@@ -1,9 +1,10 @@
 # Obsidian workspace (local editor state)
 .obsidian/
 
-# dev harness dependencies (jsdom for dev/smoke.js)
+# dev harness dependencies (jsdom for dev/smoke.js) and scratch screenshots
 dev/node_modules/
 dev/package*.json
+dev/*.png
 
 # Windows cruft
 desktop.ini
