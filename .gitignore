@@ -12,6 +12,7 @@ Thumbs.db
 
 # Art source binaries stay local (public repo, big files)
 design-docs/ProtoArt/
+design-docs/art-originals/
 design-docs/prototype pictures/*
 # ...except the diagram the terrain rules are defined by
 !design-docs/prototype pictures/HexClarificationDiagram.png

@@ -297,6 +297,20 @@ console.log('== turn flow / first hand ==');
   ok(st.removed.red.length === 1 && st.discards.red.length === 3, 'played card removed, rest discarded');
 })();
 
+console.log('== play metrics (seen / playLog for the card report) ==');
+(function () {
+  var st = testBattle(101);
+  ok(Object.keys(st.seen.red).length >= 3, 'opening hand counted as seen (' + Object.keys(st.seen.red).length + ' distinct cards)');
+  E.playCard(st, 'deploy_inf_start', 'normal');
+  var e = st.playLog[st.playLog.length - 1];
+  ok(e.id === 'deploy_inf_start' && e.p === 'red' && e.mode === 'normal' && e.seen === 1,
+    'playLog records id/mode/first-sight: ' + JSON.stringify(e));
+  var r = E.balanceMap(E.MAPS[4], 2, { seedBase: 5 });
+  var anyCard = Object.keys(r.cards).filter(function (id) { return r.cards[id].plays > 0; })[0];
+  ok(anyCard && 'simple' in r.cards[anyCard] && 'firstSight' in r.cards[anyCard] && 'seenSum' in r.cards[anyCard],
+    'balanceMap aggregates simple/firstSight/seenSum per card');
+})();
+
 console.log('== Field Marshal AI & battle sim ==');
 (function () {
   var t0 = Date.now();

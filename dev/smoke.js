@@ -94,7 +94,8 @@ setTimeout(function () {
     console.log('== maps screen & editor ==');
     doc.getElementById('btnQuit').click();
     doc.getElementById('btnMaps').click();
-    ok(doc.querySelectorAll('#mapGrid .mapitem').length === 12, '12 map tiles listed');
+    var tiles = doc.querySelectorAll('#mapGrid .mapitem').length;
+    ok(tiles >= win.Engine.MAPS.length, 'all built-in maps listed (+ any shipped customs): ' + tiles + ' tiles');
     var tileBtns = Array.prototype.map.call(doc.querySelectorAll('#mapGrid .mapitem')[0].querySelectorAll('.btns button'), function (b) { return b.textContent; });
     ok(tileBtns.indexOf('Play') >= 0 && tileBtns.indexOf('Balance') >= 0, 'map tiles offer Play + Balance (' + tileBtns.join('/') + ')');
     doc.getElementById('btnNewMap').click();
@@ -106,6 +107,18 @@ setTimeout(function () {
     ok(painted === 1, 'clicking an edge paints terrain (' + painted + ' side)');
     doc.getElementById('edMirror').click();
     ok(Object.keys(win.ED.edges).length === 2, 'Mirror creates the rotated twin side');
+
+    console.log('== TwoSetsOfThree: long terrain runs split into stock pieces ==');
+    var ring = win.splitRun([0, 1, 2, 3, 4, 5]);
+    ok(ring.length === 2 && ring[0].length === 3 && ring[1].length === 3, 'full forest ring = two length-3 pieces');
+    var five = win.splitRun([5, 0, 1, 2, 3]);
+    ok(five.length === 2 && five[0].length === 3 && five[1].length === 2 && five[0][0] === 5,
+      'five-side arc splits 3+2 from its true start (' + JSON.stringify(five) + ')');
+    var ringPieces = win.groupEdgesToPieces({ '0,0>0': 'F', '0,0>1': 'F', '0,0>2': 'F', '0,0>3': 'F', '0,0>4': 'F', '0,0>5': 'F' });
+    ok(ringPieces.length === 2 && ringPieces.every(function (p) { return p.edges.length === 3; }),
+      'editor groups a painted ring as two stock pieces');
+    var ringMap = { name: 'Ring Test', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2], pieces: ringPieces };
+    ok(win.Engine.validateMaps([ringMap]).length === 0, 'two sets of three validate cleanly');
 
     console.log('== in-game balance report ==');
     win.runBalanceUI(win.Engine.MAPS[4]); // The Cockpit (fast battles)

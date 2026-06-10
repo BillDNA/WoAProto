@@ -90,15 +90,17 @@ function mapReport(n, diff, filter) {
   console.log(new Array(header.length + 1).join('-'));
 
   var G = { red: 0, first: 0, hq: 0, games: 0, turns: 0 };
-  var cardPlays = {}, cardWins = {};
+  var cardAgg = {};
 
   maps.forEach(function (map, mi) {
     var r = E.balanceMap(map, n, { diffRed: diff, diffBlue: diff, seedBase: (mi + 1) * 7919 });
     var done = n - r.unfinished;
     G.red += r.redWins; G.first += r.firstWins; G.hq += r.hqWins; G.games += done; G.turns += r.turns;
     Object.keys(r.cards).forEach(function (cid) {
-      cardPlays[cid] = (cardPlays[cid] || 0) + r.cards[cid].plays;
-      cardWins[cid] = (cardWins[cid] || 0) + r.cards[cid].wins;
+      var a = cardAgg[cid] || (cardAgg[cid] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0 });
+      var c = r.cards[cid];
+      a.plays += c.plays; a.wins += c.wins; a.simple += c.simple;
+      a.firstSight += c.firstSight; a.seenSum += c.seenSum;
     });
     var notes = [];
     if (pct(r.redWins, done) >= 62 || pct(r.redWins, done) <= 38) notes.push('SIDE-BIASED');
@@ -118,15 +120,28 @@ function mapReport(n, diff, filter) {
   console.log('\nOverall: red ' + pct(G.red, G.games) + '% | first mover ' + pct(G.first, G.games) +
     '% | HQ captures ' + pct(G.hq, G.games) + '% | avg battle ' + (G.turns / Math.max(1, G.games)).toFixed(1) + ' turns');
 
-  console.log('\nCard report (share of plays that were by the eventual winner):');
+  console.log('\nCard report (' + G.games + ' battles of AI play — biases noted below):');
+  var ch = pad('Card', 20, true) + pad('Win%', 6) + pad('Simple%', 9) + pad('1stSight%', 11) + pad('AvgSeen', 9) + pad('plays', 8);
+  console.log(ch);
+  console.log(new Array(ch.length + 1).join('-'));
   var rows = E.CARDS.map(function (c) {
-    return { name: c.name, plays: cardPlays[c.id] || 0, winPct: pct(cardWins[c.id] || 0, cardPlays[c.id] || 0) };
-  }).sort(function (a, b) { return b.winPct - a.winPct; });
+    var a = cardAgg[c.id] || { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0 };
+    return { name: c.name, plays: a.plays, winPct: pct(a.wins, a.plays), simplePct: pct(a.simple, a.plays),
+      sightPct: pct(a.firstSight, a.plays), avgSeen: a.plays ? (a.seenSum / a.plays).toFixed(2) : '-' };
+  }).sort(function (a, b) { return b.sightPct - a.sightPct; });
   rows.forEach(function (r) {
-    var bar = new Array(Math.max(1, Math.round(r.winPct / 4))).join('#');
-    console.log(pad(r.name, 20, true) + pad(r.winPct + '%', 5) + pad('(' + r.plays + ' plays)', 14) + '  ' + bar);
+    console.log(pad(r.name, 20, true) + pad(r.winPct + '%', 6) + pad(r.simplePct + '%', 9) +
+      pad(r.sightPct + '%', 11) + pad(r.avgSeen, 9) + pad(r.plays, 8));
   });
-  console.log('\n(50% = neutral; the guaranteed starting card sits at ~50% by definition.)');
+  console.log('\nHow to read it:');
+  console.log('  Win%      share of plays by the eventual winner. Attrition games see both');
+  console.log('            sides play everything, so this hugs 50 — treat big deviations only.');
+  console.log('  Simple%   resolved as a basic attack/reposition instead of the printed action.');
+  console.log('            High = the printed action often was not worth it. (Bias: when the AI');
+  console.log('            burns a card it prefers its least precious one, per CARD_KEEP.)');
+  console.log('  1stSight% played the first time it ever appeared in hand. High + low AvgSeen =');
+  console.log('            always-good on sight (overpowered watchlist).');
+  console.log('  AvgSeen   hand-appearances before it got played. High = situational/hoarded.');
 }
 
 /* ---------------- args ---------------- */

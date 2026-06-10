@@ -240,6 +240,8 @@
       reserves: { red: copyReserves(), blue: copyReserves() },
       vp: { red: 0, blue: 0 },
       decks: {}, discards: { red: [], blue: [] }, removed: { red: [], blue: [] }, hands: { red: [], blue: [] },
+      seen: { red: {}, blue: {} },  // cardId -> times it has appeared in p's hand
+      playLog: [],                  // {p, id, mode, turn, seen-at-play} per card played
       firstTurnDone: { red: false, blue: false },
       current: match.battleIndex === 0 ? match.firstPlayer : match.lastLoser,
       second: null,
@@ -296,6 +298,8 @@
       var pos = Math.floor(rnd(st) * (st.decks[p].length + 1));
       st.decks[p].splice(pos, 0, held);
     }
+    if (!st.seen) st.seen = { red: {}, blue: {} }; // self-heal pre-metrics saves
+    hand.forEach(function (id) { st.seen[p][id] = (st.seen[p][id] || 0) + 1; });
     if (hand.length === 0) endByAttrition(st);
   }
 
@@ -557,6 +561,9 @@
     var idx = st.hands[p].indexOf(cardId);
     if (idx < 0) throw new Error('card not in hand');
     st.hands[p].splice(idx, 1);
+    if (!st.playLog) st.playLog = []; // self-heal pre-metrics saves
+    st.playLog.push({ p: p, id: cardId, mode: mode, turn: st.turnNumber,
+      seen: (st.seen && st.seen[p] && st.seen[p][cardId]) || 1 });
     var card = CARD_BY_ID[cardId];
     var steps;
     if (mode === 'attack') steps = [{ type: 'attack' }];
@@ -937,7 +944,7 @@
   function balanceMap(map, n, opts) {
     opts = opts || {};
     var out = { n: n, redWins: 0, firstWins: 0, hqWins: 0, turns: 0, vpDiff: 0, unfinished: 0, cards: {} };
-    CARDS.forEach(function (c) { out.cards[c.id] = { plays: 0, wins: 0 }; });
+    CARDS.forEach(function (c) { out.cards[c.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0 }; });
     for (var g = 0; g < n; g++) {
       var fp = g % 2 === 0 ? 'red' : 'blue';
       var st = simBattle(map, (opts.seedBase || 7919) + g * 104729 + 13, fp, opts.diffRed, opts.diffBlue);
@@ -948,12 +955,13 @@
       if (st.winType === 'hq') out.hqWins++;
       out.turns += st.turnNumber;
       out.vpDiff += Math.abs(st.vp.red - st.vp.blue);
-      ['red', 'blue'].forEach(function (p) {
-        st.removed[p].forEach(function (cid) {
-          if (!out.cards[cid]) out.cards[cid] = { plays: 0, wins: 0 };
-          out.cards[cid].plays++;
-          if (p === w) out.cards[cid].wins++;
-        });
+      (st.playLog || []).forEach(function (e) {
+        var c = out.cards[e.id] || (out.cards[e.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0 });
+        c.plays++;
+        if (e.p === w) c.wins++;
+        if (e.mode !== 'normal') c.simple++;     // resolved as a basic attack/reposition
+        if (e.seen <= 1) c.firstSight++;          // played the first time it was seen
+        c.seenSum += e.seen;
       });
       if (opts.onGame) opts.onGame(g + 1, n, st);
     }

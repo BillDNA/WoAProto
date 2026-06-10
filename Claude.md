@@ -22,6 +22,10 @@ Start in `game/CLAUDE.md` — it is the orientation file for this project and st
 * ~~LAN~~ — room code stays visible in the top bar; server terminal logs hosted/joined/expired rooms with the open-room list (extra Host clicks just make rooms that expire after 6h idle)
 * ~~Balance lab codified~~ — `node balance.js [n] [diff] [map-name]` incl. custom maps; in-game Balance buttons on every map tile and in the editor (works on unsaved drafts); Rematch-this-map button after battles
 * ~~AI levels / luck measurement~~ — third AI 'Field Marshal' searches one reply deep using sampled enemy hands (your suggestion, never peeks); `node balance.js matchup` quantifies the skill premium = how luck-based the game is
+## Feedback round 3 (all handled June 2026)
+* ~~initial art in game/art~~ — wired in: cards pull art BY CARD ID (`art/<id>.jpg` → `.png` → clean text-only fallback, so new cards never break); title plaque behind the menu title, felt table behind everything, board parchment under the hexes. Transparent margins auto-trimmed by `dev/optimize-art.ps1`, which also shrinks raw renders ~100× and sweeps originals to gitignored design-docs/art-originals (P1 unit icons skipped per Bill — drawn glyphs stay)
+* ~~TwoSetsOfThree~~ — the editor now splits long same-hex terrain runs into physical 2s and 3s (a full forest ring = two length-3 pieces); validates clean
+* ~~card report over-indexing on play share~~ — new per-card columns from a play log: Simple% (resolved as basic attack/reposition = weak printed action), 1stSight% (played the first time it was seen = OP watchlist), AvgSeen (hand appearances before being played = situational). Win% kept but documented as weak in attrition games
 ## Standing goals
 
 * rapid balance iteration is the point of this prototype — prefer data files + small tools over hardcoding

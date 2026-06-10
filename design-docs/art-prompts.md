@@ -1,8 +1,18 @@
 # Art Prompt Kit — War of Attrition digital prototype
 
 Prompts ready to paste into an image AI (Midjourney / DALL-E / Stable Diffusion etc.).
-Hand the results back and I'll wire them into the game (drop files in `game/art/`
-with the filenames below; PNG with transparency where noted).
+
+**The pipeline (now live, June 2026):** drop raw renders into `game/art/` named
+`<card-id>.png` (bare id, e.g. `naval_barrage.png` — no prefix), then run
+`powershell -ExecutionPolicy Bypass -File dev\optimize-art.ps1`. It sweeps the
+heavy originals into `design-docs/art-originals/` (gitignored), trims transparent
+margins, and writes web-weight versions back into `game/art/`. The game looks art
+up **by card id** (`art/<id>.jpg`, then `.png`) and quietly falls back to the
+text-only card face when nothing matches — new cards in maps.js just need a
+matching filename, and missing art never breaks anything.
+
+Status: all 13 card illustrations + title plaque + table felt + board parchment
+are in. The Priority-1 unit emblems were skipped (the drawn glyphs read fine).
 
 These extend the card frame kit in `Player Card Art direction drafts.md` — same
 world: **steampunk Napoleonic-era field journal**. Aged parchment, ink, brass and
@@ -52,28 +62,28 @@ laser-cut wooden pieces. Save as `inf.png`, `cav.png`, `art.png`, `hq.png`.
 ## Priority 2 — card illustrations (13, one per order)
 
 These fill the blank **artwork window** of the card fronts from your existing kit.
-**Landscape 5:3**, painted-sketch style. Save as `card-<id>.png` using the ids below.
+**Landscape 5:3**, painted-sketch style. Save as `<id>.png` using the ids below.
 
 Shared style line (prepend to each):
 > Hand-painted field-journal illustration, ink and muted watercolor on aged
 > parchment, steampunk Napoleonic war scene, earthy browns olives and creams with
 > brass accents, loose confident brushwork, no text, no border
 
-| id | scene prompt |
-|---|---|
-| `deploy_inf_start` | a column of infantry marching out of a fortified camp at dawn, sergeant pointing the way |
-| `deploy_artillery` | a gun crew heaving a brass-fitted field cannon into position, mud and rope, steam pressure gauge on the carriage |
-| `deploy_inf_trench` | soldiers digging a trench line with picks and shovels while one stands watch, earth thrown high |
-| `airdrop` | infantrymen descending under canvas-and-brass dirigible parachutes through clouds, one steadying his rifle |
-| `conscription` | a recruiting officer at a village square table, a ragged line of new men, drum and banner |
-| `deploy_cavalry` | two cavalry squadrons wheeling out of camp at a trot, pennants flying, dust rising |
-| `attack_plus1` | an officer with a brass spyglass directing a bayonet charge, signal flags raised |
-| `mass_assault` | a wide battle line surging forward in two waves across broken ground, smoke and standards |
-| `careful_maneuvers` | troops slipping along a hedgerow at dusk in single file, officer checking a pocket watch |
-| `reckless_maneuvers` | cavalry leaping a stone wall directly into musket smoke, rider standing in the stirrups |
-| `ordered_withdraw` | a disciplined fighting retreat, rear rank firing while the front rank steps back through them |
-| `naval_barrage` | a distant ironclad's broadside flash on the horizon, shells bursting in a forest, trees splintering |
-| `forced_march` | exhausted infantry marching hard down a sunken road at night, lantern light, one man asleep walking |
+| id                   | scene prompt                                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `deploy_inf_start`   | a column of infantry marching out of a fortified camp at dawn, sergeant pointing the way                         |
+| `deploy_artillery`   | a gun crew heaving a brass-fitted field cannon into position, mud and rope, steam pressure gauge on the carriage |
+| `deploy_inf_trench`  | soldiers digging a trench line with picks and shovels while one stands watch, earth thrown high                  |
+| `airdrop`            | infantrymen descending under canvas-and-brass dirigible parachutes through clouds, one steadying his rifle       |
+| `conscription`       | a recruiting officer at a village square table, a ragged line of new men, drum and banner                        |
+| `deploy_cavalry`     | two cavalry squadrons wheeling out of camp at a trot, pennants flying, dust rising                               |
+| `attack_plus1`       | an officer with a brass spyglass directing a bayonet charge, signal flags raised                                 |
+| `mass_assault`       | a wide battle line surging forward in two waves across broken ground, smoke and standards                        |
+| `careful_maneuvers`  | troops slipping along a hedgerow at dusk in single file, officer checking a pocket watch                         |
+| `reckless_maneuvers` | cavalry leaping a stone wall directly into musket smoke, rider standing in the stirrups                          |
+| `ordered_withdraw`   | a disciplined fighting retreat, rear rank firing while the front rank steps back through them                    |
+| `naval_barrage`      | a distant ironclad's broadside flash on the horizon, shells bursting in a forest, trees splintering              |
+| `forced_march`       | exhausted infantry marching hard down a sunken road at night, lantern light, one man asleep walking              |
 
 ## Priority 3 — table dressing
 
