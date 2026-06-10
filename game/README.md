@@ -1,10 +1,14 @@
 # War of Attrition — digital edition
 
-A browser version of the board game, built from the design docs. Three ways to play, all from this folder.
+A browser version of the board game, built from the design docs. Three ways to play, all from this folder — or just open the hosted page.
 
-## Play vs the AI (easiest — no setup)
+## Play in the browser (GitHub Pages)
 
-Double-click **index.html**. Pick your side and the enemy general's skill (Green Recruit = easier, Old Veteran = normal), then **March Against the AI**.
+The game is published from this repo: **https://billdna.github.io/WoAProto/** — single player vs the AI and hotseat work right from that link, nothing to install. (Two-device LAN play still needs the little server below, because Pages only serves files.)
+
+## Play vs the AI (no setup)
+
+Double-click **index.html**. Pick your side and the enemy general's skill (Green Recruit = easier, Old Veteran = normal), then **March Against the AI**. Tip: `index.html?autostart=ai` jumps straight into a battle.
 
 ## Hotseat (two players, one device)
 
@@ -18,19 +22,42 @@ Needs Node.js (nodejs.org) on one computer — the server is plain Node and runs
 2. Open that address in a browser on **both** devices (same wifi).
 3. One player clicks **Host a Room** and reads out the 4-letter code; the other types it in and joins. Host is Red, joiner is Blue.
 
-## Maps & the map editor
+## Boards & maps — built for rapid tinkering
 
-**Maps & Map Editor** on the main menu lists every battlefield with a preview. Untick a map to remove it from the draw pile — new campaigns shuffle only the maps in play. There are 18 built-ins: 12 on the Grand board plus 6 smaller ones — Frontier, The Bulge, Twin Woods, Killing Ground (Classic 4-5-6-5-4, 24 hexes) and Long March, Riverlands (Wide 5-6-7-6-5, 29 hexes).
+All built-in **board shapes and maps live in `maps.js`** as plain JSON. Edit it in any text editor, save, refresh the browser — the file explains its own format (rows of hexes, HQ coordinates, terrain pieces). `node test.js` validates every map and points at exactly what's wrong.
 
-**New Map** opens the editor: pick the board (Classic, Wide, or Grand), paint terrain, place both HQs, and use **Mirror** to copy everything point-symmetrically (design one half, mirror, done). Terrain belongs to a hex — click just inside a hex's border to cycle forest → mountain → empty on that hex's side. The editor groups painted sides into terrain pieces automatically (Naval Barrage removes a whole piece) and warns if a layout exceeds the physical terrain stock — it stays playable digitally either way. **Save & Test vs AI** drops you straight into a battle on the new map.
+There are 12 built-in maps (matching the physical 12-card map deck) across five boards, all at or under the 24-hex laser-cutter ceiling:
 
-### Sharing maps (zip the folder)
+- **Classic** 4-5-6-5-4 (24 hexes) — the physical prototype board: Frontier, The Bulge, Twin Woods, Killing Ground
+- **Compact** 3-4-5-4-3 (19) — fast brawls: The Cockpit, Highwater
+- **Hourglass** 5-4-3-4-5 (21) — a fortified waist between two fields: The Narrows, Twin Gates
+- **Ridge** four slanted rows of 5 (20) — fighting along a diagonal: Saber Ridge, Thornfield
+- **Spear** 2-3-4-5-4-3-2 (23) — a long lens with distant HQs: Long March, Vanguard
+
+The old 37-hex Grand and 29-hex Wide boards are gone: they played slow and empty (both armies fully deployed only ever control 22 hexes) and can't be laser-cut at a sane hex size. Adding a board back is one JSON entry in `maps.js` — shapes must be point-symmetric so Mirror and fair HQ placement work; the tests check this.
+
+**Maps & Map Editor** on the main menu lists every battlefield with a preview. Untick a map to remove it from the draw pile. **New Map** opens the editor: pick a board, paint terrain (click just inside a hex's border to cycle forest → mountain → empty on that hex's side), place both HQs, and **Mirror** to copy everything point-symmetrically. Terrain pieces behave like the physical ones — each piece lives inside one hex and wraps its corners; the editor and engine both enforce it.
+
+### Sharing custom maps (zip the folder)
 
 When you play through the server, custom maps are automatically written to **custom-maps.js** in this folder — zip the folder, send it, and friends get your maps. If you play by double-clicking index.html instead, maps live only in that browser: click **Export maps file** on the maps screen and drop the downloaded custom-maps.js into this folder before zipping. **Heads up:** the browser treats served pages and double-clicked files as different sites, so maps made one way won't automatically appear the other way — Export/Import bridges them, and opening the maps screen while the server runs re-syncs the file.
 
+## The balance lab
+
+`node balance.js` runs AI-vs-AI battles on every map and prints a report: win rate by side, by first/second mover, HQ-capture vs attrition share, battle length, and how often each card sat in the winner's spent pile. `node balance.js 60` for bigger samples, `node balance.js 60 easy` for the easy AI. Tweak a map or a stat, re-run, compare — that's the loop this prototype exists for.
+
 ## What's implemented
 
-Everything in the rule book: the full 16-card deck, infantry/cavalry/artillery, HQs, trenches with chosen facings, directional forest/mountain terrain, combat with support + terrain + card modifiers (a confirm dialog shows the full power calculation before every attack), HQ-capture and attrition victories, and the campaign — loser moves first next battle, first to 3 battles wins. The in-game **Field Manual** has a rules summary, **Cards** opens a glossary showing exactly which copies each side has spent (✖ spent / ○ remaining), and the campaign journal is docked on the lower right, always open. Local games auto-save; use **Resume Campaign** on the menu.
+Everything in the rule book: the full 16-card deck, infantry/cavalry/artillery, HQs, trenches with chosen facings, directional forest/mountain terrain, combat with support + terrain + card modifiers (a confirm dialog shows the full power calculation before every attack), HQ-capture and attrition victories, and the campaign — loser moves first next battle, first to 3 battles wins.
+
+Reading the table at a glance:
+
+- **Player mats** mirror the physical ones: one slot per piece — solid icon = in reserve, dashed empty slot = out on the field, ✕ = destroyed. Below them, all 16 orders as chips that gray out as each side spends them — you always know exactly what the enemy has burned and what might still be coming.
+- **Grid references**: every hex wears a faint label (A1…E4) and the campaign journal speaks them — "Red deploys Infantry at D2."
+- The **campaign score card** sits centred in the top bar; the **journal** (lower right) marks battles, turns, and victories.
+- Small animations: hands deal in, deployments pop, marches glide, attacks ring and fallen units fade, the board shakes when an HQ falls.
+
+The in-game **Field Manual** has a rules summary, **Cards** opens a glossary showing exactly which copies each side has spent (✖ spent / ○ remaining). Local games auto-save; use **Resume Campaign** on the menu.
 
 ### Terrain is directional (per the HexClarificationDiagram)
 
@@ -59,7 +86,9 @@ Terrain belongs to the hex it sits in and is drawn inset inside it. A **forest**
 ## Files
 
 - `index.html` — the whole game (UI, AI driver, map editor)
-- `engine.js` — rules engine + AI (shared by tests)
+- `engine.js` — rules engine + AI (shared by tests and the balance lab)
+- `maps.js` — **built-in boards & maps, hand-editable JSON**
+- `balance.js` — AI-vs-AI balance report: `node balance.js`
 - `server.js` / `run-server.bat` / `run-server.command` — tiny zero-dependency LAN server
 - `custom-maps.js` — your custom maps (generated; travels with the folder)
 - `test.js` — engine test suite: `node test.js`
