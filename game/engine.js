@@ -679,7 +679,7 @@
       });
       if (!pairOk) throw new Error('invalid trench orientation');
       st.reserves[p].trench--;
-      st.trenches[choice.hex] = { dirs: dirs.slice() };
+      st.trenches[choice.hex] = { dirs: dirs.slice(), owner: p }; // owner is UI-only info; trenches aid any defender
       log(st, cap(p) + ' digs a trench at ' + hexLabel(choice.hex) + '.');
     } else if (step.type === 'attack') {
       var legal = listAttacks(st, p).some(function (a) {

@@ -42,6 +42,14 @@ setTimeout(function () {
   var lblTexts = Array.prototype.map.call(doc.querySelectorAll('#board .coordlbl'), function (t) { return t.textContent; });
   ok(lblTexts.indexOf('A1') >= 0, 'label A1 present (got e.g. ' + lblTexts.slice(0, 4).join(',') + ')');
 
+  console.log('== player mats ==');
+  ok(doc.querySelectorAll('#matRed .slot').length === 13, 'red mat has 13 piece slots (7+2+1+3)');
+  ok(doc.querySelectorAll('#matBlue .slot').length === 13, 'blue mat has 13 piece slots');
+  ok(doc.querySelectorAll('#matRed .scard').length === 16, 'red mat tracks all 16 orders');
+  ok(doc.querySelectorAll('#matBlue .scard').length === 16, 'blue mat tracks all 16 orders (enemy spend visible)');
+  ok(doc.querySelectorAll('#matRed .slot svg').length === 13, 'reserve slots carry piece glyphs at battle start');
+  ok(!!doc.getElementById('scorecard'), 'campaign score card present in top bar');
+
   // play like a (random but legal) human until the battle ends or 80 turns pass
   var steps = 0;
   function tick() {
@@ -76,6 +84,12 @@ setTimeout(function () {
     ok(st && (st.phase === 'battle-over' || st.turnNumber > 3), 'battle progressed (phase=' + (st && st.phase) + ', turn=' + (st && st.turnNumber) + ')');
     var logTxt = doc.getElementById('log').textContent;
     ok(/at [A-G][0-9]/.test(logTxt), 'journal uses grid references (sample: "' + (logTxt.match(/[A-Z][a-z]+ deploys [^.]+\./) || ['?'])[0] + '")');
+    ok(doc.querySelectorAll('#log .entry.hdr').length >= 1, 'journal battle header styled');
+    ok(doc.querySelectorAll('#log .tn').length >= 3, 'journal entries carry turn markers');
+    var spentRed = doc.querySelectorAll('#matRed .scard.gone').length;
+    var spentBlue = doc.querySelectorAll('#matBlue .scard.gone').length;
+    ok(spentRed >= 1 && spentBlue >= 1, 'both mats show spent orders (red ' + spentRed + ', blue ' + spentBlue + ')');
+    ok(doc.querySelectorAll('#matRed .slot.field, #matRed .slot.lost').length >= 1, 'red mat slots emptied as pieces deployed/died');
 
     console.log('== maps screen & editor ==');
     doc.getElementById('btnQuit').click();
