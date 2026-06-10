@@ -2,54 +2,83 @@
 (function (global) {
   'use strict';
 
-  /* ---------- board geometry (pointy-top axial; multiple board shapes) ---------- */
-  var R = 3;
+  // Boards and maps are data: maps.js must load first (browser) / sit next to
+  // this file (node). Its whole payload is hand-editable JSON.
+  var BUILTIN = global.WOA_BUILTIN ||
+    (typeof require === 'function' ? require('./maps.js') : null);
+  if (!BUILTIN || !BUILTIN.shapes || !BUILTIN.maps)
+    throw new Error('War of Attrition: maps.js missing or malformed (must define WOA_BUILTIN with shapes + maps)');
+
+  /* ---------- board geometry (pointy-top axial; shapes defined in maps.js) ---------- */
   var DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]]; // E NE NW W SW SE
   function key(q, r) { return q + ',' + r; }
   function parseKey(k) { var p = k.split(','); return [+p[0], +p[1]]; }
 
-  // 'grand'  : regular hexagon, rows 4-5-6-7-6-5-4 (37 hexes)
-  // 'classic': the physical prototype board, rows 4-5-6-5-4 (24 hexes)
-  var SHAPES = {
-    grand: {
-      label: 'Grand (4-5-6-7-6-5-4)',
-      contains: function (q, r) { return Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r)) <= 3; },
-      range: { q: [-3, 3], r: [-3, 3] },
-      rot180: function (q, r) { return [-q, -r]; }
-    },
-    classic: {
-      label: 'Classic (4-5-6-5-4)',
-      contains: function (q, r) { return q >= -3 && q <= 2 && r >= -2 && r <= 2 && (q + r) >= -3 && (q + r) <= 2; },
-      range: { q: [-3, 2], r: [-2, 2] },
-      rot180: function (q, r) { return [-1 - q, -r]; }
-    },
-    wide: {
-      label: 'Wide (5-6-7-6-5)',
-      contains: function (q, r) { return q >= -3 && q <= 3 && r >= -2 && r <= 2 && (q + r) >= -3 && (q + r) <= 3; },
-      range: { q: [-3, 3], r: [-2, 2] },
-      rot180: function (q, r) { return [-q, -r]; }
-    }
-  };
-  function boardHexes(shape) {
-    var s = SHAPES[shape] || SHAPES.grand;
-    var out = [];
-    for (var r = s.range.r[0]; r <= s.range.r[1]; r++)
-      for (var q = s.range.q[0]; q <= s.range.q[1]; q++)
-        if (s.contains(q, r)) out.push(key(q, r));
-    return out;
+  // A shape def is { label, rows: [[r, qFrom, qTo], ...] }. From that we build
+  // the hex list, a containment set, per-row grid labels (A1, B3, ...), and —
+  // when the outline is point-symmetric — its 180-degree rotation constants.
+  function buildShape(name, def) {
+    var list = [], set = {}, rowsByR = {}, rs = [];
+    var sumQ = 0, sumR = 0;
+    def.rows.forEach(function (row) {
+      var r = row[0];
+      if (rowsByR[r] !== undefined) throw new Error('shape "' + name + '": row r=' + r + ' listed twice');
+      rowsByR[r] = row[1];
+      rs.push(r);
+      for (var q = row[1]; q <= row[2]; q++) {
+        var k = key(q, r);
+        if (set[k]) throw new Error('shape "' + name + '": duplicate hex ' + k);
+        set[k] = true; list.push(k);
+        sumQ += q; sumR += r;
+      }
+    });
+    rs.sort(function (a, b) { return a - b; });
+    // point-symmetry: a centre (cq,cr) with (cq-q, cr-r) on-board for every hex
+    var cq = (2 * sumQ) / list.length, cr = (2 * sumR) / list.length;
+    var symmetric = (cq === Math.round(cq)) && (cr === Math.round(cr)) &&
+      list.every(function (k) {
+        var p = parseKey(k);
+        return set[key(cq - p[0], cr - p[1])];
+      });
+    return {
+      label: def.label || name,
+      list: list, set: set,
+      rowRs: rs, rowQFrom: rowsByR,
+      centre: symmetric ? [cq, cr] : null
+    };
   }
-  var CURRENT_SHAPE = 'grand';
-  var HEXES = boardHexes('grand');
+  var SHAPES = {};
+  Object.keys(BUILTIN.shapes).forEach(function (n) { SHAPES[n] = buildShape(n, BUILTIN.shapes[n]); });
+  var DEFAULT_SHAPE = SHAPES.classic ? 'classic' : Object.keys(SHAPES)[0];
+
+  function boardHexes(shape) {
+    var s = SHAPES[shape] || SHAPES[DEFAULT_SHAPE];
+    return s.list.slice();
+  }
+  var CURRENT_SHAPE = DEFAULT_SHAPE;
+  var HEXES = boardHexes(CURRENT_SHAPE);
   function setBoard(shape) {
-    shape = SHAPES[shape] ? shape : 'grand';
+    shape = SHAPES[shape] ? shape : DEFAULT_SHAPE;
     if (shape === CURRENT_SHAPE) return;
     CURRENT_SHAPE = shape;
     HEXES = boardHexes(shape);
   }
+  // Human grid reference on the current board: row letter (A = top) + position
+  // in the row counted from the left, e.g. 'C4'. Falls back to raw coords.
+  function hexLabel(k) {
+    var s = SHAPES[CURRENT_SHAPE];
+    var p = parseKey(k);
+    var ri = s.rowRs.indexOf(p[1]);
+    if (ri < 0 || !s.set[k]) return k;
+    return String.fromCharCode(65 + ri) + (p[0] - s.rowQFrom[p[1]] + 1);
+  }
   function currentShape() { return CURRENT_SHAPE; }
   function hexes() { return HEXES; }
-  function inBoard(q, r) { return SHAPES[CURRENT_SHAPE].contains(q, r); }
-  function rot180(shape, q, r) { return SHAPES[shape] ? SHAPES[shape].rot180(q, r) : [-q, -r]; }
+  function inBoard(q, r) { return !!SHAPES[CURRENT_SHAPE].set[key(q, r)]; }
+  function rot180(shape, q, r) {
+    var c = SHAPES[shape] && SHAPES[shape].centre;
+    return c ? [c[0] - q, c[1] - r] : [-q, -r];
+  }
   function neighbor(k, d) {
     var qr = parseKey(k); var q = qr[0] + DIRS[d][0], r = qr[1] + DIRS[d][1];
     return inBoard(q, r) ? key(q, r) : null;
@@ -146,104 +175,33 @@
   var CARD_BY_ID = {};
   CARDS.forEach(function (c) { CARD_BY_ID[c.id] = c; });
 
-  /* ---------- maps ---------- */
-  // terrain piece: { t:'F'|'M', edges:[[q,r,d],...] }
-  function mir(p, shape) { // 180-degree rotation of a piece
-    return { t: p.t, edges: p.edges.map(function (e) {
-      var rr = rot180(shape || 'grand', e[0], e[1]);
-      return [rr[0], rr[1], (e[2] + 3) % 6];
-    }) };
+  /* ---------- maps (data lives in maps.js) ---------- */
+  var MAPS = BUILTIN.maps;
+
+  // A terrain piece is physical: it sits INSIDE one hex and wraps adjacent
+  // corners. Returns a problem string, or null if the piece is well-formed.
+  function pieceProblem(p) {
+    if (!p || (p.t !== 'F' && p.t !== 'M')) return 'piece type must be "F" or "M"';
+    if (!p.edges || !p.edges.length) return 'piece has no sides';
+    var q0 = p.edges[0][0], r0 = p.edges[0][1], dirs = {};
+    for (var i = 0; i < p.edges.length; i++) {
+      var e = p.edges[i];
+      if (e[0] !== q0 || e[1] !== r0)
+        return 'piece spans hexes ' + key(q0, r0) + ' and ' + key(e[0], e[1]) + ' — every side of a piece must belong to ONE hex';
+      if (e[2] < 0 || e[2] > 5) return 'bad direction ' + e[2];
+      if (dirs[e[2]]) return 'side ' + e[2] + ' listed twice';
+      dirs[e[2]] = true;
+    }
+    var n = p.edges.length;
+    var contiguous = false;
+    for (var s = 0; s < 6 && !contiguous; s++) {
+      var run = true;
+      for (var j = 0; j < n; j++) if (!dirs[(s + j) % 6]) { run = false; break; }
+      contiguous = run;
+    }
+    if (!contiguous) return 'sides of a piece must be contiguous (wrap adjacent corners of the hex)';
+    return null;
   }
-  function sym(list, shape) {
-    var out = [];
-    list.forEach(function (p) { out.push(p); out.push(mir(p, shape)); });
-    return out;
-  }
-  var MAPS = [
-    { name: 'The Clearing', redHQ: [0, -3], blueHQ: [0, 3], pieces: sym([
-      { t: 'F', edges: [[0, -1, 4], [0, -1, 5], [0, -1, 0]] },
-      { t: 'M', edges: [[-2, -1, 0], [-2, -1, 5]] }
-    ]) },
-    { name: 'High Pass', redHQ: [0, -3], blueHQ: [0, 3], pieces: sym([
-      { t: 'M', edges: [[0, 0, 2], [0, 0, 1], [1, -1, 3]] },
-      { t: 'F', edges: [[-2, 0, 1], [-2, 0, 0]] },
-      { t: 'F', edges: [[2, -2, 4], [2, -2, 5]] }
-    ]) },
-    { name: 'Ardenwood', redHQ: [-3, 0], blueHQ: [3, 0], pieces: sym([
-      { t: 'F', edges: [[0, 0, 2], [0, 0, 3], [-1, 0, 1]] },
-      { t: 'F', edges: [[0, -2, 4], [0, -2, 5]] },
-      { t: 'F', edges: [[1, 1, 0], [1, 1, 1]] }
-    ]) },
-    { name: 'The Citadel', redHQ: [0, -3], blueHQ: [0, 3], pieces: sym([
-      { t: 'M', edges: [[0, -2, 3], [0, -2, 4]] },
-      { t: 'M', edges: [[1, -2, 0], [1, -2, 5]] },
-      { t: 'F', edges: [[0, 0, 0], [0, 0, 1], [0, 0, 2]] }
-    ]) },
-    { name: 'Broken Line', redHQ: [3, -3], blueHQ: [-3, 3], pieces: sym([
-      { t: 'M', edges: [[1, -1, 2], [1, -1, 3], [1, -1, 4]] },
-      { t: 'F', edges: [[2, -3, 4], [2, -3, 5]] }
-    ]) },
-    { name: "No Man's Land", redHQ: [0, -3], blueHQ: [0, 3], pieces: sym([
-      { t: 'M', edges: [[-2, 0, 2], [-2, 0, 1]] },
-      { t: 'M', edges: [[0, 0, 2], [0, 0, 1]] },
-      { t: 'F', edges: [[3, -2, 3], [3, -2, 4]] }
-    ]) },
-    { name: 'Forest Road', redHQ: [-3, 1], blueHQ: [3, -1], pieces: sym([
-      { t: 'F', edges: [[-1, 0, 1], [-1, 0, 0], [-1, 0, 5]] },
-      { t: 'M', edges: [[0, -2, 0], [0, -2, 5]] }
-    ]) },
-    { name: 'The Anvil', redHQ: [0, -3], blueHQ: [0, 3], pieces: sym([
-      { t: 'M', edges: [[-1, -1, 5], [-1, -1, 0], [-1, -1, 1]] },
-      { t: 'M', edges: [[2, -1, 3], [2, -1, 4]] },
-      { t: 'F', edges: [[0, -1, 1], [0, -1, 2]] }
-    ]) },
-    { name: "Wolf's Den", redHQ: [0, -3], blueHQ: [0, 3], pieces: [
-      { t: 'M', edges: [[0, 1, 2], [0, 1, 1], [1, 0, 2]] },
-      { t: 'F', edges: [[0, -1, 3], [0, -1, 4], [0, -1, 5]] },
-      { t: 'F', edges: [[2, -2, 3], [2, -2, 4]] },
-      { t: 'M', edges: [[-2, 1, 1], [-2, 1, 0]] }
-    ] },
-    { name: 'River of Stone', redHQ: [-3, 2], blueHQ: [3, -2], pieces: sym([
-      { t: 'M', edges: [[0, 0, 0], [0, 0, 1], [0, 0, 2]] },
-      { t: 'F', edges: [[1, -3, 5], [1, -3, 4]] }
-    ]) },
-    { name: 'Hedgerows', redHQ: [0, -3], blueHQ: [0, 3], pieces: sym([
-      { t: 'F', edges: [[-1, -1, 5], [-1, -1, 0]] },
-      { t: 'F', edges: [[2, -1, 4], [2, -1, 3]] },
-      { t: 'M', edges: [[0, -2, 1], [0, -2, 2]] }
-    ]) },
-    { name: 'Last Stand', redHQ: [0, -3], blueHQ: [0, 3], pieces: sym([
-      { t: 'M', edges: [[2, -2, 3], [2, -2, 4], [2, -2, 5]] },
-      { t: 'M', edges: [[0, 0, 2], [0, 0, 3]] },
-      { t: 'F', edges: [[-1, -2, 4], [-1, -2, 5]] }
-    ]) },
-    { name: 'Frontier', shape: 'classic', redHQ: [0, -2], blueHQ: [-1, 2], pieces: sym([
-      { t: 'F', edges: [[0, 0, 1], [0, 0, 2]] },
-      { t: 'M', edges: [[2, -1, 3], [2, -1, 4]] }
-    ], 'classic') },
-    { name: 'The Bulge', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2], pieces: sym([
-      { t: 'M', edges: [[0, -1, 4], [0, -1, 5], [0, -1, 0]] },
-      { t: 'F', edges: [[1, 0, 2], [1, 0, 1]] }
-    ], 'classic') },
-    { name: 'Twin Woods', shape: 'classic', redHQ: [-1, -2], blueHQ: [0, 2], pieces: sym([
-      { t: 'F', edges: [[-1, 0, 1], [-1, 0, 2], [-1, 0, 3]] },
-      { t: 'M', edges: [[1, -2, 5], [1, -2, 0]] }
-    ], 'classic') },
-    { name: 'Killing Ground', shape: 'classic', redHQ: [1, -2], blueHQ: [-3, 1], pieces: [
-      { t: 'M', edges: [[0, 0, 2], [0, 0, 3]] },
-      { t: 'F', edges: [[-1, 1, 0], [-1, 1, 5]] },
-      { t: 'F', edges: [[1, -1, 3], [1, -1, 4]] },
-      { t: 'M', edges: [[-2, 0, 1], [-2, 0, 2]] }
-    ] },
-    { name: 'Long March', shape: 'wide', redHQ: [3, -2], blueHQ: [-3, 2], pieces: sym([
-      { t: 'M', edges: [[0, 0, 1], [0, 0, 2], [0, 0, 3]] },
-      { t: 'F', edges: [[2, -1, 3], [2, -1, 4]] }
-    ], 'wide') },
-    { name: 'Riverlands', shape: 'wide', redHQ: [0, -2], blueHQ: [0, 2], pieces: sym([
-      { t: 'F', edges: [[-2, 0, 1], [-2, 0, 0], [-2, 0, 5]] },
-      { t: 'M', edges: [[1, -1, 2], [1, -1, 1]] }
-    ], 'wide') }
-  ];
 
   function buildTerrain(map) {
     // Each [q,r,d] in a piece is a SIDE owned by hex (q,r):
@@ -252,6 +210,8 @@
     // returns { edges: {sideKey: 'F'|'M'}, pieces:[{id,t,edgeKeys:[sideKey...]}] }
     var edges = {}, pieces = [];
     map.pieces.forEach(function (p, i) {
+      var prob = pieceProblem(p);
+      if (prob) throw new Error('map "' + map.name + '" piece ' + (i + 1) + ': ' + prob);
       var eks = [];
       p.edges.forEach(function (e) {
         var k = key(e[0], e[1]);
@@ -302,10 +262,10 @@
     var maps = match.maps || MAPS;
     var mapIdx = match.mapOrder[match.battleIndex % match.mapOrder.length];
     var map = maps[mapIdx];
-    setBoard(map.shape || 'grand');
+    setBoard(map.shape || DEFAULT_SHAPE);
     var terrain = buildTerrain(map);
     var st = {
-      boardShape: map.shape || 'grand',
+      boardShape: map.shape || DEFAULT_SHAPE,
       seed: match.seed,
       match: match,
       mapIndex: mapIdx,
@@ -572,7 +532,8 @@
     var du = unitAt(st, atk.to), dHQ = isHQ(st, atk.to);
     var msg = cap(p) + ' ' + UNITS[au.type].name + ' attacks ' +
       (du ? cap(e) + ' ' + UNITS[du.type].name : cap(e) + ' HQ') +
-      (atk.via ? ' through the HQ' : '') +
+      ' at ' + hexLabel(atk.to) +
+      (atk.via ? ', striking through the HQ' : '') +
       ' (' + res.attackerPower + ' vs ' + res.defenderPower + '): ';
 
     function killDefender() {
@@ -709,7 +670,7 @@
       if (st.reserves[p][step.unit] <= 0 || targets.indexOf(choice.hex) < 0) throw new Error('invalid deploy');
       st.reserves[p][step.unit]--;
       st.units[choice.hex] = { type: step.unit, owner: p };
-      log(st, cap(p) + ' deploys ' + UNITS[step.unit].name + ' at ' + choice.hex + '.');
+      log(st, cap(p) + ' deploys ' + UNITS[step.unit].name + ' at ' + hexLabel(choice.hex) + '.');
     } else if (step.type === 'trench') {
       if (st.reserves[p].trench <= 0 || trenchTargets(st, p).indexOf(choice.hex) < 0) throw new Error('invalid trench hex');
       var dirs = choice.dirs;
@@ -719,7 +680,7 @@
       if (!pairOk) throw new Error('invalid trench orientation');
       st.reserves[p].trench--;
       st.trenches[choice.hex] = { dirs: dirs.slice() };
-      log(st, cap(p) + ' digs a trench at ' + choice.hex + '.');
+      log(st, cap(p) + ' digs a trench at ' + hexLabel(choice.hex) + '.');
     } else if (step.type === 'attack') {
       var legal = listAttacks(st, p).some(function (a) {
         return a.from === choice.from && a.to === choice.to && (a.via || null) === (choice.via || null);
@@ -734,26 +695,26 @@
         if (!ok) throw new Error('invalid swap');
         var ua = st.units[choice.a], ub = st.units[choice.b];
         st.units[choice.a] = ub; st.units[choice.b] = ua;
-        log(st, cap(p) + ' swaps units at ' + choice.a + ' and ' + choice.b + '.');
+        log(st, cap(p) + ' swaps the units at ' + hexLabel(choice.a) + ' and ' + hexLabel(choice.b) + '.');
       } else {
         var okm = r.moves.some(function (m) { return m.from === choice.from && m.to === choice.to; });
         if (!okm) throw new Error('invalid move');
         st.units[choice.to] = st.units[choice.from];
         delete st.units[choice.from];
-        log(st, cap(p) + ' repositions ' + UNITS[st.units[choice.to].type].name + ' to ' + choice.to + '.');
+        log(st, cap(p) + ' marches ' + UNITS[st.units[choice.to].type].name + ' from ' + hexLabel(choice.from) + ' to ' + hexLabel(choice.to) + '.');
       }
     } else if (step.type === 'barrage') {
       var b = listBarrageTargets(st, p);
       if (choice.trenchHex) {
         if (b.trenchHexes.indexOf(choice.trenchHex) < 0) throw new Error('invalid barrage');
         delete st.trenches[choice.trenchHex];
-        log(st, cap(p) + "'s naval barrage obliterates the trench at " + choice.trenchHex + '.');
+        log(st, cap(p) + "'s naval barrage obliterates the trench at " + hexLabel(choice.trenchHex) + '.');
       } else if (choice.pieceId) {
         var pc = st.terrainPieces.filter(function (x) { return x.id === choice.pieceId && !x.removed; })[0];
         if (!pc || b.forestPieces.indexOf(pc) < 0) throw new Error('invalid barrage');
         pc.removed = true;
         pc.edgeKeys.forEach(function (ek) { delete st.terrainEdges[ek]; });
-        log(st, cap(p) + "'s naval barrage burns away a forest.");
+        log(st, cap(p) + "'s naval barrage burns away the forest at " + hexLabel(pc.edgeKeys[0].split('>')[0]) + '.');
       } else throw new Error('invalid barrage choice');
     }
     advanceStep(st);
@@ -933,14 +894,20 @@
     var problems = [];
     var prevShape = CURRENT_SHAPE;
     (list || MAPS).forEach(function (m) {
-      setBoard(m.shape || 'grand');
+      var shape = m.shape || DEFAULT_SHAPE;
+      if (!SHAPES[shape]) { problems.push(m.name + ': unknown board shape "' + shape + '"'); return; }
+      setBoard(shape);
       try {
         buildTerrain(m);
         if (!inBoard.apply(null, m.redHQ)) problems.push(m.name + ': red HQ off board');
         if (!inBoard.apply(null, m.blueHQ)) problems.push(m.name + ': blue HQ off board');
         if (key.apply(null, m.redHQ) === key.apply(null, m.blueHQ)) problems.push(m.name + ': HQs overlap');
         var stock = { F2: 0, F3: 0, M2: 0, M3: 0 };
-        m.pieces.forEach(function (p) { stock[p.t + p.edges.length]++; });
+        m.pieces.forEach(function (p) {
+          var sk = p.t + p.edges.length;
+          if (stock[sk] === undefined) problems.push(m.name + ': piece of length ' + p.edges.length + ' has no physical counterpart (lengths 2-3 exist)');
+          else stock[sk]++;
+        });
         if (stock.F3 > 2 || stock.M3 > 2 || stock.F2 > 4 || stock.M2 > 4) problems.push(m.name + ': exceeds terrain stock ' + JSON.stringify(stock));
       } catch (e) { problems.push(e.message); }
     });
@@ -949,9 +916,9 @@
   }
 
   var Engine = {
-    R: R, DIRS: DIRS, UNITS: UNITS, CARDS: CARDS, CARD_BY_ID: CARD_BY_ID, MAPS: MAPS,
-    SHAPES: SHAPES, boardHexes: boardHexes, setBoard: setBoard, hexes: hexes,
-    currentShape: currentShape, rot180: rot180, buildTerrain: buildTerrain,
+    DIRS: DIRS, UNITS: UNITS, CARDS: CARDS, CARD_BY_ID: CARD_BY_ID, MAPS: MAPS,
+    SHAPES: SHAPES, DEFAULT_SHAPE: DEFAULT_SHAPE, boardHexes: boardHexes, setBoard: setBoard, hexes: hexes,
+    currentShape: currentShape, rot180: rot180, buildTerrain: buildTerrain, pieceProblem: pieceProblem, hexLabel: hexLabel,
     key: key, parseKey: parseKey, inBoard: inBoard, neighbor: neighbor, neighbors: neighbors,
     dist: dist, dirBetween: dirBetween, edgeKey: edgeKey, edgeFrom: edgeFrom, sideKey: sideKey, other: other,
     newMatch: newMatch, newBattle: newBattle,

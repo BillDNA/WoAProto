@@ -6,11 +6,34 @@ function ok(cond, msg) {
   else { console.log('  FAIL - ' + msg); fails++; }
 }
 
-console.log('== map validation ==');
-var probs = E.validateMaps();
-ok(probs.length === 0, 'all built-in maps valid' + (probs.length ? ': ' + probs.join('; ') : ''));
-ok(E.MAPS.length === 18, '18 maps defined');
-ok(E.boardHexes('grand').length === 37, '37 hexes on grand board');
+// A bare classic-board map so rules tests are deterministic regardless of the
+// built-in roster. HQs in opposite corners, no terrain.
+var TESTMAP = { name: 'Test Range', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2], pieces: [] };
+function testBattle(seed) {
+  var m = E.newMatch({ seed: seed, firstPlayer: 'red', maps: [TESTMAP] });
+  return E.newBattle(m);
+}
+
+console.log('== shapes (data-driven from maps.js) ==');
+(function () {
+  var names = Object.keys(E.SHAPES);
+  ok(names.length >= 4, names.length + ' board shapes defined');
+  ok(!E.SHAPES.grand && !E.SHAPES.wide, 'grand and wide boards are gone');
+  names.forEach(function (n) {
+    var hexes = E.boardHexes(n);
+    ok(hexes.length >= 16 && hexes.length <= 24,
+      n + ': ' + hexes.length + ' hexes (laser-cutter ceiling is 24)');
+    ok(E.SHAPES[n].centre !== null, n + ': point-symmetric (Mirror & fair HQs work)');
+    var set = {};
+    hexes.forEach(function (k) { set[k] = true; });
+    var symOk = hexes.every(function (k) {
+      var qr = E.parseKey(k);
+      var rr = E.rot180(n, qr[0], qr[1]);
+      return set[E.key(rr[0], rr[1])];
+    });
+    ok(symOk, n + ': 180-degree rotation maps the board onto itself');
+  });
+})();
 
 console.log('== classic board (physical prototype, rows 4-5-6-5-4) ==');
 (function () {
@@ -20,32 +43,42 @@ console.log('== classic board (physical prototype, rows 4-5-6-5-4) ==');
   hexes.forEach(function (k) { var r = E.parseKey(k)[1]; rows[r] = (rows[r] || 0) + 1; });
   ok(rows[-2] === 4 && rows[-1] === 5 && rows[0] === 6 && rows[1] === 5 && rows[2] === 4,
     'row counts are 4,5,6,5,4 (got ' + JSON.stringify(rows) + ')');
-  var set = {};
-  hexes.forEach(function (k) { set[k] = true; });
-  var symOk = hexes.every(function (k) {
-    var qr = E.parseKey(k);
-    var rr = E.rot180('classic', qr[0], qr[1]);
-    return set[E.key(rr[0], rr[1])];
-  });
-  ok(symOk, '180-degree rotation maps the classic board onto itself');
 })();
 
-console.log('== wide board & new small-board maps ==');
+console.log('== human-readable grid labels ==');
 (function () {
-  ok(E.boardHexes('wide').length === 29, 'wide board has 29 hexes');
-  var small = E.MAPS.filter(function (m) { return m.shape === 'classic' || m.shape === 'wide'; });
-  ok(small.length === 6, '6 new small-board maps (got ' + small.length + ')');
-  small.forEach(function (m) {
-    var n = E.boardHexes(m.shape).length;
-    ok(n >= 22 && n <= 30, m.name + ': board has ' + n + ' hexes (22-30)');
+  E.setBoard('classic');
+  ok(E.hexLabel('-1,-2') === 'A1', 'top-left of classic is A1 (got ' + E.hexLabel('-1,-2') + ')');
+  ok(E.hexLabel('0,0') === 'C4', 'centre-ish hex is C4 (got ' + E.hexLabel('0,0') + ')');
+  ok(E.hexLabel('0,2') === 'E4', 'bottom-right of classic is E4 (got ' + E.hexLabel('0,2') + ')');
+  ok(E.hexLabel('9,9') === '9,9', 'off-board key falls back to raw coords');
+})();
+
+console.log('== terrain pieces live inside ONE hex (the yellow-line bug) ==');
+(function () {
+  ok(E.pieceProblem({ t: 'F', edges: [[0, 0, 4], [0, 0, 5], [0, 0, 0]] }) === null, 'contiguous single-hex piece accepted (wraps 4-5-0)');
+  ok(E.pieceProblem({ t: 'M', edges: [[0, 0, 2], [0, 0, 1], [1, -1, 3]] }) !== null, 'hex-spanning piece rejected (old High Pass mountain)');
+  ok(E.pieceProblem({ t: 'M', edges: [[0, 0, 1], [0, 0, 4]] }) !== null, 'non-contiguous sides rejected');
+  ok(E.pieceProblem({ t: 'F', edges: [[0, 0, 2], [0, 0, 2]] }) !== null, 'duplicate side rejected');
+  var bad = { name: 'Bad Map', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2],
+    pieces: [{ t: 'F', edges: [[0, 0, 2], [-1, 0, 1]] }] };
+  ok(E.validateMaps([bad]).length === 1, 'validateMaps flags a spanning piece');
+})();
+
+console.log('== map validation ==');
+var probs = E.validateMaps();
+ok(probs.length === 0, 'all built-in maps valid' + (probs.length ? ': ' + probs.join('; ') : ''));
+ok(E.MAPS.length === 12, '12 maps defined, like the physical map deck (got ' + E.MAPS.length + ')');
+(function () {
+  E.MAPS.forEach(function (m) {
+    var d = E.dist(E.key(m.redHQ[0], m.redHQ[1]), E.key(m.blueHQ[0], m.blueHQ[1]));
+    ok(d >= 4, m.name + ': HQs ' + d + ' apart (4+ so there is no turn-2 rush)');
   });
 })();
 
 console.log('== trench/terrain edge exclusivity ==');
 (function () {
-  var m = E.newMatch({ seed: 55, firstPlayer: 'red' });
-  var st = E.newBattle(m);
-  st.units = {}; st.trenches = {}; st.terrainEdges = {}; st.terrainPieces = [];
+  var st = testBattle(55);
   st.units['0,0'] = { type: 'infantry', owner: 'red' };
   ok(E.trenchOrientations(st, '0,0').length === 6, 'all 6 orientations on a clean hex');
   st.terrainEdges[E.sideKey('0,0', 1)] = 'F'; // this hex's own dir-1 side
@@ -68,10 +101,7 @@ console.log('== HexClarificationDiagram A/B/C table ==');
   // Mountain in B on edges B|A and B|C.
   var A = '0,0', B = '-1,1', C = '0,1';
   function fresh() {
-    var m = E.newMatch({ seed: 77, firstPlayer: 'red' });
-    var st = E.newBattle(m);
-    st.units = {}; st.trenches = {}; st.terrainEdges = {}; st.terrainPieces = [];
-    st.hq = { red: '3,-3', blue: '-3,3' }; // far away
+    var st = testBattle(77);
     st.terrainEdges[E.sideKey(A, 4)] = 'F'; // A -> B
     st.terrainEdges[E.sideKey(A, 5)] = 'F'; // A -> C
     st.terrainEdges[E.sideKey(B, 1)] = 'M'; // B -> A
@@ -111,8 +141,7 @@ console.log('== airdrop never in the opening hand ==');
 
 console.log('== house rule: play any card as basic attack/reposition ==');
 (function () {
-  var m = E.newMatch({ seed: 21, firstPlayer: 'red' });
-  var st = E.newBattle(m);
+  var st = testBattle(21);
   st.units['0,0'] = { type: 'infantry', owner: 'red' };
   st.units['0,1'] = { type: 'cavalry', owner: 'blue' };
   var cid = st.hands.red.filter(function (c) { return c !== 'attack_plus1'; })[0];
@@ -122,8 +151,7 @@ console.log('== house rule: play any card as basic attack/reposition ==');
   E.applyStep(st, { from: '0,0', to: '0,1' });
   ok(st.removed.red.indexOf(cid) >= 0, 'card still removed from game');
   // reposition mode
-  var m2 = E.newMatch({ seed: 22, firstPlayer: 'red' });
-  var st2 = E.newBattle(m2);
+  var st2 = testBattle(22);
   st2.units['0,0'] = { type: 'infantry', owner: 'red' };
   var cid2 = st2.hands.red[0];
   E.playCard(st2, cid2, 'reposition');
@@ -148,13 +176,7 @@ ok(total === 16, '16 cards per deck (got ' + total + ')');
 
 console.log('== combat math ==');
 (function () {
-  var m = E.newMatch({ seed: 42, firstPlayer: 'red' });
-  var st = E.newBattle(m);
-  // clear board state for a controlled test
-  st.units = {};
-  st.terrainEdges = {}; st.terrainPieces = [];
-  st.trenches = {};
-  st.hq = { red: '0,-3', blue: '0,3' };
+  var st = testBattle(42);
   st.units['0,0'] = { type: 'infantry', owner: 'red' };
   st.units['0,1'] = { type: 'infantry', owner: 'blue' };
   var res = E.computeAttack(st, { from: '0,0', to: '0,1' });
@@ -203,10 +225,8 @@ console.log('== combat math ==');
 
 console.log('== through-HQ movement & attacks ==');
 (function () {
-  var m = E.newMatch({ seed: 7, firstPlayer: 'red' });
-  var st = E.newBattle(m);
-  st.units = {}; st.trenches = {};
-  st.hq = { red: '0,0', blue: '0,3' };
+  var st = testBattle(7);
+  st.hq.red = '0,0';
   st.units['-1,0'] = { type: 'infantry', owner: 'red' };
   st.units['1,0'] = { type: 'infantry', owner: 'blue' };
   var atks = E.listAttacks(st, 'red');
@@ -219,19 +239,15 @@ console.log('== through-HQ movement & attacks ==');
 
 console.log('== deploy / control rules ==');
 (function () {
-  var m = E.newMatch({ seed: 9, firstPlayer: 'red' });
-  var st = E.newBattle(m);
-  st.units = {}; st.trenches = {};
-  st.hq = { red: '0,-3', blue: '0,3' };
+  var st = testBattle(9);
   var t = E.deployTargets(st, 'red', false);
-  ok(t.length === 3, 'deploy targets adjacent to HQ only at battle start (got ' + t.length + ')');
-  ok(t.indexOf('0,3') < 0, 'cannot deploy onto enemy HQ');
+  ok(t.length === 3, 'deploy targets adjacent to corner HQ only at battle start (got ' + t.length + ')');
+  ok(t.indexOf('-3,2') < 0, 'cannot deploy onto enemy HQ');
 })();
 
 console.log('== turn flow / first hand ==');
 (function () {
-  var m = E.newMatch({ seed: 11, firstPlayer: 'red' });
-  var st = E.newBattle(m);
+  var st = testBattle(11);
   ok(st.hands.red.length === 4, 'first hand has 4 cards');
   ok(st.hands.red.indexOf('deploy_inf_start') >= 0, 'starting card guaranteed in first hand');
   E.playCard(st, 'deploy_inf_start');

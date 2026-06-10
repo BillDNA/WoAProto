@@ -152,7 +152,7 @@
   .hl-selected{fill:rgba(80,140,200,.25); stroke:#fff; stroke-width:3;}
   .hl-swap{fill:rgba(106,90,205,.4); stroke:#7b68c8; stroke-width:2.5; animation:pulse 1.1s infinite;}
   @keyframes pulse{0%,100%{opacity:.55;}50%{opacity:1;}}
-  .coordlbl{font-size:8px; fill:rgba(60,48,28,.35); pointer-events:none;}
+  .coordlbl{font-size:9.5px; fill:rgba(60,48,28,.48); pointer-events:none; font-style:italic;}
 
   /* overlays */
   .overlay{
@@ -307,11 +307,7 @@
     <h2 style="font-variant:small-caps;text-align:center;">Cartographer's Table</h2>
     <div class="opt-row">
       <input id="edName" placeholder="Map name">
-      <select id="edShape">
-        <option value="classic">Classic board (4-5-6-5-4)</option>
-        <option value="wide">Wide board (5-6-7-6-5)</option>
-        <option value="grand">Grand board (4-5-6-7-6-5-4)</option>
-      </select>
+      <select id="edShape"></select>
     </div>
     <div class="edtools">
       <button class="tool sel" data-tool="terrain">Terrain (click edges)</button>
@@ -368,6 +364,7 @@
 
 <div id="toast" class="parchment"></div>
 
+<script src="maps.js"></script>
 <script src="engine.js"></script>
 <script src="custom-maps.js"></script>
 <script>
@@ -388,6 +385,16 @@ var APP = {
 function $(id){ return document.getElementById(id); }
 function show(scr){ document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');}); $(scr).classList.add('active'); }
 function capName(p){ return p.charAt(0).toUpperCase()+p.slice(1); }
+
+// board shapes come from maps.js — keep the editor's dropdown in sync
+(function(){
+  var sel = $('edShape');
+  Object.keys(E.SHAPES).forEach(function(n){
+    var o = document.createElement('option');
+    o.value = n; o.textContent = E.SHAPES[n].label;
+    sel.appendChild(o);
+  });
+})();
 
 /* =================== menu =================== */
 document.querySelectorAll('#sideRow .choice').forEach(function(el){
@@ -411,7 +418,8 @@ function startLocal(mode, mapsOverride){
   if (!pool || !pool.length){ toast('No maps are in play! Enable some in Maps &amp; Map Editor.', 3500); return; }
   APP.mode = mode;
   var match = E.newMatch({ maps: pool });
-  APP.st = E.newBattle(match);
+  try { APP.st = E.newBattle(match); }
+  catch(e){ APP.mode = null; toast('A map in the pool cannot be played: '+e.message+'<br><span class="small">Untick it in Maps &amp; Map Editor.</span>', 5000); return; }
   APP.ui = { sel:null, stage:null, busy:false, handoffPending: mode==='hotseat' };
   APP.snap = null;
   show('game');
@@ -447,14 +455,16 @@ function checkResume(){
   try { ok = !!localStorage.getItem('woa-save'); } catch(e){}
   $('btnResume').style.display = ok ? '' : 'none';
 }
+var SAVE_V = 2; // bumped when old saves can no longer be loaded (e.g. board shapes changed)
 function saveLocal(){
   if (APP.mode === 'net' || !APP.st) return;
-  try { localStorage.setItem('woa-save', JSON.stringify({mode:APP.mode, mySide:APP.mySide, diff:APP.diff, st:APP.st})); } catch(e){}
+  try { localStorage.setItem('woa-save', JSON.stringify({v:SAVE_V, mode:APP.mode, mySide:APP.mySide, diff:APP.diff, st:APP.st})); } catch(e){}
 }
 function clearSave(){ try{ localStorage.removeItem('woa-save'); }catch(e){} }
 $('btnResume').onclick = function(){
   try{
     var d = JSON.parse(localStorage.getItem('woa-save'));
+    if (!d || d.v !== SAVE_V) throw new Error('save from an older version');
     APP.mode = d.mode; APP.mySide = d.mySide; APP.diff = d.diff; APP.st = d.st;
     APP.ui = { sel:null, stage:null, busy:false, handoffPending: d.mode==='hotseat' };
     show('game'); renderAll();
@@ -587,6 +597,9 @@ function renderBoard(){
     var p = svgEl('polygon', { points: hexPoints(xy[0], xy[1], S-1), 'class':'hex'+(((E.parseKey(k)[0]-E.parseKey(k)[1])%2+2)%2 ? ' dark':'') });
     p.dataset.hex = k;
     gHex.appendChild(p);
+    var lbl = svgEl('text', { x: xy[0], y: xy[1]-S*0.58, 'text-anchor':'middle', 'class':'coordlbl' });
+    lbl.textContent = E.hexLabel(k);
+    gHex.appendChild(lbl);
   });
 
   // terrain sides (hex-owned: drawn inset inside the owning hex)
@@ -889,7 +902,7 @@ function renderPrompt(){
   }
 }
 function renderAll(){
-  if (APP.st) E.setBoard(APP.st.boardShape || 'grand');
+  if (APP.st) E.setBoard(APP.st.boardShape);
   ensureSnapshot();
   renderTop(); renderMat('red'); renderMat('blue'); renderBoard(); renderHand(); renderPrompt(); renderLog();
 }
@@ -1148,7 +1161,7 @@ function getMapPool(){
 /* mini preview svg (self-contained, no global board state) */
 function previewSVG(def){
   var s = 11, sq3 = Math.sqrt(3);
-  var hexList = E.boardHexes(def.shape || 'grand');
+  var hexList = E.boardHexes(def.shape);
   var hexSet = {};
   hexList.forEach(function(k){ hexSet[k] = true; });
   function xy(q, r){ return [s*sq3*(q + r/2), s*1.5*r]; }
@@ -1192,9 +1205,10 @@ function renderMapsScr(){
     var off = dis.indexOf(m.id) >= 0;
     var d = document.createElement('div');
     d.className = 'mapitem' + (off ? ' off' : '');
+    var shp = E.SHAPES[m.def.shape || E.DEFAULT_SHAPE];
     d.innerHTML = previewSVG(m.def) +
       '<div class="nm">'+m.def.name+'</div>' +
-      '<div class="shp">'+(E.SHAPES[m.def.shape||'grand'].label)+(m.builtin?'':' &middot; custom')+'</div>' +
+      '<div class="shp">'+(shp ? shp.label : '&#9888; board "'+m.def.shape+'" no longer exists')+(m.builtin?'':' &middot; custom')+'</div>' +
       '<label><input type="checkbox" '+(off?'':'checked')+'> in play</label>' +
       '<div class="btns"></div>';
     var cb = d.querySelector('input');
@@ -1289,7 +1303,7 @@ function openEditor(def, isNewCopy){
     ED.id = def.id || ('c' + Date.now());
     ED.isNew = !!isNewCopy || !def.id;
     ED.name = def.name || '';
-    ED.shape = def.shape || 'grand';
+    ED.shape = E.SHAPES[def.shape] ? def.shape : E.DEFAULT_SHAPE;
     ED.red = def.redHQ ? def.redHQ.slice() : null;
     ED.blue = def.blueHQ ? def.blueHQ.slice() : null;
     ED.edges = {};
@@ -1373,6 +1387,7 @@ function renderEditor(){
   svg.setAttribute('viewBox', viewBoxFor(hexList));
   var gHex = svgEl('g',{}), gTer = svgEl('g',{}), gHit = svgEl('g',{});
   svg.appendChild(gHex); svg.appendChild(gTer); svg.appendChild(gHit);
+  E.setBoard(ED.shape); // so hexLabel speaks this board's grid
   hexList.forEach(function(k){
     var xy = hexXY(k);
     var p = svgEl('polygon', { points: hexPoints(xy[0], xy[1], S-1), 'class':'hex' });
@@ -1386,6 +1401,9 @@ function renderEditor(){
       });
     }
     gHex.appendChild(p);
+    var lbl = svgEl('text', { x: xy[0], y: xy[1]-S*0.58, 'text-anchor':'middle', 'class':'coordlbl', 'pointer-events':'none' });
+    lbl.textContent = E.hexLabel(k);
+    gHex.appendChild(lbl);
   });
   [['red','var(--red)'],['blue','var(--blue)']].forEach(function(h){
     var hq = ED[h[0]];
