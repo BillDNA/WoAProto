@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>War of Attrition</title>
+<style>
+  :root{
+    --parch:#e8dcc0; --parch2:#dccfae; --parch3:#cfc09a;
+    --ink:#3a2f1d; --ink-soft:#5a4c33;
+    --brass:#b08d57; --brass-dark:#8a6c3c; --copper:#9c5f3a;
+    --red:#9e2b25; --red-dark:#6f1d19; --blue:#28527a; --blue-dark:#1b3a59;
+    --olive:#6b6b3a; --forest:#4a7c3a; --mountain:#75726a;
+    --felt:#2e3a2e;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    font-family: Georgia, 'Times New Roman', serif;
+    color:var(--ink);
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(255,250,230,.08), transparent 60%),
+      radial-gradient(ellipse at 70% 80%, rgba(0,0,0,.25), transparent 60%),
+      #20281f;
+    overflow:hidden;
+    user-select:none;
+  }
+  .parchment{
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.25), transparent 55%),
+      radial-gradient(ellipse at 85% 90%, rgba(120,90,40,.18), transparent 50%),
+      radial-gradient(ellipse at 60% 40%, rgba(140,110,60,.10), transparent 60%),
+      linear-gradient(160deg, var(--parch) 0%, var(--parch2) 55%, var(--parch3) 100%);
+    border:2px solid var(--brass-dark);
+    border-radius:8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.5), inset 0 0 30px rgba(120,90,40,.25);
+  }
+  button{
+    font-family: inherit; cursor:pointer;
+    background: linear-gradient(180deg, #c8a368, var(--brass), var(--brass-dark));
+    color:#2b2113; border:1px solid #6e5430; border-radius:6px;
+    padding:8px 18px; font-size:15px; font-weight:bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.35);
+    letter-spacing:.5px;
+  }
+  button:hover{filter:brightness(1.1);}
+  button:disabled{opacity:.45; cursor:default; filter:none;}
+  button.ghost{background:transparent; color:var(--parch); border:1px solid var(--brass); box-shadow:none;}
+
+  /* ===== screens ===== */
+  .screen{position:fixed; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center;}
+  .screen.active{display:flex;}
+
+  /* menu */
+  #menu .panel{width:min(480px, 92vw); padding:34px 30px; text-align:center;}
+  #menu h1{
+    font-size:42px; letter-spacing:3px; color:var(--ink);
+    text-shadow: 1px 1px 0 rgba(255,255,255,.4);
+    margin-bottom:2px; font-variant:small-caps;
+  }
+  #menu .sub{font-style:italic; color:var(--ink-soft); margin-bottom:24px;}
+  #menu .rule{height:2px; background:linear-gradient(90deg,transparent,var(--brass),transparent); margin:14px 0 22px;}
+  .menu-btns{display:flex; flex-direction:column; gap:12px;}
+  .menu-btns button{font-size:17px; padding:12px;}
+  .opt-row{display:flex; gap:10px; justify-content:center; margin:10px 0; flex-wrap:wrap;}
+  .opt-row .choice{
+    padding:7px 14px; border:1px solid var(--brass-dark); border-radius:6px;
+    background:rgba(255,255,255,.25); cursor:pointer; font-size:14px;
+  }
+  .opt-row .choice.sel{background:var(--brass); color:#fff; box-shadow:inset 0 0 6px rgba(0,0,0,.3);}
+  #joinCode{
+    font-family:inherit; font-size:20px; text-align:center; letter-spacing:6px; text-transform:uppercase;
+    width:160px; padding:8px; border:2px solid var(--brass-dark); border-radius:6px; background:rgba(255,255,255,.5);
+  }
+  .small{font-size:12.5px; color:var(--ink-soft); font-style:italic;}
+
+  /* ===== game layout ===== */
+  #game{flex-direction:column; justify-content:flex-start;}
+  #topbar{
+    width:100%; display:flex; align-items:center; gap:14px; padding:6px 14px;
+    background:linear-gradient(180deg,#3d3424,#2c2517);
+    border-bottom:2px solid var(--brass-dark); color:var(--parch);
+    flex:0 0 auto; min-height:46px; flex-wrap:wrap;
+  }
+  #topbar .title{font-variant:small-caps; letter-spacing:2px; font-size:18px; color:var(--brass);}
+  #mapname{font-style:italic;}
+  .pips{display:flex; gap:4px; align-items:center;}
+  .pip{width:14px; height:18px; border:1px solid var(--brass); border-radius:2px; background:transparent;}
+  .pip.red{background:var(--red);} .pip.blue{background:var(--blue);}
+  #turnbadge{
+    margin-left:auto; padding:4px 14px; border-radius:14px; font-weight:bold; letter-spacing:1px;
+    border:1px solid rgba(255,255,255,.3);
+  }
+  #turnbadge.red{background:var(--red);} #turnbadge.blue{background:var(--blue);}
+  #main{flex:1 1 auto; display:flex; width:100%; overflow:hidden;}
+  .mat{
+    flex:0 0 148px; margin:10px 6px; padding:10px;
+    display:flex; flex-direction:column; gap:8px; font-size:14px;
+  }
+  .mat h3{font-variant:small-caps; letter-spacing:1px; text-align:center; border-bottom:1px solid var(--brass-dark); padding-bottom:4px;}
+  .mat.red h3{color:var(--red-dark);} .mat.blue h3{color:var(--blue-dark);}
+  .mat .row{display:flex; justify-content:space-between;}
+  .mat .vp{font-size:18px; font-weight:bold; text-align:center;}
+  #boardwrap{flex:1 1 auto; display:flex; align-items:center; justify-content:center; min-width:0;}
+  #board{width:100%; height:100%; max-height:calc(100vh - 230px);}
+
+  /* prompt + hand */
+  #promptbar{
+    width:100%; text-align:center; padding:5px 10px; color:var(--parch);
+    font-size:16px; font-style:italic; flex:0 0 auto; min-height:34px;
+    display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap;
+  }
+  #promptbar b{color:var(--brass); font-style:normal;}
+  #hand{
+    flex:0 0 auto; display:flex; gap:10px; justify-content:center; align-items:flex-end;
+    padding:4px 10px 12px; width:100%; overflow-x:auto;
+  }
+  .card{
+    flex:0 0 128px; height:172px; border-radius:7px; position:relative; cursor:pointer;
+    background:
+      radial-gradient(ellipse at 25% 15%, rgba(255,255,255,.3), transparent 50%),
+      linear-gradient(150deg, var(--parch) 0%, var(--parch2) 60%, var(--parch3) 100%);
+    border:2px solid var(--brass-dark);
+    box-shadow:0 3px 6px rgba(0,0,0,.5);
+    transition: transform .12s ease;
+    display:flex; flex-direction:column;
+  }
+  .card:hover{transform:translateY(-8px);}
+  .card.disabled{cursor:default; filter:grayscale(.4) brightness(.8);}
+  .card.disabled:hover{transform:none;}
+  .card .banner{
+    margin:8px 6px 4px; padding:4px 2px; text-align:center;
+    background:linear-gradient(180deg,#c8a368,var(--brass) 60%,var(--brass-dark));
+    border:1px solid #6e5430; border-radius:4px;
+    font-weight:bold; font-size:12.5px; color:#2b2113; line-height:1.1;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.4);
+  }
+  .card .body{flex:1; margin:2px 8px 6px; font-size:11px; line-height:1.35; color:var(--ink-soft); text-align:center; overflow:hidden;}
+  .card .corner{position:absolute; width:10px; height:10px; border:2px solid var(--copper);}
+  .card .c1{top:3px; left:3px; border-right:none; border-bottom:none;}
+  .card .c2{top:3px; right:3px; border-left:none; border-bottom:none;}
+  .card .c3{bottom:3px; left:3px; border-right:none; border-top:none;}
+  .card .c4{bottom:3px; right:3px; border-left:none; border-top:none;}
+
+  /* svg board pieces */
+  .hex{fill:#d9cca8; stroke:#4a3d26; stroke-width:1.6;}
+  .hex.dark{fill:#d2c39c;}
+  .hl{cursor:pointer;}
+  .hl-target{fill:rgba(212,175,55,.4); stroke:#e8c252; stroke-width:2.5; animation:pulse 1.1s infinite;}
+  .hl-attack{fill:rgba(158,43,37,.42); stroke:#c0392b; stroke-width:2.5; animation:pulse 1.1s infinite;}
+  .hl-from{fill:rgba(80,140,200,.35); stroke:#5b8cbf; stroke-width:2.5; animation:pulse 1.1s infinite;}
+  .hl-selected{fill:rgba(80,140,200,.25); stroke:#fff; stroke-width:3;}
+  .hl-swap{fill:rgba(106,90,205,.4); stroke:#7b68c8; stroke-width:2.5; animation:pulse 1.1s infinite;}
+  @keyframes pulse{0%,100%{opacity:.55;}50%{opacity:1;}}
+  .coordlbl{font-size:8px; fill:rgba(60,48,28,.35); pointer-events:none;}
+
+  /* overlays */
+  .overlay{
+    position:fixed; inset:0; background:rgba(15,12,6,.78); z-index:50;
+    display:none; align-items:center; justify-content:center;
+  }
+  .overlay.active{display:flex;}
+  .overlay .panel{max-width:min(560px,94vw); max-height:88vh; overflow-y:auto; padding:26px 30px; text-align:center;}
+  .overlay h2{font-variant:small-caps; letter-spacing:2px; margin-bottom:12px;}
+  .overlay h2.red{color:var(--red-dark);} .overlay h2.blue{color:var(--blue-dark);}
+  .battle-calc{display:flex; gap:18px; justify-content:center; text-align:left; margin:14px 0;}
+  .battle-calc .side{flex:1; padding:10px; border:1px solid var(--brass-dark); border-radius:6px; background:rgba(255,255,255,.25); font-size:13.5px;}
+  .battle-calc .side h4{text-align:center; margin-bottom:6px;}
+  .battle-calc .total{font-size:22px; font-weight:bold; text-align:center; margin-top:6px;}
+  .ovr-btns{display:flex; gap:12px; justify-content:center; margin-top:16px; flex-wrap:wrap;}
+
+  #rightcol{flex:0 0 265px; display:flex; flex-direction:column; gap:8px; margin:10px 6px; min-height:0;}
+  #rightcol .mat{flex:0 0 auto; margin:0 auto; width:170px;}
+  #log{
+    flex:1 1 auto; min-height:60px; overflow-y:auto;
+    padding:8px 12px; font-size:12.5px;
+    background:linear-gradient(165deg, #36311f, #292416);
+    border:2px solid var(--brass-dark); border-radius:8px;
+    color:var(--parch);
+    box-shadow: inset 0 0 18px rgba(0,0,0,.45);
+  }
+  #log .entry{padding:3px 0; border-bottom:1px dotted rgba(232,220,192,.18);}
+  #log .entry.red{color:#e89b94;} #log .entry.blue{color:#9cc3e8;}
+
+  #toast{
+    position:fixed; left:50%; top:62px; transform:translateX(-50%); z-index:40;
+    padding:10px 22px; display:none; font-size:15.5px; text-align:center; max-width:90vw;
+  }
+  .manual{text-align:left; font-size:14px; line-height:1.5;}
+  .manual h3{font-variant:small-caps; margin:12px 0 4px; color:var(--brass-dark); border-bottom:1px solid var(--brass-dark);}
+  .manual table{width:100%; border-collapse:collapse; font-size:13px;}
+  .manual td,.manual th{border:1px solid var(--brass-dark); padding:3px 6px; text-align:center;}
+
+  /* maps screen + editor */
+  #mapsScr .panel, #editorScr .panel{width:min(900px,96vw); max-height:92vh; overflow-y:auto; padding:22px 26px;}
+  .mapgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px; margin:14px 0;}
+  .mapitem{border:1px solid var(--brass-dark); border-radius:6px; padding:8px; background:rgba(255,255,255,.22); text-align:center;}
+  .mapitem.off{opacity:.45;}
+  .mapitem svg{width:100%; height:auto; display:block;}
+  .mapitem .nm{font-weight:bold; font-size:13.5px; margin:4px 0 2px;}
+  .mapitem .shp{font-size:11px; color:var(--ink-soft); font-style:italic;}
+  .mapitem .btns{display:flex; gap:5px; justify-content:center; margin-top:6px; flex-wrap:wrap;}
+  .mapitem .btns button{padding:2px 9px; font-size:12px;}
+  .mapitem label{display:flex; gap:5px; align-items:center; justify-content:center; font-size:12.5px; cursor:pointer; margin-top:5px;}
+  .edtools{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:10px 0;}
+  .edtools button.tool.sel{outline:3px solid var(--copper); filter:brightness(1.12);}
+  #edBoard{width:100%; max-height:56vh;}
+  #edBoard .edge-hit{stroke:transparent; stroke-width:12; cursor:pointer;}
+  #edBoard .edge-hit:hover{stroke:rgba(212,175,55,.45);}
+  #edName{font-family:inherit; font-size:16px; padding:6px 10px; border:2px solid var(--brass-dark); border-radius:6px; background:rgba(255,255,255,.5); width:min(280px,60vw);}
+  #edShape{font-family:inherit; font-size:14px; padding:6px; border:2px solid var(--brass-dark); border-radius:6px; background:rgba(255,255,255,.5);}
+  .warn{color:#8a3324; font-size:12.5px; font-style:italic;}
+
+  @media (max-width: 760px){
+    .mat{flex:0 0 104px; font-size:12px; padding:6px;}
+    #rightcol{flex:0 0 140px;}
+    #rightcol .mat{width:auto;}
+    #log{font-size:10.5px;}
+    .card{flex:0 0 104px; height:148px;}
+    .card .body{font-size:10px;}
+    #board{max-height:calc(100vh - 250px);}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ MENU ============ -->
+<div id="menu" class="screen active">
+  <div class="panel parchment">
+    <h1>War of Attrition</h1>
+    <div class="sub">a field commander's journal of the long campaign</div>
+    <div class="rule"></div>
+    <div class="opt-row" id="sideRow">
+      <span class="small" style="align-self:center;">Play as:</span>
+      <span class="choice sel" data-side="red">Red</span>
+      <span class="choice" data-side="blue">Blue</span>
+    </div>
+    <div class="opt-row" id="diffRow">
+      <span class="small" style="align-self:center;">Enemy general:</span>
+      <span class="choice" data-diff="easy">Green Recruit</span>
+      <span class="choice sel" data-diff="normal">Old Veteran</span>
+    </div>
+    <div class="menu-btns">
+      <button id="btnResume" style="display:none;">Resume Campaign</button>
+      <button id="btnAI">March Against the AI</button>
+      <button id="btnHotseat">Hotseat &mdash; Shared Device</button>
+      <button id="btnHost">Host a Room (two devices)</button>
+      <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
+        <input id="joinCode" maxlength="4" placeholder="CODE">
+        <button id="btnJoin">Join</button>
+      </div>
+      <button id="btnMaps">Maps &amp; Map Editor</button>
+      <button id="btnManual" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Field Manual (rules)</button>
+      <button id="btnCardsMenu" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Card Glossary</button>
+    </div>
+    <div class="rule"></div>
+    <div class="small" id="netHint">For two devices: run the little server (run-server.bat), then open this page on both devices at the address it prints.</div>
+  </div>
+</div>
+
+<!-- ============ GAME ============ -->
+<div id="game" class="screen">
+  <div id="topbar">
+    <span class="title">War of Attrition</span>
+    <span id="battleNo"></span>
+    <span id="mapname"></span>
+    <span class="pips" id="pipsRed"></span>
+    <span style="color:var(--brass)">vs</span>
+    <span class="pips" id="pipsBlue"></span>
+    <span id="turnbadge">RED</span>
+    <button class="ghost" id="btnCards" style="padding:3px 10px;font-size:13px;">Cards</button>
+    <button class="ghost" id="btnManual2" style="padding:3px 10px;font-size:13px;">Manual</button>
+    <button class="ghost" id="btnQuit" style="padding:3px 10px;font-size:13px;">Menu</button>
+  </div>
+  <div id="main">
+    <div class="mat parchment red" id="matRed"></div>
+    <div id="boardwrap"><svg id="board" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    <div id="rightcol">
+      <div class="mat parchment blue" id="matBlue"></div>
+      <div id="log" class="parchment"></div>
+    </div>
+  </div>
+  <div id="promptbar"></div>
+  <div id="hand"></div>
+</div>
+
+<!-- ============ MAPS ============ -->
+<div id="mapsScr" class="screen">
+  <div class="panel parchment">
+    <h2 style="font-variant:small-caps;text-align:center;">Theatres of War</h2>
+    <p class="small" style="text-align:center;">Tick the maps you want in the draw pile. New campaigns shuffle only the maps in play.</p>
+    <div class="mapgrid" id="mapGrid"></div>
+    <div class="ovr-btns">
+      <button id="btnNewMap">New Map</button>
+      <button id="btnExportMaps">Export maps file</button>
+      <button id="btnImportMaps">Import maps</button>
+      <input type="file" id="importFile" accept=".js,.json" style="display:none;">
+      <button id="btnMapsBack" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Back</button>
+    </div>
+    <p class="small" id="mapsHint" style="text-align:center;"></p>
+  </div>
+</div>
+
+<!-- ============ EDITOR ============ -->
+<div id="editorScr" class="screen">
+  <div class="panel parchment">
+    <h2 style="font-variant:small-caps;text-align:center;">Cartographer's Table</h2>
+    <div class="opt-row">
+      <input id="edName" placeholder="Map name">
+      <select id="edShape">
+        <option value="classic">Classic board (4-5-6-5-4)</option>
+        <option value="wide">Wide board (5-6-7-6-5)</option>
+        <option value="grand">Grand board (4-5-6-7-6-5-4)</option>
+      </select>
+    </div>
+    <div class="edtools">
+      <button class="tool sel" data-tool="terrain">Terrain (click edges)</button>
+      <button class="tool" data-tool="redhq" style="background:var(--red);color:#fff;">Red HQ</button>
+      <button class="tool" data-tool="bluehq" style="background:var(--blue);color:#fff;">Blue HQ</button>
+      <button id="edMirror" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Mirror &#8635;</button>
+      <button id="edClear" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Clear</button>
+    </div>
+    <p class="small" style="text-align:center;">Terrain belongs to a hex: click just <b>inside</b> a hex's border to cycle <span style="color:var(--forest);font-weight:bold;">forest</span> &rarr; <span style="color:var(--mountain);font-weight:bold;">mountain</span> &rarr; empty on that hex's side. Forest = +1 attacking out across it; mountain = +1 defending behind it. Mirror copies everything point-symmetrically.</p>
+    <svg id="edBoard" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div id="edStock" class="small" style="text-align:center;"></div>
+    <div id="edWarn" class="warn" style="text-align:center;"></div>
+    <div class="ovr-btns">
+      <button id="edSave">Save Map</button>
+      <button id="edTest">Save &amp; Test vs AI</button>
+      <button id="edBack" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- overlays -->
+<div class="overlay" id="playOvr"><div class="panel parchment" id="playPanel"></div></div>
+<div class="overlay" id="confirmOvr"><div class="panel parchment" id="confirmPanel"></div></div>
+<div class="overlay" id="battleOvr"><div class="panel parchment" id="battlePanel"></div></div>
+<div class="overlay" id="handoffOvr"><div class="panel parchment" id="handoffPanel"></div></div>
+<div class="overlay" id="cardsOvr"><div class="panel parchment">
+  <h2>Card Glossary</h2>
+  <div class="manual" id="cardsBody"></div>
+  <div class="ovr-btns"><button onclick="document.getElementById('cardsOvr').classList.remove('active')">Close</button></div>
+</div></div>
+<div class="overlay" id="manualOvr"><div class="panel parchment">
+  <h2>Field Manual</h2>
+  <div class="manual">
+    <h3>Object</h3>
+    <p>Win battles by <b>capturing the enemy headquarters</b> (attack into it; a tie counts) or by <b>attrition</b> &mdash; when a player has no cards left, the side that destroyed more enemy materiel wins (1&nbsp;VP per infantry, 2 per cavalry, 3 per artillery; tie goes to whoever moved second). First to <b>3 battle victories</b> wins the campaign.</p>
+    <h3>Your Turn</h3>
+    <p>Draw to a hand of 4 (your first turn includes the guaranteed Deploy Infantry card). Play exactly one card and resolve it; the played card is <b>removed from the game</b>, the rest are discarded and recycled. You have only 16 plays per battle &mdash; spend them well.</p>
+    <h3>Units</h3>
+    <table><tr><th></th><th>Attack</th><th>Defense</th><th>Support</th><th>VP</th></tr>
+    <tr><td>Infantry</td><td>1</td><td>1</td><td>1</td><td>1</td></tr>
+    <tr><td>Cavalry</td><td>3</td><td>0</td><td>0</td><td>2</td></tr>
+    <tr><td>Artillery</td><td>0</td><td>0</td><td>2</td><td>3</td></tr></table>
+    <h3>Combat</h3>
+    <p><b>Attacker:</b> unit's attack + support of your other units adjacent to the defender's hex (+1 if your HQ is adjacent) + 1 if the attacker's own hex has a <span style="color:var(--forest)">forest</span> on the crossed edge + card modifiers.<br>
+    <b>Defender:</b> unit's defense + support of their units adjacent (+1 for adjacent HQ) + 1 if the defender's hex has a <span style="color:var(--mountain)">mountain</span> on the crossed edge + 1 for a trench in the defender's hex covering that edge.<br>
+    Higher total wins; loser is destroyed. Winner-attacker advances into the hex. <b>Tie:</b> both destroyed.</p>
+    <h3>Terrain &amp; Buildings</h3>
+    <p>Terrain belongs to the hex it sits in (drawn inset inside it). <span style="color:var(--forest)">&#9632;</span> Forest: +1 attack when its hex's occupant attacks <i>out</i> across a covered edge. <span style="color:var(--mountain)">&#9632;</span> Mountain: +1 defense when its hex is attacked across a covered edge. Neither works in the other direction. Trench: +1 defense across its two covered edges, helps any defender, never an attacker; a hex side can't hold both terrain and a trench. HQ: +1 support to all adjacent hexes; units may move, swap, and attack <i>through</i> an HQ hex.</p>
+    <h3>Control</h3>
+    <p>You control the hexes your units and HQ occupy. Deployments must be adjacent to a controlled hex (Airdrop excepted). Trenches are built on a controlled hex.</p>
+  </div>
+  <div class="ovr-btns"><button onclick="document.getElementById('manualOvr').classList.remove('active')">Close</button></div>
+</div></div>
+
+<div id="toast" class="parchment"></div>
+
+<script src="engine.js"></script>
+<script src="custom-maps.js"></script>
+<script>
+'use strict';
+var E = window.Engine;
+
+/* =================== app state =================== */
+var APP = {
+  mode: null,            // 'ai' | 'hotseat' | 'net'
+  mySide: 'red',         // for ai/net
+  diff: 'normal',
+  st: null,              // battle state (includes .match)
+  net: { room: null, seq: 0, poller: null },
+  ui: { sel: null, stage: null, busy: false, handoffPending: false },
+  snap: null
+};
+
+function $(id){ return document.getElementById(id); }
+function show(scr){ document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');}); $(scr).classList.add('active'); }
+function capName(p){ return p.charAt(0).toUpperCase()+p.slice(1); }
+
+/* =================== menu =================== */
+document.querySelectorAll('#sideRow .choice').forEach(function(el){
+  el.onclick = function(){ document.querySelectorAll('#sideRow .choice').forEach(function(x){x.classList.remove('sel');}); el.classList.add('sel'); APP.mySide = el.dataset.side; };
+});
+document.querySelectorAll('#diffRow .choice').forEach(function(el){
+  el.onclick = function(){ document.querySelectorAll('#diffRow .choice').forEach(function(x){x.classList.remove('sel');}); el.classList.add('sel'); APP.diff = el.dataset.diff; };
+});
+$('btnAI').onclick = function(){ startLocal('ai'); };
+$('btnHotseat').onclick = function(){ startLocal('hotseat'); };
+$('btnManual').onclick = function(){ $('manualOvr').classList.add('active'); };
+$('btnManual2').onclick = function(){ $('manualOvr').classList.add('active'); };
+$('btnQuit').onclick = function(){
+  if (APP.net.poller) clearInterval(APP.net.poller);
+  APP.net.poller = null; APP.mode = null;
+  show('menu'); checkResume();
+};
+
+function startLocal(mode, mapsOverride){
+  var pool = mapsOverride || getMapPool();
+  if (!pool || !pool.length){ toast('No maps are in play! Enable some in Maps &amp; Map Editor.', 3500); return; }
+  APP.mode = mode;
+  var match = E.newMatch({ maps: pool });
+  APP.st = E.newBattle(match);
+  APP.ui = { sel:null, stage:null, busy:false, handoffPending: mode==='hotseat' };
+  APP.snap = null;
+  show('game');
+  renderAll();
+  saveLocal();
+  if (mode==='hotseat') showHandoff();
+  else maybeAI();
+}
+
+/* ---- turn snapshot / reset (house rule: reset to start of your turn mid-card) ---- */
+function ensureSnapshot(){
+  var st = APP.st;
+  if (!st || st.phase !== 'choose-card') return;
+  if (APP.snap && APP.snap.turn === st.turnNumber) return;
+  APP.snap = { turn: st.turnNumber, data: JSON.stringify(st) };
+}
+function canReset(){
+  var st = APP.st;
+  return st && st.phase === 'step' && APP.snap && APP.snap.turn === st.turnNumber && inputLive();
+}
+function resetTurn(){
+  if (!canReset()) return;
+  APP.st = JSON.parse(APP.snap.data);
+  APP.ui.sel = null; APP.ui.stage = null;
+  renderAll(); saveLocal();
+  if (APP.mode === 'net') pushState();
+  toast('Turn reset — choose a card.', 1800);
+}
+
+/* resume saved local game */
+function checkResume(){
+  var ok = false;
+  try { ok = !!localStorage.getItem('woa-save'); } catch(e){}
+  $('btnResume').style.display = ok ? '' : 'none';
+}
+function saveLocal(){
+  if (APP.mode === 'net' || !APP.st) return;
+  try { localStorage.setItem('woa-save', JSON.stringify({mode:APP.mode, mySide:APP.mySide, diff:APP.diff, st:APP.st})); } catch(e){}
+}
+function clearSave(){ try{ localStorage.removeItem('woa-save'); }catch(e){} }
+$('btnResume').onclick = function(){
+  try{
+    var d = JSON.parse(localStorage.getItem('woa-save'));
+    APP.mode = d.mode; APP.mySide = d.mySide; APP.diff = d.diff; APP.st = d.st;
+    APP.ui = { sel:null, stage:null, busy:false, handoffPending: d.mode==='hotseat' };
+    show('game'); renderAll();
+    if (APP.st.phase === 'battle-over') showBattleOver();
+    else if (d.mode==='hotseat') showHandoff();
+    else maybeAI();
+  }catch(e){ clearSave(); checkResume(); }
+};
+checkResume();
+
+/* =================== networking (LAN) =================== */
+var canNet = location.protocol === 'http:' || location.protocol === 'https:';
+if (!canNet){
+  $('btnHost').disabled = true; $('btnJoin').disabled = true;
+  $('netHint').textContent = 'Two-device play needs the server: double-click run-server.bat, then open the address it prints on both devices.';
+}
+function api(path, body){
+  return fetch('/api/'+path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body||{}) })
+    .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); });
+}
+$('btnHost').onclick = function(){
+  var pool = getMapPool();
+  if (!pool || !pool.length){ toast('No maps are in play! Enable some in Maps &amp; Map Editor.', 3500); return; }
+  var match = E.newMatch({ maps: pool });
+  var st = E.newBattle(match);
+  api('create', { state: st }).then(function(d){
+    APP.mode='net'; APP.mySide='red'; APP.st = st;
+    APP.net.room = d.room; APP.net.seq = d.seq;
+    APP.ui = { sel:null, stage:null, busy:false };
+    show('game'); renderAll(); startPolling();
+    toast('Room code: <b style="font-size:22px;letter-spacing:4px;">'+d.room+'</b><br><span class="small">The other device joins with this code. You are Red.</span>', 6500);
+  }).catch(function(e){ toast('Could not create room — is the server running? ('+e.message+')', 4000); });
+};
+$('btnJoin').onclick = function(){
+  var code = $('joinCode').value.trim().toUpperCase();
+  if (code.length !== 4) { toast('Enter the 4-letter room code.', 2500); return; }
+  api('join', { room: code }).then(function(d){
+    APP.mode='net'; APP.mySide='blue'; APP.st = d.state;
+    APP.net.room = code; APP.net.seq = d.seq;
+    APP.ui = { sel:null, stage:null, busy:false };
+    show('game'); renderAll(); startPolling();
+    toast('Joined! You are Blue.', 3000);
+    if (APP.st.phase==='battle-over') showBattleOver();
+  }).catch(function(e){ toast('Could not join: '+e.message, 3500); });
+};
+function pushState(){
+  if (APP.mode !== 'net') return;
+  APP.net.seq++;
+  var seq = APP.net.seq;
+  api('push', { room: APP.net.room, seq: seq, state: APP.st }).then(function(d){
+    if (d.conflict){ APP.net.seq = d.seq; APP.st = d.state; renderAll(); if(APP.st.phase==='battle-over') showBattleOver(); }
+  }).catch(function(){ APP.net.seq = seq-1; toast('Connection hiccup — retrying on next move.', 2500); });
+}
+function startPolling(){
+  if (APP.net.poller) clearInterval(APP.net.poller);
+  APP.net.poller = setInterval(function(){
+    if (APP.mode !== 'net') return;
+    fetch('/api/poll?room='+APP.net.room+'&seq='+APP.net.seq)
+      .then(function(r){ return r.status===200 ? r.json() : null; })
+      .then(function(d){
+        if (!d) return;
+        APP.net.seq = d.seq; APP.st = d.state;
+        APP.ui = { sel:null, stage:null, busy:false };
+        renderAll();
+        if (APP.st.phase==='battle-over') showBattleOver();
+      }).catch(function(){});
+  }, 1000);
+}
+
+/* =================== whose input is live? =================== */
+function inputLive(){
+  if (!APP.st || APP.st.phase === 'battle-over' || APP.ui.busy) return false;
+  if (APP.mode === 'ai') return APP.st.current === APP.mySide;
+  if (APP.mode === 'net') return APP.st.current === APP.mySide;
+  return true; // hotseat
+}
+function viewSide(){
+  if (APP.mode === 'hotseat') return APP.st.current;
+  return APP.mySide;
+}
+
+/* =================== board rendering =================== */
+var S = 44, SQ3 = Math.sqrt(3);
+function hexXY(k){
+  var qr = E.parseKey(k);
+  return [ S*SQ3*(qr[0] + qr[1]/2), S*1.5*qr[1] ];
+}
+function cornerAngles(d){ // dir -> [a1,a2] degrees (y down)
+  var ang = [0,-60,-120,180,120,60][d];
+  return [ang-30, ang+30];
+}
+function cornerPt(cx, cy, angDeg, rad){
+  var a = angDeg*Math.PI/180;
+  return [cx + rad*Math.cos(a), cy + rad*Math.sin(a)];
+}
+function hexPoints(cx, cy, rad){
+  var pts = [];
+  for (var i=0;i<6;i++){
+    var a = (60*i - 90)*Math.PI/180;
+    pts.push((cx+rad*Math.cos(a)).toFixed(1)+','+(cy+rad*Math.sin(a)).toFixed(1));
+  }
+  return pts.join(' ');
+}
+function svgEl(tag, attrs){
+  var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+function viewBoxFor(hexList){
+  var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  hexList.forEach(function(k){
+    var xy = hexXY(k);
+    minX=Math.min(minX,xy[0]); maxX=Math.max(maxX,xy[0]);
+    minY=Math.min(minY,xy[1]); maxY=Math.max(maxY,xy[1]);
+  });
+  var m = S*1.3;
+  return (minX-m).toFixed(0)+' '+(minY-m).toFixed(0)+' '+(maxX-minX+2*m).toFixed(0)+' '+(maxY-minY+2*m).toFixed(0);
+}
+function renderBoard(){
+  var st = APP.st, svg = $('board');
+  svg.innerHTML = '';
+  svg.setAttribute('viewBox', viewBoxFor(E.hexes()));
+
+  var gHex = svgEl('g',{}), gTer = svgEl('g',{}), gTr = svgEl('g',{}), gPc = svgEl('g',{}), gHl = svgEl('g',{});
+  svg.appendChild(gHex); svg.appendChild(gTer); svg.appendChild(gTr); svg.appendChild(gPc); svg.appendChild(gHl);
+
+  E.hexes().forEach(function(k){
+    var xy = hexXY(k);
+    var p = svgEl('polygon', { points: hexPoints(xy[0], xy[1], S-1), 'class':'hex'+(((E.parseKey(k)[0]-E.parseKey(k)[1])%2+2)%2 ? ' dark':'') });
+    p.dataset.hex = k;
+    gHex.appendChild(p);
+  });
+
+  // terrain sides (hex-owned: drawn inset inside the owning hex)
+  for (var ek in st.terrainEdges){
+    var parts = ek.split('>');
+    var d = +parts[1];
+    var c = hexXY(parts[0]);
+    var aa = cornerAngles(d);
+    var p1 = cornerPt(c[0], c[1], aa[0], S*0.85), p2 = cornerPt(c[0], c[1], aa[1], S*0.85);
+    var t = st.terrainEdges[ek];
+    var line = svgEl('line', { x1:p1[0], y1:p1[1], x2:p2[0], y2:p2[1],
+      stroke: t==='F' ? 'var(--forest)' : 'var(--mountain)', 'stroke-width': 8, 'stroke-linecap':'round' });
+    line.dataset.edge = ek;
+    gTer.appendChild(line);
+    // decoration at midpoint
+    var mx=(p1[0]+p2[0])/2, my=(p1[1]+p2[1])/2;
+    if (t==='F'){
+      gTer.appendChild(svgEl('circle',{cx:mx, cy:my, r:4.4, fill:'#3a6330'}));
+      gTer.appendChild(svgEl('circle',{cx:(p1[0]+mx)/2, cy:(p1[1]+my)/2, r:3.4, fill:'#3a6330'}));
+      gTer.appendChild(svgEl('circle',{cx:(p2[0]+mx)/2, cy:(p2[1]+my)/2, r:3.4, fill:'#3a6330'}));
+    } else {
+      var nx = (my- c[1]), ny = -(mx - c[0]); // not used; draw a peak triangle along edge
+      var ex = (p2[0]-p1[0]), eyy = (p2[1]-p1[1]);
+      var tri = [ [mx-ex*0.14, my-eyy*0.14], [mx+ex*0.14, my+eyy*0.14], [mx-(my-c[1])*0.18, my+(mx-c[0])*0.18] ];
+      gTer.appendChild(svgEl('polygon',{points: tri.map(function(q){return q[0].toFixed(1)+','+q[1].toFixed(1);}).join(' '), fill:'#5d5a52'}));
+    }
+  }
+
+  // trenches
+  for (var th in st.trenches){
+    var c2 = hexXY(th);
+    st.trenches[th].dirs.forEach(function(d){
+      var aa = cornerAngles(d);
+      var p1 = cornerPt(c2[0], c2[1], aa[0], S*0.74), p2 = cornerPt(c2[0], c2[1], aa[1], S*0.74);
+      gTr.appendChild(svgEl('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],stroke:'#5a4326','stroke-width':6.5,'stroke-linecap':'round','stroke-dasharray':'7 4'}));
+    });
+  }
+
+  // HQs
+  ['red','blue'].forEach(function(p){
+    if (!st.hqAlive[p]) return;
+    var xy = hexXY(st.hq[p]);
+    var col = p==='red' ? 'var(--red)' : 'var(--blue)';
+    gPc.appendChild(svgEl('polygon',{points: hexPoints(xy[0], xy[1], S*0.62), fill:col, stroke:'#2b2113','stroke-width':2, opacity:.92}));
+    gPc.appendChild(svgEl('polygon',{points: hexPoints(xy[0], xy[1], S*0.5), fill:'none', stroke:'var(--brass)','stroke-width':1.6}));
+    var star = svgEl('text',{x:xy[0], y:xy[1]+7, 'text-anchor':'middle','font-size':20, fill:'#f0e6cc'});
+    star.textContent = '★';
+    gPc.appendChild(star);
+  });
+
+  // units
+  for (var uh in st.units){
+    var u = st.units[uh];
+    var xy = hexXY(uh);
+    var col = u.owner==='red' ? 'var(--red)' : 'var(--blue)';
+    var colD = u.owner==='red' ? 'var(--red-dark)' : 'var(--blue-dark)';
+    var g = svgEl('g',{});
+    g.appendChild(svgEl('circle',{cx:xy[0], cy:xy[1], r:S*0.5, fill:col, stroke:colD,'stroke-width':2.5}));
+    g.appendChild(svgEl('rect',{x:xy[0]-13, y:xy[1]-9, width:26, height:18, fill:'#ece1c4', stroke:colD,'stroke-width':1.4, rx:1.5}));
+    if (u.type==='infantry'){
+      g.appendChild(svgEl('line',{x1:xy[0]-13,y1:xy[1]-9,x2:xy[0]+13,y2:xy[1]+9,stroke:colD,'stroke-width':2}));
+      g.appendChild(svgEl('line',{x1:xy[0]-13,y1:xy[1]+9,x2:xy[0]+13,y2:xy[1]-9,stroke:colD,'stroke-width':2}));
+    } else if (u.type==='cavalry'){
+      g.appendChild(svgEl('line',{x1:xy[0]-13,y1:xy[1]+9,x2:xy[0]+13,y2:xy[1]-9,stroke:colD,'stroke-width':2}));
+    } else {
+      g.appendChild(svgEl('circle',{cx:xy[0],cy:xy[1],r:4.5,fill:colD}));
+    }
+    gPc.appendChild(g);
+  }
+
+  renderHighlights(gHl);
+}
+
+function hl(g, k, cls, handler){
+  var xy = hexXY(k);
+  var p = svgEl('polygon',{points: hexPoints(xy[0], xy[1], S-3), 'class':'hl '+cls});
+  p.addEventListener('click', handler);
+  g.appendChild(p);
+}
+
+/* highlights depend on UI stage */
+function renderHighlights(g){
+  var st = APP.st;
+  if (!inputLive() || st.phase !== 'step') return;
+  var o = E.stepOptions(st);
+  if (!o) return;
+  var ui = APP.ui;
+
+  if (o.type==='deploy'){
+    o.targets.forEach(function(h){ hl(g, h, 'hl-target', function(){ act({hex:h}); }); });
+  }
+  else if (o.type==='trench'){
+    if (!ui.sel){
+      o.targets.forEach(function(h){ hl(g, h, 'hl-target', function(){ ui.sel = h; ui.trenchFirst = null; renderAll(); }); });
+    } else {
+      hl(g, ui.sel, 'hl-selected', function(){ ui.sel = null; ui.trenchFirst = null; renderAll(); });
+      var pairs = E.trenchOrientations(st, ui.sel);
+      var c = hexXY(ui.sel);
+      var edgeSeg = function(d, attrs, handler){
+        var aa = cornerAngles(d);
+        var p1 = cornerPt(c[0],c[1],aa[0],S*0.74), p2 = cornerPt(c[0],c[1],aa[1],S*0.74);
+        var ln = svgEl('line', Object.assign({x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
+          stroke:'#5a4326','stroke-width':8,'stroke-linecap':'round','class':'hl'}, attrs));
+        if (handler) ln.addEventListener('click', handler);
+        g.appendChild(ln);
+        return ln;
+      };
+      if (ui.trenchFirst === null || ui.trenchFirst === undefined){
+        // pick the first edge the trench covers
+        var firsts = {};
+        pairs.forEach(function(pr){ firsts[pr[0]] = 1; firsts[pr[1]] = 1; });
+        Object.keys(firsts).forEach(function(ds){
+          var d = +ds;
+          var seg = edgeSeg(d, {'stroke-dasharray':'7 4', opacity:.55}, function(){
+            ui.trenchFirst = d; renderAll();
+          });
+          seg.addEventListener('mouseenter', function(){ seg.setAttribute('opacity','1'); });
+          seg.addEventListener('mouseleave', function(){ seg.setAttribute('opacity','.55'); });
+        });
+      } else {
+        // first edge solid; click it to undo. Valid second edges pulse.
+        edgeSeg(ui.trenchFirst, {opacity:1}, function(){ ui.trenchFirst = null; renderAll(); });
+        pairs.forEach(function(pr){
+          var d2 = pr[0] === ui.trenchFirst ? pr[1] : (pr[1] === ui.trenchFirst ? pr[0] : null);
+          if (d2 === null) return;
+          var seg = edgeSeg(d2, {'stroke-dasharray':'7 4', opacity:.55}, function(){
+            var hx = ui.sel, d1 = ui.trenchFirst;
+            ui.sel = null; ui.trenchFirst = null;
+            act({hex:hx, dirs:[d1, d2]});
+          });
+          seg.style.animation = 'pulse 1.1s infinite';
+        });
+      }
+    }
+  }
+  else if (o.type==='attack'){
+    var froms = {};
+    o.attacks.forEach(function(a){ froms[a.from] = true; });
+    if (!ui.sel){
+      Object.keys(froms).forEach(function(h){ hl(g, h, 'hl-from', function(){ ui.sel = h; renderAll(); }); });
+    } else {
+      hl(g, ui.sel, 'hl-selected', function(){ ui.sel = null; renderAll(); });
+      // group attacks from selected hex by target; if multiple routes, keep the strongest
+      var best = {};
+      o.attacks.filter(function(a){ return a.from===ui.sel; }).forEach(function(a){
+        var diff = a.preview.attackerPower - a.preview.defenderPower;
+        if (!(a.to in best) || diff > best[a.to].diff) best[a.to] = {a:a, diff:diff};
+      });
+      Object.keys(best).forEach(function(to){
+        hl(g, to, 'hl-attack', function(){ confirmAttack(best[to].a); });
+      });
+      Object.keys(froms).filter(function(h){return h!==ui.sel;}).forEach(function(h){
+        hl(g, h, 'hl-from', function(){ ui.sel = h; renderAll(); });
+      });
+    }
+  }
+  else if (o.type==='reposition'){
+    var units = {};
+    o.moves.forEach(function(m){ units[m.from]=true; });
+    o.swaps.forEach(function(s){ units[s.a]=true; units[s.b]=true; });
+    if (!ui.sel){
+      Object.keys(units).forEach(function(h){ hl(g, h, 'hl-from', function(){ ui.sel=h; renderAll(); }); });
+    } else {
+      hl(g, ui.sel, 'hl-selected', function(){ ui.sel=null; renderAll(); });
+      var seen = {};
+      o.moves.filter(function(m){return m.from===ui.sel;}).forEach(function(m){
+        if (seen[m.to]) return; seen[m.to]=true;
+        hl(g, m.to, 'hl-target', function(){ var f=ui.sel; ui.sel=null; act({from:f, to:m.to}); });
+      });
+      o.swaps.forEach(function(s){
+        var partner = s.a===ui.sel ? s.b : (s.b===ui.sel ? s.a : null);
+        if (!partner || seen[partner]) return; seen[partner]=true;
+        hl(g, partner, 'hl-swap', function(){ var f=ui.sel; ui.sel=null; act({swap:true, a:f, b:partner}); });
+      });
+      Object.keys(units).filter(function(h){return h!==ui.sel;}).forEach(function(h){
+        if (!seen[h]) hl(g, h, 'hl-from', function(){ ui.sel=h; renderAll(); });
+      });
+    }
+  }
+  else if (o.type==='barrage'){
+    o.trenchHexes.forEach(function(h){ hl(g, h, 'hl-attack', function(){ act({trenchHex:h}); }); });
+    o.forestPieces.forEach(function(pc){
+      pc.edgeKeys.forEach(function(ek){
+        var parts = ek.split('>');
+        var d = +parts[1];
+        var c = hexXY(parts[0]);
+        var aa = cornerAngles(d);
+        var p1 = cornerPt(c[0],c[1],aa[0],S*0.85), p2 = cornerPt(c[0],c[1],aa[1],S*0.85);
+        var line = svgEl('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],stroke:'#c0392b','stroke-width':12,'stroke-linecap':'round',opacity:.55,'class':'hl'});
+        line.addEventListener('mouseenter', function(){ line.setAttribute('opacity','.9'); });
+        line.addEventListener('mouseleave', function(){ line.setAttribute('opacity','.55'); });
+        line.addEventListener('click', function(){ act({pieceId: pc.id}); });
+        g.appendChild(line);
+      });
+    });
+  }
+}
+
+/* =================== side mats / topbar / hand =================== */
+function renderMat(p){
+  var st = APP.st;
+  var el = p==='red' ? $('matRed') : $('matBlue');
+  var r = st.reserves[p];
+  var hidden = (APP.mode!=='hotseat' && p!==APP.mySide);
+  el.innerHTML =
+    '<h3>'+capName(p)+'</h3>' +
+    '<div class="row"><span>Infantry</span><b>'+r.infantry+'</b></div>' +
+    '<div class="row"><span>Cavalry</span><b>'+r.cavalry+'</b></div>' +
+    '<div class="row"><span>Artillery</span><b>'+r.artillery+'</b></div>' +
+    '<div class="row"><span>Trenches</span><b>'+r.trench+'</b></div>' +
+    '<div class="row"><span>Cards left</span><b>'+E.cardsRemaining(st,p)+'</b></div>' +
+    '<div style="border-top:1px solid var(--brass-dark); padding-top:6px;" class="vp">'+st.vp[p]+' VP</div>' +
+    '<div class="small" style="text-align:center;">enemy losses</div>';
+}
+function renderTop(){
+  var st = APP.st, m = st.match;
+  $('battleNo').textContent = 'Battle ' + Math.min(m.battleIndex+1, m.battleIndex + (st.phase==='battle-over'?0:1));
+  $('battleNo').textContent = 'Battle ' + (st.phase==='battle-over' ? m.battleIndex : m.battleIndex+1);
+  $('mapname').textContent = '"' + st.mapName + '"';
+  function pips(el, n){
+    el.innerHTML='';
+    for (var i=0;i<3;i++){
+      var d = document.createElement('div');
+      d.className = 'pip' + (i<n ? ' '+(el.id==='pipsRed'?'red':'blue') : '');
+      el.appendChild(d);
+    }
+  }
+  pips($('pipsRed'), m.wins.red);
+  pips($('pipsBlue'), m.wins.blue);
+  var b = $('turnbadge');
+  b.textContent = capName(st.current) + (APP.mode!=='hotseat' && st.current===APP.mySide ? ' — you' : '');
+  b.className = st.current;
+}
+function renderHand(){
+  var st = APP.st, el = $('hand');
+  el.innerHTML = '';
+  var side = viewSide();
+  var hideCards = APP.mode==='hotseat' && APP.ui.handoffPending;
+  var hand = st.hands[side];
+  var live = inputLive() && st.phase==='choose-card';
+  hand.forEach(function(cid){
+    var c = E.CARD_BY_ID[cid];
+    var d = document.createElement('div');
+    d.className = 'card' + (live ? '' : ' disabled');
+    d.innerHTML = '<div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>' +
+      (hideCards
+        ? '<div class="body" style="display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--brass-dark);">&#9881;</div>'
+        : '<div class="banner">'+c.name+'</div><div class="body">'+c.text+'</div>');
+    if (live) d.onclick = function(){ playCardUI(cid); };
+    el.appendChild(d);
+  });
+  if (hand.length===0 && st.phase!=='battle-over'){
+    el.innerHTML = '<div class="small" style="color:var(--parch);">'+(st.current===side ? '' : 'Waiting for '+capName(st.current)+'…')+'</div>';
+  }
+}
+function renderPrompt(){
+  var st = APP.st, el = $('promptbar');
+  el.innerHTML = '';
+  if (st.phase === 'battle-over') return;
+  var who = capName(st.current);
+  if (!inputLive()){
+    el.innerHTML = APP.mode==='ai' && st.current!==APP.mySide
+      ? '<b>'+who+'</b> (the enemy general) is thinking…'
+      : 'Waiting for <b>'+who+'</b>…';
+    return;
+  }
+  if (st.phase === 'choose-card'){
+    el.innerHTML = '<b>'+who+'</b>: choose a card to play. <span class="small" style="color:#bbb;">(played cards are gone for good)</span>';
+    return;
+  }
+  var o = E.stepOptions(st);
+  if (!o) return;
+  var stepTag = o.stepCount>1 ? ' <span class="small" style="color:#bbb;">(step '+(o.stepIndex+1)+'/'+o.stepCount+')</span>' : '';
+  var msg = '';
+  if (o.type==='deploy') msg = 'Place your <b>'+E.UNITS[o.unit].name+'</b>' + (APP.ui.sel?'':'');
+  else if (o.type==='trench') msg = APP.ui.sel ? (APP.ui.trenchFirst!==null && APP.ui.trenchFirst!==undefined ? 'Click the <b>second edge</b> (or click the solid edge to undo)' : 'Click the <b>first edge</b> the trench will cover') : 'Choose a hex to <b>entrench</b>';
+  else if (o.type==='attack') msg = APP.ui.sel ? 'Choose a target' : 'Choose an attacker' + (o.mod ? ' <b>('+(o.mod>0?'+':'')+o.mod+' support)</b>':'') + (o.tieSpare?' <b>(tie spares your unit)</b>':'');
+  else if (o.type==='reposition') msg = APP.ui.sel ? 'Move to a gold hex, or swap with a violet unit' : 'Choose a unit to <b>reposition</b>';
+  else if (o.type==='barrage') msg = 'Barrage: click a <b>trench</b> or <b>forest</b> to destroy — or skip straight to the attack';
+  el.innerHTML = '<b>'+E.CARD_BY_ID[st.pending.cardId].name+'</b>: '+msg+stepTag;
+  var sk = document.createElement('button');
+  sk.textContent = 'Skip step';
+  sk.style.cssText = 'padding:3px 12px;font-size:13px;';
+  sk.onclick = function(){ APP.ui.sel=null; act({skip:true}); };
+  el.appendChild(sk);
+  if (canReset()){
+    var rs = document.createElement('button');
+    rs.textContent = 'Reset turn';
+    rs.className = 'ghost';
+    rs.style.cssText = 'padding:3px 12px;font-size:13px;';
+    rs.onclick = resetTurn;
+    el.appendChild(rs);
+  }
+  if (APP.ui.sel){
+    var back = document.createElement('button');
+    back.textContent = 'Back';
+    back.className='ghost'; back.style.cssText='padding:3px 12px;font-size:13px;';
+    back.onclick = function(){ APP.ui.sel=null; APP.ui.trenchFirst=null; renderAll(); };
+    el.appendChild(back);
+  }
+}
+function renderAll(){
+  if (APP.st) E.setBoard(APP.st.boardShape || 'grand');
+  ensureSnapshot();
+  renderTop(); renderMat('red'); renderMat('blue'); renderBoard(); renderHand(); renderPrompt(); renderLog();
+}
+function renderLog(){
+  var el = $('log'); var st = APP.st;
+  el.innerHTML = '<b style="font-variant:small-caps; color:var(--brass); letter-spacing:1px;">Campaign Journal</b>';
+  st.log.slice(-60).forEach(function(e){
+    var d = document.createElement('div');
+    d.className = 'entry '+e.player;
+    d.textContent = e.msg;
+    el.appendChild(d);
+  });
+  el.scrollTop = el.scrollHeight;
+}
+
+/* =================== toasts & overlays =================== */
+var toastTimer = null;
+function toast(html, ms){
+  var t = $('toast');
+  t.innerHTML = html;
+  t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.style.display='none'; }, ms||2600);
+}
+
+function confirmAttack(a){
+  var st = APP.st;
+  var pv = a.preview;
+  var au = st.units[a.from];
+  var tgt = pv.defenderIsHQ ? capName(E.other(st.current))+' Headquarters' : capName(E.other(st.current))+' '+E.UNITS[pv.defenderUnit].name;
+  var outcomeTxt = { attacker: 'Attack succeeds — defender destroyed' + (pv.defenderIsHQ ? '. <b>HEADQUARTERS FALLS!</b>' : ', your unit advances.'),
+                     defender: '<b>Attack fails — your unit is destroyed.</b>',
+                     tie: a.tieSpare ? 'Tie — defender destroyed, your unit withdraws safely.' + (pv.defenderIsHQ?' <b>HEADQUARTERS FALLS!</b>':'') : 'Tie — <b>both units destroyed.</b>' + (pv.defenderIsHQ?' <b>HEADQUARTERS FALLS!</b>':'') }[pv.outcome];
+  $('confirmPanel').innerHTML =
+    '<h2>Order of Battle</h2>' +
+    '<p>'+capName(st.current)+' '+E.UNITS[au.type].name+' attacks '+tgt+(a.via?' <i>(through the HQ)</i>':'')+'</p>' +
+    '<div class="battle-calc">' +
+      '<div class="side"><h4 style="color:var(--'+st.current+'-dark)">Attacker</h4>'+pv.attackerParts.join('<br>')+'<div class="total">'+pv.attackerPower+'</div></div>' +
+      '<div class="side"><h4 style="color:var(--'+E.other(st.current)+'-dark)">Defender</h4>'+pv.defenderParts.join('<br>')+'<div class="total">'+pv.defenderPower+'</div></div>' +
+    '</div>' +
+    '<p style="font-size:14.5px;">'+outcomeTxt+'</p>' +
+    '<div class="ovr-btns"><button id="cfYes">Attack!</button><button id="cfNo" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Stand Down</button></div>';
+  $('confirmOvr').classList.add('active');
+  $('cfYes').onclick = function(){
+    $('confirmOvr').classList.remove('active');
+    APP.ui.sel = null;
+    act({from:a.from, to:a.to, via:a.via});
+  };
+  $('cfNo').onclick = function(){ $('confirmOvr').classList.remove('active'); };
+}
+
+function showBattleOver(){
+  var st = APP.st, m = st.match;
+  var w = st.battleWinner;
+  var html = '<h2 class="'+w+'">'+capName(w)+' takes the field!</h2>' +
+    '<p style="font-style:italic;">"'+st.mapName+'" — ' + (st.winType==='hq' ? 'the enemy headquarters was captured.' : 'won by attrition, '+st.vp.red+' VP to '+st.vp.blue+' VP.') + '</p>' +
+    '<p style="margin-top:10px;font-size:18px;">Campaign: <b style="color:var(--red-dark)">Red '+m.wins.red+'</b> — <b style="color:var(--blue-dark)">Blue '+m.wins.blue+'</b></p>';
+  if (m.winner){
+    html += '<h2 class="'+m.winner+'" style="margin-top:14px;">'+capName(m.winner)+' wins the war!</h2>' +
+      '<div class="ovr-btns"><button id="boNew">New Campaign</button><button id="boMenu" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Main Menu</button></div>';
+  } else {
+    html += '<p class="small">'+capName(m.lastLoser)+' moves first in the next battle.</p>' +
+      '<div class="ovr-btns"><button id="boNext">Next Battle</button><button id="boMenu" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Main Menu</button></div>';
+  }
+  $('battlePanel').innerHTML = html;
+  $('battleOvr').classList.add('active');
+  if ($('boNext')) $('boNext').onclick = function(){
+    $('battleOvr').classList.remove('active');
+    APP.st = E.newBattle(m);
+    APP.ui = { sel:null, stage:null, busy:false, handoffPending: APP.mode==='hotseat' };
+    renderAll(); saveLocal();
+    if (APP.mode==='net') pushState();
+    if (APP.mode==='hotseat') showHandoff(); else maybeAI();
+  };
+  if ($('boNew')) $('boNew').onclick = function(){
+    $('battleOvr').classList.remove('active');
+    clearSave();
+    if (APP.mode==='net'){
+      var pool = getMapPool() || E.MAPS;
+      var match = E.newMatch({ maps: pool });
+      APP.st = E.newBattle(match);
+      renderAll(); pushState();
+    } else startLocal(APP.mode);
+  };
+  $('boMenu').onclick = function(){
+    $('battleOvr').classList.remove('active');
+    if (APP.net.poller) clearInterval(APP.net.poller);
+    APP.net.poller=null; APP.mode=null;
+    show('menu'); checkResume();
+  };
+}
+
+function showHandoff(){
+  if (APP.st.phase==='battle-over') return;
+  APP.ui.handoffPending = true;
+  var p = APP.st.current;
+  $('handoffPanel').innerHTML =
+    '<h2 class="'+p+'">'+capName(p)+'&rsquo;s turn</h2>' +
+    '<p>Pass the device to the '+capName(p)+' commander.</p>' +
+    '<div class="ovr-btns"><button id="hoGo">Take Command</button></div>';
+  $('handoffOvr').classList.add('active');
+  renderHand();
+  $('hoGo').onclick = function(){
+    $('handoffOvr').classList.remove('active');
+    APP.ui.handoffPending = false;
+    renderHand(); renderPrompt();
+  };
+}
+
+/* =================== actions =================== */
+// House rule: any card can instead be resolved as a basic attack or a basic reposition.
+function playCardUI(cid){
+  var st = APP.st;
+  var c = E.CARD_BY_ID[cid];
+  var side = st.current;
+  var canAtk = E.listAttacks(st, side).length > 0;
+  var rp = E.listRepositions(st, side);
+  var canRp = rp.moves.length > 0 || rp.swaps.length > 0;
+  $('playPanel').innerHTML =
+    '<h2>'+c.name+'</h2>' +
+    '<p class="small" style="margin-bottom:10px;">'+c.text+'</p>' +
+    '<div class="menu-btns">' +
+      '<button id="pcNormal">Play the card action</button>' +
+      '<button id="pcAttack" '+(canAtk?'':'disabled')+'>Resolve as a basic Attack'+(canAtk?'':' (no targets)')+'</button>' +
+      '<button id="pcRepos" '+(canRp?'':'disabled')+'>Resolve as a basic Reposition'+(canRp?'':' (no moves)')+'</button>' +
+      '<button id="pcCancel" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Keep it in hand</button>' +
+    '</div>' +
+    '<p class="small" style="margin-top:10px;">However it is resolved, the card is removed from the game.</p>';
+  $('playOvr').classList.add('active');
+  function go(mode){
+    $('playOvr').classList.remove('active');
+    try { E.playCard(st, cid, mode); } catch(e){ return; }
+    APP.ui.sel = null;
+    afterChange();
+  }
+  $('pcNormal').onclick = function(){ go('normal'); };
+  if (canAtk) $('pcAttack').onclick = function(){ go('attack'); };
+  if (canRp) $('pcRepos').onclick = function(){ go('reposition'); };
+  $('pcCancel').onclick = function(){ $('playOvr').classList.remove('active'); };
+}
+function act(choice){
+  var st = APP.st;
+  try { E.applyStep(st, choice); } catch(e){ toast('Invalid move.', 1800); renderAll(); return; }
+  APP.ui.sel = null;
+  APP.ui.trenchFirst = null;
+  afterChange();
+}
+function afterChange(){
+  var st = APP.st;
+  renderAll(); saveLocal();
+  if (APP.mode==='net') pushState();
+  if (st.phase === 'battle-over'){ clearIfMatchOver(); showBattleOver(); return; }
+  if (st.phase === 'choose-card'){
+    // turn changed
+    if (APP.mode==='hotseat') showHandoff();
+    else maybeAI();
+  }
+}
+function clearIfMatchOver(){ if (APP.st.match.winner) clearSave(); }
+
+/* =================== card glossary =================== */
+function showCards(){
+  var inGame = !!APP.st && !!APP.mode;
+  var youSide = inGame && APP.mode !== 'hotseat' ? APP.mySide : null;
+  var rows = '<table><tr><th style="text-align:left;">Card</th><th>#</th><th style="text-align:left;">Action</th>' +
+    (inGame ? '<th style="color:var(--red-dark);">Red'+(youSide==='red'?' (you)':'')+'</th>' +
+              '<th style="color:var(--blue-dark);">Blue'+(youSide==='blue'?' (you)':'')+'</th>' : '') + '</tr>';
+  function spentCell(n, total, color){
+    var marks = '';
+    for (var i = 0; i < total; i++) marks += (i < n ? '&#10006;' : '&#9675;') + (i < total-1 ? ' ' : '');
+    return '<td style="white-space:nowrap; font-size:14px;'+(n===total ? 'background:'+color+';' : '')+'">'+marks+'</td>';
+  }
+  E.CARDS.forEach(function(c){
+    var cells = '<td style="text-align:left;"><b>'+c.name+'</b>'+(c.starting?' <span class="small">(starting card)</span>':'')+'</td>' +
+      '<td>'+c.count+'</td><td style="text-align:left;">'+c.text+'</td>';
+    if (inGame){
+      var rN = APP.st.removed.red.filter(function(id){ return id===c.id; }).length;
+      var bN = APP.st.removed.blue.filter(function(id){ return id===c.id; }).length;
+      cells += spentCell(rN, c.count, 'rgba(158,43,37,.18)') + spentCell(bN, c.count, 'rgba(40,82,122,.18)');
+    }
+    rows += '<tr>'+cells+'</tr>';
+  });
+  rows += '</table>';
+  if (inGame) rows += '<p class="small" style="margin-top:8px;">&#10006; = that copy has been resolved this battle and is gone from the game; &#9675; = still in deck, hand, or discard. Shaded cell = every copy spent.</p>';
+  $('cardsBody').innerHTML = rows;
+  $('cardsOvr').classList.add('active');
+}
+$('btnCards').onclick = showCards;
+$('btnCardsMenu').onclick = showCards;
+
+/* =================== map library & pool =================== */
+function getLocalMaps(){
+  try { return JSON.parse(localStorage.getItem('woa-custom-maps')) || []; } catch(e){ return []; }
+}
+function getTombstones(){
+  try { return JSON.parse(localStorage.getItem('woa-deleted-maps')) || []; } catch(e){ return []; }
+}
+// Custom maps = maps from custom-maps.js (shipped with the folder) merged with
+// this browser's localStorage; localStorage wins on conflicts, deletions are honored.
+function getCustomMaps(){
+  var tomb = getTombstones();
+  var byId = {};
+  (window.WOA_CUSTOM_MAPS || []).forEach(function(m){
+    if (m && m.id && tomb.indexOf(m.id) < 0) byId[m.id] = m;
+  });
+  getLocalMaps().forEach(function(m){ if (m && m.id) byId[m.id] = m; });
+  return Object.keys(byId).map(function(k){ return byId[k]; });
+}
+function saveCustomMaps(list){
+  try { localStorage.setItem('woa-custom-maps', JSON.stringify(list)); } catch(e){}
+  syncMapsFile();
+}
+function deleteCustomMap(id){
+  try { localStorage.setItem('woa-custom-maps', JSON.stringify(getLocalMaps().filter(function(x){ return x.id !== id; }))); } catch(e){}
+  var tomb = getTombstones();
+  if (tomb.indexOf(id) < 0) tomb.push(id);
+  try { localStorage.setItem('woa-deleted-maps', JSON.stringify(tomb)); } catch(e){}
+  syncMapsFile(true);
+}
+// When running via the server, mirror custom maps into custom-maps.js in the
+// game folder so zipping the folder shares them.
+function syncMapsFile(allowEmpty){
+  if (!canNet){ updateMapsHint(true); return; }
+  var maps = getCustomMaps();
+  if (!maps.length && !allowEmpty){ updateMapsHint(false); return; }
+  api('savemaps', { maps: maps, allowEmpty: !!allowEmpty })
+    .then(function(){ updateMapsHint(false); })
+    .catch(function(){ updateMapsHint(true); });
+}
+// on load over http: push this browser's maps into custom-maps.js so the folder stays current
+if (canNet && (getLocalMaps().length || getTombstones().length)) setTimeout(function(){ syncMapsFile(true); }, 500);
+function updateMapsHint(needExport){
+  var el = $('mapsHint');
+  if (!el) return;
+  if (!getCustomMaps().length){ el.textContent = ''; return; }
+  el.innerHTML = needExport
+    ? 'Custom maps live in this browser only. To keep them with the folder (and share via zip), click <b>Export maps file</b> and put <b>custom-maps.js</b> next to index.html.'
+    : 'Custom maps are saved to <b>custom-maps.js</b> in the game folder &mdash; zip the folder and friends get them too.';
+}
+function getDisabledIds(){
+  try { return JSON.parse(localStorage.getItem('woa-disabled-maps')) || []; } catch(e){ return []; }
+}
+function setDisabledIds(ids){
+  try { localStorage.setItem('woa-disabled-maps', JSON.stringify(ids)); } catch(e){}
+}
+function allMaps(){
+  var out = E.MAPS.map(function(def, i){ return { def: def, id: 'b:'+i, builtin: true }; });
+  getCustomMaps().forEach(function(def){ out.push({ def: def, id: def.id, builtin: false }); });
+  return out;
+}
+function getMapPool(){
+  var dis = getDisabledIds();
+  return allMaps().filter(function(m){ return dis.indexOf(m.id) < 0; }).map(function(m){ return m.def; });
+}
+
+/* mini preview svg (self-contained, no global board state) */
+function previewSVG(def){
+  var s = 11, sq3 = Math.sqrt(3);
+  var hexList = E.boardHexes(def.shape || 'grand');
+  var hexSet = {};
+  hexList.forEach(function(k){ hexSet[k] = true; });
+  function xy(q, r){ return [s*sq3*(q + r/2), s*1.5*r]; }
+  function pts(cx, cy, rad){
+    var o = [];
+    for (var i=0;i<6;i++){ var a=(60*i-90)*Math.PI/180; o.push((cx+rad*Math.cos(a)).toFixed(1)+','+(cy+rad*Math.sin(a)).toFixed(1)); }
+    return o.join(' ');
+  }
+  var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  var body = '';
+  hexList.forEach(function(k){
+    var qr = E.parseKey(k), p = xy(qr[0], qr[1]);
+    minX=Math.min(minX,p[0]); maxX=Math.max(maxX,p[0]); minY=Math.min(minY,p[1]); maxY=Math.max(maxY,p[1]);
+    body += '<polygon points="'+pts(p[0],p[1],s-0.6)+'" fill="#d9cca8" stroke="#4a3d26" stroke-width="0.8"/>';
+  });
+  (def.pieces||[]).forEach(function(pc){
+    pc.edges.forEach(function(e){
+      var c = xy(e[0], e[1]);
+      var ang = [0,-60,-120,180,120,60][e[2]];
+      function cp(a){ a=a*Math.PI/180; return [c[0]+(s-2.4)*Math.cos(a), c[1]+(s-2.4)*Math.sin(a)]; }
+      var p1 = cp(ang-30), p2 = cp(ang+30);
+      body += '<line x1="'+p1[0].toFixed(1)+'" y1="'+p1[1].toFixed(1)+'" x2="'+p2[0].toFixed(1)+'" y2="'+p2[1].toFixed(1)+
+        '" stroke="'+(pc.t==='F'?'#4a7c3a':'#75726a')+'" stroke-width="2.6" stroke-linecap="round"/>';
+    });
+  });
+  [['redHQ','#9e2b25'],['blueHQ','#28527a']].forEach(function(h){
+    var hq = def[h[0]];
+    if (!hq) return;
+    var p = xy(hq[0], hq[1]);
+    body += '<polygon points="'+pts(p[0],p[1],s*0.62)+'" fill="'+h[1]+'" stroke="#2b2113" stroke-width="0.8"/>';
+  });
+  var m = s*1.4;
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="'+(minX-m).toFixed(0)+' '+(minY-m).toFixed(0)+' '+(maxX-minX+2*m).toFixed(0)+' '+(maxY-minY+2*m).toFixed(0)+'">'+body+'</svg>';
+}
+
+function renderMapsScr(){
+  var grid = $('mapGrid');
+  grid.innerHTML = '';
+  var dis = getDisabledIds();
+  allMaps().forEach(function(m){
+    var off = dis.indexOf(m.id) >= 0;
+    var d = document.createElement('div');
+    d.className = 'mapitem' + (off ? ' off' : '');
+    d.innerHTML = previewSVG(m.def) +
+      '<div class="nm">'+m.def.name+'</div>' +
+      '<div class="shp">'+(E.SHAPES[m.def.shape||'grand'].label)+(m.builtin?'':' &middot; custom')+'</div>' +
+      '<label><input type="checkbox" '+(off?'':'checked')+'> in play</label>' +
+      '<div class="btns"></div>';
+    var cb = d.querySelector('input');
+    cb.onchange = function(){
+      var ids = getDisabledIds().filter(function(x){ return x !== m.id; });
+      if (!cb.checked) ids.push(m.id);
+      setDisabledIds(ids);
+      d.classList.toggle('off', !cb.checked);
+    };
+    var btns = d.querySelector('.btns');
+    if (!m.builtin){
+      var be = document.createElement('button'); be.textContent='Edit';
+      be.onclick = function(){ openEditor(m.def); };
+      btns.appendChild(be);
+    }
+    var bc = document.createElement('button'); bc.textContent='Copy';
+    bc.onclick = function(){
+      var copy = JSON.parse(JSON.stringify(m.def));
+      copy.name = m.def.name + ' (copy)';
+      copy.custom = true; copy.id = 'c' + Date.now();
+      openEditor(copy, true);
+    };
+    btns.appendChild(bc);
+    if (!m.builtin){
+      var bd = document.createElement('button'); bd.textContent='Delete';
+      bd.onclick = function(){
+        if (!confirm('Delete map "'+m.def.name+'"?')) return;
+        deleteCustomMap(m.def.id);
+        renderMapsScr();
+      };
+      btns.appendChild(bd);
+    }
+    grid.appendChild(d);
+  });
+  updateMapsHint(!canNet);
+  if (canNet) syncMapsFile();
+}
+$('btnMaps').onclick = function(){ renderMapsScr(); show('mapsScr'); };
+$('btnMapsBack').onclick = function(){ show('menu'); checkResume(); };
+$('btnNewMap').onclick = function(){ openEditor(null); };
+$('btnExportMaps').onclick = function(){
+  var maps = getCustomMaps();
+  if (!maps.length){
+    toast('No custom maps in this browser to export. Note: maps made while playing via the server and via double-clicked index.html are stored separately by the browser.', 5500);
+    return;
+  }
+  var content = 'window.WOA_CUSTOM_MAPS = ' + JSON.stringify(maps, null, 1) + ';\n';
+  var blob = new Blob([content], { type: 'text/javascript' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'custom-maps.js';
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
+  toast('Downloaded custom-maps.js &mdash; put it in the game folder, next to index.html.', 4500);
+};
+$('btnImportMaps').onclick = function(){ $('importFile').click(); };
+$('importFile').onchange = function(){
+  var f = $('importFile').files[0];
+  if (!f) return;
+  var rd = new FileReader();
+  rd.onload = function(){
+    try {
+      var txt = String(rd.result);
+      var eq = txt.indexOf('=');
+      if (txt.trim().charAt(0) !== '[' && eq >= 0) txt = txt.slice(eq + 1);
+      txt = txt.trim().replace(/;\s*$/, '');
+      var arr = JSON.parse(txt);
+      if (!Array.isArray(arr)) throw new Error('not a map list');
+      var list = getLocalMaps();
+      var tomb = getTombstones();
+      arr.forEach(function(m){
+        if (!m || !m.id || !m.name) return;
+        list = list.filter(function(x){ return x.id !== m.id; });
+        list.push(m);
+        tomb = tomb.filter(function(t){ return t !== m.id; });
+      });
+      try { localStorage.setItem('woa-deleted-maps', JSON.stringify(tomb)); } catch(e){}
+      saveCustomMaps(list);
+      renderMapsScr();
+      toast('Imported ' + arr.length + ' map(s).', 2600);
+    } catch(e){ toast('Could not read that file: ' + e.message, 3500); }
+    $('importFile').value = '';
+  };
+  rd.readAsText(f);
+};
+
+/* =================== map editor =================== */
+var ED = { id:null, name:'', shape:'classic', red:null, blue:null, edges:{}, tool:'terrain', isNew:true };
+
+function openEditor(def, isNewCopy){
+  if (def){
+    ED.id = def.id || ('c' + Date.now());
+    ED.isNew = !!isNewCopy || !def.id;
+    ED.name = def.name || '';
+    ED.shape = def.shape || 'grand';
+    ED.red = def.redHQ ? def.redHQ.slice() : null;
+    ED.blue = def.blueHQ ? def.blueHQ.slice() : null;
+    ED.edges = {};
+    (def.pieces||[]).forEach(function(pc){
+      pc.edges.forEach(function(e){
+        ED.edges[E.key(e[0], e[1]) + '>' + e[2]] = pc.t;
+      });
+    });
+  } else {
+    ED.id = 'c' + Date.now();
+    ED.isNew = true;
+    ED.name = '';
+    ED.shape = 'classic';
+    ED.red = null; ED.blue = null; ED.edges = {};
+  }
+  ED.tool = 'terrain';
+  $('edName').value = ED.name;
+  $('edShape').value = ED.shape;
+  $('edWarn').textContent = '';
+  document.querySelectorAll('.edtools .tool').forEach(function(b){ b.classList.toggle('sel', b.dataset.tool==='terrain'); });
+  show('editorScr');
+  renderEditor();
+}
+
+document.querySelectorAll('.edtools .tool').forEach(function(b){
+  b.onclick = function(){
+    ED.tool = b.dataset.tool;
+    document.querySelectorAll('.edtools .tool').forEach(function(x){ x.classList.toggle('sel', x===b); });
+    renderEditor();
+  };
+});
+$('edShape').onchange = function(){
+  var v = $('edShape').value;
+  if (Object.keys(ED.edges).length || ED.red || ED.blue){
+    if (!confirm('Changing the board clears the map. Continue?')){ $('edShape').value = ED.shape; return; }
+  }
+  ED.shape = v; ED.red = null; ED.blue = null; ED.edges = {};
+  renderEditor();
+};
+$('edClear').onclick = function(){
+  if (confirm('Clear all terrain and HQs?')){ ED.red=null; ED.blue=null; ED.edges={}; renderEditor(); }
+};
+$('edMirror').onclick = function(){
+  // point-symmetry: every edge and HQ gets its rotated twin
+  var add = {};
+  for (var ek in ED.edges){
+    var parts = ek.split('>');
+    var a = E.parseKey(parts[0]);
+    var ra = E.rot180(ED.shape, a[0], a[1]);
+    add[E.key(ra[0], ra[1]) + '>' + ((+parts[1] + 3) % 6)] = ED.edges[ek];
+  }
+  for (var k2 in add) ED.edges[k2] = add[k2];
+  if (ED.red && !ED.blue) ED.blue = E.rot180(ED.shape, ED.red[0], ED.red[1]);
+  else if (ED.blue && !ED.red) ED.red = E.rot180(ED.shape, ED.blue[0], ED.blue[1]);
+  else if (ED.red) ED.blue = E.rot180(ED.shape, ED.red[0], ED.red[1]);
+  renderEditor();
+};
+$('edBack').onclick = function(){ renderMapsScr(); show('mapsScr'); };
+
+function edHexSet(){
+  var set = {};
+  E.boardHexes(ED.shape).forEach(function(k){ set[k]=true; });
+  return set;
+}
+function edInternalSides(){
+  var set = edHexSet(), out = [];
+  Object.keys(set).forEach(function(k){
+    var qr = E.parseKey(k);
+    for (var d=0; d<6; d++){
+      var n = E.key(qr[0]+E.DIRS[d][0], qr[1]+E.DIRS[d][1]);
+      if (set[n]) out.push([k, d]);
+    }
+  });
+  return out;
+}
+
+function renderEditor(){
+  var svg = $('edBoard');
+  svg.innerHTML = '';
+  var hexList = E.boardHexes(ED.shape);
+  svg.setAttribute('viewBox', viewBoxFor(hexList));
+  var gHex = svgEl('g',{}), gTer = svgEl('g',{}), gHit = svgEl('g',{});
+  svg.appendChild(gHex); svg.appendChild(gTer); svg.appendChild(gHit);
+  hexList.forEach(function(k){
+    var xy = hexXY(k);
+    var p = svgEl('polygon', { points: hexPoints(xy[0], xy[1], S-1), 'class':'hex' });
+    if (ED.tool==='redhq' || ED.tool==='bluehq'){
+      p.style.cursor = 'pointer';
+      p.addEventListener('click', function(){
+        var qr = E.parseKey(k);
+        if (ED.tool==='redhq'){ ED.red = qr; if (ED.blue && E.key(ED.blue[0],ED.blue[1])===k) ED.blue=null; }
+        else { ED.blue = qr; if (ED.red && E.key(ED.red[0],ED.red[1])===k) ED.red=null; }
+        renderEditor();
+      });
+    }
+    gHex.appendChild(p);
+  });
+  [['red','var(--red)'],['blue','var(--blue)']].forEach(function(h){
+    var hq = ED[h[0]];
+    if (!hq) return;
+    var xy = hexXY(E.key(hq[0],hq[1]));
+    var poly = svgEl('polygon',{points: hexPoints(xy[0],xy[1],S*0.62), fill:h[1], stroke:'#2b2113','stroke-width':2, opacity:.92, 'pointer-events':'none'});
+    gHex.appendChild(poly);
+    var star = svgEl('text',{x:xy[0], y:xy[1]+7, 'text-anchor':'middle','font-size':20, fill:'#f0e6cc','pointer-events':'none'});
+    star.textContent = '★';
+    gHex.appendChild(star);
+  });
+  edInternalSides().forEach(function(e){
+    var ek = e[0] + '>' + e[1];
+    var c = hexXY(e[0]);
+    var aa = cornerAngles(e[1]);
+    var p1 = cornerPt(c[0],c[1],aa[0],S*0.8), p2 = cornerPt(c[0],c[1],aa[1],S*0.8);
+    var t = ED.edges[ek];
+    if (t){
+      gTer.appendChild(svgEl('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
+        stroke: t==='F'?'var(--forest)':'var(--mountain)', 'stroke-width':8, 'stroke-linecap':'round','pointer-events':'none'}));
+    }
+    if (ED.tool==='terrain'){
+      var hit = svgEl('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],'class':'edge-hit'});
+      hit.addEventListener('click', function(){
+        var cur = ED.edges[ek];
+        if (!cur) ED.edges[ek] = 'F';
+        else if (cur==='F') ED.edges[ek] = 'M';
+        else delete ED.edges[ek];
+        renderEditor();
+      });
+      gHit.appendChild(hit);
+    }
+  });
+  renderEdStock();
+}
+
+function groupEdgesToPieces(edges){
+  // group same-type sides of the SAME hex that share a corner
+  // (physical terrain pieces sit inside one hex, wrapping its corners)
+  function vkey(h, p){ return h + '@' + Math.round(p[0])+':'+Math.round(p[1]); }
+  var items = Object.keys(edges).map(function(ek){
+    var parts = ek.split('>');
+    var d = +parts[1];
+    var c = hexXY(parts[0]);
+    var aa = cornerAngles(d);
+    return { ek: ek, t: edges[ek], a: parts[0], d: d,
+      v1: vkey(parts[0], cornerPt(c[0],c[1],aa[0],S)), v2: vkey(parts[0], cornerPt(c[0],c[1],aa[1],S)) };
+  });
+  var used = {}, pieces = [];
+  items.forEach(function(it, i){
+    if (used[i]) return;
+    var comp = [it]; used[i] = true;
+    var verts = {}; verts[it.v1]=1; verts[it.v2]=1;
+    var grew = true;
+    while (grew){
+      grew = false;
+      items.forEach(function(o, j){
+        if (used[j] || o.t !== it.t) return;
+        if (verts[o.v1] || verts[o.v2]){
+          used[j]=true; comp.push(o); verts[o.v1]=1; verts[o.v2]=1; grew=true;
+        }
+      });
+    }
+    pieces.push({ t: it.t, edges: comp.map(function(x){
+      var qr = E.parseKey(x.a);
+      return [qr[0], qr[1], x.d];
+    }) });
+  });
+  return pieces;
+}
+
+function renderEdStock(){
+  var pieces = groupEdgesToPieces(ED.edges);
+  function summary(t){
+    var lens = pieces.filter(function(p){ return p.t===t; }).map(function(p){ return p.edges.length; });
+    if (!lens.length) return 'none';
+    var cnt = {};
+    lens.forEach(function(l){ cnt[l] = (cnt[l]||0)+1; });
+    return Object.keys(cnt).sort().map(function(l){ return cnt[l]+'&times;len'+l; }).join(', ');
+  }
+  $('edStock').innerHTML = 'Forest pieces: '+summary('F')+' &nbsp;|&nbsp; Mountain pieces: '+summary('M')+
+    ' <span class="small">(physical stock per type: 2&times;len3 + 4&times;len2)</span>';
+  var over = ['F','M'].some(function(t){
+    var ps = pieces.filter(function(p){ return p.t===t; });
+    var n3 = ps.filter(function(p){ return p.edges.length===3; }).length;
+    var n2 = ps.filter(function(p){ return p.edges.length===2; }).length;
+    var odd = ps.some(function(p){ return p.edges.length<2 || p.edges.length>3; });
+    return odd || n3>2 || n2>4;
+  });
+  $('edWarn').textContent = over ? 'Note: this layout exceeds the physical terrain stock (still fully playable digitally).' : '';
+}
+
+function edBuildDef(){
+  var name = $('edName').value.trim() || 'Untitled Map';
+  if (!ED.red || !ED.blue){ toast('Place both headquarters first (Red HQ and Blue HQ tools).', 3200); return null; }
+  var def = {
+    name: name, shape: ED.shape,
+    redHQ: ED.red.slice(), blueHQ: ED.blue.slice(),
+    pieces: groupEdgesToPieces(ED.edges),
+    custom: true, id: ED.id
+  };
+  try {
+    var prev = E.currentShape();
+    E.setBoard(def.shape);
+    E.buildTerrain(def);
+    E.setBoard(prev);
+  } catch(e){ toast('Map problem: '+e.message, 3500); return null; }
+  return def;
+}
+function edSaveDef(def){
+  var list = getLocalMaps().filter(function(x){ return x.id !== def.id; });
+  list.push(def);
+  try { localStorage.setItem('woa-deleted-maps', JSON.stringify(getTombstones().filter(function(t){ return t !== def.id; }))); } catch(e){}
+  saveCustomMaps(list);
+}
+$('edSave').onclick = function(){
+  var def = edBuildDef();
+  if (!def) return;
+  edSaveDef(def);
+  if (!getCustomMaps().some(function(m){ return m.id === def.id; })){
+    toast('Warning: the browser refused to store the map (private mode?). Use Export maps file to keep it.', 5500);
+  } else {
+    toast('Map "'+def.name+'" saved.', 2200);
+  }
+  renderMapsScr(); show('mapsScr');
+};
+$('edTest').onclick = function(){
+  var def = edBuildDef();
+  if (!def) return;
+  edSaveDef(def);
+  startLocal('ai', [def]);
+};
+
+/* =================== AI driver =================== */
+function maybeAI(){
+  var st = APP.st;
+  if (APP.mode !== 'ai' || st.phase !== 'choose-card' || st.current === APP.mySide) return;
+  APP.ui.busy = true;
+  renderPrompt();
+  setTimeout(function(){
+    var plan = E.aiPlanTurn(st, APP.diff);
+    if (!plan){ APP.ui.busy=false; return; }
+    E.playCard(st, plan.cardId, plan.mode || 'normal');
+    var modeTxt = plan.mode==='attack' ? ' as a direct attack' : plan.mode==='reposition' ? ' as a simple maneuver' : '';
+    toast(capName(st.current)+' plays <b>'+E.CARD_BY_ID[plan.cardId].name+'</b>'+modeTxt, 2200);
+    renderAll();
+    var i = 0;
+    function nextStep(){
+      if (st.phase !== 'step'){
+        APP.ui.busy = false;
+        renderAll(); saveLocal();
+        if (st.phase==='battle-over'){ clearIfMatchOver(); showBattleOver(); }
+        else renderPrompt();
+        return;
+      }
+      var c = plan.choices[i++] || {skip:true};
+      try { E.applyStep(st, c); } catch(e){ try { E.applyStep(st, {skip:true}); } catch(e2){} }
+      renderAll();
+      setTimeout(nextStep, 650);
+    }
+    setTimeout(nextStep, 650);
+  }, 500);
+}
+</script>
+</body>
+</html>

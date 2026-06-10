@@ -1,0 +1,12 @@
+# Obsidian workspace (local editor state)
+.obsidian/
+
+# Windows cruft
+desktop.ini
+Thumbs.db
+
+# Art source binaries stay local (public repo, big files)
+design-docs/ProtoArt/
+design-docs/prototype pictures/*
+# ...except the diagram the terrain rules are defined by
+!design-docs/prototype pictures/HexClarificationDiagram.png
