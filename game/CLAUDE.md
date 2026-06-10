@@ -52,7 +52,8 @@ Read this first; it will save you from re-deriving (or breaking) decisions that 
 - Don't add build steps, frameworks, or dependencies to `game/`. Everything is intentionally plain files Bill can zip and share. (`dev/` may hold dev-only deps like jsdom.)
 - Aesthetic: steampunk Napoleonic field journal (see `../design-docs/Player Card Art direction drafts.md`, prompts in `../design-docs/art-prompts.md`) — parchment, brass, earthy tones; no modern UI chrome.
 
-## Known balance signals (from balance.js, June 2026 — small samples, verify before acting)
+## Known balance signals (from balance.js, June 2026 — verify before acting; present findings to Bill, he decides rule changes)
 
 - Second mover wins ~60% of AI battles (last card + attrition tiebreak both favour them). Note the campaign rule "loser moves first" therefore *punishes* the loser further — worth discussing with Bill before changing anything.
-- Attrition ends ~80% of battles; HQ captures are rare on spread-out maps.
+- Attrition ends ~80% of battles; HQ captures are rare on spread-out maps (HQs 6 apart ≈ never captured; the compact dist-4 maps are healthiest).
+- Skill premium (matchup mode, n=192/pairing): normal beats easy 71%, hard beats easy 80%, hard beats normal 57%, normal-vs-normal sanity 46%. Read: learning the game is rewarded heavily; between two competent players the card draw decides more (~57%). Caveat: measured with these AIs, not humans.

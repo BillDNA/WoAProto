@@ -1,0 +1,11 @@
+﻿Skill-vs-luck report: 16 battles per map per pairing, 12 maps.
+Each pairing also swaps sides so colour bias cancels out.
+
+............  normal vs easy     stronger AI wins 71% of 192
+............  hard vs normal     stronger AI wins 57% of 192
+............  hard vs easy       stronger AI wins 80% of 192
+............  normal vs normal   stronger AI wins 46% of 192
+
+How to read it: a clearly better player winning only ~50-55% means the
+card draw decides most battles (luck-heavy). 55-65% = luck and skill both
+matter. 65%+ = skill dominates. The normal-vs-normal line is the ~50% sanity check.
