@@ -4,19 +4,24 @@ Start in `game/CLAUDE.md` — it is the orientation file for this project and st
 
 ## Status — June 2026 work order (all done)
 
-* visualADJ feedback pass:
-	* terrain bug (yellow lines) — fixed: pieces straddling hexes are now impossible; every piece lives inside one hex (engine-enforced + tested)
-	* red & blue player panels — rebuilt as physical-style mats: one slot per piece with icons (solid = reserve, dashed = fielded, ✕ = lost)
-	* purple campaign journal — resized + design pass; hexes use grid references (A1…E4) drawn faintly on the board and spoken in the journal
-	* teal — campaign score card centred in the top bar
-* simple animations — deal-in, deploy pop, march glide, attack ring, fallen-unit ghosts, HQ-capture shake
-* removed-cards visibility — spent-orders track on BOTH mats (all 16 chips per side gray out as cards leave the game)
-* save map system — `game/maps.js` holds board shapes AND the map roster as hand-editable JSON; new 12-map roster on 5 boards (24-hex max: laser-cutter ceiling, 22 controlled hexes at full deployment); Grand/Wide removed
-* version control — git repo, remote https://github.com/BillDNA/WoAProto.git, PSD/XCS sources gitignored (public repo)
-* hosting — root index.html redirects into game/ for GitHub Pages (single player + hotseat free in the browser; LAN PvP still needs the local server)
-* art — prompts for image AIs in `design-docs/art-prompts.md`; results go to `game/art/` and Claude wires them in
-* balance tooling — `node game/balance.js` simulates AI-vs-AI battles per map and reports side/mover win rates, HQ vs attrition, card win correlation
-
+* ~~visualADJ feedback pass:~~
+	* ~~terrain bug (yellow lines) — fixed: pieces straddling hexes are now impossible; every piece lives inside one hex (engine-enforced + tested)~~
+	* ~~red & blue player panels — rebuilt as physical-style mats: one slot per piece with icons (solid = reserve, dashed = fielded, ✕ = lost)~~
+	* ~~purple campaign journal — resized + design pass; hexes use grid references (A1…E4) drawn faintly on the board and spoken in the journal~~
+	* ~~teal — campaign score card centred in the top bar~~
+* ~~simple animations — deal-in, deploy pop, march glide, attack ring, fallen-unit ghosts, HQ-capture shake~~
+* ~~removed-cards visibility — spent-orders track on BOTH mats (all 16 chips per side gray out as cards leave the game)~~
+* ~~save map system — `game/maps.js` holds board shapes AND the map roster as hand-editable JSON; new 12-map roster on 5 boards (24-hex max: laser-cutter ceiling, 22 controlled hexes at full deployment); Grand/Wide removed~~
+* ~~version control — git repo, remote https://github.com/BillDNA/WoAProto.git, PSD/XCS sources gitignored (public repo)~~
+* ~~hosting — root index.html redirects into game/ for GitHub Pages (single player + hotseat free in the browser; LAN PvP still needs the local server)~~
+* ~~art — prompts for image AIs in `design-docs/art-prompts.md`; results go to `game/art/` and Claude wires them in~~
+* ~~balance tooling — `node game/balance.js` simulates AI-vs-AI battles per map and reports side/mover win rates, HQ vs attrition, card win correlation~~
+## Feedback round 2 (all handled June 2026)
+* ~~DoubleTrenchNotAllowed bug~~ — was a ruling I invented, not a rule: hexes now hold multiple trenches as long as edges don't overlap (tested with the exact D3/C3/C4 repro)
+* ~~Export maps .js Windows warning~~ — harmless (Windows refuses to RUN downloaded .js); the toast now says so. The file only needs to be moved next to index.html
+* ~~LAN~~ — room code stays visible in the top bar; server terminal logs hosted/joined/expired rooms with the open-room list (extra Host clicks just make rooms that expire after 6h idle)
+* ~~Balance lab codified~~ — `node balance.js [n] [diff] [map-name]` incl. custom maps; in-game Balance buttons on every map tile and in the editor (works on unsaved drafts); Rematch-this-map button after battles
+* ~~AI levels / luck measurement~~ — third AI 'Field Marshal' searches one reply deep using sampled enemy hands (your suggestion, never peeks); `node balance.js matchup` quantifies the skill premium = how luck-based the game is
 ## Standing goals
 
 * rapid balance iteration is the point of this prototype — prefer data files + small tools over hardcoding

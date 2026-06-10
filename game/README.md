@@ -8,7 +8,15 @@ The game is published from this repo: **https://billdna.github.io/WoAProto/** �
 
 ## Play vs the AI (no setup)
 
-Double-click **index.html**. Pick your side and the enemy general's skill (Green Recruit = easier, Old Veteran = normal), then **March Against the AI**. Tip: `index.html?autostart=ai` jumps straight into a battle.
+Double-click **index.html**. Pick your side and the enemy general's skill, then **March Against the AI**. Tip: `index.html?autostart=ai` jumps straight into a battle.
+
+Three generals to fight:
+
+- **Green Recruit** — judges positions with noisy eyes; makes real mistakes.
+- **Old Veteran** — plays its best one-turn-deep plan.
+- **Field Marshal** — shortlists its best plans, then imagines your strongest reply (sampling possible hands from the public deck information — it never peeks at your cards) before committing.
+
+**Watch: AI vs AI** on the menu lets you spectate two generals fighting at your chosen skill level — useful for getting a feel for a new map without playing it.
 
 ## Hotseat (two players, one device)
 
@@ -20,11 +28,11 @@ Needs Node.js (nodejs.org) on one computer — the server is plain Node and runs
 
 1. Start the server: **run-server.bat** (Windows) or **run-server.command** (Mac — if double-clicking is blocked, open Terminal in this folder and run `sh run-server.command` or just `node server.js`). It prints an address like `http://192.168.1.23:8420`.
 2. Open that address in a browser on **both** devices (same wifi).
-3. One player clicks **Host a Room** and reads out the 4-letter code; the other types it in and joins. Host is Red, joiner is Blue.
+3. One player clicks **Host a Room** and reads out the 4-letter code; the other types it in and joins. Host is Red, joiner is Blue. The room code stays visible in the top bar during the game, and the server's terminal logs every room as it's hosted, joined, and expired (idle rooms vanish after 6 hours, so stray clicks on Host are harmless).
 
-## Boards & maps — built for rapid tinkering
+## Boards, maps, units & cards — built for rapid tinkering
 
-All built-in **board shapes and maps live in `maps.js`** as plain JSON. Edit it in any text editor, save, refresh the browser — the file explains its own format (rows of hexes, HQ coordinates, terrain pieces). `node test.js` validates every map and points at exactly what's wrong.
+**Everything tunable lives in `maps.js`** as plain JSON: board shapes, the map roster, **unit stats and piece counts, the trench count, the full card deck, and the physical terrain stock**. Edit it in any text editor, save, refresh the browser — the file explains its own format. Want to know what cavalry with 1 defense feels like, or a 20-card deck? Change a number, refresh, play (or run the balance lab on it). `node test.js` validates everything and points at exactly what's wrong.
 
 There are 12 built-in maps (matching the physical 12-card map deck) across five boards, all at or under the 24-hex laser-cutter ceiling:
 
@@ -36,7 +44,7 @@ There are 12 built-in maps (matching the physical 12-card map deck) across five 
 
 The old 37-hex Grand and 29-hex Wide boards are gone: they played slow and empty (both armies fully deployed only ever control 22 hexes) and can't be laser-cut at a sane hex size. Adding a board back is one JSON entry in `maps.js` — shapes must be point-symmetric so Mirror and fair HQ placement work; the tests check this.
 
-**Maps & Map Editor** on the main menu lists every battlefield with a preview. Untick a map to remove it from the draw pile. **New Map** opens the editor: pick a board, paint terrain (click just inside a hex's border to cycle forest → mountain → empty on that hex's side), place both HQs, and **Mirror** to copy everything point-symmetrically. Terrain pieces behave like the physical ones — each piece lives inside one hex and wraps its corners; the editor and engine both enforce it.
+**Maps & Map Editor** on the main menu lists every battlefield with a preview. Untick a map to remove it from the draw pile; **Play** starts a quick AI campaign on just that map; **Balance** runs 20 AI-vs-AI battles on it and reports the win rates right there. **New Map** opens the editor: pick a board, paint terrain (click just inside a hex's border to cycle forest → mountain → empty on that hex's side), place both HQs, and **Mirror** to copy everything point-symmetrically — its **Balance Report** button works on the map as drawn, before you even save. Terrain pieces behave like the physical ones — each piece lives inside one hex and wraps its corners; the editor and engine both enforce it.
 
 ### Sharing custom maps (zip the folder)
 
@@ -44,7 +52,13 @@ When you play through the server, custom maps are automatically written to **cus
 
 ## The balance lab
 
-`node balance.js` runs AI-vs-AI battles on every map and prints a report: win rate by side, by first/second mover, HQ-capture vs attrition share, battle length, and how often each card sat in the winner's spent pile. `node balance.js 60` for bigger samples, `node balance.js 60 easy` for the easy AI. Tweak a map or a stat, re-run, compare — that's the loop this prototype exists for.
+`node balance.js` runs AI-vs-AI battles on every map (custom maps included) and prints a report: win rate by side, by first/second mover, HQ-capture vs attrition share, battle length, and how often each card sat in the winner's spent pile.
+
+- `node balance.js 60` — bigger samples; `node balance.js 60 hard` — with the Field Marshal
+- `node balance.js 40 narrows` — only maps whose name matches "narrows"
+- `node balance.js matchup` — **the luck-o-meter**: better AIs fight worse ones, and the stronger side's win rate is the skill premium. If a clearly better player only wins ~55%, the card draw decides most battles; 65%+ means skill decides. The normal-vs-normal line is a ~50% sanity check.
+
+The same reports are available in-game via the **Balance** buttons on the maps screen and in the editor. After any battle, **Rematch this map** restarts on the same battlefield — tweak, rematch, compare. That's the loop this prototype exists for.
 
 ## What's implemented
 
@@ -74,6 +88,7 @@ Terrain belongs to the hex it sits in and is drawn inset inside it. A **forest**
 
 - **Controlled hex** = a hex occupied by your unit or HQ (per Bill).
 - **Trenches** cover 2 chosen edges; +1 defense only across those edges, helps any defender, never an attacker (per Bill).
+- **A hex may hold several trenches** as long as their covered edges don't overlap each other or that hex's own terrain sides (per Bill's DoubleTrenchNotAllowed report).
 - HQ's +1 support applies to adjacent hexes for both attack and defense calculations.
 - The attacking unit's own support value is not added to its attack.
 - Moving/attacking "through a headquarters": a unit adjacent to any HQ may move to, swap with, or attack a hex on the far side of that HQ. Terrain on the crossing edge applies.
@@ -85,10 +100,10 @@ Terrain belongs to the hex it sits in and is drawn inset inside it. A **forest**
 
 ## Files
 
-- `index.html` — the whole game (UI, AI driver, map editor)
-- `engine.js` — rules engine + AI (shared by tests and the balance lab)
-- `maps.js` — **built-in boards & maps, hand-editable JSON**
-- `balance.js` — AI-vs-AI balance report: `node balance.js`
+- `index.html` — the whole game (UI, AI driver, map editor, in-game balance lab)
+- `engine.js` — rules engine + the three AIs + battle simulator (shared by tests and the balance lab)
+- `maps.js` — **all tunable game data, hand-editable JSON**: boards, maps, units, cards, terrain stock
+- `balance.js` — AI-vs-AI balance reports: `node balance.js`, `node balance.js matchup`
 - `server.js` / `run-server.bat` / `run-server.command` — tiny zero-dependency LAN server
 - `custom-maps.js` — your custom maps (generated; travels with the folder)
 - `test.js` — engine test suite: `node test.js`

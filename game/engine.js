@@ -123,57 +123,18 @@
     return arr;
   }
 
-  /* ---------- static data ---------- */
-  var UNITS = {
-    infantry: { name: 'Infantry', atk: 1, def: 1, sup: 1, vp: 1 },
-    cavalry: { name: 'Cavalry', atk: 3, def: 0, sup: 0, vp: 2 },
-    artillery: { name: 'Artillery', atk: 0, def: 0, sup: 2, vp: 3 }
-  };
-  var RESERVES = { infantry: 7, cavalry: 2, artillery: 1, trench: 3 };
-
-  var CARDS = [
-    { id: 'deploy_inf_start', name: 'Deploy Infantry', count: 1, starting: true,
-      text: 'Place an Infantry unit adjacent to any controlled hex.',
-      steps: [{ type: 'deploy', unit: 'infantry' }] },
-    { id: 'deploy_artillery', name: 'Deploy Artillery', count: 1,
-      text: 'Place an Artillery unit adjacent to any controlled hex.',
-      steps: [{ type: 'deploy', unit: 'artillery' }] },
-    { id: 'deploy_inf_trench', name: 'Entrench', count: 3,
-      text: 'Place an Infantry unit adjacent to any controlled hex. Then build a trench on any controlled hex.',
-      steps: [{ type: 'deploy', unit: 'infantry' }, { type: 'trench' }] },
-    { id: 'airdrop', name: 'Airdrop', count: 1,
-      text: 'Place an Infantry unit on any empty hex. (Never in your opening hand.)',
-      steps: [{ type: 'deploy', unit: 'infantry', anywhere: true }] },
-    { id: 'conscription', name: 'Conscription', count: 1,
-      text: 'Place two Infantry units adjacent to any controlled hex, in sequence.',
-      steps: [{ type: 'deploy', unit: 'infantry' }, { type: 'deploy', unit: 'infantry' }] },
-    { id: 'deploy_cavalry', name: 'Deploy Cavalry', count: 1,
-      text: 'Place two Cavalry units adjacent to any controlled hex, in sequence.',
-      steps: [{ type: 'deploy', unit: 'cavalry' }, { type: 'deploy', unit: 'cavalry' }] },
-    { id: 'attack_plus1', name: 'Attack +1', count: 2,
-      text: 'Order an attack with +1 support.',
-      steps: [{ type: 'attack', mod: 1 }] },
-    { id: 'mass_assault', name: 'Mass Assault', count: 1,
-      text: 'Order an attack. Then order another attack.',
-      steps: [{ type: 'attack' }, { type: 'attack' }] },
-    { id: 'careful_maneuvers', name: 'Careful Maneuvers', count: 1,
-      text: 'Reposition a unit. Then order an attack with −1 support.',
-      steps: [{ type: 'reposition' }, { type: 'attack', mod: -1 }] },
-    { id: 'reckless_maneuvers', name: 'Reckless Maneuvers', count: 1,
-      text: 'Order an attack. Then reposition a unit.',
-      steps: [{ type: 'attack' }, { type: 'reposition' }] },
-    { id: 'ordered_withdraw', name: 'Ordered Withdraw', count: 1,
-      text: 'Order an attack. On a tie, your attacker survives but does not take the hex.',
-      steps: [{ type: 'attack', tieSpare: true }] },
-    { id: 'naval_barrage', name: 'Naval Barrage', count: 1,
-      text: 'Remove a trench or forest near your lines (optional). Then order an attack.',
-      steps: [{ type: 'barrage' }, { type: 'attack' }] },
-    { id: 'forced_march', name: 'Forced March', count: 1,
-      text: 'Reposition up to three times, in sequence.',
-      steps: [{ type: 'reposition' }, { type: 'reposition' }, { type: 'reposition' }] }
-  ];
+  /* ---------- static data (all tunable in maps.js) ---------- */
+  var UNITS = BUILTIN.units;
+  var TRENCH_COUNT = BUILTIN.trenchCount || 3;
+  var TERRAIN_STOCK = BUILTIN.terrainStock || { F3: 2, F2: 4, M3: 2, M2: 4 };
+  var CARDS = BUILTIN.cards;
+  if (!UNITS || !CARDS) throw new Error('War of Attrition: maps.js must define units and cards');
   var CARD_BY_ID = {};
   CARDS.forEach(function (c) { CARD_BY_ID[c.id] = c; });
+  var STARTING_CARD = (CARDS.filter(function (c) { return c.starting; })[0] || CARDS[0]).id;
+  // one slot per physical piece on the player mat
+  var PIECE_TOTALS = { trench: TRENCH_COUNT };
+  Object.keys(UNITS).forEach(function (t) { PIECE_TOTALS[t] = UNITS[t].count || 0; });
 
   /* ---------- maps (data lives in maps.js) ---------- */
   var MAPS = BUILTIN.maps;
@@ -296,7 +257,11 @@
     drawHand(st, st.current);
     return st;
   }
-  function copyReserves() { return { infantry: 7, cavalry: 2, artillery: 1, trench: 3 }; }
+  function copyReserves() {
+    var r = { trench: TRENCH_COUNT };
+    Object.keys(UNITS).forEach(function (t) { r[t] = UNITS[t].count || 0; });
+    return r;
+  }
   function cap(p) { return p.charAt(0).toUpperCase() + p.slice(1); }
   function log(st, msg) { st.log.push({ turn: st.turnNumber, player: st.current, msg: msg }); }
 
@@ -309,7 +274,7 @@
     var first = !st.firstTurnDone[p];
     if (first) {
       st.firstTurnDone[p] = true;
-      hand.push('deploy_inf_start');
+      hand.push(STARTING_CARD);
     }
     var want = first ? 3 : 4;
     var total = st.decks[p].length + st.discards[p].length;
@@ -382,10 +347,18 @@
     }
     return Object.keys(set);
   }
-  // House rule: an edge cannot carry both terrain and a trench.
+  // st.trenches[hex] is an ARRAY of {dirs:[d,d+1], owner} — a hex may hold
+  // several trenches (per Bill's DoubleTrenchNotAllowed report), but their
+  // edges may not overlap each other or this hex's own terrain sides.
+  function trenchCovers(st, h, d) {
+    var list = st.trenches[h];
+    if (!list) return false;
+    for (var i = 0; i < list.length; i++) if (list[i].dirs.indexOf(d) >= 0) return true;
+    return false;
+  }
   function edgeFreeForTrench(st, h, d) {
-    // only terrain owned by this hex occupies the same physical space as a trench here
-    return !st.terrainEdges[sideKey(h, d)];
+    // only works owned by this hex occupy the same physical space as a trench here
+    return !st.terrainEdges[sideKey(h, d)] && !trenchCovers(st, h, d);
   }
   function trenchOrientations(st, h) {
     var out = [];
@@ -397,7 +370,7 @@
   }
   function trenchTargets(st, p) {
     return controlledHexes(st, p).filter(function (h) {
-      return !st.trenches[h] && trenchOrientations(st, h).length > 0;
+      return trenchOrientations(st, h).length > 0;
     });
   }
 
@@ -463,7 +436,11 @@
       zone[c] = true;
       neighbors(c).forEach(function (n) { zone[n] = true; });
     });
-    var trenchHexes = Object.keys(st.trenches).filter(function (h) { return zone[h]; });
+    var trenches = [];
+    Object.keys(st.trenches).forEach(function (h) {
+      if (!zone[h]) return;
+      st.trenches[h].forEach(function (t, i) { trenches.push({ hex: h, idx: i, dirs: t.dirs }); });
+    });
     var forestPieces = st.terrainPieces.filter(function (pc) {
       if (pc.t !== 'F' || pc.removed) return false;
       return pc.edgeKeys.some(function (sk) {
@@ -472,7 +449,7 @@
         return zone[parts[0]] || (n && zone[n]);
       });
     });
-    return { trenchHexes: trenchHexes, forestPieces: forestPieces };
+    return { trenches: trenches, forestPieces: forestPieces };
   }
 
   /* ---------- combat ---------- */
@@ -512,10 +489,10 @@
     var dsup = supportFor(st, e, atk.to, null);
     dPow += dsup.total; dParts = dParts.concat(dsup.parts);
     if (st.terrainEdges[defSide] === 'M') { dPow += 1; dParts.push('Mountain +1'); }
-    var tr = st.trenches[atk.to];
-    if (tr) {
+    var trList = st.trenches[atk.to];
+    if (trList) {
       var dirIn = dirBetween(atk.to, attackEdgeFromHex);
-      if (tr.dirs.indexOf(dirIn) >= 0) { dPow += 1; dParts.push('Trench +1'); }
+      if (trList.some(function (t) { return t.dirs.indexOf(dirIn) >= 0; })) { dPow += 1; dParts.push('Trench +1'); }
     }
     var outcome = aPow > dPow ? 'attacker' : (dPow > aPow ? 'defender' : 'tie');
     return {
@@ -629,7 +606,7 @@
       o.moves = r.moves; o.swaps = r.swaps;
     } else if (step.type === 'barrage') {
       var b = listBarrageTargets(st, p);
-      o.trenchHexes = b.trenchHexes; o.forestPieces = b.forestPieces;
+      o.trenches = b.trenches; o.forestPieces = b.forestPieces;
     }
     return o;
   }
@@ -640,7 +617,7 @@
     if (o.type === 'deploy' || o.type === 'trench') return o.targets.length > 0;
     if (o.type === 'attack') return o.attacks.length > 0;
     if (o.type === 'reposition') return o.moves.length > 0 || o.swaps.length > 0;
-    if (o.type === 'barrage') return o.trenchHexes.length > 0 || o.forestPieces.length > 0;
+    if (o.type === 'barrage') return o.trenches.length > 0 || o.forestPieces.length > 0;
     return false;
   }
 
@@ -679,8 +656,10 @@
       });
       if (!pairOk) throw new Error('invalid trench orientation');
       st.reserves[p].trench--;
-      st.trenches[choice.hex] = { dirs: dirs.slice(), owner: p }; // owner is UI-only info; trenches aid any defender
-      log(st, cap(p) + ' digs a trench at ' + hexLabel(choice.hex) + '.');
+      if (!st.trenches[choice.hex]) st.trenches[choice.hex] = [];
+      st.trenches[choice.hex].push({ dirs: dirs.slice(), owner: p }); // owner is UI-only info; trenches aid any defender
+      log(st, cap(p) + ' digs a trench at ' + hexLabel(choice.hex) +
+        (st.trenches[choice.hex].length > 1 ? ' — the hex is now double-trenched.' : '.'));
     } else if (step.type === 'attack') {
       var legal = listAttacks(st, p).some(function (a) {
         return a.from === choice.from && a.to === choice.to && (a.via || null) === (choice.via || null);
@@ -706,9 +685,12 @@
     } else if (step.type === 'barrage') {
       var b = listBarrageTargets(st, p);
       if (choice.trenchHex) {
-        if (b.trenchHexes.indexOf(choice.trenchHex) < 0) throw new Error('invalid barrage');
-        delete st.trenches[choice.trenchHex];
-        log(st, cap(p) + "'s naval barrage obliterates the trench at " + hexLabel(choice.trenchHex) + '.');
+        var ti = choice.trenchIdx || 0;
+        var okT = b.trenches.some(function (t) { return t.hex === choice.trenchHex && t.idx === ti; });
+        if (!okT) throw new Error('invalid barrage');
+        st.trenches[choice.trenchHex].splice(ti, 1);
+        if (!st.trenches[choice.trenchHex].length) delete st.trenches[choice.trenchHex];
+        log(st, cap(p) + "'s naval barrage obliterates a trench at " + hexLabel(choice.trenchHex) + '.');
       } else if (choice.pieceId) {
         var pc = st.terrainPieces.filter(function (x) { return x.id === choice.pieceId && !x.removed; })[0];
         if (!pc || b.forestPieces.indexOf(pc) < 0) throw new Error('invalid barrage');
@@ -745,7 +727,7 @@
     return c;
   }
 
-  function unitValue(t) { return { infantry: 3, cavalry: 4, artillery: 5 }[t]; }
+  function unitValue(t) { return { infantry: 3, cavalry: 4, artillery: 5 }[t] || ((UNITS[t] ? UNITS[t].vp : 1) + 2); }
 
   function threatScan(st, me) {
     // best enemy attack power against each of my pieces next turn (+1 for possible card mod)
@@ -797,7 +779,7 @@
     // enemy threats on mine
     s += threatScan(st, me);
     // trench coverage near my HQ is nice
-    for (var th in st.trenches) if (dist(th, mhq) <= 1) s += 6;
+    for (var th in st.trenches) if (dist(th, mhq) <= 1) s += 6 * st.trenches[th].length;
     return s;
   }
 
@@ -816,7 +798,7 @@
       o.moves.forEach(function (m) { out.push({ from: m.from, to: m.to }); });
       o.swaps.forEach(function (sw) { out.push({ swap: true, a: sw.a, b: sw.b }); });
     } else if (o.type === 'barrage') {
-      o.trenchHexes.forEach(function (h) { out.push({ trenchHex: h }); });
+      o.trenches.forEach(function (t) { out.push({ trenchHex: t.hex, trenchIdx: t.idx }); });
       o.forestPieces.forEach(function (pc) { out.push({ pieceId: pc.id }); });
     }
     return out;
@@ -857,13 +839,47 @@
     forced_march: 3, deploy_inf_start: 2
   };
 
+  // Field Marshal helper: how good is this end-of-my-turn state for me, once
+  // the enemy answers? Their hand is hidden, so resample it from what is
+  // legitimately public (deck + hand contents are known, order is not), let
+  // them play their best reply, and average over a few sampled hands.
+  function sampledReplyScore(endSt, me, s, samples) {
+    if (endSt.phase === 'battle-over') return evalState(endSt, me);
+    var opp = endSt.current;
+    var total = 0;
+    for (var k = 0; k < samples; k++) {
+      var sim0 = clone(endSt);
+      var pool = sim0.decks[opp].concat(sim0.hands[opp]);
+      shuffle(s, pool);
+      var hn = sim0.hands[opp].length;
+      sim0.hands[opp] = pool.slice(0, hn);
+      sim0.decks[opp] = pool.slice(hn);
+      var bestOpp = -Infinity, bestState = sim0;
+      var tried = {};
+      sim0.hands[opp].forEach(function (cid) {
+        if (tried[cid]) return;
+        tried[cid] = true;
+        var sim2 = clone(sim0);
+        try { playCard(sim2, cid); } catch (e) { return; }
+        var r = (sim2.phase === 'step') ? greedyResolve(sim2, opp, 0, s) : { score: evalState(sim2, opp), choices: [] };
+        if (r.score > bestOpp) { bestOpp = r.score; bestState = sim2; }
+      });
+      total += evalState(bestState, me);
+    }
+    return total / samples;
+  }
+
   // Decide the AI's whole turn. Returns {cardId, mode, choices:[...]}
+  // easy   = greedy with noisy evaluations (makes mistakes)
+  // normal = greedy, one turn deep
+  // hard   = normal shortlist, then the top candidates are re-scored by what
+  //          the enemy can do back (sampled hands — it never peeks at yours)
   function aiPlanTurn(st, difficulty) {
     var me = st.current;
     var randomness = difficulty === 'easy' ? 60 : 0;
     var s = { seed: (st.seed ^ 0x9e3779b9) | 0 };
     var hand = st.hands[me].slice();
-    var bestPlan = null, bestScore = -Infinity;
+    var candidates = [];
     var tried = {};
     hand.forEach(function (cid) {
       if (tried[cid]) return;
@@ -871,8 +887,8 @@
       var sim = clone(st);
       try { playCard(sim, cid); } catch (e) { return; }
       var r = (sim.phase === 'step') ? greedyResolve(sim, me, randomness, s) : { score: evalState(sim, me), choices: [] };
-      var sc = r.score + (randomness ? rnd(s) * randomness : 0);
-      if (sc > bestScore) { bestScore = sc; bestPlan = { cardId: cid, mode: 'normal', choices: r.choices }; }
+      candidates.push({ plan: { cardId: cid, mode: 'normal', choices: r.choices },
+        score: r.score + (randomness ? rnd(s) * randomness : 0), end: sim });
     });
     // House rule: any card may be played as a basic attack or reposition.
     // Burn the least precious card if that beats every printed action.
@@ -882,11 +898,66 @@
         var sim = clone(st);
         try { playCard(sim, burn, mode); } catch (e) { return; }
         var r = (sim.phase === 'step') ? greedyResolve(sim, me, randomness, s) : { score: evalState(sim, me), choices: [] };
-        var sc = r.score - 12 + (randomness ? rnd(s) * randomness : 0); // mild bias toward printed actions
-        if (sc > bestScore) { bestScore = sc; bestPlan = { cardId: burn, mode: mode, choices: r.choices }; }
+        candidates.push({ plan: { cardId: burn, mode: mode, choices: r.choices },
+          score: r.score - 12 + (randomness ? rnd(s) * randomness : 0), end: sim }); // mild bias toward printed actions
       });
     }
-    return bestPlan;
+    if (!candidates.length) return null;
+    candidates.sort(function (a, b) { return b.score - a.score; });
+    if (difficulty !== 'hard') return candidates[0].plan;
+    var best = null, bestScore = -Infinity;
+    candidates.slice(0, 3).forEach(function (cand) {
+      var sc = 0.3 * cand.score + 0.7 * sampledReplyScore(cand.end, me, s, 2);
+      if (sc > bestScore) { bestScore = sc; best = cand.plan; }
+    });
+    return best;
+  }
+
+  /* ---------- battle simulation (shared by balance.js and the in-game lab) ---------- */
+  function simBattle(map, seed, firstPlayer, diffRed, diffBlue) {
+    var match = newMatch({ seed: seed | 0, maps: [map], firstPlayer: firstPlayer || 'red' });
+    var st = newBattle(match);
+    var guard = 0;
+    while (st.phase !== 'battle-over' && guard++ < 400) {
+      var diff = st.current === 'red' ? (diffRed || 'normal') : (diffBlue || diffRed || 'normal');
+      var plan = aiPlanTurn(st, diff);
+      if (!plan) break;
+      playCard(st, plan.cardId, plan.mode || 'normal');
+      var g2 = 0;
+      while (st.phase === 'step' && g2++ < 12) {
+        var c = plan.choices.shift() || { skip: true };
+        try { applyStep(st, c); }
+        catch (e) { try { applyStep(st, { skip: true }); } catch (e2) { break; } }
+      }
+    }
+    return st;
+  }
+
+  // n AI-vs-AI battles on one map (alternating first player); aggregated stats.
+  function balanceMap(map, n, opts) {
+    opts = opts || {};
+    var out = { n: n, redWins: 0, firstWins: 0, hqWins: 0, turns: 0, vpDiff: 0, unfinished: 0, cards: {} };
+    CARDS.forEach(function (c) { out.cards[c.id] = { plays: 0, wins: 0 }; });
+    for (var g = 0; g < n; g++) {
+      var fp = g % 2 === 0 ? 'red' : 'blue';
+      var st = simBattle(map, (opts.seedBase || 7919) + g * 104729 + 13, fp, opts.diffRed, opts.diffBlue);
+      if (st.phase !== 'battle-over') { out.unfinished++; continue; }
+      var w = st.battleWinner;
+      if (w === 'red') out.redWins++;
+      if (w === fp) out.firstWins++;
+      if (st.winType === 'hq') out.hqWins++;
+      out.turns += st.turnNumber;
+      out.vpDiff += Math.abs(st.vp.red - st.vp.blue);
+      ['red', 'blue'].forEach(function (p) {
+        st.removed[p].forEach(function (cid) {
+          if (!out.cards[cid]) out.cards[cid] = { plays: 0, wins: 0 };
+          out.cards[cid].plays++;
+          if (p === w) out.cards[cid].wins++;
+        });
+      });
+      if (opts.onGame) opts.onGame(g + 1, n, st);
+    }
+    return out;
   }
 
   /* ---------- validation helper (for tests) ---------- */
@@ -902,13 +973,15 @@
         if (!inBoard.apply(null, m.redHQ)) problems.push(m.name + ': red HQ off board');
         if (!inBoard.apply(null, m.blueHQ)) problems.push(m.name + ': blue HQ off board');
         if (key.apply(null, m.redHQ) === key.apply(null, m.blueHQ)) problems.push(m.name + ': HQs overlap');
-        var stock = { F2: 0, F3: 0, M2: 0, M3: 0 };
+        var stock = {};
+        Object.keys(TERRAIN_STOCK).forEach(function (k) { stock[k] = 0; });
         m.pieces.forEach(function (p) {
           var sk = p.t + p.edges.length;
-          if (stock[sk] === undefined) problems.push(m.name + ': piece of length ' + p.edges.length + ' has no physical counterpart (lengths 2-3 exist)');
+          if (stock[sk] === undefined) problems.push(m.name + ': piece of length ' + p.edges.length + ' has no physical counterpart (stock: ' + Object.keys(TERRAIN_STOCK).join(',') + ')');
           else stock[sk]++;
         });
-        if (stock.F3 > 2 || stock.M3 > 2 || stock.F2 > 4 || stock.M2 > 4) problems.push(m.name + ': exceeds terrain stock ' + JSON.stringify(stock));
+        var over = Object.keys(TERRAIN_STOCK).filter(function (k) { return stock[k] > TERRAIN_STOCK[k]; });
+        if (over.length) problems.push(m.name + ': exceeds terrain stock ' + JSON.stringify(stock));
       } catch (e) { problems.push(e.message); }
     });
     setBoard(prevShape);
@@ -917,6 +990,7 @@
 
   var Engine = {
     DIRS: DIRS, UNITS: UNITS, CARDS: CARDS, CARD_BY_ID: CARD_BY_ID, MAPS: MAPS,
+    PIECE_TOTALS: PIECE_TOTALS, TERRAIN_STOCK: TERRAIN_STOCK,
     SHAPES: SHAPES, DEFAULT_SHAPE: DEFAULT_SHAPE, boardHexes: boardHexes, setBoard: setBoard, hexes: hexes,
     currentShape: currentShape, rot180: rot180, buildTerrain: buildTerrain, pieceProblem: pieceProblem, hexLabel: hexLabel,
     key: key, parseKey: parseKey, inBoard: inBoard, neighbor: neighbor, neighbors: neighbors,
@@ -927,7 +1001,8 @@
     listAttacks: listAttacks, listRepositions: listRepositions, listBarrageTargets: listBarrageTargets,
     computeAttack: computeAttack, playCard: playCard, currentStep: currentStep,
     stepOptions: stepOptions, applyStep: applyStep, cardsRemaining: cardsRemaining,
-    aiPlanTurn: aiPlanTurn, clone: clone, evalState: evalState, validateMaps: validateMaps
+    aiPlanTurn: aiPlanTurn, clone: clone, evalState: evalState, validateMaps: validateMaps,
+    simBattle: simBattle, balanceMap: balanceMap
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = Engine;

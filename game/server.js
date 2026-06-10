@@ -20,9 +20,20 @@ function code4() {
   return rooms[c] ? code4() : c;
 }
 
+function stamp() { return new Date().toTimeString().slice(0, 8); }
+function logRooms(msg) {
+  var open = Object.keys(rooms).sort().join(' ') || 'none';
+  console.log('  [' + stamp() + '] ' + msg + '   (open rooms: ' + open + ')');
+}
+
 function cleanup() {
   var now = Date.now();
-  for (var c in rooms) if (now - rooms[c].updated > 6 * 3600 * 1000) delete rooms[c];
+  for (var c in rooms) {
+    if (now - rooms[c].updated > 6 * 3600 * 1000) {
+      delete rooms[c];
+      logRooms('room ' + c + ' expired after 6h idle');
+    }
+  }
 }
 setInterval(cleanup, 600000);
 
@@ -56,6 +67,7 @@ http.createServer(function (req, res) {
       if (err || !body.state) return json(res, 400, { error: 'bad request' });
       var room = code4();
       rooms[room] = { state: body.state, seq: 1, updated: Date.now() };
+      logRooms('room ' + room + ' hosted by ' + (req.socket.remoteAddress || '?'));
       json(res, 200, { room: room, seq: 1 });
     });
   }
@@ -64,6 +76,7 @@ http.createServer(function (req, res) {
       var r = body && rooms[(body.room || '').toUpperCase()];
       if (err || !r) return json(res, 404, { error: 'room not found' });
       r.updated = Date.now();
+      logRooms('room ' + (body.room || '').toUpperCase() + ' joined by ' + (req.socket.remoteAddress || '?'));
       json(res, 200, { state: r.state, seq: r.seq });
     });
   }

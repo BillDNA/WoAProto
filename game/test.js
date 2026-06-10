@@ -95,6 +95,40 @@ console.log('== trench/terrain edge exclusivity ==');
   ok(thrown, 'engine rejects trench over a terrain edge');
 })();
 
+console.log('== multiple trenches per hex (DoubleTrenchNotAllowed report) ==');
+(function () {
+  // Bill's repro: infantry on D3 (classic '-1,1'), already entrenched on its
+  // west/southwest edges; a second trench along the C3/C4 edges must be legal.
+  var st = testBattle(60);
+  st.units['-1,1'] = { type: 'infantry', owner: 'red' };
+  st.trenches['-1,1'] = [{ dirs: [3, 4], owner: 'red' }];
+  ok(E.trenchTargets(st, 'red').indexOf('-1,1') >= 0, 'a hex with a trench can be entrenched again');
+  var ors = E.trenchOrientations(st, '-1,1');
+  ok(ors.some(function (pr) { return pr[0] === 1 && pr[1] === 2; }), 'orientation toward C3/C4 (dirs 1-2) offered');
+  ok(!ors.some(function (pr) { return pr.indexOf(3) >= 0 || pr.indexOf(4) >= 0; }), 'already-covered edges excluded');
+  st.hands.red = ['deploy_inf_trench'];
+  E.playCard(st, 'deploy_inf_trench');
+  E.applyStep(st, { skip: true }); // skip the deploy
+  E.applyStep(st, { hex: '-1,1', dirs: [1, 2] });
+  ok(st.trenches['-1,1'].length === 2, 'second trench dug on the same hex');
+  st.units['0,0'] = { type: 'infantry', owner: 'blue' };
+  var r = E.computeAttack(st, { from: '0,0', to: '-1,1' });
+  ok(r.defenderPower === 2, 'second trench defends its edges (got ' + r.defenderPower + ')');
+  st.units['-2,1'] = { type: 'infantry', owner: 'blue' };
+  var r2 = E.computeAttack(st, { from: '-2,1', to: '-1,1' });
+  ok(r2.defenderPower >= 2, 'first trench still defends its edges');
+  // overlap stays illegal
+  var st2 = testBattle(61);
+  st2.units['0,0'] = { type: 'infantry', owner: 'red' };
+  st2.trenches['0,0'] = [{ dirs: [1, 2], owner: 'red' }];
+  var thrown = false;
+  st2.hands.red = ['deploy_inf_trench'];
+  E.playCard(st2, 'deploy_inf_trench');
+  E.applyStep(st2, { skip: true });
+  try { E.applyStep(st2, { hex: '0,0', dirs: [2, 3] }); } catch (e) { thrown = true; }
+  ok(thrown, 'overlapping trench edges rejected');
+})();
+
 console.log('== HexClarificationDiagram A/B/C table ==');
 (function () {
   // A top, B = A's SW neighbor, C = A's SE neighbor. Forest in A on edges A|B and A|C.
@@ -170,9 +204,14 @@ console.log('== map pool ==');
   ok(st2.mapName === E.MAPS[0].name, 'pool cycles when battles outnumber maps');
 })();
 
-console.log('== deck composition ==');
-var total = E.CARDS.reduce(function (a, c) { return a + c.count; }, 0);
-ok(total === 16, '16 cards per deck (got ' + total + ')');
+console.log('== deck composition (data-driven from maps.js) ==');
+(function () {
+  var total = E.CARDS.reduce(function (a, c) { return a + c.count; }, 0);
+  var st = testBattle(99);
+  ok(E.cardsRemaining(st, 'red') === total, 'battle starts with every card in deck+hand (' + total + ' per maps.js)');
+  ok(E.CARDS.some(function (c) { return c.starting; }), 'a starting card is defined');
+  ok(Object.keys(E.PIECE_TOTALS).length >= 2 && E.PIECE_TOTALS.trench >= 0, 'piece totals derive from maps.js: ' + JSON.stringify(E.PIECE_TOTALS));
+})();
 
 console.log('== combat math ==');
 (function () {
@@ -190,10 +229,10 @@ console.log('== combat math ==');
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
   ok(res.defenderPower === 2, 'defender inf support +1 (got ' + res.defenderPower + ')');
   // trench across attack edge: attack comes from 0,0 which is NW (dir 2) of 0,1
-  st.trenches['0,1'] = { dirs: [2, 3] };
+  st.trenches['0,1'] = [{ dirs: [2, 3], owner: 'blue' }];
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
   ok(res.defenderPower === 3, 'trench +1 when attacked across covered edge (got ' + res.defenderPower + ')');
-  st.trenches['0,1'] = { dirs: [0, 1] };
+  st.trenches['0,1'] = [{ dirs: [0, 1], owner: 'blue' }];
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
   ok(res.defenderPower === 2, 'trench no bonus on uncovered edge (got ' + res.defenderPower + ')');
   // terrain is hex-owned and directional (HexClarificationDiagram)
@@ -256,6 +295,19 @@ console.log('== turn flow / first hand ==');
   E.applyStep(st, { hex: o.targets[0] });
   ok(st.current === 'blue' && st.hands.blue.length === 4, 'turn passed to blue with 4 cards');
   ok(st.removed.red.length === 1 && st.discards.red.length === 3, 'played card removed, rest discarded');
+})();
+
+console.log('== Field Marshal AI & battle sim ==');
+(function () {
+  var t0 = Date.now();
+  var st = E.simBattle(E.MAPS[0], 4242, 'red', 'hard', 'normal');
+  ok(st.phase === 'battle-over', 'hard-vs-normal battle finishes (winner ' + st.battleWinner + ', ' + st.turnNumber + ' turns)');
+  console.log('  (hard-AI battle took ' + ((Date.now() - t0) / 1000).toFixed(1) + 's)');
+  var r = E.balanceMap(E.MAPS[4], 4, { seedBase: 11 });
+  ok(r.redWins <= 4 && r.turns > 0 && r.unfinished === 0, 'balanceMap aggregates: ' + JSON.stringify({ red: r.redWins, first: r.firstWins, hq: r.hqWins }));
+  var a = E.simBattle(E.MAPS[2], 777, 'red', 'normal', 'normal');
+  var b = E.simBattle(E.MAPS[2], 777, 'red', 'normal', 'normal');
+  ok(a.battleWinner === b.battleWinner && a.turnNumber === b.turnNumber, 'simulation is deterministic per seed');
 })();
 
 console.log('== AI vs AI full matches ==');

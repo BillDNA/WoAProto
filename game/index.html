@@ -298,10 +298,12 @@
       <span class="small" style="align-self:center;">Enemy general:</span>
       <span class="choice" data-diff="easy">Green Recruit</span>
       <span class="choice sel" data-diff="normal">Old Veteran</span>
+      <span class="choice" data-diff="hard" title="Thinks about your best reply before committing — takes a moment per turn">Field Marshal</span>
     </div>
     <div class="menu-btns">
       <button id="btnResume" style="display:none;">Resume Campaign</button>
       <button id="btnAI">March Against the AI</button>
+      <button id="btnWatch" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Watch: AI vs AI</button>
       <button id="btnHotseat">Hotseat &mdash; Shared Device</button>
       <button id="btnHost">Host a Room (two devices)</button>
       <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
@@ -328,6 +330,7 @@
       <span style="color:var(--brass)">vs</span>
       <span class="pips" id="pipsBlue"></span>
     </div>
+    <span id="roomchip" style="display:none; padding:3px 10px; border:1px dashed var(--brass); border-radius:5px; font-size:13px; letter-spacing:2px;"></span>
     <span id="turnbadge">RED</span>
     <button class="ghost" id="btnCards" style="padding:3px 10px;font-size:13px;">Cards</button>
     <button class="ghost" id="btnManual2" style="padding:3px 10px;font-size:13px;">Manual</button>
@@ -384,6 +387,7 @@
     <div class="ovr-btns">
       <button id="edSave">Save Map</button>
       <button id="edTest">Save &amp; Test vs AI</button>
+      <button id="edBalance" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);" title="AI-vs-AI win rates for the map as drawn (does not save)">Balance Report</button>
       <button id="edBack" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Back</button>
     </div>
   </div>
@@ -391,6 +395,7 @@
 
 <!-- overlays -->
 <div class="overlay" id="playOvr"><div class="panel parchment" id="playPanel"></div></div>
+<div class="overlay" id="balOvr"><div class="panel parchment" id="balPanel"></div></div>
 <div class="overlay" id="confirmOvr"><div class="panel parchment" id="confirmPanel"></div></div>
 <div class="overlay" id="battleOvr"><div class="panel parchment" id="battlePanel"></div></div>
 <div class="overlay" id="handoffOvr"><div class="panel parchment" id="handoffPanel"></div></div>
@@ -467,6 +472,7 @@ document.querySelectorAll('#diffRow .choice').forEach(function(el){
 $('btnAI').onclick = function(){ startLocal('ai'); };
 // deep link straight into a game: index.html?autostart=ai (handy for screenshots & sharing)
 if (/autostart=ai/.test(location.search)) setTimeout(function(){ startLocal('ai'); }, 60);
+$('btnWatch').onclick = function(){ startLocal('watch'); };
 $('btnHotseat').onclick = function(){ startLocal('hotseat'); };
 $('btnManual').onclick = function(){ $('manualOvr').classList.add('active'); };
 $('btnManual2').onclick = function(){ $('manualOvr').classList.add('active'); };
@@ -518,7 +524,7 @@ function checkResume(){
   try { ok = !!localStorage.getItem('woa-save'); } catch(e){}
   $('btnResume').style.display = ok ? '' : 'none';
 }
-var SAVE_V = 2; // bumped when old saves can no longer be loaded (e.g. board shapes changed)
+var SAVE_V = 3; // bumped when old saves can no longer be loaded (board shapes, trench arrays, ...)
 function saveLocal(){
   if (APP.mode === 'net' || !APP.st) return;
   try { localStorage.setItem('woa-save', JSON.stringify({v:SAVE_V, mode:APP.mode, mySide:APP.mySide, diff:APP.diff, st:APP.st})); } catch(e){}
@@ -600,12 +606,13 @@ function startPolling(){
 /* =================== whose input is live? =================== */
 function inputLive(){
   if (!APP.st || APP.st.phase === 'battle-over' || APP.ui.busy) return false;
+  if (APP.mode === 'watch') return false; // spectating
   if (APP.mode === 'ai') return APP.st.current === APP.mySide;
   if (APP.mode === 'net') return APP.st.current === APP.mySide;
   return true; // hotseat
 }
 function viewSide(){
-  if (APP.mode === 'hotseat') return APP.st.current;
+  if (APP.mode === 'hotseat' || APP.mode === 'watch') return APP.st.current;
   return APP.mySide;
 }
 
@@ -691,13 +698,15 @@ function renderBoard(){
     }
   }
 
-  // trenches
+  // trenches (a hex may hold several)
   for (var th in st.trenches){
     var c2 = hexXY(th);
-    st.trenches[th].dirs.forEach(function(d){
-      var aa = cornerAngles(d);
-      var p1 = cornerPt(c2[0], c2[1], aa[0], S*0.74), p2 = cornerPt(c2[0], c2[1], aa[1], S*0.74);
-      gTr.appendChild(svgEl('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],stroke:'#5a4326','stroke-width':6.5,'stroke-linecap':'round','stroke-dasharray':'7 4'}));
+    st.trenches[th].forEach(function(t){
+      t.dirs.forEach(function(d){
+        var aa = cornerAngles(d);
+        var p1 = cornerPt(c2[0], c2[1], aa[0], S*0.74), p2 = cornerPt(c2[0], c2[1], aa[1], S*0.74);
+        gTr.appendChild(svgEl('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],stroke:'#5a4326','stroke-width':6.5,'stroke-linecap':'round','stroke-dasharray':'7 4'}));
+      });
     });
   }
 
@@ -843,7 +852,18 @@ function renderHighlights(g){
     }
   }
   else if (o.type==='barrage'){
-    o.trenchHexes.forEach(function(h){ hl(g, h, 'hl-attack', function(){ act({trenchHex:h}); }); });
+    o.trenches.forEach(function(t){
+      var c = hexXY(t.hex);
+      t.dirs.forEach(function(d){
+        var aa = cornerAngles(d);
+        var p1 = cornerPt(c[0],c[1],aa[0],S*0.74), p2 = cornerPt(c[0],c[1],aa[1],S*0.74);
+        var seg = svgEl('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],stroke:'#c0392b','stroke-width':11,'stroke-linecap':'round',opacity:.55,'class':'hl'});
+        seg.addEventListener('mouseenter', function(){ seg.setAttribute('opacity','.9'); });
+        seg.addEventListener('mouseleave', function(){ seg.setAttribute('opacity','.55'); });
+        seg.addEventListener('click', function(){ act({trenchHex:t.hex, trenchIdx:t.idx}); });
+        g.appendChild(seg);
+      });
+    });
     o.forestPieces.forEach(function(pc){
       pc.edgeKeys.forEach(function(ek){
         var parts = ek.split('>');
@@ -873,12 +893,11 @@ function glyphSVG(type, col, colD){
   else s += '<circle cx="10" cy="10" r="3.4" fill="#ece1c4"/>';
   return s+'</svg>';
 }
-var STAT_TIP = {
-  infantry: 'Infantry — attack 1, defense 1, support 1, worth 1 VP',
-  cavalry: 'Cavalry — attack 3, defense 0, support 0, worth 2 VP',
-  artillery: 'Artillery — attack 0, defense 0, support 2, worth 3 VP',
-  trench: 'Trench — +1 defense across its two covered edges'
-};
+function statTip(type){
+  if (type==='trench') return 'Trench — +1 defense across its two covered edges';
+  var u = E.UNITS[type];
+  return u.name+' — attack '+u.atk+', defense '+u.def+', support '+u.sup+', worth '+u.vp+' VP to the enemy';
+}
 var CARD_ABBR = {
   deploy_inf_start:'In', deploy_artillery:'Ar', deploy_inf_trench:'En', airdrop:'Ad',
   conscription:'Co', deploy_cavalry:'Cv', attack_plus1:'+1', mass_assault:'MA',
@@ -891,10 +910,11 @@ function renderMat(p){
   var r = st.reserves[p];
   var col = p==='red' ? 'var(--red)' : 'var(--blue)';
   var colD = p==='red' ? 'var(--red-dark)' : 'var(--blue-dark)';
-  var totals = { infantry:7, cavalry:2, artillery:1, trench:3 };
-  var onField = { infantry:0, cavalry:0, artillery:0, trench:0 };
+  var totals = E.PIECE_TOTALS;
+  var onField = { trench:0 };
+  Object.keys(totals).forEach(function(t){ onField[t] = onField[t] || 0; });
   for (var h in st.units) if (st.units[h].owner===p) onField[st.units[h].type]++;
-  for (var th in st.trenches) if (st.trenches[th].owner===p) onField.trench++;
+  for (var th in st.trenches) st.trenches[th].forEach(function(t){ if (t.owner===p) onField.trench++; });
 
   // one slot per physical piece: solid = still on the mat, dashed = on the
   // field, X = destroyed — same at-a-glance read as the wooden player mat
@@ -908,8 +928,11 @@ function renderMat(p){
       else if (i < res+field) boxes += '<span class="slot field" title="'+label+' on the field"></span>';
       else boxes += '<span class="slot lost" title="'+label+' destroyed">&#10006;</span>';
     }
-    return '<div class="srow"><span class="slbl" title="'+STAT_TIP[type]+'">'+label+'</span><span class="sboxes">'+boxes+'</span></div>';
+    return '<div class="srow"><span class="slbl" title="'+statTip(type)+'">'+label+'</span><span class="sboxes">'+boxes+'</span></div>';
   }
+  var rowsHtml = '';
+  Object.keys(E.UNITS).forEach(function(t){ rowsHtml += row(E.UNITS[t].name, t); });
+  rowsHtml += row('Trenches','trench');
 
   var spent = '';
   E.CARDS.forEach(function(c){
@@ -923,10 +946,7 @@ function renderMat(p){
   var you = APP.mode!=='hotseat' && p===APP.mySide ? ' — you' : '';
   el.innerHTML =
     '<h3>'+capName(p)+you+'</h3>' +
-    row('Infantry','infantry') +
-    row('Cavalry','cavalry') +
-    row('Artillery','artillery') +
-    row('Trenches','trench') +
+    rowsHtml +
     '<div class="row" style="margin-top:2px;"><span>Orders left</span><b>'+E.cardsRemaining(st,p)+'</b></div>' +
     '<div class="spentlbl">orders spent &mdash; gone from the game</div>' +
     '<div class="spent" title="Click for the full card glossary">'+spent+'</div>' +
@@ -948,6 +968,12 @@ function renderTop(){
   }
   pips($('pipsRed'), m.wins.red);
   pips($('pipsBlue'), m.wins.blue);
+  var rc = $('roomchip');
+  if (APP.mode === 'net' && APP.net.room){
+    rc.style.display = '';
+    rc.innerHTML = 'Room <b>' + APP.net.room + '</b>';
+    rc.title = 'The other player joins with this code';
+  } else rc.style.display = 'none';
   var b = $('turnbadge');
   b.textContent = capName(st.current) + (APP.mode!=='hotseat' && st.current===APP.mySide ? ' — you' : '');
   b.className = st.current;
@@ -985,9 +1011,11 @@ function renderPrompt(){
   if (st.phase === 'battle-over') return;
   var who = capName(st.current);
   if (!inputLive()){
-    el.innerHTML = APP.mode==='ai' && st.current!==APP.mySide
+    el.innerHTML = (APP.mode==='ai' && st.current!==APP.mySide)
       ? '<b>'+who+'</b> (the enemy general) is thinking…'
-      : 'Waiting for <b>'+who+'</b>…';
+      : APP.mode==='watch'
+        ? 'General <b>'+who+'</b> surveys the field… <span class="small" style="color:#bbb;">(you are spectating)</span>'
+        : 'Waiting for <b>'+who+'</b>…';
     return;
   }
   if (st.phase === 'choose-card'){
@@ -1093,15 +1121,22 @@ function showBattleOver(){
   var html = '<h2 class="'+w+'">'+capName(w)+' takes the field!</h2>' +
     '<p style="font-style:italic;">"'+st.mapName+'" — ' + (st.winType==='hq' ? 'the enemy headquarters was captured.' : 'won by attrition, '+st.vp.red+' VP to '+st.vp.blue+' VP.') + '</p>' +
     '<p style="margin-top:10px;font-size:18px;">Campaign: <b style="color:var(--red-dark)">Red '+m.wins.red+'</b> — <b style="color:var(--blue-dark)">Blue '+m.wins.blue+'</b></p>';
+  var rematch = APP.mode !== 'net'
+    ? '<button id="boRematch" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);" title="Fresh battle, same map — for A/B testing a layout">Rematch this map</button>'
+    : '';
   if (m.winner){
     html += '<h2 class="'+m.winner+'" style="margin-top:14px;">'+capName(m.winner)+' wins the war!</h2>' +
-      '<div class="ovr-btns"><button id="boNew">New Campaign</button><button id="boMenu" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Main Menu</button></div>';
+      '<div class="ovr-btns"><button id="boNew">New Campaign</button>'+rematch+'<button id="boMenu" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Main Menu</button></div>';
   } else {
     html += '<p class="small">'+capName(m.lastLoser)+' moves first in the next battle.</p>' +
-      '<div class="ovr-btns"><button id="boNext">Next Battle</button><button id="boMenu" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Main Menu</button></div>';
+      '<div class="ovr-btns"><button id="boNext">Next Battle</button>'+rematch+'<button id="boMenu" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Main Menu</button></div>';
   }
   $('battlePanel').innerHTML = html;
   $('battleOvr').classList.add('active');
+  if ($('boRematch')) $('boRematch').onclick = function(){
+    $('battleOvr').classList.remove('active');
+    startLocal(APP.mode, [m.maps[st.mapIndex]]);
+  };
   if ($('boNext')) $('boNext').onclick = function(){
     $('battleOvr').classList.remove('active');
     APP.st = E.newBattle(m);
@@ -1434,6 +1469,14 @@ function renderMapsScr(){
       d.classList.toggle('off', !cb.checked);
     };
     var btns = d.querySelector('.btns');
+    var bp = document.createElement('button'); bp.textContent='Play';
+    bp.title = 'A quick campaign vs the AI on just this map';
+    bp.onclick = function(){ startLocal('ai', [m.def]); };
+    btns.appendChild(bp);
+    var bb = document.createElement('button'); bb.textContent='Balance';
+    bb.title = 'Run AI-vs-AI battles on this map and report the win rates';
+    bb.onclick = function(){ runBalanceUI(m.def); };
+    btns.appendChild(bb);
     if (!m.builtin){
       var be = document.createElement('button'); be.textContent='Edit';
       be.onclick = function(){ openEditor(m.def); };
@@ -1477,7 +1520,7 @@ $('btnExportMaps').onclick = function(){
   a.download = 'custom-maps.js';
   a.click();
   setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
-  toast('Downloaded custom-maps.js &mdash; put it in the game folder, next to index.html.', 4500);
+  toast('Downloaded custom-maps.js &mdash; just move it into the game folder, next to index.html.<br><span class="small">No need to open it: Windows refusing to RUN a downloaded .js file is normal and harmless.</span>', 6500);
 };
 $('btnImportMaps').onclick = function(){ $('importFile').click(); };
 $('importFile').onchange = function(){
@@ -1509,6 +1552,70 @@ $('importFile').onchange = function(){
   };
   rd.readAsText(f);
 };
+
+/* =================== in-game balance lab =================== */
+// Runs AI-vs-AI battles on one map, chunked so the page stays alive.
+var BAL = { cancel:true };
+function runBalanceUI(def){
+  var probs = E.validateMaps([def]);
+  if (probs.length){ toast('Map problem: '+probs.join('; '), 4200); return; }
+  BAL = { cancel:false, n:0, red:0, first:0, hq:0, turns:0, vp:0, seed:(Date.now() & 0xfffff) };
+  $('balOvr').classList.add('active');
+  balRound(def, 20);
+}
+function closeBal(){ BAL.cancel = true; $('balOvr').classList.remove('active'); }
+function balRound(def, add){
+  var target = BAL.n + add;
+  function step(){
+    if (BAL.cancel) return;
+    if (BAL.n >= target){ balReport(def); return; }
+    $('balPanel').innerHTML = '<h2>Balance Report</h2><p style="font-weight:bold;">'+def.name+'</p>' +
+      '<p style="font-size:17px;">The generals are fighting battle '+(BAL.n+1)+' of '+target+'&hellip;</p>' +
+      '<div class="ovr-btns"><button id="balCancel" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Cancel</button></div>';
+    $('balCancel').onclick = closeBal;
+    setTimeout(function(){
+      if (BAL.cancel) return;
+      var fp = BAL.n % 2 ? 'blue' : 'red';
+      var st = E.simBattle(def, BAL.seed + BAL.n * 104729, fp, 'normal', 'normal');
+      if (st.phase === 'battle-over'){
+        if (st.battleWinner === 'red') BAL.red++;
+        if (st.battleWinner === fp) BAL.first++;
+        if (st.winType === 'hq') BAL.hq++;
+        BAL.turns += st.turnNumber;
+        BAL.vp += Math.abs(st.vp.red - st.vp.blue);
+      }
+      BAL.n++;
+      step();
+    }, 15);
+  }
+  step();
+}
+function balReport(def){
+  var n = Math.max(1, BAL.n);
+  function pct(a){ return Math.round(100*a/n); }
+  var notes = [];
+  if (pct(BAL.red) >= 62 || pct(BAL.red) <= 38) notes.push('one side is favoured — check terrain/HQ symmetry');
+  if (pct(BAL.first) >= 62) notes.push('first mover is strong here');
+  if (pct(BAL.first) <= 38) notes.push('second mover is strong here');
+  if (pct(BAL.hq) <= 8) notes.push('the HQ never falls — battles grind to attrition');
+  if (pct(BAL.hq) >= 55) notes.push('HQ rushes dominate');
+  var row = function(l, v){ return '<div class="row" style="max-width:300px;margin:0 auto;"><span>'+l+'</span><b>'+v+'</b></div>'; };
+  $('balPanel').innerHTML =
+    '<h2>Balance Report</h2><p style="font-weight:bold;">'+def.name+'</p>' +
+    '<p class="small">'+BAL.n+' AI-vs-AI battles (Old Veteran both sides)</p>' +
+    row('<span style="color:var(--red-dark);font-weight:bold;">Red</span> / <span style="color:var(--blue-dark);font-weight:bold;">Blue</span> wins', pct(BAL.red)+'% / '+pct(n-BAL.red)+'%') +
+    row('First / second mover wins', pct(BAL.first)+'% / '+pct(n-BAL.first)+'%') +
+    row('HQ captures / attrition', pct(BAL.hq)+'% / '+pct(n-BAL.hq)+'%') +
+    row('Average battle length', (BAL.turns/n).toFixed(1)+' turns') +
+    row('Average VP margin', (BAL.vp/n).toFixed(1)) +
+    (notes.length
+      ? '<p style="margin-top:10px;" class="warn">'+notes.join('<br>')+'</p>'
+      : '<p style="margin-top:10px;color:var(--olive);font-style:italic;">No red flags at this sample size.</p>') +
+    '<p class="small" style="margin-top:6px;">Small samples wobble: &plusmn;'+Math.round(100/Math.sqrt(n))+' points. Run more for confidence, or <code>node balance.js</code> for the full report.</p>' +
+    '<div class="ovr-btns"><button id="balMore">Run 20 more</button><button id="balClose" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Close</button></div>';
+  $('balMore').onclick = function(){ balRound(def, 20); };
+  $('balClose').onclick = closeBal;
+}
 
 /* =================== map editor =================== */
 var ED = { id:null, name:'', shape:'classic', red:null, blue:null, edges:{}, tool:'terrain', isNew:true };
@@ -1699,14 +1806,13 @@ function renderEdStock(){
     lens.forEach(function(l){ cnt[l] = (cnt[l]||0)+1; });
     return Object.keys(cnt).sort().map(function(l){ return cnt[l]+'&times;len'+l; }).join(', ');
   }
+  var stockNote = Object.keys(E.TERRAIN_STOCK).map(function(k){ return E.TERRAIN_STOCK[k]+'&times;len'+k.slice(1)+' '+(k[0]==='F'?'forest':'mountain'); }).join(', ');
   $('edStock').innerHTML = 'Forest pieces: '+summary('F')+' &nbsp;|&nbsp; Mountain pieces: '+summary('M')+
-    ' <span class="small">(physical stock per type: 2&times;len3 + 4&times;len2)</span>';
-  var over = ['F','M'].some(function(t){
-    var ps = pieces.filter(function(p){ return p.t===t; });
-    var n3 = ps.filter(function(p){ return p.edges.length===3; }).length;
-    var n2 = ps.filter(function(p){ return p.edges.length===2; }).length;
-    var odd = ps.some(function(p){ return p.edges.length<2 || p.edges.length>3; });
-    return odd || n3>2 || n2>4;
+    ' <span class="small">(physical stock: '+stockNote+')</span>';
+  var over = pieces.some(function(p){
+    var cap = E.TERRAIN_STOCK[p.t + p.edges.length];
+    if (cap === undefined) return true; // no physical piece of this size
+    return pieces.filter(function(o){ return o.t===p.t && o.edges.length===p.edges.length; }).length > cap;
   });
   $('edWarn').textContent = over ? 'Note: this layout exceeds the physical terrain stock (still fully playable digitally).' : '';
 }
@@ -1751,11 +1857,16 @@ $('edTest').onclick = function(){
   edSaveDef(def);
   startLocal('ai', [def]);
 };
+$('edBalance').onclick = function(){
+  var def = edBuildDef();
+  if (def) runBalanceUI(def);
+};
 
 /* =================== AI driver =================== */
 function maybeAI(){
   var st = APP.st;
-  if (APP.mode !== 'ai' || st.phase !== 'choose-card' || st.current === APP.mySide) return;
+  var aiTurn = (APP.mode === 'ai' && st.current !== APP.mySide) || APP.mode === 'watch';
+  if (!aiTurn || st.phase !== 'choose-card') return;
   APP.ui.busy = true;
   renderPrompt();
   setTimeout(function(){
@@ -1771,7 +1882,7 @@ function maybeAI(){
         APP.ui.busy = false;
         renderAll(); saveLocal();
         if (st.phase==='battle-over'){ clearIfMatchOver(); showBattleOver(); }
-        else renderPrompt();
+        else { renderPrompt(); maybeAI(); } // watch mode: the other general takes over
         return;
       }
       var c = plan.choices[i++] || {skip:true};

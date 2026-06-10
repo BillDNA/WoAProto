@@ -95,6 +95,8 @@ setTimeout(function () {
     doc.getElementById('btnQuit').click();
     doc.getElementById('btnMaps').click();
     ok(doc.querySelectorAll('#mapGrid .mapitem').length === 12, '12 map tiles listed');
+    var tileBtns = Array.prototype.map.call(doc.querySelectorAll('#mapGrid .mapitem')[0].querySelectorAll('.btns button'), function (b) { return b.textContent; });
+    ok(tileBtns.indexOf('Play') >= 0 && tileBtns.indexOf('Balance') >= 0, 'map tiles offer Play + Balance (' + tileBtns.join('/') + ')');
     doc.getElementById('btnNewMap').click();
     ok(doc.getElementById('editorScr').classList.contains('active'), 'editor opens');
     var hits = doc.querySelectorAll('#edBoard .edge-hit');
@@ -105,8 +107,42 @@ setTimeout(function () {
     doc.getElementById('edMirror').click();
     ok(Object.keys(win.ED.edges).length === 2, 'Mirror creates the rotated twin side');
 
-    console.log(fails === 0 ? '\nSMOKE PASSED' : '\n' + fails + ' SMOKE FAILURES');
-    process.exit(fails === 0 ? 0 : 1);
+    console.log('== in-game balance report ==');
+    win.runBalanceUI(win.Engine.MAPS[4]); // The Cockpit (fast battles)
+    var waited = 0;
+    (function waitBal() {
+      if (doc.getElementById('balMore')) {
+        ok(true, 'balance report rendered after 20 battles');
+        ok(/wins/.test(doc.getElementById('balPanel').textContent), 'report shows win rates');
+        win.closeBal();
+        return watchMode();
+      }
+      if ((waited += 100) > 60000) { ok(false, 'balance report never finished'); return watchMode(); }
+      realSetTimeout(waitBal, 100);
+    })();
+
+    function watchMode() {
+      console.log('== watch mode (AI vs AI spectate) ==');
+      doc.getElementById('edBack').click();
+      doc.getElementById('btnMapsBack').click();
+      doc.getElementById('btnWatch').click();
+      ok(doc.getElementById('game').classList.contains('active'), 'watch mode starts a game');
+      var w0 = 0;
+      (function waitWatch() {
+        var st = win.APP.st;
+        if (st && (st.turnNumber >= 3 || st.phase === 'battle-over')) {
+          ok(true, 'both generals played without input (turn ' + st.turnNumber + ')');
+          return finish();
+        }
+        if ((w0 += 100) > 30000) { ok(false, 'watch mode stalled at turn ' + (st && st.turnNumber)); return finish(); }
+        realSetTimeout(waitWatch, 100);
+      })();
+    }
+
+    function finish() {
+      console.log(fails === 0 ? '\nSMOKE PASSED' : '\n' + fails + ' SMOKE FAILURES');
+      process.exit(fails === 0 ? 0 : 1);
+    }
   }
   realSetTimeout(tick, 30);
 }, 50);
