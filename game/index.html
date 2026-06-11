@@ -53,15 +53,19 @@
   .screen{position:fixed; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center;}
   .screen.active{display:flex;}
 
-  /* menu */
-  #menu .panel{width:min(480px, 92vw); padding:34px 30px; text-align:center;}
+  /* menu — never centre-clip: shrink to fit short screens, scroll only as a last resort */
+  #menu{justify-content:flex-start; overflow-y:auto; padding:18px 12px;}
+  /* min-width:0 stops the nowrap title from forcing the flex panel wider than 92vw on narrow screens */
+  #menu .panel{width:min(480px, 92vw); min-width:0; padding:34px 30px; text-align:center; margin:auto; overflow:hidden;}
   #menu h1{
-    font-size:29px; letter-spacing:2px; color:#2b2113;
+    /* width-driven so the one-line plaque title always fits; capped at 29px on roomy screens */
+    font-size:clamp(14px, 4.4vw, 29px); letter-spacing:2px; color:#2b2113;
     text-shadow: 0 1px 0 rgba(255,255,255,.25);
-    margin:-8px -6px 4px; font-variant:small-caps;
-    /* brass plaque (art/title.png); plain text when the art is absent */
+    margin:-8px -6px 4px; font-variant:small-caps; line-height:1;
+    /* brass plaque (art/title.png); plain text when the art is absent.
+       all-caps sits high in its own line box, so bias the padding downward to optically centre it on the plaque */
     background:url('art/title.png') center/100% 100% no-repeat;
-    padding:24px 52px; white-space:nowrap;
+    padding:1.18em clamp(12px,5vw,52px) .56em; white-space:nowrap;
   }
   #menu .sub{font-style:italic; color:var(--ink-soft); margin-bottom:24px;}
   #menu .rule{height:2px; background:linear-gradient(90deg,transparent,var(--brass),transparent); margin:14px 0 22px;}
@@ -81,27 +85,31 @@
 
   /* ===== game layout ===== */
   #game{flex-direction:column; justify-content:flex-start;}
+  /* three-track grid: title | dead-centre scorecard | controls — centres in flow, so nothing overlaps */
   #topbar{
-    width:100%; display:flex; align-items:center; gap:14px; padding:6px 14px;
+    width:100%; display:grid; grid-template-columns:1fr auto 1fr; align-items:center;
+    gap:6px 12px; padding:6px 14px;
     background:linear-gradient(180deg,#3d3424,#2c2517);
     border-bottom:2px solid var(--brass-dark); color:var(--parch);
-    flex:0 0 auto; min-height:50px; flex-wrap:wrap; position:relative;
+    flex:0 0 auto; min-height:50px;
   }
-  #topbar .title{font-variant:small-caps; letter-spacing:2px; font-size:18px; color:var(--brass);}
+  #topbar .title{grid-column:1; justify-self:start; font-variant:small-caps; letter-spacing:2px; font-size:18px; color:var(--brass); white-space:nowrap;}
   /* the campaign score card sits dead centre of the top bar */
   #scorecard{
-    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    grid-column:2; justify-self:center; max-width:100%;
     display:flex; gap:10px; align-items:center; padding:4px 18px; white-space:nowrap;
     border:1px solid var(--brass-dark); border-radius:6px;
     background:linear-gradient(170deg, rgba(232,220,192,.16), rgba(232,220,192,.06));
     box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
   }
+  .topright{grid-column:3; justify-self:end; display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; min-width:0;}
+  #btnJournal{display:none;}
   #mapname{font-style:italic;}
   .pips{display:flex; gap:4px; align-items:center;}
   .pip{width:14px; height:18px; border:1px solid var(--brass); border-radius:2px; background:transparent;}
   .pip.red{background:var(--red);} .pip.blue{background:var(--blue);}
   #turnbadge{
-    margin-left:auto; padding:4px 14px; border-radius:14px; font-weight:bold; letter-spacing:1px;
+    padding:4px 14px; border-radius:14px; font-weight:bold; letter-spacing:1px;
     border:1px solid rgba(255,255,255,.3);
   }
   #turnbadge.red{background:var(--red);} #turnbadge.blue{background:var(--blue);}
@@ -231,25 +239,27 @@
 
   #rightcol{flex:0 0 248px; display:flex; flex-direction:column; gap:8px; margin:10px 6px; min-height:0;}
   #rightcol .mat{flex:0 0 auto; margin:0; width:100%;}
-  #log{
-    flex:1 1 auto; min-height:90px; overflow-y:auto;
-    padding:8px 12px; font-size:12.5px; line-height:1.45;
+  /* shared look for the campaign journal, whether inline (#log) or in the small-screen overlay (#journalBody) */
+  .journal-feed{
+    padding:8px 12px; font-size:12.5px; line-height:1.45; text-align:left;
     background:linear-gradient(165deg, #36311f, #292416);
     border:2px solid var(--brass-dark); border-radius:8px;
     color:var(--parch);
     box-shadow: inset 0 0 18px rgba(0,0,0,.45);
   }
-  #log .entry{padding:3px 0 3px 26px; border-bottom:1px dotted rgba(232,220,192,.14); position:relative;}
-  #log .entry.red{color:#eba9a2;} #log .entry.blue{color:#a8cbec;}
-  #log .entry .tn{
+  #log{flex:1 1 auto; min-height:90px; overflow-y:auto;}
+  #journalBody{max-height:64vh; overflow-y:auto;}
+  .journal-feed .entry{padding:3px 0 3px 26px; border-bottom:1px dotted rgba(232,220,192,.14); position:relative;}
+  .journal-feed .entry.red{color:#eba9a2;} .journal-feed .entry.blue{color:#a8cbec;}
+  .journal-feed .entry .tn{
     position:absolute; left:0; top:4px; width:21px; text-align:right;
     font-size:9.5px; color:rgba(232,220,192,.42); font-style:italic;
   }
-  #log .entry.hdr{
+  .journal-feed .entry.hdr{
     padding-left:0; margin-top:7px; color:var(--brass); font-weight:bold;
     font-variant:small-caps; letter-spacing:.5px; border-bottom:1px solid rgba(176,141,87,.45);
   }
-  #log .entry.finale{color:#f0d98c; font-weight:bold;}
+  .journal-feed .entry.finale{color:#f0d98c; font-weight:bold;}
 
   #toast{
     position:fixed; left:50%; top:62px; transform:translateX(-50%); z-index:40;
@@ -280,8 +290,38 @@
   #edShape{font-family:inherit; font-size:14px; padding:6px; border:2px solid var(--brass-dark); border-radius:6px; background:rgba(255,255,255,.5);}
   .warn{color:#8a3324; font-size:12.5px; font-style:italic;}
 
-  @media (max-width: 920px){
-    #scorecard{position:static; transform:none; order:5; margin:0 auto;}
+  /* short screens: compress the menu so it fits without scrolling (Bill: shrink, don't scroll) */
+  @media (max-height: 780px){
+    #menu{padding:12px;}
+    #menu .panel{padding:18px 26px;}
+    #menu h1{font-size:clamp(14px,4.4vw,24px); padding:.95em clamp(12px,5vw,46px) .42em;}
+    #menu .sub{margin-bottom:12px; font-size:13.5px;}
+    #menu .rule{margin:7px 0 10px;}
+    .opt-row{margin:6px 0;}
+    .menu-btns{gap:7px;}
+    .menu-btns button{font-size:15px; padding:8px;}
+  }
+  @media (max-height: 620px){
+    #menu .panel{padding:12px 22px;}
+    #menu h1{font-size:clamp(13px,4.2vw,21px); padding:.9em clamp(12px,4.5vw,40px) .4em;}
+    #menu .sub{margin-bottom:6px; font-size:12px;}
+    #menu .rule{margin:4px 0 7px;}
+    .opt-row{margin:4px 0; gap:6px;}
+    .opt-row .choice{padding:5px 10px; font-size:12px;}
+    .menu-btns{gap:5px;}
+    .menu-btns button{font-size:13px; padding:6px;}
+    #menu #netHint, #menu .rule:last-of-type{display:none;}
+  }
+
+  /* medium windows: slim the side columns so the board keeps its room */
+  @media (max-width: 1080px){
+    .mat{flex:0 0 200px;}
+    #rightcol{flex:0 0 200px;}
+  }
+  /* short or narrow: the inline journal would be a useless sliver — move it to an on-demand overlay */
+  @media (max-height: 700px), (max-width: 860px){
+    #log{display:none;}
+    #btnJournal{display:inline-block;}
   }
   @media (max-width: 760px){
     .mat{flex:0 0 150px; font-size:11px; padding:6px;}
@@ -291,11 +331,31 @@
     .scard{height:16px; font-size:7px;}
     #rightcol{flex:0 0 156px;}
     #rightcol .mat{width:auto;}
-    #log{font-size:10.5px;}
     .card{flex:0 0 104px; height:148px;}
     .card .body{font-size:10px;}
     .card .art{height:42px;}
     #board{max-height:calc(100vh - 250px);}
+  }
+  /* short windows: shrink the hand + give the board the reclaimed height */
+  @media (max-height: 700px){
+    .card{height:150px;}
+    .card .art{height:46px;}
+    #hand{padding:4px 10px 8px;}
+    #board{max-height:calc(100vh - 200px);}
+    #promptbar{min-height:28px; font-size:15px;}
+  }
+  @media (max-height: 560px){
+    .card{flex:0 0 100px; height:120px;}
+    .card .art{display:none;}
+    .card .banner{font-size:11px;}
+    #board{max-height:calc(100vh - 162px);}
+  }
+  /* very narrow: stack the top bar instead of cramming one row */
+  @media (max-width: 720px){
+    #topbar{display:flex; flex-wrap:wrap; justify-content:center; row-gap:4px;}
+    #topbar .title{display:none;}
+    .topright{order:1; width:100%; justify-content:center;}
+    #scorecard{order:2; justify-self:auto;}
   }
 </style>
 </head>
@@ -348,18 +408,21 @@
       <span style="color:var(--brass)">vs</span>
       <span class="pips" id="pipsBlue"></span>
     </div>
-    <span id="roomchip" style="display:none; padding:3px 10px; border:1px dashed var(--brass); border-radius:5px; font-size:13px; letter-spacing:2px;"></span>
-    <span id="turnbadge">RED</span>
-    <button class="ghost" id="btnCards" style="padding:3px 10px;font-size:13px;">Cards</button>
-    <button class="ghost" id="btnManual2" style="padding:3px 10px;font-size:13px;">Manual</button>
-    <button class="ghost" id="btnQuit" style="padding:3px 10px;font-size:13px;">Menu</button>
+    <div class="topright">
+      <span id="roomchip" style="display:none; padding:3px 10px; border:1px dashed var(--brass); border-radius:5px; font-size:13px; letter-spacing:2px;"></span>
+      <span id="turnbadge">RED</span>
+      <button class="ghost" id="btnJournal" style="padding:3px 10px;font-size:13px;">Journal</button>
+      <button class="ghost" id="btnCards" style="padding:3px 10px;font-size:13px;">Cards</button>
+      <button class="ghost" id="btnManual2" style="padding:3px 10px;font-size:13px;">Manual</button>
+      <button class="ghost" id="btnQuit" style="padding:3px 10px;font-size:13px;">Menu</button>
+    </div>
   </div>
   <div id="main">
     <div class="mat parchment red" id="matRed"></div>
     <div id="boardwrap"><svg id="board" xmlns="http://www.w3.org/2000/svg"></svg></div>
     <div id="rightcol">
       <div class="mat parchment blue" id="matBlue"></div>
-      <div id="log" class="parchment"></div>
+      <div id="log" class="journal-feed"></div>
     </div>
   </div>
   <div id="promptbar"></div>
@@ -421,6 +484,11 @@
   <h2>Card Glossary</h2>
   <div class="manual" id="cardsBody"></div>
   <div class="ovr-btns"><button onclick="document.getElementById('cardsOvr').classList.remove('active')">Close</button></div>
+</div></div>
+<div class="overlay" id="journalOvr"><div class="panel parchment" style="max-width:min(560px,94vw);">
+  <h2>Campaign Journal</h2>
+  <div class="journal-feed" id="journalBody"></div>
+  <div class="ovr-btns"><button onclick="document.getElementById('journalOvr').classList.remove('active')">Close</button></div>
 </div></div>
 <div class="overlay" id="manualOvr"><div class="panel parchment">
   <h2>Field Manual</h2>
@@ -494,6 +562,18 @@ $('btnWatch').onclick = function(){ startLocal('watch'); };
 $('btnHotseat').onclick = function(){ startLocal('hotseat'); };
 $('btnManual').onclick = function(){ $('manualOvr').classList.add('active'); };
 $('btnManual2').onclick = function(){ $('manualOvr').classList.add('active'); };
+function syncJournalOverlay(){
+  // mirror the (possibly hidden) inline journal into the overlay, dropping its inline
+  // "Campaign Journal" header since the panel already shows one; newest entry in view
+  var body = $('journalBody');
+  body.innerHTML = $('log').innerHTML;
+  var h = body.querySelector('b'); if (h) h.remove();
+  body.scrollTop = body.scrollHeight;
+}
+$('btnJournal').onclick = function(){
+  syncJournalOverlay();
+  $('journalOvr').classList.add('active');
+};
 $('btnQuit').onclick = function(){
   if (APP.net.poller) clearInterval(APP.net.poller);
   APP.net.poller = null; APP.mode = null;
@@ -1118,6 +1198,8 @@ function renderLog(){
     el.appendChild(d);
   });
   el.scrollTop = el.scrollHeight;
+  // keep the small-screen journal overlay in sync while it's open
+  if ($('journalOvr').classList.contains('active')) syncJournalOverlay();
 }
 
 /* =================== toasts & overlays =================== */

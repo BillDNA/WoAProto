@@ -26,6 +26,21 @@ Start in `game/CLAUDE.md` — it is the orientation file for this project and st
 * ~~initial art in game/art~~ — wired in: cards pull art BY CARD ID (`art/<id>.jpg` → `.png` → clean text-only fallback, so new cards never break); title plaque behind the menu title, felt table behind everything, board parchment under the hexes. Transparent margins auto-trimmed by `dev/optimize-art.ps1`, which also shrinks raw renders ~100× and sweeps originals to gitignored design-docs/art-originals (P1 unit icons skipped per Bill — drawn glyphs stay)
 * ~~TwoSetsOfThree~~ — the editor now splits long same-hex terrain runs into physical 2s and 3s (a full forest ring = two length-3 pieces); validates clean
 * ~~card report over-indexing on play share~~ — new per-card columns from a play log: Simple% (resolved as basic attack/reposition = weak printed action), 1stSight% (played the first time it was seen = OP watchlist), AvgSeen (hand appearances before being played = situational). Win% kept but documented as weak in attrition games
+## Feedback Round 4 (display/resize pass — all handled June 2026; CSS-only + a journal toggle, no engine change)
+* ~~issues with smaller screens and resizing in general~~ — responsive pass across menu, topbar, mats, board, hand (see "Responsive" bullet in `game/CLAUDE.md`)
+* ~~MainMenuScreen - menu cut off~~ — menu now **shrinks to fit** short screens via `max-height` queries; `overflow-y:auto` kept only as a fallback (shrink, don't scroll)
+* ~~TitleTextBug - text mis-placed~~ — all-caps rode high in its line box; `line-height:1` + downward-biased plaque padding optically centre it, and the title font width-clamps so it never overflows the panel
+* ~~gameSmallerScreen~~:
+	* ~~top menu gets squeezed~~ — topbar rebuilt as a `1fr auto 1fr` grid (centred scorecard never overlaps; stacks below 720px)
+	* ~~campaign Journal placement~~ — a useless sliver on short/narrow screens, so it's hidden there and reached via a new topbar **Journal** button (mirrors the log into an overlay); inline on roomy screens
+## FeedBack Round 5
+* Confused on what the AI actually did 
+	* So the logs just say blue plays "Attack +1".  then its my turn.
+	* Blue could have resolved as a reposition
+	* was this actually a skip turn?
+* BugReports/BarrageTargetSelection - I can target the forest in E3 even though i (red) don't control an adjacent hex.  let's change the rule for Barrage to allow targeting of any forest or trench.
+* 
+	
 ## Standing goals
 
 * rapid balance iteration is the point of this prototype — prefer data files + small tools over hardcoding
