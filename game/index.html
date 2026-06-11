@@ -113,11 +113,16 @@
     border:1px solid rgba(255,255,255,.3);
   }
   #turnbadge.red{background:var(--red);} #turnbadge.blue{background:var(--blue);}
-  #main{flex:1 1 auto; display:flex; width:100%; overflow:hidden;}
+  /* full-height side columns (Bill's maybeBLSolution sketch): mats on top, the
+     journal fills the right column all the way to the window bottom — the centre
+     column owns the board + prompt + hand, so the journal can never be clipped */
+  #main{flex:1 1 auto; display:flex; width:100%; overflow:hidden; min-height:0;}
+  .sidecol{flex:0 0 248px; display:flex; flex-direction:column; gap:8px; margin:10px 6px; min-height:0;}
+  #centercol{flex:1 1 auto; display:flex; flex-direction:column; min-width:0; min-height:0;}
 
   /* ===== player mats (mirror the physical mat: one slot per piece) ===== */
   .mat{
-    flex:0 0 236px; margin:10px 6px; padding:10px 12px;
+    flex:0 0 auto; width:100%; padding:10px 12px;
     display:flex; flex-direction:column; gap:6px; font-size:13px;
   }
   .mat h3{font-variant:small-caps; letter-spacing:1px; text-align:center; border-bottom:1px solid var(--brass-dark); padding-bottom:4px; font-size:16px;}
@@ -144,7 +149,7 @@
     display:flex; align-items:center; justify-content:center;
   }
   .scard.gone{background:#4e4029; color:rgba(232,220,192,.5); border-color:#3c3120; text-decoration:line-through;}
-  #boardwrap{flex:1 1 auto; display:flex; align-items:center; justify-content:center; min-width:0; padding:8px 4px;}
+  #boardwrap{flex:1 1 auto; display:flex; align-items:center; justify-content:center; min-width:0; min-height:0; padding:8px 4px;}
   #board{
     width:100%; height:100%; max-height:calc(100vh - 230px);
     /* the campaign-map parchment sheet (art/board.jpg); invisible when art is absent */
@@ -237,8 +242,6 @@
   .battle-calc .total{font-size:22px; font-weight:bold; text-align:center; margin-top:6px;}
   .ovr-btns{display:flex; gap:12px; justify-content:center; margin-top:16px; flex-wrap:wrap;}
 
-  #rightcol{flex:0 0 248px; display:flex; flex-direction:column; gap:8px; margin:10px 6px; min-height:0;}
-  #rightcol .mat{flex:0 0 auto; margin:0; width:100%;}
   /* shared look for the campaign journal, whether inline (#log) or in the small-screen overlay (#journalBody) */
   .journal-feed{
     padding:8px 12px; font-size:12.5px; line-height:1.45; text-align:left;
@@ -247,7 +250,7 @@
     color:var(--parch);
     box-shadow: inset 0 0 18px rgba(0,0,0,.45);
   }
-  #log{flex:1 1 auto; min-height:90px; overflow-y:auto;}
+  #log{flex:1 1 auto; min-height:0; overflow-y:auto;}
   #journalBody{max-height:64vh; overflow-y:auto;}
   .journal-feed .entry{padding:3px 0 3px 26px; border-bottom:1px dotted rgba(232,220,192,.14); position:relative;}
   .journal-feed .entry.red{color:#eba9a2;} .journal-feed .entry.blue{color:#a8cbec;}
@@ -260,6 +263,9 @@
     font-variant:small-caps; letter-spacing:.5px; border-bottom:1px solid rgba(176,141,87,.45);
   }
   .journal-feed .entry.finale{color:#f0d98c; font-weight:bold;}
+  /* a card play opens a turn: give it air + a rule so turns read as paragraphs */
+  .journal-feed .entry.play{margin-top:7px; border-top:1px solid rgba(176,141,87,.3); padding-top:5px;}
+  .journal-feed .entry.noop{font-style:italic; opacity:.8;}
 
   #toast{
     position:fixed; left:50%; top:62px; transform:translateX(-50%); z-index:40;
@@ -315,22 +321,21 @@
 
   /* medium windows: slim the side columns so the board keeps its room */
   @media (max-width: 1080px){
-    .mat{flex:0 0 200px;}
-    #rightcol{flex:0 0 200px;}
+    .sidecol{flex:0 0 200px;}
   }
-  /* short or narrow: the inline journal would be a useless sliver — move it to an on-demand overlay */
-  @media (max-height: 700px), (max-width: 860px){
+  /* short or narrow: the inline journal would be a useless sliver — move it to an on-demand overlay
+     (the full-height column bought ~200px, so the height cutoff is far lower than it used to be) */
+  @media (max-height: 580px), (max-width: 860px){
     #log{display:none;}
     #btnJournal{display:inline-block;}
   }
   @media (max-width: 760px){
-    .mat{flex:0 0 150px; font-size:11px; padding:6px;}
+    .sidecol{flex:0 0 156px;}
+    .mat{font-size:11px; padding:6px;}
     .slbl{flex:0 0 44px; font-size:9.5px;}
     .slot{width:14px; height:14px; border-radius:3px;}
     .slot svg{width:10px; height:10px;}
     .scard{height:16px; font-size:7px;}
-    #rightcol{flex:0 0 156px;}
-    #rightcol .mat{width:auto;}
     .card{flex:0 0 104px; height:148px;}
     .card .body{font-size:10px;}
     .card .art{height:42px;}
@@ -411,6 +416,7 @@
     <div class="topright">
       <span id="roomchip" style="display:none; padding:3px 10px; border:1px dashed var(--brass); border-radius:5px; font-size:13px; letter-spacing:2px;"></span>
       <span id="turnbadge">RED</span>
+      <button class="ghost" id="btnConcede" style="padding:3px 10px;font-size:13px;" title="Give up this battle; the campaign moves on">Concede</button>
       <button class="ghost" id="btnJournal" style="padding:3px 10px;font-size:13px;">Journal</button>
       <button class="ghost" id="btnCards" style="padding:3px 10px;font-size:13px;">Cards</button>
       <button class="ghost" id="btnManual2" style="padding:3px 10px;font-size:13px;">Manual</button>
@@ -418,15 +424,19 @@
     </div>
   </div>
   <div id="main">
-    <div class="mat parchment red" id="matRed"></div>
-    <div id="boardwrap"><svg id="board" xmlns="http://www.w3.org/2000/svg"></svg></div>
-    <div id="rightcol">
+    <div class="sidecol" id="leftcol">
+      <div class="mat parchment red" id="matRed"></div>
+    </div>
+    <div id="centercol">
+      <div id="boardwrap"><svg id="board" xmlns="http://www.w3.org/2000/svg"></svg></div>
+      <div id="promptbar"></div>
+      <div id="hand"></div>
+    </div>
+    <div class="sidecol" id="rightcol">
       <div class="mat parchment blue" id="matBlue"></div>
       <div id="log" class="journal-feed"></div>
     </div>
   </div>
-  <div id="promptbar"></div>
-  <div id="hand"></div>
 </div>
 
 <!-- ============ MAPS ============ -->
@@ -562,6 +572,25 @@ $('btnWatch').onclick = function(){ startLocal('watch'); };
 $('btnHotseat').onclick = function(){ startLocal('hotseat'); };
 $('btnManual').onclick = function(){ $('manualOvr').classList.add('active'); };
 $('btnManual2').onclick = function(){ $('manualOvr').classList.add('active'); };
+$('btnConcede').onclick = function(){
+  var st = APP.st;
+  if (!st || st.phase === 'battle-over' || APP.mode === 'watch') return;
+  if (!inputLive() || st.phase !== 'choose-card'){ toast('You can concede at the start of your own turn.'); return; }
+  var p = viewSide();
+  $('confirmPanel').innerHTML =
+    '<h2 class="'+p+'">Concede the field?</h2>' +
+    '<p>'+capName(E.other(p))+' takes this battle. Losing one battle does not lose the war — the campaign moves on.</p>' +
+    '<div class="ovr-btns"><button id="cdYes">Concede</button><button id="cdNo" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Fight on</button></div>';
+  $('confirmOvr').classList.add('active');
+  $('cdYes').onclick = function(){
+    $('confirmOvr').classList.remove('active');
+    E.concede(APP.st, p);
+    renderAll(); saveLocal();
+    if (APP.mode === 'net') pushState();
+    clearIfMatchOver(); showBattleOver();
+  };
+  $('cdNo').onclick = function(){ $('confirmOvr').classList.remove('active'); };
+};
 function syncJournalOverlay(){
   // mirror the (possibly hidden) inline journal into the overlay, dropping its inline
   // "Campaign Journal" header since the panel already shows one; newest entry in view
@@ -1075,6 +1104,8 @@ function renderTop(){
   var b = $('turnbadge');
   b.textContent = capName(st.current) + (APP.mode!=='hotseat' && st.current===APP.mySide ? ' — you' : '');
   b.className = st.current;
+  // conceding is a human act; the AI decides it for itself (and watch mode has no human side)
+  $('btnConcede').style.display = (st.phase !== 'battle-over' && APP.mode !== 'watch') ? '' : 'none';
 }
 /* card art is looked up BY CARD ID: art/<id>.jpg, falling back to art/<id>.png,
    falling back to no art at all — so new cards in maps.js just need a matching
@@ -1140,7 +1171,9 @@ function renderPrompt(){
     return;
   }
   if (st.phase === 'choose-card'){
-    el.innerHTML = '<b>'+who+'</b>: choose a card to play. <span class="small" style="color:#bbb;">(played cards are gone for good)</span>';
+    var adv = E.concedeAdvised(st, st.current);
+    el.innerHTML = '<b>'+who+'</b>: choose a card to play. <span class="small" style="color:#bbb;">(played cards are gone for good)</span>' +
+      (adv ? ' <span class="small" style="color:#e3c06a;">The cause looks lost — <b>Concede</b> (top right) keeps the campaign moving.</span>' : '');
     return;
   }
   var o = E.stepOptions(st);
@@ -1151,7 +1184,7 @@ function renderPrompt(){
   else if (o.type==='trench') msg = APP.ui.sel ? (APP.ui.trenchFirst!==null && APP.ui.trenchFirst!==undefined ? 'Click the <b>second edge</b> (or click the solid edge to undo)' : 'Click the <b>first edge</b> the trench will cover') : 'Choose a hex to <b>entrench</b>';
   else if (o.type==='attack') msg = APP.ui.sel ? 'Choose a target' : 'Choose an attacker' + (o.mod ? ' <b>('+(o.mod>0?'+':'')+o.mod+' support)</b>':'') + (o.tieSpare?' <b>(tie spares your unit)</b>':'');
   else if (o.type==='reposition') msg = APP.ui.sel ? 'Move to a gold hex, or swap with a violet unit' : 'Choose a unit to <b>reposition</b>';
-  else if (o.type==='barrage') msg = 'Barrage: click a <b>trench</b> or <b>forest</b> to destroy — or skip straight to the attack';
+  else if (o.type==='barrage') msg = 'Barrage: click <b>any trench</b> or <b>forest</b> on the board to destroy — or skip straight to the attack';
   el.innerHTML = '<b>'+E.CARD_BY_ID[st.pending.cardId].name+'</b>: '+msg+stepTag;
   var sk = document.createElement('button');
   sk.textContent = 'Skip step';
@@ -1185,8 +1218,11 @@ function renderLog(){
   st.log.slice(-80).forEach(function(e){
     var d = document.createElement('div');
     var hdr = e.msg.indexOf('Battle ') === 0;
-    var finale = e.msg.indexOf('wins the battle') >= 0;
-    d.className = 'entry ' + (hdr ? 'hdr' : e.player) + (finale ? ' finale' : '');
+    var finale = e.msg.indexOf('wins the battle') >= 0 || e.msg.indexOf('concedes the field') >= 0;
+    var play = e.msg.indexOf(' plays "') > 0;
+    var noop = e.msg.indexOf('no opening') > 0;
+    d.className = 'entry ' + (hdr ? 'hdr' : e.player) + (finale ? ' finale' : '') +
+      (play ? ' play' : '') + (noop ? ' noop' : '');
     if (!hdr){
       var tn = document.createElement('span');
       tn.className = 'tn';
@@ -1242,7 +1278,9 @@ function showBattleOver(){
   var st = APP.st, m = st.match;
   var w = st.battleWinner;
   var html = '<h2 class="'+w+'">'+capName(w)+' takes the field!</h2>' +
-    '<p style="font-style:italic;">"'+st.mapName+'" — ' + (st.winType==='hq' ? 'the enemy headquarters was captured.' : 'won by attrition, '+st.vp.red+' VP to '+st.vp.blue+' VP.') + '</p>' +
+    '<p style="font-style:italic;">"'+st.mapName+'" — ' + (st.winType==='hq' ? 'the enemy headquarters was captured.' :
+      st.winType==='concession' ? 'the enemy conceded the field.' :
+      'won by attrition, '+st.vp.red+' VP to '+st.vp.blue+' VP.') + '</p>' +
     '<p style="margin-top:10px;font-size:18px;">Campaign: <b style="color:var(--red-dark)">Red '+m.wins.red+'</b> — <b style="color:var(--blue-dark)">Blue '+m.wins.blue+'</b></p>';
   var rematch = APP.mode !== 'net'
     ? '<button id="boRematch" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);" title="Fresh battle, same map — for A/B testing a layout">Rematch this map</button>'
@@ -2017,6 +2055,16 @@ function maybeAI(){
   APP.ui.busy = true;
   renderPrompt();
   setTimeout(function(){
+    // a beaten general yields rather than playing out a foregone conclusion
+    if (E.concedeAdvised(st, st.current)){
+      var loser = st.current;
+      E.concede(st, loser);
+      toast(capName(loser)+' <b>concedes the field</b> — the outcome was beyond doubt.', 3200);
+      APP.ui.busy = false;
+      renderAll(); saveLocal();
+      clearIfMatchOver(); showBattleOver();
+      return;
+    }
     var plan = E.aiPlanTurn(st, APP.diff);
     if (!plan){ APP.ui.busy=false; return; }
     E.playCard(st, plan.cardId, plan.mode || 'normal');

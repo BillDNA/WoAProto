@@ -323,7 +323,43 @@
     m.battleIndex++;
     m.seed = st.seed;
     if (m.wins[winner] >= 3) { m.winner = winner; }
-    log(st, cap(winner) + ' wins the battle by ' + (how === 'hq' ? 'capturing the headquarters!' : 'attrition (' + st.vp.red + ' VP vs ' + st.vp.blue + ' VP).'));
+    log(st, cap(winner) + ' wins the battle by ' + (how === 'hq' ? 'capturing the headquarters!' :
+      how === 'concession' ? 'concession.' :
+      'attrition (' + st.vp.red + ' VP vs ' + st.vp.blue + ' VP).'));
+  }
+
+  // A player throws in the towel; the battle (not the match) goes to the enemy.
+  function concede(st, p) {
+    if (st.phase === 'battle-over') throw new Error('battle already over');
+    log(st, cap(p) + ' concedes the field.');
+    finishBattle(st, other(p), 'concession');
+    return st;
+  }
+
+  // Is the battle a foregone conclusion for p? ADVISORY ONLY — never enforced.
+  // Truthy ({need, gain, turnsLeft}) when BOTH paths to victory look closed:
+  //  - attrition: even destroying every enemy unit on the field can't close the
+  //    VP gap (enemy reserves can simply stay off the field, so they don't count)
+  //  - HQ capture: no unit (fielded, or deployed then marched) can reach the
+  //    enemy HQ within the turns p has left; a live Airdrop keeps hope alive.
+  function concedeAdvised(st, p) {
+    if (st.phase !== 'choose-card') return null;
+    var e = other(p);
+    var turnsLeft = cardsRemaining(st, p); // each turn removes exactly 1 card from p's pool
+    var need = (st.vp[e] - st.vp[p]) + (st.second === p ? 0 : 1); // second player wins VP ties
+    if (need <= 0) return null;            // p still ahead (or tied as second player)
+    var gain = 0;
+    for (var h in st.units) { var u = st.units[h]; if (u.owner === e) gain += UNITS[u.type].vp; }
+    if (gain >= need) return null;         // the gap can still be closed in principle
+    if (st.hqAlive[e] && turnsLeft > 0) {
+      var hasReserve = Object.keys(UNITS).some(function (t) { return st.reserves[p][t] > 0; });
+      if (hasReserve && turnsLeft >= 2 && st.removed[p].indexOf('airdrop') < 0) return null; // Airdrop snipe still possible
+      var hq = st.hq[e], reach = Infinity;
+      for (var h2 in st.units) if (st.units[h2].owner === p) reach = Math.min(reach, dist(h2, hq));
+      if (hasReserve) deployTargets(st, p, false).forEach(function (d) { reach = Math.min(reach, dist(d, hq) + 1); });
+      if (reach <= turnsLeft) return null; // a march on the HQ is still conceivable
+    }
+    return { need: need, gain: gain, turnsLeft: turnsLeft };
   }
 
   /* ---------- queries ---------- */
@@ -434,24 +470,14 @@
   }
 
   function listBarrageTargets(st, p) {
-    // hexes in/adjacent to controlled territory
-    var zone = {};
-    controlledHexes(st, p).forEach(function (c) {
-      zone[c] = true;
-      neighbors(c).forEach(function (n) { zone[n] = true; });
-    });
+    // June 2026 ruling: the naval guns reach the whole board — ANY trench or
+    // forest may be targeted (the old in/adjacent-to-controlled-hexes zone is gone).
     var trenches = [];
     Object.keys(st.trenches).forEach(function (h) {
-      if (!zone[h]) return;
       st.trenches[h].forEach(function (t, i) { trenches.push({ hex: h, idx: i, dirs: t.dirs }); });
     });
     var forestPieces = st.terrainPieces.filter(function (pc) {
-      if (pc.t !== 'F' || pc.removed) return false;
-      return pc.edgeKeys.some(function (sk) {
-        var parts = sk.split('>');
-        var n = neighbor(parts[0], +parts[1]);
-        return zone[parts[0]] || (n && zone[n]);
-      });
+      return pc.t === 'F' && !pc.removed;
     });
     return { trenches: trenches, forestPieces: forestPieces };
   }
@@ -573,7 +599,9 @@
       cardId: cardId,
       mode: mode,
       steps: steps,
-      idx: 0
+      idx: 0,
+      acted: 0,                      // actions actually resolved (0 at endTurn = the play did nothing)
+      logIdx: st.playLog.length - 1  // back-pointer so endTurn can mark the entry noop
     };
     st.phase = 'step';
     log(st, cap(p) + ' plays "' + card.name + '"' +
@@ -706,6 +734,7 @@
         log(st, cap(p) + "'s naval barrage burns away the forest at " + hexLabel(pc.edgeKeys[0].split('>')[0]) + '.');
       } else throw new Error('invalid barrage choice');
     }
+    if (st.pending) st.pending.acted = (st.pending.acted || 0) + 1;
     advanceStep(st);
     if (st.phase === 'step') skipImpossible(st);
     return st;
@@ -713,6 +742,13 @@
 
   function endTurn(st) {
     var p = st.current;
+    if (st.pending.acted === 0) {
+      // The play resolved zero actions — an effective skipped turn. Bill wants
+      // these visible in the journal AND measurable in the card report.
+      log(st, cap(p) + ' finds no opening — the order is spent to no effect.');
+      var entry = st.playLog[st.pending.logIdx];
+      if (entry && entry.id === st.pending.cardId) entry.noop = true;
+    }
     st.removed[p].push(st.pending.cardId);
     st.pending = null;
     // discard remaining hand
@@ -888,6 +924,13 @@
     var hand = st.hands[me].slice();
     var candidates = [];
     var tried = {};
+    // A plan that resolves ZERO actions is a dead turn (Bill: players should
+    // always get to act) — penalize harder than the -12 fallback bias so a
+    // basic reposition beats doing nothing, unless truly nothing can act.
+    function noopPenalty(sim) {
+      var le = sim.playLog[sim.playLog.length - 1];
+      return (le && le.p === me && le.noop) ? 25 : 0;
+    }
     hand.forEach(function (cid) {
       if (tried[cid]) return;
       tried[cid] = true;
@@ -895,7 +938,7 @@
       try { playCard(sim, cid); } catch (e) { return; }
       var r = (sim.phase === 'step') ? greedyResolve(sim, me, randomness, s) : { score: evalState(sim, me), choices: [] };
       candidates.push({ plan: { cardId: cid, mode: 'normal', choices: r.choices },
-        score: r.score + (randomness ? rnd(s) * randomness : 0), end: sim });
+        score: r.score - noopPenalty(sim) + (randomness ? rnd(s) * randomness : 0), end: sim });
     });
     // House rule: any card may be played as a basic attack or reposition.
     // Burn the least precious card if that beats every printed action.
@@ -906,7 +949,7 @@
         try { playCard(sim, burn, mode); } catch (e) { return; }
         var r = (sim.phase === 'step') ? greedyResolve(sim, me, randomness, s) : { score: evalState(sim, me), choices: [] };
         candidates.push({ plan: { cardId: burn, mode: mode, choices: r.choices },
-          score: r.score - 12 + (randomness ? rnd(s) * randomness : 0), end: sim }); // mild bias toward printed actions
+          score: r.score - 12 - noopPenalty(sim) + (randomness ? rnd(s) * randomness : 0), end: sim }); // mild bias toward printed actions
       });
     }
     if (!candidates.length) return null;
@@ -944,7 +987,7 @@
   function balanceMap(map, n, opts) {
     opts = opts || {};
     var out = { n: n, redWins: 0, firstWins: 0, hqWins: 0, turns: 0, vpDiff: 0, unfinished: 0, cards: {} };
-    CARDS.forEach(function (c) { out.cards[c.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0 }; });
+    CARDS.forEach(function (c) { out.cards[c.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 }; });
     for (var g = 0; g < n; g++) {
       var fp = g % 2 === 0 ? 'red' : 'blue';
       var st = simBattle(map, (opts.seedBase || 7919) + g * 104729 + 13, fp, opts.diffRed, opts.diffBlue);
@@ -956,11 +999,12 @@
       out.turns += st.turnNumber;
       out.vpDiff += Math.abs(st.vp.red - st.vp.blue);
       (st.playLog || []).forEach(function (e) {
-        var c = out.cards[e.id] || (out.cards[e.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0 });
+        var c = out.cards[e.id] || (out.cards[e.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 });
         c.plays++;
         if (e.p === w) c.wins++;
         if (e.mode !== 'normal') c.simple++;     // resolved as a basic attack/reposition
         if (e.seen <= 1) c.firstSight++;          // played the first time it was seen
+        if (e.noop) c.noop++;                     // resolved ZERO actions — an effective skipped turn
         c.seenSum += e.seen;
       });
       if (opts.onGame) opts.onGame(g + 1, n, st);
@@ -1009,6 +1053,7 @@
     listAttacks: listAttacks, listRepositions: listRepositions, listBarrageTargets: listBarrageTargets,
     computeAttack: computeAttack, playCard: playCard, currentStep: currentStep,
     stepOptions: stepOptions, applyStep: applyStep, cardsRemaining: cardsRemaining,
+    concede: concede, concedeAdvised: concedeAdvised,
     aiPlanTurn: aiPlanTurn, clone: clone, evalState: evalState, validateMaps: validateMaps,
     simBattle: simBattle, balanceMap: balanceMap
   };

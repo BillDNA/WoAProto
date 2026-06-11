@@ -26,21 +26,19 @@ Start in `game/CLAUDE.md` — it is the orientation file for this project and st
 * ~~initial art in game/art~~ — wired in: cards pull art BY CARD ID (`art/<id>.jpg` → `.png` → clean text-only fallback, so new cards never break); title plaque behind the menu title, felt table behind everything, board parchment under the hexes. Transparent margins auto-trimmed by `dev/optimize-art.ps1`, which also shrinks raw renders ~100× and sweeps originals to gitignored design-docs/art-originals (P1 unit icons skipped per Bill — drawn glyphs stay)
 * ~~TwoSetsOfThree~~ — the editor now splits long same-hex terrain runs into physical 2s and 3s (a full forest ring = two length-3 pieces); validates clean
 * ~~card report over-indexing on play share~~ — new per-card columns from a play log: Simple% (resolved as basic attack/reposition = weak printed action), 1stSight% (played the first time it was seen = OP watchlist), AvgSeen (hand appearances before being played = situational). Win% kept but documented as weak in attrition games
-## Feedback Round 4 (display/resize pass — all handled June 2026; CSS-only + a journal toggle, no engine change)
-* ~~issues with smaller screens and resizing in general~~ — responsive pass across menu, topbar, mats, board, hand (see "Responsive" bullet in `game/CLAUDE.md`)
-* ~~MainMenuScreen - menu cut off~~ — menu now **shrinks to fit** short screens via `max-height` queries; `overflow-y:auto` kept only as a fallback (shrink, don't scroll)
-* ~~TitleTextBug - text mis-placed~~ — all-caps rode high in its line box; `line-height:1` + downward-biased plaque padding optically centre it, and the title font width-clamps so it never overflows the panel
-* ~~gameSmallerScreen~~:
-	* ~~top menu gets squeezed~~ — topbar rebuilt as a `1fr auto 1fr` grid (centred scorecard never overlaps; stacks below 720px)
-	* ~~campaign Journal placement~~ — a useless sliver on short/narrow screens, so it's hidden there and reached via a new topbar **Journal** button (mirrors the log into an overlay); inline on roomy screens
-## FeedBack Round 5
-* Confused on what the AI actually did 
-	* So the logs just say blue plays "Attack +1".  then its my turn.
-	* Blue could have resolved as a reposition
-	* was this actually a skip turn?
-* BugReports/BarrageTargetSelection - I can target the forest in E3 even though i (red) don't control an adjacent hex.  let's change the rule for Barrage to allow targeting of any forest or trench.
-* 
-	
+## Feedback Round 4
+* ~~issues with smaller screens and resizing in general~~
+* ~~BugReports/MainMenuScreen - menu is cut off, Probably shrink for smaller vertical space not scroll.~~
+* ~~BugReports/TitleTextBug - the text is not placed correctly~~
+* ~~BugReports/gameSmallerScreen -~~ 
+	* ~~the top menu Gets squeezed,~~ 
+	* ~~The campaign Journal Needs better placement Not sure how to fix that on a smaller screen up to you.~~
+## Feedback Round 5 (all handled June 2026)
+* ~~Confused on what the AI actually did~~ — a play that resolves zero actions now logs "finds no opening — the order is spent to no effect" in the journal, is marked `noop` in the play log, and shows up as a **Skip%** column in the card report. Root cause found AND fixed: the AI's -12 "prefer printed actions" bias made it play unplayable attack cards instead of repositioning; zero-action plans now take a -25 penalty, which took Skip% on Attack +1 / Mass Assault / Ordered Withdraw from 65–75% to ~0 (those turns became basic repositions — visible as Simple%)
+* ~~BarrageTargetSelection~~ — ruled as asked: Naval Barrage now targets ANY forest or trench on the board (engine + card text + README + tests)
+* ~~BattleLogDisplayIssues~~ — layout reworked per the maybeBLSolution sketch: three full-height columns (red mat | board+prompt+hand | blue mat+journal), so the journal runs to the window bottom and can't be clipped; card plays get a separator rule so turns read as paragraphs; the journal-to-overlay breakpoint dropped to ≤580px height now that the inline journal has room
+* ~~concede design question~~ — Concede button in the topbar (confirm dialog; works in AI/hotseat/LAN). Detection heuristic `concedeAdvised`: hopeless = the VP gap exceeds every enemy VP still ON the field (reserves can stay home) AND nothing can reach the enemy HQ in the turns left (a live Airdrop keeps hope alive). It's advisory only for humans (a hint appears in the prompt bar); the AI concedes on its own. Balance sims deliberately play battles out in full
+
 ## Standing goals
 
 * rapid balance iteration is the point of this prototype — prefer data files + small tools over hardcoding

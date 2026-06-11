@@ -77,7 +77,7 @@ var WOA_BUILTIN =
       "text": "Order an attack. On a tie, your attacker survives but does not take the hex.",
       "steps": [{ "type": "attack", "tieSpare": true }] },
     { "id": "naval_barrage", "name": "Naval Barrage", "count": 1,
-      "text": "Remove a trench or forest near your lines (optional). Then order an attack.",
+      "text": "Remove any trench or forest on the board (optional). Then order an attack.",
       "steps": [{ "type": "barrage" }, { "type": "attack" }] },
     { "id": "forced_march", "name": "Forced March", "count": 1,
       "text": "Reposition up to three times, in sequence.",

@@ -324,6 +324,68 @@ console.log('== Field Marshal AI & battle sim ==');
   ok(a.battleWinner === b.battleWinner && a.turnNumber === b.turnNumber, 'simulation is deterministic per seed');
 })();
 
+console.log('== Barrage targets ANY trench or forest (Feedback Round 5 ruling) ==');
+(function () {
+  // forest + trench deep in blue territory, far from anything red controls
+  var BARMAP = { name: 'Barrage Range', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2],
+    pieces: [{ t: 'F', edges: [[-2, 2, 0], [-2, 2, 1]] }] };
+  var m = E.newMatch({ seed: 31, firstPlayer: 'red', maps: [BARMAP] });
+  var st = E.newBattle(m);
+  st.trenches['-3,1'] = [{ dirs: [0, 1], owner: 'blue' }];
+  var b = E.listBarrageTargets(st, 'red');
+  ok(b.forestPieces.length === 1, 'forest far outside red lines is targetable (got ' + b.forestPieces.length + ')');
+  ok(b.trenches.length === 1 && b.trenches[0].hex === '-3,1', 'trench far outside red lines is targetable');
+  st.hands.red = ['naval_barrage'];
+  E.playCard(st, 'naval_barrage');
+  E.applyStep(st, { trenchHex: '-3,1', trenchIdx: 0 });
+  ok(!st.trenches['-3,1'], 'barrage destroys the distant trench');
+})();
+
+console.log('== no-op plays are logged and marked (skipped-turn report) ==');
+(function () {
+  var st = testBattle(77);
+  st.hands.red = ['attack_plus1']; // no units on the board: the attack cannot resolve
+  E.playCard(st, 'attack_plus1');
+  ok(st.current === 'blue', 'impossible card ends the turn immediately');
+  var e = st.playLog[st.playLog.length - 1];
+  ok(e.id === 'attack_plus1' && e.noop === true, 'playLog entry marked noop: ' + JSON.stringify(e));
+  ok(st.log.some(function (l) { return l.msg.indexOf('no opening') >= 0; }), 'journal says the order was spent to no effect');
+  var st2 = testBattle(78);
+  E.playCard(st2, 'deploy_inf_start');
+  E.applyStep(st2, { hex: E.stepOptions(st2).targets ? E.stepOptions(st2).targets[0] : null });
+  ok(!st2.playLog[st2.playLog.length - 1].noop, 'a play that acted is NOT marked noop');
+  var r = E.balanceMap(E.MAPS[4], 2, { seedBase: 5 });
+  var anyCard = Object.keys(r.cards)[0];
+  ok('noop' in r.cards[anyCard], 'balanceMap aggregates noop per card');
+})();
+
+console.log('== concession ==');
+(function () {
+  var st = testBattle(88);
+  E.concede(st, 'red');
+  ok(st.phase === 'battle-over' && st.battleWinner === 'blue' && st.winType === 'concession',
+    'conceding hands the battle to the enemy');
+  ok(st.match.wins.blue === 1 && st.match.lastLoser === 'red', 'match bookkeeping matches a normal loss');
+  ok(st.log.some(function (l) { return l.msg.indexOf('concedes the field') >= 0; }), 'concession reaches the journal');
+})();
+
+console.log('== concede advisory (foregone-conclusion heuristic) ==');
+(function () {
+  var st = testBattle(99);
+  ok(E.concedeAdvised(st, 'red') === null, 'fresh battle: no advisory (Airdrop HQ snipe still possible)');
+  // hopeless for red: 1 turn left, 6 VP behind, only 1 enemy VP on the field,
+  // airdrop already spent, nothing within marching range of the blue HQ
+  st.vp.blue = 6;
+  st.decks.red = []; st.discards.red = []; st.hands.red = ['attack_plus1'];
+  st.removed.red.push('airdrop');
+  st.units['-3,1'] = { type: 'infantry', owner: 'blue' };
+  var adv = E.concedeAdvised(st, 'red');
+  ok(adv && adv.need === 7 && adv.turnsLeft === 1, 'hopeless position advised: ' + JSON.stringify(adv));
+  ok(E.concedeAdvised(st, 'blue') === null, 'the winning side is never advised to concede');
+  st.vp.red = 9;
+  ok(E.concedeAdvised(st, 'red') === null, 'a leading player is never advised to concede');
+})();
+
 console.log('== AI vs AI full matches ==');
 var seeds = [1, 2, 3, 4, 5, 6, 7, 8];
 var hqWins = 0, attrWins = 0, maxTurns = 0;

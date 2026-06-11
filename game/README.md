@@ -87,6 +87,7 @@ Terrain belongs to the hex it sits in and is drawn inset inside it. A **forest**
 - **Reset turn**: mid-way through a multi-step card you can reset back to the start of your turn (button next to Skip). Once the card fully resolves the turn is final.
 - **No stacking**: a hex side with terrain can't also hold a trench; trenches are placed by clicking their two edges, one at a time.
 - **Airdrop nerf**: Airdrop never appears in your opening hand (it returns to the deck for later turns).
+- **Concession**: at the start of your turn you may concede the battle (button in the top bar); the enemy takes the battle and the campaign moves on. When the maths say the battle is decided (the VP gap can't be closed even by destroying every enemy unit on the field, and no unit can reach the enemy HQ in the turns you have left), the game quietly suggests it — and the AI concedes on its own rather than playing out a foregone conclusion.
 
 ## Rulings made where the rule book was silent
 
@@ -98,7 +99,7 @@ Terrain belongs to the hex it sits in and is drawn inset inside it. A **forest**
 - Moving/attacking "through a headquarters": a unit adjacent to any HQ may move to, swap with, or attack a hex on the far side of that HQ. Terrain on the crossing edge applies.
 - Attrition VP counts enemy units you destroyed; tie goes to whoever moved second in the battle.
 - Ordered Withdraw tie: defender destroyed, attacker survives in place.
-- Naval Barrage may remove a trench or a whole forest piece in or adjacent to your controlled hexes; the barrage is optional, the attack can still be ordered.
+- Naval Barrage may remove **any** trench or whole forest piece on the board (June 2026 ruling — the old "in or adjacent to your controlled hexes" zone is gone); the barrage is optional, the attack can still be ordered.
 - Any card step can be skipped if you can't or don't want to complete it ("up to three" marches, etc.).
 - The "Depot" engraved on the prototype player mats isn't in the rule book, so it's not in the game.
 
