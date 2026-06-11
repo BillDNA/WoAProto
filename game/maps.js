@@ -12,9 +12,10 @@
 
    CARDS — the 16-card deck. "count" = copies. "starting": true marks the
    guaranteed first-hand card. "steps" run in order; types: deploy (unit,
-   optional anywhere:true), trench, attack (optional mod, tieSpare:true),
-   reposition, barrage. The ids "airdrop" (kept out of opening hands) and
-   the starting card id are meaningful to the engine — rename with care.
+   optional anywhere:true), trench, attack (optional mod, tieSpare:true,
+   noAdvance:true), reposition, barrage. The ids "airdrop" (kept out of
+   opening hands) and the starting card id are meaningful to the engine —
+   rename with care. Full field guide: ../design-docs/card-cheatsheet.md
 
    SHAPES — a board outline. "rows" is a list of [r, qFrom, qTo] spans of
    pointy-top axial coordinates (row r, hexes q=qFrom..qTo inclusive).
@@ -74,8 +75,8 @@ var WOA_BUILTIN =
       "text": "Order an attack. Then reposition a unit.",
       "steps": [{ "type": "attack" }, { "type": "reposition" }] },
     { "id": "ordered_withdraw", "name": "Ordered Withdraw", "count": 1,
-      "text": "Order an attack. On a tie, your attacker survives but does not take the hex.",
-      "steps": [{ "type": "attack", "tieSpare": true }] },
+      "text": "Order an attack. Your attacker survives a tie, and never advances into the hex.",
+      "steps": [{ "type": "attack", "tieSpare": true, "noAdvance": true }] },
     { "id": "naval_barrage", "name": "Naval Barrage", "count": 1,
       "text": "Remove any trench or forest on the board (optional). Then order an attack.",
       "steps": [{ "type": "barrage" }, { "type": "attack" }] },

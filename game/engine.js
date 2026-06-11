@@ -554,9 +554,13 @@
 
     if (res.outcome === 'attacker') {
       killDefender();
-      delete st.units[atk.from];
-      st.units[atk.to] = au;
-      msg += 'defender destroyed, attacker advances.';
+      if (atk.noAdvance) {
+        msg += 'defender destroyed; the attacker holds its ground.';
+      } else {
+        delete st.units[atk.from];
+        st.units[atk.to] = au;
+        msg += 'defender destroyed, attacker advances.';
+      }
     } else if (res.outcome === 'defender') {
       killAttacker();
       msg += 'attack repelled, attacker destroyed.';
@@ -631,8 +635,9 @@
     } else if (step.type === 'attack') {
       o.mod = step.mod || 0;
       o.tieSpare = !!step.tieSpare;
+      o.noAdvance = !!step.noAdvance;
       o.attacks = listAttacks(st, p).map(function (a) {
-        a = Object.assign({}, a, { mod: step.mod || 0, tieSpare: !!step.tieSpare });
+        a = Object.assign({}, a, { mod: step.mod || 0, tieSpare: !!step.tieSpare, noAdvance: !!step.noAdvance });
         a.preview = computeAttack(st, a);
         return a;
       });
@@ -700,7 +705,7 @@
         return a.from === choice.from && a.to === choice.to && (a.via || null) === (choice.via || null);
       });
       if (!legal) throw new Error('invalid attack');
-      resolveAttack(st, { from: choice.from, to: choice.to, via: choice.via || null, mod: step.mod || 0, tieSpare: !!step.tieSpare });
+      resolveAttack(st, { from: choice.from, to: choice.to, via: choice.via || null, mod: step.mod || 0, tieSpare: !!step.tieSpare, noAdvance: !!step.noAdvance });
       if (st.phase === 'battle-over') return st;
     } else if (step.type === 'reposition') {
       var r = listRepositions(st, p);

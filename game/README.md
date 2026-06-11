@@ -98,7 +98,7 @@ Terrain belongs to the hex it sits in and is drawn inset inside it. A **forest**
 - The attacking unit's own support value is not added to its attack.
 - Moving/attacking "through a headquarters": a unit adjacent to any HQ may move to, swap with, or attack a hex on the far side of that HQ. Terrain on the crossing edge applies.
 - Attrition VP counts enemy units you destroyed; tie goes to whoever moved second in the battle.
-- Ordered Withdraw tie: defender destroyed, attacker survives in place.
+- Ordered Withdraw: the attacker survives a tie, and never advances into the target hex — even on a clear win it holds its ground (June 2026 change). A successful attack on the HQ still captures it; entering isn't required.
 - Naval Barrage may remove **any** trench or whole forest piece on the board (June 2026 ruling — the old "in or adjacent to your controlled hexes" zone is gone); the barrage is optional, the attack can still be ordered.
 - Any card step can be skipped if you can't or don't want to complete it ("up to three" marches, etc.).
 - The "Depot" engraved on the prototype player mats isn't in the rule book, so it's not in the game.

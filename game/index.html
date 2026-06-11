@@ -1253,7 +1253,7 @@ function confirmAttack(a){
   var pv = a.preview;
   var au = st.units[a.from];
   var tgt = pv.defenderIsHQ ? capName(E.other(st.current))+' Headquarters' : capName(E.other(st.current))+' '+E.UNITS[pv.defenderUnit].name;
-  var outcomeTxt = { attacker: 'Attack succeeds — defender destroyed' + (pv.defenderIsHQ ? '. <b>HEADQUARTERS FALLS!</b>' : ', your unit advances.'),
+  var outcomeTxt = { attacker: 'Attack succeeds — defender destroyed' + (pv.defenderIsHQ ? '. <b>HEADQUARTERS FALLS!</b>' : (a.noAdvance ? ', your unit holds its ground.' : ', your unit advances.')),
                      defender: '<b>Attack fails — your unit is destroyed.</b>',
                      tie: a.tieSpare ? 'Tie — defender destroyed, your unit withdraws safely.' + (pv.defenderIsHQ?' <b>HEADQUARTERS FALLS!</b>':'') : 'Tie — <b>both units destroyed.</b>' + (pv.defenderIsHQ?' <b>HEADQUARTERS FALLS!</b>':'') }[pv.outcome];
   $('confirmPanel').innerHTML =

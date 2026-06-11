@@ -324,6 +324,39 @@ console.log('== Field Marshal AI & battle sim ==');
   ok(a.battleWinner === b.battleWinner && a.turnNumber === b.turnNumber, 'simulation is deterministic per seed');
 })();
 
+console.log('== noAdvance attacks (Ordered Withdraw holds its ground) ==');
+(function () {
+  var card = E.CARD_BY_ID.ordered_withdraw;
+  ok(card.steps[0].tieSpare === true && card.steps[0].noAdvance === true,
+    'Ordered Withdraw carries tieSpare + noAdvance');
+  // outright victory: cavalry (atk 3) vs lone infantry (def 1) — defender dies, attacker stays put
+  var st = testBattle(70);
+  st.units['0,0'] = { type: 'cavalry', owner: 'red' };
+  st.units['1,0'] = { type: 'infantry', owner: 'blue' };
+  st.hands.red = ['ordered_withdraw'];
+  E.playCard(st, 'ordered_withdraw');
+  E.applyStep(st, { from: '0,0', to: '1,0' });
+  ok(!st.units['1,0'], 'defender destroyed on a clear win');
+  ok(st.units['0,0'] && st.units['0,0'].type === 'cavalry', 'attacker did NOT take the hex');
+  ok(st.vp.red === 1, 'VP scored for the kill');
+  // tie: infantry vs infantry (1 vs 1) — defender dies, attacker survives in place
+  var st2 = testBattle(71);
+  st2.units['0,0'] = { type: 'infantry', owner: 'red' };
+  st2.units['1,0'] = { type: 'infantry', owner: 'blue' };
+  st2.hands.red = ['ordered_withdraw'];
+  E.playCard(st2, 'ordered_withdraw');
+  E.applyStep(st2, { from: '0,0', to: '1,0' });
+  ok(!st2.units['1,0'] && st2.units['0,0'], 'tie: defender destroyed, attacker survives in place');
+  // HQ still falls to a noAdvance attack (capture does not require entering)
+  var st3 = testBattle(72);
+  st3.units['-2,2'] = { type: 'cavalry', owner: 'red' }; // adjacent to blue HQ at -3,2
+  st3.hands.red = ['ordered_withdraw'];
+  E.playCard(st3, 'ordered_withdraw');
+  E.applyStep(st3, { from: '-2,2', to: '-3,2' });
+  ok(st3.phase === 'battle-over' && st3.battleWinner === 'red' && st3.winType === 'hq',
+    'noAdvance attack still captures the HQ');
+})();
+
 console.log('== Barrage targets ANY trench or forest (Feedback Round 5 ruling) ==');
 (function () {
   // forest + trench deep in blue territory, far from anything red controls
