@@ -392,6 +392,74 @@ console.log('== no-op plays are logged and marked (skipped-turn report) ==');
   ok('noop' in r.cards[anyCard], 'balanceMap aggregates noop per card');
 })();
 
+console.log('== attrition victory (surviving units on the board, June 2026) ==');
+(function () {
+  // Drain blue's card pool so red's next completed turn triggers attrition.
+  function drainBlue(st) {
+    st.decks.blue = []; st.discards.blue = []; st.hands.blue = [];
+    st.firstTurnDone.blue = true; // or drawHand would gift the starting card
+  }
+  // Kills don't score: blue killed 5 VP worth, but red has more ON the board.
+  var st = testBattle(111);
+  st.units['2,-1'] = { type: 'artillery', owner: 'red' };  // red fields 3 VP
+  st.units['-3,1'] = { type: 'infantry', owner: 'blue' };  // blue fields 1 VP
+  st.vp.blue = 5;
+  drainBlue(st);
+  st.hands.red = ['attack_plus1']; // no legal attack: resolves to nothing, ends the turn
+  E.playCard(st, 'attack_plus1');
+  ok(st.phase === 'battle-over' && st.battleWinner === 'red' && st.winType === 'attrition',
+    'attrition counts surviving units, not kills (red wins 3-1 despite 0-5 in kills)');
+  ok(st.log.some(function (l) { return l.msg.indexOf('3 VP vs 1 VP of surviving units') >= 0; }),
+    'journal reports the surviving-unit scores');
+  ok(E.fieldScore(st, 'red') === 3 && E.fieldScore(st, 'blue') === 1, 'fieldScore reads the board');
+
+  // Undeployed reserves count for nothing: blue's full reserve loses to one fielded infantry.
+  var st2 = testBattle(112);
+  st2.units['2,-1'] = { type: 'infantry', owner: 'red' };
+  drainBlue(st2);
+  st2.hands.red = ['attack_plus1'];
+  E.playCard(st2, 'attack_plus1');
+  ok(st2.battleWinner === 'red', 'undeployed reserves count for nothing');
+
+  // Bare-board tie still goes to the second player.
+  var st3 = testBattle(113);
+  drainBlue(st3);
+  st3.hands.red = ['attack_plus1'];
+  E.playCard(st3, 'attack_plus1');
+  ok(st3.battleWinner === st3.second && st3.battleWinner === 'blue', '0-0 tie goes to the second player');
+})();
+
+console.log('== behaviour counters (balance-lab metrics) ==');
+(function () {
+  var st = testBattle(120);
+  E.playCard(st, 'deploy_inf_start');
+  E.applyStep(st, { hex: E.stepOptions(st).targets[0] });
+  ok(st.stats.deploys === 1, 'deploy increments stats.deploys');
+  var r = E.balanceMap(E.MAPS[0], 2, { seedBase: 5 });
+  ['attacks', 'swaps', 'marches', 'zeroKill', 'tiebreak', 'firstBloodGames', 'controlGames', 'deployedShare']
+    .forEach(function (k) { ok(k in r, 'balanceMap reports ' + k); });
+})();
+
+console.log('== AI dead-turn regression (round 6: hard AI must not skip turn 1) ==');
+(function () {
+  ['normal', 'hard'].forEach(function (diff) {
+    var noops = 0;
+    for (var seed = 1; seed <= 6; seed++) {
+      var st = testBattle(seed * 17);
+      var plan = E.aiPlanTurn(st, diff);
+      E.playCard(st, plan.cardId, plan.mode || 'normal');
+      var g = 0;
+      while (st.phase === 'step' && g++ < 12) {
+        var c = plan.choices.shift() || { skip: true };
+        try { E.applyStep(st, c); } catch (e) { E.applyStep(st, { skip: true }); }
+      }
+      var le = st.playLog[st.playLog.length - 1];
+      if (le && le.noop) noops++;
+    }
+    ok(noops === 0, diff + ' AI: 0 turn-1 dead turns across 6 seeds (got ' + noops + ')');
+  });
+})();
+
 console.log('== concession ==');
 (function () {
   var st = testBattle(88);
@@ -406,16 +474,18 @@ console.log('== concede advisory (foregone-conclusion heuristic) ==');
 (function () {
   var st = testBattle(99);
   ok(E.concedeAdvised(st, 'red') === null, 'fresh battle: no advisory (Airdrop HQ snipe still possible)');
-  // hopeless for red: 1 turn left, 6 VP behind, only 1 enemy VP on the field,
+  // hopeless for red: 1 turn left, blue has 5 VP of units on the field vs red's
+  // none (need 6 incl. the tie that goes to blue), best-case swing is 3/turn,
   // airdrop already spent, nothing within marching range of the blue HQ
-  st.vp.blue = 6;
   st.decks.red = []; st.discards.red = []; st.hands.red = ['attack_plus1'];
   st.removed.red.push('airdrop');
-  st.units['-3,1'] = { type: 'infantry', owner: 'blue' };
+  st.units['-3,1'] = { type: 'artillery', owner: 'blue' };
+  st.units['-2,1'] = { type: 'cavalry', owner: 'blue' };
   var adv = E.concedeAdvised(st, 'red');
-  ok(adv && adv.need === 7 && adv.turnsLeft === 1, 'hopeless position advised: ' + JSON.stringify(adv));
+  ok(adv && adv.need === 6 && adv.turnsLeft === 1, 'hopeless position advised: ' + JSON.stringify(adv));
   ok(E.concedeAdvised(st, 'blue') === null, 'the winning side is never advised to concede');
-  st.vp.red = 9;
+  st.units['2,-1'] = { type: 'artillery', owner: 'red' };
+  st.units['1,-1'] = { type: 'artillery', owner: 'red' };
   ok(E.concedeAdvised(st, 'red') === null, 'a leading player is never advised to concede');
 })();
 

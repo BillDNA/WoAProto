@@ -52,7 +52,7 @@ When you play through the server, custom maps are automatically written to **cus
 
 ## The balance lab
 
-`node balance.js` runs AI-vs-AI battles on every map (custom maps included) and prints a report: win rate by side, by first/second mover, HQ-capture vs attrition share, battle length, and how often each card sat in the winner's spent pile.
+`node balance.js` runs AI-vs-AI battles on every map (custom maps included) and prints a report: win rate by side, by first/second mover, HQ-capture vs attrition share, battle length, AI behaviour health (attacks & swaps per battle, zero-kill stalemates, share of units fielded), decisiveness (tiebreak share, first-blood conversion, board control vs winning), and how often each card sat in the winner's spent pile.
 
 - `node balance.js 60` — bigger samples; `node balance.js 60 hard` — with the Field Marshal
 - `node balance.js 40 narrows` — only maps whose name matches "narrows"
@@ -87,7 +87,7 @@ Terrain belongs to the hex it sits in and is drawn inset inside it. A **forest**
 - **Reset turn**: mid-way through a multi-step card you can reset back to the start of your turn (button next to Skip). Once the card fully resolves the turn is final.
 - **No stacking**: a hex side with terrain can't also hold a trench; trenches are placed by clicking their two edges, one at a time.
 - **Airdrop nerf**: Airdrop never appears in your opening hand (it returns to the deck for later turns).
-- **Concession**: at the start of your turn you may concede the battle (button in the top bar); the enemy takes the battle and the campaign moves on. When the maths say the battle is decided (the VP gap can't be closed even by destroying every enemy unit on the field, and no unit can reach the enemy HQ in the turns you have left), the game quietly suggests it — and the AI concedes on its own rather than playing out a foregone conclusion.
+- **Concession**: at the start of your turn you may concede the battle (button in the top bar); the enemy takes the battle and the campaign moves on. When the maths say the battle is decided (the field-score gap is bigger than the best plausible swing — about 3 VP a turn — in the turns you have left, and no unit can reach the enemy HQ in time), the game quietly suggests it — and the AI concedes on its own rather than playing out a foregone conclusion.
 
 ## Rulings made where the rule book was silent
 
@@ -97,7 +97,7 @@ Terrain belongs to the hex it sits in and is drawn inset inside it. A **forest**
 - HQ's +1 support applies to adjacent hexes for both attack and defense calculations.
 - The attacking unit's own support value is not added to its attack.
 - Moving/attacking "through a headquarters": a unit adjacent to any HQ may move to, swap with, or attack a hex on the far side of that HQ. Terrain on the crossing edge applies.
-- Attrition VP counts enemy units you destroyed; tie goes to whoever moved second in the battle.
+- Attrition VP counts your **surviving units on the board** (1/2/3 for infantry/cavalry/artillery); reserves never deployed count for nothing, and neither do kills as such — destroying a unit matters because it leaves the enemy less on the field. Tie goes to whoever moved second in the battle. (June 2026 revision; the rule book is updated. Previously kills were what scored, which let a one-kill turtle beat a side that dominated the board.)
 - Ordered Withdraw: the attacker survives a tie, and never advances into the target hex — even on a clear win it holds its ground (June 2026 change). A successful attack on the HQ still captures it; entering isn't required.
 - Naval Barrage may remove **any** trench or whole forest piece on the board (June 2026 ruling — the old "in or adjacent to your controlled hexes" zone is gone); the barrage is optional, the attack can still be ordered.
 - Any card step can be skipped if you can't or don't want to complete it ("up to three" marches, etc.).

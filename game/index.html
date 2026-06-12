@@ -504,7 +504,7 @@
   <h2>Field Manual</h2>
   <div class="manual">
     <h3>Object</h3>
-    <p>Win battles by <b>capturing the enemy headquarters</b> (attack into it; a tie counts) or by <b>attrition</b> &mdash; when a player has no cards left, the side that destroyed more enemy materiel wins (1&nbsp;VP per infantry, 2 per cavalry, 3 per artillery; tie goes to whoever moved second). First to <b>3 battle victories</b> wins the campaign.</p>
+    <p>Win battles by <b>capturing the enemy headquarters</b> (attack into it; a tie counts) or by <b>attrition</b> &mdash; when a player has no cards left, the side with more <b>surviving units on the board</b> wins (1&nbsp;VP per infantry, 2 per cavalry, 3 per artillery; reserves left at home count for nothing; tie goes to whoever moved second). First to <b>3 battle victories</b> wins the campaign.</p>
     <h3>Your Turn</h3>
     <p>Draw to a hand of 4 (your first turn includes the guaranteed Deploy Infantry card). Play exactly one card and resolve it; the played card is <b>removed from the game</b>, the rest are discarded and recycled. You have only 16 plays per battle &mdash; spend them well.</p>
     <h3>Units</h3>
@@ -1077,8 +1077,8 @@ function renderMat(p){
     '<div class="row" style="margin-top:2px;"><span>Orders left</span><b>'+E.cardsRemaining(st,p)+'</b></div>' +
     '<div class="spentlbl">orders spent &mdash; gone from the game</div>' +
     '<div class="spent" title="Click for the full card glossary">'+spent+'</div>' +
-    '<div class="vp">'+st.vp[p]+' VP</div>' +
-    '<div class="small" style="text-align:center;">from enemy losses</div>';
+    '<div class="vp">'+E.fieldScore(st,p)+' VP</div>' +
+    '<div class="small" style="text-align:center;">surviving units on the field</div>';
   el.querySelector('.spent').onclick = showCards;
 }
 function renderTop(){
@@ -1280,7 +1280,7 @@ function showBattleOver(){
   var html = '<h2 class="'+w+'">'+capName(w)+' takes the field!</h2>' +
     '<p style="font-style:italic;">"'+st.mapName+'" — ' + (st.winType==='hq' ? 'the enemy headquarters was captured.' :
       st.winType==='concession' ? 'the enemy conceded the field.' :
-      'won by attrition, '+st.vp.red+' VP to '+st.vp.blue+' VP.') + '</p>' +
+      'won by attrition, '+E.fieldScore(st,'red')+' VP to '+E.fieldScore(st,'blue')+' VP of surviving units.') + '</p>' +
     '<p style="margin-top:10px;font-size:18px;">Campaign: <b style="color:var(--red-dark)">Red '+m.wins.red+'</b> — <b style="color:var(--blue-dark)">Blue '+m.wins.blue+'</b></p>';
   var rematch = APP.mode !== 'net'
     ? '<button id="boRematch" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);" title="Fresh battle, same map — for A/B testing a layout">Rematch this map</button>'
@@ -1744,7 +1744,7 @@ function balRound(def, add){
         if (st.battleWinner === fp) BAL.first++;
         if (st.winType === 'hq') BAL.hq++;
         BAL.turns += st.turnNumber;
-        BAL.vp += Math.abs(st.vp.red - st.vp.blue);
+        BAL.vp += Math.abs(E.fieldScore(st,'red') - E.fieldScore(st,'blue'));
       }
       BAL.n++;
       step();

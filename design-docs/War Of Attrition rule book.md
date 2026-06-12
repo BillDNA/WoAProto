@@ -53,12 +53,14 @@ Calculating Defender’s  Power
   * Successfully attack into the opponent's headquarters.  A tie where both units get removed counts.  
 * Attrition  
   * No cards are left to play  
-  * Calls for a points win with defeated units counting as such  
+  * Calls for a points win counting each player's **surviving units on the board**  
     * 1 vp / infantry  
     * 2 vp / calvary  
     * 3 vp / artillery  
+    * Units still in reserve (never deployed) count for nothing  
   * Victor is the player with more points  
-  * In the event of a tie who ever went 2nd wins
+  * In the event of a tie who ever went 2nd wins  
+  * *(Revised June 2026 — previously scored by defeated enemy units; board presence now decides the standstill.)*
 
 ## Game Victory Conditions
 

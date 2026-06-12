@@ -242,6 +242,8 @@
       decks: {}, discards: { red: [], blue: [] }, removed: { red: [], blue: [] }, hands: { red: [], blue: [] },
       seen: { red: {}, blue: {} },  // cardId -> times it has appeared in p's hand
       playLog: [],                  // {p, id, mode, turn, seen-at-play} per card played
+      lastSwap: { red: null, blue: null }, // p's most recent swap pair (AI anti-shuffle)
+      stats: { attacks: 0, swaps: 0, marches: 0, deploys: 0, firstBlood: null }, // behaviour counters for the balance lab
       firstTurnDone: { red: false, blue: false },
       current: match.battleIndex === 0 ? match.firstPlayer : match.lastLoser,
       second: null,
@@ -303,11 +305,21 @@
     if (hand.length === 0) endByAttrition(st);
   }
 
+  // Attrition score (June 2026 rules revision): VP of a player's SURVIVING units
+  // on the board. Reserves never deployed count for nothing; kills only matter
+  // because they remove enemy units from the field. (st.vp still tracks kills
+  // for stats/journal, but victory reads the board.)
+  function fieldScore(st, p) {
+    var s = 0;
+    for (var h in st.units) { var u = st.units[h]; if (u.owner === p) s += UNITS[u.type].vp; }
+    return s;
+  }
+
   function endByAttrition(st) {
-    var vr = st.vp.red, vb = st.vp.blue;
+    var fr = fieldScore(st, 'red'), fb = fieldScore(st, 'blue');
     var winner;
-    if (vr > vb) winner = 'red';
-    else if (vb > vr) winner = 'blue';
+    if (fr > fb) winner = 'red';
+    else if (fb > fr) winner = 'blue';
     else winner = st.second; // tie: player who went 2nd wins
     finishBattle(st, winner, 'attrition');
   }
@@ -325,7 +337,7 @@
     if (m.wins[winner] >= 3) { m.winner = winner; }
     log(st, cap(winner) + ' wins the battle by ' + (how === 'hq' ? 'capturing the headquarters!' :
       how === 'concession' ? 'concession.' :
-      'attrition (' + st.vp.red + ' VP vs ' + st.vp.blue + ' VP).'));
+      'attrition (' + fieldScore(st, 'red') + ' VP vs ' + fieldScore(st, 'blue') + ' VP of surviving units).'));
   }
 
   // A player throws in the towel; the battle (not the match) goes to the enemy.
@@ -338,18 +350,19 @@
 
   // Is the battle a foregone conclusion for p? ADVISORY ONLY — never enforced.
   // Truthy ({need, gain, turnsLeft}) when BOTH paths to victory look closed:
-  //  - attrition: even destroying every enemy unit on the field can't close the
-  //    VP gap (enemy reserves can simply stay off the field, so they don't count)
+  //  - attrition (surviving-units scoring): the field-score gap is bigger than
+  //    the most p could plausibly swing it in the turns left. One turn can swing
+  //    at most ~3 VP p's way (deploy or destroy an artillery) — multi-action
+  //    cards can beat that, so this is a heuristic, which is why it only advises.
   //  - HQ capture: no unit (fielded, or deployed then marched) can reach the
   //    enemy HQ within the turns p has left; a live Airdrop keeps hope alive.
   function concedeAdvised(st, p) {
     if (st.phase !== 'choose-card') return null;
     var e = other(p);
     var turnsLeft = cardsRemaining(st, p); // each turn removes exactly 1 card from p's pool
-    var need = (st.vp[e] - st.vp[p]) + (st.second === p ? 0 : 1); // second player wins VP ties
+    var need = (fieldScore(st, e) - fieldScore(st, p)) + (st.second === p ? 0 : 1); // second player wins ties
     if (need <= 0) return null;            // p still ahead (or tied as second player)
-    var gain = 0;
-    for (var h in st.units) { var u = st.units[h]; if (u.owner === e) gain += UNITS[u.type].vp; }
+    var gain = 3 * turnsLeft;              // best case: a 3-VP swing every remaining turn
     if (gain >= need) return null;         // the gap can still be closed in principle
     if (st.hqAlive[e] && turnsLeft > 0) {
       var hasReserve = Object.keys(UNITS).some(function (t) { return st.reserves[p][t] > 0; });
@@ -537,19 +550,22 @@
     var res = computeAttack(st, atk);
     var au = st.units[atk.from];
     var du = unitAt(st, atk.to), dHQ = isHQ(st, atk.to);
+    ensureStats(st).attacks++;
     var msg = cap(p) + ' ' + UNITS[au.type].name + ' attacks ' +
       (du ? cap(e) + ' ' + UNITS[du.type].name : cap(e) + ' HQ') +
       ' at ' + hexLabel(atk.to) +
       (atk.via ? ', striking through the HQ' : '') +
       ' (' + res.attackerPower + ' vs ' + res.defenderPower + '): ';
 
+    // st.vp tracks kills for stats/journal only — victory reads fieldScore.
     function killDefender() {
-      if (du) { delete st.units[atk.to]; st.vp[p] += UNITS[du.type].vp; }
+      if (du) { delete st.units[atk.to]; st.vp[p] += UNITS[du.type].vp; if (!st.stats.firstBlood) st.stats.firstBlood = p; }
       if (dHQ) { st.hqAlive[dHQ] = false; }
     }
     function killAttacker() {
       delete st.units[atk.from];
       st.vp[e] += UNITS[au.type].vp;
+      if (!st.stats.firstBlood) st.stats.firstBlood = e;
     }
 
     if (res.outcome === 'attacker') {
@@ -673,9 +689,17 @@
     if (st.pending.idx >= st.pending.steps.length) endTurn(st);
   }
 
+  function ensureStats(st) { // self-heal saves from before the behaviour counters
+    if (!st.stats) st.stats = { attacks: 0, swaps: 0, marches: 0, deploys: 0, firstBlood: null };
+    if (!st.lastSwap) st.lastSwap = { red: null, blue: null };
+    return st.stats;
+  }
+  function swapKey(a, b) { return a < b ? a + '|' + b : b + '|' + a; }
+
   function applyStep(st, choice) {
     if (st.phase !== 'step') throw new Error('no step pending');
     var p = st.current;
+    ensureStats(st);
     var step = currentStep(st);
     if (choice && choice.skip) {
       advanceStep(st);
@@ -687,6 +711,7 @@
       if (st.reserves[p][step.unit] <= 0 || targets.indexOf(choice.hex) < 0) throw new Error('invalid deploy');
       st.reserves[p][step.unit]--;
       st.units[choice.hex] = { type: step.unit, owner: p };
+      st.stats.deploys++;
       log(st, cap(p) + ' deploys ' + UNITS[step.unit].name + ' at ' + hexLabel(choice.hex) + '.');
     } else if (step.type === 'trench') {
       if (st.reserves[p].trench <= 0 || trenchTargets(st, p).indexOf(choice.hex) < 0) throw new Error('invalid trench hex');
@@ -714,12 +739,15 @@
         if (!ok) throw new Error('invalid swap');
         var ua = st.units[choice.a], ub = st.units[choice.b];
         st.units[choice.a] = ub; st.units[choice.b] = ua;
+        st.lastSwap[p] = swapKey(choice.a, choice.b);
+        st.stats.swaps++;
         log(st, cap(p) + ' swaps the units at ' + hexLabel(choice.a) + ' and ' + hexLabel(choice.b) + '.');
       } else {
         var okm = r.moves.some(function (m) { return m.from === choice.from && m.to === choice.to; });
         if (!okm) throw new Error('invalid move');
         st.units[choice.to] = st.units[choice.from];
         delete st.units[choice.from];
+        st.stats.marches++;
         log(st, cap(p) + ' marches ' + UNITS[st.units[choice.to].type].name + ' from ' + hexLabel(choice.from) + ' to ' + hexLabel(choice.to) + '.');
       }
     } else if (step.type === 'barrage') {
@@ -798,7 +826,16 @@
     var en = other(me);
     if (st.phase === 'battle-over') return st.battleWinner === me ? 1e6 : -1e6;
     var s = 0;
-    s += (st.vp[me] - st.vp[en]) * 60;
+    // Attrition projection: who wins if the decks ran out right now? Ramps up as
+    // they empty, so the side losing the standstill (incl. ties — second player
+    // wins those) is pushed to force combat instead of swap-dancing to 0-0.
+    // This replaced a kill-VP term when scoring moved to surviving units (June 2026).
+    var fsMe = fieldScore(st, me), fsEn = fieldScore(st, en);
+    var turnsLeft = Math.min(cardsRemaining(st, me), cardsRemaining(st, en));
+    var urgency = Math.max(0, 1 - turnsLeft / 12);
+    var attrWin = fsMe > fsEn || (fsMe === fsEn && st.second === me);
+    s += (attrWin ? 1 : -1) * 500 * urgency;
+    s += (fsMe - fsEn) * (8 + 40 * urgency);
     var myUnits = [], enUnits = [];
     for (var h in st.units) {
       var u = st.units[h];
@@ -870,6 +907,8 @@
         try { applyStep(sim2, c); } catch (e) { return; }
         var sc = evalState(sim2, me) + (randomness ? rnd(s) * randomness : 0);
         if (c.skip) sc -= 1; // mild bias toward acting
+        // anti-shuffle: re-swapping the pair I swapped last time is ping-ponging
+        if (c.swap && sim.lastSwap && sim.lastSwap[me] === swapKey(c.a, c.b)) sc -= 10;
         if (sc > bestScore) { bestScore = sc; best = c; }
       });
       if (!best) best = { skip: true };
@@ -930,11 +969,13 @@
     var candidates = [];
     var tried = {};
     // A plan that resolves ZERO actions is a dead turn (Bill: players should
-    // always get to act) — penalize harder than the -12 fallback bias so a
-    // basic reposition beats doing nothing, unless truly nothing can act.
+    // always get to act) — penalize harder than the -12 fallback bias AND the
+    // hard AI's 2-sample reply noise (round 6: 25 wasn't enough; sampled-hand
+    // variance between candidates flipped it). When truly nothing can act,
+    // every plan carries the penalty, so it cancels out.
     function noopPenalty(sim) {
       var le = sim.playLog[sim.playLog.length - 1];
-      return (le && le.p === me && le.noop) ? 25 : 0;
+      return (le && le.p === me && le.noop) ? 80 : 0;
     }
     hand.forEach(function (cid) {
       if (tried[cid]) return;
@@ -942,8 +983,9 @@
       var sim = clone(st);
       try { playCard(sim, cid); } catch (e) { return; }
       var r = (sim.phase === 'step') ? greedyResolve(sim, me, randomness, s) : { score: evalState(sim, me), choices: [] };
+      var pen = noopPenalty(sim);
       candidates.push({ plan: { cardId: cid, mode: 'normal', choices: r.choices },
-        score: r.score - noopPenalty(sim) + (randomness ? rnd(s) * randomness : 0), end: sim });
+        score: r.score - pen + (randomness ? rnd(s) * randomness : 0), pen: pen, end: sim });
     });
     // House rule: any card may be played as a basic attack or reposition.
     // Burn the least precious card if that beats every printed action.
@@ -953,8 +995,9 @@
         var sim = clone(st);
         try { playCard(sim, burn, mode); } catch (e) { return; }
         var r = (sim.phase === 'step') ? greedyResolve(sim, me, randomness, s) : { score: evalState(sim, me), choices: [] };
+        var pen = noopPenalty(sim);
         candidates.push({ plan: { cardId: burn, mode: mode, choices: r.choices },
-          score: r.score - 12 - noopPenalty(sim) + (randomness ? rnd(s) * randomness : 0), end: sim }); // mild bias toward printed actions
+          score: r.score - 12 - pen + (randomness ? rnd(s) * randomness : 0), pen: pen, end: sim }); // mild bias toward printed actions
       });
     }
     if (!candidates.length) return null;
@@ -962,7 +1005,15 @@
     if (difficulty !== 'hard') return candidates[0].plan;
     var best = null, bestScore = -Infinity;
     candidates.slice(0, 3).forEach(function (cand) {
-      var sc = 0.3 * cand.score + 0.7 * sampledReplyScore(cand.end, me, s, 2);
+      // Common random numbers (round 6): every candidate is scored against the
+      // SAME sampled enemy hands (fresh rng, same seed), otherwise one candidate
+      // randomly eats an Airdrop-by-the-HQ sample (-600) that another never saw
+      // — that noise once drowned the dead-turn penalty entirely.
+      var s2 = { seed: (st.seed ^ 0x51f15eed) | 0 };
+      // cand.score already carries -pen; subtract the other 0.7 share so the
+      // dead-turn penalty hits the blend at FULL strength (0.3 alone diluted
+      // -80 to -24 and the reply term never saw it).
+      var sc = 0.3 * cand.score + 0.7 * sampledReplyScore(cand.end, me, s2, 2) - 0.7 * (cand.pen || 0);
       if (sc > bestScore) { bestScore = sc; best = cand.plan; }
     });
     return best;
@@ -991,8 +1042,14 @@
   // n AI-vs-AI battles on one map (alternating first player); aggregated stats.
   function balanceMap(map, n, opts) {
     opts = opts || {};
-    var out = { n: n, redWins: 0, firstWins: 0, hqWins: 0, turns: 0, vpDiff: 0, unfinished: 0, cards: {} };
+    var out = { n: n, redWins: 0, firstWins: 0, hqWins: 0, turns: 0, vpDiff: 0, unfinished: 0, cards: {},
+      // behaviour metrics (June 2026): catch degenerate AI play, not just outcomes
+      attacks: 0, swaps: 0, marches: 0, zeroKill: 0, tiebreak: 0,
+      firstBloodGames: 0, firstBloodWins: 0, controlGames: 0, controlWins: 0,
+      deployedShare: 0 };
     CARDS.forEach(function (c) { out.cards[c.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 }; });
+    var unitTotal = 0;
+    Object.keys(UNITS).forEach(function (t) { unitTotal += UNITS[t].count || 0; });
     for (var g = 0; g < n; g++) {
       var fp = g % 2 === 0 ? 'red' : 'blue';
       var st = simBattle(map, (opts.seedBase || 7919) + g * 104729 + 13, fp, opts.diffRed, opts.diffBlue);
@@ -1002,7 +1059,29 @@
       if (w === fp) out.firstWins++;
       if (st.winType === 'hq') out.hqWins++;
       out.turns += st.turnNumber;
-      out.vpDiff += Math.abs(st.vp.red - st.vp.blue);
+      var fsr = fieldScore(st, 'red'), fsb = fieldScore(st, 'blue');
+      out.vpDiff += Math.abs(fsr - fsb);
+      var stats = st.stats || {};
+      out.attacks += stats.attacks || 0;
+      out.swaps += stats.swaps || 0;
+      out.marches += stats.marches || 0;
+      if (st.vp.red + st.vp.blue === 0) out.zeroKill++;            // no unit ever died
+      if (st.winType === 'attrition' && fsr === fsb) out.tiebreak++; // decided only by tie-goes-to-2nd
+      if (stats.firstBlood) {
+        out.firstBloodGames++;
+        if (stats.firstBlood === w) out.firstBloodWins++;
+      }
+      var hr = 0, hb = 0;
+      for (var h in st.units) (st.units[h].owner === 'red' ? hr++ : hb++);
+      if (hr !== hb) {
+        out.controlGames++;
+        if ((w === 'red') === (hr > hb)) out.controlWins++;        // winner also held more hexes
+      }
+      var resLeft = 0;
+      ['red', 'blue'].forEach(function (p) {
+        Object.keys(UNITS).forEach(function (t) { resLeft += st.reserves[p][t] || 0; });
+      });
+      out.deployedShare += 1 - resLeft / (2 * unitTotal);
       (st.playLog || []).forEach(function (e) {
         var c = out.cards[e.id] || (out.cards[e.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 });
         c.plays++;
@@ -1058,7 +1137,7 @@
     listAttacks: listAttacks, listRepositions: listRepositions, listBarrageTargets: listBarrageTargets,
     computeAttack: computeAttack, playCard: playCard, currentStep: currentStep,
     stepOptions: stepOptions, applyStep: applyStep, cardsRemaining: cardsRemaining,
-    concede: concede, concedeAdvised: concedeAdvised,
+    concede: concede, concedeAdvised: concedeAdvised, fieldScore: fieldScore,
     aiPlanTurn: aiPlanTurn, clone: clone, evalState: evalState, validateMaps: validateMaps,
     simBattle: simBattle, balanceMap: balanceMap
   };
