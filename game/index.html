@@ -61,11 +61,11 @@
     /* width-driven so the one-line plaque title always fits; capped at 29px on roomy screens */
     font-size:clamp(14px, 4.4vw, 29px); letter-spacing:2px; color:#2b2113;
     text-shadow: 0 1px 0 rgba(255,255,255,.25);
-    margin:-8px -6px 4px; font-variant:small-caps; line-height:1;
+    margin:-6px -6px 4px; font-variant:small-caps; line-height:1;
     /* brass plaque (art/title.png); plain text when the art is absent.
        all-caps sits high in its own line box, so bias the padding downward to optically centre it on the plaque */
     background:url('art/title.png') center/100% 100% no-repeat;
-    padding:1.18em clamp(12px,5vw,52px) .56em; white-space:nowrap;
+    padding:.88em clamp(12px,5vw,52px) .65em; white-space:nowrap;
   }
   #menu .sub{font-style:italic; color:var(--ink-soft); margin-bottom:24px;}
   #menu .rule{height:2px; background:linear-gradient(90deg,transparent,var(--brass),transparent); margin:14px 0 22px;}
@@ -77,6 +77,11 @@
     background:rgba(255,255,255,.25); cursor:pointer; font-size:14px;
   }
   .opt-row .choice.sel{background:var(--brass); color:#fff; box-shadow:inset 0 0 6px rgba(0,0,0,.3);}
+  #diffSel{
+    font-family:inherit; font-size:14px; padding:6px 12px;
+    border:1px solid var(--brass-dark); border-radius:6px;
+    background:rgba(255,255,255,.25); color:var(--ink); cursor:pointer;
+  }
   #joinCode{
     font-family:inherit; font-size:20px; text-align:center; letter-spacing:6px; text-transform:uppercase;
     width:160px; padding:8px; border:2px solid var(--brass-dark); border-radius:6px; background:rgba(255,255,255,.5);
@@ -300,7 +305,7 @@
   @media (max-height: 780px){
     #menu{padding:12px;}
     #menu .panel{padding:18px 26px;}
-    #menu h1{font-size:clamp(14px,4.4vw,24px); padding:.95em clamp(12px,5vw,46px) .42em;}
+    #menu h1{font-size:clamp(14px,4.4vw,24px); padding:.76em clamp(12px,5vw,46px) .52em;}
     #menu .sub{margin-bottom:12px; font-size:13.5px;}
     #menu .rule{margin:7px 0 10px;}
     .opt-row{margin:6px 0;}
@@ -309,7 +314,7 @@
   }
   @media (max-height: 620px){
     #menu .panel{padding:12px 22px;}
-    #menu h1{font-size:clamp(13px,4.2vw,21px); padding:.9em clamp(12px,4.5vw,40px) .4em;}
+    #menu h1{font-size:clamp(13px,4.2vw,21px); padding:.72em clamp(12px,4.5vw,40px) .5em;}
     #menu .sub{margin-bottom:6px; font-size:12px;}
     #menu .rule{margin:4px 0 7px;}
     .opt-row{margin:4px 0; gap:6px;}
@@ -378,22 +383,24 @@
       <span class="choice" data-side="blue">Blue</span>
     </div>
     <div class="opt-row" id="diffRow">
-      <span class="small" style="align-self:center;">Enemy general:</span>
-      <span class="choice" data-diff="easy">Green Recruit</span>
-      <span class="choice sel" data-diff="normal">Old Veteran</span>
-      <span class="choice" data-diff="hard" title="Thinks about your best reply before committing — takes a moment per turn">Field Marshal</span>
+      <label class="small" for="diffSel" style="align-self:center;">Enemy general:</label>
+      <select id="diffSel">
+        <option value="easy">Green Recruit</option>
+        <option value="normal" selected>Old Veteran</option>
+        <option value="hard" title="Thinks about your best reply before committing — takes a moment per turn">Field Marshal</option>
+      </select>
     </div>
     <div class="menu-btns">
       <button id="btnResume" style="display:none;">Resume Campaign</button>
       <button id="btnAI">March Against the AI</button>
-      <button id="btnWatch" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Watch: AI vs AI</button>
       <button id="btnHotseat">Hotseat &mdash; Shared Device</button>
       <button id="btnHost">Host a Room (two devices)</button>
       <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
         <input id="joinCode" maxlength="4" placeholder="CODE">
         <button id="btnJoin">Join</button>
       </div>
-      <button id="btnMaps">Maps &amp; Map Editor</button>
+      <button id="btnWatch" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Watch: AI vs AI</button>
+      <button id="btnMaps" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Maps &amp; Map Editor</button>
       <button id="btnManual" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Field Manual (rules)</button>
       <button id="btnCardsMenu" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Card Glossary</button>
     </div>
@@ -562,9 +569,7 @@ function capName(p){ return p.charAt(0).toUpperCase()+p.slice(1); }
 document.querySelectorAll('#sideRow .choice').forEach(function(el){
   el.onclick = function(){ document.querySelectorAll('#sideRow .choice').forEach(function(x){x.classList.remove('sel');}); el.classList.add('sel'); APP.mySide = el.dataset.side; };
 });
-document.querySelectorAll('#diffRow .choice').forEach(function(el){
-  el.onclick = function(){ document.querySelectorAll('#diffRow .choice').forEach(function(x){x.classList.remove('sel');}); el.classList.add('sel'); APP.diff = el.dataset.diff; };
-});
+$('diffSel').onchange = function(){ APP.diff = this.value; };
 $('btnAI').onclick = function(){ startLocal('ai'); };
 // deep link straight into a game: index.html?autostart=ai (handy for screenshots & sharing)
 if (/autostart=ai/.test(location.search)) setTimeout(function(){ startLocal('ai'); }, 60);
@@ -662,6 +667,7 @@ $('btnResume').onclick = function(){
     var d = JSON.parse(localStorage.getItem('woa-save'));
     if (!d || d.v !== SAVE_V) throw new Error('save from an older version');
     APP.mode = d.mode; APP.mySide = d.mySide; APP.diff = d.diff; APP.st = d.st;
+    $('diffSel').value = d.diff || 'normal';
     APP.ui = { sel:null, stage:null, busy:false, handoffPending: d.mode==='hotseat' };
     show('game'); renderAll();
     if (APP.st.phase === 'battle-over') showBattleOver();
