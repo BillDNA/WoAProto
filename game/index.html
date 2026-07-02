@@ -227,6 +227,7 @@
   #hand{
     flex:0 0 auto; display:flex; gap:10px; justify-content:center; align-items:flex-end;
     padding:4px 10px 12px; width:100%; overflow-x:auto;
+    min-height:188px; /* reserve the card-strip height so the board doesn't snap larger when the hand empties */
   }
   .card{
     flex:0 0 128px; height:172px; border-radius:7px; position:relative; cursor:pointer;
@@ -711,6 +712,11 @@ var APP = {
 function $(id){ return document.getElementById(id); }
 function show(scr){ document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');}); $(scr).classList.add('active'); }
 function capName(p){ return p.charAt(0).toUpperCase()+p.slice(1); }
+// AI general's display label (reads the enemy-general dropdown so custom AIs work too)
+function aiDisplayName(diff){
+  var opt = $('diffSel').querySelector('option[value="'+diff+'"]');
+  return opt ? opt.textContent : capName(diff||'ai');
+}
 
 // AI personalities beyond easy/normal/hard come from maps.js as data — offer
 // them wherever an AI is picked (enemy general + dashboard sides)
@@ -1333,8 +1339,10 @@ function renderMat(p){
   });
 
   var you = APP.mode!=='hotseat' && p===APP.mySide ? ' — you' : '';
+  var aiHere = APP.mode==='watch' || (APP.mode==='ai' && p!==APP.mySide);
+  var gen = aiHere ? '<span style="font-weight:normal;font-size:.72em;opacity:.72;"> &middot; '+aiDisplayName(APP.diff)+'</span>' : '';
   el.innerHTML =
-    '<h3>'+capName(p)+you+'</h3>' +
+    '<h3>'+capName(p)+you+gen+'</h3>' +
     rowsHtml +
     '<div class="row" style="margin-top:2px;"><span>Orders left</span><b>'+E.cardsRemaining(st,p)+'</b></div>' +
     '<div class="spentlbl">orders spent &mdash; gone from the game</div>' +
@@ -1804,7 +1812,7 @@ function playCardUI(cid){
     '<div class="menu-btns">' +
       '<button id="pcNormal">Play the card action</button>' +
       '<button id="pcAttack" '+(canAtk?'':'disabled')+'>Resolve as a basic Attack'+(canAtk?'':' (no targets)')+'</button>' +
-      '<button id="pcRepos" '+(canRp?'':'disabled')+'>Resolve as a basic Reposition'+(canRp?'':' (no moves)')+'</button>' +
+      '<button id="pcRepos" '+(canRp && !canAtk?'':'disabled')+'>Resolve as a basic Reposition'+(!canRp?' (no moves)':canAtk?' (attack available)':'')+'</button>' +
       '<button id="pcCancel" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Keep it in hand</button>' +
     '</div>' +
     '<p class="small" style="margin-top:10px;">However it is resolved, the card is removed from the game.</p>';
@@ -1817,7 +1825,7 @@ function playCardUI(cid){
   }
   $('pcNormal').onclick = function(){ go('normal'); };
   if (canAtk) $('pcAttack').onclick = function(){ go('attack'); };
-  if (canRp) $('pcRepos').onclick = function(){ go('reposition'); };
+  if (canRp && !canAtk) $('pcRepos').onclick = function(){ go('reposition'); };
   $('pcCancel').onclick = function(){ $('playOvr').classList.remove('active'); };
 }
 function act(choice){
@@ -1832,7 +1840,8 @@ function afterChange(){
   var st = APP.st;
   renderAll(); saveLocal();
   if (APP.mode==='net') pushState();
-  if (st.phase === 'battle-over'){ clearIfMatchOver(); showBattleOver(); return; }
+  // let the final strike arrow / death animation (~.85s) finish before the win card
+  if (st.phase === 'battle-over'){ clearIfMatchOver(); setTimeout(showBattleOver, 900); return; }
   if (st.phase === 'choose-card'){
     // turn changed
     if (APP.mode==='hotseat') showHandoff();
@@ -2007,8 +2016,8 @@ function renderMapsScr(){
     bp.onclick = function(){ startLocal('ai', [m.def]); };
     btns.appendChild(bp);
     var bb = document.createElement('button'); bb.textContent='Balance';
-    bb.title = 'Run AI-vs-AI battles on this map and report the win rates';
-    bb.onclick = function(){ runBalanceUI(m.def); };
+    bb.title = 'Open the Balance Dashboard and run this map';
+    bb.onclick = function(){ openDash(); $('dashMap').value = m.def.name; $('dashRun').click(); };
     btns.appendChild(bb);
     if (!m.builtin){
       var be = document.createElement('button'); be.textContent='Edit';
@@ -2411,7 +2420,7 @@ function renderDash(){
     if (dpct(o.hqWins, done) >= 55) notes.push('HQ-rushable');
     if (dpct(o.zeroKill, done) >= 20) notes.push('STALEMATES');
     return {
-      name: r.map.name, shape: r.map.shape || '?', done: done,
+      name: r.map.name, shape: (r.map.shapeDef || String(r.map.shape||'').charAt(0)==='@') ? 'custom' : (r.map.shape || '?'), done: done,
       red: dpct(o.redWins, done), first: dpct(o.firstWins, done),
       hq: dpct(o.hqWins, done), turns: +(o.turns/done).toFixed(1), vpdiff: +(o.vpDiff/done).toFixed(1),
       atk: +(o.attacks/done).toFixed(1), swp: +(o.swaps/done).toFixed(1),
@@ -2629,13 +2638,11 @@ function edRemoveHex(k){
   if (ED.blue && E.key(ED.blue[0], ED.blue[1]) === k) ED.blue = null;
 }
 function edInternalSides(){
+  // every side of every on-board hex is paintable — including sides facing the
+  // board edge or an interior hole (e.g. The Void), Feedback Round 1
   var set = edHexSet(), out = [];
   Object.keys(set).forEach(function(k){
-    var qr = E.parseKey(k);
-    for (var d=0; d<6; d++){
-      var n = E.key(qr[0]+E.DIRS[d][0], qr[1]+E.DIRS[d][1]);
-      if (set[n]) out.push([k, d]);
-    }
+    for (var d=0; d<6; d++) out.push([k, d]);
   });
   return out;
 }
@@ -2761,10 +2768,8 @@ function groupEdgesToPieces(edges){
     var qr = E.parseKey(it.a);
     // physical pieces come in lengths 2-3, but several can share one hex —
     // split longer runs into 3s and 2s (TwoSetsOfThree: a full forest ring = 3+3).
-    // Rivers are single-side pieces: every side is its own piece.
-    var chunks = it.t === 'R'
-      ? comp.map(function(x){ return [x.d]; })
-      : splitRun(comp.map(function(x){ return x.d; }));
+    // Rivers now come in the same physical lengths as forest/mountain (Feedback Round 1).
+    var chunks = splitRun(comp.map(function(x){ return x.d; }));
     chunks.forEach(function(chunk){
       pieces.push({ t: it.t, edges: chunk.map(function(d){ return [qr[0], qr[1], d]; }) });
     });

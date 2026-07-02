@@ -81,11 +81,11 @@ The in-game **Field Manual** has a rules summary, **Cards** opens a glossary sho
 
 Terrain belongs to the hex it sits in and is drawn inset inside it. A **forest** in hex X gives +1 attack when X's occupant attacks *out* across a covered edge. A **mountain** in hex X gives +1 defense when X is attacked across a covered edge. Neither does anything in the other direction, and both hexes of one border can each hold their own piece.
 
-A **river** (single-side pieces, drawn in blue) sits on a border: **support never crosses it, for either side** — a hex you control doesn't count across a river. Attacks and movement cross freely, Airdrop lands beyond it just fine, and Naval Barrage can't remove it (it acts like a mountain there). Whichever hex the piece is drawn in, the border is blocked both ways.
+A **river** (drawn in blue, in the same 2- and 3-side pieces as forest and mountain) sits on a border: **support never crosses it, for either side** — a hex you control doesn't count across a river. Attacks and movement cross freely, Airdrop lands beyond it just fine, and Naval Barrage can't remove it (it acts like a mountain there). Whichever hex the piece is drawn in, the border is blocked both ways.
 
 ## House rules (per Bill's prototyping)
 
-- **Flexible orders**: any card may resolve as the printed action, a basic Attack, or a basic Reposition — the card is removed from the game regardless.
+- **Flexible orders**: any card may resolve as the printed action, a basic Attack, or a basic Reposition — the card is removed from the game regardless. A basic Reposition is only offered when no basic Attack is possible: if you can fight, you can't spend the order just shuffling pieces.
 - **Reset turn**: mid-way through a multi-step card you can reset back to the start of your turn (button next to Skip). Once the card fully resolves the turn is final.
 - **No stacking**: a hex side with terrain can't also hold a trench; to place one, pick the hex then click the brass corner knob of the orientation you want (hovering a knob previews its two edges).
 - **Reading a fight**: hover any of your units to see the attack math against every hex it could hit (green = you win, brass = tie, red = you lose — the same numbers the confirm dialog shows). When an attack lands, an arrow shows where it came from (bending through an HQ on a through-HQ strike) and rings mark every unit whose support actually counted — gold for the attacker's, steel for the defender's.

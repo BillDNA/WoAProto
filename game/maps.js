@@ -31,9 +31,10 @@
    adjacent corners (contiguous directions) — exactly like the physical
    pieces. Forest in hex X: +1 attacking OUT of X across a covered side.
    Mountain in hex X: +1 defending X when attacked across a covered side.
-   River ("R", single-side pieces): SUPPORT never crosses that border, for
-   either side — attacks and movement still cross freely. Rivers can't be
-   barraged (they act like mountains there).
+   River ("R"): SUPPORT never crosses that border, for either side — attacks
+   and movement still cross freely. Rivers can't be barraged (they act like
+   mountains there). Rivers come in the same physical lengths as forest and
+   mountain (2- and 3-side pieces).
    There is no automatic mirroring here: list both halves of the map.
    ============================================================================ */
 var WOA_BUILTIN =
@@ -44,7 +45,7 @@ var WOA_BUILTIN =
     "artillery": { "name": "Artillery", "atk": 0, "def": 0, "sup": 2, "vp": 3, "count": 1 }
   },
   "trenchCount": 3,
-  "terrainStock": { "F3": 2, "F2": 4, "M3": 2, "M2": 4, "R1": 4 },
+  "terrainStock": { "F3": 2, "F2": 4, "M3": 2, "M2": 4, "R3": 2, "R2": 4 },
 
   /* AI — extra personalities as data (easy/normal/hard are built in). A config
      is { noise, breadth, replySamples, replyWeight, weights:{...} }: noise =
@@ -72,7 +73,7 @@ var WOA_BUILTIN =
     { "id": "deploy_inf_trench", "name": "Entrench", "count": 3,
       "text": "Place an Infantry unit adjacent to any controlled hex. Then build a trench on any controlled hex.",
       "steps": [{ "type": "deploy", "unit": "infantry" }, { "type": "trench" }] },
-    { "id": "airdrop", "name": "Airdrop", "count": 1,
+    { "id": "airdrop", "name": "Airdrop", "count": 1, "noOpener": true,
       "text": "Place an Infantry unit on any empty hex. (Never in your opening hand.)",
       "steps": [{ "type": "deploy", "unit": "infantry", "anywhere": true }] },
     { "id": "conscription", "name": "Conscription", "count": 1,

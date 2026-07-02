@@ -234,6 +234,15 @@ console.log('== house rule: play any card as basic attack/reposition ==');
   var cid2 = st2.hands.red[0];
   E.playCard(st2, cid2, 'reposition');
   ok(E.stepOptions(st2).type === 'reposition', 'card resolves as plain reposition step');
+  // Feedback Round 1: reposition is refused while a basic attack is possible
+  var st3 = testBattle(23);
+  st3.units['0,0'] = { type: 'infantry', owner: 'red' };
+  st3.units['0,1'] = { type: 'infantry', owner: 'blue' }; // a basic attack IS available
+  var cid3 = st3.hands.red[0];
+  var threw = false;
+  try { E.playCard(st3, cid3, 'reposition'); } catch (e) { threw = true; }
+  ok(threw, 'reposition refused while a basic attack is available');
+  ok(st3.phase === 'choose-card' && st3.hands.red.indexOf(cid3) >= 0, 'the refused card stays in hand');
 })();
 
 console.log('== map pool ==');
@@ -354,18 +363,20 @@ console.log('== V0 terrain-crossing rules: trench support denial + rivers ==');
   var rD = E.computeAttack(st2, { from: B3, to: C3 });
   ok(rD.defenderPower === 1, "D3's defender support stops at the river (got " + rD.defenderPower + ')');
 
-  // River pieces: single-side, validated against the R1 stock, not barrageable.
-  ok(E.pieceProblem({ t: 'R', edges: [[0, 0, 1]] }) === null, 'single-side river piece accepted');
+  // River pieces now come in the same lengths as forest/mountain (2- and 3-side,
+  // Feedback Round 1), validated against the R3/R2 stock; still not barrageable.
+  ok(E.pieceProblem({ t: 'R', edges: [[0, 0, 0], [0, 0, 1]] }) === null, 'two-side river piece accepted');
   var riverMap = { name: 'River Test', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2],
-    pieces: [{ t: 'R', edges: [[0, 0, 1]] }, { t: 'R', edges: [[0, 0, 4]] },
-             { t: 'R', edges: [[-1, 0, 0]] }, { t: 'R', edges: [[1, 0, 3]] }] };
-  ok(E.validateMaps([riverMap]).length === 0, 'four single-side rivers fit the R1 stock');
+    pieces: [{ t: 'R', edges: [[0, 0, 0], [0, 0, 1]] }, { t: 'R', edges: [[0, 0, 3], [0, 0, 4]] }] };
+  ok(E.validateMaps([riverMap]).length === 0, 'two 2-side rivers fit the R2 stock');
   var tooMany = { name: 'Flooded', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2],
-    pieces: riverMap.pieces.concat([{ t: 'R', edges: [[1, 1, 2]] }]) };
-  ok(E.validateMaps([tooMany]).length === 1, 'a fifth river exceeds stock');
-  var longRiver = { name: 'Long River', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2],
-    pieces: [{ t: 'R', edges: [[0, 0, 1], [0, 0, 2]] }] };
-  ok(E.validateMaps([longRiver]).length === 1, 'a two-side river has no physical counterpart (R1 only)');
+    pieces: [{ t: 'R', edges: [[0, 0, 0], [0, 0, 1], [0, 0, 2]] },
+             { t: 'R', edges: [[1, 0, 0], [1, 0, 1], [1, 0, 2]] },
+             { t: 'R', edges: [[-1, 0, 0], [-1, 0, 1], [-1, 0, 2]] }] };
+  ok(E.validateMaps([tooMany]).length === 1, 'a third 3-side river exceeds the R3 stock');
+  var single = { name: 'Trickle', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2],
+    pieces: [{ t: 'R', edges: [[0, 0, 1]] }] };
+  ok(E.validateMaps([single]).length === 1, 'a single-side river has no physical counterpart (R1 removed)');
   var m3 = E.newMatch({ seed: 99, firstPlayer: 'red', maps: [riverMap] });
   var st3 = E.newBattle(m3);
   var bt = E.listBarrageTargets(st3, 'red');

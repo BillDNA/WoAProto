@@ -311,10 +311,12 @@
     var want = first ? 3 : 4;
     var total = st.decks[p].length + st.discards[p].length;
     if (total <= (first ? 4 : 5)) want = total; // 5 or fewer remain: draw all
-    var held = null;
-    if (first) { // house rule: Airdrop may never be in the opening hand
-      var ai = st.decks[p].indexOf('airdrop');
-      if (ai >= 0) held = st.decks[p].splice(ai, 1)[0];
+    var held = [];
+    if (first) { // house rule: cards flagged noOpener (e.g. Airdrop) never open
+      for (var hi = st.decks[p].length - 1; hi >= 0; hi--) {
+        var cid = st.decks[p][hi];
+        if (CARD_BY_ID[cid] && CARD_BY_ID[cid].noOpener) held.push(st.decks[p].splice(hi, 1)[0]);
+      }
     }
     for (var i = 0; i < want; i++) {
       if (st.decks[p].length === 0 && st.discards[p].length > 0) {
@@ -324,10 +326,10 @@
       if (st.decks[p].length === 0) break;
       hand.push(st.decks[p].pop());
     }
-    if (held) {
+    held.forEach(function (cid) {
       var pos = Math.floor(rnd(st) * (st.decks[p].length + 1));
-      st.decks[p].splice(pos, 0, held);
-    }
+      st.decks[p].splice(pos, 0, cid);
+    });
     if (!st.seen) st.seen = { red: {}, blue: {} }; // self-heal pre-metrics saves
     hand.forEach(function (id) { st.seen[p][id] = (st.seen[p][id] || 0) + 1; });
     if (hand.length === 0) endByAttrition(st);
@@ -649,6 +651,10 @@
     var p = st.current;
     var idx = st.hands[p].indexOf(cardId);
     if (idx < 0) throw new Error('card not in hand');
+    // House rule (Feedback Round 1): a basic reposition is only allowed when no
+    // basic attack is possible — you can't shuffle pieces to dodge a fight.
+    if (mode === 'reposition' && listAttacks(st, p).length > 0)
+      throw new Error('cannot reposition while a basic attack is available');
     st.hands[p].splice(idx, 1);
     if (!st.playLog) st.playLog = []; // self-heal pre-metrics saves
     st.playLog.push({ p: p, id: cardId, mode: mode, turn: st.turnNumber,
