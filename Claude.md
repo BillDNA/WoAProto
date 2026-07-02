@@ -27,9 +27,32 @@ All ten V0 specs in `specs/` were built and committed in one autonomous run (Jul
 - [[deck-editor]] ✓ — Quartermaster's Ledger: in-browser card editing with validation (16 copies, one starting card, step vocabulary), saved to localStorage + `custom-deck.js` (`/api/savedeck`), applied on reload.
 - [[map-roster-and-shapes]] ✓ — built-in maps deletable (tombstones, floor of 5, restore button); editor carves board outlines hex-by-hex (`shapeDef` travels inline with the map, 24-hex ceiling enforced).
 - [[ai-variety]] ✓ — one parameterized AI engine; personalities are maps.js `"ai"` data rows (shipped brawler/turtle); `balance.js matchup` pits any two; presets verified byte-identical to the old easy/normal/hard.
-- [[grading-rubrics]] ✓ — `design-docs/grading-rubrics.md`: north stars + card/map/unit/game rubrics (goal / evidence + data origin / score meaning), baselines and tune-me targets.
+- [[specs/V0 Specs/grading-rubrics]] ✓ — `design-docs/grading-rubrics.md`: north stars + card/map/unit/game rubrics (goal / evidence + data origin / score meaning), baselines and tune-me targets.
 - [[cli-responder-transport]] + [[claude-plays]] ✓ — `dev/llm-client.js` (zero-dep `claude -p` transport, fail-open) + `dev/claude-plays.js` (LLM plays real battles from numbered legal-move lists, honest info only, felt-notes after; verified live with haiku).
 - [[claude-skills]] ✓ — `.claude/skills/`: run-tournament, create-card, create-map (thin orchestrators over balance.js + the rubrics; suggestions only, Bill decides).
+
+### Feedback round 1
+* ~~Map building -~~
+	* ~~rivers should be in the same number and sizes as mountains and forest~~
+	* ~~allow terrain placement on interior map hex allows (see the void custom map)~~
+	* ~~balance btn should take you to the balance dashboard and run it not just in place~~
+* ~~Deck builder~~
+	* ~~how is airdrop being excluded from opening hand should be part of starting toggle~~
+* ~~rule tweaks~~
+	* ~~should only be allowed to resolve as reposition if you can't resolve as basic attack - should encourage more attacking~~
+* ~~little ui things~~
+	* ~~add the ai name to the player mats~~ 
+	* ~~when all cards are played the map snaps to larger~~ 
+	* ~~should let the last attack animation finish b4 showing win/lose card~~ 
+	* ~~the shape col in balance dashboard should just say custom instead of the string of numbers~~
+* ~~bigger ui things~~
+	* ~~deck builder - see the whiteboard page "WoA deck builder"~~
+	* ~~balance dashboard - see the whiteboard page "WoA Ballance Dashboard"~~
+* ~~this code base is probably big enough to put graphify in (https://github.com/safishamsi/graphify)~~
+## Feedback round 2
+* ai things
+	* on the "Thornfield" map blue played entrench and then place the trench on C4 facing away from the board so that the trench was not doing anything
+	* 
 
 ### The Dynamic Image Generation MCP
 

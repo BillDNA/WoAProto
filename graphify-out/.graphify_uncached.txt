@@ -1,0 +1,44 @@
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\.claude\skills\create-card\SKILL.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\.claude\skills\create-map\SKILL.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\.claude\skills\run-tournament\SKILL.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\CLAUDE.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\design-docs\Player Card Art direction drafts.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\design-docs\War Of Attrition rule book.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\design-docs\art-prompts.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\design-docs\card-cheatsheet.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\design-docs\grading-rubrics.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\dev\balance-80.txt
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\dev\matchup-16.txt
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\CLAUDE.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\README.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\index.html
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\index.html
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\specs\V0 Specs\ai-variety.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\specs\V0 Specs\claude-plays.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\specs\V0 Specs\claude-skills.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\specs\V0 Specs\cli-responder-transport.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\specs\V0 Specs\combat-clarity-qol.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\specs\V0 Specs\deck-editor.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\specs\V0 Specs\grading-rubrics.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\specs\V0 Specs\layout-design-pass.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\specs\V0 Specs\layout-v2-implementation.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\specs\V0 Specs\map-roster-and-shapes.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\specs\V0 Specs\metrics-dashboard.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\specs\V0 Specs\terrain-crossing-rules.md
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\design-docs\prototype pictures\HexClarificationDiagram.png
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\art\airdrop.jpg
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\art\attack_plus1.jpg
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\art\board.jpg
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\art\careful_maneuvers.jpg
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\art\conscription.jpg
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\art\deploy_artillery.jpg
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\art\deploy_cavalry.jpg
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\art\deploy_inf_start.jpg
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\art\deploy_inf_trench.jpg
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\art\forced_march.jpg
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\art\mass_assault.jpg
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\art\naval_barrage.jpg
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\art\ordered_withdraw.jpg
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\art\reckless_maneuvers.jpg
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\art\table.jpg
+C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\game\art\title.png

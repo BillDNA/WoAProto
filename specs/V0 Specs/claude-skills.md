@@ -11,14 +11,14 @@ Run a CLI tournament and turn it into balance suggestions.
 - Reuses `balance.js` aggregation + the [[metrics-dashboard]] numbers — the skill's job is to run
   the matches, read the metric spread, and propose concrete balance changes (this card is a dead
   card, this map is 70/30 side-biased, tie-rule decides too many games), grading against
-  [[grading-rubrics]].
+  [[specs/V0 Specs/grading-rubrics]].
 - Output is a report + suggestions for Bill, not auto-applied edits (rules changes are Bill's
   call — game/CLAUDE.md).
 
 ## create-card
 Read the current deck (`maps.js` cards + `design-docs/card-cheatsheet.md`) and propose new cards
 that *add something* — a decision the deck doesn't already offer — scored against the card rubric
-in [[grading-rubrics]]. Proposals are in the [[deck-editor]] data shape so they drop straight in.
+in [[specs/V0 Specs/grading-rubrics]]. Proposals are in the [[deck-editor]] data shape so they drop straight in.
 
 ## create-map
 Same pattern for maps: read the roster + board shapes, propose maps that fill a gap (a healthy
@@ -34,7 +34,7 @@ mostly "gather the inputs, run the sim, grade, report."
 ## Gotchas
 
 - Build order: run-tournament needs [[claude-plays]] to exist; create-card / create-map need
-  [[grading-rubrics]] to grade against. Don't start these before their dependencies land.
+  [[specs/V0 Specs/grading-rubrics]] to grade against. Don't start these before their dependencies land.
 - Suggestions only. None of these three edits balance data on their own — they hand Bill a graded
   proposal and let him decide (consistent with "present findings to Bill, he decides rule
   changes" in game/CLAUDE.md).
