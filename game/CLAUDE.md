@@ -70,11 +70,12 @@ Read this first; it will save you from re-deriving (or breaking) decisions that 
 - Don't add build steps, frameworks, or dependencies to `game/`. Everything is intentionally plain files Bill can zip and share. (`dev/` may hold dev-only deps like jsdom.)
 - Aesthetic: steampunk Napoleonic field journal (see `../design-docs/Player Card Art direction drafts.md`, prompts in `../design-docs/art-prompts.md`) — parchment, brass, earthy tones; no modern UI chrome.
 
-## Known balance signals (from balance.js — re-measured June 2026 AFTER the round-6 AI fixes and the surviving-units attrition rule; verify before acting; present findings to Bill, he decides rule changes)
+## Known balance signals (from balance.js — re-measured July 2026 AFTER the V0 terrain-crossing rules: trench = support denial, rivers added; verify before acting; present findings to Bill, he decides rule changes)
 
-- Mover advantage is roughly healed at normal (first mover 46% overall; was ~40%). At hard the second player still wins ~56%.
-- **Tie-goes-to-2nd decides ~25% of battles** (attrition wins with EQUAL field scores) — the biggest remaining lever; worth raising with Bill if it bothers playtesters.
-- Attrition still ends ~80% of battles; HQ captures are rare on spread-out maps (the compact dist-4 maps are healthiest). First blood converts to a win 62% — kills matter without one trade deciding everything. Board control tracks winning (79%) now that surviving units score.
-- Side-biased maps under the NEW rules (n=40, normal): Thornfield 70/30 red, The Narrows & Saber Ridge 33/68 blue — map edits are Bill's call.
-- Skill premium (matchup, n=96/pairing post-fix): normal beats easy 70%, hard beats easy 83%, hard beats normal 54%, sanity 44%. Same shape as before the fixes, so the old numbers weren't just the stalling exploit — but hard's edge over normal is small and within noise at this n.
-- Behaviour baselines (normal AI, n=40/map): ~5 attacks & ~7 swaps per battle, zero-kill 4%, 88% of units fielded. If a heuristic change moves these sharply, treat it as a regression even if win rates look fine.
+- Mover advantage stays healed at normal (first mover 46% overall, n=40/map incl. 2 shipped customs). Red 52% overall.
+- **Tie-goes-to-2nd still decides ~26% of battles** — unchanged by the trench rework; still the biggest open lever for Bill.
+- Attrition ends ~78% of battles (HQ captures 22%); compact dist-4 maps stay the healthiest. First blood converts 61%; board control tracks winning 81%.
+- Side/mover flags under the NEW rules (n=40, normal — ±16pts noise): Thornfield 73/28 red and The Cockpit 63/38 red read SIDE-BIASED; the spear maps (Long March 30/70, Vanguard 28/73) and Killing Ground (33/68) read strongly second-mover; Twin Gates/Thornfield/Long March/Vanguard are attrition-only (HQ% ≤3). Map edits are Bill's call.
+- Skill premium (matchup, n=16/map = 192/pairing, July 2026): normal beats easy **71%**, hard beats normal **60%**, hard beats easy **78%**, sanity 50%. Hard's edge over normal WIDENED from ~54% pre-change — the support-denial rules appear to reward the deeper search; good news for skill-over-luck.
+- Behaviour baselines (normal AI, n=40/map, post-change): ~4.9 attacks & ~6.5 swaps per battle, zero-kill 3%, 88% of units ever fielded — within June's bands, so the trench/river change didn't re-open the stalemate. If a heuristic change moves these sharply, treat it as a regression even if win rates look fine.
+- New instruments: the Balance Dashboard runs all of this in-browser (same aggregation as the CLI); `balance.js matchup <n> <a> <b>` pits any two personalities (first read: turtle beat brawler 65/35 at n=48 — untuned examples); `dev/claude-plays.js` gives an LLM reference point + felt-notes.
