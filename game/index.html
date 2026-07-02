@@ -350,22 +350,41 @@
 
   /* maps screen + editor + balance dashboard + deck editor */
   #mapsScr .panel, #editorScr .panel{width:min(900px,96vw); max-height:92vh; overflow-y:auto; padding:22px 26px;}
-  #deckScr .panel{width:min(880px,96vw); max-height:94vh; overflow-y:auto; padding:22px 26px;}
-  .dkcard{border:1px solid var(--brass-dark); border-radius:6px; padding:8px 10px; margin:8px 0; background:rgba(255,255,255,.22);}
-  .dkcard .dkrow{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:5px;}
-  .dkcard label{font-size:11.5px; color:var(--ink-soft); display:flex; gap:4px; align-items:center;}
-  .dkcard input[type=text], .dkcard input[type=number], .dkcard textarea{
+  #deckScr .panel{width:min(1000px,97vw); max-height:94vh; overflow-y:auto; padding:20px 24px;}
+  /* master-detail deck editor (Feedback Round 1) */
+  #dkWrap{display:flex; gap:14px; align-items:stretch; margin:8px 0;}
+  #dkListPane{flex:0 0 250px; display:flex; flex-direction:column; max-height:58vh; border:1px solid var(--brass-dark); border-radius:8px; background:rgba(255,255,255,.18); overflow:hidden;}
+  #dkList{overflow-y:auto;}
+  .dkli{display:flex; align-items:center; gap:7px; padding:6px 9px; cursor:pointer; border-bottom:1px solid rgba(139,111,71,.22); font-size:13.5px;}
+  .dkli:hover{background:rgba(176,141,87,.16);}
+  .dkli.sel{background:rgba(176,141,87,.32);}
+  .dkli.out .dkli-name, .dkli.out .dkli-ct{opacity:.4; text-decoration:line-through;}
+  .dkli .dkli-star{width:11px; color:var(--brass-dark); font-size:12px;}
+  .dkli .dkli-name{flex:1; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .dkli .dkli-ct{font-size:12px; color:var(--ink-soft); min-width:24px; text-align:right;}
+  #dkListFoot{padding:7px 9px; font-weight:bold; text-align:center; border-top:1px solid var(--brass-dark); background:rgba(176,141,87,.14); font-size:12.5px;}
+  #dkDetail{flex:1 1 auto; min-width:0; border:1px solid var(--brass-dark); border-radius:8px; padding:12px 14px; background:rgba(255,255,255,.22);}
+  .dkd-top{display:flex; gap:12px; align-items:flex-start;}
+  .dkart-box{position:relative; flex:0 0 118px; height:150px; border:2px solid var(--brass-dark); border-radius:6px; overflow:hidden; display:flex; align-items:center; justify-content:center; text-align:center; font-size:10.5px; color:var(--ink-soft); background:rgba(0,0,0,.05); padding:5px;}
+  .dkart-box img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover;}
+  .dkd-fields{flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:6px;}
+  .dkd-row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  #dkDetail label{font-size:11.5px; color:var(--ink-soft); display:flex; gap:4px; align-items:center;}
+  #dkDetail input[type=text], #dkDetail input[type=number], #dkDetail textarea, #dkDetail select{
     font-family:inherit; font-size:13px; padding:4px 6px;
     border:1px solid var(--brass-dark); border-radius:4px; background:rgba(255,255,255,.5); color:var(--ink);
   }
-  .dkcard input.dk-name{width:170px; font-weight:bold;}
-  .dkcard input.dk-id{width:130px; font-family:monospace; font-size:12px;}
-  .dkcard input.dk-count{width:52px;}
-  .dkcard textarea.dk-text{width:100%; height:34px; resize:vertical;}
-  .dkcard input.dk-steps{flex:1; min-width:240px; font-family:monospace; font-size:11.5px;}
-  .dkcard input.dk-steps.bad{border-color:#8a3324; background:rgba(158,43,37,.12);}
-  .dkcard .dkbtns{display:flex; gap:5px;}
-  .dkcard .dkbtns button{padding:2px 9px; font-size:12px;}
+  #dkDetail input.dkd-name{flex:1; min-width:120px; font-weight:bold;}
+  #dkDetail input.dkd-id{width:150px; font-family:monospace; font-size:12px;}
+  #dkDetail input.dkd-count{width:52px;}
+  #dkDetail textarea.dkd-text{width:100%; height:44px; resize:vertical;}
+  .dkbtns{display:flex; gap:5px;}
+  .dkbtns button{padding:2px 9px; font-size:12px;}
+  .dksteps{margin-top:10px; border-top:1px dashed var(--brass-dark); padding-top:8px;}
+  .dksteps h4{margin:0 0 5px; font-size:12px; font-variant:small-caps; letter-spacing:.04em; color:var(--brass-dark);}
+  .dkstep{display:flex; gap:6px; align-items:center; flex-wrap:wrap; padding:4px 7px; margin:4px 0; border:1px solid rgba(139,111,71,.4); border-radius:5px; background:rgba(255,255,255,.3);}
+  .dkstep .dkstep-n{font-size:11px; color:var(--ink-soft); min-width:13px;}
+  @media (max-width:720px){ #dkWrap{flex-direction:column;} #dkListPane{flex:0 0 auto; max-height:30vh;} }
   #dashScr .panel{width:min(1040px,97vw); max-height:94vh; overflow-y:auto; padding:22px 26px;}
   #dashScr select{font-family:inherit; font-size:13.5px; padding:5px 8px; border:1px solid var(--brass-dark); border-radius:6px; background:rgba(255,255,255,.35); color:var(--ink); cursor:pointer;}
   #dashOut table{margin:8px 0 4px;}
@@ -606,9 +625,15 @@
 <div id="deckScr" class="screen">
   <div class="panel parchment">
     <h2 style="font-variant:small-caps;text-align:center;">Quartermaster's Ledger &mdash; Deck Editor</h2>
-    <p class="small" style="text-align:center;">The deck is data (<code>maps.js</code> cards). 16 cards per deck, exactly one <b>starting</b> card (guaranteed in the opening hand; count 1). A card named <code>airdrop</code> is kept out of opening hands. Card art is looked up by id (<code>art/&lt;id&gt;.jpg</code>) &mdash; a new id simply renders as a clean text card. Steps are JSON &mdash; the full vocabulary is in <code>design-docs/card-cheatsheet.md</code>.</p>
+    <p class="small" style="text-align:center;">The deck is data (<code>maps.js</code> cards). 16 copies per deck, exactly one <b>starting</b> card (guaranteed in the opening hand; count 1). Tick a card off to bench it. Pick a card on the left to edit it on the right; build its steps with the dropdowns. Card art is looked up by id (<code>art/&lt;id&gt;.jpg</code>) &mdash; a new id simply renders as a clean text card.</p>
     <p class="small" id="deckHdr" style="text-align:center;font-weight:bold;"></p>
-    <div id="deckList"></div>
+    <div id="dkWrap">
+      <div id="dkListPane">
+        <div id="dkList"></div>
+        <div id="dkListFoot"></div>
+      </div>
+      <div id="dkDetail"></div>
+    </div>
     <div id="dkWarn" class="warn" style="text-align:left;"></div>
     <div class="ovr-btns">
       <button id="dkAdd">Add Card</button>
@@ -764,6 +789,13 @@ $('diffSel').onchange = function(){ APP.diff = this.value; };
 $('btnAI').onclick = function(){ startLocal('ai'); };
 // deep link straight into a game: index.html?autostart=ai (handy for screenshots & sharing)
 if (/autostart=ai/.test(location.search)) setTimeout(function(){ startLocal('ai'); }, 60);
+// deep link to a menu screen: index.html?screen=deck|dash|maps (screenshots & quick testing)
+if (/screen=/.test(location.search)) setTimeout(function(){
+  var s = (location.search.match(/screen=(\w+)/)||[])[1];
+  if (s==='deck') openDeck();
+  else if (s==='dash'){ openDash(); if (/[?&]run/.test(location.search)){ $('dashN').value='20'; if ($('dashMap').options[1]) $('dashMap').value = $('dashMap').options[1].value; setTimeout(function(){ $('dashRun').click(); }, 40); } }
+  else if (s==='maps'){ renderMapsScr(); show('mapsScr'); }
+}, 60);
 $('btnWatch').onclick = function(){ startLocal('watch'); };
 $('btnHotseat').onclick = function(){ startLocal('hotseat'); };
 $('btnManual').onclick = function(){ $('manualOvr').classList.add('active'); };
@@ -2186,11 +2218,12 @@ function balReport(def){
 // localStorage ('woa-custom-deck') + custom-deck.js via the server, then
 // reloads — the engine snapshots the card list at load, so a reload IS the
 // apply step (same contract as hand-editing maps.js).
-var DK = { cards: null, stepErr: {} };
+var DK = { cards: null, sel: 0, stepErr: {} };
 var DK_STEP_FLAGS = { deploy:{unit:1,anywhere:1}, trench:{}, attack:{mod:1,tieSpare:1,noAdvance:1}, reposition:{}, barrage:{} };
 
 function deckProblems(cards){
   var probs = [], ids = {}, total = 0, starting = 0;
+  cards = cards.filter(function(c){ return !c.out; }); // benched cards aren't shipped or validated
   cards.forEach(function(c, i){
     var tag = c.name || c.id || ('card ' + (i+1));
     if (!c.id || !/^[a-z0-9_]+$/i.test(c.id)) probs.push(tag + ': id must be letters/digits/underscores');
@@ -2202,8 +2235,7 @@ function deckProblems(cards){
     else total += n;
     if (c.starting && n !== 1) probs.push(tag + ': the starting card must have count 1 (the engine deals exactly one)');
     if (c.starting) starting++;
-    if (DK.stepErr[i]) probs.push(tag + ': steps are not valid JSON');
-    else if (!Array.isArray(c.steps) || !c.steps.length) probs.push(tag + ': needs at least one step');
+    if (!Array.isArray(c.steps) || !c.steps.length) probs.push(tag + ': needs at least one step');
     else c.steps.forEach(function(s, si){
       var st = tag + ' step ' + (si+1);
       if (!s || !DK_STEP_FLAGS[s.type]){ probs.push(st + ': unknown type "' + (s && s.type) + '" (deploy / trench / attack / reposition / barrage)'); return; }
@@ -2219,67 +2251,159 @@ function deckProblems(cards){
 
 function openDeck(){
   DK.cards = JSON.parse(JSON.stringify(E.CARDS));
-  DK.stepErr = {};
+  DK.sel = 0;
   renderDeck();
   show('deckScr');
 }
 $('btnDeck').onclick = openDeck;
 $('dkBack').onclick = function(){ show('menu'); checkResume(); };
 
+function dkEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function deckToShip(){ // benched cards and the transient `out` flag never ship
+  return DK.cards.filter(function(c){ return !c.out; }).map(function(c){ var d = {}; for (var k in c) if (k!=='out') d[k] = c[k]; return d; });
+}
+// LEFT: the selectable card list with in/out (bench) checkboxes
 function renderDeck(){
-  var list = $('deckList');
+  var list = $('dkList');
   list.innerHTML = '';
   DK.cards.forEach(function(c, i){
-    var d = document.createElement('div');
-    d.className = 'dkcard';
-    d.innerHTML =
-      '<div class="dkrow">' +
-        '<input type="text" class="dk-name" placeholder="Name" value="'+(c.name||'').replace(/"/g,'&quot;')+'">' +
-        '<label>id <input type="text" class="dk-id" placeholder="snake_case_id" value="'+(c.id||'').replace(/"/g,'&quot;')+'"></label>' +
-        '<label>copies <input type="number" class="dk-count" min="1" max="16" value="'+(c.count||1)+'"></label>' +
-        '<label title="guaranteed in the opening hand"><input type="radio" name="dkstart" '+(c.starting?'checked':'')+'> starting</label>' +
-        '<span class="dkbtns" style="margin-left:auto;"><button class="dk-dup" title="copy this card">Duplicate</button><button class="dk-del" title="remove this card">Delete</button></span>' +
-      '</div>' +
-      '<textarea class="dk-text" placeholder="Card text shown to players">'+(c.text||'')+'</textarea>' +
-      '<div class="dkrow" style="margin-top:5px;margin-bottom:0;"><label style="flex:1;">steps ' +
-        '<input type="text" class="dk-steps'+(DK.stepErr[i]?' bad':'')+'" value="'+JSON.stringify(c.steps||[]).replace(/"/g,'&quot;')+'"></label></div>';
-    var name = d.querySelector('.dk-name'), id = d.querySelector('.dk-id'),
-        count = d.querySelector('.dk-count'), start = d.querySelector('input[type=radio]'),
-        text = d.querySelector('.dk-text'), steps = d.querySelector('.dk-steps');
-    name.oninput = function(){ c.name = name.value; dkStatus(); };
-    id.oninput = function(){ c.id = id.value.trim(); dkStatus(); };
-    count.oninput = function(){ c.count = +count.value; dkStatus(); };
-    start.onchange = function(){ DK.cards.forEach(function(x){ delete x.starting; }); c.starting = true; dkStatus(); };
-    text.oninput = function(){ c.text = text.value; };
-    steps.oninput = function(){
-      try { c.steps = JSON.parse(steps.value); delete DK.stepErr[i]; steps.classList.remove('bad'); }
-      catch(e){ DK.stepErr[i] = true; steps.classList.add('bad'); }
-      dkStatus();
-    };
-    d.querySelector('.dk-dup').onclick = function(){
-      var copy = JSON.parse(JSON.stringify(c));
-      delete copy.starting;
-      copy.id = (c.id||'card') + '_2';
-      copy.name = (c.name||'Card') + ' II';
-      DK.cards.splice(i+1, 0, copy);
+    var li = document.createElement('div');
+    li.className = 'dkli' + (i===DK.sel?' sel':'') + (c.out?' out':'');
+    li.innerHTML =
+      '<input type="checkbox" class="dkli-in" '+(c.out?'':'checked')+' title="in the deck (untick to bench)">' +
+      '<span class="dkli-star">'+(c.starting?'&#9733;':'')+'</span>' +
+      '<span class="dkli-name">'+dkEsc(c.name||'(unnamed)')+'</span>' +
+      '<span class="dkli-ct">'+(c.out?'&mdash;':'&times;'+(c.count||1))+'</span>';
+    li.querySelector('.dkli-in').onclick = function(e){
+      e.stopPropagation();
+      c.out = !this.checked;
+      if (c.out && c.starting) c.starting = false; // a benched card can't be the starting card
       renderDeck();
     };
-    d.querySelector('.dk-del').onclick = function(){ DK.cards.splice(i, 1); renderDeck(); };
-    list.appendChild(d);
+    li.onclick = function(){ DK.sel = i; renderDeck(); };
+    list.appendChild(li);
   });
+  renderDetail();
   dkStatus();
 }
+// RIGHT: the detail editor for the selected card (art, fields, GUI step builder)
+var DK_STEP_TYPES = ['deploy','trench','attack','reposition','barrage'];
+function renderDetail(){
+  var el = $('dkDetail'), c = DK.cards[DK.sel];
+  if (!c){ el.innerHTML = '<p class="small" style="text-align:center;color:var(--ink-soft);padding:34px 0;">Pick a card on the left, or <b>Add Card</b>.</p>'; return; }
+  el.innerHTML =
+    '<div class="dkd-top">' +
+      '<div class="dkart-box" id="dkArtBox"></div>' +
+      '<div class="dkd-fields">' +
+        '<div class="dkd-row">' +
+          '<input type="text" class="dkd-name" placeholder="Card name" value="'+dkEsc(c.name)+'">' +
+          '<span class="dkbtns"><button id="dkDup" title="copy this card">Duplicate</button>' +
+          '<button id="dkDel" title="remove this card">Delete</button></span>' +
+        '</div>' +
+        '<div class="dkd-row">' +
+          '<label>id <input type="text" class="dkd-id" placeholder="snake_case_id" value="'+dkEsc(c.id)+'"></label>' +
+          '<label>copies <input type="number" class="dkd-count" min="1" max="16" value="'+(c.count||1)+'"'+(c.out?' disabled':'')+'></label>' +
+        '</div>' +
+        '<div class="dkd-row">' +
+          '<label title="guaranteed in the opening hand (exactly one card)"><input type="radio" name="dkstart" id="dkStart" '+(c.starting?'checked':'')+(c.out?' disabled':'')+'> starting card</label>' +
+          '<label title="never dealt in the opening hand (like Airdrop)"><input type="checkbox" id="dkNoOpener" '+(c.noOpener?'checked':'')+'> keep out of opening hand</label>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<textarea class="dkd-text" placeholder="Card text shown to players">'+dkEsc(c.text)+'</textarea>' +
+    '<div class="dksteps"><h4>Steps &mdash; resolved in order</h4><div id="dkStepList"></div>' +
+      '<button id="dkAddStep" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);font-size:12px;padding:2px 10px;margin-top:5px;">+ Add step</button></div>';
+  renderDkArt(c);
+  renderSteps(c);
+  var q = function(s){ return el.querySelector(s); };
+  q('.dkd-name').oninput = function(){ c.name = this.value; touchList(); };
+  q('.dkd-id').oninput = function(){ c.id = this.value.trim(); renderDkArt(c); dkStatus(); };
+  q('.dkd-count').oninput = function(){ c.count = +this.value; touchList(); };
+  q('#dkStart').onchange = function(){ DK.cards.forEach(function(x){ delete x.starting; }); c.starting = true; renderDeck(); };
+  q('#dkNoOpener').onchange = function(){ if (this.checked) c.noOpener = true; else delete c.noOpener; };
+  q('.dkd-text').oninput = function(){ c.text = this.value; };
+  q('#dkDup').onclick = function(){
+    var copy = JSON.parse(JSON.stringify(c));
+    delete copy.starting; delete copy.out;
+    copy.id = (c.id||'card') + '_2';
+    copy.name = (c.name||'Card') + ' II';
+    DK.cards.splice(DK.sel+1, 0, copy);
+    DK.sel += 1;
+    renderDeck();
+  };
+  q('#dkDel').onclick = function(){
+    DK.cards.splice(DK.sel, 1);
+    if (DK.sel >= DK.cards.length) DK.sel = DK.cards.length - 1;
+    renderDeck();
+  };
+  q('#dkAddStep').onclick = function(){ c.steps = c.steps || []; c.steps.push({ type:'attack' }); renderSteps(c); dkStatus(); };
+}
+// update only the selected list row (keeps focus while typing name/count)
+function touchList(){
+  var li = $('dkList').children[DK.sel], c = DK.cards[DK.sel];
+  if (li && c){
+    li.querySelector('.dkli-name').textContent = c.name || '(unnamed)';
+    li.querySelector('.dkli-ct').innerHTML = c.out ? '&mdash;' : '&times;'+(c.count||1);
+  }
+  dkStatus();
+}
+function renderDkArt(c){
+  var box = $('dkArtBox');
+  if (!box) return; // placeholder shows through when the art <img> errors/hides
+  box.innerHTML = '<span>no art<br><span style="font-size:9px;">art/'+dkEsc(c.id||'id')+'.jpg</span></span>' + artImg(c.id, 'dkart');
+}
+function renderSteps(c){
+  var host = $('dkStepList');
+  if (!host) return;
+  c.steps = c.steps || [];
+  host.innerHTML = '';
+  c.steps.forEach(function(s, si){
+    var row = document.createElement('div');
+    row.className = 'dkstep';
+    var typeSel = '<select class="ds-type">'+DK_STEP_TYPES.map(function(t){ return '<option '+(s.type===t?'selected':'')+'>'+t+'</option>'; }).join('')+'</select>';
+    var extra = '';
+    if (s.type === 'deploy'){
+      extra = '<label>unit <select class="ds-unit">'+Object.keys(E.UNITS).map(function(u){ return '<option value="'+u+'" '+(s.unit===u?'selected':'')+'>'+E.UNITS[u].name+'</option>'; }).join('')+'</select></label>' +
+        '<label title="place on ANY empty hex (Airdrop)"><input type="checkbox" class="ds-any" '+(s.anywhere?'checked':'')+'> anywhere</label>';
+    } else if (s.type === 'attack'){
+      extra = '<label title="&plusmn; attacker power">power <input type="number" class="ds-mod" style="width:48px;" value="'+(s.mod||0)+'"></label>' +
+        '<label title="attacker survives ties"><input type="checkbox" class="ds-tie" '+(s.tieSpare?'checked':'')+'> tie-spare</label>' +
+        '<label title="attacker never enters the hex, even on a win"><input type="checkbox" class="ds-noadv" '+(s.noAdvance?'checked':'')+'> no-advance</label>';
+    }
+    row.innerHTML = '<span class="dkstep-n">'+(si+1)+'</span>' + typeSel + extra +
+      '<button class="ds-del" title="remove step" style="margin-left:auto;font-size:14px;padding:0 8px;">&times;</button>';
+    row.querySelector('.ds-type').onchange = function(){
+      var nt = this.value;
+      DK.cards[DK.sel].steps[si] = nt==='deploy' ? { type:'deploy', unit: s.unit||'infantry' } : { type:nt }; // fresh step drops stale flags
+      renderSteps(DK.cards[DK.sel]); dkStatus();
+    };
+    if (s.type === 'deploy'){
+      row.querySelector('.ds-unit').onchange = function(){ s.unit = this.value; dkStatus(); };
+      row.querySelector('.ds-any').onchange = function(){ if (this.checked) s.anywhere = true; else delete s.anywhere; dkStatus(); };
+    } else if (s.type === 'attack'){
+      row.querySelector('.ds-mod').oninput = function(){ var v = +this.value; if (v) s.mod = v; else delete s.mod; dkStatus(); };
+      row.querySelector('.ds-tie').onchange = function(){ if (this.checked) s.tieSpare = true; else delete s.tieSpare; dkStatus(); };
+      row.querySelector('.ds-noadv').onchange = function(){ if (this.checked) s.noAdvance = true; else delete s.noAdvance; dkStatus(); };
+    }
+    row.querySelector('.ds-del').onclick = function(){ c.steps.splice(si, 1); renderSteps(c); dkStatus(); };
+    host.appendChild(row);
+  });
+  if (!c.steps.length) host.innerHTML = '<p class="small" style="color:#8a3324;margin:2px 0;">A card needs at least one step.</p>';
+}
 function dkStatus(){
-  var total = DK.cards.reduce(function(a, c){ return a + (+c.count >= 1 ? Math.floor(+c.count) : 0); }, 0);
+  var inCards = DK.cards.filter(function(c){ return !c.out; });
+  var total = inCards.reduce(function(a, c){ return a + (+c.count >= 1 ? Math.floor(+c.count) : 0); }, 0);
   var src = WOA_DECK_SRC === 'builtin' ? 'the built-in deck (maps.js)' :
             WOA_DECK_SRC === 'local' ? 'a custom deck (saved in this browser)' : 'a custom deck (custom-deck.js)';
-  $('deckHdr').innerHTML = 'Editing ' + src + ' &mdash; ' + DK.cards.length + ' distinct cards, <b>' + total + '/16</b> total copies';
+  $('deckHdr').innerHTML = 'Editing ' + src;
+  $('dkListFoot').innerHTML = inCards.length + ' cards &middot; <b>' + total + '/16</b> copies';
   var probs = deckProblems(DK.cards);
   $('dkWarn').innerHTML = probs.length ? '&#9888; ' + probs.join('<br>&#9888; ') : '';
   $('dkSave').disabled = probs.length > 0;
 }
 $('dkAdd').onclick = function(){
   DK.cards.push({ id:'new_card', name:'New Card', count:1, text:'Order an attack.', steps:[{ type:'attack' }] });
+  DK.sel = DK.cards.length - 1;
   renderDeck();
 };
 function syncDeckFile(deck, done){
@@ -2289,11 +2413,12 @@ function syncDeckFile(deck, done){
 $('dkSave').onclick = function(){
   var probs = deckProblems(DK.cards);
   if (probs.length){ toast('Fix first: ' + probs[0], 4200); return; }
-  try { localStorage.setItem('woa-custom-deck', JSON.stringify(DK.cards)); }
+  var ship = deckToShip();
+  try { localStorage.setItem('woa-custom-deck', JSON.stringify(ship)); }
   catch(e){ toast('The browser refused to store the deck (private mode?). Use Export instead.', 5000); return; }
   clearSave(); // an in-flight battle from another deck would confuse the resume path
   toast('Deck saved — reloading with the new cards…', 1800);
-  syncDeckFile(DK.cards, function(){ setTimeout(function(){ location.reload(); }, 600); });
+  syncDeckFile(ship, function(){ setTimeout(function(){ location.reload(); }, 600); });
 };
 $('dkReset').onclick = function(){
   if (!confirm('Restore the built-in deck from maps.js?')) return;
@@ -2304,7 +2429,7 @@ $('dkReset').onclick = function(){
 $('dkExport').onclick = function(){
   var probs = deckProblems(DK.cards);
   if (probs.length){ toast('Fix first: ' + probs[0], 4200); return; }
-  var blob = new Blob(['window.WOA_CUSTOM_DECK = ' + JSON.stringify(DK.cards, null, 1) + ';\n'], { type:'text/javascript' });
+  var blob = new Blob(['window.WOA_CUSTOM_DECK = ' + JSON.stringify(deckToShip(), null, 1) + ';\n'], { type:'text/javascript' });
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'custom-deck.js';
@@ -2325,7 +2450,7 @@ $('dkImportFile').onchange = function(){
       var arr = JSON.parse(txt.trim().replace(/;\s*$/, ''));
       if (!Array.isArray(arr) || !arr.length) throw new Error('not a card list');
       DK.cards = arr;
-      DK.stepErr = {};
+      DK.sel = 0;
       renderDeck();
       toast('Imported ' + arr.length + ' cards — review, then Save &amp; Reload.', 3200);
     } catch(e){ toast('Could not read that file: ' + e.message, 3500); }

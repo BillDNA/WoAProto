@@ -193,12 +193,14 @@ setTimeout(function () {
       doc.getElementById('dashBack').click();
       doc.getElementById('btnDeck').click();
       ok(doc.getElementById('deckScr').classList.contains('active'), 'deck editor opens');
-      ok(doc.querySelectorAll('#deckList .dkcard').length === win.Engine.CARDS.length,
-        'one editor row per card (' + doc.querySelectorAll('#deckList .dkcard').length + ')');
+      ok(doc.querySelectorAll('#dkList .dkli').length === win.Engine.CARDS.length,
+        'one list row per card (' + doc.querySelectorAll('#dkList .dkli').length + ')');
+      ok(doc.querySelector('#dkDetail .dkd-name') && doc.querySelectorAll('#dkStepList .dkstep').length >= 1,
+        'detail panel + GUI step builder render for the selected card');
       ok(win.deckProblems(win.Engine.CARDS).length === 0, 'built-in deck validates clean');
       ok(!doc.getElementById('dkSave').disabled, 'Save enabled on a valid deck');
-      // break it: bump a count so the total exceeds 16 -> validation refuses
-      var cnt = doc.querySelector('#deckList .dk-count');
+      // break it: bump the selected card's count so the total exceeds 16 -> validation refuses
+      var cnt = doc.querySelector('#dkDetail .dkd-count');
       cnt.value = String(+cnt.value + 1);
       cnt.dispatchEvent(new win.Event('input', { bubbles: true }));
       ok(/must total 16/.test(doc.getElementById('dkWarn').textContent), 'over-16 deck flagged');
@@ -210,6 +212,9 @@ setTimeout(function () {
       var badStep = JSON.parse(JSON.stringify(win.Engine.CARDS));
       badStep[0].steps = [{ type: 'heal' }];
       ok(win.deckProblems(badStep).some(function (p) { return /unknown type/.test(p); }), 'unknown step type refused');
+      var benched = JSON.parse(JSON.stringify(win.Engine.CARDS));
+      benched[2].out = true; // Feedback Round 1: benched cards drop from the 16
+      ok(win.deckProblems(benched).some(function (p) { return /must total 16/.test(p); }), 'benching a card drops it from the 16');
       doc.getElementById('dkBack').click();
 
       console.log('== watch mode (AI vs AI spectate) ==');
