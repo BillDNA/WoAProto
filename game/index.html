@@ -10,7 +10,7 @@
     --ink:#3a2f1d; --ink-soft:#5a4c33;
     --brass:#b08d57; --brass-dark:#8a6c3c; --copper:#9c5f3a;
     --red:#9e2b25; --red-dark:#6f1d19; --blue:#28527a; --blue-dark:#1b3a59;
-    --olive:#6b6b3a; --forest:#4a7c3a; --mountain:#75726a;
+    --olive:#6b6b3a; --forest:#4a7c3a; --mountain:#75726a; --river:#4a7ea8;
     --felt:#2e3a2e;
   }
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
@@ -478,7 +478,7 @@
       <button id="edMirror" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Mirror &#8635;</button>
       <button id="edClear" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Clear</button>
     </div>
-    <p class="small" style="text-align:center;">Terrain belongs to a hex: click just <b>inside</b> a hex's border to cycle <span style="color:var(--forest);font-weight:bold;">forest</span> &rarr; <span style="color:var(--mountain);font-weight:bold;">mountain</span> &rarr; empty on that hex's side. Forest = +1 attacking out across it; mountain = +1 defending behind it. Mirror copies everything point-symmetrically.</p>
+    <p class="small" style="text-align:center;">Terrain belongs to a hex: click just <b>inside</b> a hex's border to cycle <span style="color:var(--forest);font-weight:bold;">forest</span> &rarr; <span style="color:var(--mountain);font-weight:bold;">mountain</span> &rarr; <span style="color:var(--river);font-weight:bold;">river</span> &rarr; empty on that hex's side. Forest = +1 attacking out across it; mountain = +1 defending behind it; river = support never crosses that border. Mirror copies everything point-symmetrically.</p>
     <svg id="edBoard" xmlns="http://www.w3.org/2000/svg"></svg>
     <div id="edStock" class="small" style="text-align:center;"></div>
     <div id="edWarn" class="warn" style="text-align:center;"></div>
@@ -520,11 +520,11 @@
     <tr><td>Cavalry</td><td>3</td><td>0</td><td>0</td><td>2</td></tr>
     <tr><td>Artillery</td><td>0</td><td>0</td><td>2</td><td>3</td></tr></table>
     <h3>Combat</h3>
-    <p><b>Attacker:</b> unit's attack + support of your other units adjacent to the defender's hex (+1 if your HQ is adjacent) + 1 if the attacker's own hex has a <span style="color:var(--forest)">forest</span> on the crossed edge + card modifiers.<br>
-    <b>Defender:</b> unit's defense + support of their units adjacent (+1 for adjacent HQ) + 1 if the defender's hex has a <span style="color:var(--mountain)">mountain</span> on the crossed edge + 1 for a trench in the defender's hex covering that edge.<br>
+    <p><b>Attacker:</b> unit's attack + support of your other units adjacent to the defender's hex (+1 if your HQ is adjacent) + 1 if the attacker's own hex has a <span style="color:var(--forest)">forest</span> on the crossed edge + card modifiers. Attacker support does <b>not</b> arrive across a <b>trenched</b> or <span style="color:var(--river)">river</span> border.<br>
+    <b>Defender:</b> unit's defense + support of their units adjacent (+1 for adjacent HQ) + 1 if the defender's hex has a <span style="color:var(--mountain)">mountain</span> on the crossed edge. Defender support does not arrive across a <span style="color:var(--river)">river</span> border (trenches never stop it).<br>
     Higher total wins; loser is destroyed. Winner-attacker advances into the hex. <b>Tie:</b> both destroyed.</p>
     <h3>Terrain &amp; Buildings</h3>
-    <p>Terrain belongs to the hex it sits in (drawn inset inside it). <span style="color:var(--forest)">&#9632;</span> Forest: +1 attack when its hex's occupant attacks <i>out</i> across a covered edge. <span style="color:var(--mountain)">&#9632;</span> Mountain: +1 defense when its hex is attacked across a covered edge. Neither works in the other direction. Trench: +1 defense across its two covered edges, helps any defender, never an attacker; a hex side can't hold both terrain and a trench. HQ: +1 support to all adjacent hexes; units may move, swap, and attack <i>through</i> an HQ hex.</p>
+    <p>Terrain belongs to the hex it sits in (drawn inset inside it). <span style="color:var(--forest)">&#9632;</span> Forest: +1 attack when its hex's occupant attacks <i>out</i> across a covered edge. <span style="color:var(--mountain)">&#9632;</span> Mountain: +1 defense when its hex is attacked across a covered edge. Neither works in the other direction. <span style="color:var(--river)">&#9632;</span> River: <b>support never crosses</b> that border, for either side &mdash; attacks and movement cross freely, and a river can't be barraged. Trench: the enemy's <b>attacking support may not cross</b> its two covered edges (whoever dug it &mdash; a captured trench serves its new master); it adds no defense, never blocks the attack itself, and never hinders the defender. A hex side can't hold both terrain and a trench. HQ: +1 support to all adjacent hexes; units may move, swap, and attack <i>through</i> an HQ hex.</p>
     <h3>Control</h3>
     <p>You control the hexes your units and HQ occupy. Deployments must be adjacent to a controlled hex (Airdrop excepted). Trenches are built on a controlled hex.</p>
   </div>
@@ -814,12 +814,16 @@ function renderBoard(){
     var p1 = cornerPt(c[0], c[1], aa[0], S*0.85), p2 = cornerPt(c[0], c[1], aa[1], S*0.85);
     var t = st.terrainEdges[ek];
     var line = svgEl('line', { x1:p1[0], y1:p1[1], x2:p2[0], y2:p2[1],
-      stroke: t==='F' ? 'var(--forest)' : 'var(--mountain)', 'stroke-width': 8, 'stroke-linecap':'round' });
+      stroke: t==='F' ? 'var(--forest)' : t==='R' ? 'var(--river)' : 'var(--mountain)', 'stroke-width': 8, 'stroke-linecap':'round' });
     line.dataset.edge = ek;
     gTer.appendChild(line);
     // decoration at midpoint
     var mx=(p1[0]+p2[0])/2, my=(p1[1]+p2[1])/2;
-    if (t==='F'){
+    if (t==='R'){
+      // a paler current line down the middle of the river
+      gTer.appendChild(svgEl('line',{x1:(p1[0]*0.7+mx*0.3), y1:(p1[1]*0.7+my*0.3), x2:(p2[0]*0.7+mx*0.3), y2:(p2[1]*0.7+my*0.3),
+        stroke:'#a9c6dd','stroke-width':2.2,'stroke-linecap':'round','stroke-dasharray':'6 5'}));
+    } else if (t==='F'){
       gTer.appendChild(svgEl('circle',{cx:mx, cy:my, r:4.4, fill:'#3a6330'}));
       gTer.appendChild(svgEl('circle',{cx:(p1[0]+mx)/2, cy:(p1[1]+my)/2, r:3.4, fill:'#3a6330'}));
       gTer.appendChild(svgEl('circle',{cx:(p2[0]+mx)/2, cy:(p2[1]+my)/2, r:3.4, fill:'#3a6330'}));
@@ -1027,7 +1031,7 @@ function glyphSVG(type, col, colD){
   return s+'</svg>';
 }
 function statTip(type){
-  if (type==='trench') return 'Trench — +1 defense across its two covered edges';
+  if (type==='trench') return 'Trench — enemy attacks across its two covered edges get no support';
   var u = E.UNITS[type];
   return u.name+' — attack '+u.atk+', defense '+u.def+', support '+u.sup+', worth '+u.vp+' VP to the enemy';
 }
@@ -1602,7 +1606,7 @@ function previewSVG(def){
       function cp(a){ a=a*Math.PI/180; return [c[0]+(s-2.4)*Math.cos(a), c[1]+(s-2.4)*Math.sin(a)]; }
       var p1 = cp(ang-30), p2 = cp(ang+30);
       body += '<line x1="'+p1[0].toFixed(1)+'" y1="'+p1[1].toFixed(1)+'" x2="'+p2[0].toFixed(1)+'" y2="'+p2[1].toFixed(1)+
-        '" stroke="'+(pc.t==='F'?'#4a7c3a':'#75726a')+'" stroke-width="2.6" stroke-linecap="round"/>';
+        '" stroke="'+(pc.t==='F'?'#4a7c3a':pc.t==='R'?'#4a7ea8':'#75726a')+'" stroke-width="2.6" stroke-linecap="round"/>';
     });
   });
   [['redHQ','#9e2b25'],['blueHQ','#28527a']].forEach(function(h){
@@ -1913,7 +1917,7 @@ function renderEditor(){
     var t = ED.edges[ek];
     if (t){
       gTer.appendChild(svgEl('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
-        stroke: t==='F'?'var(--forest)':'var(--mountain)', 'stroke-width':8, 'stroke-linecap':'round','pointer-events':'none'}));
+        stroke: t==='F'?'var(--forest)':t==='R'?'var(--river)':'var(--mountain)', 'stroke-width':8, 'stroke-linecap':'round','pointer-events':'none'}));
     }
     if (ED.tool==='terrain'){
       var hit = svgEl('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],'class':'edge-hit'});
@@ -1921,6 +1925,7 @@ function renderEditor(){
         var cur = ED.edges[ek];
         if (!cur) ED.edges[ek] = 'F';
         else if (cur==='F') ED.edges[ek] = 'M';
+        else if (cur==='M') ED.edges[ek] = 'R';
         else delete ED.edges[ek];
         renderEditor();
       });
@@ -1959,8 +1964,12 @@ function groupEdgesToPieces(edges){
     }
     var qr = E.parseKey(it.a);
     // physical pieces come in lengths 2-3, but several can share one hex —
-    // split longer runs into 3s and 2s (TwoSetsOfThree: a full forest ring = 3+3)
-    splitRun(comp.map(function(x){ return x.d; })).forEach(function(chunk){
+    // split longer runs into 3s and 2s (TwoSetsOfThree: a full forest ring = 3+3).
+    // Rivers are single-side pieces: every side is its own piece.
+    var chunks = it.t === 'R'
+      ? comp.map(function(x){ return [x.d]; })
+      : splitRun(comp.map(function(x){ return x.d; }));
+    chunks.forEach(function(chunk){
       pieces.push({ t: it.t, edges: chunk.map(function(d){ return [qr[0], qr[1], d]; }) });
     });
   });
@@ -1997,8 +2006,8 @@ function renderEdStock(){
     lens.forEach(function(l){ cnt[l] = (cnt[l]||0)+1; });
     return Object.keys(cnt).sort().map(function(l){ return cnt[l]+'&times;len'+l; }).join(', ');
   }
-  var stockNote = Object.keys(E.TERRAIN_STOCK).map(function(k){ return E.TERRAIN_STOCK[k]+'&times;len'+k.slice(1)+' '+(k[0]==='F'?'forest':'mountain'); }).join(', ');
-  $('edStock').innerHTML = 'Forest pieces: '+summary('F')+' &nbsp;|&nbsp; Mountain pieces: '+summary('M')+
+  var stockNote = Object.keys(E.TERRAIN_STOCK).map(function(k){ return E.TERRAIN_STOCK[k]+'&times;len'+k.slice(1)+' '+(k[0]==='F'?'forest':k[0]==='R'?'river':'mountain'); }).join(', ');
+  $('edStock').innerHTML = 'Forest pieces: '+summary('F')+' &nbsp;|&nbsp; Mountain pieces: '+summary('M')+' &nbsp;|&nbsp; River pieces: '+summary('R')+
     ' <span class="small">(physical stock: '+stockNote+')</span>';
   var over = pieces.some(function(p){
     var cap = E.TERRAIN_STOCK[p.t + p.edges.length];

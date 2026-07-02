@@ -51,6 +51,9 @@ actions, the journal says so and it counts in the card report's **Skip%**.
 - No options. Player picks a controlled hex, then two contiguous edges that
   don't overlap existing trenches or that hex's own terrain.
 - Needs a trench in reserve (`"trenchCount"` per player, top of the file).
+- What a trench DOES (July 2026 rules): enemy attacking support may not cross
+  its covered edges. No defense bonus, no effect on the attack itself or on
+  the defender's support; ownership irrelevant.
 
 ### `attack` — order one attack
 

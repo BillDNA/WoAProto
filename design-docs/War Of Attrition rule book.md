@@ -35,15 +35,20 @@ War of Attrition is fought across various battlefields, each represented by a un
 Calculating Attacker’s Power
 
 * Start with the attacking unit’s attack value.  
-* Add support from any allied units adjacent to the battle hex.  
+* Add support from any allied units adjacent to the battle hex — **except** support whose border into the battle hex is covered by a **trench** or a **river** (that support does not arrive).  
 * If the attacker’s hex has a forest along the edge bordering the battle hex, add \+1.  
 * Apply any card modifiers, if applicable.
 
 Calculating Defender’s  Power
 
 * Start with the defending unit’s defense value.  
-* Add support from any allied units adjacent to the battle hex.  
-* If a trench or mountain is present in the battle hex along the edge from which the attack is coming, add \+1
+* Add support from any allied units adjacent to the battle hex — **except** support whose border into the battle hex is covered by a **river** (trenches never stop the defender’s support).  
+* If a mountain is present in the battle hex along the edge from which the attack is coming, add \+1
+
+Trenches and rivers *(revised July 2026 — trenches previously gave \+1 defense)*
+
+* A **trench** covers two edges of its hex. Attacking support may not cross a covered edge; that is all it does. It adds no defense, never blocks the attack itself, and never hinders the defender. Whoever dug it is irrelevant — a captured trench serves its new occupant.  
+* A **river** sits on one border. **Support never crosses it, for either side** — a hex you control does not count across a river. Attacks and movement cross freely; Airdrop may land beyond it; Naval Barrage cannot remove it.
 
 # Victory Conditions
 
@@ -141,9 +146,10 @@ Calculating Defender’s  Power
 
 ## Building Types
 
-* Trench  
-  * Will give 1 defense when attacked across (regardless of which side build it)  
-  * Attacking from a hex with a tench does not give any support or defense  
+* Trench *(revised July 2026)*  
+  * Attacking support may not cross its two covered edges — the attacker fights without the help that would arrive over the trench line.  
+  * Gives no defense, never blocks the attack itself, and never hinders the defender's support.  
+  * Works the same whichever side dug it; a captured trench serves its new occupant.  
 * Headquarters  
   * Gives 1 support to all adjacent hexes  
   * Has no inherent defence  
@@ -154,4 +160,7 @@ Calculating Defender’s  Power
 * Mountain (Grey)  
   * Will give 1 defense when attacked across.  
 * Forest (Green)  
-  * Will give 1 attack when attacked across.
+  * Will give 1 attack when attacked across.  
+* River (Blue) *(new July 2026)*  
+  * Sits on one border; support never crosses it, for either side.  
+  * Attacks and movement cross freely; Airdrop may land beyond it; Naval Barrage cannot remove it.

@@ -81,6 +81,8 @@ The in-game **Field Manual** has a rules summary, **Cards** opens a glossary sho
 
 Terrain belongs to the hex it sits in and is drawn inset inside it. A **forest** in hex X gives +1 attack when X's occupant attacks *out* across a covered edge. A **mountain** in hex X gives +1 defense when X is attacked across a covered edge. Neither does anything in the other direction, and both hexes of one border can each hold their own piece.
 
+A **river** (single-side pieces, drawn in blue) sits on a border: **support never crosses it, for either side** — a hex you control doesn't count across a river. Attacks and movement cross freely, Airdrop lands beyond it just fine, and Naval Barrage can't remove it (it acts like a mountain there). Whichever hex the piece is drawn in, the border is blocked both ways.
+
 ## House rules (per Bill's prototyping)
 
 - **Flexible orders**: any card may resolve as the printed action, a basic Attack, or a basic Reposition — the card is removed from the game regardless.
@@ -92,7 +94,8 @@ Terrain belongs to the hex it sits in and is drawn inset inside it. A **forest**
 ## Rulings made where the rule book was silent
 
 - **Controlled hex** = a hex occupied by your unit or HQ (per Bill).
-- **Trenches** cover 2 chosen edges; +1 defense only across those edges, helps any defender, never an attacker (per Bill).
+- **Trenches** cover 2 chosen edges and are **support denial, not armour** (V0 terrain-crossing revision, July 2026): an attacker's support may not cross a trenched border to reach the battle hex. They add **no** defense (mountains do that), never block the attack itself, never hinder the defender's support, and a unit in a trenched hex still supports out across its free borders. Ownership is irrelevant — lose the hex and the enemy uses your trench just fine. (Previously: +1 defense across covered edges.)
+- **Rivers** block support — both players' — across their border; nothing else (see Terrain above). (V0 terrain-crossing revision, July 2026.)
 - **A hex may hold several trenches** as long as their covered edges don't overlap each other or that hex's own terrain sides (per Bill's DoubleTrenchNotAllowed report).
 - HQ's +1 support applies to adjacent hexes for both attack and defense calculations.
 - The attacking unit's own support value is not added to its attack.

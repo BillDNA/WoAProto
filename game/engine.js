@@ -142,7 +142,7 @@
   // A terrain piece is physical: it sits INSIDE one hex and wraps adjacent
   // corners. Returns a problem string, or null if the piece is well-formed.
   function pieceProblem(p) {
-    if (!p || (p.t !== 'F' && p.t !== 'M')) return 'piece type must be "F" or "M"';
+    if (!p || (p.t !== 'F' && p.t !== 'M' && p.t !== 'R')) return 'piece type must be "F", "M" or "R"';
     if (!p.edges || !p.edges.length) return 'piece has no sides';
     var q0 = p.edges[0][0], r0 = p.edges[0][1], dirs = {};
     for (var i = 0; i < p.edges.length; i++) {
@@ -167,8 +167,10 @@
   function buildTerrain(map) {
     // Each [q,r,d] in a piece is a SIDE owned by hex (q,r):
     //   forest in hex X: +1 attack when X's occupant attacks out across it;
-    //   mountain in hex X: +1 defense when X is attacked across it.
-    // returns { edges: {sideKey: 'F'|'M'}, pieces:[{id,t,edgeKeys:[sideKey...]}] }
+    //   mountain in hex X: +1 defense when X is attacked across it;
+    //   river on a border: support never crosses it, for either side (the
+    //   crossing check reads BOTH hexes' sides, so which hex owns it is moot).
+    // returns { edges: {sideKey: 'F'|'M'|'R'}, pieces:[{id,t,edgeKeys:[sideKey...]}] }
     var edges = {}, pieces = [];
     map.pieces.forEach(function (p, i) {
       var prob = pieceProblem(p);
@@ -496,16 +498,33 @@
   }
 
   /* ---------- combat ---------- */
-  function supportFor(st, p, battleHex, excludeHex) {
+  // Support crossing rules (V0 terrain-crossing revision, July 2026):
+  //  - a RIVER on the border between supporter and battle hex blocks support
+  //    for EITHER side — control never counts across a river. Both hexes'
+  //    sides are read, so which hex owns the river piece doesn't matter.
+  //  - a TRENCH on that border blocks ATTACKER support only. Ownership is
+  //    irrelevant (Bill: lose a trench and the enemy uses it just fine).
+  //    Trenches no longer grant +1 defense — that's what mountains are for.
+  function borderBlocked(st, fromHex, battleHex, attacking) {
+    var dOut = dirBetween(fromHex, battleHex), dIn = dirBetween(battleHex, fromHex);
+    if (st.terrainEdges[sideKey(fromHex, dOut)] === 'R' ||
+        st.terrainEdges[sideKey(battleHex, dIn)] === 'R') return 'river';
+    if (attacking && (trenchCovers(st, fromHex, dOut) || trenchCovers(st, battleHex, dIn))) return 'trench';
+    return null;
+  }
+  function supportFor(st, p, battleHex, excludeHex, attacking) {
     var total = 0, parts = [];
     neighbors(battleHex).forEach(function (n) {
       if (n === excludeHex) return;
+      var giver = null, amount = 0;
       var u = unitAt(st, n);
-      if (u && u.owner === p && UNITS[u.type].sup > 0) {
-        total += UNITS[u.type].sup;
-        parts.push(UNITS[u.type].name + ' +' + UNITS[u.type].sup);
-      }
-      if (isHQ(st, n) === p) { total += 1; parts.push('HQ +1'); }
+      if (u && u.owner === p && UNITS[u.type].sup > 0) { giver = UNITS[u.type].name; amount = UNITS[u.type].sup; }
+      else if (isHQ(st, n) === p) { giver = 'HQ'; amount = 1; }
+      if (!giver) return;
+      var block = borderBlocked(st, n, battleHex, attacking);
+      if (block) { parts.push(giver + ' support blocked by ' + block); return; }
+      total += amount;
+      parts.push(giver + ' +' + amount);
     });
     return { total: total, parts: parts };
   }
@@ -518,7 +537,7 @@
     var defSide = sideKey(atk.to, dirBetween(atk.to, attackEdgeFromHex));
     var aParts = [UNITS[au.type].name + ' attack ' + UNITS[au.type].atk];
     var aPow = UNITS[au.type].atk;
-    var asup = supportFor(st, p, atk.to, atk.from);
+    var asup = supportFor(st, p, atk.to, atk.from, true);
     aPow += asup.total; aParts = aParts.concat(asup.parts);
     if (st.terrainEdges[atkSide] === 'F') { aPow += 1; aParts.push('Forest +1'); }
     var mod = atk.mod || 0;
@@ -529,14 +548,11 @@
     var dPow, dParts;
     if (du) { dPow = UNITS[du.type].def; dParts = [UNITS[du.type].name + ' defense ' + UNITS[du.type].def]; }
     else { dPow = 0; dParts = ['Headquarters defense 0']; }
-    var dsup = supportFor(st, e, atk.to, null);
+    var dsup = supportFor(st, e, atk.to, null, false);
     dPow += dsup.total; dParts = dParts.concat(dsup.parts);
     if (st.terrainEdges[defSide] === 'M') { dPow += 1; dParts.push('Mountain +1'); }
-    var trList = st.trenches[atk.to];
-    if (trList) {
-      var dirIn = dirBetween(atk.to, attackEdgeFromHex);
-      if (trList.some(function (t) { return t.dirs.indexOf(dirIn) >= 0; })) { dPow += 1; dParts.push('Trench +1'); }
-    }
+    // (trenches no longer add defense — they deny attacker support instead;
+    //  the attack itself may always cross a trench or river)
     var outcome = aPow > dPow ? 'attacker' : (dPow > aPow ? 'defender' : 'tie');
     return {
       attackerPower: aPow, defenderPower: dPow,
@@ -1137,6 +1153,7 @@
     listAttacks: listAttacks, listRepositions: listRepositions, listBarrageTargets: listBarrageTargets,
     computeAttack: computeAttack, playCard: playCard, currentStep: currentStep,
     stepOptions: stepOptions, applyStep: applyStep, cardsRemaining: cardsRemaining,
+    enumerateChoices: enumerateChoices,
     concede: concede, concedeAdvised: concedeAdvised, fieldScore: fieldScore,
     aiPlanTurn: aiPlanTurn, clone: clone, evalState: evalState, validateMaps: validateMaps,
     simBattle: simBattle, balanceMap: balanceMap

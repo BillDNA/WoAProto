@@ -113,10 +113,13 @@ console.log('== multiple trenches per hex (DoubleTrenchNotAllowed report) ==');
   ok(st.trenches['-1,1'].length === 2, 'second trench dug on the same hex');
   st.units['0,0'] = { type: 'infantry', owner: 'blue' };
   var r = E.computeAttack(st, { from: '0,0', to: '-1,1' });
-  ok(r.defenderPower === 2, 'second trench defends its edges (got ' + r.defenderPower + ')');
-  st.units['-2,1'] = { type: 'infantry', owner: 'blue' };
-  var r2 = E.computeAttack(st, { from: '-2,1', to: '-1,1' });
-  ok(r2.defenderPower >= 2, 'first trench still defends its edges');
+  ok(r.defenderPower === 1, 'trenches add no defense under the V0 rules (got ' + r.defenderPower + ')');
+  st.units['-1,0'] = { type: 'infantry', owner: 'blue' }; // its border into the hex is trenched (dir 2)
+  var r2 = E.computeAttack(st, { from: '0,0', to: '-1,1' });
+  ok(r2.attackerPower === 1, 'second trench denies attacker support across its edges (got ' + r2.attackerPower + ')');
+  st.units['0,1'] = { type: 'infantry', owner: 'blue' }; // untrenched border into the hex
+  var r3 = E.computeAttack(st, { from: '0,0', to: '-1,1' });
+  ok(r3.attackerPower === 2, 'support across an untrenched border still counts (got ' + r3.attackerPower + ')');
   // overlap stays illegal
   var st2 = testBattle(61);
   st2.units['0,0'] = { type: 'infantry', owner: 'red' };
@@ -228,13 +231,15 @@ console.log('== combat math ==');
   st.units['1,1'] = { type: 'infantry', owner: 'blue' };
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
   ok(res.defenderPower === 2, 'defender inf support +1 (got ' + res.defenderPower + ')');
-  // trench across attack edge: attack comes from 0,0 which is NW (dir 2) of 0,1
-  st.trenches['0,1'] = [{ dirs: [2, 3], owner: 'blue' }];
+  // trench across the artillery's support border: that support is denied (V0 rules)
+  st.trenches['0,1'] = [{ dirs: [2, 3], owner: 'blue' }]; // covers borders toward 0,0 and -1,1
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  ok(res.defenderPower === 3, 'trench +1 when attacked across covered edge (got ' + res.defenderPower + ')');
-  st.trenches['0,1'] = [{ dirs: [0, 1], owner: 'blue' }];
+  ok(res.attackerPower === 1 && res.defenderPower === 2,
+    'trench denies attacker support and adds no defense (got ' + res.attackerPower + 'v' + res.defenderPower + ')');
+  st.trenches['0,1'] = [{ dirs: [0, 1], owner: 'blue' }]; // clear of the support borders; covers blue supporter's border
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  ok(res.defenderPower === 2, 'trench no bonus on uncovered edge (got ' + res.defenderPower + ')');
+  ok(res.attackerPower === 3, 'trench clear of the attacker-support border denies nothing (got ' + res.attackerPower + ')');
+  ok(res.defenderPower === 2, 'defender support is never trench-blocked (got ' + res.defenderPower + ')');
   // terrain is hex-owned and directional (HexClarificationDiagram)
   st.terrainEdges[E.sideKey('0,0', 5)] = 'F'; // forest in the attacker's hex facing 0,1
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
@@ -260,6 +265,74 @@ console.log('== combat math ==');
   st.units['2,0'] = { type: 'cavalry', owner: 'red' };
   var hqAtk = E.computeAttack(st, { from: '2,0', to: '1,0' });
   ok(hqAtk.defenderIsHQ, 'HQ recognized as target');
+})();
+
+console.log('== V0 terrain-crossing rules: trench support denial + rivers ==');
+(function () {
+  // Trench on the SUPPORTER's hex blocks just the same (ownership of the
+  // border piece is irrelevant): red attacks 0,1 from 0,0; red support at 1,1.
+  var st = testBattle(130);
+  st.units['0,0'] = { type: 'infantry', owner: 'red' };
+  st.units['1,1'] = { type: 'infantry', owner: 'red' };
+  st.units['0,1'] = { type: 'infantry', owner: 'blue' };
+  var res = E.computeAttack(st, { from: '0,0', to: '0,1' });
+  ok(res.attackerPower === 2, 'baseline: supporter counts (got ' + res.attackerPower + ')');
+  st.trenches['1,1'] = [{ dirs: [3, 4], owner: 'red' }]; // covers the 1,1 -> 0,1 border
+  res = E.computeAttack(st, { from: '0,0', to: '0,1' });
+  ok(res.attackerPower === 1, "trench in the supporter's hex blocks its support out across it (got " + res.attackerPower + ')');
+  ok(res.attackerParts.some(function (p) { return p.indexOf('blocked by trench') >= 0; }),
+    'breakdown names the blocked support');
+  // ...but a trench NOT on that border never locks a unit in:
+  st.trenches['1,1'] = [{ dirs: [0, 1], owner: 'red' }];
+  res = E.computeAttack(st, { from: '0,0', to: '0,1' });
+  ok(res.attackerPower === 2, 'a unit in a trenched hex still supports out across a free border');
+  // The attack itself may always cross a trenched border:
+  st.trenches['0,1'] = [{ dirs: [2, 3], owner: 'blue' }]; // covers the attack border from 0,0
+  var atks = E.listAttacks(st, 'red').filter(function (a) { return a.from === '0,0' && a.to === '0,1'; });
+  ok(atks.length === 1, 'attacks still cross trenched borders');
+
+  // Rivers — Bill's ruling example on the classic board: red holds B3 and C2,
+  // blue holds C3, river on the C2|C3 border. B3's attack on C3 loses C2's
+  // support; C2's own attack on C3 still gets B3's support (no river there).
+  var B3 = '0,-1', C2 = '-2,0', C3 = '-1,0';
+  var st2 = testBattle(131);
+  st2.units[B3] = { type: 'infantry', owner: 'red' };
+  st2.units[C2] = { type: 'infantry', owner: 'red' };
+  st2.units[C3] = { type: 'infantry', owner: 'blue' };
+  st2.terrainEdges[E.sideKey(C2, 0)] = 'R'; // river on C2's side toward C3
+  var rB = E.computeAttack(st2, { from: B3, to: C3 });
+  ok(rB.attackerPower === 1, 'B3->C3: support from C2 stops at the river (got ' + rB.attackerPower + ')');
+  ok(rB.attackerParts.some(function (p) { return p.indexOf('blocked by river') >= 0; }), 'breakdown names the river');
+  var rC = E.computeAttack(st2, { from: C2, to: C3 });
+  ok(rC.attackerPower === 2, 'C2->C3: attack crosses the river and B3 supports it (got ' + rC.attackerPower + ')');
+  // Rivers block DEFENDER support too (control never counts across a river),
+  // and the check reads either hex's side of the border:
+  var D3 = '-1,1';
+  st2.units[D3] = { type: 'infantry', owner: 'blue' };
+  st2.terrainEdges[E.sideKey(C3, 5)] = 'R'; // river owned by the BATTLE hex side toward D3
+  var rD = E.computeAttack(st2, { from: B3, to: C3 });
+  ok(rD.defenderPower === 1, "D3's defender support stops at the river (got " + rD.defenderPower + ')');
+
+  // River pieces: single-side, validated against the R1 stock, not barrageable.
+  ok(E.pieceProblem({ t: 'R', edges: [[0, 0, 1]] }) === null, 'single-side river piece accepted');
+  var riverMap = { name: 'River Test', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2],
+    pieces: [{ t: 'R', edges: [[0, 0, 1]] }, { t: 'R', edges: [[0, 0, 4]] },
+             { t: 'R', edges: [[-1, 0, 0]] }, { t: 'R', edges: [[1, 0, 3]] }] };
+  ok(E.validateMaps([riverMap]).length === 0, 'four single-side rivers fit the R1 stock');
+  var tooMany = { name: 'Flooded', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2],
+    pieces: riverMap.pieces.concat([{ t: 'R', edges: [[1, 1, 2]] }]) };
+  ok(E.validateMaps([tooMany]).length === 1, 'a fifth river exceeds stock');
+  var longRiver = { name: 'Long River', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2],
+    pieces: [{ t: 'R', edges: [[0, 0, 1], [0, 0, 2]] }] };
+  ok(E.validateMaps([longRiver]).length === 1, 'a two-side river has no physical counterpart (R1 only)');
+  var m3 = E.newMatch({ seed: 99, firstPlayer: 'red', maps: [riverMap] });
+  var st3 = E.newBattle(m3);
+  var bt = E.listBarrageTargets(st3, 'red');
+  ok(bt.forestPieces.length === 0, 'rivers are not barrage targets (they act like mountains)');
+  // rivers occupy the border: no trench may share it
+  st3.units['0,0'] = { type: 'infantry', owner: 'red' };
+  ok(!E.trenchOrientations(st3, '0,0').some(function (pr) { return pr.indexOf(1) >= 0 || pr.indexOf(4) >= 0; }),
+    'trenches may not overlap river sides');
 })();
 
 console.log('== through-HQ movement & attacks ==');

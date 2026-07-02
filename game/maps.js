@@ -26,11 +26,14 @@
    both sides only ever control 22 hexes.
 
    MAPS — "shape" names a shape above. HQs are [q,r]. Each terrain piece is
-   {"t":"F"|"M","edges":[[q,r,d],...]}: a side d (0=E 1=NE 2=NW 3=W 4=SW 5=SE)
+   {"t":"F"|"M"|"R","edges":[[q,r,d],...]}: a side d (0=E 1=NE 2=NW 3=W 4=SW 5=SE)
    of hex (q,r). ALL sides of one piece must belong to THE SAME hex and wrap
    adjacent corners (contiguous directions) — exactly like the physical
    pieces. Forest in hex X: +1 attacking OUT of X across a covered side.
    Mountain in hex X: +1 defending X when attacked across a covered side.
+   River ("R", single-side pieces): SUPPORT never crosses that border, for
+   either side — attacks and movement still cross freely. Rivers can't be
+   barraged (they act like mountains there).
    There is no automatic mirroring here: list both halves of the map.
    ============================================================================ */
 var WOA_BUILTIN =
@@ -41,7 +44,7 @@ var WOA_BUILTIN =
     "artillery": { "name": "Artillery", "atk": 0, "def": 0, "sup": 2, "vp": 3, "count": 1 }
   },
   "trenchCount": 3,
-  "terrainStock": { "F3": 2, "F2": 4, "M3": 2, "M2": 4 },
+  "terrainStock": { "F3": 2, "F2": 4, "M3": 2, "M2": 4, "R1": 4 },
 
   "cards": [
     { "id": "deploy_inf_start", "name": "Deploy Infantry", "count": 1, "starting": true,
