@@ -171,7 +171,8 @@ setTimeout(function () {
           ok(win.DASH.results.length === 1, 'dashboard run finished on the chosen map');
           ok(doc.querySelectorAll('#dashOut table').length === 2, 'map table + card report rendered');
           ok(doc.querySelectorAll('#dashOut th.sortable').length > 10, 'columns are sortable');
-          ok(/Behaviour:/.test(doc.getElementById('dashOut').textContent), 'behaviour metrics shown');
+          var dashTxt = doc.getElementById('dashOut').textContent;
+          ok(/Aggression/.test(dashTxt) && /Decisiveness/.test(dashTxt), 'behaviour + decisiveness metrics shown');
           // dashboard numbers must equal the CLI's: same fold, same seeds
           var cli = win.Engine.balanceMap(win.Engine.MAPS[4], 20, { seedBase: 1 * 7919, diffRed: 'normal', diffBlue: 'normal' });
           var gui = win.DASH.results[0].out;

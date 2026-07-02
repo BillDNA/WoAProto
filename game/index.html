@@ -375,6 +375,17 @@
   #dashOut th.sorted{background:rgba(176,141,87,.3);}
   #dashOut .dnote{color:#8a3324; font-size:11.5px; font-style:italic;}
   #dashOut h3{margin-top:16px;}
+  #dashOut th[title]{cursor:help;}
+  #dashOut th.sortable[title]{cursor:pointer;}
+  #dashOut .dstats{display:flex; flex-wrap:wrap; gap:12px; margin:8px 0 4px;}
+  #dashOut .dgrp{flex:1 1 210px; min-width:190px; border:1px solid var(--brass-dark); border-left-width:4px; border-radius:8px; padding:7px 11px 9px; background:rgba(255,255,255,.22);}
+  #dashOut .dgrp.g-vic{border-left-color:#4a7c3f;}
+  #dashOut .dgrp.g-agg{border-left-color:#2b5a7a;}
+  #dashOut .dgrp.g-dec{border-left-color:#9a6a1a;}
+  #dashOut .dgrp-h{font-variant:small-caps; font-weight:bold; letter-spacing:.05em; color:var(--brass-dark); border-bottom:1px solid rgba(139,111,71,.4); margin-bottom:4px; padding-bottom:3px; font-size:13px;}
+  #dashOut .dstat{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:2.5px 0; cursor:help; font-size:13.5px;}
+  #dashOut .dstat + .dstat{border-top:1px dotted rgba(0,0,0,.08);}
+  #dashOut .dstat b{color:var(--ink);}
   .dbar{display:inline-block; width:64px; height:10px; border:1px solid var(--brass-dark); border-radius:3px; overflow:hidden; vertical-align:middle; background:rgba(255,255,255,.3); font-size:0; line-height:0;}
   .dbar i{display:inline-block; height:100%;}
   .dbar i.red{background:var(--red);} .dbar i.blue{background:var(--blue);} .dbar i.brass{background:var(--brass);}
@@ -2402,6 +2413,28 @@ function dashSort(rows, key, dir){
 function dbar(redPct, cls){
   return '<span class="dbar"><i class="'+(cls||'red')+'" style="width:'+redPct+'%"></i><i class="'+(cls?'':'blue')+'" style="width:'+(100-redPct)+'%"></i></span>';
 }
+// column tooltips: what each stat means + its healthy target (Feedback Round 1)
+var MAP_TIPS = {
+  name:'Map name', shape:'Board shape (custom = a carved outline)',
+  red:'Red win rate. 50% = balanced; ≥62% or ≤38% flags a side bias (±noise at this n)',
+  first:'First-mover win rate. Target ~46-50%; ≥62% / ≤38% flags a turn-order bias',
+  hq:'Share of battles ending in HQ capture (rest are attrition). ≤8% = attrition-only, ≥55% = HQ-rushable',
+  turns:'Average battle length in turns (~20 typical)',
+  vpdiff:'Average field-score margin of victory — higher = more decisive',
+  atk:'Attacks per battle. Healthy ~5', swp:'Swaps per battle. Healthy ~7',
+  zk:'Zero-kill battles. Healthy ~4%; ≥20% flags stalemates',
+  tie:'Battles decided by the tie-goes-to-2nd rule — lower is better (~25% baseline)'
+};
+var CARD_TIPS = {
+  name:'Card',
+  winPct:'Win rate when played — hugs 50% in attrition games; treat only big deviations',
+  simplePct:'Share resolved as a basic attack/reposition — high = the printed action often was not worth it',
+  noopPct:'Dead-turn rate — non-zero is bad (the order resolved nothing)',
+  sightPct:'Share played the first turn it was seen — high + low AvgSeen = always-good on sight (OP watchlist)',
+  avgSeen:'Average times in hand before it was played — high = situational/hoarded',
+  plays:'Total times played across all battles'
+};
+function dstat(label, val, tip){ return '<div class="dstat" title="'+tip+'"><span>'+label+'</span><span>'+val+'</span></div>'; }
 function renderDash(){
   var el = $('dashOut');
   if (!DASH.results.length){ el.innerHTML = ''; return; }
@@ -2436,8 +2469,8 @@ function renderDash(){
   var h = '<h3>Maps &mdash; '+n+' battles each, '+aiLabel+' <span class="small">(&plusmn;'+noise+' points at this n)</span></h3>';
   h += '<table><tr>';
   cols.forEach(function(c){
-    if (!c[0]){ h += '<th>'+c[1]+'</th>'; return; }
-    h += '<th class="sortable'+(key===c[0]?' sorted':'')+'" data-key="'+c[0]+'" title="click to sort">'+c[1]+(key===c[0]?(dir>0?' &#9650;':' &#9660;'):'')+'</th>';
+    if (!c[0]){ h += '<th title="Automated flags derived from the thresholds in this table">'+c[1]+'</th>'; return; }
+    h += '<th class="sortable'+(key===c[0]?' sorted':'')+'" data-key="'+c[0]+'" title="'+(MAP_TIPS[c[0]]||'')+' &middot; click to sort">'+c[1]+(key===c[0]?(dir>0?' &#9650;':' &#9660;'):'')+'</th>';
   });
   h += '<th title="red vs blue win share">R/B</th></tr>';
   rows.forEach(function(r){
@@ -2465,14 +2498,28 @@ function renderDash(){
       a.firstSight += c.firstSight; a.seenSum += c.seenSum; a.noop += (c.noop||0);
     });
   });
+  var mx = Math.max(1, G.games);
   h += '<h3>Overall <span class="small">(n='+G.games+' battles)</span></h3>' +
-    '<p>Red wins <b>'+dpct(G.red,G.games)+'%</b> '+dbar(dpct(G.red,G.games))+' &nbsp; First mover wins <b>'+dpct(G.first,G.games)+'%</b> '+
-    dbar(dpct(G.first,G.games),'brass')+' &nbsp; HQ captures <b>'+dpct(G.hq,G.games)+'%</b> &nbsp; Avg battle <b>'+(G.turns/Math.max(1,G.games)).toFixed(1)+'</b> turns</p>' +
-    '<p><b>Behaviour:</b> '+(G.attacks/Math.max(1,G.games)).toFixed(1)+' attacks &amp; '+(G.swaps/Math.max(1,G.games)).toFixed(1)+
-    ' swaps per battle &middot; zero-kill battles '+dpct(G.zeroKill,G.games)+'% &middot; '+Math.round(100*G.depShare/Math.max(1,G.games))+'% of units ever fielded</p>' +
-    '<p><b>Decisiveness:</b> tie-goes-to-2nd decided '+dpct(G.tiebreak,G.games)+'% of battles &middot; first blood won '+
-    dpct(G.fbWins,G.fbGames)+'% of the '+dpct(G.fbGames,G.games)+'% of battles with a kill &middot; side holding more hexes won '+dpct(G.ctlWins,G.ctlGames)+'%</p>' +
-    '<p class="small">Healthy baselines (June 2026, normal AI): ~5 attacks &amp; ~7 swaps, zero-kill ~4%, ~88% fielded, first mover ~46%, tie-rule ~25%. See design-docs/grading-rubrics.md for targets.</p>';
+    '<div class="dstats">' +
+      '<div class="dgrp g-vic"><div class="dgrp-h">Victory</div>' +
+        dstat('Red wins', '<b>'+dpct(G.red,G.games)+'%</b> '+dbar(dpct(G.red,G.games)), 'Overall red win rate across all maps. 50% = balanced.') +
+        dstat('First mover wins', '<b>'+dpct(G.first,G.games)+'%</b> '+dbar(dpct(G.first,G.games),'brass'), 'Win rate of whoever moved first. Target ~46-50%.') +
+        dstat('HQ captures', '<b>'+dpct(G.hq,G.games)+'%</b>', 'Share of battles won by capturing the HQ; the rest end in attrition. ~22% typical.') +
+        dstat('Avg length', '<b>'+(G.turns/mx).toFixed(1)+'</b> turns', 'Mean battle length in turns. ~20 typical.') +
+      '</div>' +
+      '<div class="dgrp g-agg"><div class="dgrp-h">Aggression</div>' +
+        dstat('Attacks / battle', '<b>'+(G.attacks/mx).toFixed(1)+'</b>', 'Attacks resolved per battle. Healthy ~5.') +
+        dstat('Swaps / battle', '<b>'+(G.swaps/mx).toFixed(1)+'</b>', 'Repositions/swaps per battle. Healthy ~7.') +
+        dstat('Units fielded', '<b>'+Math.round(100*G.depShare/mx)+'%</b>', 'Share of each army that ever reached the board. Healthy ~88%.') +
+        dstat('Zero-kill battles', '<b>'+dpct(G.zeroKill,G.games)+'%</b>', 'Battles that ended with no unit killed. Healthy ~4%; high = stalemates.') +
+      '</div>' +
+      '<div class="dgrp g-dec"><div class="dgrp-h">Decisiveness</div>' +
+        dstat('Tie &rarr; 2nd player', '<b>'+dpct(G.tiebreak,G.games)+'%</b>', 'Battles decided by the tie-goes-to-second rule. Lower is better; ~25% baseline (the biggest open lever).') +
+        dstat('First blood converts', '<b>'+dpct(G.fbWins,G.fbGames)+'%</b>', 'How often the side that drew first blood went on to win, across the '+dpct(G.fbGames,G.games)+'% of battles with a kill. ~61% baseline.') +
+        dstat('Board leader wins', '<b>'+dpct(G.ctlWins,G.ctlGames)+'%</b>', 'How often the side holding more hexes won. ~81% baseline.') +
+      '</div>' +
+    '</div>' +
+    '<p class="small">Hover any stat or column header for what it means and its healthy range. Full targets in design-docs/grading-rubrics.md.</p>';
 
   // ---- card report ----
   var crows = E.CARDS.map(function(c){
@@ -2485,7 +2532,7 @@ function renderDash(){
   var ccols = [['name','Card'], ['winPct','Win%'], ['simplePct','Simple%'], ['noopPct','Skip%'], ['sightPct','1stSight%'], ['avgSeen','AvgSeen'], ['plays','plays']];
   h += '<h3>Card report <span class="small">('+G.games+' battles of AI play)</span></h3><table><tr>';
   ccols.forEach(function(c){
-    h += '<th class="sortable'+(DASH.cardSort.key===c[0]?' sorted':'')+'" data-ckey="'+c[0]+'" title="click to sort">'+c[1]+(DASH.cardSort.key===c[0]?(DASH.cardSort.dir>0?' &#9650;':' &#9660;'):'')+'</th>';
+    h += '<th class="sortable'+(DASH.cardSort.key===c[0]?' sorted':'')+'" data-ckey="'+c[0]+'" title="'+(CARD_TIPS[c[0]]||'')+' &middot; click to sort">'+c[1]+(DASH.cardSort.key===c[0]?(DASH.cardSort.dir>0?' &#9650;':' &#9660;'):'')+'</th>';
   });
   h += '<th title="share of plays by the eventual winner">Win share</th></tr>';
   crows.forEach(function(r){
@@ -2494,7 +2541,7 @@ function renderDash(){
       '<td>'+r.sightPct+'%</td><td>'+r.avgSeen+'</td><td>'+r.plays+'</td><td>'+dbar(r.winPct)+'</td></tr>';
   });
   h += '</table>' +
-    '<p class="small"><b>Win%</b> hugs 50 in attrition games — treat big deviations only. <b>Simple%</b> high = the printed action often wasn\'t worth it (bias: the AI burns its least precious card). <b>Skip%</b> non-zero = dead turns: bad. <b>1stSight%</b> high + low AvgSeen = always-good on sight (OP watchlist). <b>AvgSeen</b> high = situational/hoarded.</p>';
+    '<p class="small">Hover a column header for what it means and its target. Skip% shown in red = dead turns (bad).</p>';
 
   el.innerHTML = h;
   el.querySelectorAll('th[data-key]').forEach(function(th){
