@@ -1055,59 +1055,76 @@
     return st;
   }
 
-  // n AI-vs-AI battles on one map (alternating first player); aggregated stats.
-  function balanceMap(map, n, opts) {
-    opts = opts || {};
+  // Balance aggregation is split so the CLI (balance.js) and the in-browser
+  // dashboard fold battles through the SAME code — if they ever disagree on a
+  // number, that's a bug. balanceNew makes an empty aggregate; balanceAdd folds
+  // one finished battle in; balanceMap is the synchronous convenience loop.
+  function balanceNew(n) {
     var out = { n: n, redWins: 0, firstWins: 0, hqWins: 0, turns: 0, vpDiff: 0, unfinished: 0, cards: {},
       // behaviour metrics (June 2026): catch degenerate AI play, not just outcomes
       attacks: 0, swaps: 0, marches: 0, zeroKill: 0, tiebreak: 0,
       firstBloodGames: 0, firstBloodWins: 0, controlGames: 0, controlWins: 0,
       deployedShare: 0 };
     CARDS.forEach(function (c) { out.cards[c.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 }; });
+    return out;
+  }
+  function balanceAdd(out, st, fp) {
+    if (st.phase !== 'battle-over') { out.unfinished++; return out; }
     var unitTotal = 0;
     Object.keys(UNITS).forEach(function (t) { unitTotal += UNITS[t].count || 0; });
+    var w = st.battleWinner;
+    if (w === 'red') out.redWins++;
+    if (w === fp) out.firstWins++;
+    if (st.winType === 'hq') out.hqWins++;
+    out.turns += st.turnNumber;
+    var fsr = fieldScore(st, 'red'), fsb = fieldScore(st, 'blue');
+    out.vpDiff += Math.abs(fsr - fsb);
+    var stats = st.stats || {};
+    out.attacks += stats.attacks || 0;
+    out.swaps += stats.swaps || 0;
+    out.marches += stats.marches || 0;
+    if (st.vp.red + st.vp.blue === 0) out.zeroKill++;            // no unit ever died
+    if (st.winType === 'attrition' && fsr === fsb) out.tiebreak++; // decided only by tie-goes-to-2nd
+    if (stats.firstBlood) {
+      out.firstBloodGames++;
+      if (stats.firstBlood === w) out.firstBloodWins++;
+    }
+    var hr = 0, hb = 0;
+    for (var h in st.units) (st.units[h].owner === 'red' ? hr++ : hb++);
+    if (hr !== hb) {
+      out.controlGames++;
+      if ((w === 'red') === (hr > hb)) out.controlWins++;        // winner also held more hexes
+    }
+    var resLeft = 0;
+    ['red', 'blue'].forEach(function (p) {
+      Object.keys(UNITS).forEach(function (t) { resLeft += st.reserves[p][t] || 0; });
+    });
+    out.deployedShare += 1 - resLeft / (2 * unitTotal);
+    (st.playLog || []).forEach(function (e) {
+      var c = out.cards[e.id] || (out.cards[e.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 });
+      c.plays++;
+      if (e.p === w) c.wins++;
+      if (e.mode !== 'normal') c.simple++;     // resolved as a basic attack/reposition
+      if (e.seen <= 1) c.firstSight++;          // played the first time it was seen
+      if (e.noop) c.noop++;                     // resolved ZERO actions — an effective skipped turn
+      c.seenSum += e.seen;
+    });
+    return out;
+  }
+  // the seed/first-player schedule for battle g of a balance run — one place,
+  // so the CLI and the dashboard replay the identical battles
+  function balanceSeed(seedBase, g) { return (seedBase || 7919) + g * 104729 + 13; }
+  function balanceFP(g) { return g % 2 === 0 ? 'red' : 'blue'; }
+
+  // n AI-vs-AI battles on one map (alternating first player); aggregated stats.
+  function balanceMap(map, n, opts) {
+    opts = opts || {};
+    var out = balanceNew(n);
     for (var g = 0; g < n; g++) {
-      var fp = g % 2 === 0 ? 'red' : 'blue';
-      var st = simBattle(map, (opts.seedBase || 7919) + g * 104729 + 13, fp, opts.diffRed, opts.diffBlue);
-      if (st.phase !== 'battle-over') { out.unfinished++; continue; }
-      var w = st.battleWinner;
-      if (w === 'red') out.redWins++;
-      if (w === fp) out.firstWins++;
-      if (st.winType === 'hq') out.hqWins++;
-      out.turns += st.turnNumber;
-      var fsr = fieldScore(st, 'red'), fsb = fieldScore(st, 'blue');
-      out.vpDiff += Math.abs(fsr - fsb);
-      var stats = st.stats || {};
-      out.attacks += stats.attacks || 0;
-      out.swaps += stats.swaps || 0;
-      out.marches += stats.marches || 0;
-      if (st.vp.red + st.vp.blue === 0) out.zeroKill++;            // no unit ever died
-      if (st.winType === 'attrition' && fsr === fsb) out.tiebreak++; // decided only by tie-goes-to-2nd
-      if (stats.firstBlood) {
-        out.firstBloodGames++;
-        if (stats.firstBlood === w) out.firstBloodWins++;
-      }
-      var hr = 0, hb = 0;
-      for (var h in st.units) (st.units[h].owner === 'red' ? hr++ : hb++);
-      if (hr !== hb) {
-        out.controlGames++;
-        if ((w === 'red') === (hr > hb)) out.controlWins++;        // winner also held more hexes
-      }
-      var resLeft = 0;
-      ['red', 'blue'].forEach(function (p) {
-        Object.keys(UNITS).forEach(function (t) { resLeft += st.reserves[p][t] || 0; });
-      });
-      out.deployedShare += 1 - resLeft / (2 * unitTotal);
-      (st.playLog || []).forEach(function (e) {
-        var c = out.cards[e.id] || (out.cards[e.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 });
-        c.plays++;
-        if (e.p === w) c.wins++;
-        if (e.mode !== 'normal') c.simple++;     // resolved as a basic attack/reposition
-        if (e.seen <= 1) c.firstSight++;          // played the first time it was seen
-        if (e.noop) c.noop++;                     // resolved ZERO actions — an effective skipped turn
-        c.seenSum += e.seen;
-      });
-      if (opts.onGame) opts.onGame(g + 1, n, st);
+      var fp = balanceFP(g);
+      var st = simBattle(map, balanceSeed(opts.seedBase, g), fp, opts.diffRed, opts.diffBlue);
+      balanceAdd(out, st, fp);
+      if (st.phase === 'battle-over' && opts.onGame) opts.onGame(g + 1, n, st);
     }
     return out;
   }
@@ -1156,7 +1173,8 @@
     enumerateChoices: enumerateChoices,
     concede: concede, concedeAdvised: concedeAdvised, fieldScore: fieldScore,
     aiPlanTurn: aiPlanTurn, clone: clone, evalState: evalState, validateMaps: validateMaps,
-    simBattle: simBattle, balanceMap: balanceMap
+    simBattle: simBattle, balanceMap: balanceMap,
+    balanceNew: balanceNew, balanceAdd: balanceAdd, balanceSeed: balanceSeed, balanceFP: balanceFP
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = Engine;

@@ -135,9 +135,40 @@ setTimeout(function () {
     })();
 
     function watchMode() {
-      console.log('== watch mode (AI vs AI spectate) ==');
+      console.log('== balance dashboard ==');
       doc.getElementById('edBack').click();
       doc.getElementById('btnMapsBack').click();
+      doc.getElementById('btnDash').click();
+      ok(doc.getElementById('dashScr').classList.contains('active'), 'dashboard opens from the menu');
+      ok(doc.querySelectorAll('#dashMap option').length >= win.Engine.MAPS.length, 'map picker lists the pool');
+      doc.getElementById('dashN').value = '20';
+      doc.getElementById('dashMap').value = win.Engine.MAPS[4].name; // The Cockpit (fast battles)
+      doc.getElementById('dashRun').click();
+      var dw = 0;
+      (function waitDash() {
+        if (!win.DASH.running && win.DASH.results.length) {
+          ok(win.DASH.results.length === 1, 'dashboard run finished on the chosen map');
+          ok(doc.querySelectorAll('#dashOut table').length === 2, 'map table + card report rendered');
+          ok(doc.querySelectorAll('#dashOut th.sortable').length > 10, 'columns are sortable');
+          ok(/Behaviour:/.test(doc.getElementById('dashOut').textContent), 'behaviour metrics shown');
+          // dashboard numbers must equal the CLI's: same fold, same seeds
+          var cli = win.Engine.balanceMap(win.Engine.MAPS[4], 20, { seedBase: 1 * 7919, diffRed: 'normal', diffBlue: 'normal' });
+          var gui = win.DASH.results[0].out;
+          ok(cli.redWins === gui.redWins && cli.turns === gui.turns && cli.attacks === gui.attacks,
+            'GUI and CLI agree exactly (red ' + gui.redWins + '/' + cli.redWins + ', turns ' + gui.turns + '/' + cli.turns + ')');
+          var th = doc.querySelector('#dashOut th[data-key="red"]');
+          th.dispatchEvent(new win.Event('click', { bubbles: true }));
+          ok(doc.querySelector('#dashOut th.sorted'), 'clicking a header sorts');
+          return startWatch();
+        }
+        if ((dw += 100) > 60000) { ok(false, 'dashboard run never finished'); return startWatch(); }
+        realSetTimeout(waitDash, 100);
+      })();
+    }
+
+    function startWatch() {
+      console.log('== watch mode (AI vs AI spectate) ==');
+      doc.getElementById('dashBack').click();
       doc.getElementById('btnWatch').click();
       ok(doc.getElementById('game').classList.contains('active'), 'watch mode starts a game');
       var w0 = 0;

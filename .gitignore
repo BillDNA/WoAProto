@@ -16,3 +16,4 @@ design-docs/art-originals/
 design-docs/prototype pictures/*
 # ...except the diagram the terrain rules are defined by
 !design-docs/prototype pictures/HexClarificationDiagram.png
+dev/claude-plays-log.jsonl

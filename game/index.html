@@ -345,8 +345,20 @@
   .manual table{width:100%; border-collapse:collapse; font-size:13px;}
   .manual td,.manual th{border:1px solid var(--brass-dark); padding:3px 6px; text-align:center;}
 
-  /* maps screen + editor */
+  /* maps screen + editor + balance dashboard */
   #mapsScr .panel, #editorScr .panel{width:min(900px,96vw); max-height:92vh; overflow-y:auto; padding:22px 26px;}
+  #dashScr .panel{width:min(1040px,97vw); max-height:94vh; overflow-y:auto; padding:22px 26px;}
+  #dashScr select{font-family:inherit; font-size:13.5px; padding:5px 8px; border:1px solid var(--brass-dark); border-radius:6px; background:rgba(255,255,255,.35); color:var(--ink); cursor:pointer;}
+  #dashOut table{margin:8px 0 4px;}
+  #dashOut td{white-space:nowrap;}
+  #dashOut th.sortable{cursor:pointer;}
+  #dashOut th.sortable:hover{background:rgba(176,141,87,.25);}
+  #dashOut th.sorted{background:rgba(176,141,87,.3);}
+  #dashOut .dnote{color:#8a3324; font-size:11.5px; font-style:italic;}
+  #dashOut h3{margin-top:16px;}
+  .dbar{display:inline-block; width:64px; height:10px; border:1px solid var(--brass-dark); border-radius:3px; overflow:hidden; vertical-align:middle; background:rgba(255,255,255,.3); font-size:0; line-height:0;}
+  .dbar i{display:inline-block; height:100%;}
+  .dbar i.red{background:var(--red);} .dbar i.blue{background:var(--blue);} .dbar i.brass{background:var(--brass);}
   .mapgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px; margin:14px 0;}
   .mapitem{border:1px solid var(--brass-dark); border-radius:6px; padding:8px; background:rgba(255,255,255,.22); text-align:center;}
   .mapitem.off{opacity:.45;}
@@ -464,6 +476,7 @@
       </div>
       <button id="btnWatch" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Watch: AI vs AI</button>
       <button id="btnMaps" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Maps &amp; Map Editor</button>
+      <button id="btnDash" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Balance Dashboard</button>
       <button id="btnManual" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Field Manual (rules)</button>
       <button id="btnCardsMenu" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Card Glossary</button>
     </div>
@@ -553,6 +566,25 @@
       <button id="edBalance" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);" title="AI-vs-AI win rates for the map as drawn (does not save)">Balance Report</button>
       <button id="edBack" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Back</button>
     </div>
+  </div>
+</div>
+
+<!-- ============ BALANCE DASHBOARD ============ -->
+<div id="dashScr" class="screen">
+  <div class="panel parchment">
+    <h2 style="font-variant:small-caps;text-align:center;">The War Office &mdash; Balance Dashboard</h2>
+    <p class="small" style="text-align:center;">The full <code>balance.js</code> report, in the browser: AI-vs-AI battles across the roster, every metric laid out. Same aggregation as the terminal — the numbers can't disagree.</p>
+    <div class="opt-row" style="align-items:center;">
+      <label class="small">Battles/map <select id="dashN"><option>20</option><option selected>40</option><option>60</option><option>100</option></select></label>
+      <label class="small">Red AI <select id="dashRed"><option value="easy">Green Recruit</option><option value="normal" selected>Old Veteran</option><option value="hard">Field Marshal</option></select></label>
+      <label class="small">Blue AI <select id="dashBlue"><option value="easy">Green Recruit</option><option value="normal" selected>Old Veteran</option><option value="hard">Field Marshal</option></select></label>
+      <label class="small">Maps <select id="dashMap"><option value="all">All in play</option></select></label>
+      <button id="dashRun">Run</button>
+      <button id="dashStop" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);display:none;">Stop</button>
+    </div>
+    <p class="small" id="dashStatus" style="text-align:center;"></p>
+    <div id="dashOut" class="manual"></div>
+    <div class="ovr-btns"><button id="dashBack" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Back</button></div>
   </div>
 </div>
 
@@ -1941,6 +1973,196 @@ function balReport(def){
     '<div class="ovr-btns"><button id="balMore">Run 20 more</button><button id="balClose" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Close</button></div>';
   $('balMore').onclick = function(){ balRound(def, 20); };
   $('balClose').onclick = closeBal;
+}
+
+/* =================== balance dashboard =================== */
+// The full balance.js report in the browser. Aggregation is E.balanceNew /
+// E.balanceAdd — the SAME code the CLI folds battles through — and the
+// seed/first-player schedule is E.balanceSeed/balanceFP, so a run here with
+// the same n/AI/maps reproduces the terminal's numbers exactly.
+var DASH = { running:false, cancel:false, results:[], sort:{key:null, dir:1}, cardSort:{key:'sightPct', dir:-1}, meta:null };
+function dpct(a, b){ return b ? Math.round(100 * a / b) : 0; }
+
+function openDash(){
+  var sel = $('dashMap');
+  var cur = sel.value;
+  sel.innerHTML = '<option value="all">All in play</option>';
+  getMapPool().forEach(function(m){
+    var o = document.createElement('option');
+    o.value = m.name; o.textContent = m.name;
+    sel.appendChild(o);
+  });
+  if (cur) sel.value = [].some.call(sel.options, function(o){ return o.value===cur; }) ? cur : 'all';
+  show('dashScr');
+}
+$('btnDash').onclick = openDash;
+$('dashBack').onclick = function(){ DASH.cancel = true; show('menu'); checkResume(); };
+$('dashStop').onclick = function(){ DASH.cancel = true; };
+
+$('dashRun').onclick = function(){
+  if (DASH.running) return;
+  var n = +$('dashN').value;
+  var dr = $('dashRed').value, db = $('dashBlue').value;
+  var pick = $('dashMap').value;
+  var maps = getMapPool();
+  if (pick !== 'all') maps = maps.filter(function(m){ return m.name === pick; });
+  if (!maps.length){ toast('No maps in play — enable some in Maps &amp; Map Editor.', 3500); return; }
+  var probs = E.validateMaps(maps);
+  if (probs.length){ toast('Fix these maps first: '+probs.join('; '), 4500); return; }
+  DASH.running = true; DASH.cancel = false;
+  DASH.results = []; DASH.meta = { n:n, dr:dr, db:db };
+  $('dashStop').style.display = ''; $('dashRun').disabled = true;
+  var mi = 0, g = 0, out = E.balanceNew(n);
+  var t0 = Date.now();
+  function finish(){
+    DASH.running = false;
+    $('dashStop').style.display = 'none'; $('dashRun').disabled = false;
+    $('dashStatus').textContent = DASH.cancel
+      ? 'Stopped — showing the maps that finished.'
+      : 'Done: '+DASH.results.length+' map(s) × '+n+' battles in '+((Date.now()-t0)/1000).toFixed(0)+'s.';
+    renderDash();
+  }
+  function step(){
+    if (DASH.cancel){ finish(); return; }
+    if (g >= n){
+      DASH.results.push({ map: maps[mi], out: out });
+      renderDash();
+      mi++; g = 0; out = E.balanceNew(n);
+      if (mi >= maps.length){ finish(); return; }
+    }
+    $('dashStatus').textContent = 'Map '+(mi+1)+'/'+maps.length+' — "'+maps[mi].name+'", battle '+(g+1)+'/'+n+'…'+
+      (dr==='hard'||db==='hard' ? ' (Field Marshal thinks ~1s per battle)' : '');
+    setTimeout(function(){
+      if (DASH.cancel){ finish(); return; }
+      var fp = E.balanceFP(g);
+      var st = E.simBattle(maps[mi], E.balanceSeed((mi+1)*7919, g), fp, dr, db);
+      E.balanceAdd(out, st, fp);
+      g++;
+      step();
+    }, 8);
+  }
+  step();
+};
+
+function dashSort(rows, key, dir){
+  return rows.slice().sort(function(a, b){
+    var av = a[key], bv = b[key];
+    if (typeof av === 'string') return dir * av.localeCompare(bv);
+    return dir * (av - bv);
+  });
+}
+function dbar(redPct, cls){
+  return '<span class="dbar"><i class="'+(cls||'red')+'" style="width:'+redPct+'%"></i><i class="'+(cls?'':'blue')+'" style="width:'+(100-redPct)+'%"></i></span>';
+}
+function renderDash(){
+  var el = $('dashOut');
+  if (!DASH.results.length){ el.innerHTML = ''; return; }
+  var n = DASH.meta.n;
+  var noise = Math.round(100 / Math.sqrt(n));
+  var aiLabel = DASH.meta.dr === DASH.meta.db ? DASH.meta.dr + ' AI both sides' : 'red ' + DASH.meta.dr + ' vs blue ' + DASH.meta.db;
+
+  // ---- per-map rows (derived exactly like balance.js) ----
+  var rows = DASH.results.map(function(r){
+    var o = r.out, done = Math.max(1, n - o.unfinished);
+    var notes = [];
+    if (dpct(o.redWins, done) >= 62 || dpct(o.redWins, done) <= 38) notes.push('SIDE-BIASED');
+    if (dpct(o.firstWins, done) >= 62) notes.push('1st-mover strong');
+    if (dpct(o.firstWins, done) <= 38) notes.push('2nd-mover strong');
+    if (dpct(o.hqWins, done) <= 8) notes.push('attrition-only');
+    if (dpct(o.hqWins, done) >= 55) notes.push('HQ-rushable');
+    if (dpct(o.zeroKill, done) >= 20) notes.push('STALEMATES');
+    return {
+      name: r.map.name, shape: r.map.shape || '?', done: done,
+      red: dpct(o.redWins, done), first: dpct(o.firstWins, done),
+      hq: dpct(o.hqWins, done), turns: +(o.turns/done).toFixed(1), vpdiff: +(o.vpDiff/done).toFixed(1),
+      atk: +(o.attacks/done).toFixed(1), swp: +(o.swaps/done).toFixed(1),
+      zk: dpct(o.zeroKill, done), tie: dpct(o.tiebreak, done), notes: notes.join(', ')
+    };
+  });
+  var key = DASH.sort.key, dir = DASH.sort.dir;
+  if (key) rows = dashSort(rows, key, dir);
+  var cols = [
+    ['name','Map'], ['shape','Shape'], ['red','Red%'], ['first','1st%'], ['hq','HQ%'],
+    ['turns','Turns'], ['vpdiff','VPdiff'], ['atk','Atk'], ['swp','Swp'], ['zk','0kill%'], ['tie','Tie%'], [null,'notes']
+  ];
+  var h = '<h3>Maps &mdash; '+n+' battles each, '+aiLabel+' <span class="small">(&plusmn;'+noise+' points at this n)</span></h3>';
+  h += '<table><tr>';
+  cols.forEach(function(c){
+    if (!c[0]){ h += '<th>'+c[1]+'</th>'; return; }
+    h += '<th class="sortable'+(key===c[0]?' sorted':'')+'" data-key="'+c[0]+'" title="click to sort">'+c[1]+(key===c[0]?(dir>0?' &#9650;':' &#9660;'):'')+'</th>';
+  });
+  h += '<th title="red vs blue win share">R/B</th></tr>';
+  rows.forEach(function(r){
+    h += '<tr><td style="text-align:left;"><b>'+r.name+'</b></td><td>'+r.shape+'</td>' +
+      '<td>'+r.red+'%</td><td>'+r.first+'%</td><td>'+r.hq+'%</td><td>'+r.turns+'</td><td>'+r.vpdiff+'</td>' +
+      '<td>'+r.atk+'</td><td>'+r.swp+'</td><td>'+r.zk+'%</td><td>'+r.tie+'%</td>' +
+      '<td style="text-align:left;" class="dnote">'+(r.notes||'')+'</td><td>'+dbar(r.red)+'</td></tr>';
+  });
+  h += '</table>';
+
+  // ---- overall + behaviour + decisiveness (same folds as balance.js) ----
+  var G = { red:0, first:0, hq:0, games:0, turns:0, attacks:0, swaps:0, zeroKill:0, tiebreak:0,
+    fbWins:0, fbGames:0, ctlWins:0, ctlGames:0, depShare:0 };
+  var cardAgg = {};
+  DASH.results.forEach(function(r){
+    var o = r.out, done = n - o.unfinished;
+    G.red += o.redWins; G.first += o.firstWins; G.hq += o.hqWins; G.games += done; G.turns += o.turns;
+    G.attacks += o.attacks; G.swaps += o.swaps; G.zeroKill += o.zeroKill; G.tiebreak += o.tiebreak;
+    G.fbWins += o.firstBloodWins; G.fbGames += o.firstBloodGames;
+    G.ctlWins += o.controlWins; G.ctlGames += o.controlGames; G.depShare += o.deployedShare;
+    Object.keys(o.cards).forEach(function(cid){
+      var a = cardAgg[cid] || (cardAgg[cid] = { plays:0, wins:0, simple:0, firstSight:0, seenSum:0, noop:0 });
+      var c = o.cards[cid];
+      a.plays += c.plays; a.wins += c.wins; a.simple += c.simple;
+      a.firstSight += c.firstSight; a.seenSum += c.seenSum; a.noop += (c.noop||0);
+    });
+  });
+  h += '<h3>Overall <span class="small">(n='+G.games+' battles)</span></h3>' +
+    '<p>Red wins <b>'+dpct(G.red,G.games)+'%</b> '+dbar(dpct(G.red,G.games))+' &nbsp; First mover wins <b>'+dpct(G.first,G.games)+'%</b> '+
+    dbar(dpct(G.first,G.games),'brass')+' &nbsp; HQ captures <b>'+dpct(G.hq,G.games)+'%</b> &nbsp; Avg battle <b>'+(G.turns/Math.max(1,G.games)).toFixed(1)+'</b> turns</p>' +
+    '<p><b>Behaviour:</b> '+(G.attacks/Math.max(1,G.games)).toFixed(1)+' attacks &amp; '+(G.swaps/Math.max(1,G.games)).toFixed(1)+
+    ' swaps per battle &middot; zero-kill battles '+dpct(G.zeroKill,G.games)+'% &middot; '+Math.round(100*G.depShare/Math.max(1,G.games))+'% of units ever fielded</p>' +
+    '<p><b>Decisiveness:</b> tie-goes-to-2nd decided '+dpct(G.tiebreak,G.games)+'% of battles &middot; first blood won '+
+    dpct(G.fbWins,G.fbGames)+'% of the '+dpct(G.fbGames,G.games)+'% of battles with a kill &middot; side holding more hexes won '+dpct(G.ctlWins,G.ctlGames)+'%</p>' +
+    '<p class="small">Healthy baselines (June 2026, normal AI): ~5 attacks &amp; ~7 swaps, zero-kill ~4%, ~88% fielded, first mover ~46%, tie-rule ~25%. See design-docs/grading-rubrics.md for targets.</p>';
+
+  // ---- card report ----
+  var crows = E.CARDS.map(function(c){
+    var a = cardAgg[c.id] || { plays:0, wins:0, simple:0, firstSight:0, seenSum:0, noop:0 };
+    return { name: c.name, plays: a.plays, winPct: dpct(a.wins,a.plays), simplePct: dpct(a.simple,a.plays),
+      noopPct: dpct(a.noop,a.plays), sightPct: dpct(a.firstSight,a.plays),
+      avgSeen: a.plays ? +(a.seenSum/a.plays).toFixed(2) : 0 };
+  });
+  crows = dashSort(crows, DASH.cardSort.key, DASH.cardSort.dir);
+  var ccols = [['name','Card'], ['winPct','Win%'], ['simplePct','Simple%'], ['noopPct','Skip%'], ['sightPct','1stSight%'], ['avgSeen','AvgSeen'], ['plays','plays']];
+  h += '<h3>Card report <span class="small">('+G.games+' battles of AI play)</span></h3><table><tr>';
+  ccols.forEach(function(c){
+    h += '<th class="sortable'+(DASH.cardSort.key===c[0]?' sorted':'')+'" data-ckey="'+c[0]+'" title="click to sort">'+c[1]+(DASH.cardSort.key===c[0]?(DASH.cardSort.dir>0?' &#9650;':' &#9660;'):'')+'</th>';
+  });
+  h += '<th title="share of plays by the eventual winner">Win share</th></tr>';
+  crows.forEach(function(r){
+    h += '<tr><td style="text-align:left;"><b>'+r.name+'</b></td><td>'+r.winPct+'%</td><td>'+r.simplePct+'%</td>' +
+      '<td'+(r.noopPct>0?' style="color:#8a3324;font-weight:bold;"':'')+'>'+r.noopPct+'%</td>' +
+      '<td>'+r.sightPct+'%</td><td>'+r.avgSeen+'</td><td>'+r.plays+'</td><td>'+dbar(r.winPct)+'</td></tr>';
+  });
+  h += '</table>' +
+    '<p class="small"><b>Win%</b> hugs 50 in attrition games — treat big deviations only. <b>Simple%</b> high = the printed action often wasn\'t worth it (bias: the AI burns its least precious card). <b>Skip%</b> non-zero = dead turns: bad. <b>1stSight%</b> high + low AvgSeen = always-good on sight (OP watchlist). <b>AvgSeen</b> high = situational/hoarded.</p>';
+
+  el.innerHTML = h;
+  el.querySelectorAll('th[data-key]').forEach(function(th){
+    th.onclick = function(){
+      var k = th.dataset.key;
+      DASH.sort = { key: k, dir: DASH.sort.key === k ? -DASH.sort.dir : (k==='name'||k==='shape' ? 1 : -1) };
+      renderDash();
+    };
+  });
+  el.querySelectorAll('th[data-ckey]').forEach(function(th){
+    th.onclick = function(){
+      var k = th.dataset.ckey;
+      DASH.cardSort = { key: k, dir: DASH.cardSort.key === k ? -DASH.cardSort.dir : (k==='name' ? 1 : -1) };
+      renderDash();
+    };
+  });
 }
 
 /* =================== map editor =================== */
