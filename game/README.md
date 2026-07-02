@@ -115,5 +115,6 @@ A **river** (single-side pieces, drawn in blue) sits on a border: **support neve
   (the same report lives in the browser: **Balance Dashboard** on the main menu — pick battles-per-map, the AI for each side, and a map or the whole pool; every table is click-to-sort)
 - `server.js` / `run-server.bat` / `run-server.command` — tiny zero-dependency LAN server
 - `custom-maps.js` — your custom maps (generated; travels with the folder)
+- `custom-deck.js` — your custom deck from the **Deck Editor** (menu): edit cards in the browser — name, copies, text, steps — with validation (16 cards, one starting card); Save reloads with the new deck. Export/Import for file:// use; node tools keep reading maps.js.
 - `test.js` — engine test suite: `node test.js`
 - `CLAUDE.md` — orientation notes for AI coding assistants working on this project

@@ -102,6 +102,18 @@ http.createServer(function (req, res) {
       });
     });
   }
+  if (p === '/api/savedeck' && req.method === 'POST') {
+    // mirror of savemaps for the Deck Editor: deck = card list, or null to
+    // restore the built-in deck from maps.js
+    return readBody(req, function (err, body) {
+      if (err || !('deck' in body)) return json(res, 400, { error: 'bad request' });
+      var content = 'window.WOA_CUSTOM_DECK = ' + JSON.stringify(body.deck, null, 1) + ';\n';
+      fs.writeFile(path.join(ROOT, 'custom-deck.js'), content, function (werr) {
+        if (werr) return json(res, 500, { error: 'write failed' });
+        json(res, 200, { ok: true });
+      });
+    });
+  }
   if (p === '/api/poll' && req.method === 'GET') {
     var r = rooms[(u.searchParams.get('room') || '').toUpperCase()];
     if (!r) return json(res, 404, { error: 'room not found' });

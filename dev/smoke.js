@@ -12,6 +12,7 @@ var html = read('index.html');
 // inline the three scripts so jsdom needs no loader
 html = html
   .replace('<script src="maps.js"></script>', '<script>' + read('maps.js') + '</script>')
+  .replace('<script src="custom-deck.js"></script>', '<script>' + read('custom-deck.js') + '</script>')
   .replace('<script src="engine.js"></script>', '<script>' + read('engine.js') + '</script>')
   .replace('<script src="custom-maps.js"></script>', '<script>' + read('custom-maps.js') + '</script>');
 
@@ -167,8 +168,30 @@ setTimeout(function () {
     }
 
     function startWatch() {
-      console.log('== watch mode (AI vs AI spectate) ==');
+      console.log('== deck editor ==');
       doc.getElementById('dashBack').click();
+      doc.getElementById('btnDeck').click();
+      ok(doc.getElementById('deckScr').classList.contains('active'), 'deck editor opens');
+      ok(doc.querySelectorAll('#deckList .dkcard').length === win.Engine.CARDS.length,
+        'one editor row per card (' + doc.querySelectorAll('#deckList .dkcard').length + ')');
+      ok(win.deckProblems(win.Engine.CARDS).length === 0, 'built-in deck validates clean');
+      ok(!doc.getElementById('dkSave').disabled, 'Save enabled on a valid deck');
+      // break it: bump a count so the total exceeds 16 -> validation refuses
+      var cnt = doc.querySelector('#deckList .dk-count');
+      cnt.value = String(+cnt.value + 1);
+      cnt.dispatchEvent(new win.Event('input', { bubbles: true }));
+      ok(/must total 16/.test(doc.getElementById('dkWarn').textContent), 'over-16 deck flagged');
+      ok(doc.getElementById('dkSave').disabled, 'Save disabled while invalid');
+      // two starting cards / bad step type are refused too
+      var broken = JSON.parse(JSON.stringify(win.Engine.CARDS));
+      broken[1].starting = true;
+      ok(win.deckProblems(broken).some(function (p) { return /exactly ONE/.test(p); }), 'double starting card refused');
+      var badStep = JSON.parse(JSON.stringify(win.Engine.CARDS));
+      badStep[0].steps = [{ type: 'heal' }];
+      ok(win.deckProblems(badStep).some(function (p) { return /unknown type/.test(p); }), 'unknown step type refused');
+      doc.getElementById('dkBack').click();
+
+      console.log('== watch mode (AI vs AI spectate) ==');
       doc.getElementById('btnWatch').click();
       ok(doc.getElementById('game').classList.contains('active'), 'watch mode starts a game');
       var w0 = 0;

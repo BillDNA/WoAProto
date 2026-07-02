@@ -345,8 +345,24 @@
   .manual table{width:100%; border-collapse:collapse; font-size:13px;}
   .manual td,.manual th{border:1px solid var(--brass-dark); padding:3px 6px; text-align:center;}
 
-  /* maps screen + editor + balance dashboard */
+  /* maps screen + editor + balance dashboard + deck editor */
   #mapsScr .panel, #editorScr .panel{width:min(900px,96vw); max-height:92vh; overflow-y:auto; padding:22px 26px;}
+  #deckScr .panel{width:min(880px,96vw); max-height:94vh; overflow-y:auto; padding:22px 26px;}
+  .dkcard{border:1px solid var(--brass-dark); border-radius:6px; padding:8px 10px; margin:8px 0; background:rgba(255,255,255,.22);}
+  .dkcard .dkrow{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:5px;}
+  .dkcard label{font-size:11.5px; color:var(--ink-soft); display:flex; gap:4px; align-items:center;}
+  .dkcard input[type=text], .dkcard input[type=number], .dkcard textarea{
+    font-family:inherit; font-size:13px; padding:4px 6px;
+    border:1px solid var(--brass-dark); border-radius:4px; background:rgba(255,255,255,.5); color:var(--ink);
+  }
+  .dkcard input.dk-name{width:170px; font-weight:bold;}
+  .dkcard input.dk-id{width:130px; font-family:monospace; font-size:12px;}
+  .dkcard input.dk-count{width:52px;}
+  .dkcard textarea.dk-text{width:100%; height:34px; resize:vertical;}
+  .dkcard input.dk-steps{flex:1; min-width:240px; font-family:monospace; font-size:11.5px;}
+  .dkcard input.dk-steps.bad{border-color:#8a3324; background:rgba(158,43,37,.12);}
+  .dkcard .dkbtns{display:flex; gap:5px;}
+  .dkcard .dkbtns button{padding:2px 9px; font-size:12px;}
   #dashScr .panel{width:min(1040px,97vw); max-height:94vh; overflow-y:auto; padding:22px 26px;}
   #dashScr select{font-family:inherit; font-size:13.5px; padding:5px 8px; border:1px solid var(--brass-dark); border-radius:6px; background:rgba(255,255,255,.35); color:var(--ink); cursor:pointer;}
   #dashOut table{margin:8px 0 4px;}
@@ -477,6 +493,7 @@
       <button id="btnWatch" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Watch: AI vs AI</button>
       <button id="btnMaps" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Maps &amp; Map Editor</button>
       <button id="btnDash" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Balance Dashboard</button>
+      <button id="btnDeck" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Deck Editor</button>
       <button id="btnManual" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Field Manual (rules)</button>
       <button id="btnCardsMenu" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Card Glossary</button>
     </div>
@@ -569,6 +586,27 @@
   </div>
 </div>
 
+<!-- ============ DECK EDITOR ============ -->
+<div id="deckScr" class="screen">
+  <div class="panel parchment">
+    <h2 style="font-variant:small-caps;text-align:center;">Quartermaster's Ledger &mdash; Deck Editor</h2>
+    <p class="small" style="text-align:center;">The deck is data (<code>maps.js</code> cards). 16 cards per deck, exactly one <b>starting</b> card (guaranteed in the opening hand; count 1). A card named <code>airdrop</code> is kept out of opening hands. Card art is looked up by id (<code>art/&lt;id&gt;.jpg</code>) &mdash; a new id simply renders as a clean text card. Steps are JSON &mdash; the full vocabulary is in <code>design-docs/card-cheatsheet.md</code>.</p>
+    <p class="small" id="deckHdr" style="text-align:center;font-weight:bold;"></p>
+    <div id="deckList"></div>
+    <div id="dkWarn" class="warn" style="text-align:left;"></div>
+    <div class="ovr-btns">
+      <button id="dkAdd">Add Card</button>
+      <button id="dkSave" title="Stores the deck in this browser (and custom-deck.js when running via the server), then reloads">Save &amp; Reload</button>
+      <button id="dkExport" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Export deck file</button>
+      <button id="dkImport" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Import</button>
+      <input type="file" id="dkImportFile" accept=".js,.json" style="display:none;">
+      <button id="dkReset" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);" title="Back to the built-in deck from maps.js">Restore built-in</button>
+      <button id="dkBack" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Back</button>
+    </div>
+    <p class="small" style="text-align:center;">Changing cards is a rules change in effect &mdash; run the Balance Dashboard after, and <code>node game/test.js</code> if you can. LAN play needs the same deck on both devices (share <code>custom-deck.js</code>). CLI tools (<code>balance.js</code>, <code>test.js</code>) always read <code>maps.js</code>; Export and hand-merge when a brew graduates.</p>
+  </div>
+</div>
+
 <!-- ============ BALANCE DASHBOARD ============ -->
 <div id="dashScr" class="screen">
   <div class="panel parchment">
@@ -636,6 +674,19 @@
 <div id="toast" class="parchment"></div>
 
 <script src="maps.js"></script>
+<script src="custom-deck.js"></script>
+<script>
+// A custom deck (Deck Editor) must replace the built-in card list BEFORE the
+// engine snapshots it. This browser's saved deck wins over the shipped
+// custom-deck.js file. WOA_DECK_SRC tells the editor what it is editing.
+var WOA_DECK_SRC = 'builtin';
+try {
+  var WOA_LOCAL_DECK = null;
+  try { WOA_LOCAL_DECK = JSON.parse(localStorage.getItem('woa-custom-deck')); } catch(e){}
+  if (WOA_LOCAL_DECK && WOA_LOCAL_DECK.length){ WOA_BUILTIN.cards = WOA_LOCAL_DECK; WOA_DECK_SRC = 'local'; }
+  else if (window.WOA_CUSTOM_DECK && window.WOA_CUSTOM_DECK.length){ WOA_BUILTIN.cards = window.WOA_CUSTOM_DECK; WOA_DECK_SRC = 'file'; }
+} catch(e){}
+</script>
 <script src="engine.js"></script>
 <script src="custom-maps.js"></script>
 <script>
@@ -1162,6 +1213,11 @@ var CARD_ABBR = {
   careful_maneuvers:'CM', reckless_maneuvers:'RM', ordered_withdraw:'OW',
   naval_barrage:'NB', forced_march:'FM'
 };
+function cardAbbr(c){
+  if (CARD_ABBR[c.id]) return CARD_ABBR[c.id];
+  var w = String(c.name || c.id || '?').trim().split(/\s+/);
+  return (w.length > 1 ? w[0].charAt(0) + w[1].charAt(0) : w[0].slice(0, 2)); // custom cards: initials
+}
 function renderMat(p){
   var st = APP.st;
   var el = p==='red' ? $('matRed') : $('matBlue');
@@ -1197,7 +1253,7 @@ function renderMat(p){
     var n = st.removed[p].filter(function(id){ return id===c.id; }).length;
     for (var i=0;i<c.count;i++){
       var gone = i < n;
-      spent += '<span class="scard'+(gone?' gone':'')+'" title="'+c.name+(gone?' — spent, gone from the game':'')+'">'+(CARD_ABBR[c.id]||'?')+'</span>';
+      spent += '<span class="scard'+(gone?' gone':'')+'" title="'+c.name+(gone?' — spent, gone from the game':'')+'">'+cardAbbr(c)+'</span>';
     }
   });
 
@@ -1974,6 +2030,159 @@ function balReport(def){
   $('balMore').onclick = function(){ balRound(def, 20); };
   $('balClose').onclick = closeBal;
 }
+
+/* =================== deck editor =================== */
+// Edits a working copy of the ACTIVE card list (E.CARDS). Saving stores it in
+// localStorage ('woa-custom-deck') + custom-deck.js via the server, then
+// reloads — the engine snapshots the card list at load, so a reload IS the
+// apply step (same contract as hand-editing maps.js).
+var DK = { cards: null, stepErr: {} };
+var DK_STEP_FLAGS = { deploy:{unit:1,anywhere:1}, trench:{}, attack:{mod:1,tieSpare:1,noAdvance:1}, reposition:{}, barrage:{} };
+
+function deckProblems(cards){
+  var probs = [], ids = {}, total = 0, starting = 0;
+  cards.forEach(function(c, i){
+    var tag = c.name || c.id || ('card ' + (i+1));
+    if (!c.id || !/^[a-z0-9_]+$/i.test(c.id)) probs.push(tag + ': id must be letters/digits/underscores');
+    else if (ids[c.id]) probs.push('duplicate id "' + c.id + '"');
+    ids[c.id] = 1;
+    if (!c.name) probs.push('card ' + (i+1) + ' needs a name');
+    var n = +c.count;
+    if (!(n >= 1) || n !== Math.floor(n)) probs.push(tag + ': count must be a whole number ≥ 1');
+    else total += n;
+    if (c.starting && n !== 1) probs.push(tag + ': the starting card must have count 1 (the engine deals exactly one)');
+    if (c.starting) starting++;
+    if (DK.stepErr[i]) probs.push(tag + ': steps are not valid JSON');
+    else if (!Array.isArray(c.steps) || !c.steps.length) probs.push(tag + ': needs at least one step');
+    else c.steps.forEach(function(s, si){
+      var st = tag + ' step ' + (si+1);
+      if (!s || !DK_STEP_FLAGS[s.type]){ probs.push(st + ': unknown type "' + (s && s.type) + '" (deploy / trench / attack / reposition / barrage)'); return; }
+      Object.keys(s).forEach(function(k){ if (k !== 'type' && !DK_STEP_FLAGS[s.type][k]) probs.push(st + ': "' + k + '" is not a ' + s.type + ' option'); });
+      if (s.type === 'deploy' && !E.UNITS[s.unit]) probs.push(st + ': unknown unit "' + s.unit + '" (' + Object.keys(E.UNITS).join(' / ') + ')');
+      if (s.type === 'attack' && s.mod !== undefined && typeof s.mod !== 'number') probs.push(st + ': mod must be a number');
+    });
+  });
+  if (starting !== 1) probs.push('exactly ONE card must be marked starting (got ' + starting + ')');
+  if (total !== 16) probs.push('the deck must total 16 cards (got ' + total + ') — hand-edit maps.js if you really want an exotic size');
+  return probs;
+}
+
+function openDeck(){
+  DK.cards = JSON.parse(JSON.stringify(E.CARDS));
+  DK.stepErr = {};
+  renderDeck();
+  show('deckScr');
+}
+$('btnDeck').onclick = openDeck;
+$('dkBack').onclick = function(){ show('menu'); checkResume(); };
+
+function renderDeck(){
+  var list = $('deckList');
+  list.innerHTML = '';
+  DK.cards.forEach(function(c, i){
+    var d = document.createElement('div');
+    d.className = 'dkcard';
+    d.innerHTML =
+      '<div class="dkrow">' +
+        '<input type="text" class="dk-name" placeholder="Name" value="'+(c.name||'').replace(/"/g,'&quot;')+'">' +
+        '<label>id <input type="text" class="dk-id" placeholder="snake_case_id" value="'+(c.id||'').replace(/"/g,'&quot;')+'"></label>' +
+        '<label>copies <input type="number" class="dk-count" min="1" max="16" value="'+(c.count||1)+'"></label>' +
+        '<label title="guaranteed in the opening hand"><input type="radio" name="dkstart" '+(c.starting?'checked':'')+'> starting</label>' +
+        '<span class="dkbtns" style="margin-left:auto;"><button class="dk-dup" title="copy this card">Duplicate</button><button class="dk-del" title="remove this card">Delete</button></span>' +
+      '</div>' +
+      '<textarea class="dk-text" placeholder="Card text shown to players">'+(c.text||'')+'</textarea>' +
+      '<div class="dkrow" style="margin-top:5px;margin-bottom:0;"><label style="flex:1;">steps ' +
+        '<input type="text" class="dk-steps'+(DK.stepErr[i]?' bad':'')+'" value="'+JSON.stringify(c.steps||[]).replace(/"/g,'&quot;')+'"></label></div>';
+    var name = d.querySelector('.dk-name'), id = d.querySelector('.dk-id'),
+        count = d.querySelector('.dk-count'), start = d.querySelector('input[type=radio]'),
+        text = d.querySelector('.dk-text'), steps = d.querySelector('.dk-steps');
+    name.oninput = function(){ c.name = name.value; dkStatus(); };
+    id.oninput = function(){ c.id = id.value.trim(); dkStatus(); };
+    count.oninput = function(){ c.count = +count.value; dkStatus(); };
+    start.onchange = function(){ DK.cards.forEach(function(x){ delete x.starting; }); c.starting = true; dkStatus(); };
+    text.oninput = function(){ c.text = text.value; };
+    steps.oninput = function(){
+      try { c.steps = JSON.parse(steps.value); delete DK.stepErr[i]; steps.classList.remove('bad'); }
+      catch(e){ DK.stepErr[i] = true; steps.classList.add('bad'); }
+      dkStatus();
+    };
+    d.querySelector('.dk-dup').onclick = function(){
+      var copy = JSON.parse(JSON.stringify(c));
+      delete copy.starting;
+      copy.id = (c.id||'card') + '_2';
+      copy.name = (c.name||'Card') + ' II';
+      DK.cards.splice(i+1, 0, copy);
+      renderDeck();
+    };
+    d.querySelector('.dk-del').onclick = function(){ DK.cards.splice(i, 1); renderDeck(); };
+    list.appendChild(d);
+  });
+  dkStatus();
+}
+function dkStatus(){
+  var total = DK.cards.reduce(function(a, c){ return a + (+c.count >= 1 ? Math.floor(+c.count) : 0); }, 0);
+  var src = WOA_DECK_SRC === 'builtin' ? 'the built-in deck (maps.js)' :
+            WOA_DECK_SRC === 'local' ? 'a custom deck (saved in this browser)' : 'a custom deck (custom-deck.js)';
+  $('deckHdr').innerHTML = 'Editing ' + src + ' &mdash; ' + DK.cards.length + ' distinct cards, <b>' + total + '/16</b> total copies';
+  var probs = deckProblems(DK.cards);
+  $('dkWarn').innerHTML = probs.length ? '&#9888; ' + probs.join('<br>&#9888; ') : '';
+  $('dkSave').disabled = probs.length > 0;
+}
+$('dkAdd').onclick = function(){
+  DK.cards.push({ id:'new_card', name:'New Card', count:1, text:'Order an attack.', steps:[{ type:'attack' }] });
+  renderDeck();
+};
+function syncDeckFile(deck, done){
+  if (!canNet){ done(); return; }
+  api('savedeck', { deck: deck }).then(done).catch(done);
+}
+$('dkSave').onclick = function(){
+  var probs = deckProblems(DK.cards);
+  if (probs.length){ toast('Fix first: ' + probs[0], 4200); return; }
+  try { localStorage.setItem('woa-custom-deck', JSON.stringify(DK.cards)); }
+  catch(e){ toast('The browser refused to store the deck (private mode?). Use Export instead.', 5000); return; }
+  clearSave(); // an in-flight battle from another deck would confuse the resume path
+  toast('Deck saved — reloading with the new cards…', 1800);
+  syncDeckFile(DK.cards, function(){ setTimeout(function(){ location.reload(); }, 600); });
+};
+$('dkReset').onclick = function(){
+  if (!confirm('Restore the built-in deck from maps.js?')) return;
+  try { localStorage.removeItem('woa-custom-deck'); } catch(e){}
+  clearSave();
+  syncDeckFile(null, function(){ location.reload(); });
+};
+$('dkExport').onclick = function(){
+  var probs = deckProblems(DK.cards);
+  if (probs.length){ toast('Fix first: ' + probs[0], 4200); return; }
+  var blob = new Blob(['window.WOA_CUSTOM_DECK = ' + JSON.stringify(DK.cards, null, 1) + ';\n'], { type:'text/javascript' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'custom-deck.js';
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
+  toast('Downloaded custom-deck.js — put it next to index.html.', 4500);
+};
+$('dkImport').onclick = function(){ $('dkImportFile').click(); };
+$('dkImportFile').onchange = function(){
+  var f = $('dkImportFile').files[0];
+  if (!f) return;
+  var rd = new FileReader();
+  rd.onload = function(){
+    try {
+      var txt = String(rd.result);
+      var eq = txt.indexOf('=');
+      if (txt.trim().charAt(0) !== '[' && eq >= 0) txt = txt.slice(eq + 1);
+      var arr = JSON.parse(txt.trim().replace(/;\s*$/, ''));
+      if (!Array.isArray(arr) || !arr.length) throw new Error('not a card list');
+      DK.cards = arr;
+      DK.stepErr = {};
+      renderDeck();
+      toast('Imported ' + arr.length + ' cards — review, then Save &amp; Reload.', 3200);
+    } catch(e){ toast('Could not read that file: ' + e.message, 3500); }
+    $('dkImportFile').value = '';
+  };
+  rd.readAsText(f);
+};
 
 /* =================== balance dashboard =================== */
 // The full balance.js report in the browser. Aggregation is E.balanceNew /
