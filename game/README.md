@@ -111,6 +111,7 @@ A **river** (single-side pieces, drawn in blue) sits on a border: **support neve
 - `index.html` — the whole game (UI, AI driver, map editor, in-game balance lab)
 - `engine.js` — rules engine + the three AIs + battle simulator (shared by tests and the balance lab)
 - `maps.js` — **all tunable game data, hand-editable JSON**: boards, maps, units, cards, terrain stock
+  (the map editor can also carve the **board outline itself** — Board hexes tool, add/remove under the 24-hex ceiling — and base maps can be deleted from the roster, floor of 5, with a Restore button)
 - `balance.js` — AI-vs-AI balance reports: `node balance.js`, `node balance.js matchup`
   (the same report lives in the browser: **Balance Dashboard** on the main menu — pick battles-per-map, the AI for each side, and a map or the whole pool; every table is click-to-sort)
 - `server.js` / `run-server.bat` / `run-server.command` — tiny zero-dependency LAN server

@@ -14,24 +14,35 @@
   function key(q, r) { return q + ',' + r; }
   function parseKey(k) { var p = k.split(','); return [+p[0], +p[1]]; }
 
-  // A shape def is { label, rows: [[r, qFrom, qTo], ...] }. From that we build
-  // the hex list, a containment set, per-row grid labels (A1, B3, ...), and —
-  // when the outline is point-symmetric — its 180-degree rotation constants.
+  // A shape def is { label, rows: [[r, qFrom, qTo], ...] } — contiguous spans —
+  // OR { label, hexes: [[q, r], ...] } — an explicit hex set, the honest
+  // representation for irregular outlines from the shape editor. From either we
+  // build the hex list, a containment set, per-row grid labels (A1, B3, ...),
+  // and — when the outline is point-symmetric — its 180-degree rotation centre.
   function buildShape(name, def) {
     var list = [], set = {}, rowsByR = {}, rs = [];
     var sumQ = 0, sumR = 0;
-    def.rows.forEach(function (row) {
-      var r = row[0];
-      if (rowsByR[r] !== undefined) throw new Error('shape "' + name + '": row r=' + r + ' listed twice');
-      rowsByR[r] = row[1];
-      rs.push(r);
-      for (var q = row[1]; q <= row[2]; q++) {
-        var k = key(q, r);
-        if (set[k]) throw new Error('shape "' + name + '": duplicate hex ' + k);
-        set[k] = true; list.push(k);
-        sumQ += q; sumR += r;
-      }
-    });
+    function addHex(q, r) {
+      var k = key(q, r);
+      if (set[k]) throw new Error('shape "' + name + '": duplicate hex ' + k);
+      set[k] = true; list.push(k);
+      sumQ += q; sumR += r;
+      // rowQFrom = the leftmost hex of the row; labels count columns from it,
+      // so a hole in a row leaves a GAP in the numbering (C1 C2 C4) — a hex
+      // keeps its label when its neighbours are carved away.
+      if (rowsByR[r] === undefined || q < rowsByR[r]) rowsByR[r] = q;
+    }
+    if (def.hexes) {
+      def.hexes.forEach(function (h) { addHex(h[0], h[1]); });
+    } else {
+      def.rows.forEach(function (row) {
+        var r = row[0];
+        if (rowsByR[r] !== undefined) throw new Error('shape "' + name + '": row r=' + r + ' listed twice');
+        for (var q = row[1]; q <= row[2]; q++) addHex(q, r);
+      });
+    }
+    if (!list.length) throw new Error('shape "' + name + '": no hexes');
+    Object.keys(rowsByR).forEach(function (r) { rs.push(+r); });
     rs.sort(function (a, b) { return a - b; });
     // point-symmetry: a centre (cq,cr) with (cq-q, cr-r) on-board for every hex
     var cq = (2 * sumQ) / list.length, cr = (2 * sumR) / list.length;
@@ -62,6 +73,20 @@
     if (shape === CURRENT_SHAPE) return;
     CURRENT_SHAPE = shape;
     HEXES = boardHexes(shape);
+  }
+  // A map may carry its own board outline inline (map.shapeDef, written by the
+  // shape editor) — the def travels WITH the map (LAN/save-safe). Register it
+  // under '@<map id>' and normalize map.shape to that name. Always rebuilt:
+  // the editor may have changed the outline since the last registration.
+  function ensureMapShape(map) {
+    if (map && map.shapeDef) {
+      var name = '@' + (map.id || map.name || 'custom');
+      SHAPES[name] = buildShape(name, map.shapeDef);
+      map.shape = name;
+      if (name === CURRENT_SHAPE) HEXES = boardHexes(name);
+      return name;
+    }
+    return (map && map.shape) || DEFAULT_SHAPE;
   }
   // Human grid reference on the current board: row letter (A = top) + position
   // in the row counted from the left, e.g. 'C4'. Falls back to raw coords.
@@ -225,10 +250,11 @@
     var maps = match.maps || MAPS;
     var mapIdx = match.mapOrder[match.battleIndex % match.mapOrder.length];
     var map = maps[mapIdx];
-    setBoard(map.shape || DEFAULT_SHAPE);
+    var shapeName = ensureMapShape(map);
+    setBoard(shapeName);
     var terrain = buildTerrain(map);
     var st = {
-      boardShape: map.shape || DEFAULT_SHAPE,
+      boardShape: shapeName,
       seed: match.seed,
       match: match,
       mapIndex: mapIdx,
@@ -1134,8 +1160,12 @@
     var problems = [];
     var prevShape = CURRENT_SHAPE;
     (list || MAPS).forEach(function (m) {
-      var shape = m.shape || DEFAULT_SHAPE;
+      var shape;
+      try { shape = ensureMapShape(m); }
+      catch (e) { problems.push(m.name + ': ' + e.message); return; }
       if (!SHAPES[shape]) { problems.push(m.name + ': unknown board shape "' + shape + '"'); return; }
+      if (m.shapeDef && SHAPES[shape].list.length > 24)
+        problems.push(m.name + ': ' + SHAPES[shape].list.length + ' hexes exceeds the 24-hex ceiling (laser-cutter max; big empty maps are not fun)');
       setBoard(shape);
       try {
         buildTerrain(m);
@@ -1161,6 +1191,7 @@
     DIRS: DIRS, UNITS: UNITS, CARDS: CARDS, CARD_BY_ID: CARD_BY_ID, MAPS: MAPS,
     PIECE_TOTALS: PIECE_TOTALS, TERRAIN_STOCK: TERRAIN_STOCK,
     SHAPES: SHAPES, DEFAULT_SHAPE: DEFAULT_SHAPE, boardHexes: boardHexes, setBoard: setBoard, hexes: hexes,
+    buildShape: buildShape, ensureMapShape: ensureMapShape,
     currentShape: currentShape, rot180: rot180, buildTerrain: buildTerrain, pieceProblem: pieceProblem, hexLabel: hexLabel,
     key: key, parseKey: parseKey, inBoard: inBoard, neighbor: neighbor, neighbors: neighbors,
     dist: dist, dirBetween: dirBetween, edgeKey: edgeKey, edgeFrom: edgeFrom, sideKey: sideKey, other: other,

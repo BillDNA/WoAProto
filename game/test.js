@@ -54,6 +54,47 @@ console.log('== human-readable grid labels ==');
   ok(E.hexLabel('9,9') === '9,9', 'off-board key falls back to raw coords');
 })();
 
+console.log('== custom board shapes (explicit hex sets, V0 map-roster-and-shapes) ==');
+(function () {
+  // explicit hex set builds like a rows shape
+  var s = E.buildShape('tst', { hexes: [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1]] });
+  ok(s.list.length === 5, 'hex-set shape builds (5 hexes)');
+  // a hole in a row leaves a GAP in the labels: hexes keep their columns
+  var holed = E.buildShape('holed', { hexes: [[0, 0], [2, 0]] });
+  ok(holed.rowQFrom[0] === 0, 'row starts at its leftmost hex');
+  // label check needs the shape current: run it through a map + newBattle
+  var IRR = { name: 'Irregular', id: 'irr1', redHQ: [0, -1], blueHQ: [0, 1],
+    shapeDef: { hexes: [[0, -1], [1, -1], [-1, 0], [0, 0], [1, 0], [-1, 1], [0, 1]] }, pieces: [] };
+  ok(E.validateMaps([IRR]).length === 0, 'irregular map validates: ' + E.validateMaps([IRR]).join('; '));
+  var m = E.newMatch({ seed: 5, firstPlayer: 'red', maps: [IRR] });
+  var st = E.newBattle(m);
+  ok(st.boardShape === '@irr1', 'inline shapeDef registered under @<map id> (got ' + st.boardShape + ')');
+  ok(E.hexes().length === 7, 'battle runs on the 7-hex board');
+  ok(E.hexLabel('-1,0') === 'B1' && E.hexLabel('0,0') === 'B2', 'labels count from the leftmost hex');
+  // point-symmetry from a hex set (this outline is symmetric about 0,0 -> Mirror works)
+  ok(E.SHAPES['@irr1'].centre !== null, 'symmetric hex set gets a rot180 centre');
+  // a hole in a row leaves a GAP in the labels (hexes keep their columns)
+  var HOLED = { name: 'Holed', id: 'hole1', redHQ: [0, -1], blueHQ: [0, 1],
+    shapeDef: { hexes: [[0, -1], [1, -1], [-1, 0], [0, 0], [2, 0], [-1, 1], [0, 1]] }, pieces: [] };
+  var m2 = E.newMatch({ seed: 6, firstPlayer: 'red', maps: [HOLED] });
+  E.newBattle(m2);
+  ok(E.hexLabel('2,0') === 'B4', 'a hole leaves a gap in the numbering (2,0 stays B4, got ' + E.hexLabel('2,0') + ')');
+  ok(E.neighbor('0,0', 0) === null, 'the missing hex is truly off-board');
+  E.setBoard('@irr1');
+  var asym = E.buildShape('asym', { hexes: [[0, 0], [1, 0], [0, 1]] });
+  ok(asym.centre === null, 'asymmetric hex set has no centre (Mirror disabled)');
+  // the 24-hex ceiling is enforced for edited shapes
+  var big = [];
+  for (var q = 0; q < 5; q++) for (var r = 0; r < 5; r++) big.push([q, r]);
+  var BIGMAP = { name: 'Too Big', id: 'big1', redHQ: [0, 0], blueHQ: [4, 4],
+    shapeDef: { hexes: big }, pieces: [] };
+  ok(E.validateMaps([BIGMAP]).some(function (p) { return p.indexOf('24-hex ceiling') >= 0; }),
+    '25-hex edited shape rejected by validateMaps');
+  // an edited shape can play a full AI battle
+  var sim = E.simBattle(IRR, 99, 'red', 'normal', 'normal');
+  ok(sim.phase === 'battle-over', 'AI battle completes on an irregular board (winner ' + sim.battleWinner + ')');
+})();
+
 console.log('== terrain pieces live inside ONE hex (the yellow-line bug) ==');
 (function () {
   ok(E.pieceProblem({ t: 'F', edges: [[0, 0, 4], [0, 0, 5], [0, 0, 0]] }) === null, 'contiguous single-hex piece accepted (wraps 4-5-0)');

@@ -33,7 +33,8 @@ win.setTimeout = function (fn, ms) { return realSetTimeout(fn, Math.min(ms || 0,
 setTimeout(function () {
   console.log('== boot ==');
   ok(win.Engine && win.Engine.MAPS.length === 12, 'engine loaded with 12 maps');
-  ok(doc.querySelectorAll('#edShape option').length === Object.keys(win.Engine.SHAPES).length, 'editor shape dropdown built from maps.js');
+  ok(doc.querySelectorAll('#edShape option').length === Object.keys(win.Engine.SHAPES).length + 1,
+    'editor shape dropdown = maps.js shapes + the Custom entry');
 
   console.log('== AI battle through the DOM ==');
   doc.getElementById('btnAI').click();
@@ -108,6 +109,25 @@ setTimeout(function () {
     ok(painted === 1, 'clicking an edge paints terrain (' + painted + ' side)');
     doc.getElementById('edMirror').click();
     ok(Object.keys(win.ED.edges).length === 2, 'Mirror creates the rotated twin side');
+
+    console.log('== map roster deletion + board-shape carving (V0) ==');
+    var firstTileBtns = doc.querySelector('#mapGrid .mapitem .btns');
+    ok(firstTileBtns && firstTileBtns.textContent.indexOf('Delete') >= 0, 'built-in map tiles offer Delete (floor of 5 enforced on click)');
+    var hexTool = doc.querySelector('.edtools button[data-tool="hexes"]');
+    hexTool.dispatchEvent(new win.Event('click', { bubbles: true }));
+    ok(win.ED.hexes && Object.keys(win.ED.hexes).length === 24, 'Board-hexes tool converts to a custom outline seeded from the template');
+    ok(doc.getElementById('edShape').value === '@custom', 'shape dropdown flips to Custom');
+    var beforeCarve = Object.keys(win.ED.hexes).length;
+    win.edRemoveHex('0,0');
+    win.renderEditor();
+    ok(Object.keys(win.ED.hexes).length === beforeCarve - 1, 'a hex can be carved out');
+    ok(/23\/24 hexes/.test(doc.getElementById('edStock').textContent), 'hex count shown against the 24 ceiling');
+    win.ED.red = [2, -2]; win.ED.blue = [-3, 2];
+    win.ED.edges = {}; // the stray single side painted above has no physical piece
+    doc.getElementById('edName').value = 'Carved Smoke Test';
+    var carvedDef = win.edBuildDef();
+    ok(carvedDef && carvedDef.shapeDef && carvedDef.shapeDef.hexes.length === 23, 'carved map saves an inline shapeDef');
+    ok(win.Engine.validateMaps([carvedDef]).length === 0, 'carved map validates: ' + win.Engine.validateMaps([carvedDef]).join('; '));
 
     console.log('== TwoSetsOfThree: long terrain runs split into stock pieces ==');
     var ring = win.splitRun([0, 1, 2, 3, 4, 5]);

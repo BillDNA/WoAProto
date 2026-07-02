@@ -549,6 +549,7 @@
     <div class="mapgrid" id="mapGrid"></div>
     <div class="ovr-btns">
       <button id="btnNewMap">New Map</button>
+      <button id="btnRestoreMaps" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);display:none;">Restore deleted built-ins</button>
       <button id="btnExportMaps">Export maps file</button>
       <button id="btnImportMaps">Import maps</button>
       <input type="file" id="importFile" accept=".js,.json" style="display:none;">
@@ -568,12 +569,13 @@
     </div>
     <div class="edtools">
       <button class="tool sel" data-tool="terrain">Terrain (click edges)</button>
+      <button class="tool" data-tool="hexes" title="Add or remove board hexes (24 max — big empty maps are not fun)">Board hexes</button>
       <button class="tool" data-tool="redhq" style="background:var(--red);color:#fff;">Red HQ</button>
       <button class="tool" data-tool="bluehq" style="background:var(--blue);color:#fff;">Blue HQ</button>
       <button id="edMirror" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Mirror &#8635;</button>
       <button id="edClear" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Clear</button>
     </div>
-    <p class="small" style="text-align:center;">Terrain belongs to a hex: click just <b>inside</b> a hex's border to cycle <span style="color:var(--forest);font-weight:bold;">forest</span> &rarr; <span style="color:var(--mountain);font-weight:bold;">mountain</span> &rarr; <span style="color:var(--river);font-weight:bold;">river</span> &rarr; empty on that hex's side. Forest = +1 attacking out across it; mountain = +1 defending behind it; river = support never crosses that border. Mirror copies everything point-symmetrically.</p>
+    <p class="small" style="text-align:center;">Terrain belongs to a hex: click just <b>inside</b> a hex's border to cycle <span style="color:var(--forest);font-weight:bold;">forest</span> &rarr; <span style="color:var(--mountain);font-weight:bold;">mountain</span> &rarr; <span style="color:var(--river);font-weight:bold;">river</span> &rarr; empty on that hex's side. Forest = +1 attacking out across it; mountain = +1 defending behind it; river = support never crosses that border. Mirror copies everything point-symmetrically. <b>Board hexes</b> carves the outline itself: click a dashed hex to add it, a solid one to remove it (24-hex ceiling).</p>
     <svg id="edBoard" xmlns="http://www.w3.org/2000/svg"></svg>
     <div id="edStock" class="small" style="text-align:center;"></div>
     <div id="edWarn" class="warn" style="text-align:center;"></div>
@@ -712,10 +714,14 @@ function capName(p){ return p.charAt(0).toUpperCase()+p.slice(1); }
 (function(){
   var sel = $('edShape');
   Object.keys(E.SHAPES).forEach(function(n){
+    if (n.charAt(0) === '@') return; // per-map registered shapes aren't templates
     var o = document.createElement('option');
     o.value = n; o.textContent = E.SHAPES[n].label;
     sel.appendChild(o);
   });
+  var oc = document.createElement('option');
+  oc.value = '@custom'; oc.textContent = 'Custom — edit hexes';
+  sel.appendChild(oc);
 })();
 
 /* =================== menu =================== */
@@ -1420,7 +1426,12 @@ function renderPrompt(){
   }
 }
 function renderAll(){
-  if (APP.st) E.setBoard(APP.st.boardShape);
+  if (APP.st){
+    // a resumed/joined battle on an edited outline must re-register its shape
+    var mm = APP.st.match && APP.st.match.maps && APP.st.match.maps[APP.st.mapIndex];
+    if (mm && mm.shapeDef) E.ensureMapShape(mm);
+    E.setBoard(APP.st.boardShape);
+  }
   ensureSnapshot();
   renderTop(); renderMat('red'); renderMat('blue'); renderBoard(); renderHand(); renderPrompt(); renderLog();
 }
@@ -1779,7 +1790,9 @@ function saveCustomMaps(list){
   try { localStorage.setItem('woa-custom-maps', JSON.stringify(list)); } catch(e){}
   syncMapsFile();
 }
-function deleteCustomMap(id){
+// One deletion path for customs AND built-ins: the tombstone list. Built-in
+// ids are 'b:<name>', so a tombstoned base map stays gone across reloads.
+function deleteMapById(id){
   try { localStorage.setItem('woa-custom-maps', JSON.stringify(getLocalMaps().filter(function(x){ return x.id !== id; }))); } catch(e){}
   var tomb = getTombstones();
   if (tomb.indexOf(id) < 0) tomb.push(id);
@@ -1813,10 +1826,13 @@ function setDisabledIds(ids){
   try { localStorage.setItem('woa-disabled-maps', JSON.stringify(ids)); } catch(e){}
 }
 function allMaps(){
-  var out = E.MAPS.map(function(def, i){ return { def: def, id: 'b:'+i, builtin: true }; });
+  var tomb = getTombstones();
+  var out = E.MAPS.map(function(def){ return { def: def, id: 'b:'+def.name, builtin: true }; })
+    .filter(function(m){ return tomb.indexOf(m.id) < 0; });
   getCustomMaps().forEach(function(def){ out.push({ def: def, id: def.id, builtin: false }); });
   return out;
 }
+var MAP_FLOOR = 5; // a first-to-3 match needs enough distinct boards
 function getMapPool(){
   var dis = getDisabledIds();
   return allMaps().filter(function(m){ return dis.indexOf(m.id) < 0; }).map(function(m){ return m.def; });
@@ -1825,7 +1841,7 @@ function getMapPool(){
 /* mini preview svg (self-contained, no global board state) */
 function previewSVG(def){
   var s = 11, sq3 = Math.sqrt(3);
-  var hexList = E.boardHexes(def.shape);
+  var hexList = E.boardHexes(E.ensureMapShape(def));
   var hexSet = {};
   hexList.forEach(function(k){ hexSet[k] = true; });
   function xy(q, r){ return [s*sq3*(q + r/2), s*1.5*r]; }
@@ -1869,7 +1885,7 @@ function renderMapsScr(){
     var off = dis.indexOf(m.id) >= 0;
     var d = document.createElement('div');
     d.className = 'mapitem' + (off ? ' off' : '');
-    var shp = E.SHAPES[m.def.shape || E.DEFAULT_SHAPE];
+    var shp = E.SHAPES[E.ensureMapShape(m.def)];
     d.innerHTML = previewSVG(m.def) +
       '<div class="nm">'+m.def.name+'</div>' +
       '<div class="shp">'+(shp ? shp.label : '&#9888; board "'+m.def.shape+'" no longer exists')+(m.builtin?'':' &middot; custom')+'</div>' +
@@ -1904,20 +1920,31 @@ function renderMapsScr(){
       openEditor(copy, true);
     };
     btns.appendChild(bc);
-    if (!m.builtin){
-      var bd = document.createElement('button'); bd.textContent='Delete';
-      bd.onclick = function(){
-        if (!confirm('Delete map "'+m.def.name+'"?')) return;
-        deleteCustomMap(m.def.id);
-        renderMapsScr();
-      };
-      btns.appendChild(bd);
-    }
+    var bd = document.createElement('button'); bd.textContent='Delete';
+    bd.onclick = function(){
+      if (allMaps().length <= MAP_FLOOR){
+        toast('The roster keeps a floor of '+MAP_FLOOR+' maps so a first-to-3 campaign always has fresh boards. Add or restore a map first.', 4500);
+        return;
+      }
+      if (!confirm('Delete map "'+m.def.name+'"?'+(m.builtin?' (Restore deleted built-ins brings it back.)':''))) return;
+      deleteMapById(m.id);
+      renderMapsScr();
+    };
+    btns.appendChild(bd);
     grid.appendChild(d);
   });
+  // tombstoned built-ins can come back
+  var deadBuiltins = getTombstones().filter(function(t){ return t.indexOf('b:') === 0; });
+  var rb = $('btnRestoreMaps');
+  rb.style.display = deadBuiltins.length ? '' : 'none';
+  rb.textContent = 'Restore deleted built-ins ('+deadBuiltins.length+')';
   updateMapsHint(!canNet);
   if (canNet) syncMapsFile();
 }
+$('btnRestoreMaps').onclick = function(){
+  try { localStorage.setItem('woa-deleted-maps', JSON.stringify(getTombstones().filter(function(t){ return t.indexOf('b:') !== 0; }))); } catch(e){}
+  renderMapsScr();
+};
 $('btnMaps').onclick = function(){ renderMapsScr(); show('mapsScr'); };
 $('btnMapsBack').onclick = function(){ show('menu'); checkResume(); };
 $('btnNewMap').onclick = function(){ openEditor(null); };
@@ -2375,14 +2402,23 @@ function renderDash(){
 }
 
 /* =================== map editor =================== */
-var ED = { id:null, name:'', shape:'classic', red:null, blue:null, edges:{}, tool:'terrain', isNew:true };
+// ED.hexes: null = a named template shape; {'q,r':true,...} = a custom outline
+// (saved as def.shapeDef, registered by the engine under '@<map id>')
+var ED = { id:null, name:'', shape:'classic', hexes:null, red:null, blue:null, edges:{}, tool:'terrain', isNew:true };
 
 function openEditor(def, isNewCopy){
   if (def){
     ED.id = def.id || ('c' + Date.now());
     ED.isNew = !!isNewCopy || !def.id;
     ED.name = def.name || '';
-    ED.shape = E.SHAPES[def.shape] ? def.shape : E.DEFAULT_SHAPE;
+    if (def.shapeDef && def.shapeDef.hexes){
+      ED.shape = '@custom';
+      ED.hexes = {};
+      def.shapeDef.hexes.forEach(function(h){ ED.hexes[E.key(h[0], h[1])] = true; });
+    } else {
+      ED.shape = E.SHAPES[def.shape] ? def.shape : E.DEFAULT_SHAPE;
+      ED.hexes = null;
+    }
     ED.red = def.redHQ ? def.redHQ.slice() : null;
     ED.blue = def.blueHQ ? def.blueHQ.slice() : null;
     ED.edges = {};
@@ -2396,6 +2432,7 @@ function openEditor(def, isNewCopy){
     ED.isNew = true;
     ED.name = '';
     ED.shape = 'classic';
+    ED.hexes = null;
     ED.red = null; ED.blue = null; ED.edges = {};
   }
   ED.tool = 'terrain';
@@ -2410,16 +2447,29 @@ function openEditor(def, isNewCopy){
 document.querySelectorAll('.edtools .tool').forEach(function(b){
   b.onclick = function(){
     ED.tool = b.dataset.tool;
+    if (ED.tool === 'hexes' && !ED.hexes) edGoCustom(); // carving implies a custom outline
     document.querySelectorAll('.edtools .tool').forEach(function(x){ x.classList.toggle('sel', x===b); });
     renderEditor();
   };
 });
+function edGoCustom(){
+  // seed the editable outline from the current template — keeps terrain + HQs
+  ED.hexes = {};
+  E.boardHexes(ED.shape).forEach(function(k){ ED.hexes[k] = true; });
+  ED.shape = '@custom';
+  $('edShape').value = '@custom';
+}
 $('edShape').onchange = function(){
   var v = $('edShape').value;
-  if (Object.keys(ED.edges).length || ED.red || ED.blue){
+  if (v === '@custom'){
+    if (!ED.hexes) edGoCustom();
+    renderEditor();
+    return;
+  }
+  if (Object.keys(ED.edges).length || ED.red || ED.blue || ED.hexes){
     if (!confirm('Changing the board clears the map. Continue?')){ $('edShape').value = ED.shape; return; }
   }
-  ED.shape = v; ED.red = null; ED.blue = null; ED.edges = {};
+  ED.shape = v; ED.hexes = null; ED.red = null; ED.blue = null; ED.edges = {};
   renderEditor();
 };
 $('edClear').onclick = function(){
@@ -2427,25 +2477,53 @@ $('edClear').onclick = function(){
 };
 $('edMirror').onclick = function(){
   // point-symmetry: every edge and HQ gets its rotated twin
+  var live = edLiveShape();
+  if (!E.SHAPES[live] || !E.SHAPES[live].centre){
+    toast('This outline is not point-symmetric, so Mirror has no centre to turn around. Carve the hexes symmetric first.', 4200);
+    return;
+  }
   var add = {};
   for (var ek in ED.edges){
     var parts = ek.split('>');
     var a = E.parseKey(parts[0]);
-    var ra = E.rot180(ED.shape, a[0], a[1]);
+    var ra = E.rot180(live, a[0], a[1]);
     add[E.key(ra[0], ra[1]) + '>' + ((+parts[1] + 3) % 6)] = ED.edges[ek];
   }
   for (var k2 in add) ED.edges[k2] = add[k2];
-  if (ED.red && !ED.blue) ED.blue = E.rot180(ED.shape, ED.red[0], ED.red[1]);
-  else if (ED.blue && !ED.red) ED.red = E.rot180(ED.shape, ED.blue[0], ED.blue[1]);
-  else if (ED.red) ED.blue = E.rot180(ED.shape, ED.red[0], ED.red[1]);
+  if (ED.red && !ED.blue) ED.blue = E.rot180(live, ED.red[0], ED.red[1]);
+  else if (ED.blue && !ED.red) ED.red = E.rot180(live, ED.blue[0], ED.blue[1]);
+  else if (ED.red) ED.blue = E.rot180(live, ED.red[0], ED.red[1]);
   renderEditor();
 };
 $('edBack').onclick = function(){ renderMapsScr(); show('mapsScr'); };
 
 function edHexSet(){
+  if (ED.hexes) return ED.hexes;
   var set = {};
   E.boardHexes(ED.shape).forEach(function(k){ set[k]=true; });
   return set;
+}
+function edHexPairs(){
+  return Object.keys(edHexSet()).map(E.parseKey).sort(function(a,b){ return a[1]-b[1] || a[0]-b[0]; });
+}
+// register the outline being edited so hexLabel / rot180 speak its grid
+function edLiveShape(){
+  if (!ED.hexes) return ED.shape;
+  return E.ensureMapShape({ id: 'edit', shapeDef: { hexes: edHexPairs() } }); // '@edit'
+}
+function edRemoveHex(k){
+  var set = ED.hexes;
+  if (Object.keys(set).length <= 2){ toast('A board needs more hexes than that.', 2200); return; }
+  delete set[k];
+  // a removed hex takes its terrain with it — including neighbours' sides that faced it
+  for (var d = 0; d < 6; d++){
+    delete ED.edges[k + '>' + d];
+    var qr = E.parseKey(k);
+    var n = E.key(qr[0] + E.DIRS[d][0], qr[1] + E.DIRS[d][1]);
+    delete ED.edges[n + '>' + ((d + 3) % 6)];
+  }
+  if (ED.red && E.key(ED.red[0], ED.red[1]) === k) ED.red = null;
+  if (ED.blue && E.key(ED.blue[0], ED.blue[1]) === k) ED.blue = null;
 }
 function edInternalSides(){
   var set = edHexSet(), out = [];
@@ -2462,11 +2540,24 @@ function edInternalSides(){
 function renderEditor(){
   var svg = $('edBoard');
   svg.innerHTML = '';
-  var hexList = E.boardHexes(ED.shape);
-  svg.setAttribute('viewBox', viewBoxFor(hexList));
+  var live = edLiveShape();
+  E.setBoard(live); // so hexLabel speaks this board's grid
+  var hexList = ED.hexes ? Object.keys(ED.hexes) : E.boardHexes(ED.shape);
+  // in hex-carving mode, every empty neighbour is a ghost hex you can add
+  var ghosts = [];
+  if (ED.tool === 'hexes'){
+    var set = edHexSet(), seen = {};
+    hexList.forEach(function(k){
+      var qr = E.parseKey(k);
+      for (var d = 0; d < 6; d++){
+        var n = E.key(qr[0] + E.DIRS[d][0], qr[1] + E.DIRS[d][1]);
+        if (!set[n] && !seen[n]){ seen[n] = true; ghosts.push(n); }
+      }
+    });
+  }
+  svg.setAttribute('viewBox', viewBoxFor(hexList.concat(ghosts)));
   var gHex = svgEl('g',{}), gTer = svgEl('g',{}), gHit = svgEl('g',{});
   svg.appendChild(gHex); svg.appendChild(gTer); svg.appendChild(gHit);
-  E.setBoard(ED.shape); // so hexLabel speaks this board's grid
   hexList.forEach(function(k){
     var xy = hexXY(k);
     var p = svgEl('polygon', { points: hexPoints(xy[0], xy[1], S-1), 'class':'hex' });
@@ -2478,11 +2569,28 @@ function renderEditor(){
         else { ED.blue = qr; if (ED.red && E.key(ED.red[0],ED.red[1])===k) ED.red=null; }
         renderEditor();
       });
+    } else if (ED.tool==='hexes'){
+      p.style.cursor = 'pointer';
+      p.addEventListener('click', function(){ edRemoveHex(k); renderEditor(); });
     }
     gHex.appendChild(p);
     var lbl = svgEl('text', { x: xy[0], y: xy[1]-S*0.58, 'text-anchor':'middle', 'class':'coordlbl', 'pointer-events':'none' });
     lbl.textContent = E.hexLabel(k);
     gHex.appendChild(lbl);
+  });
+  ghosts.forEach(function(k){
+    var xy = hexXY(k);
+    var p = svgEl('polygon', { points: hexPoints(xy[0], xy[1], S-4),
+      fill:'rgba(255,255,255,.10)', stroke:'rgba(74,61,38,.5)', 'stroke-width':1.4, 'stroke-dasharray':'6 5' });
+    p.style.cursor = 'pointer';
+    p.addEventListener('click', function(){
+      if (hexList.length >= 24){ toast('24 hexes is the ceiling (laser-cutter max — and big empty maps are not fun).', 3600); return; }
+      ED.hexes[k] = true;
+      renderEditor();
+    });
+    p.addEventListener('mouseenter', function(){ p.setAttribute('fill','rgba(212,175,55,.28)'); });
+    p.addEventListener('mouseleave', function(){ p.setAttribute('fill','rgba(255,255,255,.10)'); });
+    gHex.appendChild(p);
   });
   [['red','var(--red)'],['blue','var(--blue)']].forEach(function(h){
     var hq = ED[h[0]];
@@ -2592,7 +2700,8 @@ function renderEdStock(){
     return Object.keys(cnt).sort().map(function(l){ return cnt[l]+'&times;len'+l; }).join(', ');
   }
   var stockNote = Object.keys(E.TERRAIN_STOCK).map(function(k){ return E.TERRAIN_STOCK[k]+'&times;len'+k.slice(1)+' '+(k[0]==='F'?'forest':k[0]==='R'?'river':'mountain'); }).join(', ');
-  $('edStock').innerHTML = 'Forest pieces: '+summary('F')+' &nbsp;|&nbsp; Mountain pieces: '+summary('M')+' &nbsp;|&nbsp; River pieces: '+summary('R')+
+  $('edStock').innerHTML = (ED.hexes ? '<b>'+Object.keys(ED.hexes).length+'/24 hexes</b> &nbsp;|&nbsp; ' : '') +
+    'Forest pieces: '+summary('F')+' &nbsp;|&nbsp; Mountain pieces: '+summary('M')+' &nbsp;|&nbsp; River pieces: '+summary('R')+
     ' <span class="small">(physical stock: '+stockNote+')</span>';
   var over = pieces.some(function(p){
     var cap = E.TERRAIN_STOCK[p.t + p.edges.length];
@@ -2611,9 +2720,15 @@ function edBuildDef(){
     pieces: groupEdgesToPieces(ED.edges),
     custom: true, id: ED.id
   };
+  if (ED.hexes){
+    var pairs = edHexPairs();
+    if (pairs.length > 24){ toast('24 hexes is the ceiling (laser-cutter max) — remove '+(pairs.length-24)+'.', 3800); return null; }
+    def.shapeDef = { label: 'Custom board ('+pairs.length+' hexes)', hexes: pairs };
+    delete def.shape; // the engine registers it as '@<id>' from shapeDef
+  }
   try {
     var prev = E.currentShape();
-    E.setBoard(def.shape);
+    E.setBoard(E.ensureMapShape(def));
     E.buildTerrain(def);
     E.setBoard(prev);
   } catch(e){ toast('Map problem: '+e.message, 3500); return null; }
