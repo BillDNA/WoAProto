@@ -10,6 +10,10 @@
      node balance.js matchup 16          worse ones; the stronger side's win rate
                                          is the skill premium. ~50% = card-draw
                                          luck decides; 65%+ = skill decides.
+     node balance.js matchup 16 brawler turtle
+                                         pit any two AI personalities (built-in
+                                         easy/normal/hard or a maps.js "ai" row)
+     node balance.js 40 brawler          per-map report with a personality
 
    Reading the map report:
    - Red%/Blue% far from 50  -> the map itself favours a side (positions/terrain)
@@ -47,9 +51,9 @@ function pad(s, w, right) {
 }
 
 /* ---------------- matchup mode: how much does skill matter? ---------------- */
-function matchup(n) {
+function matchup(n, a, b) {
   var maps = E.MAPS;
-  var pairs = [
+  var pairs = (a && b) ? [[a, b]] : [
     ['normal', 'easy'],
     ['hard', 'normal'],
     ['hard', 'easy'],
@@ -183,12 +187,18 @@ function mapReport(n, diff, filter) {
 /* ---------------- args ---------------- */
 var args = process.argv.slice(2);
 if (args[0] === 'matchup') {
-  matchup(Math.max(2, +(args[1]) || 12));
+  // node balance.js matchup [n] [aiA aiB]  — aiA/aiB may be any AI_PRESETS
+  // name (easy/normal/hard or a maps.js "ai" personality)
+  var rest = args.slice(1).filter(function (a) { return !/^\d+$/.test(a); });
+  rest.forEach(function (a) {
+    if (!E.AI_PRESETS[a]) { console.log('Unknown AI "' + a + '". Known: ' + Object.keys(E.AI_PRESETS).join(', ')); process.exit(1); }
+  });
+  matchup(Math.max(2, +(args.filter(function (a) { return /^\d+$/.test(a); })[0]) || 12), rest[0], rest[1]);
 } else {
   var n = 24, diff = 'normal', filter = null;
   args.forEach(function (a) {
     if (/^\d+$/.test(a)) n = Math.max(2, +a);
-    else if (a === 'easy' || a === 'normal' || a === 'hard') diff = a;
+    else if (E.AI_PRESETS[a]) diff = a; // easy/normal/hard or a maps.js personality
     else filter = filter ? filter + ' ' + a : a;
   });
   mapReport(n, diff, filter);

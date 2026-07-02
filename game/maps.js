@@ -46,6 +46,22 @@ var WOA_BUILTIN =
   "trenchCount": 3,
   "terrainStock": { "F3": 2, "F2": 4, "M3": 2, "M2": 4, "R1": 4 },
 
+  /* AI — extra personalities as data (easy/normal/hard are built in). A config
+     is { noise, breadth, replySamples, replyWeight, weights:{...} }: noise =
+     evaluation randomness (mistakes), breadth = top candidates re-scored by the
+     enemy's sampled best reply (0 = pure greedy; 3 = the hard AI's search),
+     weights override engine AI_WEIGHTS terms (attrWin, fsDiff, fsDiffUrgent,
+     unitOnBoard, unitReserve, advance, hqGuard, enemyDist, myThreatHQ,
+     myThreatKill, threatHQ, threatKill, threatTie, trenchHome, noopPenalty,
+     antiShuffle, fallbackBias). New AI = new row. Pit them:
+     node balance.js matchup 16 brawler turtle */
+  "ai": {
+    "brawler": { "noise": 0, "breadth": 0,
+      "weights": { "myThreatKill": 7, "threatKill": 3, "advance": 4, "unitReserve": 10 } },
+    "turtle":  { "noise": 0, "breadth": 0,
+      "weights": { "hqGuard": 12, "enemyDist": 3, "advance": 0.8, "trenchHome": 12, "unitOnBoard": 26 } }
+  },
+
   "cards": [
     { "id": "deploy_inf_start", "name": "Deploy Infantry", "count": 1, "starting": true,
       "text": "Place an Infantry unit adjacent to any controlled hex.",

@@ -554,6 +554,29 @@ console.log('== behaviour counters (balance-lab metrics) ==');
     .forEach(function (k) { ok(k in r, 'balanceMap reports ' + k); });
 })();
 
+console.log('== AI personalities are data (V0 ai-variety) ==');
+(function () {
+  ok(E.AI_PRESETS.easy && E.AI_PRESETS.normal && E.AI_PRESETS.hard, 'built-in presets exist');
+  ok(E.AI_PRESETS.brawler && E.AI_PRESETS.turtle, 'maps.js "ai" personalities registered');
+  var cfg = E.aiConfig('hard');
+  ok(cfg.breadth === 3 && cfg.replySamples === 2 && cfg.w.noopPenalty === 80,
+    'hard preset = breadth 3, 2 reply samples, guards intact');
+  var custom = E.aiConfig({ noise: 0, breadth: 2, weights: { advance: 9 } });
+  ok(custom.w.advance === 9 && custom.w.attrWin === 500, 'config weights overlay the defaults');
+  // a raw config object plans a legal turn
+  var st = testBattle(140);
+  var plan = E.aiPlanTurn(st, { noise: 0, breadth: 2, replySamples: 1, replyWeight: 0.5, weights: { advance: 9 } });
+  ok(plan && st.hands.red.indexOf(plan.cardId) >= 0, 'raw config object produces a plan from the real hand');
+  // personality battles run to completion and stay deterministic
+  var a = E.simBattle(E.MAPS[4], 4242, 'red', 'brawler', 'turtle');
+  var b = E.simBattle(E.MAPS[4], 4242, 'red', 'brawler', 'turtle');
+  ok(a.phase === 'battle-over', 'brawler-vs-turtle battle finishes (winner ' + a.battleWinner + ', ' + a.turnNumber + ' turns)');
+  ok(a.battleWinner === b.battleWinner && a.turnNumber === b.turnNumber, 'personality battles are deterministic per seed');
+  // guardrail: a config that zeroes the anti-degeneracy terms is still legal
+  // (Bill may experiment) but the defaults must not lose them
+  ok(E.AI_WEIGHTS.noopPenalty === 80 && E.AI_WEIGHTS.antiShuffle === 10, 'anti-degeneracy weights present in defaults');
+})();
+
 console.log('== AI dead-turn regression (round 6: hard AI must not skip turn 1) ==');
 (function () {
   ['normal', 'hard'].forEach(function (diff) {

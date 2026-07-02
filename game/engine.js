@@ -847,7 +847,45 @@
 
   function unitValue(t) { return { infantry: 3, cavalry: 4, artillery: 5 }[t] || ((UNITS[t] ? UNITS[t].vp : 1) + 2); }
 
-  function threatScan(st, me) {
+  // ---- AI personalities are DATA (V0 ai-variety) ----
+  // One engine, many temperaments: a config is { noise, breadth, replySamples,
+  // replyWeight, weights:{...} }. noise = evaluation randomness (mistakes);
+  // breadth = how many top candidates get re-scored by the opponent's sampled
+  // best reply (0 = pure greedy, this is the depth/breadth dial); replySamples/
+  // replyWeight tune that reply search. weights override AI_WEIGHTS terms.
+  // Extra personalities can be defined in maps.js as an "ai" block — a new AI
+  // is a new row of numbers, not new code. easy/normal/hard are presets here.
+  // Guardrails baked in (don't lose them in a new config): the noopPenalty and
+  // antiShuffle weights and the attrition projection are the round-5/6 anti-
+  // degeneracy fixes — zero them and the swap-dance stalemate returns.
+  var AI_WEIGHTS = {
+    attrWin: 500,      // attrition-projection swing at full urgency
+    fsDiff: 8, fsDiffUrgent: 40, // field-score diff, flat + urgency-scaled
+    unitOnBoard: 22, unitReserve: 16, // unitValue multipliers
+    advance: 2.2,      // pressure toward the enemy HQ (per hex of distance)
+    hqGuard: 4,        // bonus for sitting next to my own HQ
+    enemyDist: 1.6,    // keep enemy units far from my HQ
+    myThreatHQ: 220, myThreatKill: 3,   // my available attacks next step
+    threatHQ: 600, threatKill: 6, threatTie: 2.5, // enemy threats on me
+    trenchHome: 6,     // trenches near my HQ
+    noopPenalty: 80,   // dead-turn plans (round 6 — keep > fallbackBias + reply noise)
+    antiShuffle: 10,   // re-swapping the same pair as last turn
+    fallbackBias: 12   // mild preference for printed actions over card-burning
+  };
+  var AI_PRESETS = {
+    easy:   { noise: 60, breadth: 0 },                                  // greedy + mistakes
+    normal: { noise: 0,  breadth: 0 },                                  // greedy
+    hard:   { noise: 0,  breadth: 3, replySamples: 2, replyWeight: 0.7 } // Field Marshal
+  };
+  Object.keys(BUILTIN.ai || {}).forEach(function (n) { AI_PRESETS[n] = BUILTIN.ai[n]; });
+  function aiConfig(d) {
+    var base = (typeof d === 'string' || d === undefined) ? (AI_PRESETS[d] || AI_PRESETS.normal) : d;
+    var cfg = Object.assign({ noise: 0, breadth: 0, replySamples: 2, replyWeight: 0.7 }, base);
+    cfg.w = Object.assign({}, AI_WEIGHTS, base.weights || {});
+    return cfg;
+  }
+
+  function threatScan(st, me, w) {
     // best enemy attack power against each of my pieces next turn (+1 for possible card mod)
     var en = other(me);
     var score = 0;
@@ -855,16 +893,17 @@
       var res = computeAttack(st, Object.assign({}, a, { mod: 1 }));
       var tgt = st.units[a.to];
       if (res.defenderIsHQ) {
-        if (res.outcome !== 'defender') score -= 600; // enemy can take our HQ
+        if (res.outcome !== 'defender') score -= w.threatHQ; // enemy can take our HQ
       } else if (tgt && tgt.owner === me) {
-        if (res.outcome === 'attacker') score -= unitValue(tgt.type) * 6;
-        else if (res.outcome === 'tie') score -= unitValue(tgt.type) * 2.5;
+        if (res.outcome === 'attacker') score -= unitValue(tgt.type) * w.threatKill;
+        else if (res.outcome === 'tie') score -= unitValue(tgt.type) * w.threatTie;
       }
     });
     return score;
   }
 
-  function evalState(st, me) {
+  function evalState(st, me, w) {
+    w = w || AI_WEIGHTS;
     var en = other(me);
     if (st.phase === 'battle-over') return st.battleWinner === me ? 1e6 : -1e6;
     var s = 0;
@@ -876,37 +915,37 @@
     var turnsLeft = Math.min(cardsRemaining(st, me), cardsRemaining(st, en));
     var urgency = Math.max(0, 1 - turnsLeft / 12);
     var attrWin = fsMe > fsEn || (fsMe === fsEn && st.second === me);
-    s += (attrWin ? 1 : -1) * 500 * urgency;
-    s += (fsMe - fsEn) * (8 + 40 * urgency);
+    s += (attrWin ? 1 : -1) * w.attrWin * urgency;
+    s += (fsMe - fsEn) * (w.fsDiff + w.fsDiffUrgent * urgency);
     var myUnits = [], enUnits = [];
     for (var h in st.units) {
       var u = st.units[h];
       (u.owner === me ? myUnits : enUnits).push({ h: h, u: u });
     }
-    myUnits.forEach(function (x) { s += unitValue(x.u.type) * 22; });
-    enUnits.forEach(function (x) { s -= unitValue(x.u.type) * 22; });
+    myUnits.forEach(function (x) { s += unitValue(x.u.type) * w.unitOnBoard; });
+    enUnits.forEach(function (x) { s -= unitValue(x.u.type) * w.unitOnBoard; });
     // reserves slightly less valuable than deployed
     ['infantry', 'cavalry', 'artillery'].forEach(function (t) {
-      s += st.reserves[me][t] * unitValue(t) * 16;
-      s -= st.reserves[en][t] * unitValue(t) * 16;
+      s += st.reserves[me][t] * unitValue(t) * w.unitReserve;
+      s -= st.reserves[en][t] * unitValue(t) * w.unitReserve;
     });
     // advance toward enemy HQ; keep some defense near own HQ
     var ehq = st.hq[en], mhq = st.hq[me];
     myUnits.forEach(function (x) {
-      s -= dist(x.h, ehq) * 2.2;
-      if (dist(x.h, mhq) <= 1) s += 4;
+      s -= dist(x.h, ehq) * w.advance;
+      if (dist(x.h, mhq) <= 1) s += w.hqGuard;
     });
-    enUnits.forEach(function (x) { s += dist(x.h, mhq) * 1.6; });
+    enUnits.forEach(function (x) { s += dist(x.h, mhq) * w.enemyDist; });
     // my immediate threats on enemy pieces
     listAttacks(st, me).forEach(function (a) {
       var res = computeAttack(st, a);
-      if (res.defenderIsHQ) { if (res.outcome !== 'defender') s += 220; }
-      else if (res.outcome === 'attacker') s += unitValue(st.units[a.to].type) * 3;
+      if (res.defenderIsHQ) { if (res.outcome !== 'defender') s += w.myThreatHQ; }
+      else if (res.outcome === 'attacker') s += unitValue(st.units[a.to].type) * w.myThreatKill;
     });
     // enemy threats on mine
-    s += threatScan(st, me);
+    s += threatScan(st, me, w);
     // trench coverage near my HQ is nice
-    for (var th in st.trenches) if (dist(th, mhq) <= 1) s += 6 * st.trenches[th].length;
+    for (var th in st.trenches) if (dist(th, mhq) <= 1) s += w.trenchHome * st.trenches[th].length;
     return s;
   }
 
@@ -932,7 +971,8 @@
   }
 
   // Greedily resolve the pending card on a cloned state; returns {score, choices}
-  function greedyResolve(sim, me, randomness, s) {
+  function greedyResolve(sim, me, randomness, s, w) {
+    w = w || AI_WEIGHTS;
     var choices = [];
     var guard = 0;
     while (sim.phase === 'step' && guard++ < 12) {
@@ -947,17 +987,17 @@
       opts.forEach(function (c) {
         var sim2 = clone(sim);
         try { applyStep(sim2, c); } catch (e) { return; }
-        var sc = evalState(sim2, me) + (randomness ? rnd(s) * randomness : 0);
+        var sc = evalState(sim2, me, w) + (randomness ? rnd(s) * randomness : 0);
         if (c.skip) sc -= 1; // mild bias toward acting
         // anti-shuffle: re-swapping the pair I swapped last time is ping-ponging
-        if (c.swap && sim.lastSwap && sim.lastSwap[me] === swapKey(c.a, c.b)) sc -= 10;
+        if (c.swap && sim.lastSwap && sim.lastSwap[me] === swapKey(c.a, c.b)) sc -= w.antiShuffle;
         if (sc > bestScore) { bestScore = sc; best = c; }
       });
       if (!best) best = { skip: true };
       choices.push(best);
       applyStep(sim, best);
     }
-    return { score: evalState(sim, me), choices: choices };
+    return { score: evalState(sim, me, w), choices: choices };
   }
 
   // How reluctant the AI is to burn a card on a fallback play (higher = keep it)
@@ -972,8 +1012,9 @@
   // the enemy answers? Their hand is hidden, so resample it from what is
   // legitimately public (deck + hand contents are known, order is not), let
   // them play their best reply, and average over a few sampled hands.
-  function sampledReplyScore(endSt, me, s, samples) {
-    if (endSt.phase === 'battle-over') return evalState(endSt, me);
+  function sampledReplyScore(endSt, me, s, samples, w) {
+    w = w || AI_WEIGHTS;
+    if (endSt.phase === 'battle-over') return evalState(endSt, me, w);
     var opp = endSt.current;
     var total = 0;
     for (var k = 0; k < samples; k++) {
@@ -990,41 +1031,45 @@
         tried[cid] = true;
         var sim2 = clone(sim0);
         try { playCard(sim2, cid); } catch (e) { return; }
-        var r = (sim2.phase === 'step') ? greedyResolve(sim2, opp, 0, s) : { score: evalState(sim2, opp), choices: [] };
+        var r = (sim2.phase === 'step') ? greedyResolve(sim2, opp, 0, s, w) : { score: evalState(sim2, opp, w), choices: [] };
         if (r.score > bestOpp) { bestOpp = r.score; bestState = sim2; }
       });
-      total += evalState(bestState, me);
+      total += evalState(bestState, me, w);
     }
     return total / samples;
   }
 
   // Decide the AI's whole turn. Returns {cardId, mode, choices:[...]}
+  // `difficulty` is a preset name ('easy' | 'normal' | 'hard' | any maps.js
+  // "ai" entry) or a raw config object — see AI_PRESETS/aiConfig above.
   // easy   = greedy with noisy evaluations (makes mistakes)
   // normal = greedy, one turn deep
-  // hard   = normal shortlist, then the top candidates are re-scored by what
-  //          the enemy can do back (sampled hands — it never peeks at yours)
+  // hard   = normal shortlist, then the top `breadth` candidates are re-scored
+  //          by what the enemy can do back (sampled hands — never peeks at yours)
   function aiPlanTurn(st, difficulty) {
+    var cfg = aiConfig(difficulty);
+    var w = cfg.w;
     var me = st.current;
-    var randomness = difficulty === 'easy' ? 60 : 0;
+    var randomness = cfg.noise;
     var s = { seed: (st.seed ^ 0x9e3779b9) | 0 };
     var hand = st.hands[me].slice();
     var candidates = [];
     var tried = {};
     // A plan that resolves ZERO actions is a dead turn (Bill: players should
-    // always get to act) — penalize harder than the -12 fallback bias AND the
-    // hard AI's 2-sample reply noise (round 6: 25 wasn't enough; sampled-hand
-    // variance between candidates flipped it). When truly nothing can act,
-    // every plan carries the penalty, so it cancels out.
+    // always get to act) — penalize harder than the fallbackBias AND the
+    // reply-search noise (round 6: 25 wasn't enough; sampled-hand variance
+    // between candidates flipped it). When truly nothing can act, every plan
+    // carries the penalty, so it cancels out.
     function noopPenalty(sim) {
       var le = sim.playLog[sim.playLog.length - 1];
-      return (le && le.p === me && le.noop) ? 80 : 0;
+      return (le && le.p === me && le.noop) ? w.noopPenalty : 0;
     }
     hand.forEach(function (cid) {
       if (tried[cid]) return;
       tried[cid] = true;
       var sim = clone(st);
       try { playCard(sim, cid); } catch (e) { return; }
-      var r = (sim.phase === 'step') ? greedyResolve(sim, me, randomness, s) : { score: evalState(sim, me), choices: [] };
+      var r = (sim.phase === 'step') ? greedyResolve(sim, me, randomness, s, w) : { score: evalState(sim, me, w), choices: [] };
       var pen = noopPenalty(sim);
       candidates.push({ plan: { cardId: cid, mode: 'normal', choices: r.choices },
         score: r.score - pen + (randomness ? rnd(s) * randomness : 0), pen: pen, end: sim });
@@ -1036,26 +1081,27 @@
       ['attack', 'reposition'].forEach(function (mode) {
         var sim = clone(st);
         try { playCard(sim, burn, mode); } catch (e) { return; }
-        var r = (sim.phase === 'step') ? greedyResolve(sim, me, randomness, s) : { score: evalState(sim, me), choices: [] };
+        var r = (sim.phase === 'step') ? greedyResolve(sim, me, randomness, s, w) : { score: evalState(sim, me, w), choices: [] };
         var pen = noopPenalty(sim);
         candidates.push({ plan: { cardId: burn, mode: mode, choices: r.choices },
-          score: r.score - 12 - pen + (randomness ? rnd(s) * randomness : 0), pen: pen, end: sim }); // mild bias toward printed actions
+          score: r.score - w.fallbackBias - pen + (randomness ? rnd(s) * randomness : 0), pen: pen, end: sim }); // mild bias toward printed actions
       });
     }
     if (!candidates.length) return null;
     candidates.sort(function (a, b) { return b.score - a.score; });
-    if (difficulty !== 'hard') return candidates[0].plan;
+    if (!cfg.breadth) return candidates[0].plan;
     var best = null, bestScore = -Infinity;
-    candidates.slice(0, 3).forEach(function (cand) {
+    candidates.slice(0, cfg.breadth).forEach(function (cand) {
       // Common random numbers (round 6): every candidate is scored against the
       // SAME sampled enemy hands (fresh rng, same seed), otherwise one candidate
-      // randomly eats an Airdrop-by-the-HQ sample (-600) that another never saw
-      // — that noise once drowned the dead-turn penalty entirely.
+      // randomly eats an Airdrop-by-the-HQ sample that another never saw —
+      // that noise once drowned the dead-turn penalty entirely.
       var s2 = { seed: (st.seed ^ 0x51f15eed) | 0 };
-      // cand.score already carries -pen; subtract the other 0.7 share so the
-      // dead-turn penalty hits the blend at FULL strength (0.3 alone diluted
-      // -80 to -24 and the reply term never saw it).
-      var sc = 0.3 * cand.score + 0.7 * sampledReplyScore(cand.end, me, s2, 2) - 0.7 * (cand.pen || 0);
+      // cand.score already carries -pen; subtract the reply-side share too so
+      // the dead-turn penalty hits the blend at FULL strength (the greedy share
+      // alone diluted it and the reply term never saw it).
+      var rw = cfg.replyWeight;
+      var sc = (1 - rw) * cand.score + rw * sampledReplyScore(cand.end, me, s2, cfg.replySamples, w) - rw * (cand.pen || 0);
       if (sc > bestScore) { bestScore = sc; best = cand.plan; }
     });
     return best;
@@ -1204,6 +1250,7 @@
     enumerateChoices: enumerateChoices,
     concede: concede, concedeAdvised: concedeAdvised, fieldScore: fieldScore,
     aiPlanTurn: aiPlanTurn, clone: clone, evalState: evalState, validateMaps: validateMaps,
+    AI_PRESETS: AI_PRESETS, AI_WEIGHTS: AI_WEIGHTS, aiConfig: aiConfig,
     simBattle: simBattle, balanceMap: balanceMap,
     balanceNew: balanceNew, balanceAdd: balanceAdd, balanceSeed: balanceSeed, balanceFP: balanceFP
   };

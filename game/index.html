@@ -710,6 +710,19 @@ function $(id){ return document.getElementById(id); }
 function show(scr){ document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');}); $(scr).classList.add('active'); }
 function capName(p){ return p.charAt(0).toUpperCase()+p.slice(1); }
 
+// AI personalities beyond easy/normal/hard come from maps.js as data — offer
+// them wherever an AI is picked (enemy general + dashboard sides)
+(function(){
+  Object.keys(E.AI_PRESETS).forEach(function(n){
+    if (n === 'easy' || n === 'normal' || n === 'hard') return;
+    ['diffSel', 'dashRed', 'dashBlue'].forEach(function(id){
+      var o = document.createElement('option');
+      o.value = n; o.textContent = n.charAt(0).toUpperCase() + n.slice(1) + ' (custom AI)';
+      $(id).appendChild(o);
+    });
+  });
+})();
+
 // board shapes come from maps.js — keep the editor's dropdown in sync
 (function(){
   var sel = $('edShape');
