@@ -87,7 +87,8 @@ A **river** (single-side pieces, drawn in blue) sits on a border: **support neve
 
 - **Flexible orders**: any card may resolve as the printed action, a basic Attack, or a basic Reposition — the card is removed from the game regardless.
 - **Reset turn**: mid-way through a multi-step card you can reset back to the start of your turn (button next to Skip). Once the card fully resolves the turn is final.
-- **No stacking**: a hex side with terrain can't also hold a trench; trenches are placed by clicking their two edges, one at a time.
+- **No stacking**: a hex side with terrain can't also hold a trench; to place one, pick the hex then click the brass corner knob of the orientation you want (hovering a knob previews its two edges).
+- **Reading a fight**: hover any of your units to see the attack math against every hex it could hit (green = you win, brass = tie, red = you lose — the same numbers the confirm dialog shows). When an attack lands, an arrow shows where it came from (bending through an HQ on a through-HQ strike) and rings mark every unit whose support actually counted — gold for the attacker's, steel for the defender's.
 - **Airdrop nerf**: Airdrop never appears in your opening hand (it returns to the deck for later turns).
 - **Concession**: at the start of your turn you may concede the battle (button in the top bar); the enemy takes the battle and the campaign moves on. When the maths say the battle is decided (the field-score gap is bigger than the best plausible swing — about 3 VP a turn — in the turns you have left, and no unit can reach the enemy HQ in time), the game quietly suggests it — and the AI concedes on its own rather than playing out a foregone conclusion.
 

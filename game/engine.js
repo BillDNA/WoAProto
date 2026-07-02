@@ -539,7 +539,7 @@
     return null;
   }
   function supportFor(st, p, battleHex, excludeHex, attacking) {
-    var total = 0, parts = [];
+    var total = 0, parts = [], hexes = [];
     neighbors(battleHex).forEach(function (n) {
       if (n === excludeHex) return;
       var giver = null, amount = 0;
@@ -551,8 +551,9 @@
       if (block) { parts.push(giver + ' support blocked by ' + block); return; }
       total += amount;
       parts.push(giver + ' +' + amount);
+      hexes.push(n); // who actually contributed — the UI highlights them
     });
-    return { total: total, parts: parts };
+    return { total: total, parts: parts, hexes: hexes };
   }
 
   function computeAttack(st, atk) {
@@ -1245,7 +1246,7 @@
     unitAt: unitAt, isHQ: isHQ, isEmpty: isEmpty, controlledHexes: controlledHexes,
     deployTargets: deployTargets, trenchTargets: trenchTargets, trenchOrientations: trenchOrientations,
     listAttacks: listAttacks, listRepositions: listRepositions, listBarrageTargets: listBarrageTargets,
-    computeAttack: computeAttack, playCard: playCard, currentStep: currentStep,
+    computeAttack: computeAttack, supportFor: supportFor, playCard: playCard, currentStep: currentStep,
     stepOptions: stepOptions, applyStep: applyStep, cardsRemaining: cardsRemaining,
     enumerateChoices: enumerateChoices,
     concede: concede, concedeAdvised: concedeAdvised, fieldScore: fieldScore,
