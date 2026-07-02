@@ -13,25 +13,23 @@ Six feedback rounds, all closed. Terse log; current state and every ruling live 
 5. **Legibility + concede** — no-op turns logged + Skip% column; Naval Barrage reaches the whole board; three-column battle layout (journal to window bottom); Concede button + advisory heuristic.
 6. **Anti-degeneracy** — hard turn-1 dead turns 9%→0; attrition scored by **surviving units on the board**; eval projects the deck-out attrition winner (kills the swap-dance stalemate); Behaviour/Decisiveness metrics in `balance.js`.
 
-## V0 roadmap → `specs/`
+## V0 — SHIPPED (July 2026)
 
-Each bullet is a self-contained spec a future session can pick up and build. Grouped, not ordered; cross-linked with `[[wikilinks]]`.
-
-**Tooling / app**
-- [[metrics-dashboard]] — GUI to run and read the balance metrics that are terminal-only in `balance.js` today.
-- [[deck-editor]] — in-browser deck construction, modeled on the map editor.
-- [[map-roster-and-shapes]] — let base maps be deleted (floor of 5 so a first-to-3 match always fits) and edit board shapes hex-by-hex (add/remove under the 24-hex ceiling).
-- [[claude-plays]] — an LLM player wired through [[cli-responder-transport]]; model/effort knobs, short rules + state as the whole prompt, picks from a legal-move list, gives "how it felt" notes.
-- [[claude-skills]] — run-tournament, create-card, create-map skills (build on [[claude-plays]] and [[grading-rubrics]]).
-- [[grading-rubrics]] — north-star goals + graded rubrics for cards, maps, units, and the game, tied to `balance.js` numbers.
-- [[ai-variety]] — more, more-varied heuristic AIs as data, along two axes: search space (depth × breadth) and heuristic weights.
+All ten V0 specs in `specs/` were built and committed in one autonomous run (July 2, 2026). The specs stay as design rationale; current behaviour lives in `game/CLAUDE.md`. Terse log:
 
 **Rules / game**
-- [[terrain-crossing-rules]] — trenches block attacker support from crossing (instead of flat +1 def); new river edge that blocks control counting across it. (Both need a one-sentence ruling from Bill before coding.)
-- [[combat-clarity-qol]] — one-action trench placement, hover unit attack-score preview, attack-source animation (esp. through-HQ).
-- [[layout-design-pass]] — `frontend-design` handoff: board wastes width on tall maps, campaign journal is exiled to a thin rail. Ready to hand off.  This has been processed int [[layout-v2-implementation]] and is now ready for implementation.
+- [[terrain-crossing-rules]] ✓ — trenches are now attacker-support denial (no +1 def, ownership irrelevant); new single-side **river** terrain (`R`) blocks support both ways, attacks/moves/Airdrop cross freely, not barrageable. Rule book updated to match the implementation, per Bill's ruling notes in the spec.
+- [[combat-clarity-qol]] ✓ — one-click trench placement (brass corner knobs), hover-a-unit attack-math pills (engine's own computeAttack), strike arrows + supporter rings on every attack (through-HQ bends shown).
+- [[layout-v2-implementation]] ✓ — 2A layout: both mats left, Campaign Journal owns the right rail as a bound book with collapsible turns, board bounded by its hex geometry (gutter fix), topbar VP tug-bar scoreboard, hamburger drawers on small screens.
 
-Already speced: [[cli-responder-transport]] — the `claude -p` transport [[claude-plays]] sits on.
+**Tooling / app**
+- [[metrics-dashboard]] ✓ — Balance Dashboard on the menu: full balance.js report in-browser, sortable tables, per-side AI pickers; aggregation shared with the CLI (`balanceNew/balanceAdd`, smoke-tested identical).
+- [[deck-editor]] ✓ — Quartermaster's Ledger: in-browser card editing with validation (16 copies, one starting card, step vocabulary), saved to localStorage + `custom-deck.js` (`/api/savedeck`), applied on reload.
+- [[map-roster-and-shapes]] ✓ — built-in maps deletable (tombstones, floor of 5, restore button); editor carves board outlines hex-by-hex (`shapeDef` travels inline with the map, 24-hex ceiling enforced).
+- [[ai-variety]] ✓ — one parameterized AI engine; personalities are maps.js `"ai"` data rows (shipped brawler/turtle); `balance.js matchup` pits any two; presets verified byte-identical to the old easy/normal/hard.
+- [[grading-rubrics]] ✓ — `design-docs/grading-rubrics.md`: north stars + card/map/unit/game rubrics (goal / evidence + data origin / score meaning), baselines and tune-me targets.
+- [[cli-responder-transport]] + [[claude-plays]] ✓ — `dev/llm-client.js` (zero-dep `claude -p` transport, fail-open) + `dev/claude-plays.js` (LLM plays real battles from numbered legal-move lists, honest info only, felt-notes after; verified live with haiku).
+- [[claude-skills]] ✓ — `.claude/skills/`: run-tournament, create-card, create-map (thin orchestrators over balance.js + the rubrics; suggestions only, Bill decides).
 
 ### The Dynamic Image Generation MCP
 

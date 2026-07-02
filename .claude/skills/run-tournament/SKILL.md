@@ -1,0 +1,50 @@
+---
+name: run-tournament
+description: Run an AI (and optionally LLM) tournament over the War of Attrition map roster and turn the metric spread into graded balance suggestions for Bill. Use when asked to "run a tournament", "check the balance", "measure the meta", or after any rules/card/map change lands.
+---
+
+# run-tournament
+
+Run the sims, read the spread against the rubrics, hand Bill a graded report.
+**Suggestions only — never edit maps.js, cards, or rules yourself** (game/CLAUDE.md:
+findings go to Bill, he decides rule changes).
+
+## Inputs to settle first (ask only if genuinely unclear)
+
+- Scope: whole roster or a map filter? n per map (default 60; 24 for a quick look)?
+- Which AIs: `normal` for the standard read; add `hard` if pacing allows; any
+  maps.js `"ai"` personalities in play (brawler, turtle, ...)?
+- LLM reference point wanted? (adds real-money/time cost — default no)
+
+## Steps
+
+1. **Baseline runs** (all from repo root):
+   - `node game/balance.js 60` — per-map report + Behaviour/Decisiveness + card report.
+   - `node game/balance.js matchup 16` — skill premium (stronger AI's win rate).
+   - Pit personalities when relevant: `node game/balance.js matchup 16 brawler turtle`.
+2. **LLM battles** (only if asked): `node dev/claude-plays.js --red haiku --blue normal`
+   per interesting map. The LLM is a non-heuristic reference point on the skill
+   curve, and its felt-notes are playtest signal — quote them.
+3. **Grade** every headline number against `design-docs/grading-rubrics.md`
+   (north stars + per-artifact rubrics: goal / evidence + data origin / score
+   meaning). Quote the target band next to each reading.
+4. **Report** (markdown, for Bill):
+   - North-star scoreboard: each metric, current value, target band, verdict.
+   - Per-map flags: SIDE-BIASED / mover-strong / attrition-only / STALEMATES rows,
+     with the numbers.
+   - Card watchlist: high Skip%, high Simple%, high 1stSight% + low AvgSeen.
+   - Concrete suggestions, each tied to the evidence ("Thornfield reads 73/28 red
+     at n=40 — consider moving the red-side forest one hex south"), phrased as
+     options for Bill, not decisions.
+   - Sample-size honesty: state n and the ±100/√n noise band next to every claim.
+
+## Gotchas
+
+- Win% hugs 50 in attrition games — flag only big deviations, never Win% alone.
+- The card report's Simple% carries the CARD_KEEP burn bias (the AI burns its
+  least precious card) — say so when citing it.
+- If Behaviour numbers moved sharply vs the baselines in game/CLAUDE.md
+  (~5 attacks / ~7 swaps / zero-kill ~4% / ~88% fielded), treat it as an AI
+  regression signal even when win rates look fine.
+- Keep `node game/test.js` out of scope here — this skill measures balance, not
+  correctness.
