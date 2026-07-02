@@ -133,6 +133,15 @@ http.createServer(function (req, res) {
     res.writeHead(200, { 'Content-Type': MIME[path.extname(full)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
     res.end(data);
   });
+}).on('error', function (err) {
+  if (err.code === 'EADDRINUSE') {
+    console.log('');
+    console.log('  Port ' + PORT + ' is already taken — the server is probably already running');
+    console.log('  in another window (check http://localhost:' + PORT + '). Close that window,');
+    console.log('  or run with a different port:  set PORT=8421 && node server.js');
+    process.exit(1);
+  }
+  throw err;
 }).listen(PORT, function () {
   console.log('');
   console.log('  WAR OF ATTRITION — server running');
