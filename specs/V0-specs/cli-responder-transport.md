@@ -1,3 +1,4 @@
+#spec
 # CLI-responder LLM transport (`claude -p`)
 
 Run an LLM behind your app's normal client interface, but route the call through the

@@ -11,9 +11,15 @@ desktop.ini
 Thumbs.db
 
 # Art source binaries stay local (public repo, big files)
-design-docs/ProtoArt/
-design-docs/art-originals/
-design-docs/prototype pictures/*
+# (moved under specs/original-specs/ in the round-2 doc reorg)
+specs/original-specs/ProtoArt/
+specs/original-specs/art-originals/
+specs/original-specs/prototype pictures/*
 # ...except the diagram the terrain rules are defined by
-!design-docs/prototype pictures/HexClarificationDiagram.png
+!specs/original-specs/prototype pictures/HexClarificationDiagram.png
+
+# Generated playtest logs (claude-plays writes here now, not dev/).
+# Keep the folder; archive an interesting run explicitly with `git add -f`.
 dev/claude-plays-log.jsonl
+design-docs/game-logs/*
+!design-docs/game-logs/.gitkeep

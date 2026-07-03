@@ -1,3 +1,4 @@
+#spec
 # Deck editor (GUI)
 
 In-browser deck construction, modeled on the map editor. The deck is already pure data in
@@ -32,7 +33,7 @@ same for a custom deck (or extend that endpoint) so file:// users still get Expo
   one starting card must exist; `airdrop` is special-cased in `drawHand` (never in the opening
   hand). Validation refuses a deck that breaks either.
 - Deck size is fixed today (16 per deck). Enforce it. The larger-pool / deck-building loop is
-  post-V0 vision, not this — see [[specs/V0 Specs/grading-rubrics]] and the roadmap Vision note; don't build for
+  post-V0 vision, not this — see [[specs/V0-specs/grading-rubrics]] and the roadmap Vision note; don't build for
   it here.
 - Changing a card's flags is a rules change in effect — re-run `node game/test.js` and the
   balance lab after edits; note that in the editor's save toast if easy.

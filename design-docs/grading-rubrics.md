@@ -1,3 +1,4 @@
+#onboarding #human-instructions
 # Grading rubrics — north stars + what to measure
 
 Reference doc for grading cards, maps, units, and the game overall. This is what the

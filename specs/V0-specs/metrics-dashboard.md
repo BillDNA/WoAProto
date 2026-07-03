@@ -1,3 +1,4 @@
+#spec
 # Metrics / balance dashboard (GUI)
 
 Read the balance numbers in a GUI instead of scraping `node game/balance.js` terminal output.

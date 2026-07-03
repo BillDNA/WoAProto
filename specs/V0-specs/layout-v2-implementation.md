@@ -1,3 +1,4 @@
+#spec
 # Layout v2 — implementation spec (2A + topbar scoreboard)
 
 **Status:** ready to build. Supersedes the *design direction* in `layout-design-pass.md` (keep that as the

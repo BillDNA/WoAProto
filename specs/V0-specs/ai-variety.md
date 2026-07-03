@@ -1,3 +1,4 @@
+#spec
 # Better, more varied heuristic AIs
 
 More AI personalities, defined as **data not code**, along two axes Bill named. Fits the standing

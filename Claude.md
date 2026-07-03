@@ -1,6 +1,12 @@
 we are taking a board game prototype and turning it into a playable prototype in the web browser, the goal of this project is to have something that allows me to playtest and rapidly iterate on balance in the game.
 
-Start in `game/CLAUDE.md` — it is the orientation file for this project and stays current. `game/README.md` is the player-facing manual.
+Start in [[code-overview]] — it is the orientation file for this project and stays current. [[game/README]] is the player-facing manual.  [[workflow]] has guide lines for our workflow.
+## Standing goals
+
+* rapid balance iteration is the point of this prototype — prefer data files + small tools over hardcoding
+* keep `game/` zero-dependency plain files (zippable); dev-only tooling lives in `dev/`
+	* we can talk about if some feature in v0 might break this goal which might be fine
+* keep `node game/test.js` green and extend it with every rules change
 
 ## History — shipped (June 2026)
 
@@ -27,7 +33,7 @@ All ten V0 specs in `specs/` were built and committed in one autonomous run (Jul
 - [[deck-editor]] ✓ — Quartermaster's Ledger: in-browser card editing with validation (16 copies, one starting card, step vocabulary), saved to localStorage + `custom-deck.js` (`/api/savedeck`), applied on reload.
 - [[map-roster-and-shapes]] ✓ — built-in maps deletable (tombstones, floor of 5, restore button); editor carves board outlines hex-by-hex (`shapeDef` travels inline with the map, 24-hex ceiling enforced).
 - [[ai-variety]] ✓ — one parameterized AI engine; personalities are maps.js `"ai"` data rows (shipped brawler/turtle); `balance.js matchup` pits any two; presets verified byte-identical to the old easy/normal/hard.
-- [[specs/V0 Specs/grading-rubrics]] ✓ — `design-docs/grading-rubrics.md`: north stars + card/map/unit/game rubrics (goal / evidence + data origin / score meaning), baselines and tune-me targets.
+- [[specs/V0-specs/grading-rubrics]] ✓ — `design-docs/grading-rubrics.md`: north stars + card/map/unit/game rubrics (goal / evidence + data origin / score meaning), baselines and tune-me targets.
 - [[cli-responder-transport]] + [[claude-plays]] ✓ — `dev/llm-client.js` (zero-dep `claude -p` transport, fail-open) + `dev/claude-plays.js` (LLM plays real battles from numbered legal-move lists, honest info only, felt-notes after; verified live with haiku).
 - [[claude-skills]] ✓ — `.claude/skills/`: run-tournament, create-card, create-map (thin orchestrators over balance.js + the rubrics; suggestions only, Bill decides).
 
@@ -49,25 +55,47 @@ All ten V0 specs in `specs/` were built and committed in one autonomous run (Jul
 	* ~~deck builder - see the whiteboard page "WoA deck builder"~~
 	* ~~balance dashboard - see the whiteboard page "WoA Ballance Dashboard"~~
 * ~~this code base is probably big enough to put graphify in (https://github.com/safishamsi/graphify)~~
-## Feedback round 2
+### Feedback round 2
 * ai things
 	* on the "Thornfield" map blue played entrench and then place the trench on C4 facing away from the board so that the trench was not doing anything
-	* 
+	* can you make me a human-instructions doc on the heuristic model and what the weights are
+		* where are the 5 ai I see are set cause in the engine.js i see the AI_PRESETS but there are only 3 not 5
+* ui things
+	* when a battle is over let me copy the campaign journal to clipboard with btn
+	* allow the metrics dash board to be wider so we can add more columns
+	* for the card editor 
+		* put the card picture over the text input sot the aspect ratio fits
+		* allow the window to get bigger so we have more vertical space 
+* metrics
+	* remove the skip % stat on card we rules now make it so you can't skip
+	* add map stat number of turn with no kill leading to game end, 0 is a HQ kill, 32 is no kill game - the goal is to help identify how soon was the game over and the ais are just marching in circles
+	* add decisiveness stat to number of times the leading player change, bringing it to a tie doesn't count as changed - the goal is to se if there really is a back and forth of who's winning the thought being the more it happens the more a player would feel like the can 'come back' from a bad turn.
+	* Start versioning the rule book this would be 0.2 as this is v0 feedback round 2.  that way we can compare apples to apples and archive data from older versions of the game.
+* Builder feature
+	* allow me 5 "decks" with one selected as active - deck is a set of 16 cards
+* Claude plays
+	* can we have logs dumped in design-docs/game-logs
+	* can you give me an human-instructions doc
+		* can we set the map?
+		* can we set the effort level for the headless Claude cli
+* skills
+	* add instructions to use DIG (if connected) to generate an image for the card if user approves of one 
+	* create a skill to read game-log(s) file and then give a one page summary report of suggestions
+* work flow / doc updates
+	* i moved your CLUADE code review from the game doe to the design-doc/onboarding and changed the name to code-overview why don't you take out the workflow and make that its own onboarding doc
+	* lets scan our docs and apply tags and do some org 
+		* onboarding
+		* claude-skills
+		* game-rules
+		* code-architecture
+		* workflow
+		* human-instructions 
+		* game-logs
+	* lets rewrite the rule book to reflect reality of code 
 
-### The Dynamic Image Generation MCP
-
-you have access to a local MCP server called dig-mcp is available — it generates images through a locally-running ComfyUI instance. Tools: generate_images, generate_set, list_checkpoints. Call list_checkpoints first to see installed models; omit checkpoint to use the first available. Requires ComfyUI to be running locally and uv installed.
-
-I will note that is works great for the hero shots like card art. but i haven't really fine tuned it yet for UI elements.  It functions for UI elements like icons but might not be the cleanest results (which is ok if you think an icon is needed in places this can at lest give us a starting point that i can punch up manually) 
 
 ## Vision (post-V0, not speced — YAGNI until V0 lands)
 
 - **Roguelite deck-builder**: a card pool larger than the 20-card deck plus a deck-building loop between battles.
 - **Side asymmetry**: different decks per side, and Commander abilities that bend the rules (e.g. guaranteed Conscription in the opening hand). Expect bigger balance swings — which is why the rubrics + metrics tooling above come first.
 
-## Standing goals
-
-* rapid balance iteration is the point of this prototype — prefer data files + small tools over hardcoding
-* keep `game/` zero-dependency plain files (zippable); dev-only tooling lives in `dev/`
-	* we can talk about if some feature in v0 might break this goal which might be fine
-* keep `node game/test.js` green and extend it with every rules change

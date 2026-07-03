@@ -1,3 +1,4 @@
+#spec
 # Map roster deletion + custom board shapes
 
 Two related map-editor asks: let the base maps be deleted (with a floor), and let the board

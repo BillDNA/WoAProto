@@ -1,3 +1,4 @@
+#spec
 # Art Prompt Kit — War of Attrition digital prototype
 
 Prompts ready to paste into an image AI (Midjourney / DALL-E / Stable Diffusion etc.).

@@ -1,3 +1,4 @@
+#spec
 # Grading rubrics + north-star goals
 
 Formalized rubrics for cards, maps, units, and the game overall, each anchored to a **north-star

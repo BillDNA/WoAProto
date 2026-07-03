@@ -1,3 +1,4 @@
+#spec
 # Combat clarity + quality-of-life
 
 A cluster of small UI wins that make combat legible. All UI-only — none touch rules. The board FX

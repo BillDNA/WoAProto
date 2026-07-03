@@ -1,3 +1,4 @@
+#spec
 # **Player Card Prompt Kit (Front \+ Back)**
 
 ## **Global Constraints (apply to both fronts and backs)**

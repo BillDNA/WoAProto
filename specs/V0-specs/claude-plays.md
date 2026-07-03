@@ -1,3 +1,4 @@
+#spec
 # Claude plays (LLM player)
 
 Wire an LLM in as a "player" so it can play battles and give notes on how the game *felt*.

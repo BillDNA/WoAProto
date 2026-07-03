@@ -1,3 +1,4 @@
+#spec
 # Terrain crossing rules: trench support-block + river
 
 Two rules changes of the **same shape** — an edge feature that blocks something from crossing it.

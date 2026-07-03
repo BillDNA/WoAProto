@@ -1,3 +1,4 @@
+#spec
 # Layout design pass — handoff to `frontend-design`
 
 **This is a design brief, not a coded spec.** Hand it to the `frontend-design` skill. The visual
