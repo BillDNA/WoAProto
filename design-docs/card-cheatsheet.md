@@ -1,3 +1,4 @@
+#game-rules #human-instructions #code-architecture
 # Card editing cheat sheet
 
 Everything here lives in `game/maps.js` → `"cards": [...]`. It is **pure JSON**:
