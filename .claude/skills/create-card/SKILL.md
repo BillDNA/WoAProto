@@ -39,16 +39,25 @@ text-only renders clean.
 1. Map the deck's existing decisions (deploy tempo, attack buffs, mobility,
    denial). Name the gap you're filling — "another attack card" is not a gap.
 2. Draft 2–4 candidates. For each: the JSON, the decision it adds, and a
-   card-rubric self-grade (predicted Skip% risk, Simple% risk, is it
+   card-rubric self-grade (predicted dead-turn risk, Simple% risk, is it
    always-good-on-sight?).
 3. State the swap: which copies leave the 16 to make room, and why.
 4. Tell Bill how to test: import via Deck Editor (or hand-edit maps.js), then
-   `node game/test.js` + a Balance Dashboard run; watch the new card's Skip% /
+   `node game/test.js` + a Balance Dashboard run; watch the new card's Simple% /
    1stSight% columns.
+5. **Offer art (only if Bill approves the card first).** If the `dig-mcp` MCP
+   server is connected, ask Bill whether he wants generated card art. Only on a
+   yes: `list_checkpoints`, then `generate_images` with a prompt in the game's
+   art direction (steampunk Napoleonic field journal — parchment, brass, earthy
+   tones; a hero shot of the card's subject, no text/UI chrome). Tell Bill the
+   art is looked up by id, so the file goes to `game/art/<id>.jpg` (run
+   `dev/optimize-art.ps1` on the raw render first). If dig-mcp isn't connected,
+   say so and skip — the card renders clean as text-only. Never generate art for
+   a card Bill hasn't approved, and never place files without showing him first.
 
 ## Gotchas
 
 - Multi-step cards are the interesting design space (steps run in order,
-  each skippable) — but every extra step raises the Skip%-never-useful risk.
+  each skippable) — but every extra step raises the dead-turn (never-useful) risk.
 - A negative `mod` (Careful Maneuvers uses -1) is a real cost lever.
 - Don't propose bigger-than-16 pools or per-side decks — post-V0 vision.

@@ -32,7 +32,10 @@ findings go to Bill, he decides rule changes).
    - North-star scoreboard: each metric, current value, target band, verdict.
    - Per-map flags: SIDE-BIASED / mover-strong / attrition-only / STALEMATES rows,
      with the numbers.
-   - Card watchlist: high Skip%, high Simple%, high 1stSight% + low AvgSeen.
+   - Pacing (Feedback Round 2): the Drag column (trailing kill-less turns before
+     the game ends — high = the AIs march in circles) and Swings (field-score
+     lead flips per battle — high = real back-and-forth). Flag maps that drag.
+   - Card watchlist: high Simple%, high 1stSight% + low AvgSeen.
    - Concrete suggestions, each tied to the evidence ("Thornfield reads 73/28 red
      at n=40 — consider moving the red-side forest one hex south"), phrased as
      options for Bill, not decisions.
