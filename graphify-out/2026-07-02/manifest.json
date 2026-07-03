@@ -1,0 +1,287 @@
+{
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\.claude\\settings.local.json": {
+    "mtime": 1781117771.305241,
+    "ast_hash": "e25f289d3b206832e526dc7347e2e156",
+    "semantic_hash": "e25f289d3b206832e526dc7347e2e156"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\dev\\claude-plays.js": {
+    "mtime": 1783017910.3790028,
+    "ast_hash": "51ea9e890d9d61d8007a5248573ac402",
+    "semantic_hash": "51ea9e890d9d61d8007a5248573ac402"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\dev\\llm-client.js": {
+    "mtime": 1783017758.0929005,
+    "ast_hash": "fb0fe94b21b34e715b0fdc04340c3f5a",
+    "semantic_hash": "fb0fe94b21b34e715b0fdc04340c3f5a"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\dev\\llm-client.test.js": {
+    "mtime": 1783017791.9916127,
+    "ast_hash": "a382520ffb610cfef70741d0ece60632",
+    "semantic_hash": "a382520ffb610cfef70741d0ece60632"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\dev\\optimize-art.ps1": {
+    "mtime": 1781116352.881881,
+    "ast_hash": "fccde103149cda6fcbef8795604a54a6",
+    "semantic_hash": "fccde103149cda6fcbef8795604a54a6"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\dev\\smoke.js": {
+    "mtime": 1783028154.7999897,
+    "ast_hash": "76d382892f9d3371262f4e2cd50f824f",
+    "semantic_hash": "76d382892f9d3371262f4e2cd50f824f"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\balance.js": {
+    "mtime": 1783020068.1806438,
+    "ast_hash": "f7dcc0b183ca8606626d6cdfc6a1559d",
+    "semantic_hash": "f7dcc0b183ca8606626d6cdfc6a1559d"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\custom-deck.js": {
+    "mtime": 1783018987.5915046,
+    "ast_hash": "1163d3cbdebcd0c45da2d0c0e45bc16d",
+    "semantic_hash": "1163d3cbdebcd0c45da2d0c0e45bc16d"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\custom-maps.js": {
+    "mtime": 1783031958.614164,
+    "ast_hash": "8b4bb497492da5382abd8d5b32048a0e",
+    "semantic_hash": "8b4bb497492da5382abd8d5b32048a0e"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\engine.js": {
+    "mtime": 1783029219.109453,
+    "ast_hash": "5c0f743106f51cdd996bcff926f854ac",
+    "semantic_hash": "5c0f743106f51cdd996bcff926f854ac"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\maps.js": {
+    "mtime": 1783026587.6415865,
+    "ast_hash": "330f8f47010a9cb73ac49c1d6d35ee43",
+    "semantic_hash": "330f8f47010a9cb73ac49c1d6d35ee43"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\server.js": {
+    "mtime": 1783021038.0689042,
+    "ast_hash": "234de22af024975dce7b8979889c71b9",
+    "semantic_hash": "234de22af024975dce7b8979889c71b9"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\test.js": {
+    "mtime": 1783026775.3180904,
+    "ast_hash": "5e6460f1127a60a64d6a7fd1cda93c3e",
+    "semantic_hash": "5e6460f1127a60a64d6a7fd1cda93c3e"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\.claude\\skills\\create-card\\SKILL.md": {
+    "mtime": 1783020474.3607368,
+    "ast_hash": "07213230f0264da1c74c27c094c1b6aa",
+    "semantic_hash": "07213230f0264da1c74c27c094c1b6aa"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\.claude\\skills\\create-map\\SKILL.md": {
+    "mtime": 1783020488.8588424,
+    "ast_hash": "a4d5484837d0341d8566ad1dbab2c997",
+    "semantic_hash": "a4d5484837d0341d8566ad1dbab2c997"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\.claude\\skills\\run-tournament\\SKILL.md": {
+    "mtime": 1783020457.0151837,
+    "ast_hash": "be6dc4b784603a49e4dd189e41900a64",
+    "semantic_hash": "be6dc4b784603a49e4dd189e41900a64"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\CLAUDE.md": {
+    "mtime": 1783032294.840592,
+    "ast_hash": "8b3a5ecf9faaefd3637bd9083a0fcf24",
+    "semantic_hash": "8b3a5ecf9faaefd3637bd9083a0fcf24"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\design-docs\\Player Card Art direction drafts.md": {
+    "mtime": 1780425827.0493758,
+    "ast_hash": "0002d112249cdd2def6ea65f52d015b0",
+    "semantic_hash": "0002d112249cdd2def6ea65f52d015b0"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\design-docs\\War Of Attrition rule book.md": {
+    "mtime": 1783017794.4969726,
+    "ast_hash": "7c2f5340f166ed5fb8b68f207fe5b46c",
+    "semantic_hash": "7c2f5340f166ed5fb8b68f207fe5b46c"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\design-docs\\art-prompts.md": {
+    "mtime": 1781117688.2228,
+    "ast_hash": "dec5f92fc763f8d6e6663ff33dce07ec",
+    "semantic_hash": "dec5f92fc763f8d6e6663ff33dce07ec"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\design-docs\\card-cheatsheet.md": {
+    "mtime": 1783017797.2786233,
+    "ast_hash": "91e8c9d9cc415bd9493c74c0fd95c127",
+    "semantic_hash": "91e8c9d9cc415bd9493c74c0fd95c127"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\design-docs\\grading-rubrics.md": {
+    "mtime": 1783017493.3695533,
+    "ast_hash": "b7eba52ec498f3a9413df6b88fe485ae",
+    "semantic_hash": "b7eba52ec498f3a9413df6b88fe485ae"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\dev\\balance-80.txt": {
+    "mtime": 1781107104.585209,
+    "ast_hash": "af603c2dd27ecf7e5d7e2141392b491a",
+    "semantic_hash": "af603c2dd27ecf7e5d7e2141392b491a"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\dev\\matchup-16.txt": {
+    "mtime": 1781113258.5785666,
+    "ast_hash": "c4496be770ec8b69601dd9c2ee3628fd",
+    "semantic_hash": "c4496be770ec8b69601dd9c2ee3628fd"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\CLAUDE.md": {
+    "mtime": 1783027153.583122,
+    "ast_hash": "0a73606952eec53050214362565087f1",
+    "semantic_hash": "0a73606952eec53050214362565087f1"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\README.md": {
+    "mtime": 1783027122.2977087,
+    "ast_hash": "c04248711309e3d9335f837360464c31",
+    "semantic_hash": "c04248711309e3d9335f837360464c31"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\index.html": {
+    "mtime": 1783028412.0500958,
+    "ast_hash": "d60d07a83e4e4a6b81a0396a05f1f427",
+    "semantic_hash": "d60d07a83e4e4a6b81a0396a05f1f427"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\index.html": {
+    "mtime": 1781107085.2196977,
+    "ast_hash": "2ee710afa3becead7c57b6a94b14552c",
+    "semantic_hash": "2ee710afa3becead7c57b6a94b14552c"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\specs\\V0 Specs\\ai-variety.md": {
+    "mtime": 1783005206.1329715,
+    "ast_hash": "820fcfa9c82660021eb924defc86d9db",
+    "semantic_hash": "820fcfa9c82660021eb924defc86d9db"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\specs\\V0 Specs\\claude-plays.md": {
+    "mtime": 1783013822.8259482,
+    "ast_hash": "ec2656f30229694f2d4e0cf7a9bfa340",
+    "semantic_hash": "ec2656f30229694f2d4e0cf7a9bfa340"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\specs\\V0 Specs\\claude-skills.md": {
+    "mtime": 1783023794.607875,
+    "ast_hash": "49aaf3d2493d7933c486fb650686f523",
+    "semantic_hash": "49aaf3d2493d7933c486fb650686f523"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\specs\\V0 Specs\\cli-responder-transport.md": {
+    "mtime": 1782964437.903432,
+    "ast_hash": "8f7f0a16cc13d500e7e66ad388bab718",
+    "semantic_hash": "8f7f0a16cc13d500e7e66ad388bab718"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\specs\\V0 Specs\\combat-clarity-qol.md": {
+    "mtime": 1783006147.6349587,
+    "ast_hash": "7f2fff4d46d82d9e2c7b89277733e88c",
+    "semantic_hash": "7f2fff4d46d82d9e2c7b89277733e88c"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\specs\\V0 Specs\\deck-editor.md": {
+    "mtime": 1783023794.5922825,
+    "ast_hash": "ef043c83933e0cf539b228fe86f9d5fc",
+    "semantic_hash": "ef043c83933e0cf539b228fe86f9d5fc"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\specs\\V0 Specs\\grading-rubrics.md": {
+    "mtime": 1783013573.0872393,
+    "ast_hash": "5fe9bf579e3943bca2defed258cb567f",
+    "semantic_hash": "5fe9bf579e3943bca2defed258cb567f"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\specs\\V0 Specs\\layout-design-pass.md": {
+    "mtime": 1783006139.1251845,
+    "ast_hash": "85192ea3964a59d1121ee5db84c9af21",
+    "semantic_hash": "85192ea3964a59d1121ee5db84c9af21"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\specs\\V0 Specs\\layout-v2-implementation.md": {
+    "mtime": 1783011791.4912584,
+    "ast_hash": "6584d72f2793b71feabb7a7c38ee251d",
+    "semantic_hash": "6584d72f2793b71feabb7a7c38ee251d"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\specs\\V0 Specs\\map-roster-and-shapes.md": {
+    "mtime": 1783005771.0387144,
+    "ast_hash": "14d5f9c9d459b2784b4d660491f3e50d",
+    "semantic_hash": "14d5f9c9d459b2784b4d660491f3e50d"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\specs\\V0 Specs\\metrics-dashboard.md": {
+    "mtime": 1783013216.0231476,
+    "ast_hash": "d52c72269c61421102598ed3c5b32687",
+    "semantic_hash": "d52c72269c61421102598ed3c5b32687"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\specs\\V0 Specs\\terrain-crossing-rules.md": {
+    "mtime": 1783012963.30735,
+    "ast_hash": "ccb00e0322dabbceb5d864324f22506d",
+    "semantic_hash": "ccb00e0322dabbceb5d864324f22506d"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\design-docs\\prototype pictures\\HexClarificationDiagram.png": {
+    "mtime": 1781070061.2466054,
+    "ast_hash": "dee787b8dcbb63be4991f0f342e3c061",
+    "semantic_hash": "dee787b8dcbb63be4991f0f342e3c061"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\art\\airdrop.jpg": {
+    "mtime": 1781116691.9142847,
+    "ast_hash": "d6104b34261bb884e5121128251b9848",
+    "semantic_hash": "d6104b34261bb884e5121128251b9848"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\art\\attack_plus1.jpg": {
+    "mtime": 1781116692.0276473,
+    "ast_hash": "443e3074fa9a94b36ce9ac6fd3258e28",
+    "semantic_hash": "443e3074fa9a94b36ce9ac6fd3258e28"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\art\\board.jpg": {
+    "mtime": 1781116692.139342,
+    "ast_hash": "5b5eab8e9833f494a55c0033e1b2bf6a",
+    "semantic_hash": "5b5eab8e9833f494a55c0033e1b2bf6a"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\art\\careful_maneuvers.jpg": {
+    "mtime": 1781116692.250137,
+    "ast_hash": "edfa3eea0d6bba208b3faa1840ec4b23",
+    "semantic_hash": "edfa3eea0d6bba208b3faa1840ec4b23"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\art\\conscription.jpg": {
+    "mtime": 1781116692.3599367,
+    "ast_hash": "be973b0ab916d50384eb16f9d90f1b7a",
+    "semantic_hash": "be973b0ab916d50384eb16f9d90f1b7a"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\art\\deploy_artillery.jpg": {
+    "mtime": 1781116692.4684856,
+    "ast_hash": "34c233a0a371936afde866942beccb8e",
+    "semantic_hash": "34c233a0a371936afde866942beccb8e"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\art\\deploy_cavalry.jpg": {
+    "mtime": 1781116692.576203,
+    "ast_hash": "2014c524849d58c3f48c4a123d3f5045",
+    "semantic_hash": "2014c524849d58c3f48c4a123d3f5045"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\art\\deploy_inf_start.jpg": {
+    "mtime": 1781116692.68673,
+    "ast_hash": "8edb82cb9cc78bd2481116fc8b390a14",
+    "semantic_hash": "8edb82cb9cc78bd2481116fc8b390a14"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\art\\deploy_inf_trench.jpg": {
+    "mtime": 1781116692.7988515,
+    "ast_hash": "78819cec06733f0391f910b940ad4144",
+    "semantic_hash": "78819cec06733f0391f910b940ad4144"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\art\\forced_march.jpg": {
+    "mtime": 1781116692.907969,
+    "ast_hash": "41c11b0d3308150f521c7ab37f886e87",
+    "semantic_hash": "41c11b0d3308150f521c7ab37f886e87"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\art\\mass_assault.jpg": {
+    "mtime": 1781116693.018605,
+    "ast_hash": "e992598f957596e9519296e09cd08109",
+    "semantic_hash": "e992598f957596e9519296e09cd08109"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\art\\naval_barrage.jpg": {
+    "mtime": 1781116693.1276338,
+    "ast_hash": "bebfe3f2431dce4a0fdba7fe4bf7d98a",
+    "semantic_hash": "bebfe3f2431dce4a0fdba7fe4bf7d98a"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\art\\ordered_withdraw.jpg": {
+    "mtime": 1781116693.1697214,
+    "ast_hash": "66a244090491991e4bddcfdf6f2117f5",
+    "semantic_hash": "66a244090491991e4bddcfdf6f2117f5"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\art\\reckless_maneuvers.jpg": {
+    "mtime": 1781116693.2838311,
+    "ast_hash": "e92f7d2f4147aca7e9203007ae326e6d",
+    "semantic_hash": "e92f7d2f4147aca7e9203007ae326e6d"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\art\\table.jpg": {
+    "mtime": 1781116693.403452,
+    "ast_hash": "e0d8083b44f57c1c1352486ba02978a5",
+    "semantic_hash": "e0d8083b44f57c1c1352486ba02978a5"
+  },
+  "C:\\Users\\Bill\\Documents\\DynamicNewAlgorithms\\WarOfAttrition\\game\\art\\title.png": {
+    "mtime": 1781116693.476552,
+    "ast_hash": "02788afa2f93f5e6d484719a68568ab3",
+    "semantic_hash": "02788afa2f93f5e6d484719a68568ab3"
+  }
+}

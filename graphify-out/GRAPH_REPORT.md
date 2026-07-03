@@ -1,13 +1,18 @@
-# Graph Report - .  (2026-07-02)
+# Graph Report - WarOfAttrition  (2026-07-02)
 
 ## Corpus Check
-- 57 files · ~122,064 words
+- 42 files · ~4,872,048 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 414 nodes · 824 edges · 25 communities (17 shown, 8 thin omitted)
-- Extraction: 92% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 60 edges (avg confidence: 0.82)
-- Token cost: 449,660 input · 0 output
+- 604 nodes · 1018 edges · 37 communities (28 shown, 9 thin omitted)
+- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 60 edges (avg confidence: 0.82)
+- Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `b224299c`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - [[_COMMUNITY_Engine Rules & AI Core|Engine Rules & AI Core]]
@@ -35,22 +40,32 @@
 - [[_COMMUNITY_Decisive-Games Goal|Decisive-Games Goal]]
 - [[_COMMUNITY_Rule Book|Rule Book]]
 - [[_COMMUNITY_Root Redirect|Root Redirect]]
+- [[_COMMUNITY_Community 25|Community 25]]
+- [[_COMMUNITY_Community 26|Community 26]]
+- [[_COMMUNITY_Community 27|Community 27]]
+- [[_COMMUNITY_Community 28|Community 28]]
+- [[_COMMUNITY_Community 29|Community 29]]
+- [[_COMMUNITY_Community 30|Community 30]]
+- [[_COMMUNITY_Community 31|Community 31]]
+- [[_COMMUNITY_Community 32|Community 32]]
+- [[_COMMUNITY_Community 33|Community 33]]
+- [[_COMMUNITY_Community 34|Community 34]]
+- [[_COMMUNITY_Community 35|Community 35]]
+- [[_COMMUNITY_Community 36|Community 36]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `applyStep()` - 20 edges
+1. `applyStep()` - 21 edges
 2. `computeAttack()` - 16 edges
 3. `evalState()` - 16 edges
 4. `renderAll (master render orchestrator)` - 15 edges
 5. `newBattle()` - 14 edges
 6. `stepOptions()` - 14 edges
 7. `aiPlanTurn()` - 14 edges
-8. `War of Attrition — player manual (README)` - 13 edges
+8. `fieldScore()` - 13 edges
 9. `other()` - 12 edges
-10. `fieldScore()` - 12 edges
+10. `listAttacks()` - 12 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Unit Rubric (role distinctness, dominated units)` --references--> `UNITS (unit table: inf 1 / cav 2 / art 3 vp)`  [INFERRED]
-  specs/V0 Specs/grading-rubrics.md → game/engine.js
 - `Hex Clarification Diagram` --references--> `sideKey()`  [INFERRED]
   design-docs/prototype pictures/HexClarificationDiagram.png → game/engine.js
 - `Deck validation (16 copies, one starting card, airdrop rule)` --references--> `drawHand()`  [EXTRACTED]
@@ -59,6 +74,8 @@
   specs/V0 Specs/combat-clarity-qol.md → game/engine.js
 - `Directional Terrain-on-a-Side Rule` --references--> `computeAttack()`  [INFERRED]
   design-docs/prototype pictures/HexClarificationDiagram.png → game/engine.js
+- `Hover unit -> preview attack scores` --references--> `computeAttack()`  [EXTRACTED]
+  specs/V0 Specs/combat-clarity-qol.md → game/engine.js
 
 ## Import Cycles
 - None detected.
@@ -80,59 +97,59 @@
 - **renderAll master render fan-out** — game_index_renderall, game_index_renderboard, game_index_rendermat, game_index_rendertop, game_index_renderhand, game_index_renderlog [EXTRACTED 1.00]
 - **Dashboard balance aggregation shared with CLI** — game_index_dashrun, game_engine_balancenew, game_engine_balanceadd, game_engine_simbattle [EXTRACTED 0.95]
 
-## Communities (25 total, 8 thin omitted)
+## Communities (37 total, 9 thin omitted)
 
 ### Community 0 - "Engine Rules & AI Core"
 Cohesion: 0.09
-Nodes (66): Anti-degeneracy AI guards, Combat clarity QoL (hover attack pills, strike arrows, one-click trenches), Flexible orders house rule (attack/reposition fallback), No-op turn penalty + visible dead turns (Skip%), River terrain (support denial both ways), Trenches (attacker-support denial), advanceStep(), aiConfig() (+58 more)
+Nodes (70): Parameterized AI + data personalities (brawler/turtle), Anti-degeneracy AI guards, Combat clarity QoL (hover attack pills, strike arrows, one-click trenches), Concession + advisory heuristic (concedeAdvised), Flexible orders house rule (attack/reposition fallback), No-op turn penalty + visible dead turns (Skip%), River terrain (support denial both ways), Trenches (attacker-support denial) (+62 more)
 
 ### Community 1 - "Game UI Render & Turn Loop"
-Cohesion: 0.06
-Nodes (56): Campaign Journal (turn-grouped bound book), Concession + advisory heuristic (concedeAdvised), Layout V2 (2A + topbar scoreboard), E.CARD_BY_ID (card index), E.CARDS (card deck data), cardsRemaining(), concedeAdvised(), fieldScore() (+48 more)
+Cohesion: 0.08
+Nodes (41): Campaign Journal (turn-grouped bound book), Layout V2 (2A + topbar scoreboard), E.CARD_BY_ID (card index), hexes(), E.PIECE_TOTALS (piece counts data), UNITS (unit table: inf 1 / cav 2 / art 3 vp), act (apply a resolution step), afterChange (post-action orchestrator) (+33 more)
 
 ### Community 2 - "Board Geometry & Map Editor"
 Cohesion: 0.07
-Nodes (45): Custom board outlines (inline shapeDef), Directional hex-owned terrain (forest/mountain), Map Editor (terrain paint + Board hexes carve), Physical terrain stock + single-hex piece rule, boardHexes(), buildShape(), buildTerrain(), currentShape() (+37 more)
+Nodes (44): create-map, Data shape, Gotchas, Read first, Steps, Custom board outlines (inline shapeDef), Map Editor (terrain paint + Board hexes carve), Physical terrain stock + single-hex piece rule (+36 more)
 
 ### Community 3 - "Orientation, Docs & Tooling"
-Cohesion: 0.10
-Nodes (27): Project root CLAUDE.md (orientation index), create-card skill, create-map skill, Grading Rubrics, run-tournament Skill, balance-80 report sample (80 battles/map), matchup-16 skill-vs-luck report sample, loadCustomMaps() (+19 more)
+Cohesion: 0.06
+Nodes (35): Feedback round 1, Feedback round 2, History — shipped (June 2026), Standing goals, V0 — SHIPPED (July 2026), Vision (post-V0, not speced — YAGNI until V0 lands), create-card, Gotchas (+27 more)
 
 ### Community 4 - "Rubrics & Design Specs"
-Cohesion: 0.11
-Nodes (26): Claude Skills (create-card / create-map / run-tournament), balance.js (CLI balance lab), validateMaps (in-browser editor validation), maps.js data (WOA_BUILTIN cards + AI/personality rows), Personalities as data not code, Claude Skills Spec (run-tournament / create-card / create-map), create-card skill, create-map skill (+18 more)
+Cohesion: 0.08
+Nodes (30): Claude Skills (create-card / create-map / run-tournament), balance.js (CLI balance lab), validateMaps (in-browser editor validation), maps.js data (WOA_BUILTIN cards + AI/personality rows), Personalities as data not code, Claude skills: run-tournament / create-card / create-map, create-card, create-map (+22 more)
 
 ### Community 5 - "Claude-Plays LLM Harness"
-Cohesion: 0.11
-Nodes (18): cap(), CARD_KEEP, CHOICE_SCHEMA, DIRN, E, fs, HEURISTIC, llm (+10 more)
+Cohesion: 0.10
+Nodes (19): cap(), CARD_KEEP, CHOICE_SCHEMA, DIRN, E, fs, HEURISTIC, llm (+11 more)
 
 ### Community 6 - "Combat Rules & Terrain"
 Cohesion: 0.12
 Nodes (21): attack Step Type, barrage Step Type, reposition Step Type, trench Step Type, Attack Action, Attack +1 (Card), Attacker's Power, Careful Maneuvers (Card) (+13 more)
 
 ### Community 7 - "Layout & Combat-Clarity UI"
-Cohesion: 0.12
-Nodes (20): frontend-design skill, Board FX layer (capturePre / playFX / slide-pop-ghost-ring), playFX / FX layer (slide/pop/ring), renderBoard(), syncJournalOverlay() (journal overlay), viewBoxFor() (hex bounding box), test.js (rules test harness), Combat Clarity + Quality-of-Life Spec (+12 more)
+Cohesion: 0.06
+Nodes (33): frontend-design skill, playFX / FX layer (slide/pop/ring), renderBoard(), syncJournalOverlay() (journal overlay), viewBoxFor() (hex bounding box), Alternatives to weigh (don't just take A), Board Fits Its Hexes (kill parchment gutters), Constraints — must not break (these are load-bearing, not preferences) (+25 more)
 
 ### Community 8 - "Units, Art & Aesthetic"
-Cohesion: 0.13
-Nodes (20): game/art/ Directory, Art Pipeline (id-based lookup + fallback), Priority 2 Card Illustrations, dev/optimize-art.ps1, Steampunk Napoleonic Field-Journal Style, Priority 1 Unit Emblems, Card Fields (id/name/count/text/starting/steps), game/maps.js (cards + units data) (+12 more)
+Cohesion: 0.10
+Nodes (21): game/art/ Directory, Art Pipeline (id-based lookup + fallback), Priority 2 Card Illustrations, dev/optimize-art.ps1, `attack` — order one attack, `barrage` — destroy a terrain feature, Card editing cheat sheet, Card fields (+13 more)
 
 ### Community 9 - "Card/Map Rules & Metrics"
-Cohesion: 0.13
-Nodes (20): Card Editing Cheat Sheet, game/balance.js (balance report), CARD_KEEP Table (engine.js), Card Report Metrics (Win%/Simple%/Skip%/1stSight%/AvgSeen), House Rule (basic attack/reposition fallback), deploy Step Type, game/test.js (deck legality validator), Card Rubric (+12 more)
+Cohesion: 0.08
+Nodes (34): Priority 1 Unit Emblems, game/balance.js (balance report), CARD_KEEP Table (engine.js), Card Report Metrics (Win%/Simple%/Skip%/1stSight%/AvgSeen), House Rule (basic attack/reposition fallback), deploy Step Type, game/test.js (deck legality validator), Card rubric (+26 more)
 
 ### Community 10 - "Balance Simulation & Dashboard"
-Cohesion: 0.20
-Nodes (18): Balance Dashboard (in-browser balance report), Balance lab CLI (balance.js), balanceAdd(), balanceFP(), balanceMap(), balanceNew(), balanceSeed(), simBattle() (+10 more)
+Cohesion: 0.09
+Nodes (29): Balance Dashboard (in-browser balance report), Balance lab CLI (balance.js), balanceAdd(), balanceFP(), balanceMap(), balanceNew(), balanceSeed(), E.CARDS (card deck data) (+21 more)
 
 ### Community 11 - "LLM Client Transport"
 Cohesion: 0.21
 Nodes (12): buildPrompt(), errored(), fs, parseEnvelope(), path, resolveBinary(), send(), { spawn, spawnSync } (+4 more)
 
 ### Community 12 - "LLM Transport Design"
-Cohesion: 0.26
-Nodes (12): Claude Plays Spec (LLM player), Felt-notes (free-text post-battle notes), Pick from numbered legal-move list, Luck-vs-skill probe (LLM as non-heuristic reference), Warm session reuse (--resume/--continue, cache not carryover), CLI-Responder LLM Transport Spec (claude -p), BuildPrompt (pure helper: user msg + schema instruction), ClaudeCliLlmClient (subprocess LLM transport) (+4 more)
+Cohesion: 0.07
+Nodes (32): Anti-degeneracy guardrails (noop -80, attrition projection, anti-shuffle -10), Better, more varied heuristic AIs, Common random numbers (fresh same-seeded rng per candidate), Grounding / guardrails (don't regress the Round 5–6 fixes), Heuristic-weights axis (evalState temperament knobs), Parameterized AI engine (config: depth/breadth/weights/noise), Search-space axis (depth plies / breadth candidates), The idea: parameterize `aiPlanTurn` (+24 more)
 
 ### Community 13 - "LAN Server"
 Cohesion: 0.38
@@ -147,11 +164,55 @@ Cohesion: 0.50
 Nodes (4): Art Prompt Kit, Shared Negative Prompt, Priority 3 Table Dressing, Player Card Prompt Kit (Front + Back)
 
 ### Community 17 - "Skill-over-Luck Goal"
-Cohesion: 0.67
-Nodes (3): Game-level Rubric, North Star: Skill over Luck, Skill Premium (matchup luck-o-meter)
+Cohesion: 0.14
+Nodes (17): Directional hex-owned terrain (forest/mountain), sideKey(), splitRun() (editor terrain-run grouping), test.js (rules test harness), Hex Clarification Diagram, Directional Terrain-on-a-Side Rule, Forest Side (Green) — +1 Attacking Out Across a Covered Side, Three Adjacent Hexes (A/B/C) Sharing a Vertex (+9 more)
+
+### Community 25 - "Community 25"
+Cohesion: 0.13
+Nodes (14): Action Definitions / clarifications, Battle Victory Conditions, Box Contents, Building Types, Card Actions, Game setup, Game Victory Conditions, Glossary (+6 more)
+
+### Community 26 - "Community 26"
+Cohesion: 0.14
+Nodes (14): Art, Boards, maps, units & cards — built for rapid tinkering, Files, Hotseat (two players, one device), House rules (per Bill's prototyping), Play in the browser (GitHub Pages), Play vs the AI (no setup), Rulings made where the rule book was silent (+6 more)
+
+### Community 27 - "Community 27"
+Cohesion: 0.20
+Nodes (10): Board FX layer (capturePre / playFX / slide-pop-ghost-ring), Animate the attack source + supporters, Attack source + supporter animation (through-HQ cue), Combat clarity + quality-of-life, Grounding, Hover unit -> preview attack scores, Hover unit → preview attack scores, Layout design pass → moved out (+2 more)
+
+### Community 28 - "Community 28"
+Cohesion: 0.22
+Nodes (8): Every weight (the `AI_WEIGHTS` table), How a turn is decided (the heuristic), How to change or add an AI, The AI, in plain English — how it thinks and every knob you can turn, The three dials that aren't weights, The tie-breaker for burning cards (CARD_KEEP), The two shipped personalities (read them as examples), Where the 5 AIs are (the "AI_PRESETS has only 3" question)
+
+### Community 29 - "Community 29"
+Cohesion: 0.22
+Nodes (8): After the battle: felt-notes, Claude Plays — human instructions, Fail-open behaviour, Gotchas, Running a battle, The logs: `design-docs/game-logs/`, What it's for, What the LLM actually sees
+
+### Community 30 - "Community 30"
+Cohesion: 0.22
+Nodes (8): 1. Problem this solves, 2. Core requirements, 3. Things that are genuinely optional, 4. Non-goals, 5. Minimal shape of one decision round-trip, 6. Minimal shape of the report record, 7. Practical LLM-transport notes (whatever CLI/SDK you use), Headless-LLM playtest harness — generalized spec
+
+### Community 31 - "Community 31"
+Cohesion: 0.29
+Nodes (6): Core model (engine.js), Files, Known balance signals (from balance.js — re-measured July 2026 AFTER the V0 terrain-crossing rules: trench = support denial, rivers added; verify before acting; present findings to Bill, he decides rule changes), Source of truth, UI invariants, War of Attrition — orientation for Claude
+
+### Community 32 - "Community 32"
+Cohesion: 0.33
+Nodes (5): Art Prompt Kit — War of Attrition digital prototype, Priority 1 — unit emblems (the biggest at-a-glance win), Priority 2 — card illustrations (13, one per order), Priority 3 — table dressing, What I'll do with them
+
+### Community 33 - "Community 33"
+Cohesion: 0.40
+Nodes (4): game-log-report, Read first, Rules, The one-page report (this exact shape)
+
+### Community 34 - "Community 34"
+Cohesion: 0.40
+Nodes (4): graphify, The Dynamic Image Generation MCP, Tools available to you, Workflow
+
+### Community 35 - "Community 35"
+Cohesion: 0.40
+Nodes (4): Back Prompt, Front Prompt, **Global Constraints (apply to both fronts and backs)**, **Player Card Prompt Kit (Front \+ Back)**
 
 ## Ambiguous Edges - Review These
-- `Grading Rubrics` → `Steampunk Napoleonic Field-Journal Style`  [AMBIGUOUS]
+- `grading-rubrics.md` → `Steampunk Napoleonic Field-Journal Style`  [AMBIGUOUS]
   design-docs/art-prompts.md · relation: semantically_similar_to
 - `Three Adjacent Hexes (A/B/C) Sharing a Vertex` → `Forest Side (Green) — +1 Attacking Out Across a Covered Side`  [AMBIGUOUS]
   design-docs/prototype pictures/HexClarificationDiagram.png · relation: conceptually_related_to
@@ -159,24 +220,24 @@ Nodes (3): Game-level Rubric, North Star: Skill over Luck, Skill Premium (matchu
   design-docs/prototype pictures/HexClarificationDiagram.png · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **77 isolated node(s):** `allow`, `fs`, `path`, `E`, `llm` (+72 more)
+- **218 isolated node(s):** `PreToolUse`, `allow`, `fs`, `path`, `E` (+213 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **8 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **What is the exact relationship between `Grading Rubrics` and `Steampunk Napoleonic Field-Journal Style`?**
+- **What is the exact relationship between `grading-rubrics.md` and `Steampunk Napoleonic Field-Journal Style`?**
   _Edge tagged AMBIGUOUS (relation: semantically_similar_to) - confidence is low._
 - **What is the exact relationship between `Three Adjacent Hexes (A/B/C) Sharing a Vertex` and `Forest Side (Green) — +1 Attacking Out Across a Covered Side`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **What is the exact relationship between `Three Adjacent Hexes (A/B/C) Sharing a Vertex` and `Mountain Side (Gray) — +1 Defending Across the Side`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **Why does `Grading Rubrics` connect `Orientation, Docs & Tooling` to `Units, Art & Aesthetic`, `Card/Map Rules & Metrics`?**
-  _High betweenness centrality (0.172) - this node is a cross-community bridge._
-- **Why does `run-tournament skill` connect `Orientation, Docs & Tooling` to `Claude-Plays LLM Harness`?**
-  _High betweenness centrality (0.143) - this node is a cross-community bridge._
-- **Why does `Steampunk Napoleonic Field-Journal Style` connect `Units, Art & Aesthetic` to `Orientation, Docs & Tooling`?**
-  _High betweenness centrality (0.125) - this node is a cross-community bridge._
+- **Why does `War of Attrition — orientation for Claude` connect `Orientation, Docs & Tooling` to `Engine Rules & AI Core`, `Board Geometry & Map Editor`, `LAN Server`?**
+  _High betweenness centrality (0.072) - this node is a cross-community bridge._
+- **Why does `Grading rubrics — north stars + what to measure` connect `Card/Map Rules & Metrics` to `Orientation, Docs & Tooling`?**
+  _High betweenness centrality (0.071) - this node is a cross-community bridge._
+- **Why does `run-tournament` connect `Rubrics & Design Specs` to `Balance Simulation & Dashboard`, `Orientation, Docs & Tooling`, `LLM Transport Design`?**
+  _High betweenness centrality (0.068) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `computeAttack()` (e.g. with `Directional hex-owned terrain (forest/mountain)` and `Directional Terrain-on-a-Side Rule`) actually correct?**
   _`computeAttack()` has 2 INFERRED edges - model-reasoned connections that need verification._
