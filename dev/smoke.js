@@ -188,6 +188,10 @@ setTimeout(function () {
           var th = doc.querySelector('#dashOut th[data-key="red"]');
           th.dispatchEvent(new win.Event('click', { bubbles: true }));
           ok(doc.querySelector('#dashOut th.sorted'), 'clicking a header sorts');
+          // Feedback Round 2: save-report builder produces a full markdown report
+          var rpt = win.dashReportMarkdown();
+          ok(doc.getElementById('dashSave') && /## Maps/.test(rpt) && /## Card report/.test(rpt) && /Drag \| Swings/.test(rpt),
+            'Save report button + markdown report (maps, card report, pacing cols)');
           return startWatch();
         }
         if ((dw += 100) > 60000) { ok(false, 'dashboard run never finished'); return startWatch(); }

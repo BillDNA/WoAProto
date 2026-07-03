@@ -114,6 +114,23 @@ http.createServer(function (req, res) {
       });
     });
   }
+  if (p === '/api/savereport' && req.method === 'POST') {
+    // Save a Balance Dashboard report to design-docs/ballance-reports/ so Bill
+    // and Claude read the same numbers. filename is validated (no path escape).
+    return readBody(req, function (err, body) {
+      if (err || !body.filename || typeof body.content !== 'string') return json(res, 400, { error: 'bad request' });
+      var name = String(body.filename);
+      if (!/^[A-Za-z0-9._-]+\.md$/.test(name)) return json(res, 400, { error: 'bad filename' });
+      var dir = path.join(ROOT, '..', 'design-docs', 'ballance-reports');
+      fs.mkdir(dir, { recursive: true }, function (merr) {
+        if (merr) return json(res, 500, { error: 'mkdir failed' });
+        fs.writeFile(path.join(dir, name), body.content, function (werr) {
+          if (werr) return json(res, 500, { error: 'write failed' });
+          json(res, 200, { ok: true, path: 'design-docs/ballance-reports/' + name });
+        });
+      });
+    });
+  }
   if (p === '/api/poll' && req.method === 'GET') {
     var r = rooms[(u.searchParams.get('room') || '').toUpperCase()];
     if (!r) return json(res, 404, { error: 'room not found' });
