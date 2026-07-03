@@ -86,6 +86,7 @@ A **river** (drawn in blue, in the same 2- and 3-side pieces as forest and mount
 ## House rules (per Bill's prototyping)
 
 - **Flexible orders**: any card may resolve as the printed action, a basic Attack, or a basic Reposition — the card is removed from the game regardless. A basic Reposition is only offered when no basic Attack is possible: if you can fight, you can't spend the order just shuffling pieces.
+- **Every order must do something**: you may skip an individual step of a multi-step card, but not skip *every* step — if the card can accomplish any action, at least one must be played (the **Skip step** button hides on the last playable step). An order that genuinely has no legal action anywhere is still spent to no effect.
 - **Reset turn**: mid-way through a multi-step card you can reset back to the start of your turn (button next to Skip). Once the card fully resolves the turn is final.
 - **No stacking**: a hex side with terrain can't also hold a trench; to place one, pick the hex then click the brass corner knob of the orientation you want (hovering a knob previews its two edges).
 - **Reading a fight**: hover any of your units to see the attack math against every hex it could hit (green = you win, brass = tie, red = you lose — the same numbers the confirm dialog shows). When an attack lands, an arrow shows where it came from (bending through an HQ on a through-HQ strike) and rings mark every unit whose support actually counted — gold for the attacker's, steel for the defender's.

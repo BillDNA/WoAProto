@@ -1516,19 +1516,23 @@ function renderPrompt(){
   }
   var o = E.stepOptions(st);
   if (!o) return;
+  var canSkip = !E.mustPlayStep(st); // Feedback Round 2: an order must resolve at least one action if it can
   var stepTag = o.stepCount>1 ? ' <span class="small" style="color:#bbb;">(step '+(o.stepIndex+1)+'/'+o.stepCount+')</span>' : '';
   var msg = '';
   if (o.type==='deploy') msg = 'Place your <b>'+E.UNITS[o.unit].name+'</b>' + (APP.ui.sel?'':'');
   else if (o.type==='trench') msg = APP.ui.sel ? 'Click a <b>brass knob</b> to dig the trench across its two edges' : 'Choose a hex to <b>entrench</b>';
   else if (o.type==='attack') msg = APP.ui.sel ? 'Choose a target' : 'Choose an attacker' + (o.mod ? ' <b>('+(o.mod>0?'+':'')+o.mod+' support)</b>':'') + (o.tieSpare?' <b>(tie spares your unit)</b>':'');
   else if (o.type==='reposition') msg = APP.ui.sel ? 'Move to a gold hex, or swap with a violet unit' : 'Choose a unit to <b>reposition</b>';
-  else if (o.type==='barrage') msg = 'Barrage: click <b>any trench</b> or <b>forest</b> on the board to destroy — or skip straight to the attack';
-  el.innerHTML = '<b>'+E.CARD_BY_ID[st.pending.cardId].name+'</b>: '+msg+stepTag;
-  var sk = document.createElement('button');
-  sk.textContent = 'Skip step';
-  sk.style.cssText = 'padding:3px 12px;font-size:13px;';
-  sk.onclick = function(){ APP.ui.sel=null; act({skip:true}); };
-  el.appendChild(sk);
+  else if (o.type==='barrage') msg = 'Barrage: click <b>any trench</b> or <b>forest</b> on the board to destroy' + (canSkip ? ' — or skip straight to the attack' : '');
+  el.innerHTML = '<b>'+E.CARD_BY_ID[st.pending.cardId].name+'</b>: '+msg+stepTag +
+    (canSkip ? '' : ' <span class="small" style="color:#e3c06a;">(this order must accomplish at least one action)</span>');
+  if (canSkip){
+    var sk = document.createElement('button');
+    sk.textContent = 'Skip step';
+    sk.style.cssText = 'padding:3px 12px;font-size:13px;';
+    sk.onclick = function(){ APP.ui.sel=null; act({skip:true}); };
+    el.appendChild(sk);
+  }
   if (canReset()){
     var rs = document.createElement('button');
     rs.textContent = 'Reset turn';

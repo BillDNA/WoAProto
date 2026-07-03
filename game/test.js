@@ -245,6 +245,40 @@ console.log('== house rule: play any card as basic attack/reposition ==');
   ok(st3.phase === 'choose-card' && st3.hands.red.indexOf(cid3) >= 0, 'the refused card stays in hand');
 })();
 
+console.log('== Feedback Round 2: at least one step of a card must be played ==');
+(function () {
+  // Red inf at 0,0 can only strike blue inf at 0,1 (both far from either HQ).
+  var st = testBattle(31);
+  st.units = { '0,0': { type: 'infantry', owner: 'red' }, '0,1': { type: 'infantry', owner: 'blue' } };
+  st.hands.red = ['mass_assault']; // two attack steps
+  E.playCard(st, 'mass_assault');
+  ok(!E.mustPlayStep(st), 'step 1 is skippable — a later step can still act');
+  E.applyStep(st, { skip: true }); // allowed: attack #2 remains
+  ok(E.mustPlayStep(st), 'the last playable step cannot be skipped while the card has done nothing');
+  var threw = false;
+  try { E.applyStep(st, { skip: true }); } catch (e) { threw = true; }
+  ok(threw, 'engine refuses to skip the whole card');
+  E.applyStep(st, { from: '0,0', to: '0,1' }); // playing an action satisfies the rule
+  ok(st.phase !== 'step', 'once an action is played the card resolves');
+
+  // Once one action is done, remaining steps ARE skippable.
+  var st2 = testBattle(32);
+  st2.units = { '0,0': { type: 'infantry', owner: 'red' } }; // lone unit, room to march, no enemies
+  st2.hands.red = ['forced_march']; // three reposition steps
+  E.playCard(st2, 'forced_march');
+  E.applyStep(st2, { from: '0,0', to: E.listRepositions(st2, 'red').moves[0].to });
+  ok(st2.phase !== 'step' || !E.mustPlayStep(st2), 'after acting, later steps are skippable');
+
+  // A card that genuinely cannot act anywhere still spends the turn (no-op).
+  var st3 = testBattle(33);
+  st3.units = {}; // no units -> no barrage targets, no attacks
+  st3.hands.red = ['naval_barrage']; // [barrage, attack]
+  E.playCard(st3, 'naval_barrage');
+  ok(st3.phase === 'choose-card' && st3.current === 'blue', 'a truly dead card still ends the turn');
+  var le = st3.playLog[st3.playLog.length - 1];
+  ok(le && le.noop, 'the dead card is logged as a no-op');
+})();
+
 console.log('== map pool ==');
 (function () {
   var one = [E.MAPS[0]];

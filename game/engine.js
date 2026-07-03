@@ -738,6 +738,26 @@
     if (st.pending.idx >= st.pending.steps.length) endTurn(st);
   }
 
+  // Feedback Round 2: a card must accomplish at least one action if it can — you
+  // may skip an individual step, but not skip EVERY step to burn the order for
+  // free. A voluntary skip is refused only when nothing has acted yet, this step
+  // can act, and no later step can (it's the card's last chance). Steps with no
+  // legal option are still auto-skipped by skipImpossible, and a card where no
+  // step can act at all still legitimately no-ops.
+  function laterStepPlayable(st) {
+    var save = st.pending.idx, found = false;
+    for (var i = save + 1; i < st.pending.steps.length && !found; i++) {
+      st.pending.idx = i;
+      if (stepHasOptions(st)) found = true;
+    }
+    st.pending.idx = save;
+    return found;
+  }
+  function mustPlayStep(st) {
+    return st.phase === 'step' && !!st.pending && st.pending.acted === 0 &&
+      stepHasOptions(st) && !laterStepPlayable(st);
+  }
+
   function ensureStats(st) { // self-heal saves from before the behaviour counters
     if (!st.stats) st.stats = { attacks: 0, swaps: 0, marches: 0, deploys: 0, firstBlood: null };
     if (!st.lastSwap) st.lastSwap = { red: null, blue: null };
@@ -751,6 +771,7 @@
     ensureStats(st);
     var step = currentStep(st);
     if (choice && choice.skip) {
+      if (mustPlayStep(st)) throw new Error('at least one step of a card must be played');
       advanceStep(st);
       if (st.phase === 'step') skipImpossible(st);
       return st;
@@ -1253,7 +1274,7 @@
     deployTargets: deployTargets, trenchTargets: trenchTargets, trenchOrientations: trenchOrientations,
     listAttacks: listAttacks, listRepositions: listRepositions, listBarrageTargets: listBarrageTargets,
     computeAttack: computeAttack, supportFor: supportFor, playCard: playCard, currentStep: currentStep,
-    stepOptions: stepOptions, applyStep: applyStep, cardsRemaining: cardsRemaining,
+    stepOptions: stepOptions, applyStep: applyStep, mustPlayStep: mustPlayStep, cardsRemaining: cardsRemaining,
     enumerateChoices: enumerateChoices,
     concede: concede, concedeAdvised: concedeAdvised, fieldScore: fieldScore,
     aiPlanTurn: aiPlanTurn, clone: clone, evalState: evalState, validateMaps: validateMaps,
