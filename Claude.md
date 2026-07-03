@@ -56,42 +56,42 @@ All ten V0 specs in `specs/` were built and committed in one autonomous run (Jul
 	* ~~balance dashboard - see the whiteboard page "WoA Ballance Dashboard"~~
 * ~~this code base is probably big enough to put graphify in (https://github.com/safishamsi/graphify)~~
 ### Feedback round 2
-* ai things
-	* on the "Thornfield" map blue played entrench and then place the trench on C4 facing away from the board so that the trench was not doing anything
-	* can you make me a human-instructions doc on the heuristic model and what the weights are
-		* where are the 5 ai I see are set cause in the engine.js i see the AI_PRESETS but there are only 3 not 5
-* ui things
-	* when a battle is over let me copy the campaign journal to clipboard with btn
-	* allow the metrics dash board to be wider so we can add more columns
-	* for the card editor 
-		* put the card picture over the text input sot the aspect ratio fits
-		* allow the window to get bigger so we have more vertical space 
-* metrics
-	* remove the skip % stat on card we rules now make it so you can't skip
-	* add map stat number of turn with no kill leading to game end, 0 is a HQ kill, 32 is no kill game - the goal is to help identify how soon was the game over and the ais are just marching in circles
-	* add decisiveness stat to number of times the leading player change, bringing it to a tie doesn't count as changed - the goal is to se if there really is a back and forth of who's winning the thought being the more it happens the more a player would feel like the can 'come back' from a bad turn.
-	* Start versioning the rule book this would be 0.2 as this is v0 feedback round 2.  that way we can compare apples to apples and archive data from older versions of the game.
-* Builder feature
-	* allow me 5 "decks" with one selected as active - deck is a set of 16 cards
-* Claude plays
-	* can we have logs dumped in design-docs/game-logs
-	* can you give me an human-instructions doc
-		* can we set the map?
-		* can we set the effort level for the headless Claude cli
-* skills
-	* add instructions to use DIG (if connected) to generate an image for the card if user approves of one 
-	* create a skill to read game-log(s) file and then give a one page summary report of suggestions
-* work flow / doc updates
-	* i moved your CLUADE code review from the game doe to the design-doc/onboarding and changed the name to code-overview why don't you take out the workflow and make that its own onboarding doc
-	* lets scan our docs and apply tags and do some org 
-		* onboarding
-		* claude-skills
-		* game-rules
-		* code-architecture
-		* workflow
-		* human-instructions 
-		* game-logs
-	* lets rewrite the rule book to reflect reality of code 
+* ~~ai things~~
+	* ~~on the "Thornfield" map blue played entrench and then place the trench on C4 facing away from the board so that the trench was not doing anything~~
+	* ~~can you make me a human-instructions doc on the heuristic model and what the weights are~~
+		* ~~where are the 5 ai I see are set cause in the engine.js i see the AI_PRESETS but there are only 3 not 5~~
+* ~~ui things~~
+	* ~~when a battle is over let me copy the campaign journal to clipboard with btn~~
+	* ~~allow the metrics dash board to be wider so we can add more columns~~
+	* ~~for the card editor~~ 
+		* ~~put the card picture over the text input sot the aspect ratio fits~~
+		* ~~allow the window to get bigger so we have more vertical space~~ 
+* ~~metrics~~
+	* ~~remove the skip % stat on card we rules now make it so you can't skip~~
+	* ~~add map stat number of turn with no kill leading to game end, 0 is a HQ kill, 32 is no kill game - the goal is to help identify how soon was the game over and the ais are just marching in circles~~
+	* ~~add decisiveness stat to number of times the leading player change, bringing it to a tie doesn't count as changed - the goal is to se if there really is a back and forth of who's winning the thought being the more it happens the more a player would feel like the can 'come back' from a bad turn.~~
+	* ~~Start versioning the rule book this would be 0.2 as this is v0 feedback round 2.  that way we can compare apples to apples and archive data from older versions of the game.~~
+* ~~Builder feature~~
+	* ~~allow me 5 "decks" with one selected as active - deck is a set of 16 cards~~
+* ~~Claude plays~~
+	* ~~can we have logs dumped in design-docs/game-logs~~
+	* ~~can you give me an human-instructions doc~~
+		* ~~can we set the map?~~
+		* ~~can we set the effort level for the headless Claude cli~~
+* ~~skills~~
+	* ~~add instructions to use DIG (if connected) to generate an image for the card if user approves of one~~ 
+	* ~~create a skill to read game-log(s) file and then give a one page summary report of suggestions~~
+* ~~work flow / doc updates~~
+	* ~~i moved your CLUADE code review from the game doe to the design-doc/onboarding and changed the name to code-overview why don't you take out the workflow and make that its own onboarding doc~~
+	* ~~lets scan our docs and apply tags and do some org~~ 
+		* ~~onboarding~~
+		* ~~claude-skills~~
+		* ~~game-rules~~
+		* ~~code-architecture~~
+		* ~~workflow~~
+		* ~~human-instructions~~ 
+		* ~~game-logs~~
+	* ~~lets rewrite the rule book to reflect reality of code~~ 
 
 
 ## Vision (post-V0, not speced — YAGNI until V0 lands)
