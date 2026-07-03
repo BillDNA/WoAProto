@@ -25,8 +25,8 @@
     "semantic_hash": "fccde103149cda6fcbef8795604a54a6"
   },
   "dev/smoke.js": {
-    "mtime": 1783052599.9577837,
-    "ast_hash": "6ffe095ce229f40cabc0643701e44d29",
+    "mtime": 1783055155.260602,
+    "ast_hash": "0ff0559334f77c5e96d8d73d301af284",
     "semantic_hash": ""
   },
   "game/balance.js": {
@@ -40,7 +40,7 @@
     "semantic_hash": "1163d3cbdebcd0c45da2d0c0e45bc16d"
   },
   "game/custom-maps.js": {
-    "mtime": 1783044979.969054,
+    "mtime": 1783054803.90371,
     "ast_hash": "e04fba340b35da5bf9053f6a21cc366e",
     "semantic_hash": ""
   },
@@ -55,9 +55,9 @@
     "semantic_hash": "330f8f47010a9cb73ac49c1d6d35ee43"
   },
   "game/server.js": {
-    "mtime": 1783021038.0689042,
-    "ast_hash": "234de22af024975dce7b8979889c71b9",
-    "semantic_hash": "234de22af024975dce7b8979889c71b9"
+    "mtime": 1783055081.640805,
+    "ast_hash": "0dc8d17ee144d3a574e6ecd57393954b",
+    "semantic_hash": ""
   },
   "game/test.js": {
     "mtime": 1783050123.9321947,
@@ -80,8 +80,8 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1783049710.281461,
-    "ast_hash": "c787164e9fb818d0e0c0ed5a59a33137",
+    "mtime": 1783054154.5060775,
+    "ast_hash": "b9648f7dc3e17fb74c905e4e2bccd805",
     "semantic_hash": ""
   },
   "design-docs/card-cheatsheet.md": {
@@ -110,8 +110,8 @@
     "semantic_hash": ""
   },
   "game/index.html": {
-    "mtime": 1783051222.9196615,
-    "ast_hash": "bf913cf1e7d83eae64f6b9cb596b86aa",
+    "mtime": 1783055132.7832508,
+    "ast_hash": "e0512aaa897a4fce5df10b7ab510237c",
     "semantic_hash": ""
   },
   "index.html": {
