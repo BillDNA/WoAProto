@@ -89,6 +89,7 @@ function send(request) {
       '--system-prompt', request.systemPrompt || '', // full override: no CLAUDE.md ambient, pinned model
       '--output-format', 'json'
     ]);
+    if (request.effort) args.push('--effort', request.effort); // reasoning effort for this headless call
     let proc;
     try { proc = spawn(bin.cmd, args, { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] }); }
     catch (e) { return resolve(errored()); }

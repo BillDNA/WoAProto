@@ -7,11 +7,14 @@
      --red <spec>       easy|normal|hard = heuristic AI; anything else (haiku|sonnet|opus|
      --blue <spec>      full model id) = LLM via the claude -p transport.
                         Defaults: --red haiku --blue normal
+     --effort <level>   reasoning effort for the LLM players' headless claude -p calls:
+                        low|medium|high|xhigh|max (default: the CLI's own default)
      --seed <n>         match seed (default 1234)
      --max-turns <n>    safety cap on turns (default 60)
      --mock             replace the transport with a deterministic fake (always picks
                         option 0, canned rationale/notes) — full offline loop test
-     --out <file>       JSONL log (default dev/claude-plays-log.jsonl)
+     --out <file>       JSONL master log (default design-docs/game-logs/claude-plays-log.jsonl)
+                        A readable per-run .md transcript is also written to game-logs/.
 
    The LLM never invents moves: each decision is a pick from a numbered legal-move list
    built by the engine (playCard modes / enumerateChoices). It sees only what a player
@@ -27,9 +30,10 @@ const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
 const llm = require(path.join(__dirname, 'llm-client.js'));
 
 /* ---------- CLI args ---------- */
+const LOG_DIR = path.join(__dirname, '..', 'design-docs', 'game-logs');
 function parseArgs(argv) {
   const a = { map: '', red: 'haiku', blue: 'normal', seed: 1234, maxTurns: 60, mock: false,
-    out: path.join(__dirname, 'claude-plays-log.jsonl') };
+    effort: '', out: path.join(LOG_DIR, 'claude-plays-log.jsonl') };
   for (let i = 2; i < argv.length; i++) {
     const k = argv[i];
     if (k === '--map') a.map = argv[++i] || '';
@@ -37,9 +41,13 @@ function parseArgs(argv) {
     else if (k === '--blue') a.blue = argv[++i];
     else if (k === '--seed') a.seed = Number(argv[++i]) | 0;
     else if (k === '--max-turns') a.maxTurns = Number(argv[++i]) || 60;
+    else if (k === '--effort') a.effort = String(argv[++i] || '').toLowerCase();
     else if (k === '--mock') a.mock = true;
     else if (k === '--out') a.out = path.resolve(argv[++i]);
     else { console.error('unknown option: ' + k); process.exit(1); }
+  }
+  if (a.effort && !['low', 'medium', 'high', 'xhigh', 'max'].includes(a.effort)) {
+    console.error('--effort must be low|medium|high|xhigh|max'); process.exit(1);
   }
   return a;
 }
@@ -311,7 +319,7 @@ async function main() {
   async function ask(model, side, userMessage, nOptions) {
     const res = await transport({
       systemPrompt: sysPrompt(side), userMessage: userMessage,
-      model: model, outputSchema: CHOICE_SCHEMA
+      model: model, outputSchema: CHOICE_SCHEMA, effort: args.effort
     });
     usage.inputTokens += res.inputTokens; usage.outputTokens += res.outputTokens;
     if (res.finishReason === 'error') return { ok: false };
@@ -376,8 +384,15 @@ async function main() {
       else { idx = choices.length > 1 ? 1 : 0; why2 = '(fallback: first legal action)'; fb2 = true; } // 0 is always {skip}
       try { E.applyStep(st, choices[idx]); }
       catch (e) {
-        fb2 = true; why2 = '(fallback: choice failed, skipped)'; idx = 0;
-        try { E.applyStep(st, { skip: true }); } catch (e2) { break; }
+        // Chosen step is illegal (e.g. must-play-step forbids skipping this step).
+        // Fall to the first OTHER legal choice — never re-try the same skip and hang.
+        fb2 = true; why2 = '(fallback: choice failed)';
+        var applied = false;
+        for (var j = 0; j < choices.length; j++) {
+          if (j === idx) continue;
+          try { E.applyStep(st, choices[j]); idx = j; applied = true; break; } catch (e2) { /* try next */ }
+        }
+        if (!applied) break;
       }
       console.log('T' + turn + ' ' + side + ' [' + model + ']: ' + so.type + ' — ' + descs[idx] +
         (why2 ? ' — "' + why2 + '"' : '') + (fb2 ? '  (fallback)' : ''));
@@ -414,7 +429,7 @@ async function main() {
         '. The final campaign journal:\n\n' + journal +
         '\n\nGive short notes (under 150 words) on how the game FELT to play: what felt strong, ' +
         'what felt weak, what felt luck-driven, and ONE suggested change to the game.',
-      model: spec
+      model: spec, effort: args.effort
     });
     usage.inputTokens += res.inputTokens; usage.outputTokens += res.outputTokens;
     if (res.finishReason !== 'error' && res.text.trim()) {
@@ -425,10 +440,11 @@ async function main() {
     }
   }
 
+  const ts = new Date().toISOString();
   const rec = {
-    ts: new Date().toISOString(),
+    ts: ts,
     map: map.name, seed: args.seed,
-    red: args.red, blue: args.blue,
+    red: args.red, blue: args.blue, effort: args.effort || null,
     winner: finished ? st.battleWinner : null,
     winType: finished ? st.winType : 'unfinished',
     turns: st.turnNumber,
@@ -437,8 +453,45 @@ async function main() {
     notes: notes,
     usage: usage
   };
+  try { fs.mkdirSync(LOG_DIR, { recursive: true }); } catch (e) { /* exists */ }
   fs.appendFileSync(args.out, JSON.stringify(rec) + '\n');
-  console.log('\nrecord appended to ' + args.out +
+
+  // Per-run human-readable transcript in design-docs/game-logs (the summary skill reads these).
+  const slug = map.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const stamp = ts.replace(/[:.]/g, '-');
+  const tPath = path.join(LOG_DIR, stamp + '-' + slug + '-' + args.red + '-v-' + args.blue + '.md');
+  const md = [];
+  md.push('# War of Attrition — "' + map.name + '" (seed ' + args.seed + ')');
+  md.push('');
+  md.push('- red: **' + args.red + '** · blue: **' + args.blue + '**' + (args.effort ? ' · effort: ' + args.effort : ''));
+  md.push('- ' + ts);
+  md.push('- Result: ' + (finished
+    ? '**' + cap(st.battleWinner) + '** wins by ' + st.winType + ' after ' + st.turnNumber + ' turns'
+    : 'unfinished at the --max-turns cap (' + args.maxTurns + ')'));
+  md.push('- Fallbacks (LLM reply unusable → engine chose): ' + fallbacks + ' of ' + decisions.length + ' decisions');
+  md.push('');
+  md.push('## Decisions');
+  decisions.forEach(function (d) {
+    md.push('- T' + d.turn + ' ' + d.side + ' — ' + d.kind + ': ' + d.choice +
+      (d.why ? ' — _' + d.why + '_' : '') + (d.fallback ? '  `(fallback)`' : ''));
+  });
+  md.push('');
+  md.push('## Campaign journal');
+  st.log.forEach(function (e) { md.push('- T' + e.turn + ' ' + e.msg); });
+  if (Object.keys(notes).length) {
+    md.push('');
+    md.push('## Felt-notes');
+    Object.keys(notes).forEach(function (side) {
+      md.push('');
+      md.push('### ' + side + ' (' + (side === 'red' ? args.red : args.blue) + ')');
+      md.push('');
+      md.push(notes[side]);
+    });
+  }
+  fs.writeFileSync(tPath, md.join('\n') + '\n');
+
+  console.log('\nrecord appended to ' + args.out);
+  console.log('transcript written to ' + tPath +
     '  (decisions: ' + decisions.length + ', fallbacks: ' + fallbacks +
     ', tokens in/out: ' + usage.inputTokens + '/' + usage.outputTokens + ')');
 }
