@@ -1,3 +1,4 @@
+#human-instructions
 # War of Attrition — digital edition
 
 A browser version of the board game, built from the design docs. Three ways to play, all from this folder — or just open the hosted page.

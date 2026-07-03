@@ -92,7 +92,14 @@ All ten V0 specs in `specs/` were built and committed in one autonomous run (Jul
 		* ~~human-instructions~~ 
 		* ~~game-logs~~
 	* ~~lets rewrite the rule book to reflect reality of code~~ 
+### Feedback round 3
 
+* ai things
+	* in [[ai-heuristic-model]] can we add a col for reward vs penalty 
+		* the default is helpful but i also want a general sense of scale / acceptable range
+	* how dose the model pick the orientation of a trench
+* efficiency of running the balance.js 
+	* what would it look like to have it run the maps in parallel 
 
 ## Vision (post-V0, not speced — YAGNI until V0 lands)
 
