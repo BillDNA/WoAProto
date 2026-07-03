@@ -215,6 +215,13 @@ setTimeout(function () {
       var benched = JSON.parse(JSON.stringify(win.Engine.CARDS));
       benched[2].out = true; // Feedback Round 1: benched cards drop from the 16
       ok(win.deckProblems(benched).some(function (p) { return /must total 16/.test(p); }), 'benching a card drops it from the 16');
+      // Feedback Round 2: five deck slots, exactly one active
+      ok(doc.querySelectorAll('#dkSlots .dkslot[data-slot]').length === 5, 'five deck slots offered');
+      ok(doc.querySelectorAll('#dkSlots .dkslot.active').length === 1, 'exactly one active deck marked');
+      doc.querySelector('#dkSlots .dkslot[data-slot="2"]').click();
+      ok(doc.querySelector('#dkSlots .dkslot[data-slot="2"]').classList.contains('open') &&
+         doc.querySelectorAll('#dkList .dkli').length === win.Engine.CARDS.length,
+        'switching to an empty slot clones the open deck for editing');
       doc.getElementById('dkBack').click();
 
       console.log('== watch mode (AI vs AI spectate) ==');
