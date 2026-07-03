@@ -23,6 +23,12 @@
    - Atk/Swp                 -> attacks and swaps per battle: AI behaviour health.
                                 Low Atk + high Swp = swap-dancing instead of fighting
    - 0kill%                  -> battles where no unit ever died (degenerate stalemates)
+   - Drag                    -> avg trailing turns with NO kill before the game ended
+                                (0 = ended on a kill/HQ capture; ~32 = a no-kill grind).
+                                High = the AIs marched in circles before it was over.
+   - Swings                  -> avg times the field-score lead flipped to the OTHER
+                                side per battle. High = real back-and-forth (you can
+                                feel you'll come back); 0 = one side led wire-to-wire.
    - Card report             -> how often each card was in the WINNER's spent pile
                                 when it got played at all (55%+ = strong, 45%- = weak)
 
@@ -96,13 +102,15 @@ function mapReport(n, diff, filter) {
   var header = pad('Map', 16, true) + pad('Shape', 11, true) +
     pad('Red%', 6) + pad('Blue%', 7) + pad('1st%', 6) + pad('2nd%', 6) +
     pad('HQ%', 6) + pad('Turns', 7) + pad('VPdiff', 8) +
-    pad('Atk', 6) + pad('Swp', 6) + pad('0kill%', 8) + '  notes';
+    pad('Atk', 6) + pad('Swp', 6) + pad('0kill%', 8) +
+    pad('Drag', 7) + pad('Swings', 8) + '  notes';
   console.log(header);
   console.log(new Array(header.length + 1).join('-'));
 
   var G = { red: 0, first: 0, hq: 0, games: 0, turns: 0,
     attacks: 0, swaps: 0, zeroKill: 0, tiebreak: 0,
-    fbWins: 0, fbGames: 0, ctlWins: 0, ctlGames: 0, depShare: 0 };
+    fbWins: 0, fbGames: 0, ctlWins: 0, ctlGames: 0, depShare: 0,
+    killTail: 0, leadChanges: 0 };
   var cardAgg = {};
 
   maps.forEach(function (map, mi) {
@@ -112,6 +120,7 @@ function mapReport(n, diff, filter) {
     G.attacks += r.attacks; G.swaps += r.swaps; G.zeroKill += r.zeroKill; G.tiebreak += r.tiebreak;
     G.fbWins += r.firstBloodWins; G.fbGames += r.firstBloodGames;
     G.ctlWins += r.controlWins; G.ctlGames += r.controlGames; G.depShare += r.deployedShare;
+    G.killTail += r.killTail; G.leadChanges += r.leadChanges;
     Object.keys(r.cards).forEach(function (cid) {
       var a = cardAgg[cid] || (cardAgg[cid] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 });
       var c = r.cards[cid];
@@ -133,7 +142,9 @@ function mapReport(n, diff, filter) {
       pad((r.vpDiff / Math.max(1, done)).toFixed(1), 8) +
       pad((r.attacks / Math.max(1, done)).toFixed(1), 6) +
       pad((r.swaps / Math.max(1, done)).toFixed(1), 6) +
-      pad(pct(r.zeroKill, done), 8) + '  ' + notes.join(', ')
+      pad(pct(r.zeroKill, done), 8) +
+      pad((r.killTail / Math.max(1, done)).toFixed(1), 7) +
+      pad((r.leadChanges / Math.max(1, done)).toFixed(1), 8) + '  ' + notes.join(', ')
     );
   });
 
@@ -145,20 +156,21 @@ function mapReport(n, diff, filter) {
   console.log('Decisiveness: tie-goes-to-2nd decided ' + pct(G.tiebreak, G.games) +
     '% of battles | first blood won ' + pct(G.fbWins, G.fbGames) + '% of the ' + pct(G.fbGames, G.games) +
     '% of battles that had a kill | side holding more hexes won ' + pct(G.ctlWins, G.ctlGames) + '%');
+  console.log('Pacing: ' + (G.killTail / Math.max(1, G.games)).toFixed(1) + ' kill-less turns before game end (0=decisive, ~32=circling) | ' +
+    (G.leadChanges / Math.max(1, G.games)).toFixed(1) + ' lead swings per battle (higher = more back-and-forth)');
 
   console.log('\nCard report (' + G.games + ' battles of AI play — biases noted below):');
-  var ch = pad('Card', 20, true) + pad('Win%', 6) + pad('Simple%', 9) + pad('Skip%', 7) + pad('1stSight%', 11) + pad('AvgSeen', 9) + pad('plays', 8);
+  var ch = pad('Card', 20, true) + pad('Win%', 6) + pad('Simple%', 9) + pad('1stSight%', 11) + pad('AvgSeen', 9) + pad('plays', 8);
   console.log(ch);
   console.log(new Array(ch.length + 1).join('-'));
   var rows = E.CARDS.map(function (c) {
-    var a = cardAgg[c.id] || { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 };
+    var a = cardAgg[c.id] || { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0 };
     return { name: c.name, plays: a.plays, winPct: pct(a.wins, a.plays), simplePct: pct(a.simple, a.plays),
-      noopPct: pct(a.noop, a.plays),
       sightPct: pct(a.firstSight, a.plays), avgSeen: a.plays ? (a.seenSum / a.plays).toFixed(2) : '-' };
   }).sort(function (a, b) { return b.sightPct - a.sightPct; });
   rows.forEach(function (r) {
     console.log(pad(r.name, 20, true) + pad(r.winPct + '%', 6) + pad(r.simplePct + '%', 9) +
-      pad(r.noopPct + '%', 7) + pad(r.sightPct + '%', 11) + pad(r.avgSeen, 9) + pad(r.plays, 8));
+      pad(r.sightPct + '%', 11) + pad(r.avgSeen, 9) + pad(r.plays, 8));
   });
   console.log('\nHow to read it:');
   console.log('  Win%      share of plays by the eventual winner. Attrition games see both');
@@ -166,8 +178,6 @@ function mapReport(n, diff, filter) {
   console.log('  Simple%   resolved as a basic attack/reposition instead of the printed action.');
   console.log('            High = the printed action often was not worth it. (Bias: when the AI');
   console.log('            burns a card it prefers its least precious one, per CARD_KEEP.)');
-  console.log('  Skip%     the play resolved ZERO actions — an effective skipped turn. Any');
-  console.log('            non-trivial number means players sit through dead turns: bad.');
   console.log('  1stSight% played the first time it ever appeared in hand. High + low AvgSeen =');
   console.log('            always-good on sight (overpowered watchlist).');
   console.log('  AvgSeen   hand-appearances before it got played. High = situational/hoarded.');
@@ -182,6 +192,10 @@ function mapReport(n, diff, filter) {
   console.log('            early trade decides everything (snowbally).');
   console.log('  more hexes won  does board control track winning? Near 50% = holding ground');
   console.log('            is decorative under the current victory rules.');
+  console.log('  kill-less turns before end  how long the AIs shuffled with nobody dying before');
+  console.log('            the game ended. 0 = a decisive finish; high = marching in circles.');
+  console.log('  lead swings  times the field-score lead flipped sides per battle. High = a real');
+  console.log('            back-and-forth (a losing player can feel a comeback); 0 = wire-to-wire.');
 }
 
 /* ---------------- args ---------------- */

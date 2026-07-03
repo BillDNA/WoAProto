@@ -595,8 +595,24 @@ console.log('== behaviour counters (balance-lab metrics) ==');
   E.applyStep(st, { hex: E.stepOptions(st).targets[0] });
   ok(st.stats.deploys === 1, 'deploy increments stats.deploys');
   var r = E.balanceMap(E.MAPS[0], 2, { seedBase: 5 });
-  ['attacks', 'swaps', 'marches', 'zeroKill', 'tiebreak', 'firstBloodGames', 'controlGames', 'deployedShare']
+  ['attacks', 'swaps', 'marches', 'zeroKill', 'tiebreak', 'firstBloodGames', 'controlGames', 'deployedShare',
+   'killTail', 'leadChanges']
     .forEach(function (k) { ok(k in r, 'balanceMap reports ' + k); });
+  ok(r.killTail >= 0 && r.killTail <= r.turns, 'kill-less tail within [0, turns] (got ' + r.killTail + '/' + r.turns + ')');
+  ok(r.leadChanges >= 0, 'lead changes non-negative (got ' + r.leadChanges + ')');
+})();
+
+console.log('== trench orientations are never fully off-board (Feedback Round 2) ==');
+(function () {
+  var st = testBattle(77);
+  var offBoard = 0, total = 0;
+  E.hexes().forEach(function (h) {
+    E.trenchOrientations(st, h).forEach(function (pr) {
+      total++;
+      if (!E.neighbor(h, pr[0]) && !E.neighbor(h, pr[1])) offBoard++;
+    });
+  });
+  ok(total > 0 && offBoard === 0, 'no offered trench faces fully off-board (' + offBoard + '/' + total + ' bad)');
 })();
 
 console.log('== AI personalities are data (V0 ai-variety) ==');

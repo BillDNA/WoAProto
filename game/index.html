@@ -385,7 +385,7 @@
   .dkstep{display:flex; gap:6px; align-items:center; flex-wrap:wrap; padding:4px 7px; margin:4px 0; border:1px solid rgba(139,111,71,.4); border-radius:5px; background:rgba(255,255,255,.3);}
   .dkstep .dkstep-n{font-size:11px; color:var(--ink-soft); min-width:13px;}
   @media (max-width:720px){ #dkWrap{flex-direction:column;} #dkListPane{flex:0 0 auto; max-height:30vh;} }
-  #dashScr .panel{width:min(1040px,97vw); max-height:94vh; overflow-y:auto; padding:22px 26px;}
+  #dashScr .panel{width:min(1320px,98vw); max-height:94vh; overflow-y:auto; padding:22px 26px;}
   #dashScr select{font-family:inherit; font-size:13.5px; padding:5px 8px; border:1px solid var(--brass-dark); border-radius:6px; background:rgba(255,255,255,.35); color:var(--ink); cursor:pointer;}
   #dashOut table{margin:8px 0 4px;}
   #dashOut td{white-space:nowrap;}
@@ -2552,13 +2552,14 @@ var MAP_TIPS = {
   vpdiff:'Average field-score margin of victory — higher = more decisive',
   atk:'Attacks per battle. Healthy ~5', swp:'Swaps per battle. Healthy ~7',
   zk:'Zero-kill battles. Healthy ~4%; ≥20% flags stalemates',
-  tie:'Battles decided by the tie-goes-to-2nd rule — lower is better (~25% baseline)'
+  tie:'Battles decided by the tie-goes-to-2nd rule — lower is better (~25% baseline)',
+  drag:'Avg trailing turns with no kill before the game ended. 0 = decisive finish; high = the AIs marched in circles',
+  swing:'Avg times the field-score lead flipped to the other side per battle. High = real back-and-forth; 0 = wire-to-wire'
 };
 var CARD_TIPS = {
   name:'Card',
   winPct:'Win rate when played — hugs 50% in attrition games; treat only big deviations',
   simplePct:'Share resolved as a basic attack/reposition — high = the printed action often was not worth it',
-  noopPct:'Dead-turn rate — non-zero is bad (the order resolved nothing)',
   sightPct:'Share played the first turn it was seen — high + low AvgSeen = always-good on sight (OP watchlist)',
   avgSeen:'Average times in hand before it was played — high = situational/hoarded',
   plays:'Total times played across all battles'
@@ -2586,14 +2587,17 @@ function renderDash(){
       red: dpct(o.redWins, done), first: dpct(o.firstWins, done),
       hq: dpct(o.hqWins, done), turns: +(o.turns/done).toFixed(1), vpdiff: +(o.vpDiff/done).toFixed(1),
       atk: +(o.attacks/done).toFixed(1), swp: +(o.swaps/done).toFixed(1),
-      zk: dpct(o.zeroKill, done), tie: dpct(o.tiebreak, done), notes: notes.join(', ')
+      zk: dpct(o.zeroKill, done), tie: dpct(o.tiebreak, done),
+      drag: +((o.killTail||0)/done).toFixed(1), swing: +((o.leadChanges||0)/done).toFixed(1),
+      notes: notes.join(', ')
     };
   });
   var key = DASH.sort.key, dir = DASH.sort.dir;
   if (key) rows = dashSort(rows, key, dir);
   var cols = [
     ['name','Map'], ['shape','Shape'], ['red','Red%'], ['first','1st%'], ['hq','HQ%'],
-    ['turns','Turns'], ['vpdiff','VPdiff'], ['atk','Atk'], ['swp','Swp'], ['zk','0kill%'], ['tie','Tie%'], [null,'notes']
+    ['turns','Turns'], ['vpdiff','VPdiff'], ['atk','Atk'], ['swp','Swp'], ['zk','0kill%'], ['tie','Tie%'],
+    ['drag','Drag'], ['swing','Swings'], [null,'notes']
   ];
   var h = '<h3>Maps &mdash; '+n+' battles each, '+aiLabel+' <span class="small">(&plusmn;'+noise+' points at this n)</span></h3>';
   h += '<table><tr>';
@@ -2606,13 +2610,14 @@ function renderDash(){
     h += '<tr><td style="text-align:left;"><b>'+r.name+'</b></td><td>'+r.shape+'</td>' +
       '<td>'+r.red+'%</td><td>'+r.first+'%</td><td>'+r.hq+'%</td><td>'+r.turns+'</td><td>'+r.vpdiff+'</td>' +
       '<td>'+r.atk+'</td><td>'+r.swp+'</td><td>'+r.zk+'%</td><td>'+r.tie+'%</td>' +
+      '<td>'+r.drag+'</td><td>'+r.swing+'</td>' +
       '<td style="text-align:left;" class="dnote">'+(r.notes||'')+'</td><td>'+dbar(r.red)+'</td></tr>';
   });
   h += '</table>';
 
   // ---- overall + behaviour + decisiveness (same folds as balance.js) ----
   var G = { red:0, first:0, hq:0, games:0, turns:0, attacks:0, swaps:0, zeroKill:0, tiebreak:0,
-    fbWins:0, fbGames:0, ctlWins:0, ctlGames:0, depShare:0 };
+    fbWins:0, fbGames:0, ctlWins:0, ctlGames:0, depShare:0, killTail:0, leadChanges:0 };
   var cardAgg = {};
   DASH.results.forEach(function(r){
     var o = r.out, done = n - o.unfinished;
@@ -2620,11 +2625,12 @@ function renderDash(){
     G.attacks += o.attacks; G.swaps += o.swaps; G.zeroKill += o.zeroKill; G.tiebreak += o.tiebreak;
     G.fbWins += o.firstBloodWins; G.fbGames += o.firstBloodGames;
     G.ctlWins += o.controlWins; G.ctlGames += o.controlGames; G.depShare += o.deployedShare;
+    G.killTail += (o.killTail||0); G.leadChanges += (o.leadChanges||0);
     Object.keys(o.cards).forEach(function(cid){
-      var a = cardAgg[cid] || (cardAgg[cid] = { plays:0, wins:0, simple:0, firstSight:0, seenSum:0, noop:0 });
+      var a = cardAgg[cid] || (cardAgg[cid] = { plays:0, wins:0, simple:0, firstSight:0, seenSum:0 });
       var c = o.cards[cid];
       a.plays += c.plays; a.wins += c.wins; a.simple += c.simple;
-      a.firstSight += c.firstSight; a.seenSum += c.seenSum; a.noop += (c.noop||0);
+      a.firstSight += c.firstSight; a.seenSum += c.seenSum;
     });
   });
   var mx = Math.max(1, G.games);
@@ -2646,19 +2652,21 @@ function renderDash(){
         dstat('Tie &rarr; 2nd player', '<b>'+dpct(G.tiebreak,G.games)+'%</b>', 'Battles decided by the tie-goes-to-second rule. Lower is better; ~25% baseline (the biggest open lever).') +
         dstat('First blood converts', '<b>'+dpct(G.fbWins,G.fbGames)+'%</b>', 'How often the side that drew first blood went on to win, across the '+dpct(G.fbGames,G.games)+'% of battles with a kill. ~61% baseline.') +
         dstat('Board leader wins', '<b>'+dpct(G.ctlWins,G.ctlGames)+'%</b>', 'How often the side holding more hexes won. ~81% baseline.') +
+        dstat('Kill-less turns to end', '<b>'+(G.killTail/mx).toFixed(1)+'</b>', 'Avg trailing turns with no kill before the game ended. 0 = decisive; high = the AIs marched in circles.') +
+        dstat('Lead swings / battle', '<b>'+(G.leadChanges/mx).toFixed(1)+'</b>', 'Avg times the field-score lead flipped sides per battle. Higher = more back-and-forth; a losing player can feel a comeback.') +
       '</div>' +
     '</div>' +
     '<p class="small">Hover any stat or column header for what it means and its healthy range. Full targets in design-docs/grading-rubrics.md.</p>';
 
   // ---- card report ----
   var crows = E.CARDS.map(function(c){
-    var a = cardAgg[c.id] || { plays:0, wins:0, simple:0, firstSight:0, seenSum:0, noop:0 };
+    var a = cardAgg[c.id] || { plays:0, wins:0, simple:0, firstSight:0, seenSum:0 };
     return { name: c.name, plays: a.plays, winPct: dpct(a.wins,a.plays), simplePct: dpct(a.simple,a.plays),
-      noopPct: dpct(a.noop,a.plays), sightPct: dpct(a.firstSight,a.plays),
+      sightPct: dpct(a.firstSight,a.plays),
       avgSeen: a.plays ? +(a.seenSum/a.plays).toFixed(2) : 0 };
   });
   crows = dashSort(crows, DASH.cardSort.key, DASH.cardSort.dir);
-  var ccols = [['name','Card'], ['winPct','Win%'], ['simplePct','Simple%'], ['noopPct','Skip%'], ['sightPct','1stSight%'], ['avgSeen','AvgSeen'], ['plays','plays']];
+  var ccols = [['name','Card'], ['winPct','Win%'], ['simplePct','Simple%'], ['sightPct','1stSight%'], ['avgSeen','AvgSeen'], ['plays','plays']];
   h += '<h3>Card report <span class="small">('+G.games+' battles of AI play)</span></h3><table><tr>';
   ccols.forEach(function(c){
     h += '<th class="sortable'+(DASH.cardSort.key===c[0]?' sorted':'')+'" data-ckey="'+c[0]+'" title="'+(CARD_TIPS[c[0]]||'')+' &middot; click to sort">'+c[1]+(DASH.cardSort.key===c[0]?(DASH.cardSort.dir>0?' &#9650;':' &#9660;'):'')+'</th>';
@@ -2666,11 +2674,10 @@ function renderDash(){
   h += '<th title="share of plays by the eventual winner">Win share</th></tr>';
   crows.forEach(function(r){
     h += '<tr><td style="text-align:left;"><b>'+r.name+'</b></td><td>'+r.winPct+'%</td><td>'+r.simplePct+'%</td>' +
-      '<td'+(r.noopPct>0?' style="color:#8a3324;font-weight:bold;"':'')+'>'+r.noopPct+'%</td>' +
       '<td>'+r.sightPct+'%</td><td>'+r.avgSeen+'</td><td>'+r.plays+'</td><td>'+dbar(r.winPct)+'</td></tr>';
   });
   h += '</table>' +
-    '<p class="small">Hover a column header for what it means and its target. Skip% shown in red = dead turns (bad).</p>';
+    '<p class="small">Hover a column header for what it means and its target.</p>';
 
   el.innerHTML = h;
   el.querySelectorAll('th[data-key]').forEach(function(th){
