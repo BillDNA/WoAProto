@@ -75,7 +75,14 @@ setTimeout(function () {
           var ors = E.trenchOrientations(APP.st, hx);
           c = { hex: hx, dirs: ors[0] };
         }
-        E.applyStep(APP.st, c);
+        try { E.applyStep(APP.st, c); }
+        catch (stepErr) {
+          // must-play-step (eb01d8e) forbids skipping this step — take the first
+          // real legal choice instead of the skip the picker fell back to.
+          var choices = E.enumerateChoices(APP.st), alt = null;
+          for (var ci = 0; ci < choices.length; ci++) { if (!choices[ci].skip) { alt = choices[ci]; break; } }
+          E.applyStep(APP.st, alt || { skip: true });
+        }
         win.afterChange();
       }
     } catch (e) { console.log('  FAIL - exception mid-battle: ' + e.message); fails++; return done(); }
