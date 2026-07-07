@@ -18,6 +18,8 @@
      --once    report this run only; do not read or write the accumulator
      --stdout  print the markdown instead of writing a file
      --quiet   suppress the progress dots
+     --mapset <id>  run a specific map-set (default: the ACTIVE set's pool;
+               'all' = every map on disk)
      --parallel [k]  simulate maps in k parallel worker processes (default:
                cores-1). The engine's board state is process-global, so
                parallelism is process-per-map — each worker require()s its own
@@ -46,6 +48,8 @@ function readAcc(ver) {
 async function run() {
   var argv = process.argv.slice(2);
   var flags = {};
+  var mi = argv.indexOf('--mapset');
+  if (mi >= 0) { flags.mapset = argv[mi + 1]; argv.splice(mi, 2); }
   var pi = argv.indexOf('--parallel');
   if (pi >= 0) {
     flags.parallel = /^\d+$/.test(argv[pi + 1] || '') ? +argv.splice(pi + 1, 1)[0]
@@ -64,7 +68,13 @@ async function run() {
   var dr = diffs[0] || 'hard', db = diffs[1] || dr, diffLabel = dr === db ? dr + ' vs ' + dr : dr + ' vs ' + db;
   var ver = E.VERSION;
 
-  var maps = E.MAPS; // content/maps/*.js — custom maps are first-class here now
+  var maps = E.mapPool(); // the ACTIVE map-set's roster (V1)
+  if (flags.mapset === 'all') maps = E.MAPS;
+  else if (flags.mapset) {
+    var mset = E.MAPSETS.filter(function (s) { return s.id === flags.mapset; })[0];
+    if (!mset) { console.error('Unknown map-set "' + flags.mapset + '". Known: ' + (E.MAPSETS.map(function (s) { return s.id; }).join(', ') || 'none') + ', all'); process.exit(1); }
+    maps = E.MAPS.filter(function (m) { return mset.maps.indexOf(m.id) >= 0 || mset.maps.indexOf(m.name) >= 0; });
+  }
   if (filter) maps = maps.filter(function (m) { return m.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0; });
   if (!maps.length) { console.error('No map matches "' + filter + '".'); process.exit(1); }
   var probs = E.validateMaps(maps);

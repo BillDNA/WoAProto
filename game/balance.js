@@ -49,9 +49,22 @@ function pad(s, w, right) {
   return s;
 }
 
+// Roster selection (V1 map-sets): default = the ACTIVE map-set's pool (one
+// shared roster across play modes + tools); `--mapset <id>` picks a specific
+// set; `--mapset all` = every map on disk.
+function rosterFor(setArg) {
+  if (!setArg) return E.mapPool();
+  if (setArg === 'all') return E.MAPS;
+  var set = E.MAPSETS.filter(function (s) { return s.id === setArg; })[0];
+  if (!set) {
+    console.log('Unknown map-set "' + setArg + '". Known: ' + (E.MAPSETS.map(function (s) { return s.id; }).join(', ') || 'none') + ', all');
+    process.exit(1);
+  }
+  return E.MAPS.filter(function (m) { return set.maps.indexOf(m.id) >= 0 || set.maps.indexOf(m.name) >= 0; });
+}
+
 /* ---------------- matchup mode: how much does skill matter? ---------------- */
-function matchup(n, a, b) {
-  var maps = E.MAPS;
+function matchup(n, a, b, maps) {
   var pairs = (a && b) ? [[a, b]] : [
     ['normal', 'easy'],
     ['hard', 'normal'],
@@ -82,8 +95,7 @@ function matchup(n, a, b) {
 }
 
 /* ---------------- per-map report ---------------- */
-function mapReport(n, diff, filter) {
-  var maps = E.MAPS; // content/maps/*.js — custom maps are first-class here now
+function mapReport(n, diff, filter, maps) {
   if (filter) {
     maps = maps.filter(function (m) { return m.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0; });
     if (!maps.length) { console.log('No map matches "' + filter + '".'); return; }
@@ -169,6 +181,8 @@ function mapReport(n, diff, filter) {
 
 /* ---------------- args ---------------- */
 var args = process.argv.slice(2);
+var setArg = null, si = args.indexOf('--mapset');
+if (si >= 0) { setArg = args[si + 1]; args.splice(si, 2); }
 if (args[0] === 'matchup') {
   // node balance.js matchup [n] [aiA aiB]  — aiA/aiB may be any AI_PRESETS
   // name (easy/normal/hard or a maps.js "ai" personality)
@@ -176,7 +190,7 @@ if (args[0] === 'matchup') {
   rest.forEach(function (a) {
     if (!E.AI_PRESETS[a]) { console.log('Unknown AI "' + a + '". Known: ' + Object.keys(E.AI_PRESETS).join(', ')); process.exit(1); }
   });
-  matchup(Math.max(2, +(args.filter(function (a) { return /^\d+$/.test(a); })[0]) || 12), rest[0], rest[1]);
+  matchup(Math.max(2, +(args.filter(function (a) { return /^\d+$/.test(a); })[0]) || 12), rest[0], rest[1], rosterFor(setArg));
 } else {
   var n = 24, diff = 'normal', filter = null;
   args.forEach(function (a) {
@@ -184,5 +198,5 @@ if (args[0] === 'matchup') {
     else if (E.AI_PRESETS[a]) diff = a; // easy/normal/hard or a maps.js personality
     else filter = filter ? filter + ' ' + a : a;
   });
-  mapReport(n, diff, filter);
+  mapReport(n, diff, filter, rosterFor(setArg));
 }

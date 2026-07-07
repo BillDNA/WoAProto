@@ -12,24 +12,45 @@
 // engine loads them into E.MAPS at boot; each carries a stable `id` (its
 // filename stem) and an optional `custom:true` flag (a user map — the badge, and
 // exempt from the shipped-roster guideline tests). Saving or deleting a map
-// rewrites/removes its file on the server AND updates E.MAPS in place, so the
-// change shows at once and survives a reload. No more localStorage tombstones
-// (the "defaults keep coming back" friction). Which maps are IN the match pool
-// stays a per-browser preference (woa-disabled-maps).
+// rewrites/removes its file on the server AND updates E.MAPS in place.
+//
+// V1: the match pool is the ACTIVE MAP-SET (content/mapsets/*.js — named
+// rosters, up to five slots, one active; the deck-slot pattern applied to
+// maps). It replaced the per-browser woa-disabled-maps preference, so the
+// browser, the LAN peer, and every CLI tool finally agree on one roster.
+// Set edits mutate E.MAPSETS in place and are saved to files via
+// /api/savemapsets (needs the server; without it, edits last the session).
 function slugifyMap(name){ return String(name||'map').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'map'; }
-function getDisabledIds(){
-  try { return JSON.parse(localStorage.getItem('woa-disabled-maps')) || []; } catch(e){ return []; }
-}
-function setDisabledIds(ids){
-  try { localStorage.setItem('woa-disabled-maps', JSON.stringify(ids)); } catch(e){}
-}
 function allMaps(){
   return E.MAPS.map(function(def){ if (!def.id) def.id = slugifyMap(def.name); return { def: def, id: def.id, builtin: !def.custom }; });
 }
-var MAP_FLOOR = 5; // keep enough distinct boards for a first-to-3 match
-function getMapPool(){
-  var dis = getDisabledIds();
-  return allMaps().filter(function(m){ return dis.indexOf(m.id) < 0; }).map(function(m){ return m.def; });
+var MAP_FLOOR = 5;   // library floor: keep enough distinct boards on disk
+var MAPSET_SLOTS = 5;
+var MS = { slot: 0 }; // which set the maps screen is viewing/editing
+function getMapPool(){ return E.mapPool(); }
+function msSets(){ return E.MAPSETS; }
+function msCurrent(){ return msSets()[MS.slot] || null; }
+function msSetActive(idx){
+  msSets().forEach(function(st, i){ st.active = (i === idx); });
+}
+function msToggleMember(set, id, on){
+  var i = set.maps.indexOf(id);
+  if (on && i < 0) set.maps.push(id);
+  if (!on && i >= 0) set.maps.splice(i, 1);
+}
+function msNewSet(){
+  var sets = msSets();
+  if (sets.length >= MAPSET_SLOTS) return;
+  var n = sets.length + 1;
+  sets.push({ id: 'set-' + n, name: 'Set ' + n, active: sets.length === 0,
+    maps: allMaps().map(function(m){ return m.id; }) });
+  MS.slot = sets.length - 1;
+}
+function msSave(){
+  if (!canNet){ toast('Map-set files need the local server (<code>node game/server.js</code>) — edits hold for this session only.', 5000); return; }
+  api('savemapsets', { mapsets: msSets() }).then(function(){
+    toast('Map-sets saved to content/mapsets/.', 2500);
+  }).catch(function(){ toast('Could not save the map-sets.', 3500); });
 }
 // E.MAPS is the engine's live roster array — mutate it in place (never reassign).
 function rosterReplace(def){
@@ -103,26 +124,68 @@ function previewSVG(def){
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="'+(minX-m).toFixed(0)+' '+(minY-m).toFixed(0)+' '+(maxX-minX+2*m).toFixed(0)+' '+(maxY-minY+2*m).toFixed(0)+'">'+body+'</svg>';
 }
 
+function renderMapsetBar(){
+  var bar = $('mapsetBar');
+  if (!bar) return;
+  bar.innerHTML = '';
+  var sets = msSets();
+  if (MS.slot >= sets.length) MS.slot = Math.max(0, sets.length - 1);
+  sets.forEach(function(st, i){
+    var chip = document.createElement('button');
+    chip.className = 'mschip' + (i === MS.slot ? ' open' : '') + (st.active ? ' active' : '');
+    chip.innerHTML = (st.active ? '&#9733; ' : '') + st.name + ' <span class="msn">(' + st.maps.length + ')</span>';
+    chip.title = st.active ? 'The active set — this roster is the match pool everywhere (game, LAN, CLI tools)' : 'View/edit this set';
+    chip.onclick = function(){ MS.slot = i; renderMapsScr(); };
+    bar.appendChild(chip);
+  });
+  if (sets.length < MAPSET_SLOTS){
+    var add = document.createElement('button');
+    add.className = 'mschip'; add.textContent = '+ new set';
+    add.onclick = function(){ msNewSet(); renderMapsScr(); };
+    bar.appendChild(add);
+  }
+  var cur = msCurrent();
+  if (cur){
+    var name = document.createElement('input');
+    name.className = 'msname'; name.value = cur.name; name.title = 'Rename this set';
+    name.onchange = function(){ cur.name = name.value || cur.name; renderMapsetBar(); };
+    bar.appendChild(name);
+    if (!cur.active){
+      var act = document.createElement('button');
+      act.className = 'mschip'; act.textContent = 'Make active';
+      act.title = 'The active set becomes the match pool for every play mode and the balance tools';
+      act.onclick = function(){ msSetActive(MS.slot); renderMapsScr(); };
+      bar.appendChild(act);
+    }
+    var save = document.createElement('button');
+    save.className = 'mschip'; save.textContent = 'Save sets';
+    save.title = 'Write content/mapsets/*.js (needs the local server)';
+    save.onclick = msSave;
+    bar.appendChild(save);
+  }
+}
+
 function renderMapsScr(){
+  renderMapsetBar();
   var grid = $('mapGrid');
   grid.innerHTML = '';
-  var dis = getDisabledIds();
+  var cur = msCurrent();
   allMaps().forEach(function(m){
-    var off = dis.indexOf(m.id) >= 0;
+    var inSet = !cur || cur.maps.indexOf(m.id) >= 0 || cur.maps.indexOf(m.def.name) >= 0;
+    var off = !inSet;
     var d = document.createElement('div');
     d.className = 'mapitem' + (off ? ' off' : '');
     var shp = E.SHAPES[E.ensureMapShape(m.def)];
     d.innerHTML = previewSVG(m.def) +
       '<div class="nm">'+m.def.name+'</div>' +
       '<div class="shp">'+(shp ? shp.label : '&#9888; board "'+m.def.shape+'" no longer exists')+(m.builtin?'':' &middot; custom')+'</div>' +
-      '<label><input type="checkbox" '+(off?'':'checked')+'> in play</label>' +
+      (cur ? '<label><input type="checkbox" '+(off?'':'checked')+'> in &ldquo;'+cur.name+'&rdquo;</label>' : '') +
       '<div class="btns"></div>';
-    var cb = d.querySelector('input');
-    cb.onchange = function(){
-      var ids = getDisabledIds().filter(function(x){ return x !== m.id; });
-      if (!cb.checked) ids.push(m.id);
-      setDisabledIds(ids);
+    var cb = d.querySelector('input[type=checkbox]');
+    if (cb) cb.onchange = function(){
+      msToggleMember(cur, m.id, cb.checked);
       d.classList.toggle('off', !cb.checked);
+      renderMapsetBar(); // membership count on the chip
     };
     var btns = d.querySelector('.btns');
     var bp = document.createElement('button'); bp.textContent='Play';

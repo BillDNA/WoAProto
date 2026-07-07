@@ -20,10 +20,14 @@ var MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
 // under content/, each registering into WOA_CONTENT; content/manifest.js is
 // regenerated (by scanning the dirs) so the browser loads exactly what's there.
 var CONTENT_DIR = path.join(ROOT, 'content');
-var CONTENT_KINDS = ['decks', 'maps'];
+var CONTENT_KINDS = (function () {
+  try { return require(path.join(CONTENT_DIR, 'kinds.js')); } catch (e) { return ['decks', 'maps', 'mapsets']; }
+})();
 function contentSlug(s) { return String(s || 'map').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'map'; }
 function wrapContent(kind, obj) {
-  return "(function(g){(g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],decks:[]})." + kind + ".push(\n" +
+  // defensive: files written before a kind existed init WOA_CONTENT without it,
+  // so every file ensures its own array rather than trusting the initializer
+  return "(function(g){var c=g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],decks:[],mapsets:[]};(c." + kind + "=c." + kind + "||[]).push(\n" +
     JSON.stringify(obj, null, 1) + "\n);})(typeof window!=='undefined'?window:globalThis);\n";
 }
 function regenContentManifest() {
@@ -199,6 +203,29 @@ var ROUTES = {
     // situation instead of pasting a screenshot (Round 4)
     if (!body.filename || typeof body.content !== 'string') return json(res, 400, { error: 'bad request' });
     saveUnderRepo(res, ['logs', 'debug'], String(body.filename), /^[A-Za-z0-9._-]+\.json$/, body.content);
+  },
+  'POST /api/savemapsets': function (req, res, body) {
+    // The Map-Sets panel owns the full slot state (like the deck slots): it
+    // POSTs every named set + which one is active; we rewrite the whole
+    // content/mapsets/ dir to match (files not in the list are deleted).
+    var sets = body.mapsets;
+    if (!Array.isArray(sets) || sets.length > 8) return json(res, 400, { error: 'bad request' });
+    var dir = path.join(CONTENT_DIR, 'mapsets');
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+      var keep = {};
+      sets.forEach(function (m) {
+        if (!m || !m.name || !Array.isArray(m.maps)) throw new Error('bad mapset');
+        var id = contentSlug(m.id || m.name);
+        keep[id + '.js'] = true;
+        fs.writeFileSync(path.join(dir, id + '.js'),
+          wrapContent('mapsets', { id: id, name: String(m.name), active: !!m.active, maps: m.maps.map(String) }));
+      });
+      fs.readdirSync(dir).filter(function (f) { return /\.js$/.test(f) && !keep[f]; })
+        .forEach(function (f) { fs.unlinkSync(path.join(dir, f)); });
+      regenContentManifest();
+      json(res, 200, { ok: true, files: Object.keys(keep) });
+    } catch (e) { json(res, 500, { error: e.message }); }
   },
   'POST /api/recordbattle': function (req, res, body) {
     // V1: one finished battle -> a per-battle row in logs/woa.db.

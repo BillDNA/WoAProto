@@ -584,11 +584,11 @@ async function feltNotes(args, transports, side, prompt, usage) {
 /* ---------- the run ---------- */
 async function main() {
   const args = ARGS;
-  let maps = E.MAPS;
-  if (args.mapset) {
-    const sets = (global.WOA_CONTENT && global.WOA_CONTENT.mapsets) || [];
-    const set = sets.filter(function (s) { return s.id === args.mapset; })[0];
-    if (!set) { console.error('--mapset "' + args.mapset + '" not found. Available: ' + (sets.map(function (s) { return s.id; }).join(', ') || 'none installed')); process.exit(1); }
+  let maps = E.mapPool(); // the ACTIVE map-set's roster (V1)
+  if (args.mapset === 'all') maps = E.MAPS;
+  else if (args.mapset) {
+    const set = E.MAPSETS.filter(function (s) { return s.id === args.mapset; })[0];
+    if (!set) { console.error('--mapset "' + args.mapset + '" not found. Available: ' + (E.MAPSETS.map(function (s) { return s.id; }).join(', ') || 'none installed') + ', all'); process.exit(1); }
     maps = E.MAPS.filter(function (m) { return set.maps.indexOf(m.id) >= 0 || set.maps.indexOf(m.name) >= 0; });
     if (!maps.length) { console.error('map-set "' + args.mapset + '" matches no installed maps'); process.exit(1); }
   }

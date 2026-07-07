@@ -524,3 +524,12 @@
 
 /* the parchment ghost button (was 26 inline style copies) */
 button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
+
+/* V1 map-sets: the named-roster chips above the map grid */
+.mapset-bar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:6px 0 10px; }
+.mapset-bar .mschip { font-size:13px; padding:3px 10px; background:transparent; color:var(--ink);
+  border:1px solid var(--brass-dark); border-radius:12px; box-shadow:none; }
+.mapset-bar .mschip.open { background:var(--brass); color:#fff; }
+.mapset-bar .mschip.active { border-width:2px; }
+.mapset-bar .mschip .msn { opacity:.7; font-size:11px; }
+.mapset-bar .msname { width:130px; font-size:13px; padding:2px 6px; }

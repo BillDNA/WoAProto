@@ -24,10 +24,12 @@
   (function loadContentNode() {
     if (global.WOA_CONTENT) return;                 // browser already populated it
     if (typeof require !== 'function') return;
-    global.WOA_CONTENT = { maps: [], cards: [], decks: [] };
+    global.WOA_CONTENT = { maps: [], cards: [], decks: [], mapsets: [] };
     try {
       var fs = require('fs'), path = require('path');
-      ['decks', 'maps'].forEach(function (kind) {
+      var kinds = ['decks', 'maps', 'mapsets'];
+      try { kinds = require('../content/kinds.js'); } catch (e2) { /* kinds.js is the source of truth when present */ }
+      kinds.forEach(function (kind) {
         var dir = path.join(__dirname, '..', 'content', kind);
         fs.readdirSync(dir).filter(function (f) { return /\.js$/.test(f); }).sort().forEach(function (f) {
           require(path.join(dir, f));                // side effect: pushes into WOA_CONTENT
@@ -39,7 +41,7 @@
       if (typeof console !== 'undefined') console.error('WoA content load failed: ' + e.message);
     }
   })();
-  var CONTENT = global.WOA_CONTENT || { maps: [], cards: [], decks: [] };
+  var CONTENT = global.WOA_CONTENT || { maps: [], cards: [], decks: [], mapsets: [] };
   // the active deck decides the card list; fall back to any deck, then to any
   // loose WOA_CONTENT.cards (belt-and-braces for hand-authored content).
   var ACTIVE_DECK = (CONTENT.decks || []).filter(function (d) { return d && d.active; })[0] ||
@@ -53,6 +55,24 @@
   };
   if (!BUILTIN.maps.length || !BUILTIN.cards.length)
     throw new Error('War of Attrition: no content loaded (content/maps/*.js + content/decks/*.js). Check the content/ dirs and content/manifest.js.');
+
+  // Map-sets (V1 content curation): named rosters in content/mapsets/*.js,
+  // exactly one flagged active — the deck pattern applied to maps. The active
+  // set IS the match/lab pool (one shared roster across play modes and tools;
+  // it replaced the per-browser woa-disabled-maps preference). No sets, or an
+  // active set matching nothing, falls back to the full library.
+  var MAPSETS = (CONTENT.mapsets || []).slice();
+  function activeMapset() {
+    return MAPSETS.filter(function (s) { return s && s.active; })[0] || null;
+  }
+  function mapPool() {
+    var set = activeMapset();
+    if (!set || !set.maps || !set.maps.length) return BUILTIN.maps;
+    var pool = BUILTIN.maps.filter(function (m) {
+      return set.maps.indexOf(m.id) >= 0 || set.maps.indexOf(m.name) >= 0;
+    });
+    return pool.length ? pool : BUILTIN.maps;
+  }
 
   /* ---------- rng (deterministic, seed stored in state) ---------- */
   function rnd(s) {
@@ -101,6 +121,9 @@
   I.STARTING_CARD = STARTING_CARD;
   I.PIECE_TOTALS = PIECE_TOTALS;
   I.MAPS = MAPS;
+  I.MAPSETS = MAPSETS;
+  I.activeMapset = activeMapset;
+  I.mapPool = mapPool;
   I.other = other;
   I.cap = cap;
 })(typeof window !== 'undefined' ? window : globalThis);
