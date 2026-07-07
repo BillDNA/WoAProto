@@ -179,6 +179,10 @@
       <button id="dashSave" class="ghost btn-ghost-dark" title="Save the report you're looking at to logs/reports/balance/<version>/ (needs the server; downloads a copy otherwise)">Save report</button>
     </div>
     <p class="small" id="dashStatus" style="text-align:center;"></p>
+    <div id="dashTabs" class="dash-tabs">
+      <button id="dashTabTables" class="dtab sel" type="button">Tables</button>
+      <button id="dashTabCharts" class="dtab" type="button" title="The same run as three pictures: map fairness, card watchlist, battle-length spread">Charts</button>
+    </div>
     <div id="dashOut" class="manual"></div>
     <div class="ovr-btns"><button id="dashBack" class="ghost btn-ghost-dark">Back</button></div>
   </div>
@@ -283,6 +287,7 @@ try {
 <script src="ui/maps-screen.js"></script>
 <script src="ui/map-editor.js"></script>
 <script src="ui/deck-editor.js"></script>
+<script src="ui/charts.js"></script>
 <script src="ui/dashboard.js"></script>
 <script src="ui/manual.js"></script>
 <script src="ui/boot.js"></script>

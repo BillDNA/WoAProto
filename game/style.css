@@ -525,6 +525,23 @@
 /* the parchment ghost button (was 26 inline style copies) */
 button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
 
+/* V1 Charts view (Balance Dashboard): the Tables|Charts toggle, one card per
+   chart, and the hover tooltip. Chart internals are inline SVG (ui/charts.js). */
+.dash-tabs{display:flex; gap:6px; justify-content:center; margin:2px 0 4px;}
+.dash-tabs .dtab{font-family:inherit; font-size:13px; font-weight:normal; padding:4px 18px; border:1px solid var(--brass-dark); border-radius:14px; background:rgba(255,255,255,.3); color:var(--ink); cursor:pointer; box-shadow:none; letter-spacing:.5px;}
+.dash-tabs .dtab.sel{background:var(--brass); color:#fff; font-weight:bold;}
+.chcard{border:1px solid var(--brass-dark); border-radius:8px; padding:12px 16px 12px; margin:14px 0; background:rgba(255,255,255,.22);}
+.chcard .chhead{display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap;}
+.chcard h3{margin-top:0;}
+.chcard svg{display:block; width:100%; height:auto; font-family:inherit;}
+.chcard .chkey{display:flex; gap:16px; align-items:center; flex-wrap:wrap; font-size:12px; color:var(--ink-soft); margin:3px 0 7px;}
+.chcard .chkey .sw{display:inline-block; width:11px; height:11px; border-radius:2px; vertical-align:-1px; margin-right:4px;}
+.chcard .ch-hit{cursor:help; outline:none;}
+.chtip{position:fixed; z-index:70; pointer-events:none; display:none; background:#2c2517; color:var(--parch); border:1px solid var(--brass-dark); border-radius:6px; padding:7px 11px 8px; font-size:12.5px; line-height:1.5; box-shadow:0 3px 10px rgba(0,0,0,.45); max-width:280px; text-align:left;}
+.chtip .tt{font-weight:bold; color:#fff; border-bottom:1px solid rgba(176,141,87,.5); margin-bottom:3px; padding-bottom:2px;}
+.chtip .tv{font-weight:bold; color:#fff;}
+.chtip .tl{color:rgba(232,220,192,.8);}
+
 /* V1 map-sets: the named-roster chips above the map grid */
 .mapset-bar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:6px 0 10px; }
 .mapset-bar .mschip { font-size:13px; padding:3px 10px; background:transparent; color:var(--ink);

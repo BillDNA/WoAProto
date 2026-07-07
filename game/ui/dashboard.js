@@ -10,7 +10,12 @@
 // E.balanceAdd — the SAME code the CLI folds battles through — and the
 // seed/first-player schedule is E.balanceSeed/balanceFP, so a run here with
 // the same n/AI/maps reproduces the terminal's numbers exactly.
-var DASH = { running:false, cancel:false, results:[], sort:{key:null, dir:1}, cardSort:{key:'sightPct', dir:-1}, meta:null, adhoc:null };
+// view: 'tables' | 'charts' (the Tables|Charts tabs above #dashOut).
+// detail: per-battle rows the charts need ({mapName: {turns:[], winTypes:[]}}),
+// collected by the dashRun loop in ui/boot.js and reset each run. chartMap is
+// the histogram's map knob (null = the run's best-balance map).
+var DASH = { running:false, cancel:false, results:[], sort:{key:null, dir:1}, cardSort:{key:'sightPct', dir:-1}, meta:null, adhoc:null,
+  view:'tables', detail:{}, chartMap:null };
 // Scoring/threshold/fold/markdown MODEL is shared with the CLI reporters —
 // one implementation per fact, in report-model.js (global WOA_REPORT).
 var dpct = WOA_REPORT.pct;
@@ -114,6 +119,10 @@ var CARD_TIPS = {
 function dstat(label, val, tip){ return '<div class="dstat" title="'+tip+'"><span>'+label+'</span><span>'+val+'</span></div>'; }
 function renderDash(){
   var el = $('dashOut');
+  // Tables|Charts toggle (V1 graphs spec) — charts view is ui/charts.js
+  var tt = $('dashTabTables'), tc = $('dashTabCharts');
+  if (tt){ tt.classList.toggle('sel', DASH.view !== 'charts'); tc.classList.toggle('sel', DASH.view === 'charts'); }
+  if (DASH.view === 'charts'){ renderCharts(el); return; }
   if (!DASH.results.length){ el.innerHTML = ''; return; }
   var n = DASH.meta.n;
   var noise = Math.round(100 / Math.sqrt(n));

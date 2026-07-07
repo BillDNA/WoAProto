@@ -220,6 +220,35 @@ setTimeout(function () {
           var rpt = win.dashReportMarkdown();
           ok(doc.getElementById('dashSave') && /## Maps/.test(rpt) && /## Card report/.test(rpt) && /Drag \| Swings/.test(rpt),
             'Save report button + markdown report (maps, card report, pacing cols)');
+
+          console.log('== charts view (V1 graphs spec) ==');
+          doc.getElementById('dashTabCharts').click();
+          ok(doc.querySelectorAll('#dashOut svg').length === 3, 'Charts tab renders three svg charts');
+          ok(doc.querySelectorAll('#dashOut #chScatter .ch-dot').length === win.DASH.results.length,
+            'fairness scatter: one dot per map row (' + doc.querySelectorAll('#dashOut #chScatter .ch-dot').length + ')');
+          ok(doc.querySelectorAll('#dashOut #chQuad .ch-bub').length >= 5,
+            'card quadrant: bubbles for the played cards (' + doc.querySelectorAll('#dashOut #chQuad .ch-bub').length + ')');
+          ok(doc.querySelectorAll('#dashOut #chHist .ch-bar').length >= 1,
+            'histogram: winType bars drawn from per-battle detail (' + doc.querySelectorAll('#dashOut #chHist .ch-bar').length + ')');
+          var detKey = win.DASH.results[0].map.name;
+          ok(win.DASH.detail[detKey] && win.DASH.detail[detKey].turns.length === 20 &&
+             win.DASH.detail[detKey].winTypes.length === 20,
+            'dashRun collected per-battle turns + winTypes (' + (win.DASH.detail[detKey] || { turns: [] }).turns.length + ' battles)');
+          ok(doc.querySelector('#chHistMap option'), 'histogram map knob present');
+          ok(doc.querySelectorAll('#dashOut .ch-hit').length >= win.DASH.results.length + 5,
+            'hover hit-targets cover dots, bubbles and bins');
+          // the hover layer: entering a hit fills + shows the tooltip, leaving hides it
+          var hit = doc.querySelector('#dashOut #chScatter .ch-hit');
+          hit.dispatchEvent(new win.Event('mouseenter'));
+          var tip = doc.getElementById('chTip');
+          ok(tip && tip.style.display === 'block' && tip.textContent.indexOf(detKey) >= 0 &&
+             /balance score/.test(tip.textContent),
+            'scatter tooltip shows the map name + metrics on hover');
+          hit.dispatchEvent(new win.Event('mouseleave'));
+          ok(tip.style.display === 'none', 'tooltip hides on mouseleave');
+          doc.getElementById('dashTabTables').click();
+          ok(doc.querySelectorAll('#dashOut table').length === 2, 'back on Tables: map table + card report still render');
+          ok(doc.querySelector('#dashOut th.sorted'), 'sort state survived the tab round-trip');
           return startWatch();
         }
         if ((dw += 100) > 60000) { ok(false, 'dashboard run never finished'); return startWatch(); }

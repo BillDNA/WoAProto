@@ -46,7 +46,17 @@ if (/autostart=ai/.test(location.search)) setTimeout(function(){ startLocal('ai'
 if (/screen=/.test(location.search)) setTimeout(function(){
   var s = (location.search.match(/screen=(\w+)/)||[])[1];
   if (s==='deck') openDeck();
-  else if (s==='dash'){ openDash(); if (/[?&]run/.test(location.search)){ $('dashN').value='20'; if ($('dashMap').options[1]) $('dashMap').value = $('dashMap').options[1].value; setTimeout(function(){ $('dashRun').click(); }, 40); } }
+  else if (s==='dash'){
+    openDash();
+    var wantCharts = /[?&]charts/.test(location.search); // &charts auto-opens the Charts tab
+    if (wantCharts){ DASH.view = 'charts'; renderDash(); }
+    if (/[?&]run/.test(location.search)){
+      $('dashN').value='20';
+      // charts read across maps, so &charts keeps "All in play"; otherwise one map for speed
+      if (!wantCharts && $('dashMap').options[1]) $('dashMap').value = $('dashMap').options[1].value;
+      setTimeout(function(){ $('dashRun').click(); }, 40);
+    }
+  }
   else if (s==='maps'){ renderMapsScr(); show('mapsScr'); }
   else if (s==='manual'){ // optional &ex=2&beat=3 target one frame (1-based beat)
     openManual();
@@ -330,6 +340,9 @@ E.hooks.onBattleEnd.push(function (st) {
 $('btnDash').onclick = openDash;
 $('dashBack').onclick = function(){ DASH.cancel = true; show('menu'); checkResume(); };
 $('dashStop').onclick = function(){ DASH.cancel = true; };
+// Tables|Charts toggle — per-run state on DASH; charts re-render from memory
+$('dashTabTables').onclick = function(){ DASH.view = 'tables'; renderDash(); };
+$('dashTabCharts').onclick = function(){ DASH.view = 'charts'; renderDash(); };
 
 $('dashRun').onclick = function(){
   if (DASH.running) return;
@@ -344,6 +357,7 @@ $('dashRun').onclick = function(){
   if (probs.length){ toast('Fix these maps first: '+probs.join('; '), 4500); return; }
   DASH.running = true; DASH.cancel = false;
   DASH.results = []; DASH.meta = { n:n, dr:dr, db:db };
+  DASH.detail = {}; DASH.chartMap = null; // per-battle rows for the Charts view (histogram)
   DASH.runKey = 'dash-' + Date.now(); // groups this run's battles into one DB run row
   $('dashStop').style.display = ''; $('dashRun').disabled = true;
   var mi = 0, g = 0, out = E.balanceNew(n);
@@ -371,6 +385,13 @@ $('dashRun').onclick = function(){
       var fp = E.balanceFP(g);
       var st = E.simBattle(maps[mi], E.balanceSeed((mi+1)*7919, g), fp, dr, db);
       E.balanceAdd(out, st, fp);
+      // keep each battle's length + ending for the Charts view's histogram —
+      // the aggregate throws these away (graphs-spec Q4); tiny per-run memory
+      if (st.phase === 'battle-over'){
+        var det = DASH.detail[maps[mi].name] || (DASH.detail[maps[mi].name] = { turns: [], winTypes: [] });
+        det.turns.push(st.turnNumber);
+        det.winTypes.push(st.winType);
+      }
       g++;
       step();
     }, 8);
