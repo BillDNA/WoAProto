@@ -341,6 +341,37 @@
   .manual table{width:100%; border-collapse:collapse; font-size:13px;}
   .manual td,.manual th{border:1px solid var(--brass-dark); padding:3px 6px; text-align:center;}
 
+  /* ===== Field Manual diagram player (V1 field-manual animations) =====
+     Same visual vocabulary as the live board: gold = attacker support that
+     counted, steel = defender support, grey dashed = support denied. All
+     rendering is state-driven per beat — the animations below are garnish
+     and are switched off under prefers-reduced-motion. */
+  #manualOvr .panel{max-width:min(640px,94vw);}
+  #manualPlayer{margin:2px 0 14px; border:1px solid var(--brass-dark); border-radius:8px; padding:10px 12px 8px; background:rgba(255,255,255,.18);}
+  #mpTabs{display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-bottom:8px;}
+  .mptab{font-family:inherit; font-size:12.5px; font-weight:normal; padding:4px 12px; border:1px solid var(--brass-dark); border-radius:14px; background:rgba(255,255,255,.3); color:var(--ink); cursor:pointer; box-shadow:none; letter-spacing:0;}
+  .mptab.sel{background:var(--brass); color:#fff; font-weight:bold;}
+  #mpBoard{display:block; width:100%; max-height:290px; margin:0 auto;}
+  #mpBoard .coordlbl{font-size:8.5px;}
+  #mpCaption{min-height:60px; font-size:13.5px; line-height:1.45; text-align:center; font-style:italic; color:var(--ink-soft); padding:6px 8px 0;}
+  #mpCaption b{color:var(--ink); font-style:normal;}
+  #mpCtrls{display:flex; gap:12px; justify-content:center; align-items:center; margin-top:6px;}
+  #mpCtrls button{padding:4px 14px; font-size:13px;}
+  #mpCounter{font-size:12.5px; color:var(--ink-soft); min-width:44px; text-align:center; font-variant:small-caps; letter-spacing:1px;}
+  #mpBoard .mring{fill:none; stroke-width:4; transform-box:fill-box; transform-origin:center; animation:mringIn .45s ease backwards;}
+  #mpBoard .mring.gold{stroke:#d4af37;}
+  #mpBoard .mring.steel{stroke:#8ea8be;}
+  #mpBoard .mring.deny{stroke:#98917f; stroke-dasharray:6 4;}
+  @keyframes mringIn{from{transform:scale(.4); opacity:0;}}
+  #mpBoard .mstrike{opacity:.9;}
+  #mpBoard .mghost{opacity:.4;}
+  #mpBoard .medge-glow{animation:mpulse 1.2s ease infinite;}
+  @keyframes mpulse{0%,100%{opacity:.35;}50%{opacity:.85;}}
+  @media (prefers-reduced-motion: reduce){
+    #manualPlayer *{animation:none !important; transition:none !important;}
+    #mpBoard .medge-glow{opacity:.6;}
+  }
+
   /* maps screen + editor + balance dashboard + deck editor */
   #mapsScr .panel, #editorScr .panel{width:min(900px,96vw); max-height:92vh; overflow-y:auto; padding:22px 26px;}
   #deckScr .panel{width:min(1040px,97vw); max-height:97vh; overflow-y:auto; padding:20px 24px;}

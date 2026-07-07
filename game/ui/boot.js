@@ -42,17 +42,33 @@ $('diffSel').onchange = function(){ APP.diff = this.value; };
 $('btnAI').onclick = function(){ startLocal('ai'); };
 // deep link straight into a game: index.html?autostart=ai (handy for screenshots & sharing)
 if (/autostart=ai/.test(location.search)) setTimeout(function(){ startLocal('ai'); }, 60);
-// deep link to a menu screen: index.html?screen=deck|dash|maps (screenshots & quick testing)
+// deep link to a menu screen: index.html?screen=deck|dash|maps|manual (screenshots & quick testing)
 if (/screen=/.test(location.search)) setTimeout(function(){
   var s = (location.search.match(/screen=(\w+)/)||[])[1];
   if (s==='deck') openDeck();
   else if (s==='dash'){ openDash(); if (/[?&]run/.test(location.search)){ $('dashN').value='20'; if ($('dashMap').options[1]) $('dashMap').value = $('dashMap').options[1].value; setTimeout(function(){ $('dashRun').click(); }, 40); } }
   else if (s==='maps'){ renderMapsScr(); show('mapsScr'); }
+  else if (s==='manual'){ // optional &ex=2&beat=3 target one frame (1-based beat)
+    openManual();
+    var mx = (location.search.match(/[?&]ex=(\d+)/)||[])[1];
+    var mb = (location.search.match(/[?&]beat=(\d+)/)||[])[1];
+    if (mx !== undefined || mb !== undefined){
+      if (mx !== undefined) MANUAL.ex = +mx - 1;
+      if (mb !== undefined) MANUAL.beat = +mb - 1;
+      renderManual();
+    }
+  }
 }, 60);
 $('btnWatch').onclick = function(){ startLocal('watch'); };
 $('btnHotseat').onclick = function(){ startLocal('hotseat'); };
-$('btnManual').onclick = function(){ $('manualOvr').classList.add('active'); };
-$('btnManual2').onclick = function(){ $('manualOvr').classList.add('active'); };
+// the Field Manual now opens through ui/manual.js (V1 diagram player renders
+// its current example/beat before the overlay shows)
+$('btnManual').onclick = function(){ openManual(); };
+$('btnManual2').onclick = function(){ openManual(); };
+$('mpPrev').onclick = function(){ manualStep(-1); };
+$('mpNext').onclick = function(){ manualStep(1); };
+$('mpTabs').onclick = manualTabClick;            // tab clicks delegated to ui/manual.js
+document.addEventListener('keydown', manualKey); // ← / → step beats while the manual is open
 $('btnConcede').onclick = function(){
   var st = APP.st;
   if (!st || st.phase === 'battle-over' || APP.mode === 'watch') return;

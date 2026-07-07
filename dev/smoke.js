@@ -271,11 +271,54 @@ setTimeout(function () {
         var st = win.APP.st;
         if (st && (st.turnNumber >= 3 || st.phase === 'battle-over')) {
           ok(true, 'both generals played without input (turn ' + st.turnNumber + ')');
-          return finish();
+          return manualPlayer();
         }
-        if ((w0 += 100) > 30000) { ok(false, 'watch mode stalled at turn ' + (st && st.turnNumber)); return finish(); }
+        if ((w0 += 100) > 30000) { ok(false, 'watch mode stalled at turn ' + (st && st.turnNumber)); return manualPlayer(); }
         realSetTimeout(waitWatch, 100);
       })();
+    }
+
+    function manualPlayer() {
+      console.log('== field manual diagram player (V1) ==');
+      doc.getElementById('btnQuit').click();
+      var liveShape = win.Engine.currentShape();
+      doc.getElementById('btnManual').click();
+      ok(doc.getElementById('manualOvr').classList.contains('active'), 'manual overlay opens');
+      ok(doc.querySelectorAll('#mpTabs .mptab').length === 3, 'diagram player present with 3 example tabs');
+      ok(doc.querySelectorAll('#mpBoard polygon.hex').length >= 8,
+        'mini-board hexes rendered (' + doc.querySelectorAll('#mpBoard polygon.hex').length + ')');
+      ok(win.Engine.currentShape() === liveShape, 'rendering restored the live board shape (' + liveShape + ')');
+      var c0 = doc.getElementById('mpCounter').textContent;
+      doc.getElementById('mpNext').click();
+      doc.getElementById('mpNext').click();
+      var c2 = doc.getElementById('mpCounter').textContent;
+      ok(c0 === '1/7' && c2 === '3/7', 'Next advances the beat counter (' + c0 + ' -> ' + c2 + ')');
+      ok(doc.querySelectorAll('#mpBoard .mring.gold').length >= 1, 'gold attacker-support ring(s) on the mini board');
+      // engine-truth guarantee: the tallies shown must equal supportFor/computeAttack
+      // run fresh on the EXACT fixture state being shown (window.MANUAL.state/atk)
+      var E2 = win.Engine, M = win.MANUAL;
+      var prevShape = E2.currentShape();
+      E2.setBoard(M.state.boardShape);
+      var asup = E2.supportFor(M.state, 'red', M.atk.to, M.atk.from, true);
+      var base = E2.UNITS[M.state.units[M.atk.from].type].atk;
+      var res = E2.computeAttack(M.state, M.atk);
+      E2.setBoard(prevShape);
+      var pill3 = doc.querySelector('#mpBoard .mpill-t').textContent;
+      ok(pill3 === (base + asup.total) + ' vs ?', 'beat-3 tally = engine base + supportFor total (' + pill3 + ')');
+      ok(doc.querySelectorAll('#mpBoard .mring.gold').length === asup.hexes.length,
+        'one gold ring per engine-confirmed supporter (' + asup.hexes.length + ')');
+      doc.getElementById('mpNext').click(); // forest beat
+      doc.getElementById('mpNext').click(); // defender beat
+      doc.getElementById('mpNext').click(); // totals beat
+      var pill6 = doc.querySelector('#mpBoard .mpill-t').textContent;
+      ok(pill6 === res.attackerPower + ' vs ' + res.defenderPower,
+        'final pill = engine computeAttack (' + pill6 + ')');
+      ok(doc.querySelectorAll('#mpBoard .mring.steel').length >= 1, 'steel defender-support ring shown');
+      doc.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+      ok(doc.getElementById('mpCounter').textContent === '5/7', 'ArrowLeft steps back a beat');
+      doc.querySelector('#manualOvr .ovr-btns button').click();
+      ok(!doc.getElementById('manualOvr').classList.contains('active'), 'manual closes');
+      finish();
     }
 
     function finish() {
