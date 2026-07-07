@@ -736,6 +736,41 @@ seeds.forEach(function (seed) {
 });
 console.log('  battle endings: ' + hqWins + ' HQ captures, ' + attrWins + ' attrition; longest battle ' + maxTurns + ' turns');
 
+/* ---------- index.html script-tag chain matches the on-disk parts ----------
+   The browser loads engine/ + ui/ via hand-ordered <script src> tags while
+   node loads them by filename sort — this assert is what keeps the two
+   orderings from drifting (V1 Seam-Split guard). */
+(function () {
+  console.log('== index.html script-tag chain ==');
+  var fs = require('fs'), path = require('path');
+  var html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+  var tags = [];
+  html.replace(/<script src="([^"]+)"><\/script>/g, function (m, src) { tags.push(src); return m; });
+  function diskSorted(sub) {
+    try {
+      return fs.readdirSync(path.join(__dirname, sub)).filter(function (f) { return /\.js$/.test(f); })
+        .sort().map(function (f) { return sub + '/' + f; });
+    } catch (e) { return null; }
+  }
+  var manIdx = tags.indexOf('content/manifest.js');
+  ok(manIdx >= 0, 'content/manifest.js tag present');
+  var engineParts = diskSorted('engine');
+  var engineTags = tags.filter(function (t) { return /^engine\//.test(t); });
+  ok(JSON.stringify(engineTags) === JSON.stringify(engineParts),
+    'engine tags = engine/ dir in sorted order (' + engineTags.length + ' parts)');
+  ok(engineParts.every(function (t) { return tags.indexOf(t) > manIdx; }),
+    'every engine part loads after content/manifest.js');
+  var uiParts = diskSorted('ui');
+  if (uiParts) {
+    var uiTags = tags.filter(function (t) { return /^ui\//.test(t); });
+    ok(uiParts.every(function (t) { return uiTags.indexOf(t) >= 0; }) && uiTags.length === uiParts.length,
+      'every ui/ file has a tag (' + uiTags.length + ')');
+    ok(uiTags[uiTags.length - 1] === 'ui/boot.js', 'ui/boot.js is the last ui tag');
+    var lastEngine = tags.indexOf(engineTags[engineTags.length - 1]);
+    ok(uiTags.every(function (t) { return tags.indexOf(t) > lastEngine; }), 'ui loads after the engine');
+  }
+})();
+
 console.log(fails === 0 ? '\nALL TESTS PASSED' : '\n' + fails + ' FAILURES');
 process.exit(fails === 0 ? 0 : 1);
 /* end */
