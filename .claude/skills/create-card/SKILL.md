@@ -13,11 +13,11 @@ or custom-deck.js.**
 
 - `game/content/decks/default.js` — the active deck's card list (and
   `game/maps.js` `"units"` for legal deploy targets).
-- `design-docs/card-cheatsheet.md` — the FULL step vocabulary. It is small on
+- `dynamic-scrum/docs/card-cheatsheet.md` — the FULL step vocabulary. It is small on
   purpose: `deploy(unit, anywhere)`, `trench`, `attack(mod, tieSpare, noAdvance)`,
   `reposition`, `barrage`. **A card needing a step type that doesn't exist is an
   engine change — flag it as such, don't pretend the JSON works.**
-- `design-docs/grading-rubrics.md` — the card rubric (goal / evidence / score meaning).
+- `dynamic-scrum/docs/grading-rubrics.md` — the card rubric (goal / evidence / score meaning).
 - Latest card report (`node game/balance.js 40` or Bill's Balance Dashboard) —
   where the current deck is weak (dead cards, hoarded cards, auto-plays).
 

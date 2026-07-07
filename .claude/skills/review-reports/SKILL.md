@@ -27,10 +27,10 @@ analysis to `logs/reports/analysis/`. Covers both report types:
 
 ## Read first
 
-- `design-docs/grading-rubrics.md` — ground every reading and suggestion in a
+- `dynamic-scrum/docs/grading-rubrics.md` — ground every reading and suggestion in a
   rubric (north stars + card/map/unit/game rubrics: goal / evidence + data
   origin / score meaning). Cite the target band next to each number, not vibes.
-- `design-docs/human-instructions/ai-heuristic-model.md` — so any AI-behaviour
+- `dynamic-scrum/docs/human-instructions/ai-heuristic-model.md` — so any AI-behaviour
   suggestion names the exact weight to turn.
 - The reports themselves. Default to the **current rules version** (the highest
   `<version>` folder / the `Engine.VERSION` stamped in report headers). Don't mix
@@ -83,7 +83,7 @@ Then tell Bill the saved path and give a 3-line verbal summary.
 - The card table's Simple% carries the CARD_KEEP burn bias (the AI burns its
   least precious card) — say so when citing it.
 - If Behaviour numbers moved sharply vs the baselines in
-  design-docs/onboarding/code-overview.md "Known balance signals" (~5 attacks
+  dynamic-scrum/docs/code-architecture.md "Known balance signals" (~5 attacks
   / ~7 swaps / zero-kill ~4% / ~88% fielded — 0.x-era numbers; the 1.0
   accumulator is the growing current-era baseline), treat it as an AI
   regression signal even when win rates look fine.

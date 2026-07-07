@@ -26,7 +26,7 @@
    both sides only ever control 22 hexes.
 
    Card + map field guides now live with the content files and in
-   ../design-docs/card-cheatsheet.md. Terrain reminder (0.3 rules): forest in
+   ../dynamic-scrum/docs/card-cheatsheet.md. Terrain reminder (0.3 rules): forest in
    hex X = +1 attacking OUT across a covered side; mountain in X = +1 defending
    X across a covered side; river ("R") = support crosses freely but you cannot
    DEPLOY across it (control does not extend over the water), and it can't be

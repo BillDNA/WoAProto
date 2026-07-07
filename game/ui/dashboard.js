@@ -191,7 +191,7 @@ function renderDash(){
         dstat('Lead swings / battle', '<b>'+(G.leadChanges/mx).toFixed(1)+'</b>', 'Avg times the field-score lead flipped sides per battle. Higher = more back-and-forth; a losing player can feel a comeback.') +
       '</div>' +
     '</div>' +
-    '<p class="small">Hover any stat or column header for what it means and its healthy range. Full targets in design-docs/grading-rubrics.md.</p>';
+    '<p class="small">Hover any stat or column header for what it means and its healthy range. Full targets in dynamic-scrum/docs/grading-rubrics.md.</p>';
 
   // ---- card report (shared derivation; local keys are this table's sort ids) ----
   var crows = WOA_REPORT.cardRows(G.cards, E.CARDS).map(function(r){

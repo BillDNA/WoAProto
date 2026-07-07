@@ -7,7 +7,7 @@ description: Run an AI (and optionally LLM) tournament over the War of Attrition
 
 Run the sims, read the spread against the rubrics, hand Bill a graded report.
 **Suggestions only — never edit maps.js, cards, or rules yourself**
-(design-docs/onboarding/code-overview.md: findings go to Bill, he decides rule
+(dynamic-scrum/docs/code-architecture.md: findings go to Bill, he decides rule
 changes).
 
 ## Inputs to settle first (ask only if genuinely unclear)
@@ -33,7 +33,7 @@ changes).
    LLM side gets one persistent session, so matches are token-cheap per battle).
    The LLM is a non-heuristic reference point on the skill curve, and its
    felt-notes are playtest signal — quote them.
-3. **Grade** every headline number against `design-docs/grading-rubrics.md`
+3. **Grade** every headline number against `dynamic-scrum/docs/grading-rubrics.md`
    (north stars + per-artifact rubrics: goal / evidence + data origin / score
    meaning). Quote the target band next to each reading.
 4. **Report** (markdown, for Bill):
@@ -55,7 +55,7 @@ changes).
 - The card report's Simple% carries the CARD_KEEP burn bias (the AI burns its
   least precious card) — say so when citing it.
 - If Behaviour numbers moved sharply vs the baselines in
-  design-docs/onboarding/code-overview.md "Known balance signals" (~5 attacks /
+  dynamic-scrum/docs/code-architecture.md "Known balance signals" (~5 attacks /
   ~7 swaps / zero-kill ~4% / ~88% fielded — 0.x-era numbers; prefer the 1.0
   accumulator under logs/reports/balance/1.0/ once it has volume), treat it as
   an AI regression signal even when win rates look fine.

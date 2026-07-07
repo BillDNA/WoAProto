@@ -1,5 +1,11 @@
+---
+last-reviewed: 2026-07-07
+---
 #onboarding #workflow
-## Workflow
+## Workflow — build/test/tooling conventions for this game
+
+*(Process — sessions, board, tickets — is DynamicScrum's `WORKFLOW.md`, surfaced by the SessionStart
+hook. This doc is the game-side build workflow only.)*
 
 - **The server is the standard dev path**: `run-server.command` (Mac) / `run-server.bat` (Windows) / `node game/server.js`. It serves the app, regenerates `content/manifest.js` at boot, enables every save endpoint (maps, decks, map-sets, reports, debug dumps), and records finished battles into `logs/woa.db` (fail-open — play works without `dev/`). Double-clicked `file://` still plays but persists nothing.
 - After ANY engine change: `node game/test.js`. After UI changes: `node dev/smoke.js`. After touching their areas, also run the focused dev suites: `node dev/claude-plays.test.js` (claude-plays / prompt surfaces — includes the honesty invariant), `node dev/db.test.js` (dev/db.js or the `/api/recordbattle` proxy), `node dev/llm-session.test.js` (the persistent LLM transport).
@@ -29,3 +35,7 @@ Rules:
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+
+## Related
+
+[[Docs Index]] · [[code-architecture]] · [[data-and-reports]]

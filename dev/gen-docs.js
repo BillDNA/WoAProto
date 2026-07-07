@@ -8,11 +8,11 @@
                                  + the hand-maintained descriptions map BELOW)
      <!-- GEN:personalities -->  the extra AI personalities (AI_PRESETS minus
                                  easy/normal/hard, i.e. the maps.js "ai" rows)
-     in design-docs/human-instructions/ai-heuristic-model.md, and
+     in dynamic-scrum/docs/human-instructions/ai-heuristic-model.md, and
 
      <!-- GEN:content -->        the current content roster (maps with shape +
                                  custom flag, decks, map-sets with the active
-                                 marker) in design-docs/onboarding/code-overview.md.
+                                 marker) in dynamic-scrum/docs/code-architecture.md.
 
    Usage: node dev/gen-docs.js
    - Idempotent: running it twice produces no diff.
@@ -116,9 +116,9 @@ function genContent() {
 /* ---------- marker plumbing ---------- */
 
 var BLOCKS = [
-  { file: 'design-docs/human-instructions/ai-heuristic-model.md', name: 'weights', gen: genWeights },
-  { file: 'design-docs/human-instructions/ai-heuristic-model.md', name: 'personalities', gen: genPersonalities },
-  { file: 'design-docs/onboarding/code-overview.md', name: 'content', gen: genContent }
+  { file: 'dynamic-scrum/docs/human-instructions/ai-heuristic-model.md', name: 'weights', gen: genWeights },
+  { file: 'dynamic-scrum/docs/human-instructions/ai-heuristic-model.md', name: 'personalities', gen: genPersonalities },
+  { file: 'dynamic-scrum/docs/code-architecture.md', name: 'content', gen: genContent }
 ];
 
 function replaceBlock(src, name, body, file) {

@@ -12,7 +12,7 @@
    tallies and rings, E.applyStep (the real resolution path) for the
    aftermath frames. Nothing is hardcoded, so a rules change flows into the
    manual automatically. Authoring guide for future examples:
-   design-docs/human-instructions/manual-animations-authoring.md.
+   dynamic-scrum/docs/human-instructions/manual-animations-authoring.md.
 
    Classic script, no wrapper — top-level names attach to window (see
    ui/app.js header). All page wiring (buttons, keys, ?screen=manual) lives

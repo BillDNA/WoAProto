@@ -6,22 +6,6 @@ sprint-planning. Same ticket format as `Sprint.md` (the `ticket-block` template;
 
 ---
 
-### WOA-003 — Docs reorg: index the design-docs/specs vault into dynamic-scrum/docs
-**Area:** docs · **Status:** Todo · **Type:** sonnet · **Docs:** code-architecture, Docs Index
-
-Represent the project's existing orientation material (`design-docs/**`, `specs/**`) in the DS
-`dynamic-scrum/docs/` layer **by indexing / pointing in place** — do **not** move the frozen-API,
-wiki-linked vault (that's the F1 finding sent to canonical). Reconcile the overlap:
-`design-docs/onboarding/code-overview.md` is effectively the filled-out `code-architecture.md` (pick one
-SOT, point the other at it), and the **implemented V0/V1 specs** should be decomposed into / indexed as
-orientation-doc primers so a fresh session finds them via [[Docs Index]].
-
-**Acceptance criteria:**
-- [ ] `Docs Index` links out to the existing `design-docs/` primers in place — no vault files relocated
-- [ ] `code-architecture.md` reconciled with `code-overview.md` (one is SOT; the other points to it)
-- [ ] Implemented V0/V1 specs are represented as (or indexed to) orientation primers a fresh session can find
-- [ ] User confirms done
-
 ### WOA-002 — Placeholder audio pass
 **Area:** feel · **Status:** Todo · **Type:** sonnet · **Docs:** code-overview
 

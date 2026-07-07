@@ -2,14 +2,14 @@
 # Drop raw AI-generated art into game/art as <card-id>.png (or title/table/board.png),
 # then run:  powershell -ExecutionPolicy Bypass -File dev\optimize-art.ps1
 #
-# It moves heavy originals to design-docs/art-originals (gitignored), trims
+# It moves heavy originals to specs/original-specs/art-originals (gitignored), trims
 # transparent margins, resizes, and writes web-weight files back into game/art:
 #   title.png stays PNG (needs transparency), everything else becomes .jpg.
 Add-Type -AssemblyName System.Drawing
 
 $root = Split-Path $PSScriptRoot -Parent
 $artDir = Join-Path $root 'game\art'
-$origDir = Join-Path $root 'design-docs\art-originals'
+$origDir = Join-Path $root 'specs\original-specs\art-originals'
 New-Item -ItemType Directory -Force $origDir | Out-Null
 
 # 1) sweep heavy PNGs out of game/art into the originals folder

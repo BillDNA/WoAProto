@@ -125,7 +125,7 @@
     var n = neighbor(k, d);
     return n ? edgeKey(k, n) : null;
   }
-  // Terrain is hex-owned and directional (see design-docs HexClarificationDiagram):
+  // Terrain is hex-owned and directional (see specs/original-specs HexClarificationDiagram):
   // a "side" is one hex's face of an edge. Key: 'q,r>d'.
   function sideKey(h, d) { return h + '>' + d; }
 

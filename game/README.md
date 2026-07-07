@@ -65,7 +65,7 @@ The same report lives in the browser as the **Balance Dashboard** (main menu): p
 
 ## Art
 
-Card illustrations, the title plaque, the table felt, and the board parchment live in `game/art/`, looked up **by card id** (`art/<id>.jpg`, falling back to `.png`). A card with no matching file simply renders the text-only face — new cards never break for lack of art. To add art: drop the raw AI render into `game/art/` as `<id>.png` and run `dev/optimize-art.ps1` — it trims transparent margins, shrinks the file ~100×, and squirrels the original away in `design-docs/art-originals/` (kept out of the public repo).
+Card illustrations, the title plaque, the table felt, and the board parchment live in `game/art/`, looked up **by card id** (`art/<id>.jpg`, falling back to `.png`). A card with no matching file simply renders the text-only face — new cards never break for lack of art. To add art: drop the raw AI render into `game/art/` as `<id>.png` and run `dev/optimize-art.ps1` — it trims transparent margins, shrinks the file ~100×, and squirrels the original away in `specs/original-specs/art-originals/` (kept out of the public repo).
 
 ## What's implemented
 

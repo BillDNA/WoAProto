@@ -7,7 +7,7 @@
   var I = global.WOA_E = global.WOA_E || {};
 
   // apples (drives report/version folders and the persistent-data reset boundary).
-  // Must track the rule book header (design-docs/onboarding/War Of Attrition rule book.md).
+  // Must track the rule book header (dynamic-scrum/docs/War Of Attrition rule book.md).
   var RULES_VERSION = '1.0';
 
   // CORE data (units/shapes/stock/ai) is hand-editable JSON in maps.js, which

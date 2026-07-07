@@ -4,7 +4,7 @@
 > rapidly iterate on balance — now on a deliberate trajectory to a **Steam roguelite deck-builder**.
 
 The high-level kickoff doc. Detail lives in companion docs — the [[Roadmap]], the process doc, and the
-project's own orientation vault (`design-docs/onboarding/code-overview.md`, `specs/`).
+project's own orientation vault (`dynamic-scrum/docs/code-architecture.md`, `specs/`).
 
 ---
 
@@ -17,7 +17,7 @@ felt-notes for pennies make content iteration cheap. A clean headless engine, de
 a test suite that survived a full restructure back it.
 
 **Next:** decide the run and grow content (see [[Roadmap]] M0–M1). Two items are filed for Bill to
-decide — the weight-tuner sweep and the Steam leverage draft (Q.2, Q.3, `design-docs/steam-roadmap.md`).
+decide — the weight-tuner sweep and the Steam leverage draft (Q.2, Q.3, `dynamic-scrum/docs/steam-roadmap.md`).
 
 ---
 
@@ -53,6 +53,6 @@ decide — the weight-tuner sweep and the Steam leverage draft (Q.2, Q.3, `desig
 ## Related
 
 [[Roadmap]] · the canonical process doc (`WORKFLOW.md`, surfaced by the SessionStart grounding hook) ·
-orientation docs in [[Docs Index]] · the project's own `design-docs/` + `specs/` vault.
+orientation docs in [[Docs Index]] · the project's own `specs/` vault (design history).
 
 #brief
