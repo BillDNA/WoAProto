@@ -7,9 +7,10 @@ start. **Overwrite** this each session — it is state, not a log.
 
 - **S1 (Docs onto the board) is CLOSED** — archived to `dynamic-scrum/history/finished/S1-docs-onto-the-board.md`.
   Alignment-pass skipped (judged: not a milestone close, no drift signal).
-- **S2 planning in progress this session** — goal: Bill can drive the V1 iteration loop himself.
-  Onboarding doc for Bill (how to run/collect balance data) + a home for "standard" run recipes
-  (apples-to-apples comparisons). Bill will mint friction tickets into the sprint as he dogfoods.
+- **S2 (Bill drives V1) is OPEN** — 2 tickets, both `Type: opus` (Bill's call): WOA-004 (Bill's
+  onboarding doc for the balance loop) then WOA-005 (standard-runs runbook, apples-to-apples recipes).
+  Deliberately small: Bill mints friction tickets into the sprint as he dogfoods — they count toward
+  the goal, not against it.
 - Backlog ready: WOA-001 (card batch — benefits from S2 landing first), WOA-002 (audio).
 
 ## Threads to carry
