@@ -76,13 +76,8 @@ function parseArgs(argv) {
 
 const HEURISTIC = { easy: true, normal: true, hard: true };
 const DIRN = ['E', 'NE', 'NW', 'W', 'SW', 'SE'];
-// Mirrors the engine's private CARD_KEEP table: which card to burn on a basic-mode play.
-const CARD_KEEP = {
-  mass_assault: 9, attack_plus1: 8, conscription: 7, deploy_cavalry: 7,
-  deploy_inf_trench: 6, ordered_withdraw: 5, careful_maneuvers: 5,
-  reckless_maneuvers: 5, deploy_artillery: 5, airdrop: 4, naval_barrage: 4,
-  forced_march: 3, deploy_inf_start: 2
-};
+// The engine's own burn-priority table (exported since V1 — no more hand-kept mirror).
+const CARD_KEEP = E.CARD_KEEP;
 
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 

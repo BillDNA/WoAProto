@@ -37,6 +37,11 @@ function regenContentManifest() {
   fs.writeFileSync(path.join(CONTENT_DIR, 'manifest.js'), body);
 }
 
+// Regenerate the manifest at boot too, not just on save/delete — hand-added
+// content files (or a git pull) otherwise leave the browser on a stale roster
+// while node tools see the truth.
+try { regenContentManifest(); } catch (e) { console.log('  (manifest regen failed: ' + e.message + ')'); }
+
 var rooms = {}; // code -> { state, seq, updated }
 
 function code4() {

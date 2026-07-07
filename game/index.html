@@ -632,7 +632,7 @@
 <div id="deckScr" class="screen">
   <div class="panel parchment">
     <h2 style="font-variant:small-caps;text-align:center;">Quartermaster's Ledger &mdash; Deck Editor</h2>
-    <p class="small" style="text-align:center;">The deck is data (<code>maps.js</code> cards). 16 copies per deck, exactly one <b>starting</b> card (guaranteed in the opening hand; count 1). <b>Five deck slots</b> live in this browser &mdash; pick one to edit, name it, and mark the &#9733; one you want the game to use. Tick a card off to bench it. Pick a card on the left to edit it on the right; build its steps with the dropdowns. Card art is looked up by id (<code>art/&lt;id&gt;.jpg</code>) &mdash; a new id simply renders as a clean text card.</p>
+    <p class="small" style="text-align:center;">The deck is data (<code>content/decks/*.js</code>). 16 copies per deck, exactly one <b>starting</b> card (guaranteed in the opening hand; count 1). <b>Five deck slots</b> live in this browser &mdash; pick one to edit, name it, and mark the &#9733; one you want the game to use. Tick a card off to bench it. Pick a card on the left to edit it on the right; build its steps with the dropdowns. Card art is looked up by id (<code>art/&lt;id&gt;.jpg</code>) &mdash; a new id simply renders as a clean text card.</p>
     <p class="small" id="deckHdr" style="text-align:center;font-weight:bold;"></p>
     <div id="dkSlots" title="Five deck slots — pick one to edit; the ★ deck is the one the game uses"></div>
     <div id="dkWrap">
@@ -649,10 +649,10 @@
       <button id="dkExport" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Export deck file</button>
       <button id="dkImport" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Import</button>
       <input type="file" id="dkImportFile" accept=".js,.json" style="display:none;">
-      <button id="dkReset" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);" title="Back to the built-in deck from maps.js">Restore built-in</button>
+      <button id="dkReset" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);" title="Back to the default deck (content/decks/default.js)">Restore built-in</button>
       <button id="dkBack" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Back</button>
     </div>
-    <p class="small" style="text-align:center;">Changing cards is a rules change in effect &mdash; run the Balance Dashboard after, and <code>node game/test.js</code> if you can. LAN play needs the same deck on both devices (share <code>custom-deck.js</code>). CLI tools (<code>balance.js</code>, <code>test.js</code>) always read <code>maps.js</code>; Export and hand-merge when a brew graduates.</p>
+    <p class="small" style="text-align:center;">Changing cards is a rules change in effect &mdash; run the Balance Dashboard after, and <code>node game/test.js</code> if you can. LAN play needs the same deck on both devices (share <code>custom-deck.js</code>). CLI tools (<code>balance.js</code>, <code>test.js</code>) read the active deck in <code>content/decks/</code> &mdash; the applied deck here is browser-only.</p>
   </div>
 </div>
 
@@ -1501,7 +1501,7 @@ function renderTop(){
   $('btnConcede').style.display = (st.phase !== 'battle-over' && APP.mode !== 'watch') ? '' : 'none';
 }
 /* card art is looked up BY CARD ID: art/<id>.jpg, falling back to art/<id>.png,
-   falling back to no art at all — so new cards in maps.js just need a matching
+   falling back to no art at all — so new cards in the deck just need a matching
    file dropped into game/art (any heavy AI render: run dev/optimize-art.ps1). */
 var ART_STATE = {}; // id -> 'jpg' | 'png' | false (known missing)
 function artImg(id, cls){
@@ -2356,7 +2356,7 @@ function deckProblems(cards){
     });
   });
   if (starting !== 1) probs.push('exactly ONE card must be marked starting (got ' + starting + ')');
-  if (total !== 16) probs.push('the deck must total 16 cards (got ' + total + ') — hand-edit maps.js if you really want an exotic size');
+  if (total !== 16) probs.push('the deck must total 16 cards (got ' + total + ') — hand-edit the deck file if you really want an exotic size');
   return probs;
 }
 
@@ -2502,7 +2502,7 @@ function dkStatus(){
   var inCards = DK.cards.filter(function(c){ return !c.out; });
   var total = inCards.reduce(function(a, c){ return a + (+c.count >= 1 ? Math.floor(+c.count) : 0); }, 0);
   var openName = (DK.slots && DK.slots[DK.slot] && DK.slots[DK.slot].name) || ('Deck '+(DK.slot+1));
-  var applied = WOA_DECK_SRC === 'builtin' ? 'built-in deck (maps.js)' :
+  var applied = WOA_DECK_SRC === 'builtin' ? 'default deck (content/decks/default.js)' :
             WOA_DECK_SRC === 'local' ? 'a custom deck saved in this browser' : 'custom-deck.js';
   $('deckHdr').innerHTML = 'Editing <b>' + dkEsc(openName) + '</b>' +
     (DK.slot === DK.active ? ' &middot; this is the active deck' : ' &middot; active deck is <b>'+dkEsc((DK.slots[DK.active]&&DK.slots[DK.active].name)||('Deck '+(DK.active+1)))+'</b>') +
@@ -2538,7 +2538,7 @@ $('dkSave').onclick = function(){
   syncDeckFile(ship, function(){ setTimeout(function(){ location.reload(); }, 600); });
 };
 $('dkReset').onclick = function(){
-  if (!confirm('Restore the built-in deck from maps.js?')) return;
+  if (!confirm('Restore the default deck (content/decks/default.js)?')) return;
   try { localStorage.removeItem('woa-custom-deck'); } catch(e){}
   clearSave();
   syncDeckFile(null, function(){ location.reload(); });

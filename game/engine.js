@@ -30,7 +30,11 @@
           require(path.join(dir, f));                // side effect: pushes into WOA_CONTENT
         });
       });
-    } catch (e) { /* leave WOA_CONTENT empty; validated just below */ }
+    } catch (e) {
+      // don't swallow silently — a bad content file otherwise just vanishes
+      // from the roster until the generic "no content" throw below
+      if (typeof console !== 'undefined') console.error('WoA content load failed: ' + e.message);
+    }
   })();
   var CONTENT = global.WOA_CONTENT || { maps: [], cards: [], decks: [] };
   // the active deck decides the card list; fall back to any deck, then to any
@@ -45,7 +49,7 @@
     cards: CARD_LIST
   };
   if (!BUILTIN.maps.length || !BUILTIN.cards.length)
-    throw new Error('War of Attrition: no content loaded (content/maps/*.js + content/decks/*.js). Run dev/migrate-content.js or check content/manifest.js.');
+    throw new Error('War of Attrition: no content loaded (content/maps/*.js + content/decks/*.js). Check the content/ dirs and content/manifest.js.');
 
   /* ---------- board geometry (pointy-top axial; shapes defined in maps.js) ---------- */
   var DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]]; // E NE NW W SW SE
@@ -322,7 +326,8 @@
       turnNumber: 1,
       lastKillTurn: 0,   // turn of the most recent kill/HQ fall — kill-less-tail metric
       leadChanges: 0,    // times the field-score leader flipped to the OTHER side
-      lastLeader: null   // last definite (non-tie) field-score leader
+      lastLeader: null,  // last definite (non-tie) field-score leader
+      fsTimeline: []     // [fsRed, fsBlue] per completed turn (V1 DB timeline; absent on sims + old saves)
     };
     st.second = other(st.current);
     st.decks.red = buildDeck(st, 'red');
@@ -396,6 +401,11 @@
     finishBattle(st, winner, 'attrition');
   }
 
+  // V1 seam: every REAL finished battle (never an AI-search clone — those carry
+  // __sim) flows through here, so persistence subscribes once and covers every
+  // source: human play, watch mode, the lab, LLM battles. Hook errors never
+  // break the game.
+  var HOOKS = { onBattleEnd: [] };
   function finishBattle(st, winner, how) {
     st.phase = 'battle-over';
     st.battleWinner = winner;
@@ -410,6 +420,9 @@
     log(st, cap(winner) + ' wins the battle by ' + (how === 'hq' ? 'capturing the headquarters!' :
       how === 'concession' ? 'concession.' :
       'attrition (' + fieldScore(st, 'red') + ' VP vs ' + fieldScore(st, 'blue') + ' VP of surviving units).'));
+    if (!st.__sim) HOOKS.onBattleEnd.forEach(function (fn) {
+      try { fn(st); } catch (e) { if (typeof console !== 'undefined') console.error('onBattleEnd hook failed: ' + e.message); }
+    });
   }
 
   // A player throws in the towel; the battle (not the match) goes to the enemy.
@@ -745,7 +758,10 @@
     return st.pending.steps[st.pending.idx] || null;
   }
 
-  function stepOptions(st) {
+  // opts.previews === false skips the per-attack computeAttack preview — the
+  // previews exist for the UI's hover pills; the AI's enumerateChoices and the
+  // step-possibility checks below never read them (V1 seam, hot path).
+  function stepOptions(st, opts) {
     var step = currentStep(st);
     if (!step) return null;
     var p = st.current;
@@ -762,9 +778,10 @@
       o.mod = step.mod || 0;
       o.tieSpare = !!step.tieSpare;
       o.noAdvance = !!step.noAdvance;
+      var withPreviews = !(opts && opts.previews === false);
       o.attacks = listAttacks(st, p).map(function (a) {
         a = Object.assign({}, a, { mod: step.mod || 0, tieSpare: !!step.tieSpare, noAdvance: !!step.noAdvance });
-        a.preview = computeAttack(st, a);
+        if (withPreviews) a.preview = computeAttack(st, a);
         return a;
       });
     } else if (step.type === 'reposition') {
@@ -778,7 +795,7 @@
   }
 
   function stepHasOptions(st) {
-    var o = stepOptions(st);
+    var o = stepOptions(st, { previews: false });
     if (!o) return false;
     if (o.type === 'deploy' || o.type === 'trench') return o.targets.length > 0;
     if (o.type === 'attack') return o.attacks.length > 0;
@@ -914,6 +931,7 @@
       if (st.lastLeader && lead !== st.lastLeader) st.leadChanges = (st.leadChanges || 0) + 1;
       st.lastLeader = lead;
     }
+    if (st.fsTimeline) st.fsTimeline.push([fr, fb]); // absent on sims + pre-V1 saves
     if (st.pending.acted === 0) {
       // The play resolved zero actions — an effective skipped turn. Bill wants
       // these visible in the journal AND measurable in the card report.
@@ -939,6 +957,20 @@
     var c = JSON.parse(JSON.stringify(st));
     st.match = m;
     c.match = { wins: { red: m.wins.red, blue: m.wins.blue }, battleIndex: m.battleIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
+    return c;
+  }
+  // The AI's hot-loop clone: identical to clone() except it drops what the
+  // search never reads — the journal prose (st.log grows every turn and was
+  // dominating clone cost late-battle), all playLog entries but the LAST
+  // (noopPenalty reads exactly that one), and fsTimeline. __sim marks the
+  // state so finishBattle never fires persistence hooks for search clones.
+  function cloneForSim(st) {
+    var m = st.match, lg = st.log, pl = st.playLog, tl = st.fsTimeline;
+    st.match = null; st.log = []; st.playLog = (pl && pl.length) ? [pl[pl.length - 1]] : []; st.fsTimeline = undefined;
+    var c = JSON.parse(JSON.stringify(st));
+    st.match = m; st.log = lg; st.playLog = pl; st.fsTimeline = tl;
+    c.match = { wins: { red: m.wins.red, blue: m.wins.blue }, battleIndex: m.battleIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
+    c.__sim = true;
     return c;
   }
 
@@ -1047,7 +1079,7 @@
   }
 
   function enumerateChoices(st) {
-    var o = stepOptions(st);
+    var o = stepOptions(st, { previews: false });
     var out = [{ skip: true }];
     if (!o) return out;
     if (o.type === 'deploy') o.targets.forEach(function (h) { out.push({ hex: h }); });
@@ -1082,7 +1114,7 @@
         if (opts.every(function (c) { return !c.skip; })) opts.push({ skip: true });
       }
       opts.forEach(function (c) {
-        var sim2 = clone(sim);
+        var sim2 = cloneForSim(sim);
         try { applyStep(sim2, c); } catch (e) { return; }
         var sc = evalState(sim2, me, w) + (randomness ? rnd(s) * randomness : 0);
         if (c.skip) sc -= 1; // mild bias toward acting
@@ -1115,7 +1147,7 @@
     var opp = endSt.current;
     var total = 0;
     for (var k = 0; k < samples; k++) {
-      var sim0 = clone(endSt);
+      var sim0 = cloneForSim(endSt);
       var pool = sim0.decks[opp].concat(sim0.hands[opp]);
       shuffle(s, pool);
       var hn = sim0.hands[opp].length;
@@ -1126,7 +1158,7 @@
       sim0.hands[opp].forEach(function (cid) {
         if (tried[cid]) return;
         tried[cid] = true;
-        var sim2 = clone(sim0);
+        var sim2 = cloneForSim(sim0);
         try { playCard(sim2, cid); } catch (e) { return; }
         var r = (sim2.phase === 'step') ? greedyResolve(sim2, opp, 0, s, w) : { score: evalState(sim2, opp, w), choices: [] };
         if (r.score > bestOpp) { bestOpp = r.score; bestState = sim2; }
@@ -1164,7 +1196,7 @@
     hand.forEach(function (cid) {
       if (tried[cid]) return;
       tried[cid] = true;
-      var sim = clone(st);
+      var sim = cloneForSim(st);
       try { playCard(sim, cid); } catch (e) { return; }
       var r = (sim.phase === 'step') ? greedyResolve(sim, me, randomness, s, w) : { score: evalState(sim, me, w), choices: [] };
       var pen = noopPenalty(sim);
@@ -1176,7 +1208,7 @@
     var burn = hand.slice().sort(function (a, b) { return (CARD_KEEP[a] || 5) - (CARD_KEEP[b] || 5); })[0];
     if (burn) {
       ['attack', 'reposition'].forEach(function (mode) {
-        var sim = clone(st);
+        var sim = cloneForSim(st);
         try { playCard(sim, burn, mode); } catch (e) { return; }
         var r = (sim.phase === 'step') ? greedyResolve(sim, me, randomness, s, w) : { score: evalState(sim, me, w), choices: [] };
         var pen = noopPenalty(sim);
@@ -1352,8 +1384,9 @@
     stepOptions: stepOptions, applyStep: applyStep, mustPlayStep: mustPlayStep, cardsRemaining: cardsRemaining,
     enumerateChoices: enumerateChoices,
     concede: concede, concedeAdvised: concedeAdvised, fieldScore: fieldScore,
-    aiPlanTurn: aiPlanTurn, clone: clone, evalState: evalState, validateMaps: validateMaps,
-    AI_PRESETS: AI_PRESETS, AI_WEIGHTS: AI_WEIGHTS, aiConfig: aiConfig,
+    aiPlanTurn: aiPlanTurn, clone: clone, cloneForSim: cloneForSim, evalState: evalState, validateMaps: validateMaps,
+    AI_PRESETS: AI_PRESETS, AI_WEIGHTS: AI_WEIGHTS, aiConfig: aiConfig, CARD_KEEP: CARD_KEEP,
+    hooks: HOOKS,
     simBattle: simBattle, balanceMap: balanceMap,
     balanceNew: balanceNew, balanceAdd: balanceAdd, balanceSeed: balanceSeed, balanceFP: balanceFP
   };
