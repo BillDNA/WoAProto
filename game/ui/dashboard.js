@@ -10,7 +10,7 @@
 // E.balanceAdd — the SAME code the CLI folds battles through — and the
 // seed/first-player schedule is E.balanceSeed/balanceFP, so a run here with
 // the same n/AI/maps reproduces the terminal's numbers exactly.
-var DASH = { running:false, cancel:false, results:[], sort:{key:null, dir:1}, cardSort:{key:'sightPct', dir:-1}, meta:null };
+var DASH = { running:false, cancel:false, results:[], sort:{key:null, dir:1}, cardSort:{key:'sightPct', dir:-1}, meta:null, adhoc:null };
 function dpct(a, b){ return b ? Math.round(100 * a / b) : 0; }
 
 function openDash(){
@@ -24,6 +24,29 @@ function openDash(){
   });
   if (cur) sel.value = [].some.call(sel.options, function(o){ return o.value===cur; }) ? cur : 'all';
   show('dashScr');
+}
+
+// Balance a map AS DRAWN — possibly unsaved (the map editor's Balance button).
+// Restructure step 9 deleted the old in-game balance lab so this is the ONE
+// aggregation pipeline: the def rides along as DASH.adhoc under a transient
+// '(as drawn)' option (value '@adhoc'), and the normal dashRun path (ui/boot.js)
+// resolves that value to [DASH.adhoc]. Invalid maps toast and stay put.
+function openDashDef(def){
+  if (!def) return; // edBuildDef() already toasted the reason
+  var probs = E.validateMaps([def]);
+  if (probs.length){ toast('Map problem: '+probs.join('; '), 4200); return; }
+  DASH.adhoc = def;
+  openDash(); // rebuilds #dashMap from the pool, so (re)inject the adhoc option after
+  var sel = $('dashMap');
+  var o = sel.querySelector('option[value="@adhoc"]');
+  if (!o){
+    o = document.createElement('option');
+    o.value = '@adhoc';
+    sel.appendChild(o);
+  }
+  o.textContent = '(as drawn) ' + def.name;
+  sel.value = '@adhoc';
+  $('dashRun').click();
 }
 
 function dashDownloadReport(fname, md){

@@ -167,18 +167,27 @@ setTimeout(function () {
     var ringMap = { name: 'Ring Test', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2], pieces: ringPieces };
     ok(win.Engine.validateMaps([ringMap]).length === 0, 'two sets of three validate cleanly');
 
-    console.log('== in-game balance report ==');
-    win.runBalanceUI(win.Engine.MAPS[4]); // The Cockpit (fast battles)
+    console.log('== editor Balance -> dashboard, map as drawn (restructure step 9) ==');
+    // The old in-game balance lab is gone; the editor's Balance button routes the
+    // UNSAVED carved map (still open in the editor above) through openDashDef into
+    // the one dashboard pipeline as a transient '(as drawn)' option.
+    doc.getElementById('dashN').value = '20'; // openDashDef runs with whatever n is picked — keep it fast
+    doc.getElementById('edBalance').click();  // openDashDef(edBuildDef())
+    ok(doc.getElementById('dashScr').classList.contains('active'), 'editor Balance opens the Balance Dashboard');
+    var adhocOpt = doc.querySelector('#dashMap option[value="@adhoc"]');
+    ok(!!adhocOpt && /as drawn.*Carved Smoke Test/.test(adhocOpt.textContent) && doc.getElementById('dashMap').value === '@adhoc',
+      'ad-hoc "(as drawn)" option injected and selected');
+    ok(win.DASH.adhoc && win.DASH.adhoc.name === 'Carved Smoke Test' && win.DASH.running,
+      'DASH.adhoc carries the unsaved def and the run started');
     var waited = 0;
-    (function waitBal() {
-      if (doc.getElementById('balMore')) {
-        ok(true, 'balance report rendered after 20 battles');
-        ok(/wins/.test(doc.getElementById('balPanel').textContent), 'report shows win rates');
-        win.closeBal();
+    (function waitAdhoc() {
+      if (!win.DASH.running && win.DASH.results.length) {
+        ok(win.DASH.results.length === 1 && win.DASH.results[0].map.name === 'Carved Smoke Test',
+          'ad-hoc dashboard run finished on the map as drawn');
         return watchMode();
       }
-      if ((waited += 100) > 60000) { ok(false, 'balance report never finished'); return watchMode(); }
-      realSetTimeout(waitBal, 100);
+      if ((waited += 100) > 60000) { ok(false, 'ad-hoc dashboard run never finished'); return watchMode(); }
+      realSetTimeout(waitAdhoc, 100);
     })();
 
     function watchMode() {

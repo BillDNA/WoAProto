@@ -293,8 +293,9 @@ $('dashRun').onclick = function(){
   var n = +$('dashN').value;
   var dr = $('dashRed').value, db = $('dashBlue').value;
   var pick = $('dashMap').value;
-  var maps = getMapPool();
-  if (pick !== 'all') maps = maps.filter(function(m){ return m.name === pick; });
+  // '@adhoc' = the map editor's as-drawn (possibly unsaved) def, via openDashDef
+  var maps = pick === '@adhoc' ? (DASH.adhoc ? [DASH.adhoc] : []) : getMapPool();
+  if (pick !== 'all' && pick !== '@adhoc') maps = maps.filter(function(m){ return m.name === pick; });
   if (!maps.length){ toast('No maps in play — enable some in Maps &amp; Map Editor.', 3500); return; }
   var probs = E.validateMaps(maps);
   if (probs.length){ toast('Fix these maps first: '+probs.join('; '), 4500); return; }
@@ -414,6 +415,7 @@ $('edTest').onclick = function(){
   startLocal('ai', [def]);
 };
 $('edBalance').onclick = function(){
-  var def = edBuildDef();
-  if (def) runBalanceUI(def);
+  // balance the map AS DRAWN through the one dashboard pipeline (invalid maps
+  // toast inside edBuildDef/openDashDef and we stay in the editor)
+  openDashDef(edBuildDef());
 };

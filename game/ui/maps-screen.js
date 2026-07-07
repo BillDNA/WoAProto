@@ -1,8 +1,10 @@
 /* War of Attrition — ui part: map library & pool (roster files, previews,
-   import/export) + the in-game balance lab overlay. Classic script, no
-   wrapper — top-level names attach to window (see ui/app.js header).
-   Extracted verbatim from index.html's inline app script; the maps-screen
-   button wiring lives in ui/boot.js. */
+   import/export). Classic script, no wrapper — top-level names attach to
+   window (see ui/app.js header). Extracted verbatim from index.html's inline
+   app script; the maps-screen button wiring lives in ui/boot.js. Balance
+   checks all route to the Balance Dashboard (ui/dashboard.js) — the old
+   in-game balance lab was deleted in restructure step 9 so exactly one
+   aggregation pipeline (E.balanceNew/balanceAdd) remains. */
 'use strict';
 
 /* =================== map library & pool =================== */
@@ -158,68 +160,4 @@ function renderMapsScr(){
   });
   var rb = $('btnRestoreMaps'); if (rb) rb.style.display = 'none'; // tombstones are gone — every map is a file
   updateMapsHint();
-}
-
-/* =================== in-game balance lab =================== */
-// Runs AI-vs-AI battles on one map, chunked so the page stays alive.
-var BAL = { cancel:true };
-function runBalanceUI(def){
-  var probs = E.validateMaps([def]);
-  if (probs.length){ toast('Map problem: '+probs.join('; '), 4200); return; }
-  BAL = { cancel:false, n:0, red:0, first:0, hq:0, turns:0, vp:0, seed:(Date.now() & 0xfffff) };
-  $('balOvr').classList.add('active');
-  balRound(def, 20);
-}
-function closeBal(){ BAL.cancel = true; $('balOvr').classList.remove('active'); }
-function balRound(def, add){
-  var target = BAL.n + add;
-  function step(){
-    if (BAL.cancel) return;
-    if (BAL.n >= target){ balReport(def); return; }
-    $('balPanel').innerHTML = '<h2>Balance Report</h2><p style="font-weight:bold;">'+def.name+'</p>' +
-      '<p style="font-size:17px;">The generals are fighting battle '+(BAL.n+1)+' of '+target+'&hellip;</p>' +
-      '<div class="ovr-btns"><button id="balCancel" class="ghost btn-ghost-dark">Cancel</button></div>';
-    $('balCancel').onclick = closeBal;
-    setTimeout(function(){
-      if (BAL.cancel) return;
-      var fp = BAL.n % 2 ? 'blue' : 'red';
-      var st = E.simBattle(def, BAL.seed + BAL.n * 104729, fp, 'normal', 'normal');
-      if (st.phase === 'battle-over'){
-        if (st.battleWinner === 'red') BAL.red++;
-        if (st.battleWinner === fp) BAL.first++;
-        if (st.winType === 'hq') BAL.hq++;
-        BAL.turns += st.turnNumber;
-        BAL.vp += Math.abs(E.fieldScore(st,'red') - E.fieldScore(st,'blue'));
-      }
-      BAL.n++;
-      step();
-    }, 15);
-  }
-  step();
-}
-function balReport(def){
-  var n = Math.max(1, BAL.n);
-  function pct(a){ return Math.round(100*a/n); }
-  var notes = [];
-  if (pct(BAL.red) >= 62 || pct(BAL.red) <= 38) notes.push('one side is favoured — check terrain/HQ symmetry');
-  if (pct(BAL.first) >= 62) notes.push('first mover is strong here');
-  if (pct(BAL.first) <= 38) notes.push('second mover is strong here');
-  if (pct(BAL.hq) <= 8) notes.push('the HQ never falls — battles grind to attrition');
-  if (pct(BAL.hq) >= 55) notes.push('HQ rushes dominate');
-  var row = function(l, v){ return '<div class="row" style="max-width:300px;margin:0 auto;"><span>'+l+'</span><b>'+v+'</b></div>'; };
-  $('balPanel').innerHTML =
-    '<h2>Balance Report</h2><p style="font-weight:bold;">'+def.name+'</p>' +
-    '<p class="small">'+BAL.n+' AI-vs-AI battles (Old Veteran both sides)</p>' +
-    row('<span style="color:var(--red-dark);font-weight:bold;">Red</span> / <span style="color:var(--blue-dark);font-weight:bold;">Blue</span> wins', pct(BAL.red)+'% / '+pct(n-BAL.red)+'%') +
-    row('First / second mover wins', pct(BAL.first)+'% / '+pct(n-BAL.first)+'%') +
-    row('HQ captures / attrition', pct(BAL.hq)+'% / '+pct(n-BAL.hq)+'%') +
-    row('Average battle length', (BAL.turns/n).toFixed(1)+' turns') +
-    row('Average VP margin', (BAL.vp/n).toFixed(1)) +
-    (notes.length
-      ? '<p style="margin-top:10px;" class="warn">'+notes.join('<br>')+'</p>'
-      : '<p style="margin-top:10px;color:var(--olive);font-style:italic;">No red flags at this sample size.</p>') +
-    '<p class="small" style="margin-top:6px;">Small samples wobble: &plusmn;'+Math.round(100/Math.sqrt(n))+' points. Run more for confidence, or <code>node balance.js</code> for the full report.</p>' +
-    '<div class="ovr-btns"><button id="balMore">Run 20 more</button><button id="balClose" class="ghost btn-ghost-dark">Close</button></div>';
-  $('balMore').onclick = function(){ balRound(def, 20); };
-  $('balClose').onclick = closeBal;
 }
