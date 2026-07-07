@@ -86,24 +86,48 @@ function run() {
   var probs = E.validateMaps(maps);
   if (probs.length) { console.error('Fix these maps first:\n  ' + probs.join('\n  ')); process.exit(1); }
 
+  // Read the accumulator BEFORE simulating: the per-map seed base is offset by
+  // how many runs are already folded in, so accumulating genuinely adds NEW
+  // battles (the old fixed seeds replayed byte-identical battles and just
+  // doubled every count). --fresh/--once use offset 0 = the original schedule.
+  var prior = (flags.once || flags.fresh) ? null : readAcc(ver);
+  if (prior && prior.diff && prior.diff !== diffLabel) {
+    console.error('NOTE: accumulator holds "' + prior.diff + '" data but this run is "' + diffLabel +
+      '" — reporting this run only (use --fresh to reset the accumulator to this run).');
+    prior = null; flags.once = true;
+  }
+  var priorRuns = (prior && prior.runs) || 0;
+
+  // V1: every battle also lands as a per-battle row in logs/woa.db (guarded —
+  // the markdown report works fine without it).
+  var dbm = null, dbh = null, runId = null;
+  try {
+    dbm = require(path.join(__dirname, 'db.js'));
+    dbh = dbm.open();
+    runId = dbm.insertRun(dbh, { version: ver, kind: 'balance', redAi: dr, blueAi: db, n: n, tool: 'balance-report' });
+  } catch (e) { dbm = null; console.error('(db off: ' + e.message + ')'); }
+
   if (!flags.quiet) process.stderr.write('Simulating ' + n + ' battles/map, ' + diffLabel + ', ' + maps.length + ' maps ');
   var thisRun = {}; // name -> {shape, agg}
   maps.forEach(function (map, mi) {
-    var r = E.balanceMap(map, n, { diffRed: dr, diffBlue: db, seedBase: (mi + 1) * 7919 });
+    // per-run stride (~21.5M) dwarfs the in-run seed span (g*104729, n<=204),
+    // so accumulated runs can never replay a prior run's seeds
+    var seedBase = (mi + 1) * 7919 + priorRuns * 7919 * 2711;
+    var r = E.balanceMap(map, n, { diffRed: dr, diffBlue: db, seedBase: seedBase,
+      onGame: dbm && function (g1, nn, st) {
+        try { dbm.insertBattle(dbh, runId, st, E.balanceFP(g1 - 1), { seed: E.balanceSeed(seedBase, g1 - 1), version: ver }); }
+        catch (e) { /* a bad row never kills the report */ }
+      } });
     thisRun[map.name] = { shape: map.shape && map.shape.charAt(0) === '@' ? 'custom' : (map.shape || '?'), agg: r };
     if (!flags.quiet) process.stderr.write('.');
   });
   if (!flags.quiet) process.stderr.write('\n');
+  if (dbm) try { dbm.close(dbh); } catch (e) {}
 
   // ---- accumulation (persistent per-version data) ----
   var acc = null, runs = 1, accumulated = false;
   if (!flags.once) {
-    var prior = flags.fresh ? null : readAcc(ver);
-    if (prior && prior.diff && prior.diff !== diffLabel) {
-      console.error('NOTE: accumulator holds "' + prior.diff + '" data but this run is "' + diffLabel +
-        '" — reporting this run only (use --fresh to reset the accumulator to this run).');
-      prior = null; flags.once = true;
-    } else {
+    {
       acc = prior || { version: ver, diff: diffLabel, runs: 0, maps: {} };
       acc.diff = diffLabel; acc.version = ver;
       Object.keys(thisRun).forEach(function (name) {
