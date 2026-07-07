@@ -49,7 +49,7 @@ Evidence source for all numbers: the **card report** at the bottom of `node game
    Goal: the card offers a choice the rest of the deck doesn't already offer — a new line of
    play, not a stat-tweaked duplicate.
    Evidence: qualitative — playtest judgment; compare `steps` against the existing deck in
-   `maps.js` (vocabulary in `card-cheatsheet.md`).
+   `game/content/decks/default.js` (vocabulary in `card-cheatsheet.md`).
    Score: good = you can name the situation where you'd pick THIS card; failing = it's strictly
    a re-skin of an existing card's decision.
 2. **Not a dead card — Skip%.**
@@ -168,7 +168,7 @@ These are the additional regression guards:
    run to deck-out on maps that also read attrition-only (tune me — no numeric baseline is
    recorded; establish one on the next full run).
 3. **Deck as attrition clock.**
-   Goal: total card count (sum of `count` in maps.js) keeps the attrition endgame meaningful —
+   Goal: total card count (sum of `count` in the active deck, `game/content/decks/default.js`) keeps the attrition endgame meaningful —
    changing deck size moves every pacing and tie-rule number above.
    Evidence: qualitative — playtest judgment, then re-run the full report after any count change.
    Score: good = attrition endings feel like the climax of positioning, not a timeout (tune me).

@@ -6,10 +6,10 @@ questions from feedback round 2: **what is the heuristic and what are the
 weights**, and **where are the "5 AIs"**. Everything here lives in
 `game/engine.js` (the brain) and `game/maps.js` (the personalities as data).
 
-## Where the 5 AIs are (the "AI_PRESETS has only 3" question)
+## Where the 6 AIs are (the "AI_PRESETS has only 3" question)
 
 There is **one** AI engine. What looks like different opponents are just
-different *rows of numbers* fed to it. Five ship today:
+different *rows of numbers* fed to it. Six ship today:
 
 | Name    | Lives in            | What it is |
 |---------|---------------------|------------|
@@ -18,12 +18,13 @@ different *rows of numbers* fed to it. Five ship today:
 | hard    | `engine.js` AI_PRESETS | "Field Marshal" — looks one enemy reply deep |
 | brawler | `maps.js` `"ai"` block | a normal AI tuned to trade and push forward |
 | turtle  | `maps.js` `"ai"` block | a normal AI tuned to hug its HQ and dig in |
+| hawk    | `maps.js` `"ai"` block | a normal AI that prizes its army and takes even trades |
 
 So `AI_PRESETS` in the engine holds **3**; the engine then merges in every row
 of the `"ai"` block from `maps.js` (`Object.keys(BUILTIN.ai)…`), which adds
-brawler and turtle → **5 total**. They all show up automatically in the menu
-AI pickers, the Balance Dashboard, and `balance.js`. **Adding a sixth AI is
-adding a row to `maps.js`, not writing code.**
+brawler, turtle, and hawk → **6 total**. They all show up automatically in the
+menu AI pickers, the Balance Dashboard, and `balance.js`. **Adding another AI
+is adding a row to `maps.js`, not writing code.**
 
 ## How a turn is decided (the heuristic)
 
@@ -86,7 +87,7 @@ Higher = the AI cares more about that thing.
 | `replySamples`| 2   | How many hidden enemy hands to sample when looking ahead. |
 | `replyWeight` | 0.7 | How heavily the enemy's best reply counts against a candidate. |
 
-## The two shipped personalities (read them as examples)
+## The three shipped personalities (read them as examples)
 
 From `maps.js` — copy the shape to make your own:
 
@@ -94,7 +95,9 @@ From `maps.js` — copy the shape to make your own:
 "brawler": { "noise": 0, "breadth": 0,
   "weights": { "myThreatKill": 7, "threatKill": 3, "advance": 4, "unitReserve": 10 } },
 "turtle":  { "noise": 0, "breadth": 0,
-  "weights": { "hqGuard": 12, "enemyDist": 3, "advance": 0.8, "trenchHome": 12, "unitOnBoard": 26 } }
+  "weights": { "hqGuard": 12, "enemyDist": 3, "advance": 0.8, "trenchHome": 12, "unitOnBoard": 26 } },
+"hawk":    { "noise": 0, "breadth": 0,
+  "weights": { "unitOnBoard": 28, "advance": 3.25, "myThreatKill": 5, "threatKill": 5, "threatTie": 0.5 } }
 ```
 
 - **brawler** cares more about killing (`myThreatKill`↑), fears trades less
@@ -103,6 +106,10 @@ From `maps.js` — copy the shape to make your own:
 - **turtle** hugs its HQ (`hqGuard`↑), pushes enemies away (`enemyDist`↑),
   barely advances (`advance`↓), loves trenches (`trenchHome`↑), and prizes units
   on the board (`unitOnBoard`↑). It digs in and waits for the attrition clock.
+- **hawk** prizes its fielded army (`unitOnBoard`↑), pushes forward (`advance`↑),
+  hunts kills (`myThreatKill`↑) while fearing losses a touch less than stock
+  (`threatKill` 5 vs the default 6), and all but ignores tie threats
+  (`threatTie` 0.5 vs 2.5) — it will happily take an even trade.
 
 First read from the lab: turtle beat brawler ~65/35 (untuned — these are
 examples, not balanced archetypes).

@@ -6,13 +6,16 @@ description: Propose new War of Attrition maps that fill a measured gap in the r
 # create-map
 
 Read the roster and its balance numbers, find the gap, propose maps in the
-exact data shape. **Proposals only — Bill saves them via the editor or maps.js.**
+exact data shape. **Proposals only — Bill saves them via the editor (which
+writes a `game/content/maps/` file).**
 
 ## Read first
 
-- `game/maps.js` — `"shapes"` and `"maps"` (terrain piece format is documented
-  in its header: `{"t":"F"|"M"|"R","edges":[[q,r,d],...]}`, sides of one piece
-  belong to ONE hex, contiguous dirs; rivers are single-side `R` pieces).
+- `game/maps.js` — `"shapes"` and the terrain piece format (documented in its
+  header: `{"t":"F"|"M"|"R","edges":[[q,r,d],...]}`, sides of one piece belong
+  to ONE hex, contiguous dirs; rivers come in the same 2/3-side lengths as
+  forest and mountain).
+- `game/content/maps/<slug>.js` — the map roster, one file per map.
 - `design-docs/grading-rubrics.md` — the map rubric.
 - Balance evidence: game/CLAUDE.md "Known balance signals" + a fresh
   `node game/balance.js 40 <filter>` for any map you're comparing against.
@@ -32,7 +35,7 @@ Custom outlines carry the board inline instead of `shape`:
 ```
 
 Hard constraints (validateMaps enforces): ≤ 24 hexes, HQs on-board and distinct,
-terrain within stock (`F3:2, F2:4, M3:2, M2:4, R1:4`), pieces single-hex
+terrain within stock (`F3:2, F2:4, M3:2, M2:4, R3:2, R2:4`), pieces single-hex
 contiguous. House norms: HQs ≥ 4 apart (no turn-2 rush — test.js asserts it for
 built-ins), point-symmetric outlines keep Mirror and fair-HQ placement working.
 
@@ -44,7 +47,7 @@ built-ins), point-symmetric outlines keep Mirror and fair-HQ placement working.
 2. Draft 1–3 maps. For each: the JSON, the intent (what fight it forces), and a
    map-rubric self-grade (predicted side balance, HQ-vs-attrition mix, tie-rule
    exposure). Rivers are new — a proposal that actually uses the
-   support-crossing rule is worth more than another forest pair.
+   deploy-denial rule is worth more than another forest pair.
 3. Verify before handing over: `node -e "const E=require('./game/engine.js');
    console.log(E.validateMaps([<def>]))"` must print `[]`.
 4. Tell Bill how to test: paste into the editor (or Import), then the map tile's
@@ -56,6 +59,9 @@ built-ins), point-symmetric outlines keep Mirror and fair-HQ placement working.
 - Big empty maps are not fun (Bill) — that's WHY the ceiling is 24; prefer the
   compact end and terrain that channels fights.
 - Terrain is directional and hex-owned: `F` helps attacks OUT of its hex,
-  `M` defends its hex, `R` blocks support BOTH ways across its border.
+  `M` defends its hex. `R` (0.3 semantics) lets support, attacks, moves, and
+  Airdrop cross freely BOTH ways — it only stops deploy-control from extending
+  across (you can't deploy to an empty hex reachable only across a river); not
+  barrageable.
 - Barrage removes forests and trenches anywhere — a forest-dependent map plan
   must survive one barrage.

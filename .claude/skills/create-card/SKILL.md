@@ -6,11 +6,13 @@ description: Propose new War of Attrition cards that add a decision the deck doe
 # create-card
 
 Read the deck, find the missing decision, propose cards Bill can drop straight
-into the Deck Editor. **Proposals only — never edit maps.js or custom-deck.js.**
+into the Deck Editor. **Proposals only — never edit the `content/decks/` files
+or custom-deck.js.**
 
 ## Read first
 
-- `game/maps.js` — the current `"cards"` list (and `"units"` for legal deploy targets).
+- `game/content/decks/default.js` — the active deck's card list (and
+  `game/maps.js` `"units"` for legal deploy targets).
 - `design-docs/card-cheatsheet.md` — the FULL step vocabulary. It is small on
   purpose: `deploy(unit, anywhere)`, `trench`, `attack(mod, tieSpare, noAdvance)`,
   `reposition`, `barrage`. **A card needing a step type that doesn't exist is an
@@ -42,7 +44,8 @@ text-only renders clean.
    card-rubric self-grade (predicted dead-turn risk, Simple% risk, is it
    always-good-on-sight?).
 3. State the swap: which copies leave the 16 to make room, and why.
-4. Tell Bill how to test: import via Deck Editor (or hand-edit maps.js), then
+4. Tell Bill how to test: import via Deck Editor (or hand-edit
+   `content/decks/default.js`), then
    `node game/test.js` + a Balance Dashboard run; watch the new card's Simple% /
    1stSight% columns.
 5. **Offer art (only if Bill approves the card first).** If the `dig-mcp` MCP

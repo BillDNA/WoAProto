@@ -35,17 +35,17 @@ Needs Node.js (nodejs.org) on one computer — the server is plain Node and runs
 
 **The tunable knobs live in `maps.js`** as plain JSON: board shapes, **unit stats and piece counts, the trench count, the AI personalities, and the physical terrain stock**. The **map roster and card decks are their own files** under `game/content/` — one file per map (`content/maps/<name>.js`) and per deck (`content/decks/<name>.js`), so you delete a map by deleting its file. Edit any of it in a text editor, save, refresh the browser — the files explain their own format. Want to know what cavalry with 1 defense feels like, or a 20-card deck? Change a number, refresh, play (or run the balance lab on it). `node test.js` validates everything and points at exactly what's wrong.
 
-There are 12 built-in maps (matching the physical 12-card map deck) across five boards, all at or under the 24-hex laser-cutter ceiling:
+The map roster lives in `game/content/maps/` — one file per map — and is browsable with previews on the **Maps & Map Editor** screen. Every map sits on one of five boards (or carries its own carved outline), all at or under the 24-hex laser-cutter ceiling:
 
-- **Classic** 4-5-6-5-4 (24 hexes) — the physical prototype board: Frontier, The Bulge, Twin Woods, Killing Ground
-- **Compact** 3-4-5-4-3 (19) — fast brawls: The Cockpit, Highwater
-- **Hourglass** 5-4-3-4-5 (21) — a fortified waist between two fields: The Narrows, Twin Gates
-- **Ridge** four slanted rows of 5 (20) — fighting along a diagonal: Saber Ridge, Thornfield
-- **Spear** 2-3-4-5-4-3-2 (23) — a long lens with distant HQs: Long March, Vanguard
+- **Classic** 4-5-6-5-4 (24 hexes) — the physical prototype board
+- **Compact** 3-4-5-4-3 (19) — fast brawls
+- **Hourglass** 5-4-3-4-5 (21) — a fortified waist between two fields
+- **Ridge** four slanted rows of 5 (20) — fighting along a diagonal
+- **Spear** 2-3-4-5-4-3-2 (23) — a long lens with distant HQs
 
 The old 37-hex Grand and 29-hex Wide boards are gone: they played slow and empty (both armies fully deployed only ever control 22 hexes) and can't be laser-cut at a sane hex size. Adding a board back is one JSON entry in `maps.js` — shapes must be point-symmetric so Mirror and fair HQ placement work; the tests check this.
 
-**Maps & Map Editor** on the main menu lists every battlefield with a preview. Untick a map to remove it from the draw pile; **Play** starts a quick AI campaign on just that map; **Balance** runs 20 AI-vs-AI battles on it and reports the win rates right there. **New Map** opens the editor: pick a board, paint terrain (click just inside a hex's border to cycle forest → mountain → empty on that hex's side), place both HQs, and **Mirror** to copy everything point-symmetrically — its **Balance Report** button works on the map as drawn, before you even save. Terrain pieces behave like the physical ones — each piece lives inside one hex and wraps its corners; the editor and engine both enforce it.
+**Maps & Map Editor** on the main menu lists every battlefield with a preview. Untick a map to remove it from the draw pile; **Play** starts a quick AI campaign on just that map; **Balance** runs 20 AI-vs-AI battles on it and reports the win rates right there. **New Map** opens the editor: pick a board, paint terrain (click just inside a hex's border to cycle forest → mountain → river → empty on that hex's side), place both HQs, and **Mirror** to copy everything point-symmetrically — its **Balance Report** button works on the map as drawn, before you even save. Terrain pieces behave like the physical ones — each piece lives inside one hex and wraps its corners; the editor and engine both enforce it.
 
 ### Sharing custom maps (zip the folder)
 
@@ -112,7 +112,7 @@ A **river** (drawn in blue, in the same 2- and 3-side pieces as forest and mount
 ## Files
 
 - `index.html` — the whole game (UI, AI driver, map editor, in-game balance lab)
-- `engine.js` — rules engine + the three AIs + battle simulator (shared by tests and the balance lab)
+- `engine.js` — rules engine + the six AI personalities (the easy/normal/hard presets plus the `maps.js` data rows) + battle simulator (shared by tests and the balance lab)
 - `maps.js` — **core tunable data, hand-editable JSON**: board shapes, units, terrain stock, AI personalities
 - `content/` — **the map roster + card decks, one file each** (`content/maps/*.js`, `content/decks/*.js`): delete a map/deck by deleting its file. The map editor carves the **board outline itself** (Board hexes tool, add/remove under the 24-hex ceiling) and deletes maps for real (floor of 5); saving/deleting needs the local server.
 - `balance.js` — AI-vs-AI balance reports: `node balance.js`, `node balance.js matchup`
