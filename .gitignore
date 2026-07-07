@@ -27,3 +27,9 @@ logs/reports/battle/run-live.log
 logs/debug/*
 !logs/debug/.gitkeep
 dev/claude-plays-log.jsonl
+
+# V1 battle database — a regenerable index over the committed reports (Bill's
+# ruling: gitignore for now). WAL mode adds -wal/-shm siblings.
+logs/woa.db
+logs/woa.db-wal
+logs/woa.db-shm
