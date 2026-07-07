@@ -111,10 +111,11 @@ var probs = E.validateMaps();
 ok(probs.length === 0, 'all built-in maps valid' + (probs.length ? ': ' + probs.join('; ') : ''));
 // Content roster (Feedback Round 4 Pass 2): maps are per-item files under
 // game/content/maps/. `custom:true` marks Bill's experiments; the shipped
-// roster is the non-custom maps (round-3: −Thornfield −Vanguard +The Ford
-// +Riverbend +Causeway).
+// roster is the non-custom maps (V1 trim to 12 total: −Black Forest −Open
+// Mountain Pass −The Bulge −Twin Woods −Highwater; see
+// logs/reports/analysis/2026-07-06-v1-map-trim.md).
 var builtinMaps = E.MAPS.filter(function (m) { return !m.custom; });
-ok(builtinMaps.length === 13, '13 shipped (non-custom) maps in the content roster (got ' + builtinMaps.length + ' of ' + E.MAPS.length + ' total)');
+ok(builtinMaps.length === 10, '10 shipped (non-custom) maps in the content roster (got ' + builtinMaps.length + ' of ' + E.MAPS.length + ' total)');
 (function () {
   // HQ-distance guardrail applies to the SHIPPED roster; custom maps are Bill's
   // experiments (a turn-2 rush map can be intentional) and are exempt.
