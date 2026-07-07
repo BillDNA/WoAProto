@@ -20,8 +20,8 @@
     "semantic_hash": "a382520ffb610cfef70741d0ece60632"
   },
   "dev/optimize-art.ps1": {
-    "mtime": 1783439820.1605537,
-    "ast_hash": "511aba7bfc09ff726bfcbc8ca2de5913",
+    "mtime": 1783440926.0549066,
+    "ast_hash": "d2f8611abe6ed0ab6bf9e9fce9a1ca15",
     "semantic_hash": ""
   },
   "dev/smoke.js": {
@@ -75,8 +75,8 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1783439789.846122,
-    "ast_hash": "1116441861805f840614b758187681a4",
+    "mtime": 1783440952.1016483,
+    "ast_hash": "592b531fe53e9c33f310b13deeeea312",
     "semantic_hash": ""
   },
   "dev/balance-80.txt": {
@@ -90,8 +90,8 @@
     "semantic_hash": ""
   },
   "game/README.md": {
-    "mtime": 1783439835.62197,
-    "ast_hash": "bfc7d3b7cc15d3d62dc4dedd4641f49e",
+    "mtime": 1783440926.1118257,
+    "ast_hash": "9bf3d1d23da28f0e3abd95811c8934ce",
     "semantic_hash": ""
   },
   "game/index.html": {
@@ -187,81 +187,6 @@
   ".claude/settings.json": {
     "mtime": 1783437122.4214952,
     "ast_hash": "c0a62d82c727546fc048aa9b97a163aa",
-    "semantic_hash": ""
-  },
-  "specs/V0-specs/ai-variety.md": {
-    "mtime": 1783049162.7578046,
-    "ast_hash": "baf392e0dca943ecddc5473a5f40e348",
-    "semantic_hash": ""
-  },
-  "specs/V0-specs/claude-plays.md": {
-    "mtime": 1783049167.1986904,
-    "ast_hash": "6d1a83a9225e5b02fab9bef15f5c3002",
-    "semantic_hash": ""
-  },
-  "specs/V0-specs/claude-skills.md": {
-    "mtime": 1783049171.4934351,
-    "ast_hash": "30f15f671ca0e1bec8f6021889bc90b3",
-    "semantic_hash": ""
-  },
-  "specs/V0-specs/cli-responder-transport.md": {
-    "mtime": 1783049175.475345,
-    "ast_hash": "a966eca2c05a15461ed94fbd212c6fdf",
-    "semantic_hash": ""
-  },
-  "specs/V0-specs/combat-clarity-qol.md": {
-    "mtime": 1783049179.4894183,
-    "ast_hash": "465f7e4740c58d5b023d01a5031c8d62",
-    "semantic_hash": ""
-  },
-  "specs/V0-specs/deck-editor.md": {
-    "mtime": 1783049184.1940427,
-    "ast_hash": "3eb96d354145ecd7ff705025e3176bfa",
-    "semantic_hash": ""
-  },
-  "specs/V0-specs/grading-rubrics.md": {
-    "mtime": 1783049187.8913438,
-    "ast_hash": "c700424d0e383404849bfaaccbb02092",
-    "semantic_hash": ""
-  },
-  "specs/V0-specs/layout-design-pass.md": {
-    "mtime": 1783049191.425023,
-    "ast_hash": "75eadf3620d35c40c435adbfa3e851ed",
-    "semantic_hash": ""
-  },
-  "specs/V0-specs/layout-v2-implementation.md": {
-    "mtime": 1783049195.110706,
-    "ast_hash": "1aa976e19ef8d5079817da406046970e",
-    "semantic_hash": ""
-  },
-  "specs/V0-specs/map-roster-and-shapes.md": {
-    "mtime": 1783049198.227247,
-    "ast_hash": "ef48c09d6b89c049a65ada28aaf2a905",
-    "semantic_hash": ""
-  },
-  "specs/V0-specs/metrics-dashboard.md": {
-    "mtime": 1783049201.319698,
-    "ast_hash": "9f21f083918441d71c849d84a765bdf2",
-    "semantic_hash": ""
-  },
-  "specs/V0-specs/terrain-crossing-rules.md": {
-    "mtime": 1783049204.4894786,
-    "ast_hash": "bf9f9eab06d264afff2054f235c81f5b",
-    "semantic_hash": ""
-  },
-  "specs/original-specs/Player Card Art direction drafts.md": {
-    "mtime": 1783049042.0339787,
-    "ast_hash": "6d58ca7d7f69fb5eac1cdb48e5ce4335",
-    "semantic_hash": ""
-  },
-  "specs/original-specs/art-prompts.md": {
-    "mtime": 1783049213.2294002,
-    "ast_hash": "263eb8dba7f2584922d418a718969713",
-    "semantic_hash": ""
-  },
-  "specs/original-specs/prototype pictures/HexClarificationDiagram.png": {
-    "mtime": 1781070061.2466054,
-    "ast_hash": "dee787b8dcbb63be4991f0f342e3c061",
     "semantic_hash": ""
   },
   "dev/balance-report.js": {
@@ -400,8 +325,8 @@
     "semantic_hash": ""
   },
   "dev/db.js": {
-    "mtime": 1783436092.0544124,
-    "ast_hash": "359677221e8e9b7da5c93b6073ebaa02",
+    "mtime": 1783440926.0816267,
+    "ast_hash": "b69b30c6b44e587d2335df6bbb789c49",
     "semantic_hash": ""
   },
   "dev/db.test.js": {
@@ -450,8 +375,8 @@
     "semantic_hash": ""
   },
   "game/engine/02-board.js": {
-    "mtime": 1783439835.5039654,
-    "ast_hash": "b085dd2ec070f43befba5ad3f897eb95",
+    "mtime": 1783440926.1420236,
+    "ast_hash": "b5ffa4df950d99cb122cec5027473df8",
     "semantic_hash": ""
   },
   "game/engine/03-rules.js": {
@@ -525,8 +450,8 @@
     "semantic_hash": ""
   },
   "game/ui/manual.js": {
-    "mtime": 1783439835.54143,
-    "ast_hash": "70d946dbbd5ddd219fb299d6691f9067",
+    "mtime": 1783440926.1822746,
+    "ast_hash": "65348bd0303d551196a12ead97f4ef8b",
     "semantic_hash": ""
   },
   "game/ui/map-editor.js": {
@@ -599,51 +524,6 @@
     "ast_hash": "55ec73f6050a2f7a54a9e71a84d64637",
     "semantic_hash": ""
   },
-  "specs/V0-specs/V0-summary.md": {
-    "mtime": 1783436092.1055603,
-    "ast_hash": "139704d4d3bd7d9d09aa824ec1e00168",
-    "semantic_hash": ""
-  },
-  "specs/V1-specs/claude-session-hub-pipeline.md": {
-    "mtime": 1783436092.1065607,
-    "ast_hash": "d5d704cdb855179fff8e399d484bfecb",
-    "semantic_hash": ""
-  },
-  "specs/V1-specs/graphs-spec.md": {
-    "mtime": 1783436092.1065607,
-    "ast_hash": "8ac15a57bed9e5261402ee9bd135e6f8",
-    "semantic_hash": ""
-  },
-  "specs/V1-specs/v1-ai-search-and-tuning.md": {
-    "mtime": 1783436092.1065607,
-    "ast_hash": "03c65a23c8e3a579e82b3d4634ab3191",
-    "semantic_hash": ""
-  },
-  "specs/V1-specs/v1-architecture.md": {
-    "mtime": 1783436092.107561,
-    "ast_hash": "5f508b6d2784cc1fc0b7c36a2a90d5f9",
-    "semantic_hash": ""
-  },
-  "specs/V1-specs/v1-claude-plays-and-reports.md": {
-    "mtime": 1783436092.107561,
-    "ast_hash": "c2a151d846c3ac4d96d5baf20d566275",
-    "semantic_hash": ""
-  },
-  "specs/V1-specs/v1-content-curation.md": {
-    "mtime": 1783436092.107561,
-    "ast_hash": "7767d73736a9bd78ad8405334825d046",
-    "semantic_hash": ""
-  },
-  "specs/V1-specs/v1-data-persistence.md": {
-    "mtime": 1783436092.108065,
-    "ast_hash": "539b58c9825157a0b50e6105acaa4514",
-    "semantic_hash": ""
-  },
-  "specs/V1-specs/v1-field-manual-animations.md": {
-    "mtime": 1783436092.108065,
-    "ast_hash": "6db2c5b9302035da54afdcb593c1dedb",
-    "semantic_hash": ""
-  },
   ".claude/hooks/scrum-statusline.mjs": {
     "mtime": 1783437122.4214952,
     "ast_hash": "02c73335bbcb45eb676e381b6e86e1fc",
@@ -655,18 +535,18 @@
     "semantic_hash": ""
   },
   "dynamic-scrum/Project-Brief.md": {
-    "mtime": 1783439887.6814137,
-    "ast_hash": "eb639ffbd50b6f176c5c16f84662de61",
+    "mtime": 1783440926.3438182,
+    "ast_hash": "1841a296b1d0daa326653683cbf589d5",
     "semantic_hash": ""
   },
   "dynamic-scrum/docs/Docs Index.md": {
-    "mtime": 1783439725.9970765,
-    "ast_hash": "8a8c972648579c49115b9778e06fdba2",
+    "mtime": 1783440988.2014718,
+    "ast_hash": "e423b088aa98bd878b8ca2a409dff4fa",
     "semantic_hash": ""
   },
   "dynamic-scrum/docs/War Of Attrition rule book.md": {
-    "mtime": 1783436092.0518925,
-    "ast_hash": "a5bc84ce68bbbb1fd3d3f157e9adaaee",
+    "mtime": 1783440370.7668996,
+    "ast_hash": "9504c110781157186ad1c672ad6049ba",
     "semantic_hash": ""
   },
   "dynamic-scrum/docs/_orientation-doc.md": {
@@ -680,13 +560,13 @@
     "semantic_hash": ""
   },
   "dynamic-scrum/docs/code-architecture.md": {
-    "mtime": 1783439606.3352728,
-    "ast_hash": "6fbcec885c0b030a3bf514c9fae8d4e4",
+    "mtime": 1783440926.229829,
+    "ast_hash": "0418b2e5dc79edbe8e643d91ff09faab",
     "semantic_hash": ""
   },
   "dynamic-scrum/docs/data-and-reports.md": {
-    "mtime": 1783439666.116207,
-    "ast_hash": "e024a7be12f703c7f704f11de11df0ab",
+    "mtime": 1783440926.2636964,
+    "ast_hash": "70559bb18480367ff93ba42423a1591b",
     "semantic_hash": ""
   },
   "dynamic-scrum/docs/glossary.md": {
@@ -710,18 +590,8 @@
     "semantic_hash": ""
   },
   "dynamic-scrum/docs/human-instructions/manual-animations-authoring.md": {
-    "mtime": 1783437605.2946873,
-    "ast_hash": "da9ba857a85a006d7933dc89cb1d20ca",
-    "semantic_hash": ""
-  },
-  "dynamic-scrum/docs/shipped-history.md": {
-    "mtime": 1783439698.447341,
-    "ast_hash": "705f1baa3189fd2cc323d873f39fca67",
-    "semantic_hash": ""
-  },
-  "dynamic-scrum/docs/steam-roadmap.md": {
-    "mtime": 1783439230.3085177,
-    "ast_hash": "41bf624603d45c4e0a80d3e9fd291a0d",
+    "mtime": 1783440926.2861674,
+    "ast_hash": "3ce9681871d9820c1b69809c1b24f709",
     "semantic_hash": ""
   },
   "dynamic-scrum/docs/ticket-block.md": {
@@ -735,8 +605,8 @@
     "semantic_hash": ""
   },
   "dynamic-scrum/docs/workflow.md": {
-    "mtime": 1783439642.4719331,
-    "ast_hash": "161d442c530d295fcb61e0af50f00f35",
+    "mtime": 1783440926.3119032,
+    "ast_hash": "f83efbf269f73384d5a3bbb509af5e68",
     "semantic_hash": ""
   },
   "dynamic-scrum/history/finished/Finished Index.md": {
@@ -760,18 +630,18 @@
     "semantic_hash": ""
   },
   "dynamic-scrum/planning/Sprint.md": {
-    "mtime": 1783439431.7082741,
-    "ast_hash": "c0e22b181011df2a3038f9e3c7ce95ff",
+    "mtime": 1783441058.344021,
+    "ast_hash": "730eff454c6a6de9362da90889ad91a6",
     "semantic_hash": ""
   },
   "dynamic-scrum/planning/parking-lot/Parking-Lot Index.md": {
-    "mtime": 1783437287.760084,
-    "ast_hash": "21e22b640c7211cdce086a1e5eca2346",
+    "mtime": 1783441001.5127873,
+    "ast_hash": "062638dce2680ab3894c28875bb738d3",
     "semantic_hash": ""
   },
   "dynamic-scrum/planning/parking-lot/run-design.md": {
-    "mtime": 1783439887.6572435,
-    "ast_hash": "ef3e3eab4597047a786c5fa2dc4273ca",
+    "mtime": 1783440926.3351526,
+    "ast_hash": "315b3e769b3bc6c4c04db131a25cb942",
     "semantic_hash": ""
   },
   "dynamic-scrum/workflow/Bill.md": {
@@ -790,8 +660,73 @@
     "semantic_hash": ""
   },
   "dynamic-scrum/workflow/Questions.md": {
-    "mtime": 1783439887.6392176,
-    "ast_hash": "77549eca2c525e532fa9d7e1467b14df",
+    "mtime": 1783440926.351414,
+    "ast_hash": "92abe76cc4482e21cec2abbba619e687",
+    "semantic_hash": ""
+  },
+  "dynamic-scrum/history/V0-summary.md": {
+    "mtime": 1783440952.0699325,
+    "ast_hash": "4ea8b5260a7860f58a2665182af596bc",
+    "semantic_hash": ""
+  },
+  "dynamic-scrum/history/shipped-history.md": {
+    "mtime": 1783440952.0458138,
+    "ast_hash": "47b206bc175f4dcb7da6d71ab65fab7c",
+    "semantic_hash": ""
+  },
+  "dynamic-scrum/planning/parking-lot/steam-roadmap.md": {
+    "mtime": 1783439230.3085177,
+    "ast_hash": "41bf624603d45c4e0a80d3e9fd291a0d",
+    "semantic_hash": ""
+  },
+  "dynamic-scrum/planning/specs/graphs-spec.md": {
+    "mtime": 1783441018.1723006,
+    "ast_hash": "7cbcd5ad985e6fa2302e36d229eb9660",
+    "semantic_hash": ""
+  },
+  "dynamic-scrum/planning/specs/original-specs/Player Card Art direction drafts.md": {
+    "mtime": 1783049042.0339787,
+    "ast_hash": "6d58ca7d7f69fb5eac1cdb48e5ce4335",
+    "semantic_hash": ""
+  },
+  "dynamic-scrum/planning/specs/original-specs/art-prompts.md": {
+    "mtime": 1783441058.2964764,
+    "ast_hash": "2a9e026a997c185683a2c392ef9044ce",
+    "semantic_hash": ""
+  },
+  "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md": {
+    "mtime": 1783441018.1996436,
+    "ast_hash": "f4490781db0ac5c8172fd398dafbd03d",
+    "semantic_hash": ""
+  },
+  "dynamic-scrum/planning/specs/v1-architecture.md": {
+    "mtime": 1783441018.2239635,
+    "ast_hash": "3ef6102cb0fb96402a6a7cc2f1be50f5",
+    "semantic_hash": ""
+  },
+  "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md": {
+    "mtime": 1783441018.2499373,
+    "ast_hash": "ac4ca9762d9b122c9cc46eca25ae8ff9",
+    "semantic_hash": ""
+  },
+  "dynamic-scrum/planning/specs/v1-content-curation.md": {
+    "mtime": 1783441018.2727356,
+    "ast_hash": "5e46153a06999f08539ba3481ba1867c",
+    "semantic_hash": ""
+  },
+  "dynamic-scrum/planning/specs/v1-data-persistence.md": {
+    "mtime": 1783441018.2950368,
+    "ast_hash": "29765961c7d1d2570acd37c2eb642bad",
+    "semantic_hash": ""
+  },
+  "dynamic-scrum/planning/specs/v1-field-manual-animations.md": {
+    "mtime": 1783441018.3200006,
+    "ast_hash": "e0730fbfd6f90df092e3600122280864",
+    "semantic_hash": ""
+  },
+  "dynamic-scrum/planning/specs/original-specs/prototype pictures/HexClarificationDiagram.png": {
+    "mtime": 1781070061.2466054,
+    "ast_hash": "dee787b8dcbb63be4991f0f342e3c061",
     "semantic_hash": ""
   }
 }

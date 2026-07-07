@@ -911,7 +911,7 @@
       "source_file": "dev/db-query.js",
       "source_location": "L1",
       "id": "dev_db_query",
-      "community": 48,
+      "community": 204,
       "norm_label": "db-query.js"
     },
     {
@@ -920,7 +920,7 @@
       "source_file": "dev/db-query.js",
       "source_location": "L19",
       "id": "dev_db_query_fmt",
-      "community": 48,
+      "community": 204,
       "norm_label": "fmt()"
     },
     {
@@ -929,7 +929,7 @@
       "source_file": "dev/db-query.js",
       "source_location": "L26",
       "id": "dev_db_query_printtable",
-      "community": 48,
+      "community": 204,
       "norm_label": "printtable()"
     },
     {
@@ -938,7 +938,7 @@
       "source_file": "dev/db-query.js",
       "source_location": "L43",
       "id": "dev_db_query_run",
-      "community": 48,
+      "community": 204,
       "norm_label": "run()"
     },
     {
@@ -1451,7 +1451,7 @@
       "source_file": "dev/smoke.js",
       "source_location": "L1",
       "id": "dev_smoke",
-      "community": 8,
+      "community": 154,
       "norm_label": "smoke.js"
     },
     {
@@ -1460,7 +1460,7 @@
       "source_file": "dev/smoke.js",
       "source_location": "L9",
       "id": "dev_smoke_read",
-      "community": 8,
+      "community": 154,
       "norm_label": "read()"
     },
     {
@@ -1469,7 +1469,7 @@
       "source_file": "dev/smoke.js",
       "source_location": "L14",
       "id": "dev_smoke_readcontent",
-      "community": 8,
+      "community": 154,
       "norm_label": "readcontent()"
     },
     {
@@ -1478,7 +1478,7 @@
       "source_file": "dev/smoke.js",
       "source_location": "L39",
       "id": "dev_smoke_ok",
-      "community": 8,
+      "community": 154,
       "norm_label": "ok()"
     },
     {
@@ -1487,7 +1487,7 @@
       "source_file": "dev/smoke.js",
       "source_location": "L76",
       "id": "dev_smoke_tick",
-      "community": 8,
+      "community": 154,
       "norm_label": "tick()"
     },
     {
@@ -1496,7 +1496,7 @@
       "source_file": "dev/smoke.js",
       "source_location": "L110",
       "id": "dev_smoke_done",
-      "community": 8,
+      "community": 154,
       "norm_label": "done()"
     },
     {
@@ -1505,7 +1505,7 @@
       "source_file": "dev/tune-weights.js",
       "source_location": "L1",
       "id": "dev_tune_weights",
-      "community": 48,
+      "community": 202,
       "norm_label": "tune-weights.js"
     },
     {
@@ -1514,7 +1514,7 @@
       "source_file": "dev/tune-weights.js",
       "source_location": "L35",
       "id": "dev_tune_weights_parseargs",
-      "community": 48,
+      "community": 202,
       "norm_label": "parseargs()"
     },
     {
@@ -1523,7 +1523,7 @@
       "source_file": "dev/tune-weights.js",
       "source_location": "L60",
       "id": "dev_tune_weights_pickmaps",
-      "community": 48,
+      "community": 202,
       "norm_label": "pickmaps()"
     },
     {
@@ -1532,7 +1532,7 @@
       "source_file": "dev/tune-weights.js",
       "source_location": "L70",
       "id": "dev_tune_weights_measure",
-      "community": 48,
+      "community": 202,
       "norm_label": "measure()"
     },
     {
@@ -1541,7 +1541,7 @@
       "source_file": "dev/tune-weights.js",
       "source_location": "L89",
       "id": "dev_tune_weights_guardrails",
-      "community": 48,
+      "community": 202,
       "norm_label": "guardrails()"
     },
     {
@@ -1550,7 +1550,7 @@
       "source_file": "dev/tune-weights.js",
       "source_location": "L97",
       "id": "dev_tune_weights_run",
-      "community": 48,
+      "community": 202,
       "norm_label": "run()"
     },
     {
@@ -1568,7 +1568,7 @@
       "source_file": "game/balance.js",
       "source_location": "L46",
       "id": "game_balance_pad",
-      "community": 48,
+      "community": 17,
       "norm_label": "pad()"
     },
     {
@@ -1586,7 +1586,7 @@
       "source_file": "game/balance.js",
       "source_location": "L67",
       "id": "game_balance_matchup",
-      "community": 48,
+      "community": 17,
       "norm_label": "matchup()"
     },
     {
@@ -1595,7 +1595,7 @@
       "source_file": "game/balance.js",
       "source_location": "L98",
       "id": "game_balance_mapreport",
-      "community": 48,
+      "community": 17,
       "norm_label": "mapreport()"
     },
     {
@@ -2891,7 +2891,7 @@
       "source_file": "game/ui/app.js",
       "source_location": "L25",
       "id": "ui_app",
-      "community": 8,
+      "community": 166,
       "norm_label": "$()"
     },
     {
@@ -2900,7 +2900,7 @@
       "source_file": "game/ui/app.js",
       "source_location": "L26",
       "id": "ui_app_show",
-      "community": 8,
+      "community": 166,
       "norm_label": "show()"
     },
     {
@@ -2927,7 +2927,7 @@
       "source_file": "game/ui/app.js",
       "source_location": "L38",
       "id": "ui_app_api",
-      "community": 8,
+      "community": 156,
       "norm_label": "api()"
     },
     {
@@ -2945,7 +2945,7 @@
       "source_file": "game/ui/app.js",
       "source_location": "L52",
       "id": "ui_app_artok",
-      "community": 8,
+      "community": 166,
       "norm_label": "artok()"
     },
     {
@@ -2954,7 +2954,7 @@
       "source_file": "game/ui/app.js",
       "source_location": "L53",
       "id": "ui_app_arterr",
-      "community": 8,
+      "community": 166,
       "norm_label": "arterr()"
     },
     {
@@ -2972,7 +2972,7 @@
       "source_file": "game/ui/app.js",
       "source_location": "L75",
       "id": "ui_app_copytext",
-      "community": 8,
+      "community": 166,
       "norm_label": "copytext()"
     },
     {
@@ -2999,7 +2999,7 @@
       "source_file": "game/ui/battle.js",
       "source_location": "L17",
       "id": "ui_battle_syncjournaloverlay",
-      "community": 8,
+      "community": 166,
       "norm_label": "syncjournaloverlay()"
     },
     {
@@ -3008,7 +3008,7 @@
       "source_file": "game/ui/battle.js",
       "source_location": "L26",
       "id": "ui_battle_syncrostersoverlay",
-      "community": 8,
+      "community": 166,
       "norm_label": "syncrostersoverlay()"
     },
     {
@@ -3152,7 +3152,7 @@
       "source_file": "game/ui/battle.js",
       "source_location": "L307",
       "id": "ui_battle_renderlog",
-      "community": 8,
+      "community": 166,
       "norm_label": "renderlog()"
     },
     {
@@ -3233,7 +3233,7 @@
       "source_file": "game/ui/battle.js",
       "source_location": "L539",
       "id": "ui_battle_showcards",
-      "community": 8,
+      "community": 166,
       "norm_label": "showcards()"
     },
     {
@@ -3539,7 +3539,7 @@
       "source_file": "game/ui/dashboard.js",
       "source_location": "L23",
       "id": "ui_dashboard_opendash",
-      "community": 8,
+      "community": 166,
       "norm_label": "opendash()"
     },
     {
@@ -3548,7 +3548,7 @@
       "source_file": "game/ui/dashboard.js",
       "source_location": "L41",
       "id": "ui_dashboard_opendashdef",
-      "community": 8,
+      "community": 166,
       "norm_label": "opendashdef()"
     },
     {
@@ -3611,7 +3611,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L1",
       "id": "ui_deck_editor",
-      "community": 8,
+      "community": 154,
       "norm_label": "deck-editor.js"
     },
     {
@@ -3620,7 +3620,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L17",
       "id": "ui_deck_editor_loaddecks",
-      "community": 8,
+      "community": 154,
       "norm_label": "loaddecks()"
     },
     {
@@ -3629,7 +3629,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L26",
       "id": "ui_deck_editor_persistdecks",
-      "community": 8,
+      "community": 154,
       "norm_label": "persistdecks()"
     },
     {
@@ -3638,7 +3638,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L28",
       "id": "ui_deck_editor_shipcards",
-      "community": 8,
+      "community": 154,
       "norm_label": "shipcards()"
     },
     {
@@ -3647,7 +3647,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L29",
       "id": "ui_deck_editor_flushslot",
-      "community": 8,
+      "community": 154,
       "norm_label": "flushslot()"
     },
     {
@@ -3656,7 +3656,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L30",
       "id": "ui_deck_editor_loadslotintoeditor",
-      "community": 8,
+      "community": 154,
       "norm_label": "loadslotintoeditor()"
     },
     {
@@ -3665,7 +3665,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L38",
       "id": "ui_deck_editor_renderslots",
-      "community": 8,
+      "community": 154,
       "norm_label": "renderslots()"
     },
     {
@@ -3674,7 +3674,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L59",
       "id": "ui_deck_editor_deckproblems",
-      "community": 8,
+      "community": 154,
       "norm_label": "deckproblems()"
     },
     {
@@ -3683,7 +3683,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L87",
       "id": "ui_deck_editor_opendeck",
-      "community": 8,
+      "community": 154,
       "norm_label": "opendeck()"
     },
     {
@@ -3692,7 +3692,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L95",
       "id": "ui_deck_editor_dkesc",
-      "community": 8,
+      "community": 154,
       "norm_label": "dkesc()"
     },
     {
@@ -3701,7 +3701,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L96",
       "id": "ui_deck_editor_decktoship",
-      "community": 8,
+      "community": 154,
       "norm_label": "decktoship()"
     },
     {
@@ -3710,7 +3710,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L98",
       "id": "ui_deck_editor_renderdeck",
-      "community": 8,
+      "community": 154,
       "norm_label": "renderdeck()"
     },
     {
@@ -3719,7 +3719,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L123",
       "id": "ui_deck_editor_renderdetail",
-      "community": 8,
+      "community": 154,
       "norm_label": "renderdetail()"
     },
     {
@@ -3728,7 +3728,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L172",
       "id": "ui_deck_editor_touchlist",
-      "community": 8,
+      "community": 154,
       "norm_label": "touchlist()"
     },
     {
@@ -3737,7 +3737,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L180",
       "id": "ui_deck_editor_renderdkart",
-      "community": 8,
+      "community": 154,
       "norm_label": "renderdkart()"
     },
     {
@@ -3746,7 +3746,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L185",
       "id": "ui_deck_editor_rendersteps",
-      "community": 8,
+      "community": 154,
       "norm_label": "rendersteps()"
     },
     {
@@ -3755,7 +3755,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L223",
       "id": "ui_deck_editor_dkstatus",
-      "community": 8,
+      "community": 154,
       "norm_label": "dkstatus()"
     },
     {
@@ -3764,7 +3764,7 @@
       "source_file": "game/ui/deck-editor.js",
       "source_location": "L238",
       "id": "ui_deck_editor_syncdeckfile",
-      "community": 8,
+      "community": 154,
       "norm_label": "syncdeckfile()"
     },
     {
@@ -3773,7 +3773,7 @@
       "source_file": "game/ui/fx.js",
       "source_location": "L1",
       "id": "ui_fx",
-      "community": 2,
+      "community": 199,
       "norm_label": "fx.js"
     },
     {
@@ -3782,7 +3782,7 @@
       "source_file": "game/ui/fx.js",
       "source_location": "L7",
       "id": "ui_fx_unitel",
-      "community": 2,
+      "community": 199,
       "norm_label": "unitel()"
     },
     {
@@ -3791,7 +3791,7 @@
       "source_file": "game/ui/fx.js",
       "source_location": "L8",
       "id": "ui_fx_slideunit",
-      "community": 2,
+      "community": 199,
       "norm_label": "slideunit()"
     },
     {
@@ -3800,7 +3800,7 @@
       "source_file": "game/ui/fx.js",
       "source_location": "L19",
       "id": "ui_fx_popunit",
-      "community": 2,
+      "community": 199,
       "norm_label": "popunit()"
     },
     {
@@ -3809,7 +3809,7 @@
       "source_file": "game/ui/fx.js",
       "source_location": "L23",
       "id": "ui_fx_ghostunit",
-      "community": 2,
+      "community": 199,
       "norm_label": "ghostunit()"
     },
     {
@@ -3818,7 +3818,7 @@
       "source_file": "game/ui/fx.js",
       "source_location": "L34",
       "id": "ui_fx_ringat",
-      "community": 2,
+      "community": 199,
       "norm_label": "ringat()"
     },
     {
@@ -3827,7 +3827,7 @@
       "source_file": "game/ui/fx.js",
       "source_location": "L42",
       "id": "ui_fx_fxstrike",
-      "community": 2,
+      "community": 199,
       "norm_label": "fxstrike()"
     },
     {
@@ -3836,7 +3836,7 @@
       "source_file": "game/ui/fx.js",
       "source_location": "L64",
       "id": "ui_fx_shakeboard",
-      "community": 2,
+      "community": 199,
       "norm_label": "shakeboard()"
     },
     {
@@ -3845,7 +3845,7 @@
       "source_file": "game/ui/fx.js",
       "source_location": "L71",
       "id": "ui_fx_capturepre",
-      "community": 2,
+      "community": 199,
       "norm_label": "capturepre()"
     },
     {
@@ -3854,7 +3854,7 @@
       "source_file": "game/ui/fx.js",
       "source_location": "L89",
       "id": "ui_fx_playfx",
-      "community": 2,
+      "community": 199,
       "norm_label": "playfx()"
     },
     {
@@ -3863,7 +3863,7 @@
       "source_file": "game/ui/fx.js",
       "source_location": "L116",
       "id": "ui_fx_fxpiecehex",
-      "community": 2,
+      "community": 199,
       "norm_label": "fxpiecehex()"
     },
     {
@@ -3872,7 +3872,7 @@
       "source_file": "game/ui/manual.js",
       "source_location": "L1",
       "id": "ui_manual",
-      "community": 2,
+      "community": 160,
       "norm_label": "manual.js"
     },
     {
@@ -3899,7 +3899,7 @@
       "source_file": "game/ui/manual.js",
       "source_location": "L48",
       "id": "ui_manual_mpdef",
-      "community": 2,
+      "community": 160,
       "norm_label": "mpdef()"
     },
     {
@@ -3908,7 +3908,7 @@
       "source_file": "game/ui/manual.js",
       "source_location": "L57",
       "id": "ui_manual_mpstate",
-      "community": 2,
+      "community": 160,
       "norm_label": "mpstate()"
     },
     {
@@ -3917,7 +3917,7 @@
       "source_file": "game/ui/manual.js",
       "source_location": "L68",
       "id": "ui_manual_mpresolve",
-      "community": 2,
+      "community": 160,
       "norm_label": "mpresolve()"
     },
     {
@@ -3926,7 +3926,7 @@
       "source_file": "game/ui/manual.js",
       "source_location": "L78",
       "id": "ui_manual_mpaftermath",
-      "community": 2,
+      "community": 160,
       "norm_label": "mpaftermath()"
     },
     {
@@ -3935,7 +3935,7 @@
       "source_file": "game/ui/manual.js",
       "source_location": "L94",
       "id": "ui_manual_mpsupamount",
-      "community": 2,
+      "community": 160,
       "norm_label": "mpsupamount()"
     },
     {
@@ -3944,7 +3944,7 @@
       "source_file": "game/ui/manual.js",
       "source_location": "L95",
       "id": "ui_manual_mpsum",
-      "community": 2,
+      "community": 160,
       "norm_label": "mpsum()"
     },
     {
@@ -3989,7 +3989,7 @@
       "source_file": "game/ui/manual.js",
       "source_location": "L270",
       "id": "ui_manual_mpsidename",
-      "community": 2,
+      "community": 160,
       "norm_label": "mpsidename()"
     },
     {
@@ -3998,7 +3998,7 @@
       "source_file": "game/ui/manual.js",
       "source_location": "L273",
       "id": "ui_manual_mpaftermathwords",
-      "community": 2,
+      "community": 160,
       "norm_label": "mpaftermathwords()"
     },
     {
@@ -4007,7 +4007,7 @@
       "source_file": "game/ui/manual.js",
       "source_location": "L451",
       "id": "ui_manual_rendermanual",
-      "community": 2,
+      "community": 160,
       "norm_label": "rendermanual()"
     },
     {
@@ -4016,7 +4016,7 @@
       "source_file": "game/ui/manual.js",
       "source_location": "L476",
       "id": "ui_manual_openmanual",
-      "community": 2,
+      "community": 160,
       "norm_label": "openmanual()"
     },
     {
@@ -4025,7 +4025,7 @@
       "source_file": "game/ui/manual.js",
       "source_location": "L492",
       "id": "ui_manual_manualstep",
-      "community": 2,
+      "community": 160,
       "norm_label": "manualstep()"
     },
     {
@@ -4034,7 +4034,7 @@
       "source_file": "game/ui/manual.js",
       "source_location": "L497",
       "id": "ui_manual_manualtabclick",
-      "community": 2,
+      "community": 160,
       "norm_label": "manualtabclick()"
     },
     {
@@ -4043,7 +4043,7 @@
       "source_file": "game/ui/manual.js",
       "source_location": "L506",
       "id": "ui_manual_manualkey",
-      "community": 2,
+      "community": 160,
       "norm_label": "manualkey()"
     },
     {
@@ -4052,7 +4052,7 @@
       "source_file": "game/ui/map-editor.js",
       "source_location": "L1",
       "id": "ui_map_editor",
-      "community": 2,
+      "community": 173,
       "norm_label": "map-editor.js"
     },
     {
@@ -4061,7 +4061,7 @@
       "source_file": "game/ui/map-editor.js",
       "source_location": "L13",
       "id": "ui_map_editor_openeditor",
-      "community": 2,
+      "community": 173,
       "norm_label": "openeditor()"
     },
     {
@@ -4070,7 +4070,7 @@
       "source_file": "game/ui/map-editor.js",
       "source_location": "L51",
       "id": "ui_map_editor_edgocustom",
-      "community": 2,
+      "community": 166,
       "norm_label": "edgocustom()"
     },
     {
@@ -4079,7 +4079,7 @@
       "source_file": "game/ui/map-editor.js",
       "source_location": "L59",
       "id": "ui_map_editor_edhexset",
-      "community": 2,
+      "community": 173,
       "norm_label": "edhexset()"
     },
     {
@@ -4088,7 +4088,7 @@
       "source_file": "game/ui/map-editor.js",
       "source_location": "L65",
       "id": "ui_map_editor_edhexpairs",
-      "community": 2,
+      "community": 173,
       "norm_label": "edhexpairs()"
     },
     {
@@ -4097,7 +4097,7 @@
       "source_file": "game/ui/map-editor.js",
       "source_location": "L69",
       "id": "ui_map_editor_edliveshape",
-      "community": 2,
+      "community": 173,
       "norm_label": "edliveshape()"
     },
     {
@@ -4106,7 +4106,7 @@
       "source_file": "game/ui/map-editor.js",
       "source_location": "L73",
       "id": "ui_map_editor_edremovehex",
-      "community": 2,
+      "community": 173,
       "norm_label": "edremovehex()"
     },
     {
@@ -4115,7 +4115,7 @@
       "source_file": "game/ui/map-editor.js",
       "source_location": "L87",
       "id": "ui_map_editor_edinternalsides",
-      "community": 2,
+      "community": 173,
       "norm_label": "edinternalsides()"
     },
     {
@@ -4124,7 +4124,7 @@
       "source_file": "game/ui/map-editor.js",
       "source_location": "L97",
       "id": "ui_map_editor_rendereditor",
-      "community": 2,
+      "community": 173,
       "norm_label": "rendereditor()"
     },
     {
@@ -4133,7 +4133,7 @@
       "source_file": "game/ui/map-editor.js",
       "source_location": "L188",
       "id": "ui_map_editor_groupedgestopieces",
-      "community": 2,
+      "community": 173,
       "norm_label": "groupedgestopieces()"
     },
     {
@@ -4142,7 +4142,7 @@
       "source_file": "game/ui/map-editor.js",
       "source_location": "L226",
       "id": "ui_map_editor_splitrun",
-      "community": 2,
+      "community": 173,
       "norm_label": "splitrun()"
     },
     {
@@ -4151,7 +4151,7 @@
       "source_file": "game/ui/map-editor.js",
       "source_location": "L248",
       "id": "ui_map_editor_renderedstock",
-      "community": 2,
+      "community": 173,
       "norm_label": "renderedstock()"
     },
     {
@@ -4160,7 +4160,7 @@
       "source_file": "game/ui/map-editor.js",
       "source_location": "L269",
       "id": "ui_map_editor_edbuilddef",
-      "community": 2,
+      "community": 173,
       "norm_label": "edbuilddef()"
     },
     {
@@ -4169,7 +4169,7 @@
       "source_file": "game/ui/map-editor.js",
       "source_location": "L292",
       "id": "ui_map_editor_edsavedef",
-      "community": 8,
+      "community": 156,
       "norm_label": "edsavedef()"
     },
     {
@@ -4178,7 +4178,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L1",
       "id": "ui_maps_screen",
-      "community": 8,
+      "community": 156,
       "norm_label": "maps-screen.js"
     },
     {
@@ -4187,7 +4187,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L23",
       "id": "ui_maps_screen_slugifymap",
-      "community": 8,
+      "community": 156,
       "norm_label": "slugifymap()"
     },
     {
@@ -4196,7 +4196,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L24",
       "id": "ui_maps_screen_allmaps",
-      "community": 8,
+      "community": 156,
       "norm_label": "allmaps()"
     },
     {
@@ -4205,7 +4205,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L30",
       "id": "ui_maps_screen_getmappool",
-      "community": 8,
+      "community": 166,
       "norm_label": "getmappool()"
     },
     {
@@ -4214,7 +4214,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L31",
       "id": "ui_maps_screen_mssets",
-      "community": 8,
+      "community": 156,
       "norm_label": "mssets()"
     },
     {
@@ -4223,7 +4223,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L32",
       "id": "ui_maps_screen_mscurrent",
-      "community": 8,
+      "community": 156,
       "norm_label": "mscurrent()"
     },
     {
@@ -4232,7 +4232,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L33",
       "id": "ui_maps_screen_mssetactive",
-      "community": 8,
+      "community": 156,
       "norm_label": "mssetactive()"
     },
     {
@@ -4241,7 +4241,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L36",
       "id": "ui_maps_screen_mstogglemember",
-      "community": 8,
+      "community": 156,
       "norm_label": "mstogglemember()"
     },
     {
@@ -4250,7 +4250,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L41",
       "id": "ui_maps_screen_msnewset",
-      "community": 8,
+      "community": 156,
       "norm_label": "msnewset()"
     },
     {
@@ -4259,7 +4259,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L49",
       "id": "ui_maps_screen_mssave",
-      "community": 8,
+      "community": 156,
       "norm_label": "mssave()"
     },
     {
@@ -4268,7 +4268,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L56",
       "id": "ui_maps_screen_rosterreplace",
-      "community": 8,
+      "community": 156,
       "norm_label": "rosterreplace()"
     },
     {
@@ -4277,7 +4277,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L60",
       "id": "ui_maps_screen_rosterremove",
-      "community": 8,
+      "community": 156,
       "norm_label": "rosterremove()"
     },
     {
@@ -4286,7 +4286,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L66",
       "id": "ui_maps_screen_savemapfile",
-      "community": 8,
+      "community": 156,
       "norm_label": "savemapfile()"
     },
     {
@@ -4295,7 +4295,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L71",
       "id": "ui_maps_screen_deletemapbyid",
-      "community": 8,
+      "community": 156,
       "norm_label": "deletemapbyid()"
     },
     {
@@ -4304,7 +4304,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L80",
       "id": "ui_maps_screen_updatemapshint",
-      "community": 8,
+      "community": 156,
       "norm_label": "updatemapshint()"
     },
     {
@@ -4313,7 +4313,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L89",
       "id": "ui_maps_screen_previewsvg",
-      "community": 8,
+      "community": 156,
       "norm_label": "previewsvg()"
     },
     {
@@ -4322,7 +4322,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L127",
       "id": "ui_maps_screen_rendermapsetbar",
-      "community": 8,
+      "community": 156,
       "norm_label": "rendermapsetbar()"
     },
     {
@@ -4331,7 +4331,7 @@
       "source_file": "game/ui/maps-screen.js",
       "source_location": "L168",
       "id": "ui_maps_screen_rendermapsscr",
-      "community": 8,
+      "community": 156,
       "norm_label": "rendermapsscr()"
     },
     {
@@ -4520,7 +4520,7 @@
       "source_file": "logs/reports/balance/0.3/accumulated.json",
       "source_location": "L16",
       "id": "0_3_accumulated_agg_cards",
-      "community": 100,
+      "community": 99,
       "norm_label": "cards"
     },
     {
@@ -6930,7 +6930,7 @@
       "label": "Rules",
       "file_type": "document",
       "source_file": ".claude/skills/review-reports/SKILL.md",
-      "source_location": "L75",
+      "source_location": "L78",
       "id": "review_reports_skill_rules",
       "community": 49,
       "norm_label": "rules"
@@ -7035,13 +7035,13 @@
       "norm_label": "warofattrition \u2014 project doctrine"
     },
     {
-      "label": "Standing goals (revised for V1 \u2014 see [[v1-architecture]] for the reasoning)",
+      "label": "Standing goals (revised for V1 \u2014 reasoning in the retired `v1-architecture` spec, git history)",
       "file_type": "document",
       "source_file": "CLAUDE.md",
       "source_location": "L47",
-      "id": "claude_standing_goals_revised_for_v1_see_v1_architecture_for_the_reasoning",
+      "id": "claude_standing_goals_revised_for_v1_reasoning_in_the_retired_v1_architecture_spec_git_history",
       "community": 3,
-      "norm_label": "standing goals (revised for v1 \u2014 see [[v1-architecture]] for the reasoning)"
+      "norm_label": "standing goals (revised for v1 \u2014 reasoning in the retired `v1-architecture` spec, git history)"
     },
     {
       "label": "Shipped history",
@@ -7182,7 +7182,7 @@
       "label": "human-instructions/ \u2014 written for Bill",
       "file_type": "document",
       "source_file": "dynamic-scrum/docs/Docs Index.md",
-      "source_location": "L38",
+      "source_location": "L39",
       "id": "docs_docs_index_human_instructions_written_for_bill",
       "community": 169,
       "norm_label": "human-instructions/ \u2014 written for bill"
@@ -7191,7 +7191,7 @@
       "label": "Implemented specs \u2192 where the behaviour is documented now",
       "file_type": "document",
       "source_file": "dynamic-scrum/docs/Docs Index.md",
-      "source_location": "L46",
+      "source_location": "L47",
       "id": "docs_docs_index_implemented_specs_where_the_behaviour_is_documented_now",
       "community": 169,
       "norm_label": "implemented specs \u2192 where the behaviour is documented now"
@@ -7632,7 +7632,7 @@
       "label": "The loop (tools + skills)",
       "file_type": "document",
       "source_file": "dynamic-scrum/docs/data-and-reports.md",
-      "source_location": "L41",
+      "source_location": "L45",
       "id": "docs_data_and_reports_the_loop_tools_skills",
       "community": 168,
       "norm_label": "the loop (tools + skills)"
@@ -7641,7 +7641,7 @@
       "label": "Related",
       "file_type": "document",
       "source_file": "dynamic-scrum/docs/data-and-reports.md",
-      "source_location": "L52",
+      "source_location": "L56",
       "id": "docs_data_and_reports_related",
       "community": 168,
       "norm_label": "related"
@@ -7672,78 +7672,6 @@
       "id": "docs_glossary_related",
       "community": 181,
       "norm_label": "related"
-    },
-    {
-      "label": "grading-rubrics.md",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
-      "source_location": "L1",
-      "id": "docs_grading_rubrics",
-      "community": 161,
-      "norm_label": "grading-rubrics.md"
-    },
-    {
-      "label": "Grading rubrics \u2014 north stars + what to measure",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
-      "source_location": "L2",
-      "id": "docs_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
-      "community": 161,
-      "norm_label": "grading rubrics \u2014 north stars + what to measure"
-    },
-    {
-      "label": "North stars (what \"good\" means for this game)",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
-      "source_location": "L20",
-      "id": "docs_grading_rubrics_north_stars_what_good_means_for_this_game",
-      "community": 161,
-      "norm_label": "north stars (what \"good\" means for this game)"
-    },
-    {
-      "label": "Card rubric",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
-      "source_location": "L45",
-      "id": "docs_grading_rubrics_card_rubric",
-      "community": 161,
-      "norm_label": "card rubric"
-    },
-    {
-      "label": "Map rubric",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
-      "source_location": "L86",
-      "id": "docs_grading_rubrics_map_rubric",
-      "community": 161,
-      "norm_label": "map rubric"
-    },
-    {
-      "label": "Unit rubric",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
-      "source_location": "L125",
-      "id": "docs_grading_rubrics_unit_rubric",
-      "community": 161,
-      "norm_label": "unit rubric"
-    },
-    {
-      "label": "Game-level rubric",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
-      "source_location": "L154",
-      "id": "docs_grading_rubrics_game_level_rubric",
-      "community": 161,
-      "norm_label": "game-level rubric"
-    },
-    {
-      "label": "How to run the numbers",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
-      "source_location": "L179",
-      "id": "docs_grading_rubrics_how_to_run_the_numbers",
-      "community": 161,
-      "norm_label": "how to run the numbers"
     },
     {
       "label": "ai-heuristic-model.md",
@@ -8487,7 +8415,7 @@
       "label": "Finished",
       "file_type": "document",
       "source_file": "dynamic-scrum/planning/Sprint.md",
-      "source_location": "L43",
+      "source_location": "L44",
       "id": "planning_sprint_finished",
       "community": 163,
       "norm_label": "finished"
@@ -8496,7 +8424,7 @@
       "label": "Blockers",
       "file_type": "document",
       "source_file": "dynamic-scrum/planning/Sprint.md",
-      "source_location": "L47",
+      "source_location": "L48",
       "id": "planning_sprint_blockers",
       "community": 163,
       "norm_label": "blockers"
@@ -8505,7 +8433,7 @@
       "label": "Related",
       "file_type": "document",
       "source_file": "dynamic-scrum/planning/Sprint.md",
-      "source_location": "L51",
+      "source_location": "L52",
       "id": "planning_sprint_related",
       "community": 163,
       "norm_label": "related"
@@ -8655,69 +8583,6 @@
       "norm_label": "if you only do three things next"
     },
     {
-      "label": "graphs-spec.md",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
-      "source_location": "L1",
-      "id": "specs_graphs_spec",
-      "community": 194,
-      "norm_label": "graphs-spec.md"
-    },
-    {
-      "label": "Graphs / data visualization \u2014 first impressions & questions",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
-      "source_location": "L4",
-      "id": "specs_graphs_spec_graphs_data_visualization_first_impressions_questions",
-      "community": 194,
-      "norm_label": "graphs / data visualization \u2014 first impressions & questions"
-    },
-    {
-      "label": "What data we already have (the corpus)",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
-      "source_location": "L14",
-      "id": "specs_graphs_spec_what_data_we_already_have_the_corpus",
-      "community": 194,
-      "norm_label": "what data we already have (the corpus)"
-    },
-    {
-      "label": "The motivation: what tables hide",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
-      "source_location": "L32",
-      "id": "specs_graphs_spec_the_motivation_what_tables_hide",
-      "community": 194,
-      "norm_label": "the motivation: what tables hide"
-    },
-    {
-      "label": "Candidate views (one per \"perspective\")",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
-      "source_location": "L39",
-      "id": "specs_graphs_spec_candidate_views_one_per_perspective",
-      "community": 194,
-      "norm_label": "candidate views (one per \"perspective\")"
-    },
-    {
-      "label": "How/where to display \u2014 the real constraint",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
-      "source_location": "L66",
-      "id": "specs_graphs_spec_how_where_to_display_the_real_constraint",
-      "community": 194,
-      "norm_label": "how/where to display \u2014 the real constraint"
-    },
-    {
-      "label": "Questions for Bill",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
-      "source_location": "L85",
-      "id": "specs_graphs_spec_questions_for_bill",
-      "community": 194,
-      "norm_label": "questions for bill"
-    },
-    {
       "label": "Player Card Art direction drafts.md",
       "file_type": "document",
       "source_file": "dynamic-scrum/planning/specs/original-specs/Player Card Art direction drafts.md",
@@ -8817,436 +8682,76 @@
       "norm_label": "what i'll do with them"
     },
     {
-      "label": "v1-ai-search-and-tuning.md",
+      "label": "grading-rubrics.md",
       "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
+      "source_file": "dynamic-scrum/rubrics/grading-rubrics.md",
       "source_location": "L1",
-      "id": "specs_v1_ai_search_and_tuning",
-      "community": 189,
-      "norm_label": "v1-ai-search-and-tuning.md"
+      "id": "rubrics_grading_rubrics",
+      "community": 200,
+      "norm_label": "grading-rubrics.md"
     },
     {
-      "label": "V1 \u2014 AI search pruning, weight tuning & the trench-orientation answer \u2014 first impressions & questions",
+      "label": "Grading rubrics \u2014 north stars + what to measure",
       "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
-      "source_location": "L4",
-      "id": "specs_v1_ai_search_and_tuning_v1_ai_search_pruning_weight_tuning_the_trench_orientation_answer_first_impressions_questions",
-      "community": 189,
-      "norm_label": "v1 \u2014 ai search pruning, weight tuning & the trench-orientation answer \u2014 first impressions & questions"
+      "source_file": "dynamic-scrum/rubrics/grading-rubrics.md",
+      "source_location": "L2",
+      "id": "rubrics_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
+      "community": 200,
+      "norm_label": "grading rubrics \u2014 north stars + what to measure"
     },
     {
-      "label": "First: the trench-orientation answer (Bill's direct question)",
+      "label": "North stars (what \"good\" means for this game)",
       "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
-      "source_location": "L19",
-      "id": "specs_v1_ai_search_and_tuning_first_the_trench_orientation_answer_bill_s_direct_question",
-      "community": 189,
-      "norm_label": "first: the trench-orientation answer (bill's direct question)"
+      "source_file": "dynamic-scrum/rubrics/grading-rubrics.md",
+      "source_location": "L20",
+      "id": "rubrics_grading_rubrics_north_stars_what_good_means_for_this_game",
+      "community": 200,
+      "norm_label": "north stars (what \"good\" means for this game)"
     },
     {
-      "label": "The search today, and where the time goes",
+      "label": "Card rubric",
       "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
-      "source_location": "L47",
-      "id": "specs_v1_ai_search_and_tuning_the_search_today_and_where_the_time_goes",
-      "community": 189,
-      "norm_label": "the search today, and where the time goes"
+      "source_file": "dynamic-scrum/rubrics/grading-rubrics.md",
+      "source_location": "L45",
+      "id": "rubrics_grading_rubrics_card_rubric",
+      "community": 200,
+      "norm_label": "card rubric"
     },
     {
-      "label": "Pruning ideas (concrete, ordered by safety)",
+      "label": "Map rubric",
       "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
-      "source_location": "L60",
-      "id": "specs_v1_ai_search_and_tuning_pruning_ideas_concrete_ordered_by_safety",
-      "community": 189,
-      "norm_label": "pruning ideas (concrete, ordered by safety)"
+      "source_file": "dynamic-scrum/rubrics/grading-rubrics.md",
+      "source_location": "L86",
+      "id": "rubrics_grading_rubrics_map_rubric",
+      "community": 200,
+      "norm_label": "map rubric"
     },
     {
-      "label": "Reuse for Claude Plays: a concentrated option list",
+      "label": "Unit rubric",
       "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
-      "source_location": "L83",
-      "id": "specs_v1_ai_search_and_tuning_reuse_for_claude_plays_a_concentrated_option_list",
-      "community": 189,
-      "norm_label": "reuse for claude plays: a concentrated option list"
+      "source_file": "dynamic-scrum/rubrics/grading-rubrics.md",
+      "source_location": "L125",
+      "id": "rubrics_grading_rubrics_unit_rubric",
+      "community": 200,
+      "norm_label": "unit rubric"
     },
     {
-      "label": "Weight tuning from the data we have",
+      "label": "Game-level rubric",
       "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
-      "source_location": "L94",
-      "id": "specs_v1_ai_search_and_tuning_weight_tuning_from_the_data_we_have",
-      "community": 189,
-      "norm_label": "weight tuning from the data we have"
+      "source_file": "dynamic-scrum/rubrics/grading-rubrics.md",
+      "source_location": "L154",
+      "id": "rubrics_grading_rubrics_game_level_rubric",
+      "community": 200,
+      "norm_label": "game-level rubric"
     },
     {
-      "label": "Questions for Bill",
+      "label": "How to run the numbers",
       "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
-      "source_location": "L104",
-      "id": "specs_v1_ai_search_and_tuning_questions_for_bill",
-      "community": 189,
-      "norm_label": "questions for bill"
-    },
-    {
-      "label": "v1-architecture.md",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
-      "source_location": "L1",
-      "id": "specs_v1_architecture",
-      "community": 190,
-      "norm_label": "v1-architecture.md"
-    },
-    {
-      "label": "V1 \u2014 Architecture review & restructure (DECIDED, implemented July 2026)",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
-      "source_location": "L4",
-      "id": "specs_v1_architecture_v1_architecture_review_restructure_decided_implemented_july_2026",
-      "community": 190,
-      "norm_label": "v1 \u2014 architecture review & restructure (decided, implemented july 2026)"
-    },
-    {
-      "label": "The decision: Seam-Split",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
-      "source_location": "L13",
-      "id": "specs_v1_architecture_the_decision_seam_split",
-      "community": 190,
-      "norm_label": "the decision: seam-split"
-    },
-    {
-      "label": "Target layout",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
-      "source_location": "L34",
-      "id": "specs_v1_architecture_target_layout",
-      "community": 190,
-      "norm_label": "target layout"
-    },
-    {
-      "label": "Load strategy",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
-      "source_location": "L67",
-      "id": "specs_v1_architecture_load_strategy",
-      "community": 190,
-      "norm_label": "load strategy"
-    },
-    {
-      "label": "The refactor oracle",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
-      "source_location": "L84",
-      "id": "specs_v1_architecture_the_refactor_oracle",
-      "community": 190,
-      "norm_label": "the refactor oracle"
-    },
-    {
-      "label": "Deferred, deliberately (triggers written down)",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
-      "source_location": "L93",
-      "id": "specs_v1_architecture_deferred_deliberately_triggers_written_down",
-      "community": 190,
-      "norm_label": "deferred, deliberately (triggers written down)"
-    },
-    {
-      "label": "Migration checklist (each step = one commit, tests + golden diff green)",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
-      "source_location": "L103",
-      "id": "specs_v1_architecture_migration_checklist_each_step_one_commit_tests_golden_diff_green",
-      "community": 190,
-      "norm_label": "migration checklist (each step = one commit, tests + golden diff green)"
-    },
-    {
-      "label": "v1-claude-plays-and-reports.md",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
-      "source_location": "L1",
-      "id": "specs_v1_claude_plays_and_reports",
-      "community": 191,
-      "norm_label": "v1-claude-plays-and-reports.md"
-    },
-    {
-      "label": "V1 \u2014 Claude Plays: persistent session, first-to-3 matches & the generate-reports rewrite \u2014 first impressions & questions",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
-      "source_location": "L4",
-      "id": "specs_v1_claude_plays_and_reports_v1_claude_plays_persistent_session_first_to_3_matches_the_generate_reports_rewrite_first_impressions_questions",
-      "community": 191,
-      "norm_label": "v1 \u2014 claude plays: persistent session, first-to-3 matches & the generate-reports rewrite \u2014 first impressions & questions"
-    },
-    {
-      "label": "The problem with today's transport",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
-      "source_location": "L23",
-      "id": "specs_v1_claude_plays_and_reports_the_problem_with_today_s_transport",
-      "community": 191,
-      "norm_label": "the problem with today's transport"
-    },
-    {
-      "label": "Persistent session (pending Bill's dynamic-scrum md)",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
-      "source_location": "L35",
-      "id": "specs_v1_claude_plays_and_reports_persistent_session_pending_bill_s_dynamic_scrum_md",
-      "community": 191,
-      "norm_label": "persistent session (pending bill's dynamic-scrum md)"
-    },
-    {
-      "label": "Honesty invariant MUST survive the memory",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
-      "source_location": "L52",
-      "id": "specs_v1_claude_plays_and_reports_honesty_invariant_must_survive_the_memory",
-      "community": 191,
-      "norm_label": "honesty invariant must survive the memory"
-    },
-    {
-      "label": "First-to-3 matches",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
-      "source_location": "L60",
-      "id": "specs_v1_claude_plays_and_reports_first_to_3_matches",
-      "community": 191,
-      "norm_label": "first-to-3 matches"
-    },
-    {
-      "label": "The generate-reports rewrite",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
-      "source_location": "L74",
-      "id": "specs_v1_claude_plays_and_reports_the_generate_reports_rewrite",
-      "community": 191,
-      "norm_label": "the generate-reports rewrite"
-    },
-    {
-      "label": "Questions for Bill",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
-      "source_location": "L90",
-      "id": "specs_v1_claude_plays_and_reports_questions_for_bill",
-      "community": 191,
-      "norm_label": "questions for bill"
-    },
-    {
-      "label": "v1-content-curation.md",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
-      "source_location": "L1",
-      "id": "specs_v1_content_curation",
-      "community": 195,
-      "norm_label": "v1-content-curation.md"
-    },
-    {
-      "label": "V1 \u2014 Content curation: trim to 12 maps + a map-set \"deck\" mechanic \u2014 first impressions & questions",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
-      "source_location": "L4",
-      "id": "specs_v1_content_curation_v1_content_curation_trim_to_12_maps_a_map_set_deck_mechanic_first_impressions_questions",
-      "community": 195,
-      "norm_label": "v1 \u2014 content curation: trim to 12 maps + a map-set \"deck\" mechanic \u2014 first impressions & questions"
-    },
-    {
-      "label": "Where the roster stands",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
-      "source_location": "L11",
-      "id": "specs_v1_content_curation_where_the_roster_stands",
-      "community": 195,
-      "norm_label": "where the roster stands"
-    },
-    {
-      "label": "Trimming to 12 \u2014 method, not a guess",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
-      "source_location": "L25",
-      "id": "specs_v1_content_curation_trimming_to_12_method_not_a_guess",
-      "community": 195,
-      "norm_label": "trimming to 12 \u2014 method, not a guess"
-    },
-    {
-      "label": "The \"map-set deck\" mechanic",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
-      "source_location": "L47",
-      "id": "specs_v1_content_curation_the_map_set_deck_mechanic",
-      "community": 195,
-      "norm_label": "the \"map-set deck\" mechanic"
-    },
-    {
-      "label": "Two readings \u2014 which one?",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
-      "source_location": "L64",
-      "id": "specs_v1_content_curation_two_readings_which_one",
-      "community": 195,
-      "norm_label": "two readings \u2014 which one?"
-    },
-    {
-      "label": "Questions for Bill",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
-      "source_location": "L73",
-      "id": "specs_v1_content_curation_questions_for_bill",
-      "community": 195,
-      "norm_label": "questions for bill"
-    },
-    {
-      "label": "v1-data-persistence.md",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
-      "source_location": "L1",
-      "id": "specs_v1_data_persistence",
-      "community": 192,
-      "norm_label": "v1-data-persistence.md"
-    },
-    {
-      "label": "V1 \u2014 Data persistence: a DB instead of loose JSON \u2014 first impressions & questions",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
-      "source_location": "L4",
-      "id": "specs_v1_data_persistence_v1_data_persistence_a_db_instead_of_loose_json_first_impressions_questions",
-      "community": 192,
-      "norm_label": "v1 \u2014 data persistence: a db instead of loose json \u2014 first impressions & questions"
-    },
-    {
-      "label": "What we store today (and why it chafes)",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
-      "source_location": "L14",
-      "id": "specs_v1_data_persistence_what_we_store_today_and_why_it_chafes",
-      "community": 192,
-      "norm_label": "what we store today (and why it chafes)"
-    },
-    {
-      "label": "The proposal: SQLite, dev-only",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
-      "source_location": "L33",
-      "id": "specs_v1_data_persistence_the_proposal_sqlite_dev_only",
-      "community": 192,
-      "norm_label": "the proposal: sqlite, dev-only"
-    },
-    {
-      "label": "Sketch schema (illustrative, not final)",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
-      "source_location": "L46",
-      "id": "specs_v1_data_persistence_sketch_schema_illustrative_not_final",
-      "community": 192,
-      "norm_label": "sketch schema (illustrative, not final)"
-    },
-    {
-      "label": "Migration & coexistence",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
-      "source_location": "L64",
-      "id": "specs_v1_data_persistence_migration_coexistence",
-      "community": 192,
-      "norm_label": "migration & coexistence"
-    },
-    {
-      "label": "Git question (flagged, not assumed)",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
-      "source_location": "L76",
-      "id": "specs_v1_data_persistence_git_question_flagged_not_assumed",
-      "community": 192,
-      "norm_label": "git question (flagged, not assumed)"
-    },
-    {
-      "label": "Questions for Bill",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
-      "source_location": "L84",
-      "id": "specs_v1_data_persistence_questions_for_bill",
-      "community": 192,
-      "norm_label": "questions for bill"
-    },
-    {
-      "label": "v1-field-manual-animations.md",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
-      "source_location": "L1",
-      "id": "specs_v1_field_manual_animations",
-      "community": 63,
-      "norm_label": "v1-field-manual-animations.md"
-    },
-    {
-      "label": "V1 \u2014 Field Manual: animated, human-readable rule explanations \u2014 first impressions & questions",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
-      "source_location": "L4",
-      "id": "specs_v1_field_manual_animations_v1_field_manual_animated_human_readable_rule_explanations_first_impressions_questions",
-      "community": 63,
-      "norm_label": "v1 \u2014 field manual: animated, human-readable rule explanations \u2014 first impressions & questions"
-    },
-    {
-      "label": "What the Field Manual is today",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
-      "source_location": "L11",
-      "id": "specs_v1_field_manual_animations_what_the_field_manual_is_today",
-      "community": 63,
-      "norm_label": "what the field manual is today"
-    },
-    {
-      "label": "The core insight: the battle already animates all of this",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
-      "source_location": "L26",
-      "id": "specs_v1_field_manual_animations_the_core_insight_the_battle_already_animates_all_of_this",
-      "community": 63,
-      "norm_label": "the core insight: the battle already animates all of this"
-    },
-    {
-      "label": "The proposal: a \"diagram player\" of worked examples",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
-      "source_location": "L44",
-      "id": "specs_v1_field_manual_animations_the_proposal_a_diagram_player_of_worked_examples",
-      "community": 63,
-      "norm_label": "the proposal: a \"diagram player\" of worked examples"
-    },
-    {
-      "label": "The animations, in priority order (Bill named the first two)",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
-      "source_location": "L55",
-      "id": "specs_v1_field_manual_animations_the_animations_in_priority_order_bill_named_the_first_two",
-      "community": 63,
-      "norm_label": "the animations, in priority order (bill named the first two)"
-    },
-    {
-      "label": "Human-readability, not just motion",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
-      "source_location": "L80",
-      "id": "specs_v1_field_manual_animations_human_readability_not_just_motion",
-      "community": 63,
-      "norm_label": "human-readability, not just motion"
-    },
-    {
-      "label": "Where it lives",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
-      "source_location": "L88",
-      "id": "specs_v1_field_manual_animations_where_it_lives",
-      "community": 63,
-      "norm_label": "where it lives"
-    },
-    {
-      "label": "Questions for Bill",
-      "file_type": "document",
-      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
-      "source_location": "L95",
-      "id": "specs_v1_field_manual_animations_questions_for_bill",
-      "community": 63,
-      "norm_label": "questions for bill"
+      "source_file": "dynamic-scrum/rubrics/grading-rubrics.md",
+      "source_location": "L179",
+      "id": "rubrics_grading_rubrics_how_to_run_the_numbers",
+      "community": 200,
+      "norm_label": "how to run the numbers"
     },
     {
       "label": "Bill.md",
@@ -10473,6 +9978,582 @@
       "norm_label": "red (haiku)"
     },
     {
+      "label": "Standing goals (revised for V1 \u2014 see [[v1-architecture]] for the reasoning)",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L47",
+      "community": 3,
+      "norm_label": "standing goals (revised for v1 \u2014 see [[v1-architecture]] for the reasoning)",
+      "id": "claude_standing_goals_revised_for_v1_see_v1_architecture_for_the_reasoning"
+    },
+    {
+      "label": "grading-rubrics.md",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
+      "source_location": "L1",
+      "community": 161,
+      "norm_label": "grading-rubrics.md",
+      "id": "docs_grading_rubrics"
+    },
+    {
+      "label": "Grading rubrics \u2014 north stars + what to measure",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
+      "source_location": "L2",
+      "community": 161,
+      "norm_label": "grading rubrics \u2014 north stars + what to measure",
+      "id": "docs_grading_rubrics_grading_rubrics_north_stars_what_to_measure"
+    },
+    {
+      "label": "North stars (what \"good\" means for this game)",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
+      "source_location": "L20",
+      "community": 161,
+      "norm_label": "north stars (what \"good\" means for this game)",
+      "id": "docs_grading_rubrics_north_stars_what_good_means_for_this_game"
+    },
+    {
+      "label": "Card rubric",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
+      "source_location": "L45",
+      "community": 161,
+      "norm_label": "card rubric",
+      "id": "docs_grading_rubrics_card_rubric"
+    },
+    {
+      "label": "Map rubric",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
+      "source_location": "L86",
+      "community": 161,
+      "norm_label": "map rubric",
+      "id": "docs_grading_rubrics_map_rubric"
+    },
+    {
+      "label": "Unit rubric",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
+      "source_location": "L125",
+      "community": 161,
+      "norm_label": "unit rubric",
+      "id": "docs_grading_rubrics_unit_rubric"
+    },
+    {
+      "label": "Game-level rubric",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
+      "source_location": "L154",
+      "community": 161,
+      "norm_label": "game-level rubric",
+      "id": "docs_grading_rubrics_game_level_rubric"
+    },
+    {
+      "label": "How to run the numbers",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
+      "source_location": "L179",
+      "community": 161,
+      "norm_label": "how to run the numbers",
+      "id": "docs_grading_rubrics_how_to_run_the_numbers"
+    },
+    {
+      "label": "graphs-spec.md",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
+      "source_location": "L1",
+      "community": 194,
+      "norm_label": "graphs-spec.md",
+      "id": "specs_graphs_spec"
+    },
+    {
+      "label": "Graphs / data visualization \u2014 first impressions & questions",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
+      "source_location": "L4",
+      "community": 194,
+      "norm_label": "graphs / data visualization \u2014 first impressions & questions",
+      "id": "specs_graphs_spec_graphs_data_visualization_first_impressions_questions"
+    },
+    {
+      "label": "What data we already have (the corpus)",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
+      "source_location": "L14",
+      "community": 194,
+      "norm_label": "what data we already have (the corpus)",
+      "id": "specs_graphs_spec_what_data_we_already_have_the_corpus"
+    },
+    {
+      "label": "The motivation: what tables hide",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
+      "source_location": "L32",
+      "community": 194,
+      "norm_label": "the motivation: what tables hide",
+      "id": "specs_graphs_spec_the_motivation_what_tables_hide"
+    },
+    {
+      "label": "Candidate views (one per \"perspective\")",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
+      "source_location": "L39",
+      "community": 194,
+      "norm_label": "candidate views (one per \"perspective\")",
+      "id": "specs_graphs_spec_candidate_views_one_per_perspective"
+    },
+    {
+      "label": "How/where to display \u2014 the real constraint",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
+      "source_location": "L66",
+      "community": 194,
+      "norm_label": "how/where to display \u2014 the real constraint",
+      "id": "specs_graphs_spec_how_where_to_display_the_real_constraint"
+    },
+    {
+      "label": "Questions for Bill",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
+      "source_location": "L85",
+      "community": 194,
+      "norm_label": "questions for bill",
+      "id": "specs_graphs_spec_questions_for_bill"
+    },
+    {
+      "label": "v1-ai-search-and-tuning.md",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
+      "source_location": "L1",
+      "community": 189,
+      "norm_label": "v1-ai-search-and-tuning.md",
+      "id": "specs_v1_ai_search_and_tuning"
+    },
+    {
+      "label": "V1 \u2014 AI search pruning, weight tuning & the trench-orientation answer \u2014 first impressions & questions",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
+      "source_location": "L4",
+      "community": 189,
+      "norm_label": "v1 \u2014 ai search pruning, weight tuning & the trench-orientation answer \u2014 first impressions & questions",
+      "id": "specs_v1_ai_search_and_tuning_v1_ai_search_pruning_weight_tuning_the_trench_orientation_answer_first_impressions_questions"
+    },
+    {
+      "label": "First: the trench-orientation answer (Bill's direct question)",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
+      "source_location": "L19",
+      "community": 189,
+      "norm_label": "first: the trench-orientation answer (bill's direct question)",
+      "id": "specs_v1_ai_search_and_tuning_first_the_trench_orientation_answer_bill_s_direct_question"
+    },
+    {
+      "label": "The search today, and where the time goes",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
+      "source_location": "L47",
+      "community": 189,
+      "norm_label": "the search today, and where the time goes",
+      "id": "specs_v1_ai_search_and_tuning_the_search_today_and_where_the_time_goes"
+    },
+    {
+      "label": "Pruning ideas (concrete, ordered by safety)",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
+      "source_location": "L60",
+      "community": 189,
+      "norm_label": "pruning ideas (concrete, ordered by safety)",
+      "id": "specs_v1_ai_search_and_tuning_pruning_ideas_concrete_ordered_by_safety"
+    },
+    {
+      "label": "Reuse for Claude Plays: a concentrated option list",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
+      "source_location": "L83",
+      "community": 189,
+      "norm_label": "reuse for claude plays: a concentrated option list",
+      "id": "specs_v1_ai_search_and_tuning_reuse_for_claude_plays_a_concentrated_option_list"
+    },
+    {
+      "label": "Weight tuning from the data we have",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
+      "source_location": "L94",
+      "community": 189,
+      "norm_label": "weight tuning from the data we have",
+      "id": "specs_v1_ai_search_and_tuning_weight_tuning_from_the_data_we_have"
+    },
+    {
+      "label": "Questions for Bill",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
+      "source_location": "L104",
+      "community": 189,
+      "norm_label": "questions for bill",
+      "id": "specs_v1_ai_search_and_tuning_questions_for_bill"
+    },
+    {
+      "label": "v1-architecture.md",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
+      "source_location": "L1",
+      "community": 190,
+      "norm_label": "v1-architecture.md",
+      "id": "specs_v1_architecture"
+    },
+    {
+      "label": "V1 \u2014 Architecture review & restructure (DECIDED, implemented July 2026)",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
+      "source_location": "L4",
+      "community": 190,
+      "norm_label": "v1 \u2014 architecture review & restructure (decided, implemented july 2026)",
+      "id": "specs_v1_architecture_v1_architecture_review_restructure_decided_implemented_july_2026"
+    },
+    {
+      "label": "The decision: Seam-Split",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
+      "source_location": "L13",
+      "community": 190,
+      "norm_label": "the decision: seam-split",
+      "id": "specs_v1_architecture_the_decision_seam_split"
+    },
+    {
+      "label": "Target layout",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
+      "source_location": "L34",
+      "community": 190,
+      "norm_label": "target layout",
+      "id": "specs_v1_architecture_target_layout"
+    },
+    {
+      "label": "Load strategy",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
+      "source_location": "L67",
+      "community": 190,
+      "norm_label": "load strategy",
+      "id": "specs_v1_architecture_load_strategy"
+    },
+    {
+      "label": "The refactor oracle",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
+      "source_location": "L84",
+      "community": 190,
+      "norm_label": "the refactor oracle",
+      "id": "specs_v1_architecture_the_refactor_oracle"
+    },
+    {
+      "label": "Deferred, deliberately (triggers written down)",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
+      "source_location": "L93",
+      "community": 190,
+      "norm_label": "deferred, deliberately (triggers written down)",
+      "id": "specs_v1_architecture_deferred_deliberately_triggers_written_down"
+    },
+    {
+      "label": "Migration checklist (each step = one commit, tests + golden diff green)",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
+      "source_location": "L103",
+      "community": 190,
+      "norm_label": "migration checklist (each step = one commit, tests + golden diff green)",
+      "id": "specs_v1_architecture_migration_checklist_each_step_one_commit_tests_golden_diff_green"
+    },
+    {
+      "label": "v1-claude-plays-and-reports.md",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
+      "source_location": "L1",
+      "community": 191,
+      "norm_label": "v1-claude-plays-and-reports.md",
+      "id": "specs_v1_claude_plays_and_reports"
+    },
+    {
+      "label": "V1 \u2014 Claude Plays: persistent session, first-to-3 matches & the generate-reports rewrite \u2014 first impressions & questions",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
+      "source_location": "L4",
+      "community": 191,
+      "norm_label": "v1 \u2014 claude plays: persistent session, first-to-3 matches & the generate-reports rewrite \u2014 first impressions & questions",
+      "id": "specs_v1_claude_plays_and_reports_v1_claude_plays_persistent_session_first_to_3_matches_the_generate_reports_rewrite_first_impressions_questions"
+    },
+    {
+      "label": "The problem with today's transport",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
+      "source_location": "L23",
+      "community": 191,
+      "norm_label": "the problem with today's transport",
+      "id": "specs_v1_claude_plays_and_reports_the_problem_with_today_s_transport"
+    },
+    {
+      "label": "Persistent session (pending Bill's dynamic-scrum md)",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
+      "source_location": "L35",
+      "community": 191,
+      "norm_label": "persistent session (pending bill's dynamic-scrum md)",
+      "id": "specs_v1_claude_plays_and_reports_persistent_session_pending_bill_s_dynamic_scrum_md"
+    },
+    {
+      "label": "Honesty invariant MUST survive the memory",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
+      "source_location": "L52",
+      "community": 191,
+      "norm_label": "honesty invariant must survive the memory",
+      "id": "specs_v1_claude_plays_and_reports_honesty_invariant_must_survive_the_memory"
+    },
+    {
+      "label": "First-to-3 matches",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
+      "source_location": "L60",
+      "community": 191,
+      "norm_label": "first-to-3 matches",
+      "id": "specs_v1_claude_plays_and_reports_first_to_3_matches"
+    },
+    {
+      "label": "The generate-reports rewrite",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
+      "source_location": "L74",
+      "community": 191,
+      "norm_label": "the generate-reports rewrite",
+      "id": "specs_v1_claude_plays_and_reports_the_generate_reports_rewrite"
+    },
+    {
+      "label": "Questions for Bill",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
+      "source_location": "L90",
+      "community": 191,
+      "norm_label": "questions for bill",
+      "id": "specs_v1_claude_plays_and_reports_questions_for_bill"
+    },
+    {
+      "label": "v1-content-curation.md",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
+      "source_location": "L1",
+      "community": 195,
+      "norm_label": "v1-content-curation.md",
+      "id": "specs_v1_content_curation"
+    },
+    {
+      "label": "V1 \u2014 Content curation: trim to 12 maps + a map-set \"deck\" mechanic \u2014 first impressions & questions",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
+      "source_location": "L4",
+      "community": 195,
+      "norm_label": "v1 \u2014 content curation: trim to 12 maps + a map-set \"deck\" mechanic \u2014 first impressions & questions",
+      "id": "specs_v1_content_curation_v1_content_curation_trim_to_12_maps_a_map_set_deck_mechanic_first_impressions_questions"
+    },
+    {
+      "label": "Where the roster stands",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
+      "source_location": "L11",
+      "community": 195,
+      "norm_label": "where the roster stands",
+      "id": "specs_v1_content_curation_where_the_roster_stands"
+    },
+    {
+      "label": "Trimming to 12 \u2014 method, not a guess",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
+      "source_location": "L25",
+      "community": 195,
+      "norm_label": "trimming to 12 \u2014 method, not a guess",
+      "id": "specs_v1_content_curation_trimming_to_12_method_not_a_guess"
+    },
+    {
+      "label": "The \"map-set deck\" mechanic",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
+      "source_location": "L47",
+      "community": 195,
+      "norm_label": "the \"map-set deck\" mechanic",
+      "id": "specs_v1_content_curation_the_map_set_deck_mechanic"
+    },
+    {
+      "label": "Two readings \u2014 which one?",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
+      "source_location": "L64",
+      "community": 195,
+      "norm_label": "two readings \u2014 which one?",
+      "id": "specs_v1_content_curation_two_readings_which_one"
+    },
+    {
+      "label": "Questions for Bill",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
+      "source_location": "L73",
+      "community": 195,
+      "norm_label": "questions for bill",
+      "id": "specs_v1_content_curation_questions_for_bill"
+    },
+    {
+      "label": "v1-data-persistence.md",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
+      "source_location": "L1",
+      "community": 192,
+      "norm_label": "v1-data-persistence.md",
+      "id": "specs_v1_data_persistence"
+    },
+    {
+      "label": "V1 \u2014 Data persistence: a DB instead of loose JSON \u2014 first impressions & questions",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
+      "source_location": "L4",
+      "community": 192,
+      "norm_label": "v1 \u2014 data persistence: a db instead of loose json \u2014 first impressions & questions",
+      "id": "specs_v1_data_persistence_v1_data_persistence_a_db_instead_of_loose_json_first_impressions_questions"
+    },
+    {
+      "label": "What we store today (and why it chafes)",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
+      "source_location": "L14",
+      "community": 192,
+      "norm_label": "what we store today (and why it chafes)",
+      "id": "specs_v1_data_persistence_what_we_store_today_and_why_it_chafes"
+    },
+    {
+      "label": "The proposal: SQLite, dev-only",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
+      "source_location": "L33",
+      "community": 192,
+      "norm_label": "the proposal: sqlite, dev-only",
+      "id": "specs_v1_data_persistence_the_proposal_sqlite_dev_only"
+    },
+    {
+      "label": "Sketch schema (illustrative, not final)",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
+      "source_location": "L46",
+      "community": 192,
+      "norm_label": "sketch schema (illustrative, not final)",
+      "id": "specs_v1_data_persistence_sketch_schema_illustrative_not_final"
+    },
+    {
+      "label": "Migration & coexistence",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
+      "source_location": "L64",
+      "community": 192,
+      "norm_label": "migration & coexistence",
+      "id": "specs_v1_data_persistence_migration_coexistence"
+    },
+    {
+      "label": "Git question (flagged, not assumed)",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
+      "source_location": "L76",
+      "community": 192,
+      "norm_label": "git question (flagged, not assumed)",
+      "id": "specs_v1_data_persistence_git_question_flagged_not_assumed"
+    },
+    {
+      "label": "Questions for Bill",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
+      "source_location": "L84",
+      "community": 192,
+      "norm_label": "questions for bill",
+      "id": "specs_v1_data_persistence_questions_for_bill"
+    },
+    {
+      "label": "v1-field-manual-animations.md",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
+      "source_location": "L1",
+      "community": 63,
+      "norm_label": "v1-field-manual-animations.md",
+      "id": "specs_v1_field_manual_animations"
+    },
+    {
+      "label": "V1 \u2014 Field Manual: animated, human-readable rule explanations \u2014 first impressions & questions",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
+      "source_location": "L4",
+      "community": 63,
+      "norm_label": "v1 \u2014 field manual: animated, human-readable rule explanations \u2014 first impressions & questions",
+      "id": "specs_v1_field_manual_animations_v1_field_manual_animated_human_readable_rule_explanations_first_impressions_questions"
+    },
+    {
+      "label": "What the Field Manual is today",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
+      "source_location": "L11",
+      "community": 63,
+      "norm_label": "what the field manual is today",
+      "id": "specs_v1_field_manual_animations_what_the_field_manual_is_today"
+    },
+    {
+      "label": "The core insight: the battle already animates all of this",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
+      "source_location": "L26",
+      "community": 63,
+      "norm_label": "the core insight: the battle already animates all of this",
+      "id": "specs_v1_field_manual_animations_the_core_insight_the_battle_already_animates_all_of_this"
+    },
+    {
+      "label": "The proposal: a \"diagram player\" of worked examples",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
+      "source_location": "L44",
+      "community": 63,
+      "norm_label": "the proposal: a \"diagram player\" of worked examples",
+      "id": "specs_v1_field_manual_animations_the_proposal_a_diagram_player_of_worked_examples"
+    },
+    {
+      "label": "The animations, in priority order (Bill named the first two)",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
+      "source_location": "L55",
+      "community": 63,
+      "norm_label": "the animations, in priority order (bill named the first two)",
+      "id": "specs_v1_field_manual_animations_the_animations_in_priority_order_bill_named_the_first_two"
+    },
+    {
+      "label": "Human-readability, not just motion",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
+      "source_location": "L80",
+      "community": 63,
+      "norm_label": "human-readability, not just motion",
+      "id": "specs_v1_field_manual_animations_human_readability_not_just_motion"
+    },
+    {
+      "label": "Where it lives",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
+      "source_location": "L88",
+      "community": 63,
+      "norm_label": "where it lives",
+      "id": "specs_v1_field_manual_animations_where_it_lives"
+    },
+    {
+      "label": "Questions for Bill",
+      "file_type": "document",
+      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
+      "source_location": "L95",
+      "community": 63,
+      "norm_label": "questions for bill",
+      "id": "specs_v1_field_manual_animations_questions_for_bill"
+    },
+    {
       "label": "shipped-history.md",
       "file_type": "document",
       "source_file": "dynamic-scrum/docs/shipped-history.md",
@@ -10666,7 +10747,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/ai-variety.md",
       "source_location": "L1",
-      "community": 154,
+      "community": 12,
       "norm_label": "ai-variety.md",
       "id": "v0_specs_ai_variety"
     },
@@ -10675,7 +10756,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/ai-variety.md",
       "source_location": "L2",
-      "community": 154,
+      "community": 12,
       "norm_label": "better, more varied heuristic ais",
       "id": "v0_specs_ai_variety_better_more_varied_heuristic_ais"
     },
@@ -10684,7 +10765,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/ai-variety.md",
       "source_location": "L8",
-      "community": 154,
+      "community": 12,
       "norm_label": "the two axes",
       "id": "v0_specs_ai_variety_the_two_axes"
     },
@@ -10693,7 +10774,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/ai-variety.md",
       "source_location": "L19",
-      "community": 154,
+      "community": 12,
       "norm_label": "the idea: parameterize `aiplanturn`",
       "id": "v0_specs_ai_variety_the_idea_parameterize_aiplanturn"
     },
@@ -10702,7 +10783,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/ai-variety.md",
       "source_location": "L29",
-      "community": 154,
+      "community": 12,
       "norm_label": "grounding / guardrails (don't regress the round 5\u20136 fixes)",
       "id": "v0_specs_ai_variety_grounding_guardrails_don_t_regress_the_round_5_6_fixes"
     },
@@ -10720,7 +10801,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/claude-plays.md",
       "source_location": "L2",
-      "community": 166,
+      "community": 12,
       "norm_label": "claude plays (llm player)",
       "id": "v0_specs_claude_plays_claude_plays_llm_player"
     },
@@ -10729,7 +10810,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/claude-plays.md",
       "source_location": "L9",
-      "community": 166,
+      "community": 12,
       "norm_label": "the key insight: pick from a legal-move list",
       "id": "v0_specs_claude_plays_the_key_insight_pick_from_a_legal_move_list"
     },
@@ -10738,7 +10819,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/claude-plays.md",
       "source_location": "L25",
-      "community": 166,
+      "community": 12,
       "norm_label": "grounding",
       "id": "v0_specs_claude_plays_grounding"
     },
@@ -10747,7 +10828,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/claude-plays.md",
       "source_location": "L40",
-      "community": 166,
+      "community": 12,
       "norm_label": "session reuse (from the transport spec)",
       "id": "v0_specs_claude_plays_session_reuse_from_the_transport_spec"
     },
@@ -10756,7 +10837,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/claude-plays.md",
       "source_location": "L48",
-      "community": 166,
+      "community": 12,
       "norm_label": "gotchas",
       "id": "v0_specs_claude_plays_gotchas"
     },
@@ -10765,7 +10846,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/claude-skills.md",
       "source_location": "L1",
-      "community": 118,
+      "community": 201,
       "norm_label": "claude-skills.md",
       "id": "v0_specs_claude_skills"
     },
@@ -10774,7 +10855,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/claude-skills.md",
       "source_location": "L2",
-      "community": 118,
+      "community": 201,
       "norm_label": "claude skills: run-tournament / create-card / create-map",
       "id": "v0_specs_claude_skills_claude_skills_run_tournament_create_card_create_map"
     },
@@ -10783,7 +10864,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/claude-skills.md",
       "source_location": "L8",
-      "community": 118,
+      "community": 201,
       "norm_label": "run-tournament",
       "id": "v0_specs_claude_skills_run_tournament"
     },
@@ -10801,7 +10882,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/claude-skills.md",
       "source_location": "L24",
-      "community": 118,
+      "community": 201,
       "norm_label": "create-map",
       "id": "v0_specs_claude_skills_create_map"
     },
@@ -10810,7 +10891,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/claude-skills.md",
       "source_location": "L29",
-      "community": 118,
+      "community": 201,
       "norm_label": "grounding / why these are thin",
       "id": "v0_specs_claude_skills_grounding_why_these_are_thin"
     },
@@ -10819,7 +10900,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/claude-skills.md",
       "source_location": "L35",
-      "community": 118,
+      "community": 201,
       "norm_label": "gotchas",
       "id": "v0_specs_claude_skills_gotchas"
     },
@@ -10837,7 +10918,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/cli-responder-transport.md",
       "source_location": "L2",
-      "community": 156,
+      "community": 12,
       "norm_label": "cli-responder llm transport (`claude -p`)",
       "id": "v0_specs_cli_responder_transport_cli_responder_llm_transport_claude_p"
     },
@@ -10846,7 +10927,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/cli-responder-transport.md",
       "source_location": "L11",
-      "community": 156,
+      "community": 12,
       "norm_label": "the idea",
       "id": "v0_specs_cli_responder_transport_the_idea"
     },
@@ -10855,7 +10936,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/cli-responder-transport.md",
       "source_location": "L25",
-      "community": 156,
+      "community": 12,
       "norm_label": "the command",
       "id": "v0_specs_cli_responder_transport_the_command"
     },
@@ -10864,7 +10945,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/cli-responder-transport.md",
       "source_location": "L35",
-      "community": 156,
+      "community": 12,
       "norm_label": "six things that will bite you (the whole reason to copy this vs. rolling your own)",
       "id": "v0_specs_cli_responder_transport_six_things_that_will_bite_you_the_whole_reason_to_copy_this_vs_rolling_your_own"
     },
@@ -10873,7 +10954,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/cli-responder-transport.md",
       "source_location": "L54",
-      "community": 156,
+      "community": 12,
       "norm_label": "fail-open (mandatory)",
       "id": "v0_specs_cli_responder_transport_fail_open_mandatory"
     },
@@ -10882,7 +10963,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/cli-responder-transport.md",
       "source_location": "L60",
-      "community": 156,
+      "community": 12,
       "norm_label": "split for testability",
       "id": "v0_specs_cli_responder_transport_split_for_testability"
     },
@@ -10891,7 +10972,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/cli-responder-transport.md",
       "source_location": "L68",
-      "community": 156,
+      "community": 12,
       "norm_label": "reference implementation (c#, trim to taste)",
       "id": "v0_specs_cli_responder_transport_reference_implementation_c_trim_to_taste"
     },
@@ -10900,7 +10981,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/cli-responder-transport.md",
       "source_location": "L164",
-      "community": 156,
+      "community": 12,
       "norm_label": "where it's headed (so you don't over-build now)",
       "id": "v0_specs_cli_responder_transport_where_it_s_headed_so_you_don_t_over_build_now"
     },
@@ -11296,7 +11377,7 @@
       "file_type": "document",
       "source_file": "specs/V0-specs/metrics-dashboard.md",
       "source_location": "L1",
-      "community": 122,
+      "community": 203,
       "norm_label": "metrics-dashboard.md",
       "id": "v0_specs_metrics_dashboard"
     },
@@ -12613,7 +12694,7 @@
       "source_file": "specs/V0-specs/ai-variety.md",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 154,
+      "community": 12,
       "norm_label": "ai-variety.md",
       "id": "c_users_bill_documents_dynamicnewalgorithms_warofattrition_specs_v0_specs_ai_variety_md"
     },
@@ -12623,7 +12704,7 @@
       "source_file": "specs/V0-specs/claude-plays.md",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 166,
+      "community": 12,
       "norm_label": "claude-plays.md",
       "id": "c_users_bill_documents_dynamicnewalgorithms_warofattrition_specs_v0_specs_claude_plays_md"
     },
@@ -12633,7 +12714,7 @@
       "source_file": "specs/V0-specs/claude-skills.md",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 118,
+      "community": 201,
       "norm_label": "claude-skills.md",
       "id": "c_users_bill_documents_dynamicnewalgorithms_warofattrition_specs_v0_specs_claude_skills_md"
     },
@@ -12643,7 +12724,7 @@
       "source_file": "specs/V0-specs/cli-responder-transport.md",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 156,
+      "community": 12,
       "norm_label": "cli-responder-transport.md",
       "id": "c_users_bill_documents_dynamicnewalgorithms_warofattrition_specs_v0_specs_cli_responder_transport_md"
     },
@@ -12947,7 +13028,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Compare attacker power vs defender power at the battle hex: attacker greater = defender removed & attacker advances; defender greater = attacker removed; tie = both removed.",
-      "community": 160,
+      "community": 6,
       "norm_label": "combat resolution",
       "id": "design_docs_war_of_attrition_rule_book_combat_resolution"
     },
@@ -12960,7 +13041,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 160,
+      "community": 6,
       "norm_label": "attacker's power",
       "id": "design_docs_war_of_attrition_rule_book_attacker_power"
     },
@@ -12973,7 +13054,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 160,
+      "community": 6,
       "norm_label": "defender's power",
       "id": "design_docs_war_of_attrition_rule_book_defender_power"
     },
@@ -12987,7 +13068,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Adjacent allied units add support to the battle hex; trenches deny attacker support, rivers deny both sides' support.",
-      "community": 160,
+      "community": 6,
       "norm_label": "support",
       "id": "design_docs_war_of_attrition_rule_book_support"
     },
@@ -13001,7 +13082,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Revised July 2026: covers two edges and only denies attacking support across them. Gives no defense, never blocks the attack itself, never hinders the defender; ownership irrelevant (a captured trench serves its new occupant). Previously gave +1 defense.",
-      "community": 160,
+      "community": 6,
       "norm_label": "trench",
       "id": "design_docs_war_of_attrition_rule_book_trench"
     },
@@ -13015,7 +13096,7 @@
       "author": null,
       "contributor": null,
       "rationale": "New July 2026: sits on one border, support never crosses it for either side; attacks and movement cross freely, Airdrop may land beyond, Naval Barrage cannot remove it.",
-      "community": 160,
+      "community": 6,
       "norm_label": "river",
       "id": "design_docs_war_of_attrition_rule_book_river"
     },
@@ -13029,7 +13110,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Grey terrain in the battle hex gives +1 defense when attacked across that edge.",
-      "community": 160,
+      "community": 6,
       "norm_label": "mountain terrain",
       "id": "design_docs_war_of_attrition_rule_book_mountain"
     },
@@ -13043,7 +13124,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Green terrain gives +1 attack when the attacker's hex borders the battle hex along a forest edge.",
-      "community": 173,
+      "community": 6,
       "norm_label": "forest terrain",
       "id": "design_docs_war_of_attrition_rule_book_forest"
     },
@@ -13295,7 +13376,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Remove a trench or forest from an adjacent controlled hex, then order an attack; cannot remove a river.",
-      "community": 173,
+      "community": 6,
       "norm_label": "naval barrage (card)",
       "id": "design_docs_war_of_attrition_rule_book_naval_barrage"
     },
@@ -13337,7 +13418,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Digs a trench on a controlled hex across two contiguous edges (July 2026 rules: denies attacker support only).",
-      "community": 160,
+      "community": 6,
       "norm_label": "trench step type",
       "id": "design_docs_card_cheatsheet_step_trench"
     },
@@ -13379,7 +13460,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Removes any single trench or whole forest anywhere on the board (June 2026 ruling); mountains are safe.",
-      "community": 173,
+      "community": 6,
       "norm_label": "barrage step type",
       "id": "design_docs_card_cheatsheet_step_barrage"
     },
@@ -13434,7 +13515,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 173,
+      "community": 174,
       "norm_label": "game/maps.js (cards + units data)",
       "id": "design_docs_card_cheatsheet_maps_js"
     },
@@ -13654,7 +13735,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Aged parchment, ink, brass and copper, earthy browns/olives/creams, matte patina, no gloss/neon/modern UI; extends the card frame kit in Player Card Art direction drafts.",
-      "community": 174,
+      "community": 38,
       "norm_label": "steampunk napoleonic field-journal style",
       "id": "design_docs_art_prompts_steampunk_napoleonic_style"
     },
@@ -13682,7 +13763,7 @@
       "author": null,
       "contributor": null,
       "rationale": "13 landscape 5:3 painted-sketch scenes saved as <id>.png that fill the blank artwork window of the card fronts.",
-      "community": 173,
+      "community": 174,
       "norm_label": "priority 2 card illustrations",
       "id": "design_docs_art_prompts_card_illustrations"
     },
@@ -13831,7 +13912,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 154,
+      "community": 12,
       "norm_label": "parameterized ai engine (config: depth/breadth/weights/noise)",
       "id": "v0_specs_ai_variety_parameterized_engine"
     },
@@ -13844,7 +13925,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 154,
+      "community": 12,
       "norm_label": "search-space axis (depth plies / breadth candidates)",
       "id": "v0_specs_ai_variety_search_space_axis"
     },
@@ -13857,7 +13938,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 154,
+      "community": 12,
       "norm_label": "heuristic-weights axis (evalstate temperament knobs)",
       "id": "v0_specs_ai_variety_heuristic_weights_axis"
     },
@@ -13870,7 +13951,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 154,
+      "community": 12,
       "norm_label": "personalities as data not code",
       "id": "v0_specs_ai_variety_personalities_as_data"
     },
@@ -13883,7 +13964,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 154,
+      "community": 12,
       "norm_label": "anti-degeneracy guardrails (noop -80, attrition projection, anti-shuffle -10)",
       "id": "v0_specs_ai_variety_anti_degeneracy_guardrails"
     },
@@ -13896,7 +13977,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 154,
+      "community": 12,
       "norm_label": "common random numbers (fresh same-seeded rng per candidate)",
       "id": "v0_specs_ai_variety_common_random_numbers"
     },
@@ -14195,7 +14276,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 122,
+      "community": 203,
       "norm_label": "card rubric (does it add a decision?)",
       "id": "v0_specs_grading_rubrics_card_rubric"
     },
@@ -14455,7 +14536,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 122,
+      "community": 203,
       "norm_label": "card report (plays/win%/simple%/1stsight%/avgseen/skip%)",
       "id": "v0_specs_metrics_dashboard_card_report"
     },
@@ -14468,7 +14549,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 122,
+      "community": 203,
       "norm_label": "behaviour / decisiveness metrics block",
       "id": "v0_specs_metrics_dashboard_behaviour_metrics"
     },
@@ -14481,7 +14562,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 122,
+      "community": 203,
       "norm_label": "shared aggregation (cli + gui read same object)",
       "id": "v0_specs_metrics_dashboard_shared_aggregation"
     },
@@ -14676,7 +14757,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 122,
+      "community": 203,
       "norm_label": "runbalanceui() (chunked in-browser sims)",
       "id": "game_index_html_runbalanceui"
     },
@@ -14954,7 +15035,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 17,
+      "community": 46,
       "norm_label": "parameterized ai + data personalities (brawler/turtle)",
       "id": "game_claude_ai_personalities"
     },
@@ -30249,6 +30330,16 @@
       "source_file": "CLAUDE.md",
       "source_location": "L47",
       "weight": 1.0,
+      "source": "claude_warofattrition_project_doctrine",
+      "target": "claude_standing_goals_revised_for_v1_reasoning_in_the_retired_v1_architecture_spec_git_history",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L47",
+      "weight": 1.0,
       "confidence_score": 1.0,
       "source": "claude_warofattrition_project_doctrine",
       "target": "claude_standing_goals_revised_for_v1_see_v1_architecture_for_the_reasoning"
@@ -30866,76 +30957,6 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
-      "source_location": "L2",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_grading_rubrics",
-      "target": "docs_grading_rubrics_grading_rubrics_north_stars_what_to_measure"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
-      "source_location": "L45",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
-      "target": "docs_grading_rubrics_card_rubric"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
-      "source_location": "L154",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
-      "target": "docs_grading_rubrics_game_level_rubric"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
-      "source_location": "L179",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
-      "target": "docs_grading_rubrics_how_to_run_the_numbers"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
-      "source_location": "L86",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
-      "target": "docs_grading_rubrics_map_rubric"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
-      "source_location": "L20",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
-      "target": "docs_grading_rubrics_north_stars_what_good_means_for_this_game"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
-      "source_location": "L125",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
-      "target": "docs_grading_rubrics_unit_rubric"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
       "source_file": "design-docs/human-instructions/ai-heuristic-model.md",
       "source_location": "L2",
       "weight": 1.0,
@@ -31299,9 +31320,9 @@
       "source_file": "dynamic-scrum/history/V0-summary.md",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "history_v0_summary",
-      "target": "history_v0_summary_war_of_attrition_v0_summary_retrospective_july_2026",
-      "confidence_score": 1.0
+      "target": "history_v0_summary_war_of_attrition_v0_summary_retrospective_july_2026"
     },
     {
       "relation": "contains",
@@ -31309,9 +31330,9 @@
       "source_file": "dynamic-scrum/history/V0-summary.md",
       "source_location": "L44",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "history_v0_summary_war_of_attrition_v0_summary_retrospective_july_2026",
-      "target": "history_v0_summary_the_five_feedback_rounds_what_each_closed",
-      "confidence_score": 1.0
+      "target": "history_v0_summary_the_five_feedback_rounds_what_each_closed"
     },
     {
       "relation": "contains",
@@ -31319,9 +31340,9 @@
       "source_file": "dynamic-scrum/history/V0-summary.md",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "history_v0_summary_war_of_attrition_v0_summary_retrospective_july_2026",
-      "target": "history_v0_summary_the_point_of_v0",
-      "confidence_score": 1.0
+      "target": "history_v0_summary_the_point_of_v0"
     },
     {
       "relation": "contains",
@@ -31329,9 +31350,9 @@
       "source_file": "dynamic-scrum/history/V0-summary.md",
       "source_location": "L83",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "history_v0_summary_war_of_attrition_v0_summary_retrospective_july_2026",
-      "target": "history_v0_summary_what_carries_into_v1",
-      "confidence_score": 1.0
+      "target": "history_v0_summary_what_carries_into_v1"
     },
     {
       "relation": "contains",
@@ -31339,9 +31360,9 @@
       "source_file": "dynamic-scrum/history/V0-summary.md",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "history_v0_summary_war_of_attrition_v0_summary_retrospective_july_2026",
-      "target": "history_v0_summary_what_shipped_the_ten_v0_specs",
-      "confidence_score": 1.0
+      "target": "history_v0_summary_what_shipped_the_ten_v0_specs"
     },
     {
       "relation": "contains",
@@ -31349,9 +31370,9 @@
       "source_file": "dynamic-scrum/history/V0-summary.md",
       "source_location": "L69",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "history_v0_summary_war_of_attrition_v0_summary_retrospective_july_2026",
-      "target": "history_v0_summary_where_the_prototype_stands_baselines_to_protect",
-      "confidence_score": 1.0
+      "target": "history_v0_summary_where_the_prototype_stands_baselines_to_protect"
     },
     {
       "relation": "contains",
@@ -31389,9 +31410,9 @@
       "source_file": "dynamic-scrum/history/shipped-history.md",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "history_shipped_history",
-      "target": "history_shipped_history_shipped_history_pre_board_eras_june_july_2026",
-      "confidence_score": 1.0
+      "target": "history_shipped_history_shipped_history_pre_board_eras_june_july_2026"
     },
     {
       "relation": "contains",
@@ -31399,9 +31420,9 @@
       "source_file": "dynamic-scrum/history/shipped-history.md",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "history_shipped_history_shipped_history_pre_board_eras_june_july_2026",
-      "target": "history_shipped_history_history_shipped_june_2026",
-      "confidence_score": 1.0
+      "target": "history_shipped_history_history_shipped_june_2026"
     },
     {
       "relation": "contains",
@@ -31409,9 +31430,9 @@
       "source_file": "dynamic-scrum/history/shipped-history.md",
       "source_location": "L53",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "history_shipped_history_shipped_history_pre_board_eras_june_july_2026",
-      "target": "history_shipped_history_related",
-      "confidence_score": 1.0
+      "target": "history_shipped_history_related"
     },
     {
       "relation": "contains",
@@ -31419,9 +31440,9 @@
       "source_file": "dynamic-scrum/history/shipped-history.md",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "history_shipped_history_shipped_history_pre_board_eras_june_july_2026",
-      "target": "history_shipped_history_v0_shipped_july_2026",
-      "confidence_score": 1.0
+      "target": "history_shipped_history_v0_shipped_july_2026"
     },
     {
       "relation": "contains",
@@ -31429,9 +31450,9 @@
       "source_file": "dynamic-scrum/history/shipped-history.md",
       "source_location": "L37",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "history_shipped_history_shipped_history_pre_board_eras_june_july_2026",
-      "target": "history_shipped_history_v1_shipped_july_2026_rules_version_1_0",
-      "confidence_score": 1.0
+      "target": "history_shipped_history_v1_shipped_july_2026_rules_version_1_0"
     },
     {
       "relation": "contains",
@@ -31729,9 +31750,9 @@
       "source_file": "dynamic-scrum/planning/parking-lot/steam-roadmap.md",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "parking_lot_steam_roadmap",
-      "target": "parking_lot_steam_roadmap_war_of_attrition_steam_the_leverage_map_july_2026_draft",
-      "confidence_score": 1.0
+      "target": "parking_lot_steam_roadmap_war_of_attrition_steam_the_leverage_map_july_2026_draft"
     },
     {
       "relation": "contains",
@@ -31739,9 +31760,9 @@
       "source_file": "dynamic-scrum/planning/parking-lot/steam-roadmap.md",
       "source_location": "L101",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "parking_lot_steam_roadmap_war_of_attrition_steam_the_leverage_map_july_2026_draft",
-      "target": "parking_lot_steam_roadmap_if_you_only_do_three_things_next",
-      "confidence_score": 1.0
+      "target": "parking_lot_steam_roadmap_if_you_only_do_three_things_next"
     },
     {
       "relation": "contains",
@@ -31749,9 +31770,9 @@
       "source_file": "dynamic-scrum/planning/parking-lot/steam-roadmap.md",
       "source_location": "L74",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "parking_lot_steam_roadmap_war_of_attrition_steam_the_leverage_map_july_2026_draft",
-      "target": "parking_lot_steam_roadmap_long_term_3_12_months_ship_it",
-      "confidence_score": 1.0
+      "target": "parking_lot_steam_roadmap_long_term_3_12_months_ship_it"
     },
     {
       "relation": "contains",
@@ -31759,9 +31780,9 @@
       "source_file": "dynamic-scrum/planning/parking-lot/steam-roadmap.md",
       "source_location": "L51",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "parking_lot_steam_roadmap_war_of_attrition_steam_the_leverage_map_july_2026_draft",
-      "target": "parking_lot_steam_roadmap_medium_term_1_3_months_build_the_product_around_the_decided_run",
-      "confidence_score": 1.0
+      "target": "parking_lot_steam_roadmap_medium_term_1_3_months_build_the_product_around_the_decided_run"
     },
     {
       "relation": "contains",
@@ -31769,9 +31790,9 @@
       "source_file": "dynamic-scrum/planning/parking-lot/steam-roadmap.md",
       "source_location": "L89",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "parking_lot_steam_roadmap_war_of_attrition_steam_the_leverage_map_july_2026_draft",
-      "target": "parking_lot_steam_roadmap_risks_worth_naming",
-      "confidence_score": 1.0
+      "target": "parking_lot_steam_roadmap_risks_worth_naming"
     },
     {
       "relation": "contains",
@@ -31779,9 +31800,9 @@
       "source_file": "dynamic-scrum/planning/parking-lot/steam-roadmap.md",
       "source_location": "L31",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "parking_lot_steam_roadmap_war_of_attrition_steam_the_leverage_map_july_2026_draft",
-      "target": "parking_lot_steam_roadmap_short_term_the_next_few_weeks_decide_the_game_grow_the_content",
-      "confidence_score": 1.0
+      "target": "parking_lot_steam_roadmap_short_term_the_next_few_weeks_decide_the_game_grow_the_content"
     },
     {
       "relation": "contains",
@@ -31789,69 +31810,9 @@
       "source_file": "dynamic-scrum/planning/parking-lot/steam-roadmap.md",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "parking_lot_steam_roadmap_war_of_attrition_steam_the_leverage_map_july_2026_draft",
-      "target": "parking_lot_steam_roadmap_where_we_actually_stand_honest_inventory",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
-      "source_location": "L4",
-      "weight": 1.0,
-      "source": "specs_graphs_spec",
-      "target": "specs_graphs_spec_graphs_data_visualization_first_impressions_questions",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
-      "source_location": "L39",
-      "weight": 1.0,
-      "source": "specs_graphs_spec_graphs_data_visualization_first_impressions_questions",
-      "target": "specs_graphs_spec_candidate_views_one_per_perspective",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
-      "source_location": "L66",
-      "weight": 1.0,
-      "source": "specs_graphs_spec_graphs_data_visualization_first_impressions_questions",
-      "target": "specs_graphs_spec_how_where_to_display_the_real_constraint",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
-      "source_location": "L85",
-      "weight": 1.0,
-      "source": "specs_graphs_spec_graphs_data_visualization_first_impressions_questions",
-      "target": "specs_graphs_spec_questions_for_bill",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
-      "source_location": "L32",
-      "weight": 1.0,
-      "source": "specs_graphs_spec_graphs_data_visualization_first_impressions_questions",
-      "target": "specs_graphs_spec_the_motivation_what_tables_hide",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
-      "source_location": "L14",
-      "weight": 1.0,
-      "source": "specs_graphs_spec_graphs_data_visualization_first_impressions_questions",
-      "target": "specs_graphs_spec_what_data_we_already_have_the_corpus",
-      "confidence_score": 1.0
+      "target": "parking_lot_steam_roadmap_where_we_actually_stand_honest_inventory"
     },
     {
       "relation": "contains",
@@ -31986,421 +31947,71 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
-      "source_location": "L4",
+      "source_file": "dynamic-scrum/rubrics/grading-rubrics.md",
+      "source_location": "L2",
       "weight": 1.0,
-      "source": "specs_v1_ai_search_and_tuning",
-      "target": "specs_v1_ai_search_and_tuning_v1_ai_search_pruning_weight_tuning_the_trench_orientation_answer_first_impressions_questions",
+      "source": "rubrics_grading_rubrics",
+      "target": "rubrics_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
-      "source_location": "L19",
+      "source_file": "dynamic-scrum/rubrics/grading-rubrics.md",
+      "source_location": "L45",
       "weight": 1.0,
-      "source": "specs_v1_ai_search_and_tuning_v1_ai_search_pruning_weight_tuning_the_trench_orientation_answer_first_impressions_questions",
-      "target": "specs_v1_ai_search_and_tuning_first_the_trench_orientation_answer_bill_s_direct_question",
+      "source": "rubrics_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
+      "target": "rubrics_grading_rubrics_card_rubric",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
-      "source_location": "L60",
+      "source_file": "dynamic-scrum/rubrics/grading-rubrics.md",
+      "source_location": "L154",
       "weight": 1.0,
-      "source": "specs_v1_ai_search_and_tuning_v1_ai_search_pruning_weight_tuning_the_trench_orientation_answer_first_impressions_questions",
-      "target": "specs_v1_ai_search_and_tuning_pruning_ideas_concrete_ordered_by_safety",
+      "source": "rubrics_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
+      "target": "rubrics_grading_rubrics_game_level_rubric",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
-      "source_location": "L104",
+      "source_file": "dynamic-scrum/rubrics/grading-rubrics.md",
+      "source_location": "L179",
       "weight": 1.0,
-      "source": "specs_v1_ai_search_and_tuning_v1_ai_search_pruning_weight_tuning_the_trench_orientation_answer_first_impressions_questions",
-      "target": "specs_v1_ai_search_and_tuning_questions_for_bill",
+      "source": "rubrics_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
+      "target": "rubrics_grading_rubrics_how_to_run_the_numbers",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
-      "source_location": "L83",
+      "source_file": "dynamic-scrum/rubrics/grading-rubrics.md",
+      "source_location": "L86",
       "weight": 1.0,
-      "source": "specs_v1_ai_search_and_tuning_v1_ai_search_pruning_weight_tuning_the_trench_orientation_answer_first_impressions_questions",
-      "target": "specs_v1_ai_search_and_tuning_reuse_for_claude_plays_a_concentrated_option_list",
+      "source": "rubrics_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
+      "target": "rubrics_grading_rubrics_map_rubric",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
-      "source_location": "L47",
+      "source_file": "dynamic-scrum/rubrics/grading-rubrics.md",
+      "source_location": "L20",
       "weight": 1.0,
-      "source": "specs_v1_ai_search_and_tuning_v1_ai_search_pruning_weight_tuning_the_trench_orientation_answer_first_impressions_questions",
-      "target": "specs_v1_ai_search_and_tuning_the_search_today_and_where_the_time_goes",
+      "source": "rubrics_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
+      "target": "rubrics_grading_rubrics_north_stars_what_good_means_for_this_game",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
-      "source_location": "L94",
+      "source_file": "dynamic-scrum/rubrics/grading-rubrics.md",
+      "source_location": "L125",
       "weight": 1.0,
-      "source": "specs_v1_ai_search_and_tuning_v1_ai_search_pruning_weight_tuning_the_trench_orientation_answer_first_impressions_questions",
-      "target": "specs_v1_ai_search_and_tuning_weight_tuning_from_the_data_we_have",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
-      "source_location": "L4",
-      "weight": 1.0,
-      "source": "specs_v1_architecture",
-      "target": "specs_v1_architecture_v1_architecture_review_restructure_decided_implemented_july_2026",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
-      "source_location": "L93",
-      "weight": 1.0,
-      "source": "specs_v1_architecture_v1_architecture_review_restructure_decided_implemented_july_2026",
-      "target": "specs_v1_architecture_deferred_deliberately_triggers_written_down",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
-      "source_location": "L67",
-      "weight": 1.0,
-      "source": "specs_v1_architecture_v1_architecture_review_restructure_decided_implemented_july_2026",
-      "target": "specs_v1_architecture_load_strategy",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
-      "source_location": "L103",
-      "weight": 1.0,
-      "source": "specs_v1_architecture_v1_architecture_review_restructure_decided_implemented_july_2026",
-      "target": "specs_v1_architecture_migration_checklist_each_step_one_commit_tests_golden_diff_green",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
-      "source_location": "L34",
-      "weight": 1.0,
-      "source": "specs_v1_architecture_v1_architecture_review_restructure_decided_implemented_july_2026",
-      "target": "specs_v1_architecture_target_layout",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
-      "source_location": "L13",
-      "weight": 1.0,
-      "source": "specs_v1_architecture_v1_architecture_review_restructure_decided_implemented_july_2026",
-      "target": "specs_v1_architecture_the_decision_seam_split",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
-      "source_location": "L84",
-      "weight": 1.0,
-      "source": "specs_v1_architecture_v1_architecture_review_restructure_decided_implemented_july_2026",
-      "target": "specs_v1_architecture_the_refactor_oracle",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
-      "source_location": "L4",
-      "weight": 1.0,
-      "source": "specs_v1_claude_plays_and_reports",
-      "target": "specs_v1_claude_plays_and_reports_v1_claude_plays_persistent_session_first_to_3_matches_the_generate_reports_rewrite_first_impressions_questions",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
-      "source_location": "L60",
-      "weight": 1.0,
-      "source": "specs_v1_claude_plays_and_reports_v1_claude_plays_persistent_session_first_to_3_matches_the_generate_reports_rewrite_first_impressions_questions",
-      "target": "specs_v1_claude_plays_and_reports_first_to_3_matches",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
-      "source_location": "L35",
-      "weight": 1.0,
-      "source": "specs_v1_claude_plays_and_reports_v1_claude_plays_persistent_session_first_to_3_matches_the_generate_reports_rewrite_first_impressions_questions",
-      "target": "specs_v1_claude_plays_and_reports_persistent_session_pending_bill_s_dynamic_scrum_md",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
-      "source_location": "L90",
-      "weight": 1.0,
-      "source": "specs_v1_claude_plays_and_reports_v1_claude_plays_persistent_session_first_to_3_matches_the_generate_reports_rewrite_first_impressions_questions",
-      "target": "specs_v1_claude_plays_and_reports_questions_for_bill",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
-      "source_location": "L74",
-      "weight": 1.0,
-      "source": "specs_v1_claude_plays_and_reports_v1_claude_plays_persistent_session_first_to_3_matches_the_generate_reports_rewrite_first_impressions_questions",
-      "target": "specs_v1_claude_plays_and_reports_the_generate_reports_rewrite",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
-      "source_location": "L23",
-      "weight": 1.0,
-      "source": "specs_v1_claude_plays_and_reports_v1_claude_plays_persistent_session_first_to_3_matches_the_generate_reports_rewrite_first_impressions_questions",
-      "target": "specs_v1_claude_plays_and_reports_the_problem_with_today_s_transport",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
-      "source_location": "L52",
-      "weight": 1.0,
-      "source": "specs_v1_claude_plays_and_reports_persistent_session_pending_bill_s_dynamic_scrum_md",
-      "target": "specs_v1_claude_plays_and_reports_honesty_invariant_must_survive_the_memory",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
-      "source_location": "L4",
-      "weight": 1.0,
-      "source": "specs_v1_content_curation",
-      "target": "specs_v1_content_curation_v1_content_curation_trim_to_12_maps_a_map_set_deck_mechanic_first_impressions_questions",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
-      "source_location": "L73",
-      "weight": 1.0,
-      "source": "specs_v1_content_curation_v1_content_curation_trim_to_12_maps_a_map_set_deck_mechanic_first_impressions_questions",
-      "target": "specs_v1_content_curation_questions_for_bill",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
-      "source_location": "L47",
-      "weight": 1.0,
-      "source": "specs_v1_content_curation_v1_content_curation_trim_to_12_maps_a_map_set_deck_mechanic_first_impressions_questions",
-      "target": "specs_v1_content_curation_the_map_set_deck_mechanic",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
-      "source_location": "L25",
-      "weight": 1.0,
-      "source": "specs_v1_content_curation_v1_content_curation_trim_to_12_maps_a_map_set_deck_mechanic_first_impressions_questions",
-      "target": "specs_v1_content_curation_trimming_to_12_method_not_a_guess",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
-      "source_location": "L11",
-      "weight": 1.0,
-      "source": "specs_v1_content_curation_v1_content_curation_trim_to_12_maps_a_map_set_deck_mechanic_first_impressions_questions",
-      "target": "specs_v1_content_curation_where_the_roster_stands",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
-      "source_location": "L64",
-      "weight": 1.0,
-      "source": "specs_v1_content_curation_the_map_set_deck_mechanic",
-      "target": "specs_v1_content_curation_two_readings_which_one",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
-      "source_location": "L4",
-      "weight": 1.0,
-      "source": "specs_v1_data_persistence",
-      "target": "specs_v1_data_persistence_v1_data_persistence_a_db_instead_of_loose_json_first_impressions_questions",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
-      "source_location": "L76",
-      "weight": 1.0,
-      "source": "specs_v1_data_persistence_v1_data_persistence_a_db_instead_of_loose_json_first_impressions_questions",
-      "target": "specs_v1_data_persistence_git_question_flagged_not_assumed",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
-      "source_location": "L64",
-      "weight": 1.0,
-      "source": "specs_v1_data_persistence_v1_data_persistence_a_db_instead_of_loose_json_first_impressions_questions",
-      "target": "specs_v1_data_persistence_migration_coexistence",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
-      "source_location": "L84",
-      "weight": 1.0,
-      "source": "specs_v1_data_persistence_v1_data_persistence_a_db_instead_of_loose_json_first_impressions_questions",
-      "target": "specs_v1_data_persistence_questions_for_bill",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
-      "source_location": "L46",
-      "weight": 1.0,
-      "source": "specs_v1_data_persistence_v1_data_persistence_a_db_instead_of_loose_json_first_impressions_questions",
-      "target": "specs_v1_data_persistence_sketch_schema_illustrative_not_final",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
-      "source_location": "L33",
-      "weight": 1.0,
-      "source": "specs_v1_data_persistence_v1_data_persistence_a_db_instead_of_loose_json_first_impressions_questions",
-      "target": "specs_v1_data_persistence_the_proposal_sqlite_dev_only",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
-      "source_location": "L14",
-      "weight": 1.0,
-      "source": "specs_v1_data_persistence_v1_data_persistence_a_db_instead_of_loose_json_first_impressions_questions",
-      "target": "specs_v1_data_persistence_what_we_store_today_and_why_it_chafes",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
-      "source_location": "L4",
-      "weight": 1.0,
-      "source": "specs_v1_field_manual_animations",
-      "target": "specs_v1_field_manual_animations_v1_field_manual_animated_human_readable_rule_explanations_first_impressions_questions",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
-      "source_location": "L95",
-      "weight": 1.0,
-      "source": "specs_v1_field_manual_animations_v1_field_manual_animated_human_readable_rule_explanations_first_impressions_questions",
-      "target": "specs_v1_field_manual_animations_questions_for_bill",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
-      "source_location": "L26",
-      "weight": 1.0,
-      "source": "specs_v1_field_manual_animations_v1_field_manual_animated_human_readable_rule_explanations_first_impressions_questions",
-      "target": "specs_v1_field_manual_animations_the_core_insight_the_battle_already_animates_all_of_this",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
-      "source_location": "L44",
-      "weight": 1.0,
-      "source": "specs_v1_field_manual_animations_v1_field_manual_animated_human_readable_rule_explanations_first_impressions_questions",
-      "target": "specs_v1_field_manual_animations_the_proposal_a_diagram_player_of_worked_examples",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
-      "source_location": "L11",
-      "weight": 1.0,
-      "source": "specs_v1_field_manual_animations_v1_field_manual_animated_human_readable_rule_explanations_first_impressions_questions",
-      "target": "specs_v1_field_manual_animations_what_the_field_manual_is_today",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
-      "source_location": "L88",
-      "weight": 1.0,
-      "source": "specs_v1_field_manual_animations_v1_field_manual_animated_human_readable_rule_explanations_first_impressions_questions",
-      "target": "specs_v1_field_manual_animations_where_it_lives",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
-      "source_location": "L80",
-      "weight": 1.0,
-      "source": "specs_v1_field_manual_animations_the_proposal_a_diagram_player_of_worked_examples",
-      "target": "specs_v1_field_manual_animations_human_readability_not_just_motion",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
-      "source_location": "L55",
-      "weight": 1.0,
-      "source": "specs_v1_field_manual_animations_the_proposal_a_diagram_player_of_worked_examples",
-      "target": "specs_v1_field_manual_animations_the_animations_in_priority_order_bill_named_the_first_two",
+      "source": "rubrics_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
+      "target": "rubrics_grading_rubrics_unit_rubric",
       "confidence_score": 1.0
     },
     {
@@ -33662,6 +33273,556 @@
       "confidence_score": 1.0,
       "source": "1_0_2026_07_07t06_07_04_985z_the_cockpit_haiku_v_normal_felt_notes",
       "target": "1_0_2026_07_07t06_07_04_985z_the_cockpit_haiku_v_normal_red_haiku"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
+      "source_location": "L2",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "docs_grading_rubrics",
+      "target": "docs_grading_rubrics_grading_rubrics_north_stars_what_to_measure"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
+      "source_location": "L45",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "docs_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
+      "target": "docs_grading_rubrics_card_rubric"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
+      "source_location": "L154",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "docs_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
+      "target": "docs_grading_rubrics_game_level_rubric"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
+      "source_location": "L179",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "docs_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
+      "target": "docs_grading_rubrics_how_to_run_the_numbers"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
+      "source_location": "L86",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "docs_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
+      "target": "docs_grading_rubrics_map_rubric"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
+      "source_location": "L20",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "docs_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
+      "target": "docs_grading_rubrics_north_stars_what_good_means_for_this_game"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/docs/grading-rubrics.md",
+      "source_location": "L125",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "docs_grading_rubrics_grading_rubrics_north_stars_what_to_measure",
+      "target": "docs_grading_rubrics_unit_rubric"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_graphs_spec",
+      "target": "specs_graphs_spec_graphs_data_visualization_first_impressions_questions"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
+      "source_location": "L39",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_graphs_spec_graphs_data_visualization_first_impressions_questions",
+      "target": "specs_graphs_spec_candidate_views_one_per_perspective"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
+      "source_location": "L66",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_graphs_spec_graphs_data_visualization_first_impressions_questions",
+      "target": "specs_graphs_spec_how_where_to_display_the_real_constraint"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
+      "source_location": "L85",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_graphs_spec_graphs_data_visualization_first_impressions_questions",
+      "target": "specs_graphs_spec_questions_for_bill"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
+      "source_location": "L32",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_graphs_spec_graphs_data_visualization_first_impressions_questions",
+      "target": "specs_graphs_spec_the_motivation_what_tables_hide"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/graphs-spec.md",
+      "source_location": "L14",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_graphs_spec_graphs_data_visualization_first_impressions_questions",
+      "target": "specs_graphs_spec_what_data_we_already_have_the_corpus"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_ai_search_and_tuning",
+      "target": "specs_v1_ai_search_and_tuning_v1_ai_search_pruning_weight_tuning_the_trench_orientation_answer_first_impressions_questions"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
+      "source_location": "L19",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_ai_search_and_tuning_v1_ai_search_pruning_weight_tuning_the_trench_orientation_answer_first_impressions_questions",
+      "target": "specs_v1_ai_search_and_tuning_first_the_trench_orientation_answer_bill_s_direct_question"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
+      "source_location": "L60",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_ai_search_and_tuning_v1_ai_search_pruning_weight_tuning_the_trench_orientation_answer_first_impressions_questions",
+      "target": "specs_v1_ai_search_and_tuning_pruning_ideas_concrete_ordered_by_safety"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
+      "source_location": "L104",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_ai_search_and_tuning_v1_ai_search_pruning_weight_tuning_the_trench_orientation_answer_first_impressions_questions",
+      "target": "specs_v1_ai_search_and_tuning_questions_for_bill"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
+      "source_location": "L83",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_ai_search_and_tuning_v1_ai_search_pruning_weight_tuning_the_trench_orientation_answer_first_impressions_questions",
+      "target": "specs_v1_ai_search_and_tuning_reuse_for_claude_plays_a_concentrated_option_list"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
+      "source_location": "L47",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_ai_search_and_tuning_v1_ai_search_pruning_weight_tuning_the_trench_orientation_answer_first_impressions_questions",
+      "target": "specs_v1_ai_search_and_tuning_the_search_today_and_where_the_time_goes"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-ai-search-and-tuning.md",
+      "source_location": "L94",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_ai_search_and_tuning_v1_ai_search_pruning_weight_tuning_the_trench_orientation_answer_first_impressions_questions",
+      "target": "specs_v1_ai_search_and_tuning_weight_tuning_from_the_data_we_have"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_architecture",
+      "target": "specs_v1_architecture_v1_architecture_review_restructure_decided_implemented_july_2026"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
+      "source_location": "L93",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_architecture_v1_architecture_review_restructure_decided_implemented_july_2026",
+      "target": "specs_v1_architecture_deferred_deliberately_triggers_written_down"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
+      "source_location": "L67",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_architecture_v1_architecture_review_restructure_decided_implemented_july_2026",
+      "target": "specs_v1_architecture_load_strategy"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
+      "source_location": "L103",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_architecture_v1_architecture_review_restructure_decided_implemented_july_2026",
+      "target": "specs_v1_architecture_migration_checklist_each_step_one_commit_tests_golden_diff_green"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
+      "source_location": "L34",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_architecture_v1_architecture_review_restructure_decided_implemented_july_2026",
+      "target": "specs_v1_architecture_target_layout"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
+      "source_location": "L13",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_architecture_v1_architecture_review_restructure_decided_implemented_july_2026",
+      "target": "specs_v1_architecture_the_decision_seam_split"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-architecture.md",
+      "source_location": "L84",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_architecture_v1_architecture_review_restructure_decided_implemented_july_2026",
+      "target": "specs_v1_architecture_the_refactor_oracle"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_claude_plays_and_reports",
+      "target": "specs_v1_claude_plays_and_reports_v1_claude_plays_persistent_session_first_to_3_matches_the_generate_reports_rewrite_first_impressions_questions"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
+      "source_location": "L60",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_claude_plays_and_reports_v1_claude_plays_persistent_session_first_to_3_matches_the_generate_reports_rewrite_first_impressions_questions",
+      "target": "specs_v1_claude_plays_and_reports_first_to_3_matches"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
+      "source_location": "L35",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_claude_plays_and_reports_v1_claude_plays_persistent_session_first_to_3_matches_the_generate_reports_rewrite_first_impressions_questions",
+      "target": "specs_v1_claude_plays_and_reports_persistent_session_pending_bill_s_dynamic_scrum_md"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
+      "source_location": "L90",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_claude_plays_and_reports_v1_claude_plays_persistent_session_first_to_3_matches_the_generate_reports_rewrite_first_impressions_questions",
+      "target": "specs_v1_claude_plays_and_reports_questions_for_bill"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
+      "source_location": "L74",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_claude_plays_and_reports_v1_claude_plays_persistent_session_first_to_3_matches_the_generate_reports_rewrite_first_impressions_questions",
+      "target": "specs_v1_claude_plays_and_reports_the_generate_reports_rewrite"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
+      "source_location": "L23",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_claude_plays_and_reports_v1_claude_plays_persistent_session_first_to_3_matches_the_generate_reports_rewrite_first_impressions_questions",
+      "target": "specs_v1_claude_plays_and_reports_the_problem_with_today_s_transport"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-claude-plays-and-reports.md",
+      "source_location": "L52",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_claude_plays_and_reports_persistent_session_pending_bill_s_dynamic_scrum_md",
+      "target": "specs_v1_claude_plays_and_reports_honesty_invariant_must_survive_the_memory"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_content_curation",
+      "target": "specs_v1_content_curation_v1_content_curation_trim_to_12_maps_a_map_set_deck_mechanic_first_impressions_questions"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
+      "source_location": "L73",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_content_curation_v1_content_curation_trim_to_12_maps_a_map_set_deck_mechanic_first_impressions_questions",
+      "target": "specs_v1_content_curation_questions_for_bill"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
+      "source_location": "L47",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_content_curation_v1_content_curation_trim_to_12_maps_a_map_set_deck_mechanic_first_impressions_questions",
+      "target": "specs_v1_content_curation_the_map_set_deck_mechanic"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
+      "source_location": "L25",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_content_curation_v1_content_curation_trim_to_12_maps_a_map_set_deck_mechanic_first_impressions_questions",
+      "target": "specs_v1_content_curation_trimming_to_12_method_not_a_guess"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
+      "source_location": "L11",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_content_curation_v1_content_curation_trim_to_12_maps_a_map_set_deck_mechanic_first_impressions_questions",
+      "target": "specs_v1_content_curation_where_the_roster_stands"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-content-curation.md",
+      "source_location": "L64",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_content_curation_the_map_set_deck_mechanic",
+      "target": "specs_v1_content_curation_two_readings_which_one"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_data_persistence",
+      "target": "specs_v1_data_persistence_v1_data_persistence_a_db_instead_of_loose_json_first_impressions_questions"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
+      "source_location": "L76",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_data_persistence_v1_data_persistence_a_db_instead_of_loose_json_first_impressions_questions",
+      "target": "specs_v1_data_persistence_git_question_flagged_not_assumed"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
+      "source_location": "L64",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_data_persistence_v1_data_persistence_a_db_instead_of_loose_json_first_impressions_questions",
+      "target": "specs_v1_data_persistence_migration_coexistence"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
+      "source_location": "L84",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_data_persistence_v1_data_persistence_a_db_instead_of_loose_json_first_impressions_questions",
+      "target": "specs_v1_data_persistence_questions_for_bill"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
+      "source_location": "L46",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_data_persistence_v1_data_persistence_a_db_instead_of_loose_json_first_impressions_questions",
+      "target": "specs_v1_data_persistence_sketch_schema_illustrative_not_final"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
+      "source_location": "L33",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_data_persistence_v1_data_persistence_a_db_instead_of_loose_json_first_impressions_questions",
+      "target": "specs_v1_data_persistence_the_proposal_sqlite_dev_only"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-data-persistence.md",
+      "source_location": "L14",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_data_persistence_v1_data_persistence_a_db_instead_of_loose_json_first_impressions_questions",
+      "target": "specs_v1_data_persistence_what_we_store_today_and_why_it_chafes"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_field_manual_animations",
+      "target": "specs_v1_field_manual_animations_v1_field_manual_animated_human_readable_rule_explanations_first_impressions_questions"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
+      "source_location": "L95",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_field_manual_animations_v1_field_manual_animated_human_readable_rule_explanations_first_impressions_questions",
+      "target": "specs_v1_field_manual_animations_questions_for_bill"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
+      "source_location": "L26",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_field_manual_animations_v1_field_manual_animated_human_readable_rule_explanations_first_impressions_questions",
+      "target": "specs_v1_field_manual_animations_the_core_insight_the_battle_already_animates_all_of_this"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
+      "source_location": "L44",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_field_manual_animations_v1_field_manual_animated_human_readable_rule_explanations_first_impressions_questions",
+      "target": "specs_v1_field_manual_animations_the_proposal_a_diagram_player_of_worked_examples"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
+      "source_location": "L11",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_field_manual_animations_v1_field_manual_animated_human_readable_rule_explanations_first_impressions_questions",
+      "target": "specs_v1_field_manual_animations_what_the_field_manual_is_today"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
+      "source_location": "L88",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_field_manual_animations_v1_field_manual_animated_human_readable_rule_explanations_first_impressions_questions",
+      "target": "specs_v1_field_manual_animations_where_it_lives"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
+      "source_location": "L80",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_field_manual_animations_the_proposal_a_diagram_player_of_worked_examples",
+      "target": "specs_v1_field_manual_animations_human_readability_not_just_motion"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "dynamic-scrum/planning/specs/v1-field-manual-animations.md",
+      "source_location": "L55",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "specs_v1_field_manual_animations_the_proposal_a_diagram_player_of_worked_examples",
+      "target": "specs_v1_field_manual_animations_the_animations_in_priority_order_bill_named_the_first_two"
     },
     {
       "relation": "contains",
@@ -39154,5 +39315,5 @@
       "source_file": "game/index.html"
     }
   ],
-  "built_at_commit": "b78185d76948bc226ed8ccda05395071abb9f49b"
+  "built_at_commit": "63e1a39c8f908509c51f3e70b17ea7a551d857e8"
 }
