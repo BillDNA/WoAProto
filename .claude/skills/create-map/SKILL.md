@@ -15,10 +15,14 @@ writes a `game/content/maps/` file).**
   header: `{"t":"F"|"M"|"R","edges":[[q,r,d],...]}`, sides of one piece belong
   to ONE hex, contiguous dirs; rivers come in the same 2/3-side lengths as
   forest and mountain).
-- `game/content/maps/<slug>.js` — the map roster, one file per map.
+- `game/content/maps/<slug>.js` — the map library, one file per map (12 shipped
+  after the V1 trim). Note the match pool is the ACTIVE map-set
+  (`game/content/mapsets/`), so a new map must also be added to a set — or
+  measured directly with a name filter / `--mapset all`.
 - `design-docs/grading-rubrics.md` — the map rubric.
-- Balance evidence: game/CLAUDE.md "Known balance signals" + a fresh
-  `node game/balance.js 40 <filter>` for any map you're comparing against.
+- Balance evidence: design-docs/onboarding/code-overview.md "Known balance
+  signals" (0.x-era baseline) + a fresh `node game/balance.js 40 <filter>` for
+  any map you're comparing against.
 
 ## Data shape
 
@@ -50,16 +54,18 @@ built-ins), point-symmetric outlines keep Mirror and fair-HQ placement working.
    deploy-denial rule is worth more than another forest pair.
 3. Verify before handing over: `node -e "const E=require('./game/engine.js');
    console.log(E.validateMaps([<def>]))"` must print `[]`.
-4. Tell Bill how to test: paste into the editor (or Import), then the map tile's
-   Balance button / `node game/balance.js 40 <name>`; flag thresholds are in
-   balance.js (side ≥62/38, mover ≥62, HQ% ≤8 = attrition-only).
+4. Tell Bill how to test: paste into the editor (its Balance button runs the
+   Balance Dashboard on the map AS DRAWN, before saving) or Import, then
+   `node game/balance.js 40 <name>`; to put it in the match pool, tick it into
+   the active map-set on the maps screen. Flag thresholds live in
+   game/report-model.js (side ≥62/38, mover ≥62, HQ% ≤8 = attrition-only).
 
 ## Gotchas
 
 - Big empty maps are not fun (Bill) — that's WHY the ceiling is 24; prefer the
   compact end and terrain that channels fights.
 - Terrain is directional and hex-owned: `F` helps attacks OUT of its hex,
-  `M` defends its hex. `R` (0.3 semantics) lets support, attacks, moves, and
+  `M` defends its hex. `R` (0.3 semantics, unchanged in 1.0) lets support, attacks, moves, and
   Airdrop cross freely BOTH ways — it only stops deploy-control from extending
   across (you can't deploy to an empty hex reachable only across a river); not
   barrageable.

@@ -1,9 +1,11 @@
 #game-rules #human-instructions #code-architecture
 # Card editing cheat sheet
 
-Everything here lives in `game/maps.js` → `"cards": [...]`. It is **pure JSON**:
-double-quoted keys, no trailing commas, no comments inside the data. Edit, save,
-refresh the browser. Then:
+Everything here lives in the active deck file, `game/content/decks/<slug>.js`
+(`default.js` as shipped; the Deck Editor's applied override is
+`game/custom-deck.js`). The card list is **pure JSON**: double-quoted keys, no
+trailing commas, no comments inside the data. Edit, save, refresh the browser.
+Then:
 
 ```
 node game/test.js      # validates the deck; points at exactly what's wrong
@@ -26,13 +28,15 @@ node game/balance.js   # shows what your change did to win rates + the card repo
 - `"airdrop"` — never dealt into an opening hand (house rule).
 - The `"starting": true` card's id — guaranteed first-hand card.
 - Renaming any OTHER id is safe, but you lose its art file link and its entry in
-  the AI's `CARD_KEEP` table (engine.js) until you update those too.
+  the AI's `CARD_KEEP` table (engine/05-ai.js) until you update those too.
 
 ## Step types and their options
 
 Steps resolve top to bottom. The player may **skip any step**; steps that are
 impossible (no legal target) skip themselves. If a whole play resolves zero
-actions, the journal says so and it counts in the card report's **Skip%**.
+actions, the journal says so and it's logged as a **no-op** in the card data
+(the printed report dropped its Skip% column once the no-skip rule pinned it
+near zero).
 
 ### `deploy` — place a unit from reserve
 
@@ -88,8 +92,8 @@ actions, the journal says so and it counts in the card report's **Skip%**.
 ## What you canNOT do from JSON
 
 A step type that doesn't exist (no `"heal"`, no `"draw"`, no conditional steps)
-needs engine work — ask Claude to add the step type to `engine.js`
-(`stepOptions`/`applyStep`/`stepHasOptions`) and a test. The flags above are the
+needs engine work — ask Claude to add the step type to the engine parts
+(`stepOptions`/`applyStep`/`stepHasOptions` in `game/engine/`) and a test. The flags above are the
 full current vocabulary:
 
 ```
@@ -106,14 +110,15 @@ barrage:    —
   Reposition instead of its printed steps. A card with weak printed steps will
   show a high **Simple%** in the card report.
 - **The AI needs no teaching** — it simulates the steps, so new combinations
-  just work. Optional: add your card's id to `CARD_KEEP` in engine.js (1–9,
+  just work. Optional: add your card's id to `CARD_KEEP` in engine/05-ai.js (1–9,
   higher = more reluctant to burn it as a basic action; unlisted ids default 5).
 - **Art**: drop `game/art/<id>.jpg` (or `.png`) and the card picks it up; no
   file = clean text-only card. Heavy AI renders: run `dev/optimize-art.ps1`.
 - **Validate, then measure**: `node game/test.js` for legality,
   `node game/balance.js 60` for what it does to the game. Watch the card report:
-  Win% (correlation), Simple% (printed action not worth it), Skip% (dead turns —
-  should stay ~0), 1stSight% high + AvgSeen low (overpowered watchlist).
+  Win% (correlation), Simple% (printed action not worth it), the no-op counts
+  in the data (dead turns — should stay ~0), 1stSight% high + AvgSeen low
+  (overpowered watchlist).
 
 ## Worked example — a new card
 

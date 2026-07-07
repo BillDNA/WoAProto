@@ -9,14 +9,19 @@ Read the playtest reports, grade them against the rubrics, and write ONE graded
 analysis to `logs/reports/analysis/`. Covers both report types:
 
 - **battle** reports — `logs/reports/battle/<version>/*.md` (per-run LLM/AI
-  transcripts from `dev/claude-plays.js`: result, decisions, journal, felt-notes,
-  and the **Typicality vs the map baseline** footer) plus the machine record
-  `logs/reports/battle/claude-plays-log.jsonl` (one JSON/battle: `version, map,
-  seed, red, blue, redEffort, blueEffort, winner, winType, turns, fallbacks,
-  decisions[], notes, usage`).
+  transcripts from `dev/claude-plays.js` — single battles or first-to-N matches:
+  result(s), decisions, journal, per-battle felt-notes, and the **Typicality vs
+  the map baseline** footer) plus the machine record
+  `logs/reports/battle/claude-plays-log.jsonl` (one JSON row per finished battle:
+  `ts, version, map, seed, transport, matchId, battleIndex, red, blue,
+  redEffort, blueEffort, winner, winType, turns, fallbacks, decisions[], notes`;
+  token `usage` is reported on the match row).
 - **balance** reports — `logs/reports/balance/<version>/*.md` (whole-roster
   metric tables from the Balance Dashboard or `dev/balance-report.js`: per-map
-  Red%/1st%/HQ%/Turns/Atk/Swp/0kill%/Tie%/Drag/Swings/Balance + card table).
+  Red%/1st%/HQ%/Turns/VPdiff/Atk/Swp/0kill%/Tie%/Drag/Swings/Balance + card
+  table — Win%/Simple%/1stSight%/AvgSeen/Plays). `accumulated.json` beside them
+  is the per-version fold of every battle to date; the same battles also land
+  as rows in `logs/woa.db` (`node dev/db-query.js` for ad-hoc SQL).
 
 **Suggestions only — never edit maps.js, cards, the rules, or code. Bill decides.**
 
@@ -77,7 +82,9 @@ Then tell Bill the saved path and give a 3-line verbal summary.
   not player choices; don't read strategy into them.
 - The card table's Simple% carries the CARD_KEEP burn bias (the AI burns its
   least precious card) — say so when citing it.
-- If Behaviour numbers moved sharply vs the game/CLAUDE.md baselines (~5 attacks
-  / ~7 swaps / zero-kill ~4% / ~88% fielded), treat it as an AI regression
-  signal even when win rates look fine.
+- If Behaviour numbers moved sharply vs the baselines in
+  design-docs/onboarding/code-overview.md "Known balance signals" (~5 attacks
+  / ~7 swaps / zero-kill ~4% / ~88% fielded — 0.x-era numbers; the 1.0
+  accumulator is the growing current-era baseline), treat it as an AI
+  regression signal even when win rates look fine.
 - One page of analysis is plenty. If there's nothing worth suggesting, say so.

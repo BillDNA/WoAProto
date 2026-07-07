@@ -28,7 +28,9 @@ attrition rule. Re-measure before grading against them (commands in the footer).
    Baseline: zero-kill ~4%, first-blood→win 62%, control-tracks-win 79%.
    Targets: zero-kill ≤5%; first-blood 55–70% (higher = snowbally); control ≥70% (tune me).
 3. **No dead turns.** A player always feels they can act.
-   Metric: Skip% column of the card report (plays that resolved zero actions).
+   Metric: per-card no-op share — plays that resolved zero actions (`noop` in the card data:
+   the balance accumulator / `logs/woa.db`; the printed card table dropped its Skip% column
+   in Round 2 once the no-skip rule pinned it near zero).
    Baseline: ≈0 across the deck (hard turn-1 dead turns 9%→0 after round 6).
    Target: ~0; any card above 2% gets investigated (tune me).
 4. **Balanced start.** Neither seat nor colour wins the battle before it starts.
@@ -43,7 +45,8 @@ attrition rule. Re-measure before grading against them (commands in the footer).
 ## Card rubric
 
 Evidence source for all numbers: the **card report** at the bottom of `node game/balance.js 60`
-(columns: Win% / Simple% / Skip% / 1stSight% / AvgSeen / plays).
+(columns: Win% / Simple% / 1stSight% / AvgSeen / plays; per-card no-op counts stay in the
+data — the accumulator JSON and `logs/woa.db` — no longer a printed column).
 
 1. **Adds a decision.**
    Goal: the card offers a choice the rest of the deck doesn't already offer — a new line of
@@ -52,9 +55,9 @@ Evidence source for all numbers: the **card report** at the bottom of `node game
    `game/content/decks/default.js` (vocabulary in `card-cheatsheet.md`).
    Score: good = you can name the situation where you'd pick THIS card; failing = it's strictly
    a re-skin of an existing card's decision.
-2. **Not a dead card — Skip%.**
+2. **Not a dead card — no-ops.**
    Goal: the card never burns a turn doing nothing.
-   Evidence: Skip% (play resolved zero actions).
+   Evidence: the card's no-op share (play resolved zero actions; `noop` in the card data).
    Score: good ~0%; marginal 1–2%; failing >2% — a dead turn generator (tune me). This is the
    north-star-3 metric applied per card.
 3. **Printed action worth printing — Simple%.**
