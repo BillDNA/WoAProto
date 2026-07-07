@@ -1,3 +1,47 @@
+# WarOfAttrition
+
+This project runs the **DynamicScrum** scrum workflow. The board lives in `dynamic-scrum/planning/` +
+`dynamic-scrum/workflow/`; orientation docs in `dynamic-scrum/docs/`.
+
+## Start every session with the workflow
+- Begin with **`/session-start`** — it orients from the board and aligns on focus before any work.
+- Wrap up with **`/end-session`** — it updates the board and (if a remote exists) pushes.
+- Capture passing ideas with **`/make-ticket`** without derailing.
+
+## Workflow authority — read before reaching for any external skill
+**The canonical DynamicScrum `WORKFLOW.md` is the process source of truth** — surfaced each session by the
+SessionStart grounding hook (there is no local copy). It outranks any installed plugin/skill — superpowers'
+own precedence agrees (user instructions > skills > default). In particular:
+
+- **External skills (superpowers etc.) are a toolbox, not the driver.** Use them à la carte — adversarial
+  code review, TDD, systematic debugging, verification-before-completion. **Do not auto-run the
+  brainstorm → spec → plan → implement *pipeline* on every ticket.**
+- **Design ceremony scales with altitude:** heavy design lives at **parking-lot → roadmap**; **tickets are
+  actionable**, completed directly by a Sonnet-tier agent with adversarial review as the net; the full
+  spec→plan flow is for a **brainstorming/research ticket** or a novel/risky build, and is rare.
+- **Trunk-based, edit-in-place on `main`** — standing consent to commit on `main`; **no git worktrees**, no
+  feature branch except for genuinely risky/large structural work.
+- **Artifact paths:** design specs go in **`dynamic-scrum/planning/specs/`**, never `dynamic-scrum/docs/superpowers/`.
+- **Integration is `/end-session`** (commit on `main` + push) — not a branch-finish / merge / PR menu.
+
+## Where things live
+- **Process SOT:** the canonical DynamicScrum `WORKFLOW.md`, surfaced each session by the SessionStart
+  grounding hook — no local copy.
+- **Skills** (`session-start`, `end-session`, `make-ticket`, `alignment-pass`) resolve at **user level**
+  (`~/.claude/skills/`), served once per machine — no per-project junction.
+- **Rubrics** (the rule books alignment grades against) are served at user level
+  (`~/.claude/rubrics/workflow-rubrics/`); add project-specific rubrics as real files in a local `dynamic-scrum/rubrics/`.
+- **Owner scratchpad:** `dynamic-scrum/workflow/Bill.md` (`B.N` notes).
+
+---
+
+# WarOfAttrition — project doctrine
+
+*(Migrated verbatim from the pre-adopt `Claude.md`. The engagement block above governs **process**; the
+below governs **this game's build**. Where the old text says "[[workflow]] has our workflow", the process
+SOT is now canonical DynamicScrum's `WORKFLOW.md` — surfaced by the SessionStart hook — with these
+project-specific standing goals layered on top.)*
+
 we are taking a board game prototype and turning it into a playable prototype in the web browser, the goal of this project is to have something that allows me to playtest and rapidly iterate on balance in the game.
 
 Start in [[code-overview]] — it is the orientation file for this project and stays current. [[game/README]] is the player-facing manual.  [[workflow]] has guide lines for our workflow.
@@ -55,5 +99,3 @@ Built in one autonomous run (July 6–7). Terse log; the architecture record is
 
 - **Roguelite deck-builder**: a card pool larger than the 20-card deck plus a deck-building loop between battles.
 - **Side asymmetry**: different decks per side, and Commander abilities that bend the rules (e.g. guaranteed Conscription in the opening hand). Expect bigger balance swings — which is why the rubrics + metrics tooling above come first.
-- 
-

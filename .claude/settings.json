@@ -29,5 +29,9 @@
     "supabase@claude-plugins-official": false,
     "atomic-agents@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node .claude/hooks/scrum-statusline.mjs"
   }
 }
