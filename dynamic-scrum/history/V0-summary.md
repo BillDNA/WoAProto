@@ -2,10 +2,10 @@
 # War of Attrition — V0 summary & retrospective (July 2026)
 
 The one-page account of what V0 set out to do, what shipped, what five feedback rounds changed,
-and what state the prototype is in as V1 speccing begins ([[v1-data-persistence]],
-[[v1-ai-search-and-tuning]], [[v1-claude-plays-and-reports]],
-[[v1-content-curation]]). Terse by design — current *behaviour* lives in
-`game/CLAUDE.md`, `game/README.md`, and [[code-overview]]; this is the *arc*.
+and what state the prototype is in as V1 speccing begins (`v1-data-persistence`,
+`v1-ai-search-and-tuning`, `v1-claude-plays-and-reports`,
+`v1-content-curation`). Terse by design — current *behaviour* lives in
+`game/CLAUDE.md`, `game/README.md`, and [[code-architecture]]; this is the *arc*.
 
 ## The point of V0
 
@@ -21,25 +21,25 @@ Built and committed in one autonomous run (July 2, 2026); the V0 spec files were
 rationale, current behaviour is in `game/CLAUDE.md`.
 
 **Rules / game**
-- [[terrain-crossing-rules]] — trenches became **attacker-support denial** (no more +1 defense,
+- `terrain-crossing-rules` — trenches became **attacker-support denial** (no more +1 defense,
   ownership irrelevant); new directional **river** terrain (`R`).
-- [[combat-clarity-qol]] — one-click trench placement, hover attack-math pills, strike
+- `combat-clarity-qol` — one-click trench placement, hover attack-math pills, strike
   arrows + supporter rings drawn from engine truth.
-- [[layout-v2-implementation]] — the "2A + topbar scoreboard" battle layout: both mats left,
+- `layout-v2-implementation` — the "2A + topbar scoreboard" battle layout: both mats left,
   Campaign Journal as a bound book on the right, board bounded by its hex geometry, VP tug-bar.
 
 **Tooling / app**
-- [[metrics-dashboard]] — the in-browser Balance Dashboard (the full `balance.js` report, same
+- `metrics-dashboard` — the in-browser Balance Dashboard (the full `balance.js` report, same
   aggregation code as the CLI — smoke-asserted identical).
-- [[deck-editor]] — the Quartermaster's Ledger: in-browser card editing with validation.
-- [[map-roster-and-shapes]] — deletable maps + the editor's hex-by-hex board carving (24-hex
+- `deck-editor` — the Quartermaster's Ledger: in-browser card editing with validation.
+- `map-roster-and-shapes` — deletable maps + the editor's hex-by-hex board carving (24-hex
   ceiling, `shapeDef` travels inline).
-- [[ai-variety]] — one parameterized AI engine; personalities are data rows (brawler/turtle);
+- `ai-variety` — one parameterized AI engine; personalities are data rows (brawler/turtle);
   `balance.js matchup` pits any two.
 - grading-rubrics — `design-docs/grading-rubrics.md`: north stars + card/map/unit/game rubrics.
-- [[cli-responder-transport]] + [[claude-plays]] — the `claude -p` transport + LLM-plays-real-
+- `cli-responder-transport` + `claude-plays` — the `claude -p` transport + LLM-plays-real-
   battles harness with honest info and felt-notes.
-- [[claude-skills]] — `.claude/skills/`: thin orchestrators over `balance.js` + the rubrics.
+- `claude-skills` — `.claude/skills/`: thin orchestrators over `balance.js` + the rubrics.
 
 ## The five feedback rounds (what each closed)
 
@@ -54,13 +54,13 @@ Every item from rounds 1–4 is struck through in `CLAUDE.md`; the arc:
    starts at 0.2.** Doc reorg into tagged onboarding/skills/rules/architecture/workflow.
 3. **Round 3 — rules refinement + perf questions.** River went from no-support to no-deploy-
    -control-extension; no-swapping-same-type rule; trench-orientation + search-cost questions
-   raised (now answered in [[v1-ai-search-and-tuning]]); first data review against
+   raised (now answered in `v1-ai-search-and-tuning`); first data review against
    the rubrics.
 4. **Round 4 — data infrastructure.** Persistent per-version accumulation (`accumulated.json`),
    Typicality footer on LLM battles, the **`content/` file reorg** (maps + decks as deletable
    files, tombstones gone), reports moved to `logs/reports/{balance,battle,analysis}/<version>/`,
    the **Debug button** state-dump, `generate-reports` + `review-reports` skills, and
-   [[graphs-spec]] (a thinking doc — the first V1-shaped question).
+   `graphs-spec` (a thinking doc — the first V1-shaped question).
 5. **Round 5 — prepping V1 (this round).** Not built — **specced.** Data persistence, AI search
    pruning + weight tuning + the trench-orientation answer, Claude Plays persistent sessions +
    first-to-3, generate-reports fire-and-forget, and trim-to-12 + a map-set mechanic. See the four
@@ -83,7 +83,7 @@ Roster: **17 maps** (V1 trims to 12). Green bars to keep green: `node game/test.
 ## What carries into V1
 
 The four V1 thinking docs (now `dynamic-scrum/planning/specs/`), each ending in questions for Bill:
-- **Data persistence** — SQLite dev-only, keep per-battle rows (unblocks [[graphs-spec]] trends).
+- **Data persistence** — SQLite dev-only, keep per-battle rows (unblocks `graphs-spec` trends).
 - **AI search & tuning** — kill the random 80-cap → ranked shortlist; reuse for a concentrated
   claude-plays option list; offline weight tuner; the trench-orientation fix.
 - **Claude Plays & reports** — persistent piped session (pending Bill's dynamic-scrum md),
@@ -91,5 +91,5 @@ The four V1 thinking docs (now `dynamic-scrum/planning/specs/`), each ending in 
 - **Content curation** — trim to 12 by data + coverage; a file-backed map-set "deck" mechanic that
   may make the trim a curation act, not a deletion.
 
-Plus the still-open **[[graphs-spec]]** (awaiting Bill's answers on which views + in-game vs dev-tool)
+Plus the still-open **`graphs-spec`** (awaiting Bill's answers on which views + in-game vs dev-tool)
 and the Vision's roguelite-deck-builder / side-asymmetry direction (YAGNI until V1 lands).

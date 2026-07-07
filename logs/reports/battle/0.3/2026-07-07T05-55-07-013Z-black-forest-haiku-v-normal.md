@@ -77,3 +77,5 @@
 ### red (haiku)
 
 Mock felt-notes: skipping every step felt weak; the countdown felt strong; nothing was luck-driven because I never rolled the dice. Suggested change: use a real model.
+
+#reports #battle #v0-3

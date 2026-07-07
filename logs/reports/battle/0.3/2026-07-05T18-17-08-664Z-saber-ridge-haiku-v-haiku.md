@@ -126,3 +126,5 @@ _Baseline: 40 hard-AI self-play battles on "Saber Ridge" (rules 0.3), folded thr
 | Final VP gap | 1 | ~2.5 avg | below baseline |
 
 An **atypical** game — much shorter than average.
+
+#reports #battle #v0-3

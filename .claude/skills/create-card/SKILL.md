@@ -17,7 +17,7 @@ or custom-deck.js.**
   purpose: `deploy(unit, anywhere)`, `trench`, `attack(mod, tieSpare, noAdvance)`,
   `reposition`, `barrage`. **A card needing a step type that doesn't exist is an
   engine change — flag it as such, don't pretend the JSON works.**
-- `dynamic-scrum/docs/grading-rubrics.md` — the card rubric (goal / evidence / score meaning).
+- `dynamic-scrum/rubrics/grading-rubrics.md` — the card rubric (goal / evidence / score meaning).
 - Latest card report (`node game/balance.js 40` or Bill's Balance Dashboard) —
   where the current deck is weak (dead cards, hoarded cards, auto-plays).
 

@@ -86,3 +86,5 @@
 **Luck-driven:** The T10 HQ attack (1 vs 1 tie) decided the game on a coin flip. Instant-loss ties on HQ are swingy and anticlimactic.
 
 **One Change:** **HQ should have defense +1**, making it 1 vs 2 (attacker needs support or help). Removes the binary 50/50 coin-flip endgame and rewards building an assault—feels more like a climactic push than a roulette spin.
+
+#reports #battle #v0-2

@@ -189,6 +189,9 @@ var WOA_REPORT = (function () {
       L.push('| ' + r.name + ' | ' + r.win + ' | ' + r.simple + ' | ' + r.sight + ' | ' + r.seen + ' | ' + r.plays + ' |');
     });
     L.push('');
+    // Obsidian-style tag footer so reports are findable by kind + rules version
+    L.push('#reports #balance #v' + String(model.version).replace(/\./g, '-'));
+    L.push('');
     return L.join('\n');
   }
 

@@ -30,10 +30,11 @@ out of root `CLAUDE.md`) and [[V0-summary]] (the full V0 arc). Templates `_orien
 | Doc                  | Purpose                                                                  |
 | -------------------- | ------------------------------------------------------------------------ |
 | [[card-cheatsheet]]  | Full card/step data vocabulary for `content/decks/` (create-card reads it) |
-| [[grading-rubrics]]  | Goal/evidence/score rubrics for cards, maps, units, the game (create-card / create-map / run-tournament / review-reports grade against it) |
 
-Future-looking material is NOT here: [[steam-roadmap]] is parked in `dynamic-scrum/planning/parking-lot/`
-(**for Bill to decide**; board [[Roadmap]] carries the adopted milestones).
+Not here by class: [[grading-rubrics]] lives in **`dynamic-scrum/rubrics/`** (the rubric class — what
+create-card / create-map / run-tournament / review-reports grade against). Future-looking material:
+[[steam-roadmap]] is parked in `dynamic-scrum/planning/parking-lot/` (**for Bill to decide**; board
+[[Roadmap]] carries the adopted milestones).
 
 ## human-instructions/ — written for Bill
 
@@ -46,21 +47,21 @@ Future-looking material is NOT here: [[steam-roadmap]] is parked in `dynamic-scr
 ## Implemented specs → where the behaviour is documented now
 
 Specs live in `dynamic-scrum/planning/specs/` (the DS spec home; the old repo-root `specs/` dir is
-gone). The **V1 specs are kept there, marked implemented** — thinking docs with Bill's inline rulings,
-read only for decision rationale. The **V0 spec files were deleted** (fully represented below; git
-history is the archive), with [[V0-summary]] preserved in `dynamic-scrum/history/`.
+gone). **All implemented V0 + V1 spec files are fully decomposed and deleted** — the behaviour and
+rationale live in the docs below; git history is the archive. [[V0-summary]] is preserved in
+`dynamic-scrum/history/`.
 
-| Spec (implemented)                 | Orientation home now                                      |
+| Retired spec                       | Where it lives as docs now                                |
 | ---------------------------------- | --------------------------------------------------------- |
-| [[v1-architecture]]                | [[code-architecture]] (seam-split layout, golden-diff oracle) |
-| [[v1-data-persistence]]            | [[data-and-reports]]                                      |
-| [[v1-ai-search-and-tuning]]        | [[ai-heuristic-model]] + [[code-architecture]] §AI        |
-| [[v1-claude-plays-and-reports]]    | [[claude-plays-human-instructions]] + [[data-and-reports]] |
-| [[v1-content-curation]]            | [[code-architecture]] §content/map-sets                   |
-| [[graphs-spec]]                    | [[data-and-reports]] §loop (Charts tab)                   |
-| [[v1-field-manual-animations]]     | [[manual-animations-authoring]]                           |
-| V0 specs (ten + 5 rounds, deleted) | [[shipped-history]] §V0 + [[V0-summary]] → [[code-architecture]] / [[War Of Attrition rule book]] / [[grading-rubrics]] |
-| `original-specs/`                  | Physical-prototype record under `dynamic-scrum/planning/specs/original-specs/` (art sources, `HexClarificationDiagram.png` — still normative for directional terrain, gitignore-whitelisted) |
+| `v1-architecture`                  | [[code-architecture]] (seam-split layout, golden-diff oracle) |
+| `v1-data-persistence`              | [[data-and-reports]]                                      |
+| `v1-ai-search-and-tuning`          | [[ai-heuristic-model]] + [[code-architecture]] §AI        |
+| `v1-claude-plays-and-reports`      | [[claude-plays-human-instructions]] + [[data-and-reports]] |
+| `v1-content-curation`              | [[code-architecture]] §content/map-sets                   |
+| `graphs-spec`                      | [[data-and-reports]] §loop (Charts tab)                   |
+| `v1-field-manual-animations`       | [[manual-animations-authoring]]                           |
+| V0 specs (ten + 5 rounds)          | [[shipped-history]] §V0 + [[V0-summary]] → [[code-architecture]] / [[War Of Attrition rule book]] / [[grading-rubrics]] |
+| `original-specs/`                  | Physical-prototype record under `dynamic-scrum/planning/specs/original-specs/` (art sources, `HexClarificationDiagram.png` — still normative for directional terrain, gitignore-whitelisted) — the one thing kept in the specs dir |
 
 **`style-guide.md` — N/A as a separate doc**: the aesthetic doctrine (steampunk Napoleonic field
 journal) lives in [[workflow]] + `dynamic-scrum/planning/specs/original-specs/Player Card Art direction drafts.md`.

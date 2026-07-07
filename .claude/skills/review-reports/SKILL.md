@@ -27,7 +27,7 @@ analysis to `logs/reports/analysis/`. Covers both report types:
 
 ## Read first
 
-- `dynamic-scrum/docs/grading-rubrics.md` — ground every reading and suggestion in a
+- `dynamic-scrum/rubrics/grading-rubrics.md` — ground every reading and suggestion in a
   rubric (north stars + card/map/unit/game rubrics: goal / evidence + data
   origin / score meaning). Cite the target band next to each number, not vibes.
 - `dynamic-scrum/docs/human-instructions/ai-heuristic-model.md` — so any AI-behaviour
@@ -47,6 +47,9 @@ analysis to `logs/reports/analysis/`. Covers both report types:
 
 Filename: `<YYYY-MM-DD>-<version>-analysis.md`. Open with a one-line scope
 (version, how many battle reports across which maps, how many balance reports, n).
+End the file with the tag footer `#reports #analysis #v<version with dots as dashes>`
+(e.g. `#reports #analysis #v1-0`) — the balance/battle reports auto-tag themselves
+the same way; the tags are how the right era's reports are found fast.
 
 1. **North-star scoreboard** (from the balance reports) — each headline metric,
    current value, rubric target band, verdict (✓ / watch / ✗). red%, 1st-mover%,

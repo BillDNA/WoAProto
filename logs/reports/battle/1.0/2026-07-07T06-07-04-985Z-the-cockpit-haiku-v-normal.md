@@ -55,3 +55,5 @@
 **Luck-driven:** Blue's Airdrop placing Infantry at A2 (right beside my HQ) felt arbitrary—I had no way to predict or block it. The final tie on my HQ came down to one support point; margins were razor-thin.
 
 **Suggested change:** Give defending HQs +1 base defense (so 1 instead of 0), or let units defending the HQ add their support even if in trenched hexes. Right now the HQ feels like a fragile objective, not a fortress—it should feel like capturing it costs something significant.
+
+#reports #battle #v1-0

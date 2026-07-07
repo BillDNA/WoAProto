@@ -44,7 +44,7 @@ we are taking a board game prototype and turning it into a playable prototype in
 
 Start in [[code-architecture]] (`dynamic-scrum/docs/`) — it is the orientation file for this project and stays current; [[Docs Index]] maps every other doc. [[game/README]] is the player-facing manual. [[workflow]] has the build/test conventions. The shipped pre-board eras (June rounds / V0 / V1) live in [[shipped-history]].
 
-## Standing goals (revised for V1 — see [[v1-architecture]] for the reasoning)
+## Standing goals (revised for V1 — reasoning in the retired `v1-architecture` spec, git history)
 
 * **rapid balance iteration is still the point** — content is data files (`content/{decks,maps,mapsets}`, `maps.js` ai rows), tunables are data (AI_WEIGHTS overrides), new tools are small `dev/` scripts over the exported Engine surface
 * **Steam trajectory, guardrails kept**: we're aiming at a Steam release of a roguelite deck-builder. The physical-board constraints (24-hex ceiling, 16-card decks, piece stocks) stay as *design* guardrails even where code no longer needs them; code formalization is pulled in by a shipped feature, never speculatively

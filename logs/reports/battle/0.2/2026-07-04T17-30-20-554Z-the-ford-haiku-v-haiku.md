@@ -90,3 +90,5 @@
 
 **Suggested Change:**
 **Allow Reposition to happen without needing a failed Attack card.** Blue's units were too fragmented to consolidate. Forcing Reposition into the house rule (instead of burning card steps) would let Blue compress defenses before Red's Cavalry landslide. Tightens the spacing game and makes positioning decisions more active.
+
+#reports #battle #v0-2

@@ -38,6 +38,7 @@ convention this project uses.
 - [x] Same-commit sweep: `dev/gen-docs.js`, `dev/optimize-art.ps1`, game code comments/strings, 4 skills — tests + gen-docs green
 - [x] Report sent to canonical DS (standing goals + docs tags note)
 - [x] Round 2 (Bill feedback): `shipped-history` + `V0-summary` → `dynamic-scrum/history/`; `steam-roadmap` parked (parking-lot + index); repo-root `specs/` dissolved — V1 specs (+ original-specs record) → `dynamic-scrum/planning/specs/` marked Implemented, V0 spec files deleted (represented in docs; git = archive); templates kept (DS-current, scaffolded from canonical `templates/`); all path refs swept, tests green
+- [x] Round 3 (Bill feedback): dangling links fixed vault-wide (V0-summary + shipped-history + code-architecture + run-design); `grading-rubrics` → `dynamic-scrum/rubrics/`; V1 specs fully decomposed — files deleted, docs are the home (git = archive); reports auto-tag `#reports #<kind> #v<version>` (report-model + claude-plays + review-reports skill) + 15 existing reports backfilled
 - [ ] User confirms done
 
 ## Finished

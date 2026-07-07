@@ -190,3 +190,5 @@
 **Luck-driven:** Cavalry opening trades hinged entirely on which support units were adjacent; positioning luck dominated turns 2–7. The attrition win came down to who happened to have units left standing—felt thin on player agency.
 
 **One change:** Allow cards that can't resolve to be *returned to hand* (or reshuffled immediately) instead of simply discarded as no-ops. Dead hands kill momentum and make the endgame feel like a war of attrition against the deck, not the opponent.
+
+#reports #battle #v0-2

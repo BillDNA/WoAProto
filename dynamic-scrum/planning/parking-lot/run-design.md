@@ -22,6 +22,6 @@ What *is* a run? Candidate shapes to argue and **physically playtest on the boar
 ## When it graduates
 
 One page, three candidate shapes, each physically playtested, one chosen and written as the M3 spec.
-See [[brainstorming]] when ready.
+See `brainstorming` when ready.
 
 #parking-lot

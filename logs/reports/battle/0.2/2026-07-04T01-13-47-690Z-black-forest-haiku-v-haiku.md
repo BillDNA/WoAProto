@@ -82,3 +82,5 @@ The cavalry rush was fun to execute—just felt inevitable once they landed.
 **Luck-driven:** The T4 tie (Infantry vs Artillery) was neutral but randomized; beyond that, it felt deterministic: Red's unit composition beat Blue's.
 
 **One change:** **Give Cavalry 1 defense** (keep 3 attack, 2 VP). Currently they're pure offence with no trade-off; they should have a fragility/cost tradeoff. This would let Infantry/Artillery create meaningful pressure and make Cavalry positioning matter more tactically.
+
+#reports #battle #v0-2

@@ -33,7 +33,7 @@ changes).
    LLM side gets one persistent session, so matches are token-cheap per battle).
    The LLM is a non-heuristic reference point on the skill curve, and its
    felt-notes are playtest signal — quote them.
-3. **Grade** every headline number against `dynamic-scrum/docs/grading-rubrics.md`
+3. **Grade** every headline number against `dynamic-scrum/rubrics/grading-rubrics.md`
    (north stars + per-artifact rubrics: goal / evidence + data origin / score
    meaning). Quote the target band next to each reading.
 4. **Report** (markdown, for Bill):

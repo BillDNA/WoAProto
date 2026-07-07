@@ -5,8 +5,8 @@ last-reviewed: 2026-07-07
 # Data & reports — where every battle lands and how reports flow
 
 The one primer for the V1 data pipeline: per-battle persistence, the report tree, and the
-skills loop that runs it. (Distilled from the implemented specs `../planning/specs/v1-data-persistence.md`,
-`v1-claude-plays-and-reports.md`, and `graphs-spec.md` — read those only for the decision rationale.)
+skills loop that runs it. (Distilled from the retired v1 specs — `v1-data-persistence`,
+`v1-claude-plays-and-reports`, `graphs-spec` — git history holds the full rationale.)
 
 ## The invariant
 
@@ -34,6 +34,10 @@ Markdown reports are the durable artifact; the DB is the queryable index over th
   map-trim decisions). Findings go to Bill; **he decides rule changes**.
 - `<version>` = `Engine.VERSION` (`game/engine/01-core.js`, tracks the rule book header) — the one
   source of the version string, so playtest data stays apples-to-apples per rules era.
+- **Every report ends with a tag footer** `#reports #<kind> #v<version, dots as dashes>` (e.g.
+  `#reports #balance #v1-0`) — auto-emitted by `report-model.js` (balance, CLI + dashboard alike) and
+  `claude-plays.js` (battle); the review-reports skill writes it on analyses. Search by tag to find the
+  right era's reports fast.
 
 These paths + balance-report's `SAVED:`/`BEST_MAP:` stdout lines are **frozen API** (pinned by the
 skills below) — moving any requires a same-commit sweep of `.claude/skills/` + these docs.

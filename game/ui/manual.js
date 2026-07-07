@@ -1,5 +1,5 @@
 /* War of Attrition — ui part: Field Manual + its diagram player (V1
-   field-manual animations, dynamic-scrum/planning/specs/v1-field-manual-animations.md).
+   field-manual animations, the retired v1-field-manual-animations spec, git history).
 
    The player shows three worked examples — Support, Ties, Trench vs River —
    as step-through beats (Prev/Next, arrow keys) over a mini hex board that

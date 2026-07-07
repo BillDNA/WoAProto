@@ -770,6 +770,7 @@ async function main() {
     try { md.push.apply(md, typicalitySection(map, lastFinished.st, args.typicalN)); }
     catch (e) { md.push('', '_(typicality baseline failed: ' + e.message + ')_'); }
   }
+  md.push('', '#reports #battle #v' + E.VERSION.replace(/\./g, '-')); // tag footer: kind + rules version
   fs.writeFileSync(tPath, md.join('\n') + '\n');
 
   // match summary row in the master JSONL

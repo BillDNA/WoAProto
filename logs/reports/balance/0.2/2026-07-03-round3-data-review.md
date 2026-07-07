@@ -256,3 +256,5 @@ hard, so river maps need the deeper-search pass before you trust a side-balance 
   automate it).
 - Consider the **cavalry def 0→1** experiment (unit-level; both LLMs asked).
 - Consider **dead-hand return-to-hand** as its own measured rule round (LLM felt-notes).
+
+#reports #balance #v0-2

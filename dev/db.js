@@ -1,5 +1,5 @@
 /* dev/db.js — SQLite persistence for per-battle data (V1 data persistence,
-   dynamic-scrum/planning/specs/v1-data-persistence.md). Zero deps: uses Node's BUILT-IN
+   the retired v1-data-persistence spec, git history). Zero deps: uses Node's BUILT-IN
    node:sqlite (Node 22+; we run 26). The DB is the dev-side analysis store —
    one row per battle instead of the pre-summed aggregates balanceAdd keeps —
    so distributions, typicality and version-over-version trends become SQL.

@@ -96,3 +96,5 @@ Verify on the full roster before adopting: node game/balance.js 60 normal
 Adopt by editing AI_WEIGHTS in game/engine/05-ai.js (and bump the rules version —
 weight changes shift the data baseline). Suggestions only — Bill decides.
 ```
+
+#reports #analysis
