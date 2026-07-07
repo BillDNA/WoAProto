@@ -736,6 +736,43 @@ seeds.forEach(function (seed) {
 });
 console.log('  battle endings: ' + hqWins + ' HQ captures, ' + attrWins + ' attrition; longest battle ' + maxTurns + ' turns');
 
+/* ---------- V1 AI search: orientation-aware trenches + ranked choice APIs ---------- */
+(function () {
+  console.log('== V1 AI search ==');
+  var cmap = E.MAPS.filter(function (m) { return m.shape === 'classic'; })[0];
+  ok(!!cmap, 'a classic-shape map exists for the fixture');
+  var match = E.newMatch({ seed: 99, maps: [cmap], firstPlayer: 'red' });
+  var st = E.newBattle(match);
+  // Orientation term: same trench hex, enemy approaching from the east — the
+  // east-facing trench must evaluate higher than the west-facing one.
+  st.units = { '0,0': { type: 'infantry', owner: 'red' }, '2,0': { type: 'infantry', owner: 'blue' } };
+  st.trenches = { '0,0': [{ dirs: [0, 1], owner: 'red' }] };   // faces E+NE (toward 2,0)
+  var facing = E.evalState(st, 'red');
+  st.trenches = { '0,0': [{ dirs: [3, 4], owner: 'red' }] };   // faces W+SW (away)
+  var away = E.evalState(st, 'red');
+  ok(facing > away, 'trench facing the live enemy lane outscores facing away (' +
+    Math.round(facing) + ' > ' + Math.round(away) + ')');
+  ok(typeof E.AI_WEIGHTS.trenchFacing === 'number' && typeof E.AI_WEIGHTS.shortlist === 'number',
+    'trenchFacing + shortlist live in AI_WEIGHTS (tunable, personality-overridable)');
+
+  // rankChoices: honest top-K of N for the LLM harness
+  var m2 = E.newMatch({ seed: 7, maps: [cmap], firstPlayer: 'red' });
+  var st2 = E.newBattle(m2);
+  E.playCard(st2, st2.hands.red[0], 'normal'); // starting card -> a step
+  var all = E.enumerateChoices(st2);
+  var r = E.rankChoices(st2, { k: 4 });
+  ok(r.total === all.length, 'rankChoices.total = full legal count (' + r.total + ')');
+  ok(r.shown.length <= 4 + 6 + 1, 'top-k plus HQ-relevant forced entries only (' + r.shown.length + ')');
+  var sc = r.shown.map(function (x) { return x.score; }).filter(function (x) { return x !== null; });
+  var sorted = sc.slice(0, 4).every(function (x, i, a) { return i === 0 || a[i - 1] >= x; });
+  ok(sorted, 'shown choices come best-first by heuristic score');
+  ok(r.shown.every(function (x) {
+    return all.some(function (c) { return JSON.stringify(c) === JSON.stringify(x.choice); });
+  }), 'every shown choice is a real legal option');
+  var big = E.rankChoices(st2, { k: 99 });
+  ok(big.shown.length === all.length, 'k >= N shows the whole list (' + big.shown.length + ')');
+})();
+
 /* ---------- index.html script-tag chain matches the on-disk parts ----------
    The browser loads engine/ + ui/ via hand-ordered <script src> tags while
    node loads them by filename sort — this assert is what keeps the two

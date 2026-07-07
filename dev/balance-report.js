@@ -18,6 +18,11 @@
      --once    report this run only; do not read or write the accumulator
      --stdout  print the markdown instead of writing a file
      --quiet   suppress the progress dots
+     --parallel [k]  simulate maps in k parallel worker processes (default:
+               cores-1). The engine's board state is process-global, so
+               parallelism is process-per-map — each worker require()s its own
+               engine. NOTE: per-battle DB rows are skipped in parallel mode
+               (the report + accumulator are identical either way).
 
    It also ranks maps by a balance-quality score and prints `BEST_MAP: <name>`
    (closest to fair + most back-and-forth) so generate-reports knows which map
@@ -65,9 +70,15 @@ function readAcc(ver) {
   try { return JSON.parse(fs.readFileSync(accFilePath(ver), 'utf8')); } catch (e) { return null; }
 }
 
-function run() {
+async function run() {
   var argv = process.argv.slice(2);
   var flags = {};
+  var pi = argv.indexOf('--parallel');
+  if (pi >= 0) {
+    flags.parallel = /^\d+$/.test(argv[pi + 1] || '') ? +argv.splice(pi + 1, 1)[0]
+      : Math.max(1, (require('os').availableParallelism ? require('os').availableParallelism() : 4) - 1);
+    argv.splice(pi, 1);
+  }
   ['--stdout', '--quiet', '--fresh', '--once'].forEach(function (f) {
     if (argv.indexOf(f) >= 0) { flags[f.slice(2)] = true; argv = argv.filter(function (a) { return a !== f; }); }
   });
@@ -107,22 +118,52 @@ function run() {
     runId = dbm.insertRun(dbh, { version: ver, kind: 'balance', redAi: dr, blueAi: db, n: n, tool: 'balance-report' });
   } catch (e) { dbm = null; console.error('(db off: ' + e.message + ')'); }
 
-  if (!flags.quiet) process.stderr.write('Simulating ' + n + ' battles/map, ' + diffLabel + ', ' + maps.length + ' maps ');
+  if (!flags.quiet) process.stderr.write('Simulating ' + n + ' battles/map, ' + diffLabel + ', ' + maps.length + ' maps' +
+    (flags.parallel ? ' (' + flags.parallel + ' workers)' : '') + ' ');
   var thisRun = {}; // name -> {shape, agg}
-  maps.forEach(function (map, mi) {
-    // per-run stride (~21.5M) dwarfs the in-run seed span (g*104729, n<=204),
-    // so accumulated runs can never replay a prior run's seeds
-    var seedBase = (mi + 1) * 7919 + priorRuns * 7919 * 2711;
-    var r = E.balanceMap(map, n, { diffRed: dr, diffBlue: db, seedBase: seedBase,
-      onGame: dbm && function (g1, nn, st) {
-        try { dbm.insertBattle(dbh, runId, st, E.balanceFP(g1 - 1), { seed: E.balanceSeed(seedBase, g1 - 1), version: ver }); }
-        catch (e) { /* a bad row never kills the report */ }
-      } });
-    thisRun[map.name] = { shape: map.shape && map.shape.charAt(0) === '@' ? 'custom' : (map.shape || '?'), agg: r };
-    if (!flags.quiet) process.stderr.write('.');
-  });
+  function shapeOf(map) { return map.shape && map.shape.charAt(0) === '@' ? 'custom' : (map.shape || '?'); }
+  // per-run stride (~21.5M) dwarfs the in-run seed span (g*104729, n<=204),
+  // so accumulated runs can never replay a prior run's seeds
+  function seedBaseFor(mi) { return (mi + 1) * 7919 + priorRuns * 7919 * 2711; }
+  if (flags.parallel) {
+    // process-per-map: the engine's current-board state is module-global, so
+    // in-process interleaving is unsafe — each worker require()s a fresh engine.
+    if (dbm) { try { dbm.close(dbh); } catch (e) {} dbm = null; console.error('(per-battle DB rows skipped in --parallel)'); }
+    var cp = require('child_process');
+    var WORKER = 'var E=require(process.argv[1]);var m=E.MAPS.filter(function(x){return x.name===process.argv[2]})[0];' +
+      'process.stdout.write(JSON.stringify(E.balanceMap(m,+process.argv[3],{diffRed:process.argv[4],diffBlue:process.argv[5],seedBase:+process.argv[6]})));';
+    var enginePath = path.join(__dirname, '..', 'game', 'engine.js');
+    await new Promise(function (resolve, reject) {
+      var pending = maps.length, launched = 0;
+      var launchNext = function () {
+        if (launched >= maps.length) return;
+        var mi = launched++, map = maps[mi];
+        cp.execFile(process.execPath, ['-e', WORKER, enginePath, map.name, String(n), dr, db, String(seedBaseFor(mi))],
+          { maxBuffer: 64e6 }, function (err, stdout) {
+            if (err) return reject(err);
+            try { thisRun[map.name] = { shape: shapeOf(map), agg: JSON.parse(stdout) }; }
+            catch (e) { return reject(e); }
+            if (!flags.quiet) process.stderr.write('.');
+            if (--pending === 0) return resolve();
+            launchNext();
+          });
+      };
+      for (var wk = 0; wk < Math.min(flags.parallel, maps.length); wk++) launchNext();
+    }).catch(function (e) { console.error('worker failed: ' + e.message); process.exit(1); });
+  } else {
+    maps.forEach(function (map, mi) {
+      var seedBase = seedBaseFor(mi);
+      var r = E.balanceMap(map, n, { diffRed: dr, diffBlue: db, seedBase: seedBase,
+        onGame: dbm && function (g1, nn, st) {
+          try { dbm.insertBattle(dbh, runId, st, E.balanceFP(g1 - 1), { seed: E.balanceSeed(seedBase, g1 - 1), version: ver }); }
+          catch (e) { /* a bad row never kills the report */ }
+        } });
+      thisRun[map.name] = { shape: shapeOf(map), agg: r };
+      if (!flags.quiet) process.stderr.write('.');
+    });
+    if (dbm) try { dbm.close(dbh); } catch (e) {}
+  }
   if (!flags.quiet) process.stderr.write('\n');
-  if (dbm) try { dbm.close(dbh); } catch (e) {}
 
   // ---- accumulation (persistent per-version data) ----
   var acc = null, runs = 1, accumulated = false;
@@ -240,4 +281,4 @@ function run() {
   if (accumulated) console.log('ACCUMULATED: ' + rel + '/accumulated.json (' + totalBattles + ' battles across ' + runs + ' runs)');
   console.log('BEST_MAP: ' + best);
 }
-run();
+run().catch(function (e) { console.error(e); process.exit(1); });

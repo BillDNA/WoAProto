@@ -30,7 +30,14 @@
     return c;
   }
 
-  function unitValue(t) { return { infantry: 3, cavalry: 4, artillery: 5 }[t] || ((I.UNITS[t] ? I.UNITS[t].vp : 1) + 2); }
+  // AI-side unit valuation — lives in the weight vector since V1 so the tuner
+  // and personalities can sweep it; the old hardcoded 3/4/5 are the defaults.
+  var UNIT_VAL_KEY = { infantry: 'unitValInfantry', cavalry: 'unitValCavalry', artillery: 'unitValArtillery' };
+  function unitValue(t, w) {
+    var k = UNIT_VAL_KEY[t];
+    if (k && w && typeof w[k] === 'number') return w[k];
+    return { infantry: 3, cavalry: 4, artillery: 5 }[t] || ((I.UNITS[t] ? I.UNITS[t].vp : 1) + 2);
+  }
 
   // ---- AI personalities are DATA (V0 ai-variety) ----
   // One engine, many temperaments: a config is { noise, breadth, replySamples,
@@ -47,15 +54,23 @@
     attrWin: 500,      // attrition-projection swing at full urgency
     fsDiff: 8, fsDiffUrgent: 40, // field-score diff, flat + urgency-scaled
     unitOnBoard: 22, unitReserve: 16, // unitValue multipliers
+    unitValInfantry: 3, unitValCavalry: 4, unitValArtillery: 5, // the AI's own worth-per-unit
     advance: 2.2,      // pressure toward the enemy HQ (per hex of distance)
     hqGuard: 4,        // bonus for sitting next to my own HQ
     enemyDist: 1.6,    // keep enemy units far from my HQ
     myThreatHQ: 220, myThreatKill: 3,   // my available attacks next step
     threatHQ: 600, threatKill: 6, threatTie: 2.5, // enemy threats on me
     trenchHome: 6,     // trenches near my HQ
+    trenchFacing: 3,   // V1: per covered trench edge that faces a LIVE enemy lane
+                       // (enemy unit within 2 of the far hex) — orientation matters now
     noopPenalty: 80,   // dead-turn plans (round 6 — keep > fallbackBias + reply noise)
     antiShuffle: 10,   // re-swapping the same pair as last turn
-    fallbackBias: 12   // mild preference for printed actions over card-burning
+    fallbackBias: 12,  // mild preference for printed actions over card-burning
+    // V1 search dial (lives with the weights so personalities/tuner can set it):
+    // when a step has more options than this, keep the top N by cheap static
+    // pre-rank instead of the old RANDOM shuffle+slice(80) — the cap can no
+    // longer discard the best move. Lower = faster + more approximate.
+    shortlist: 40
   };
   var AI_PRESETS = {
     easy:   { noise: 60, breadth: 0 },                                  // greedy + mistakes
@@ -80,11 +95,28 @@
       if (res.defenderIsHQ) {
         if (res.outcome !== 'defender') score -= w.threatHQ; // enemy can take our HQ
       } else if (tgt && tgt.owner === me) {
-        if (res.outcome === 'attacker') score -= unitValue(tgt.type) * w.threatKill;
-        else if (res.outcome === 'tie') score -= unitValue(tgt.type) * w.threatTie;
+        if (res.outcome === 'attacker') score -= unitValue(tgt.type, w) * w.threatKill;
+        else if (res.outcome === 'tie') score -= unitValue(tgt.type, w) * w.threatTie;
       }
     });
     return score;
+  }
+
+  // How many of a trench's two covered edges face a LIVE enemy lane — an enemy
+  // unit within 2 hexes of the far side of the denied border. Trenches are
+  // attacker-support denial, so an edge nobody can attack across is worth
+  // nothing; this is what makes orientation a real choice (V1 — Bill's
+  // "how does the AI pick the facing" answer used to be "it doesn't").
+  function trenchFacingLive(st, h, dirs, enemyHexes) {
+    var v = 0;
+    for (var i = 0; i < dirs.length; i++) {
+      var n = I.neighbor(h, dirs[i]);
+      if (!n) continue;
+      for (var j = 0; j < enemyHexes.length; j++) {
+        if (I.dist(n, enemyHexes[j]) <= 2) { v++; break; }
+      }
+    }
+    return v;
   }
 
   function evalState(st, me, w) {
@@ -107,12 +139,12 @@
       var u = st.units[h];
       (u.owner === me ? myUnits : enUnits).push({ h: h, u: u });
     }
-    myUnits.forEach(function (x) { s += unitValue(x.u.type) * w.unitOnBoard; });
-    enUnits.forEach(function (x) { s -= unitValue(x.u.type) * w.unitOnBoard; });
+    myUnits.forEach(function (x) { s += unitValue(x.u.type, w) * w.unitOnBoard; });
+    enUnits.forEach(function (x) { s -= unitValue(x.u.type, w) * w.unitOnBoard; });
     // reserves slightly less valuable than deployed
     ['infantry', 'cavalry', 'artillery'].forEach(function (t) {
-      s += st.reserves[me][t] * unitValue(t) * w.unitReserve;
-      s -= st.reserves[en][t] * unitValue(t) * w.unitReserve;
+      s += st.reserves[me][t] * unitValue(t, w) * w.unitReserve;
+      s -= st.reserves[en][t] * unitValue(t, w) * w.unitReserve;
     });
     // advance toward enemy HQ; keep some defense near own HQ
     var ehq = st.hq[en], mhq = st.hq[me];
@@ -125,19 +157,31 @@
     I.listAttacks(st, me).forEach(function (a) {
       var res = I.computeAttack(st, a);
       if (res.defenderIsHQ) { if (res.outcome !== 'defender') s += w.myThreatHQ; }
-      else if (res.outcome === 'attacker') s += unitValue(st.units[a.to].type) * w.myThreatKill;
+      else if (res.outcome === 'attacker') s += unitValue(st.units[a.to].type, w) * w.myThreatKill;
     });
     // enemy threats on mine
     s += threatScan(st, me, w);
-    // trench coverage near my HQ is nice
-    for (var th in st.trenches) if (I.dist(th, mhq) <= 1) s += w.trenchHome * st.trenches[th].length;
+    // Trenches: proximity to my HQ is nice, but a trench is attacker-support
+    // denial — its real worth is FACING somewhere the enemy can actually come
+    // from. Count each covered edge on a live lane (my unit's hex, or a hex
+    // shielding my HQ) so orientation stops being an arbitrary tie (V1).
+    var enemyHexes = enUnits.map(function (x) { return x.h; });
+    for (var th in st.trenches) {
+      if (I.dist(th, mhq) <= 1) s += w.trenchHome * st.trenches[th].length;
+      var occ = st.units[th];
+      if ((occ && occ.owner === me) || I.dist(th, mhq) <= 1) {
+        for (var ti = 0; ti < st.trenches[th].length; ti++) {
+          s += w.trenchFacing * trenchFacingLive(st, th, st.trenches[th][ti].dirs, enemyHexes);
+        }
+      }
+    }
     return s;
   }
 
-  function enumerateChoices(st) {
+  function enumerateWithOptions(st) {
     var o = I.stepOptions(st, { previews: false });
     var out = [{ skip: true }];
-    if (!o) return out;
+    if (!o) return { o: null, choices: out };
     if (o.type === 'deploy') o.targets.forEach(function (h) { out.push({ hex: h }); });
     else if (o.type === 'trench') o.targets.forEach(function (h) {
       I.trenchOrientations(st, h).forEach(function (d) { out.push({ hex: h, dirs: d }); });
@@ -152,7 +196,42 @@
       o.trenches.forEach(function (t) { out.push({ trenchHex: t.hex, trenchIdx: t.idx }); });
       o.forestPieces.forEach(function (pc) { out.push({ pieceId: pc.id }); });
     }
-    return out;
+    return { o: o, choices: out };
+  }
+  function enumerateChoices(st) { return enumerateWithOptions(st).choices; }
+
+  // Cheap static pre-rank for the branching cap — no cloning, just "roughly
+  // how promising is this option". Only ORDER matters (the real clone+eval
+  // decides); ties keep enumeration order, so the search stays deterministic.
+  // Scale note for tuners: attacks that win land ~100+, advances ~30, swaps 10.
+  function prescoreChoice(st, o, c, me, w, ctx) {
+    if (c.skip) return -1e5; // ranked last; re-appended after the cut anyway
+    if (o.type === 'attack') {
+      var res = I.computeAttack(st, { from: c.from, to: c.to, via: c.via || null,
+        mod: o.mod || 0, tieSpare: !!o.tieSpare, noAdvance: !!o.noAdvance });
+      if (res.defenderIsHQ && res.outcome !== 'defender') return 1e4; // battle won
+      var tgt = res.defenderUnit ? unitValue(res.defenderUnit, w) : 0;
+      var mine = unitValue(st.units[c.from].type, w);
+      if (res.outcome === 'attacker') return 100 + tgt * 10;
+      if (res.outcome === 'tie') return 50 + (tgt - mine) * 10;
+      return -mine * 10; // walking into a repulse
+    }
+    if (o.type === 'deploy') {
+      return 40 - I.dist(c.hex, ctx.ehq) * 4 + (I.dist(c.hex, ctx.mhq) <= 1 ? 2 : 0);
+    }
+    if (o.type === 'trench') {
+      return 20 + trenchFacingLive(st, c.hex, c.dirs, ctx.enemyHexes) * 10;
+    }
+    if (o.type === 'reposition') {
+      if (c.swap) return 10; // situational; the eval sorts survivors out
+      return 30 + (I.dist(c.from, ctx.ehq) - I.dist(c.to, ctx.ehq)) * 8;
+    }
+    return 25; // barrage: option counts never reach the cap
+  }
+  function prescoreCtx(st, me) {
+    var en = I.other(me), enemyHexes = [];
+    for (var h in st.units) if (st.units[h].owner === en) enemyHexes.push(h);
+    return { mhq: st.hq[me], ehq: st.hq[en], enemyHexes: enemyHexes };
   }
 
   // Greedily resolve the pending card on a cloned state; returns {score, choices}
@@ -161,13 +240,18 @@
     var choices = [];
     var guard = 0;
     while (sim.phase === 'step' && guard++ < 12) {
-      var opts = enumerateChoices(sim);
+      var eo = enumerateWithOptions(sim);
+      var opts = eo.choices;
       var best = null, bestScore = -Infinity;
-      // I.cap branching for performance
-      if (opts.length > 80) {
-        I.shuffle(s, opts);
-        opts = opts.slice(0, 80);
-        if (opts.every(function (c) { return !c.skip; })) opts.push({ skip: true });
+      // Branching cap (V1): the old cap RANDOM-shuffled and sliced 80 — on a
+      // high-branching step it could discard the best move outright. Now the
+      // cut keeps the top w.shortlist by static pre-rank; skip stays available.
+      if (opts.length > w.shortlist) {
+        var ctx = prescoreCtx(sim, me);
+        var scored = opts.map(function (c, i) { return { c: c, i: i, p: prescoreChoice(sim, eo.o, c, me, w, ctx) }; });
+        scored.sort(function (a, b) { return b.p - a.p || a.i - b.i; });
+        opts = scored.slice(0, w.shortlist).map(function (x) { return x.c; });
+        opts.push({ skip: true });
       }
       opts.forEach(function (c) {
         var sim2 = cloneForSim(sim);
@@ -292,6 +376,42 @@
     return best;
   }
 
+  // Rank the current step's legal choices by the same clone+eval the AI uses.
+  // Built for the LLM harness (V1): show the model the top k of N instead of
+  // every legal move, WITHOUT hiding anything strategic —
+  //   - an attack step is never truncated (attacks are the strategic moves),
+  //   - any choice touching ground within 1 of either HQ is force-included,
+  //   - skip is always listed when legal.
+  // Returns { type, total, shown:[{choice, score}] } — shown sorted best-first,
+  // score = evalState of the resulting position (the honest heuristic number).
+  function rankChoices(st, opts) {
+    opts = opts || {};
+    var k = opts.k || 15;
+    var w = aiConfig(opts.config).w;
+    var me = st.current;
+    var eo = enumerateWithOptions(st);
+    if (!eo.o) return { type: null, total: 0, shown: [] };
+    if (eo.o.type === 'attack') k = Math.max(k, eo.choices.length); // never hide an attack
+    var mhq = st.hq[me], ehq = st.hq[I.other(me)];
+    function nearHQ(c) {
+      var spots = [c.hex, c.to, c.from, c.a, c.b].filter(Boolean);
+      return spots.some(function (h) { return I.dist(h, mhq) <= 1 || I.dist(h, ehq) <= 1; });
+    }
+    var scored = eo.choices.map(function (c, i) {
+      if (c.skip) return { choice: c, score: -Infinity, i: i, keep: true };
+      var sim = cloneForSim(st), sc;
+      try { I.applyStep(sim, c); sc = evalState(sim, me, w); } catch (e) { sc = -Infinity; }
+      return { choice: c, score: sc, i: i, keep: nearHQ(c) };
+    });
+    scored.sort(function (a, b) { return b.score - a.score || a.i - b.i; });
+    var shown = scored.slice(0, k);
+    scored.slice(k).forEach(function (x) { if (x.keep) shown.push(x); });
+    return {
+      type: eo.o.type, total: eo.choices.length,
+      shown: shown.map(function (x) { return { choice: x.choice, score: x.score === -Infinity ? null : Math.round(x.score) }; })
+    };
+  }
+
   /* shared-namespace exports */
   I.clone = clone;
   I.cloneForSim = cloneForSim;
@@ -306,4 +426,5 @@
   I.CARD_KEEP = CARD_KEEP;
   I.sampledReplyScore = sampledReplyScore;
   I.aiPlanTurn = aiPlanTurn;
+  I.rankChoices = rankChoices;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -66,6 +66,7 @@ Higher = the AI cares more about that thing.
 | `fsDiffUrgent` | 40   | Extra value per point of field-score lead, scaled up as the game nears its end. |
 | `unitOnBoard`  | 22   | Value of each of my deployed units (× the unit's worth). |
 | `unitReserve`  | 16   | Value of each of my un-deployed reserves. Lower than on-board = mild nudge to actually field them. |
+| `unitValInfantry` / `unitValCavalry` / `unitValArtillery` | 3 / 4 / 5 | The AI's own worth-per-unit (multiplied into the four unit/threat terms above and below). V1: moved into the weights so the tuner and personalities can sweep them. |
 | `advance`      | 2.2  | Reward for my units being *closer* to the enemy HQ (per hex). Raise it to make the AI pushy. |
 | `hqGuard`      | 4    | Bonus for a unit sitting next to my own HQ. |
 | `enemyDist`    | 1.6  | Reward for keeping enemy units *far* from my HQ. |
@@ -75,9 +76,27 @@ Higher = the AI cares more about that thing.
 | `threatKill`   | 6    | Penalty per point of my unit the enemy threatens to kill. |
 | `threatTie`    | 2.5  | Penalty per point of my unit the enemy could trade with (tie). |
 | `trenchHome`   | 6    | Bonus per trench dug near my own HQ. |
+| `trenchFacing` | 3    | V1: bonus per covered trench edge that faces a **live enemy lane** (an enemy unit within 2 hexes of the far side of the denied border). This is what makes trench *orientation* a real choice — see below. |
 | `noopPenalty`  | 80   | Penalty for a plan that resolves **zero** actions (a dead turn). Anti-degeneracy — **don't zero it.** |
 | `antiShuffle`  | 10   | Penalty for re-swapping the same pair of units it swapped last turn. Anti-degeneracy. |
 | `fallbackBias` | 12   | Mild preference for a card's printed action over burning it. |
+| `shortlist`    | 40   | V1 search dial: when a step has more options than this, keep the top N by a cheap static pre-rank (winning attacks first, advances next, swaps last). Replaces the old **random** 80-cap that could discard the best move. Lower = faster + more approximate — lab personalities can crank it down. |
+
+### How the AI picks a trench's orientation (Bill's Round-3/5 question)
+
+Before V1 the honest answer was "it doesn't": `trenchHome` was orientation-blind,
+so unless a live enemy attack happened to cross one of the candidate borders
+(where support denial shows up in `threatKill`/`threatHQ`), every facing scored
+the same and the first one in enumeration order won — which is how the
+Feedback-Round-2 "trench facing nowhere" happened.
+
+Since V1 the orientation is explicit: each covered edge that faces a live enemy
+lane (enemy unit within 2 hexes of the hex across the denied border) earns
+`trenchFacing` points, counted for trenches on my units' hexes or shielding my
+HQ. Same-facing ties still fall back to enumeration order, but a trench that
+blocks a real approach now always beats one facing an empty flank. The cheap
+pre-rank (`shortlist`) uses the same signal, so useful facings also survive the
+branching cut.
 
 ### The three dials that aren't weights
 | Dial | Default | What it does |

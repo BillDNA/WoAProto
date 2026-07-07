@@ -22,7 +22,7 @@
     stepOptions: I.stepOptions, applyStep: I.applyStep, mustPlayStep: I.mustPlayStep, cardsRemaining: I.cardsRemaining,
     enumerateChoices: I.enumerateChoices,
     concede: I.concede, concedeAdvised: I.concedeAdvised, fieldScore: I.fieldScore,
-    aiPlanTurn: I.aiPlanTurn, clone: I.clone, cloneForSim: I.cloneForSim, evalState: I.evalState, validateMaps: I.validateMaps,
+    aiPlanTurn: I.aiPlanTurn, rankChoices: I.rankChoices, clone: I.clone, cloneForSim: I.cloneForSim, evalState: I.evalState, validateMaps: I.validateMaps,
     AI_PRESETS: I.AI_PRESETS, AI_WEIGHTS: I.AI_WEIGHTS, aiConfig: I.aiConfig, CARD_KEEP: I.CARD_KEEP,
     hooks: I.HOOKS,
     simBattle: I.simBattle, balanceMap: I.balanceMap,

@@ -48,8 +48,8 @@ var WOA_BUILTIN =
      enemy's sampled best reply (0 = pure greedy; 3 = the hard AI's search),
      weights override engine AI_WEIGHTS terms (attrWin, fsDiff, fsDiffUrgent,
      unitOnBoard, unitReserve, advance, hqGuard, enemyDist, myThreatHQ,
-     myThreatKill, threatHQ, threatKill, threatTie, trenchHome, noopPenalty,
-     antiShuffle, fallbackBias). New AI = new row. Pit them:
+     myThreatKill, threatHQ, threatKill, threatTie, trenchHome, trenchFacing,
+     noopPenalty, antiShuffle, fallbackBias, shortlist). New AI = new row. Pit them:
      node balance.js matchup 16 brawler turtle */
   "ai": {
     "brawler": { "noise": 0, "breadth": 0,
