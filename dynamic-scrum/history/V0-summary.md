@@ -2,9 +2,9 @@
 # War of Attrition — V0 summary & retrospective (July 2026)
 
 The one-page account of what V0 set out to do, what shipped, what five feedback rounds changed,
-and what state the prototype is in as V1 speccing begins ([[specs/V1-specs/v1-data-persistence]],
-[[specs/V1-specs/v1-ai-search-and-tuning]], [[specs/V1-specs/v1-claude-plays-and-reports]],
-[[specs/V1-specs/v1-content-curation]]). Terse by design — current *behaviour* lives in
+and what state the prototype is in as V1 speccing begins ([[v1-data-persistence]],
+[[v1-ai-search-and-tuning]], [[v1-claude-plays-and-reports]],
+[[v1-content-curation]]). Terse by design — current *behaviour* lives in
 `game/CLAUDE.md`, `game/README.md`, and [[code-overview]]; this is the *arc*.
 
 ## The point of V0
@@ -17,7 +17,7 @@ data, and why a balance lab exists at all.
 
 ## What shipped — the ten V0 specs
 
-Built and committed in one autonomous run (July 2, 2026); specs in `specs/V0-specs/` are the design
+Built and committed in one autonomous run (July 2, 2026); the V0 spec files were the design
 rationale, current behaviour is in `game/CLAUDE.md`.
 
 **Rules / game**
@@ -54,7 +54,7 @@ Every item from rounds 1–4 is struck through in `CLAUDE.md`; the arc:
    starts at 0.2.** Doc reorg into tagged onboarding/skills/rules/architecture/workflow.
 3. **Round 3 — rules refinement + perf questions.** River went from no-support to no-deploy-
    -control-extension; no-swapping-same-type rule; trench-orientation + search-cost questions
-   raised (now answered in [[specs/V1-specs/v1-ai-search-and-tuning]]); first data review against
+   raised (now answered in [[v1-ai-search-and-tuning]]); first data review against
    the rubrics.
 4. **Round 4 — data infrastructure.** Persistent per-version accumulation (`accumulated.json`),
    Typicality footer on LLM battles, the **`content/` file reorg** (maps + decks as deletable
@@ -64,7 +64,7 @@ Every item from rounds 1–4 is struck through in `CLAUDE.md`; the arc:
 5. **Round 5 — prepping V1 (this round).** Not built — **specced.** Data persistence, AI search
    pruning + weight tuning + the trench-orientation answer, Claude Plays persistent sessions +
    first-to-3, generate-reports fire-and-forget, and trim-to-12 + a map-set mechanic. See the four
-   `specs/V1-specs/` docs.
+   V1 spec docs (now `dynamic-scrum/planning/specs/`).
 
 ## Where the prototype stands (baselines to protect)
 
@@ -82,7 +82,7 @@ Roster: **17 maps** (V1 trims to 12). Green bars to keep green: `node game/test.
 
 ## What carries into V1
 
-The four `specs/V1-specs/` thinking docs, each ending in questions for Bill:
+The four V1 thinking docs (now `dynamic-scrum/planning/specs/`), each ending in questions for Bill:
 - **Data persistence** — SQLite dev-only, keep per-battle rows (unblocks [[graphs-spec]] trends).
 - **AI search & tuning** — kill the random 80-cap → ranked shortlist; reuse for a concentrated
   claude-plays option list; offline weight tuner; the trench-orientation fix.

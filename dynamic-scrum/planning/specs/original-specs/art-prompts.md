@@ -6,7 +6,7 @@ Prompts ready to paste into an image AI (Midjourney / DALL-E / Stable Diffusion 
 **The pipeline (now live, June 2026):** drop raw renders into `game/art/` named
 `<card-id>.png` (bare id, e.g. `naval_barrage.png` — no prefix), then run
 `powershell -ExecutionPolicy Bypass -File dev\optimize-art.ps1`. It sweeps the
-heavy originals into `design-docs/art-originals/` (gitignored), trims transparent
+heavy originals into `dynamic-scrum/planning/specs/original-specs/art-originals/` (gitignored), trims transparent
 margins, and writes web-weight versions back into `game/art/`. The game looks art
 up **by card id** (`art/<id>.jpg`, then `.png`) and quietly falls back to the
 text-only card face when nothing matches — new cards in maps.js just need a

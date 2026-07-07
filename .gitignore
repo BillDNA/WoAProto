@@ -11,12 +11,12 @@ desktop.ini
 Thumbs.db
 
 # Art source binaries stay local (public repo, big files)
-# (moved under specs/original-specs/ in the round-2 doc reorg)
-specs/original-specs/ProtoArt/
-specs/original-specs/art-originals/
-specs/original-specs/prototype pictures/*
+# (moved under dynamic-scrum/planning/specs/original-specs/ in the round-2 doc reorg)
+dynamic-scrum/planning/specs/original-specs/ProtoArt/
+dynamic-scrum/planning/specs/original-specs/art-originals/
+dynamic-scrum/planning/specs/original-specs/prototype pictures/*
 # ...except the diagram the terrain rules are defined by
-!specs/original-specs/prototype pictures/HexClarificationDiagram.png
+!dynamic-scrum/planning/specs/original-specs/prototype pictures/HexClarificationDiagram.png
 
 # Playtest reports live under logs/reports/ (Feedback Round 4). The balance +
 # battle .md reports ARE the corpus the report skills read, so they're tracked;

@@ -17,7 +17,7 @@ felt-notes for pennies make content iteration cheap. A clean headless engine, de
 a test suite that survived a full restructure back it.
 
 **Next:** decide the run and grow content (see [[Roadmap]] M0–M1). Two items are filed for Bill to
-decide — the weight-tuner sweep and the Steam leverage draft (Q.2, Q.3, `dynamic-scrum/docs/steam-roadmap.md`).
+decide — the weight-tuner sweep and the Steam leverage draft (Q.2, Q.3, `dynamic-scrum/planning/parking-lot/steam-roadmap.md`).
 
 ---
 

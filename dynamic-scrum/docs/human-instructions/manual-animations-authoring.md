@@ -3,7 +3,7 @@
 # Field Manual animations — authoring guide for future sessions
 
 How to add or edit a worked example in the Field Manual's diagram player
-(V1, [[../../specs/V1-specs/v1-field-manual-animations.md|spec]]). Everything
+(V1, [[../../planning/specs/v1-field-manual-animations.md|spec]]). Everything
 lives in **`game/ui/manual.js`**; read that file alongside this doc.
 
 ## The pieces

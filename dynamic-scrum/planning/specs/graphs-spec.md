@@ -1,3 +1,5 @@
+> **Status: Implemented** (V1, July 2026) — kept for decision rationale + Bill's inline rulings; current behaviour lives in the dynamic-scrum/docs primers ([[Docs Index]]).
+
 #spec
 # Graphs / data visualization — first impressions & questions
 

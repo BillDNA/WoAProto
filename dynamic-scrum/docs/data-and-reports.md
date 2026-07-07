@@ -5,7 +5,7 @@ last-reviewed: 2026-07-07
 # Data & reports — where every battle lands and how reports flow
 
 The one primer for the V1 data pipeline: per-battle persistence, the report tree, and the
-skills loop that runs it. (Distilled from the implemented specs `../../specs/V1-specs/v1-data-persistence.md`,
+skills loop that runs it. (Distilled from the implemented specs `../planning/specs/v1-data-persistence.md`,
 `v1-claude-plays-and-reports.md`, and `graphs-spec.md` — read those only for the decision rationale.)
 
 ## The invariant

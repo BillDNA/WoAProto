@@ -22,7 +22,7 @@ Six feedback rounds, all closed. Terse log; current state and every ruling live 
 
 ## V0 — SHIPPED (July 2026)
 
-Ten specs built in one autonomous run (July 2, 2026) + five feedback rounds, all closed. Terse log; the full arc lives in `../../specs/V0-specs/V0-summary.md`, current behaviour in [[code-architecture]], every ruling in git history.
+Ten specs built in one autonomous run (July 2, 2026) + five feedback rounds, all closed. Terse log; the full arc lives in [[V0-summary]] (next to this file), current behaviour in [[code-architecture]], every ruling in git history.
 
 **The ten specs** — terrain rework (trenches = attacker-support denial; directional rivers), combat clarity (hover attack pills, strike arrows, supporter rings from engine truth), 2A layout (mats left, journal-as-book right, VP tug-bar), Balance Dashboard (CLI-identical aggregation), Quartermaster's Ledger deck editor, deletable maps + hex-carved board shapes, parameterized AI personalities as data rows, grading rubrics, claude-plays (`claude -p` transport, honest info only, felt-notes), claude skills (run-tournament / create-card / create-map).
 
@@ -30,7 +30,7 @@ Ten specs built in one autonomous run (July 2, 2026) + five feedback rounds, all
 2. **Round 2 — AI transparency + metrics.** [[ai-heuristic-model]] doc, no-skip rule, **Drag** + **Swings** pacing metrics, rule-book versioning starts at **0.2**, 5 deck slots, claude-plays logs + human-instructions, doc reorg + tags, rule book rewritten to match code.
 3. **Round 3 — rules refinement.** River: support crosses freely but no deploy-control extension; no same-type swaps (a hidden skip); trench-orientation + search-cost questions raised (answered in V1 specs); first rubric-graded data review; version stamps in logs/reports.
 4. **Round 4 — data infrastructure (0.3).** Per-version accumulation (`accumulated.json`), Typicality footer on LLM battles, `content/` reorg (every map + deck a deletable file, one roster for all modes), reports → `logs/reports/{balance,battle,analysis}/<version>/`, Debug state-dump button, generate-reports + review-reports skills, [[graphs-spec]] drafted; river-deploy bug fixed.
-5. **Round 5 — specced V1.** The `specs/V1-specs/` thinking docs (data persistence, AI search + tuning, claude-plays sessions, content curation, field-manual animations); Bill answered every open question inline in the specs.
+5. **Round 5 — specced V1.** The V1 thinking docs (now `dynamic-scrum/planning/specs/`) (data persistence, AI search + tuning, claude-plays sessions, content curation, field-manual animations); Bill answered every open question inline in the specs.
 
 **Baselines to protect** (post-V0, details in V0-summary): first mover ~46%, Red ~52%, tie-goes-to-2nd decides ~26% (biggest open lever), hard>normal 60% / hard>easy 78% skill premium, behaviour band ~4.9 attacks / ~6.5 swaps per battle. Sharp moves in these = regression even if win rates look fine.
 

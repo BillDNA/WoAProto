@@ -3,7 +3,7 @@
 **Status:** not started · captured 2026-07-07 (adopt) · graduates to [[Roadmap]] M0 when brainstormed
 
 > "There is no run. The roguelite loop — the actual product — is undesigned."
-> — `dynamic-scrum/docs/steam-roadmap.md`
+> — `dynamic-scrum/planning/parking-lot/steam-roadmap.md`
 
 The load-bearing design decision the whole Steam trajectory waits on. Everything downstream (the shell,
 the save system, the content targets, the store pitch) is gated by it, so it earns a real brainstorm

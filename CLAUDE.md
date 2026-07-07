@@ -57,7 +57,7 @@ Start in [[code-architecture]] (`dynamic-scrum/docs/`) — it is the orientation
 ## Shipped history
 
 The June-2026 feedback rounds, V0, and V1 all shipped pre-board; the terse log lives in
-[[shipped-history]] (`dynamic-scrum/docs/`), including the **baselines to protect** (first mover ~46%,
+[[shipped-history]] (`dynamic-scrum/history/`), including the **baselines to protect** (first mover ~46%,
 Red ~52%, tie-goes-to-2nd ~26%, skill premium 60/78%, ~4.9 attacks / ~6.5 swaps per battle — sharp
 moves in these = regression even if win rates look fine). Post-adopt work is tracked on the board.
 

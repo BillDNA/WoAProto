@@ -18,9 +18,12 @@ plus topic tags (`#game-rules`, `#code-architecture`, `#ai`, `#game-logs`, `#his
 | [[workflow]]                     | Build/test/tooling conventions (server, test suites, golden-diff oracle, gen-docs, graphify) |
 | [[data-and-reports]]             | Where every battle lands (`logs/woa.db`) and how reports/skills flow |
 | [[War Of Attrition rule book]]   | The rules SOT (versioned — tracks `Engine.VERSION`)            |
-| [[shipped-history]]              | Pre-board shipped log (June-rounds / V0 / V1) parsed out of root `CLAUDE.md` |
 | [[glossary]]                     | Project lexicon                                                |
 | [[version-control-policy]]       | Git protocol — single source of truth                          |
+
+History lives in `dynamic-scrum/history/`: [[shipped-history]] (June-rounds / V0 / V1 terse log, parsed
+out of root `CLAUDE.md`) and [[V0-summary]] (the full V0 arc). Templates `_orientation-doc.md` /
+`ticket-block.md` are DS-scaffolded and current — author new primers / tickets from them.
 
 ## Reference (used by skills + Bill alike)
 
@@ -28,7 +31,9 @@ plus topic tags (`#game-rules`, `#code-architecture`, `#ai`, `#game-logs`, `#his
 | -------------------- | ------------------------------------------------------------------------ |
 | [[card-cheatsheet]]  | Full card/step data vocabulary for `content/decks/` (create-card reads it) |
 | [[grading-rubrics]]  | Goal/evidence/score rubrics for cards, maps, units, the game (create-card / create-map / run-tournament / review-reports grade against it) |
-| [[steam-roadmap]]    | Steam leverage map (July 2026 draft — **for Bill to decide**; board [[Roadmap]] carries the adopted milestones) |
+
+Future-looking material is NOT here: [[steam-roadmap]] is parked in `dynamic-scrum/planning/parking-lot/`
+(**for Bill to decide**; board [[Roadmap]] carries the adopted milestones).
 
 ## human-instructions/ — written for Bill
 
@@ -40,23 +45,25 @@ plus topic tags (`#game-rules`, `#code-architecture`, `#ai`, `#game-logs`, `#his
 
 ## Implemented specs → where the behaviour is documented now
 
-`specs/` (repo root) stays in place as the historical record — thinking docs + Bill's inline rulings.
-A fresh session orients from the primers; read a spec only for decision rationale.
+Specs live in `dynamic-scrum/planning/specs/` (the DS spec home; the old repo-root `specs/` dir is
+gone). The **V1 specs are kept there, marked implemented** — thinking docs with Bill's inline rulings,
+read only for decision rationale. The **V0 spec files were deleted** (fully represented below; git
+history is the archive), with [[V0-summary]] preserved in `dynamic-scrum/history/`.
 
-| Spec (implemented)                        | Orientation home now                                      |
-| ----------------------------------------- | --------------------------------------------------------- |
-| `V1-specs/v1-architecture.md`             | [[code-architecture]] (seam-split layout, golden-diff oracle) |
-| `V1-specs/v1-data-persistence.md`         | [[data-and-reports]]                                      |
-| `V1-specs/v1-ai-search-and-tuning.md`     | [[ai-heuristic-model]] + [[code-architecture]] §AI        |
-| `V1-specs/v1-claude-plays-and-reports.md` | [[claude-plays-human-instructions]] + [[data-and-reports]] |
-| `V1-specs/v1-content-curation.md`         | [[code-architecture]] §content/map-sets                   |
-| `V1-specs/graphs-spec.md`                 | [[data-and-reports]] §loop (Charts tab)                   |
-| `V1-specs/v1-field-manual-animations.md`  | [[manual-animations-authoring]]                           |
-| `V0-specs/*` (ten specs + 5 rounds)       | [[shipped-history]] §V0 → [[code-architecture]] / [[War Of Attrition rule book]] / [[grading-rubrics]] |
-| `original-specs/*`                        | Physical-prototype record (art sources, `HexClarificationDiagram.png` — still normative for directional terrain) |
+| Spec (implemented)                 | Orientation home now                                      |
+| ---------------------------------- | --------------------------------------------------------- |
+| [[v1-architecture]]                | [[code-architecture]] (seam-split layout, golden-diff oracle) |
+| [[v1-data-persistence]]            | [[data-and-reports]]                                      |
+| [[v1-ai-search-and-tuning]]        | [[ai-heuristic-model]] + [[code-architecture]] §AI        |
+| [[v1-claude-plays-and-reports]]    | [[claude-plays-human-instructions]] + [[data-and-reports]] |
+| [[v1-content-curation]]            | [[code-architecture]] §content/map-sets                   |
+| [[graphs-spec]]                    | [[data-and-reports]] §loop (Charts tab)                   |
+| [[v1-field-manual-animations]]     | [[manual-animations-authoring]]                           |
+| V0 specs (ten + 5 rounds, deleted) | [[shipped-history]] §V0 + [[V0-summary]] → [[code-architecture]] / [[War Of Attrition rule book]] / [[grading-rubrics]] |
+| `original-specs/`                  | Physical-prototype record under `dynamic-scrum/planning/specs/original-specs/` (art sources, `HexClarificationDiagram.png` — still normative for directional terrain, gitignore-whitelisted) |
 
 **`style-guide.md` — N/A as a separate doc**: the aesthetic doctrine (steampunk Napoleonic field
-journal) lives in [[workflow]] + `specs/original-specs/Player Card Art direction drafts.md`.
+journal) lives in [[workflow]] + `dynamic-scrum/planning/specs/original-specs/Player Card Art direction drafts.md`.
 
 **Sibling artifact-class indexes (not here):** rule books (`dynamic-scrum/rubrics/`), design specs (`dynamic-scrum/planning/specs/`), and
 the generic skills are their own classes — `dynamic-scrum/docs/` is purely orientation primers (+ the
