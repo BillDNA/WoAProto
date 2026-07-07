@@ -95,13 +95,17 @@
   }
 
   function listRepositions(st, p) {
+    // Round-3 ruling, enforced in 1.0 (was documented as shipped but never made
+    // it into the code): swapping two units of the SAME type changes nothing on
+    // the board — it's a hidden skip the metrics can't see — so it's not legal.
     var moves = [], swaps = [], seenSwap = {};
     for (var h in st.units) {
       if (st.units[h].owner !== p) continue;
+      var myType = st.units[h].type;
       I.neighbors(h).forEach(function (n) {
         if (isEmpty(st, n)) moves.push({ from: h, to: n, via: null });
         var u = unitAt(st, n);
-        if (u && u.owner === p) {
+        if (u && u.owner === p && u.type !== myType) {
           var k = I.edgeKey(h, n);
           if (!seenSwap[k]) { seenSwap[k] = true; swaps.push({ a: h, b: n }); }
         }
@@ -111,7 +115,7 @@
             if (m === h) return;
             if (isEmpty(st, m)) moves.push({ from: h, to: m, via: n });
             var u2 = unitAt(st, m);
-            if (u2 && u2.owner === p) {
+            if (u2 && u2.owner === p && u2.type !== myType) {
               var k2 = 'hq:' + I.edgeKey(h, m);
               if (!seenSwap[k2]) { seenSwap[k2] = true; swaps.push({ a: h, b: m, via: n }); }
             }

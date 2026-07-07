@@ -103,6 +103,7 @@ A **river** (drawn in blue, in the same 2- and 3-side pieces as forest and mount
 - HQ's +1 support applies to adjacent hexes for both attack and defense calculations.
 - The attacking unit's own support value is not added to its attack.
 - Moving/attacking "through a headquarters": a unit adjacent to any HQ may move to, swap with, or attack a hex on the far side of that HQ. Terrain on the crossing edge applies.
+- **Same-type swaps are not legal** (Round-3 ruling, enforced in 1.0): swapping two identical units changes nothing on the board — it's a hidden skipped turn — so only units of different types may swap.
 - Attrition VP counts your **surviving units on the board** (1/2/3 for infantry/cavalry/artillery); reserves never deployed count for nothing, and neither do kills as such — destroying a unit matters because it leaves the enemy less on the field. Tie goes to whoever moved second in the battle. (June 2026 revision; the rule book is updated. Previously kills were what scored, which let a one-kill turtle beat a side that dominated the board.)
 - Ordered Withdraw: the attacker survives a tie, and never advances into the target hex — even on a clear win it holds its ground (June 2026 change). A successful attack on the HQ still captures it; entering isn't required.
 - Naval Barrage may remove **any** trench or whole forest piece on the board (June 2026 ruling — the old "in or adjacent to your controlled hexes" zone is gone); the barrage is optional, the attack can still be ordered.

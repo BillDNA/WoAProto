@@ -93,7 +93,7 @@ Trenches and rivers *(trenches revised July 2026 — previously \+1 defense; riv
   * Take a unit or building from your player mate and place it on the board  
 * Reposition (can do one of these)  
   * Move any unit into an empty adjacent hex; can move through a headquarters.  
-  * Swap the position of two adjacent units; can swap through a headquarters.  
+  * Swap the position of two adjacent units **of different types** (swapping two identical units changes nothing — it is not a legal move); can swap through a headquarters.  
 * Attack  
   * Select a unit on the board to attack an adjacent tile; tile must have a unit or headquarters in it for it to count as an attack.  
 * In sequence   

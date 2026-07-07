@@ -771,6 +771,17 @@ console.log('  battle endings: ' + hqWins + ' HQ captures, ' + attrWins + ' attr
   }), 'every shown choice is a real legal option');
   var big = E.rankChoices(st2, { k: 99 });
   ok(big.shown.length === all.length, 'k >= N shows the whole list (' + big.shown.length + ')');
+
+  // Round-3 ruling enforced in 1.0: same-type swaps are a hidden skip — illegal.
+  var st3 = E.newBattle(E.newMatch({ seed: 5, maps: [cmap], firstPlayer: 'red' }));
+  st3.units = {
+    '0,0': { type: 'infantry', owner: 'red' }, '1,0': { type: 'infantry', owner: 'red' },
+    '0,1': { type: 'cavalry', owner: 'red' }
+  };
+  var reps = E.listRepositions(st3, 'red');
+  ok(!reps.swaps.some(function (sw) { return st3.units[sw.a].type === st3.units[sw.b].type; }),
+    'same-type swaps are not offered (' + reps.swaps.length + ' legal swaps, all cross-type)');
+  ok(reps.swaps.length >= 2, 'cross-type swaps still legal (infantry<->cavalry both pairs)');
 })();
 
 /* ---------- index.html script-tag chain matches the on-disk parts ----------
