@@ -31,12 +31,12 @@ Afterwards: `/send-report` to canonical DS noting the standing-goals pattern and
 convention this project uses.
 
 **Acceptance criteria:**
-- [ ] `design-docs/` gone; contents live under `dynamic-scrum/docs/` (human-instructions divide kept)
-- [ ] `code-architecture.md` = code-overview contents; old name/path references swept
-- [ ] Implemented V0/V1 specs indexed to orientation primers in [[Docs Index]]
-- [ ] Root `CLAUDE.md`: standing goals kept, shipped-history blocks parsed out
-- [ ] Same-commit sweep: `dev/gen-docs.js`, `dev/optimize-art.ps1`, game code comments/strings, 4 skills — tests + gen-docs green
-- [ ] Report sent to canonical DS (standing goals + docs tags note)
+- [x] `design-docs/` gone; contents live under `dynamic-scrum/docs/` (human-instructions divide kept)
+- [x] `code-architecture.md` = code-overview contents; old name/path references swept
+- [x] Implemented V0/V1 specs indexed to orientation primers in [[Docs Index]]
+- [x] Root `CLAUDE.md`: standing goals kept, shipped-history blocks parsed out
+- [x] Same-commit sweep: `dev/gen-docs.js`, `dev/optimize-art.ps1`, game code comments/strings, 4 skills — tests + gen-docs green
+- [x] Report sent to canonical DS (standing goals + docs tags note)
 - [ ] User confirms done
 
 ## Finished
