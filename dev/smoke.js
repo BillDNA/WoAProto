@@ -22,12 +22,18 @@ function readContent() {
   return out;
 }
 var html = read('index.html');
-// inline the scripts so jsdom needs no loader
-html = html
-  .replace('<script src="maps.js"></script>', '<script>' + read('maps.js') + '</script>')
-  .replace('<script src="custom-deck.js"></script>', '<script>' + read('custom-deck.js') + '</script>')
-  .replace('<script src="content/manifest.js"></script>', '<script>' + readContent() + '</script>')
-  .replace('<script src="engine.js"></script>', '<script>' + read('engine.js') + '</script>');
+// inline EVERY <script src> so jsdom needs no loader — the manifest tag expands
+// to the content files (same document.write effect), everything else reads
+// straight from disk. Any tag left un-replaced is a loud failure, not a silent
+// no-op (the old exact-string replaces broke invisibly when a tag changed).
+html = html.replace(/<script src="([^"]+)"><\/script>/g, function (tag, src) {
+  if (src === 'content/manifest.js') return '<script>' + readContent() + '</script>';
+  return '<script>' + read(src) + '</script>';
+});
+if (/<script [^>]*src=/.test(html)) {
+  console.log('FAIL - un-inlined <script src> tag survived (inliner regex mismatch)');
+  process.exit(1);
+}
 
 var fails = 0;
 function ok(cond, msg) {
