@@ -90,12 +90,19 @@ try {
   var wonExpected = st.playLog.filter(function (e) { return e.p === st.battleWinner; }).length;
   ok(wonRows === wonExpected, 'won=1 count equals winner-side plays (' + wonRows + ')');
 
-  /* ---------- timeline: absent -> zero rows; synthetic -> N rows ---------- */
+  /* ---------- timeline: real battles carry one; absence is tolerated ---------- */
   section('timeline');
+  // simBattle states carry fsTimeline since the V1 seams commit — a real battle
+  // should have produced per-turn rows above.
   var tl0 = h.db.prepare('SELECT COUNT(*) c FROM timeline WHERE battle_id = ?').get(battleId).c;
-  ok(tl0 === 0, 'no st.fsTimeline -> zero timeline rows (tolerated silently)');
+  ok(tl0 === (st.fsTimeline ? st.fsTimeline.length : 0) && tl0 > 0,
+    'a real battle lands its per-turn timeline (' + tl0 + ' rows)');
+  var noTl = JSON.parse(JSON.stringify(st)); noTl.match = st.match; delete noTl.fsTimeline;
+  var battleId0 = db.insertBattle(h, runId, noTl, 'red', { seed: 1234 });
+  var tlAbsent = h.db.prepare('SELECT COUNT(*) c FROM timeline WHERE battle_id = ?').get(battleId0).c;
+  ok(tlAbsent === 0, 'a state without fsTimeline (pre-V1 save) -> zero rows, tolerated silently');
 
-  st.fsTimeline = [[2, 2], [4, 2], [4, 5]]; // synthetic upcoming-engine field
+  st.fsTimeline = [[2, 2], [4, 2], [4, 5]]; // synthetic, to pin the column mapping
   var battleId2 = db.insertBattle(h, runId, st, 'blue', { seed: 1234 });
   var tl = h.db.prepare('SELECT turn, fs_red, fs_blue FROM timeline WHERE battle_id = ? ORDER BY turn').all(battleId2);
   ok(tl.length === 3, 'synthetic 3-entry fsTimeline -> 3 rows (got ' + tl.length + ')');
@@ -111,13 +118,13 @@ try {
   var threwKind = false;
   try { db.insertRun(h, { version: E.VERSION, kind: 'nonsense' }); } catch (e) { threwKind = true; }
   ok(threwKind, 'insertRun rejects an unknown kind');
-  ok(h.db.prepare('SELECT COUNT(*) c FROM battles').get().c === 2, 'failed inserts left no battles rows');
+  ok(h.db.prepare('SELECT COUNT(*) c FROM battles').get().c === 3, 'failed inserts left no battles rows');
 
   /* ---------- a GROUP BY through the same handle ---------- */
   section('GROUP BY via the handle');
   var g = h.db.prepare('SELECT map, COUNT(*) n, AVG(turns) avg_turns FROM battles GROUP BY map').all();
   ok(g.length === 1 && g[0].map === E.MAPS[0].name, 'one map group (' + (g[0] && g[0].map) + ')');
-  ok(g[0].n === 2, 'both battles counted (n=' + g[0].n + ')');
+  ok(g[0].n === 3, 'all three battles counted (n=' + g[0].n + ')');
   ok(g[0].avg_turns === st.turnNumber, 'AVG(turns) is sane (' + g[0].avg_turns + ')');
 
   db.close(h);
@@ -135,7 +142,7 @@ try {
   var schemaOut = cp.execFileSync(process.execPath, [cli, '--db', dbFile], { encoding: 'utf8' });
   ok(schemaOut.indexOf('CREATE TABLE') >= 0 && schemaOut.indexOf('battles') >= 0,
     'no-arg CLI prints the schema');
-  ok(/-- 2 rows/.test(schemaOut), 'no-arg CLI prints per-table row counts (battles: 2)');
+  ok(/-- 3 rows/.test(schemaOut), 'no-arg CLI prints per-table row counts (battles: 3)');
 
   var wrote = true;
   try {
