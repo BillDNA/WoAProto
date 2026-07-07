@@ -15,29 +15,15 @@ in the loop. Friction tickets minted mid-sprint count toward the goal, not again
 
 | Ticket  | Title                                          | Area | Status | Depends on |
 | ------- | ---------------------------------------------- | ---- | ------ | ---------- |
-| WOA-004 | Bill's onboarding doc: driving the balance loop | docs | Todo   | —          |
+| WOA-004 | Bill's onboarding doc: driving the balance loop | docs | Done   | —          |
 | WOA-005 | Standard-runs runbook (apples-to-apples recipes) | docs | Todo   | —          |
+| WOA-006 | Load saved balance reports into the Dashboard Charts tab | game-ui | Todo | — |
+| WOA-007 | Define "best map": ideal-range scoring, rubric as SOT | balance | Todo | — |
+| WOA-008 | claude-plays match mode draws maps from the map-set pool | dev-tools | Todo | — |
 
 **Suggested order:** WOA-004 first (WOA-005 slots its recipes into the doc's "now iterate" ending).
 
 ## In Progress / Todo
-
-### WOA-004 — Bill's onboarding doc: driving the balance loop
-**Area:** docs · **Status:** Todo · **Type:** opus · **Docs:** data-and-reports, code-architecture
-
-A single `human-instructions/` doc that takes Bill from zero to reading balance data: start the server
-(`node game/server.js`), play/watch a battle, generate a report set (`dev/balance-report.js`, or the
-`generate-reports` skill via Claude), where everything lands (`logs/woa.db`, `logs/reports/{balance,
-battle,analysis}/`), how to query the DB (`dev/db-query.js`), what each `dev/` script is for (one line
-each), and which skills (`generate-reports`, `review-reports`, `run-tournament`, `create-card`,
-`create-map`) do what. Written for a human at the command line, not for Claude — copy-pasteable commands
-with expected output snippets.
-
-**Acceptance criteria:**
-- [ ] Doc exists in `dynamic-scrum/docs/human-instructions/`, indexed in Docs Index, every command in it
-      actually run and verified during writing
-- [ ] Covers: server, battle, report generation, data locations, DB query, dev-script inventory, skill map
-- [ ] Bill walks it end-to-end and confirms done
 
 ### WOA-005 — Standard-runs runbook (apples-to-apples recipes)
 **Area:** docs · **Status:** Todo · **Type:** opus · **Docs:** data-and-reports
@@ -55,9 +41,52 @@ only if a recipe's command line proves too fiddly to paste.
 - [ ] One recipe demonstrated as before/after: run, tweak a data value, rerun, compare (and revert the tweak)
 - [ ] Bill confirms the format works for organizing his own runs
 
+### WOA-008 — claude-plays match mode draws maps from the map-set pool
+**Area:** dev-tools · **Status:** Todo
+
+`dev/claude-plays.js` match mode pins one map for the whole match (`E.newMatch({maps: [map]})`,
+claude-plays.js:608) even with `--mapset` — Bill expected it to cycle the set like browser matches do
+(`match.maps` cycles battle to battle). Change: no `--map` → the match pool is the whole (map-set)
+roster; `--map` keeps pinning a single map (and a single-map set covers that anyway). Needs a decision
+on the per-map Typicality footer for mixed-map matches (per-battle baselines, or drop it there).
+Doc-sync: claude-plays-human-instructions flag table + generate-reports skill (which relies on
+single-map pinning via `--map BEST_MAP` — keep that behavior working).
+
+**Acceptance criteria:**
+- [ ] `--match` without `--map` cycles the map-set pool; `--map` still pins one map
+- [ ] Typicality footer behavior for mixed-map matches decided and implemented
+- [ ] User confirms done
+
+### WOA-007 — Define "best map": ideal-range scoring, rubric as SOT
+**Area:** balance · **Status:** Todo · **Docs:** grading-rubrics
+
+Bill wants "best map" properly defined: each metric gets an ideal *range* and the map is scored
+against those ranges — replacing today's ad-hoc formula (`balanceScore`, `game/report-model.js:37` —
+fairness deltas + degeneracy penalties − swing reward; attrition-only deliberately unscored per the
+Round-4 ruling, which this may revisit). The definition lands in the grading rubrics as the SOT;
+`balanceScore` then implements the rubric (one implementation per fact — CLI, dashboard, tuner all
+read it). (S2 dogfood friction: BEST_MAP picked an attrition-only map and the "why" wasn't findable.)
+
+**Acceptance criteria:**
+- [ ] Ideal ranges per metric decided by Bill and written into the rubrics doc as SOT
+- [ ] `balanceScore` reimplements the rubric; reports/skills that cite the old formula updated
+- [ ] User confirms done
+
+### WOA-006 — Load saved balance reports into the Dashboard Charts tab
+**Area:** game-ui · **Status:** Todo
+
+Dashboard→logs data flow is one-way today: the Balance Dashboard only charts its own live in-browser
+sims. Let it load previous CLI runs (`logs/reports/balance/<version>/` — `accumulated.json` and/or
+saved reports) so `dev/balance-report.js` terminal runs get the Charts tab too. (S2 dogfood friction,
+minted mid-sprint — counts toward the goal.)
+
+**Acceptance criteria:**
+- [ ] Dashboard can display data from a prior CLI balance run (at minimum the accumulator)
+- [ ] User confirms done
+
 ## Finished
 
-_None yet._
+- **WOA-004 — Bill's onboarding doc: driving the balance loop** (2026-07-07) — `human-instructions/driving-the-balance-loop.md` shipped, indexed, every command run live; Bill dogfooded it end-to-end (spawning WOA-006/007/008 friction tickets) and confirmed.
 
 ## Blockers
 
