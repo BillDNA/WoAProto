@@ -85,6 +85,7 @@ function send(request) {
     try { bin = resolveBinary(request.binaryPath); } catch (e) { return resolve(errored()); }
     const args = bin.extraArgs.concat([
       '-p',
+      '--no-session-persistence', // one-shot decision call; no session file to write or resume
       '--model', request.model || '',
       '--system-prompt', request.systemPrompt || '', // full override: no CLAUDE.md ambient, pinned model
       '--output-format', 'json'

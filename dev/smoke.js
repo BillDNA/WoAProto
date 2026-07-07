@@ -8,13 +8,26 @@ var { JSDOM } = require(path.join(__dirname, 'node_modules', 'jsdom'));
 var GAME = path.join(__dirname, '..', 'game');
 function read(f) { return fs.readFileSync(path.join(GAME, f), 'utf8'); }
 
+// content/ is loaded in the browser by content/manifest.js via document.write;
+// jsdom has no external loader, so inline every content file (they populate
+// window.WOA_CONTENT the same way) plus the core scripts.
+function readContent() {
+  var out = '';
+  ['decks', 'maps'].forEach(function (kind) {
+    var d = path.join(GAME, 'content', kind);
+    fs.readdirSync(d).filter(function (f) { return /\.js$/.test(f); }).sort().forEach(function (f) {
+      out += fs.readFileSync(path.join(d, f), 'utf8') + '\n';
+    });
+  });
+  return out;
+}
 var html = read('index.html');
-// inline the three scripts so jsdom needs no loader
+// inline the scripts so jsdom needs no loader
 html = html
   .replace('<script src="maps.js"></script>', '<script>' + read('maps.js') + '</script>')
   .replace('<script src="custom-deck.js"></script>', '<script>' + read('custom-deck.js') + '</script>')
-  .replace('<script src="engine.js"></script>', '<script>' + read('engine.js') + '</script>')
-  .replace('<script src="custom-maps.js"></script>', '<script>' + read('custom-maps.js') + '</script>');
+  .replace('<script src="content/manifest.js"></script>', '<script>' + readContent() + '</script>')
+  .replace('<script src="engine.js"></script>', '<script>' + read('engine.js') + '</script>');
 
 var fails = 0;
 function ok(cond, msg) {
@@ -32,7 +45,7 @@ win.setTimeout = function (fn, ms) { return realSetTimeout(fn, Math.min(ms || 0,
 
 setTimeout(function () {
   console.log('== boot ==');
-  ok(win.Engine && win.Engine.MAPS.length === 12, 'engine loaded with 12 maps');
+  ok(win.Engine && win.Engine.MAPS.length >= 5, 'engine loaded the map roster (' + (win.Engine && win.Engine.MAPS.length) + ' maps)');
   ok(doc.querySelectorAll('#edShape option').length === Object.keys(win.Engine.SHAPES).length + 1,
     'editor shape dropdown = maps.js shapes + the Custom entry');
 

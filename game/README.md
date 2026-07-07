@@ -33,7 +33,7 @@ Needs Node.js (nodejs.org) on one computer — the server is plain Node and runs
 
 ## Boards, maps, units & cards — built for rapid tinkering
 
-**Everything tunable lives in `maps.js`** as plain JSON: board shapes, the map roster, **unit stats and piece counts, the trench count, the full card deck, and the physical terrain stock**. Edit it in any text editor, save, refresh the browser — the file explains its own format. Want to know what cavalry with 1 defense feels like, or a 20-card deck? Change a number, refresh, play (or run the balance lab on it). `node test.js` validates everything and points at exactly what's wrong.
+**The tunable knobs live in `maps.js`** as plain JSON: board shapes, **unit stats and piece counts, the trench count, the AI personalities, and the physical terrain stock**. The **map roster and card decks are their own files** under `game/content/` — one file per map (`content/maps/<name>.js`) and per deck (`content/decks/<name>.js`), so you delete a map by deleting its file. Edit any of it in a text editor, save, refresh the browser — the files explain their own format. Want to know what cavalry with 1 defense feels like, or a 20-card deck? Change a number, refresh, play (or run the balance lab on it). `node test.js` validates everything and points at exactly what's wrong.
 
 There are 12 built-in maps (matching the physical 12-card map deck) across five boards, all at or under the 24-hex laser-cutter ceiling:
 
@@ -49,7 +49,7 @@ The old 37-hex Grand and 29-hex Wide boards are gone: they played slow and empty
 
 ### Sharing custom maps (zip the folder)
 
-When you play through the server, custom maps are automatically written to **custom-maps.js** in this folder — zip the folder, send it, and friends get your maps. If you play by double-clicking index.html instead, maps live only in that browser: click **Export maps file** on the maps screen and drop the downloaded custom-maps.js into this folder before zipping. **Heads up:** the browser treats served pages and double-clicked files as different sites, so maps made one way won't automatically appear the other way — Export/Import bridges them, and opening the maps screen while the server runs re-syncs the file.
+Maps you make or edit are saved as **files in `game/content/maps/`** (one file per map) when you play through the server — delete a map on the maps screen and its file is deleted for good; zip the folder and friends get your exact roster. Editing, adding, or deleting a map needs the local server (it writes the files). If you double-click index.html instead, you can still play and toggle maps in and out of the match pool, but not save/delete map files; **Export maps** downloads the whole roster as a `maps-bundle.json` you can **Import** on another machine (which writes the files there).
 
 ## The balance lab
 
@@ -63,7 +63,7 @@ The same reports are available in-game via the **Balance** buttons on the maps s
 
 ## Art
 
-Card illustrations, the title plaque, the table felt, and the board parchment live in `game/art/`, looked up **by card id** (`art/<id>.jpg`, falling back to `.png`). A card with no matching file simply renders the text-only face — new cards in `maps.js` never break for lack of art. To add art: drop the raw AI render into `game/art/` as `<id>.png` and run `dev/optimize-art.ps1` — it trims transparent margins, shrinks the file ~100×, and squirrels the original away in `design-docs/art-originals/` (kept out of the public repo).
+Card illustrations, the title plaque, the table felt, and the board parchment live in `game/art/`, looked up **by card id** (`art/<id>.jpg`, falling back to `.png`). A card with no matching file simply renders the text-only face — new cards never break for lack of art. To add art: drop the raw AI render into `game/art/` as `<id>.png` and run `dev/optimize-art.ps1` — it trims transparent margins, shrinks the file ~100×, and squirrels the original away in `design-docs/art-originals/` (kept out of the public repo).
 
 ## What's implemented
 
@@ -82,7 +82,7 @@ The in-game **Field Manual** has a rules summary, **Cards** opens a glossary sho
 
 Terrain belongs to the hex it sits in and is drawn inset inside it. A **forest** in hex X gives +1 attack when X's occupant attacks *out* across a covered edge. A **mountain** in hex X gives +1 defense when X is attacked across a covered edge. Neither does anything in the other direction, and both hexes of one border can each hold their own piece.
 
-A **river** (drawn in blue, in the same 2- and 3-side pieces as forest and mountain) sits on a border: **support never crosses it, for either side** — a hex you control doesn't count across a river. Attacks and movement cross freely, Airdrop lands beyond it just fine, and Naval Barrage can't remove it (it acts like a mountain there). Whichever hex the piece is drawn in, the border is blocked both ways.
+A **river** (drawn in blue, in the same 2- and 3-side pieces as forest and mountain) sits on a border. **Support crosses it freely** for both sides, but **control doesn't extend across it**: you can't deploy a unit onto a hex whose only link to a hex you control runs across a river — adjacency control stops at the water. Attacks and movement still cross freely, Airdrop lands beyond it just fine, and Naval Barrage can't remove it. Whichever hex the piece is drawn in, the border is read both ways. *(0.3 river revision — Feedback Round 3/4: rivers used to block support instead.)*
 
 ## House rules (per Bill's prototyping)
 
@@ -98,7 +98,7 @@ A **river** (drawn in blue, in the same 2- and 3-side pieces as forest and mount
 
 - **Controlled hex** = a hex occupied by your unit or HQ (per Bill).
 - **Trenches** cover 2 chosen edges and are **support denial, not armour** (V0 terrain-crossing revision, July 2026): an attacker's support may not cross a trenched border to reach the battle hex. They add **no** defense (mountains do that), never block the attack itself, never hinder the defender's support, and a unit in a trenched hex still supports out across its free borders. Ownership is irrelevant — lose the hex and the enemy uses your trench just fine. (Previously: +1 defense across covered edges.)
-- **Rivers** block support — both players' — across their border; nothing else (see Terrain above). (V0 terrain-crossing revision, July 2026.)
+- **Rivers** no longer block support — support crosses freely for both players. Instead a river **denies deploy-control extension**: a hex reachable only across a river is not a legal deploy target (see Terrain above). (0.3 river revision, Feedback Round 3/4, July 2026; previously rivers blocked support.)
 - **A hex may hold several trenches** as long as their covered edges don't overlap each other or that hex's own terrain sides (per Bill's DoubleTrenchNotAllowed report).
 - HQ's +1 support applies to adjacent hexes for both attack and defense calculations.
 - The attacking unit's own support value is not added to its attack.
@@ -113,12 +113,11 @@ A **river** (drawn in blue, in the same 2- and 3-side pieces as forest and mount
 
 - `index.html` — the whole game (UI, AI driver, map editor, in-game balance lab)
 - `engine.js` — rules engine + the three AIs + battle simulator (shared by tests and the balance lab)
-- `maps.js` — **all tunable game data, hand-editable JSON**: boards, maps, units, cards, terrain stock
-  (the map editor can also carve the **board outline itself** — Board hexes tool, add/remove under the 24-hex ceiling — and base maps can be deleted from the roster, floor of 5, with a Restore button)
+- `maps.js` — **core tunable data, hand-editable JSON**: board shapes, units, terrain stock, AI personalities
+- `content/` — **the map roster + card decks, one file each** (`content/maps/*.js`, `content/decks/*.js`): delete a map/deck by deleting its file. The map editor carves the **board outline itself** (Board hexes tool, add/remove under the 24-hex ceiling) and deletes maps for real (floor of 5); saving/deleting needs the local server.
 - `balance.js` — AI-vs-AI balance reports: `node balance.js`, `node balance.js matchup`
   (the same report lives in the browser: **Balance Dashboard** on the main menu — pick battles-per-map, the AI for each side, and a map or the whole pool; every table is click-to-sort)
 - `server.js` / `run-server.bat` / `run-server.command` — tiny zero-dependency LAN server
-- `custom-maps.js` — your custom maps (generated; travels with the folder)
-- `custom-deck.js` — your custom deck from the **Deck Editor** (menu): edit cards in the browser — name, copies, text, steps — with validation (16 cards, one starting card); Save reloads with the new deck. Export/Import for file:// use; node tools keep reading maps.js.
+- `custom-deck.js` — the **applied** deck from the **Deck Editor** (menu): edit cards in the browser — name, copies, text, steps — with validation (16 cards, one starting card); Save reloads with the new deck (it overrides `content/decks/default.js`). The 5 editing slots live in the browser; the applied deck is a file.
 - `test.js` — engine test suite: `node test.js`
 - `CLAUDE.md` — orientation notes for AI coding assistants working on this project

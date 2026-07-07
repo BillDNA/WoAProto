@@ -109,9 +109,16 @@ console.log('== terrain pieces live inside ONE hex (the yellow-line bug) ==');
 console.log('== map validation ==');
 var probs = E.validateMaps();
 ok(probs.length === 0, 'all built-in maps valid' + (probs.length ? ': ' + probs.join('; ') : ''));
-ok(E.MAPS.length === 12, '12 maps defined, like the physical map deck (got ' + E.MAPS.length + ')');
+// Content roster (Feedback Round 4 Pass 2): maps are per-item files under
+// game/content/maps/. `custom:true` marks Bill's experiments; the shipped
+// roster is the non-custom maps (round-3: −Thornfield −Vanguard +The Ford
+// +Riverbend +Causeway).
+var builtinMaps = E.MAPS.filter(function (m) { return !m.custom; });
+ok(builtinMaps.length === 13, '13 shipped (non-custom) maps in the content roster (got ' + builtinMaps.length + ' of ' + E.MAPS.length + ' total)');
 (function () {
-  E.MAPS.forEach(function (m) {
+  // HQ-distance guardrail applies to the SHIPPED roster; custom maps are Bill's
+  // experiments (a turn-2 rush map can be intentional) and are exempt.
+  builtinMaps.forEach(function (m) {
     var d = E.dist(E.key(m.redHQ[0], m.redHQ[1]), E.key(m.blueHQ[0], m.blueHQ[1]));
     ok(d >= 4, m.name + ': HQs ' + d + ' apart (4+ so there is no turn-2 rush)');
   });
@@ -375,9 +382,10 @@ console.log('== V0 terrain-crossing rules: trench support denial + rivers ==');
   var atks = E.listAttacks(st, 'red').filter(function (a) { return a.from === '0,0' && a.to === '0,1'; });
   ok(atks.length === 1, 'attacks still cross trenched borders');
 
-  // Rivers — Bill's ruling example on the classic board: red holds B3 and C2,
-  // blue holds C3, river on the C2|C3 border. B3's attack on C3 loses C2's
-  // support; C2's own attack on C3 still gets B3's support (no river there).
+  // Rivers no longer block support (Feedback Round 3): support crosses freely
+  // for both sides. Bill's board example — red holds B3 and C2, blue holds C3,
+  // river on the C2|C3 border. B3's attack on C3 STILL gets C2's support across
+  // the water; the river's job is now deploy-control (see the deploy section).
   var B3 = '0,-1', C2 = '-2,0', C3 = '-1,0';
   var st2 = testBattle(131);
   st2.units[B3] = { type: 'infantry', owner: 'red' };
@@ -385,17 +393,15 @@ console.log('== V0 terrain-crossing rules: trench support denial + rivers ==');
   st2.units[C3] = { type: 'infantry', owner: 'blue' };
   st2.terrainEdges[E.sideKey(C2, 0)] = 'R'; // river on C2's side toward C3
   var rB = E.computeAttack(st2, { from: B3, to: C3 });
-  ok(rB.attackerPower === 1, 'B3->C3: support from C2 stops at the river (got ' + rB.attackerPower + ')');
-  ok(rB.attackerParts.some(function (p) { return p.indexOf('blocked by river') >= 0; }), 'breakdown names the river');
-  var rC = E.computeAttack(st2, { from: C2, to: C3 });
-  ok(rC.attackerPower === 2, 'C2->C3: attack crosses the river and B3 supports it (got ' + rC.attackerPower + ')');
-  // Rivers block DEFENDER support too (control never counts across a river),
-  // and the check reads either hex's side of the border:
+  ok(rB.attackerPower === 2, 'B3->C3: support crosses the river now (got ' + rB.attackerPower + ')');
+  ok(!rB.attackerParts.some(function (p) { return p.indexOf('blocked by river') >= 0; }), 'river no longer blocks support');
+  // Defender support crosses the river too (the check used to read either hex's
+  // side; now neither blocks):
   var D3 = '-1,1';
   st2.units[D3] = { type: 'infantry', owner: 'blue' };
   st2.terrainEdges[E.sideKey(C3, 5)] = 'R'; // river owned by the BATTLE hex side toward D3
   var rD = E.computeAttack(st2, { from: B3, to: C3 });
-  ok(rD.defenderPower === 1, "D3's defender support stops at the river (got " + rD.defenderPower + ')');
+  ok(rD.defenderPower === 2, "D3's defender support crosses the river (got " + rD.defenderPower + ')');
 
   // River pieces now come in the same lengths as forest/mountain (2- and 3-side,
   // Feedback Round 1), validated against the R3/R2 stock; still not barrageable.
@@ -441,6 +447,18 @@ console.log('== deploy / control rules ==');
   var t = E.deployTargets(st, 'red', false);
   ok(t.length === 3, 'deploy targets adjacent to corner HQ only at battle start (got ' + t.length + ')');
   ok(t.indexOf('-3,2') < 0, 'cannot deploy onto enemy HQ');
+  // Feedback Round 4 bug: a river on the border to a would-be deploy hex must
+  // stop control from extending across it (D2 was wrongly deployable). Put a
+  // river on the HQ|target border and that target drops out of the list.
+  var hq = st.hq.red, target = t[0];
+  st.terrainEdges[E.sideKey(hq, E.dirBetween(hq, target))] = 'R';
+  var t2 = E.deployTargets(st, 'red', false);
+  ok(t2.indexOf(target) < 0, 'cannot deploy across a river (control does not extend over water)');
+  ok(t2.length === 2, 'river removes exactly the one across-water target (got ' + t2.length + ')');
+  // reading the far hex's side of the same border blocks it just as well:
+  var st4 = testBattle(9), target4 = E.deployTargets(st4, 'red', false)[0];
+  st4.terrainEdges[E.sideKey(target4, E.dirBetween(target4, st4.hq.red))] = 'R';
+  ok(E.deployTargets(st4, 'red', false).indexOf(target4) < 0, 'river read from the target hex side also blocks deploy');
 })();
 
 console.log('== turn flow / first hand ==');

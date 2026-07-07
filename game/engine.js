@@ -2,12 +2,50 @@
 (function (global) {
   'use strict';
 
-  // Boards and maps are data: maps.js must load first (browser) / sit next to
-  // this file (node). Its whole payload is hand-editable JSON.
-  var BUILTIN = global.WOA_BUILTIN ||
+  // Rules version — bump on every rule change so playtest data stays apples-to-
+  // apples (drives report/version folders and the persistent-data reset boundary).
+  // Must track the rule book header (design-docs/onboarding/War Of Attrition rule book.md).
+  var RULES_VERSION = '0.3';
+
+  // CORE data (units/shapes/stock/ai) is hand-editable JSON in maps.js, which
+  // loads first (browser) / sits next to this file (node).
+  var CORE = global.WOA_BUILTIN ||
     (typeof require === 'function' ? require('./maps.js') : null);
-  if (!BUILTIN || !BUILTIN.shapes || !BUILTIN.maps)
-    throw new Error('War of Attrition: maps.js missing or malformed (must define WOA_BUILTIN with shapes + maps)');
+  if (!CORE || !CORE.shapes || !CORE.units)
+    throw new Error('War of Attrition: maps.js missing or malformed (must define WOA_BUILTIN with shapes + units)');
+
+  // CONTENT (the map roster + the card decks) lives in per-item files under
+  // content/ (Feedback Round 4, Pass 2 — delete a map/deck by deleting its
+  // file). In the browser content/manifest.js document.write()'d them into
+  // WOA_CONTENT before this script ran; in node we load them from disk here.
+  (function loadContentNode() {
+    if (global.WOA_CONTENT) return;                 // browser already populated it
+    if (typeof require !== 'function') return;
+    global.WOA_CONTENT = { maps: [], cards: [], decks: [] };
+    try {
+      var fs = require('fs'), path = require('path');
+      ['decks', 'maps'].forEach(function (kind) {
+        var dir = path.join(__dirname, 'content', kind);
+        fs.readdirSync(dir).filter(function (f) { return /\.js$/.test(f); }).sort().forEach(function (f) {
+          require(path.join(dir, f));                // side effect: pushes into WOA_CONTENT
+        });
+      });
+    } catch (e) { /* leave WOA_CONTENT empty; validated just below */ }
+  })();
+  var CONTENT = global.WOA_CONTENT || { maps: [], cards: [], decks: [] };
+  // the active deck decides the card list; fall back to any deck, then to any
+  // loose WOA_CONTENT.cards (belt-and-braces for hand-authored content).
+  var ACTIVE_DECK = (CONTENT.decks || []).filter(function (d) { return d && d.active; })[0] ||
+    (CONTENT.decks || [])[0] || null;
+  var CARD_LIST = (ACTIVE_DECK && ACTIVE_DECK.cards && ACTIVE_DECK.cards.length) ? ACTIVE_DECK.cards : (CONTENT.cards || []);
+  var BUILTIN = {
+    shapes: CORE.shapes, units: CORE.units, trenchCount: CORE.trenchCount,
+    terrainStock: CORE.terrainStock, ai: CORE.ai,
+    maps: (CONTENT.maps || []).slice(),
+    cards: CARD_LIST
+  };
+  if (!BUILTIN.maps.length || !BUILTIN.cards.length)
+    throw new Error('War of Attrition: no content loaded (content/maps/*.js + content/decks/*.js). Run dev/migrate-content.js or check content/manifest.js.');
 
   /* ---------- board geometry (pointy-top axial; shapes defined in maps.js) ---------- */
   var DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]]; // E NE NW W SW SE
@@ -193,8 +231,9 @@
     // Each [q,r,d] in a piece is a SIDE owned by hex (q,r):
     //   forest in hex X: +1 attack when X's occupant attacks out across it;
     //   mountain in hex X: +1 defense when X is attacked across it;
-    //   river on a border: support never crosses it, for either side (the
-    //   crossing check reads BOTH hexes' sides, so which hex owns it is moot).
+    //   river on a border: DEPLOY-control doesn't extend across it (Round 3;
+    //   support still crosses freely). The crossing check reads BOTH hexes'
+    //   sides, so which hex owns it is moot.
     // returns { edges: {sideKey: 'F'|'M'|'R'}, pieces:[{id,t,edgeKeys:[sideKey...]}] }
     var edges = {}, pieces = [];
     map.pieces.forEach(function (p, i) {
@@ -428,7 +467,11 @@
       HEXES.forEach(function (h) { if (isEmpty(st, h)) set[h] = true; });
     } else {
       controlledHexes(st, p).forEach(function (c) {
-        neighbors(c).forEach(function (n) { if (isEmpty(st, n)) set[n] = true; });
+        neighbors(c).forEach(function (n) {
+          // a river on the c|n border stops control from extending across it
+          // (Round 3: adjacency control must not cross the water)
+          if (isEmpty(st, n) && !riverBetween(st, c, n)) set[n] = true;
+        });
       });
     }
     return Object.keys(set);
@@ -534,19 +577,27 @@
   }
 
   /* ---------- combat ---------- */
-  // Support crossing rules (V0 terrain-crossing revision, July 2026):
-  //  - a RIVER on the border between supporter and battle hex blocks support
-  //    for EITHER side — control never counts across a river. Both hexes'
-  //    sides are read, so which hex owns the river piece doesn't matter.
-  //  - a TRENCH on that border blocks ATTACKER support only. Ownership is
-  //    irrelevant (Bill: lose a trench and the enemy uses it just fine).
-  //    Trenches no longer grant +1 defense — that's what mountains are for.
+  // Support crossing rules (Feedback Round 3 river revision, July 2026):
+  //  - a TRENCH on the border between supporter and battle hex blocks ATTACKER
+  //    support only. Ownership is irrelevant (Bill: lose a trench and the enemy
+  //    uses it just fine). Trenches grant no +1 defense — that's for mountains.
+  //  - a RIVER no longer blocks support at all: support crosses it freely for
+  //    both sides. A river instead denies DEPLOY-control extension across it
+  //    (riverBetween / deployTargets) — control creep stops at the water, but
+  //    armies already on the field still support across it. Bill's Round-3 goal:
+  //    make situational repositioning stronger and cut infantry-for-infantry
+  //    swaps. Attacks/moves/Airdrop cross freely; a river is not barrageable.
   function borderBlocked(st, fromHex, battleHex, attacking) {
     var dOut = dirBetween(fromHex, battleHex), dIn = dirBetween(battleHex, fromHex);
-    if (st.terrainEdges[sideKey(fromHex, dOut)] === 'R' ||
-        st.terrainEdges[sideKey(battleHex, dIn)] === 'R') return 'river';
     if (attacking && (trenchCovers(st, fromHex, dOut) || trenchCovers(st, battleHex, dIn))) return 'trench';
     return null;
+  }
+  // A river on the border between two adjacent hexes stops deploy-control from
+  // extending across it (Round 3: adjacency control must not cross the water).
+  // Reads both hexes' sides — ownership of the piece is irrelevant.
+  function riverBetween(st, a, b) {
+    var dOut = dirBetween(a, b), dIn = dirBetween(b, a);
+    return st.terrainEdges[sideKey(a, dOut)] === 'R' || st.terrainEdges[sideKey(b, dIn)] === 'R';
   }
   function supportFor(st, p, battleHex, excludeHex, attacking) {
     var total = 0, parts = [], hexes = [];
@@ -1285,6 +1336,7 @@
   }
 
   var Engine = {
+    VERSION: RULES_VERSION,
     DIRS: DIRS, UNITS: UNITS, CARDS: CARDS, CARD_BY_ID: CARD_BY_ID, MAPS: MAPS,
     PIECE_TOTALS: PIECE_TOTALS, TERRAIN_STOCK: TERRAIN_STOCK,
     SHAPES: SHAPES, DEFAULT_SHAPE: DEFAULT_SHAPE, boardHexes: boardHexes, setBoard: setBoard, hexes: hexes,
@@ -1294,7 +1346,7 @@
     dist: dist, dirBetween: dirBetween, edgeKey: edgeKey, edgeFrom: edgeFrom, sideKey: sideKey, other: other,
     newMatch: newMatch, newBattle: newBattle,
     unitAt: unitAt, isHQ: isHQ, isEmpty: isEmpty, controlledHexes: controlledHexes,
-    deployTargets: deployTargets, trenchTargets: trenchTargets, trenchOrientations: trenchOrientations,
+    deployTargets: deployTargets, riverBetween: riverBetween, trenchTargets: trenchTargets, trenchOrientations: trenchOrientations,
     listAttacks: listAttacks, listRepositions: listRepositions, listBarrageTargets: listBarrageTargets,
     computeAttack: computeAttack, supportFor: supportFor, playCard: playCard, currentStep: currentStep,
     stepOptions: stepOptions, applyStep: applyStep, mustPlayStep: mustPlayStep, cardsRemaining: cardsRemaining,

@@ -3,18 +3,26 @@
    Runs one battle, printing every decision live; appends a JSON-lines record.
 
    Usage: node dev/claude-plays.js [options]
-     --map <filter>     map name filter, case-insensitive (default: first built-in map)
+     --map <filter>     map name filter, case-insensitive (default: first map in
+                        the content roster; all content/maps/*.js are included)
      --red <spec>       easy|normal|hard = heuristic AI; anything else (haiku|sonnet|opus|
      --blue <spec>      full model id) = LLM via the claude -p transport.
                         Defaults: --red haiku --blue normal
      --effort <level>   reasoning effort for the LLM players' headless claude -p calls:
-                        low|medium|high|xhigh|max (default: the CLI's own default)
+                        low|medium|high|xhigh|max (default: the CLI's own default).
+                        Shared default for both sides; overridden per side below.
+     --red-effort <lvl> effort for the red side only, overrides --effort for red
+     --blue-effort <lvl> effort for the blue side only, overrides --effort for blue
      --seed <n>         match seed (default 1234)
      --max-turns <n>    safety cap on turns (default 60)
      --mock             replace the transport with a deterministic fake (always picks
                         option 0, canned rationale/notes) — full offline loop test
-     --out <file>       JSONL master log (default design-docs/game-logs/claude-plays-log.jsonl)
-                        A readable per-run .md transcript is also written to game-logs/.
+     --out <file>       JSONL master log (default logs/reports/battle/claude-plays-log.jsonl)
+                        A readable per-run .md transcript is also written to
+                        logs/reports/battle/<rules-version>/.
+     --typical-n <n>    baseline battles used to gauge how "typical" this game was
+                        for the map (hard-AI self-play, appended to the report).
+                        Default 40; 0 skips the comparison.
 
    The LLM never invents moves: each decision is a pick from a numbered legal-move list
    built by the engine (playCard modes / enumerateChoices). It sees only what a player
@@ -30,10 +38,14 @@ const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
 const llm = require(path.join(__dirname, 'llm-client.js'));
 
 /* ---------- CLI args ---------- */
-const LOG_DIR = path.join(__dirname, '..', 'design-docs', 'game-logs');
+// Reports live under logs/reports/battle/ (Feedback Round 4). The append-only
+// master JSONL sits at the root; each run's readable .md transcript is filed by
+// rules version so playtest data stays apples-to-apples across rule changes.
+const LOG_DIR = path.join(__dirname, '..', 'logs', 'reports', 'battle');
+const TRANSCRIPT_DIR = path.join(LOG_DIR, E.VERSION);
 function parseArgs(argv) {
-  const a = { map: '', red: 'haiku', blue: 'normal', seed: 1234, maxTurns: 60, mock: false,
-    effort: '', out: path.join(LOG_DIR, 'claude-plays-log.jsonl') };
+  const a = { map: '', red: 'haiku', blue: 'normal', seed: 1234, maxTurns: 60, mock: false, typicalN: 40,
+    effort: '', redEffort: '', blueEffort: '', out: path.join(LOG_DIR, 'claude-plays-log.jsonl') };
   for (let i = 2; i < argv.length; i++) {
     const k = argv[i];
     if (k === '--map') a.map = argv[++i] || '';
@@ -41,14 +53,24 @@ function parseArgs(argv) {
     else if (k === '--blue') a.blue = argv[++i];
     else if (k === '--seed') a.seed = Number(argv[++i]) | 0;
     else if (k === '--max-turns') a.maxTurns = Number(argv[++i]) || 60;
+    else if (k === '--typical-n') a.typicalN = Math.max(0, Number(argv[++i]) | 0);
     else if (k === '--effort') a.effort = String(argv[++i] || '').toLowerCase();
+    else if (k === '--red-effort') a.redEffort = String(argv[++i] || '').toLowerCase();
+    else if (k === '--blue-effort') a.blueEffort = String(argv[++i] || '').toLowerCase();
     else if (k === '--mock') a.mock = true;
     else if (k === '--out') a.out = path.resolve(argv[++i]);
     else { console.error('unknown option: ' + k); process.exit(1); }
   }
-  if (a.effort && !['low', 'medium', 'high', 'xhigh', 'max'].includes(a.effort)) {
-    console.error('--effort must be low|medium|high|xhigh|max'); process.exit(1);
+  function checkEffort(v, flag) {
+    if (v && !['low', 'medium', 'high', 'xhigh', 'max'].includes(v)) {
+      console.error(flag + ' must be low|medium|high|xhigh|max'); process.exit(1);
+    }
   }
+  checkEffort(a.effort, '--effort');
+  checkEffort(a.redEffort, '--red-effort');
+  checkEffort(a.blueEffort, '--blue-effort');
+  a.redEffort = a.redEffort || a.effort;
+  a.blueEffort = a.blueEffort || a.effort;
   return a;
 }
 
@@ -63,6 +85,59 @@ const CARD_KEEP = {
 };
 
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+// How "typical" was this finished game for the map? (Feedback Round 4.) Fold a
+// hard-AI self-play baseline for the same map + rules version through the SAME
+// aggregation the Balance Dashboard uses, then read this one game against it so
+// Bill can see at a glance whether it was representative or an outlier. Returns
+// markdown lines (empty if skipped or the game didn't finish).
+function typicalitySection(map, st, n) {
+  if (n <= 0 || st.phase !== 'battle-over') return [];
+  const base = E.balanceMap(map, n, { diffRed: 'hard', diffBlue: 'hard' });
+  const done = Math.max(1, n - base.unfinished);
+  const pct = (x) => Math.round(100 * x / done);
+  const per = (x) => x / done;
+  const avgTurns = per(base.turns), hqPct = pct(base.hqWins), redPct = pct(base.redWins), zeroPct = pct(base.zeroKill);
+  const avgAtk = per(base.attacks), avgVP = per(base.vpDiff);
+  const kills = st.vp.red + st.vp.blue;
+  const gAtk = (st.stats && st.stats.attacks) || 0;
+  const gVP = Math.abs(E.fieldScore(st, 'red') - E.fieldScore(st, 'blue'));
+  const dT = avgTurns ? Math.round(100 * (st.turnNumber - avgTurns) / avgTurns) : 0;
+
+  // per-row "read" of how this game compares
+  const lenRead = Math.abs(dT) <= 15 ? 'typical length'
+    : dT < 0 ? Math.abs(dT) + '% shorter — quicker than usual' : dT + '% longer — grindier than usual';
+  let endRead;
+  if (st.winType === 'hq') endRead = hqPct < 25 ? 'HQ capture is uncommon here (' + hqPct + '%) — decisive' : 'HQ capture, in line with the map';
+  else if (st.winType === 'attrition') endRead = hqPct >= 50 ? 'attrition, though this map often ends by HQ (' + hqPct + '%)' : 'attrition — typical for this map';
+  else endRead = st.winType;
+  const killRead = kills === 0 ? 'a zero-kill game (' + zeroPct + '% of baseline games are)' : 'had combat (' + zeroPct + '% of baseline games have none)';
+  const cmp = (g, avg) => avg === 0 ? '—' : (g >= avg * 1.25 ? 'above baseline' : g <= avg * 0.75 ? 'below baseline' : 'about average');
+
+  // outlier flags → verdict
+  const flags = [];
+  if (Math.abs(dT) > 25) flags.push(dT < 0 ? 'much shorter than average' : 'much longer than average');
+  if (st.winType === 'hq' && hqPct < 25) flags.push('ended by a rare HQ capture');
+  if (st.winType === 'attrition' && hqPct >= 60) flags.push('went to attrition on an HQ-happy map');
+  if (kills === 0 && zeroPct < 15) flags.push('a zero-kill game where the map usually sees combat');
+  if (kills > 0 && zeroPct >= 60) flags.push('a fighting game on a map that usually stalemates');
+  const verdict = flags.length === 0
+    ? 'A fairly **typical** game for this map.'
+    : 'An **atypical** game — ' + flags.join('; ') + '.';
+
+  return ['', '## Typicality vs the map baseline', '',
+    '_Baseline: ' + n + ' hard-AI self-play battles on "' + map.name + '" (rules ' + E.VERSION +
+    '), folded through the same aggregation as the Balance Dashboard._', '',
+    '| Metric | This game | Baseline | Read |', '|---|--:|--:|---|',
+    '| Ending | ' + cap(st.battleWinner) + ' by ' + st.winType + ' | ' + hqPct + '% HQ / ' + (100 - hqPct) + '% attrition | ' + endRead + ' |',
+    '| Length | T' + st.turnNumber + ' | ~' + avgTurns.toFixed(0) + ' avg | ' + lenRead + ' |',
+    '| Winner side | ' + cap(st.battleWinner) + ' | red ' + redPct + '% | map leans ' + (redPct >= 50 ? 'red' : 'blue') + ' ' + Math.max(redPct, 100 - redPct) + '% |',
+    '| Kills (units lost) | ' + kills + ' | ' + zeroPct + '% zero-kill | ' + killRead + ' |',
+    '| Attacks resolved | ' + gAtk + ' | ~' + avgAtk.toFixed(1) + ' avg | ' + cmp(gAtk, avgAtk) + ' |',
+    '| Final VP gap | ' + gVP + ' | ~' + avgVP.toFixed(1) + ' avg | ' + cmp(gVP, avgVP) + ' |',
+    '', verdict];
+}
+
 
 /* ---------- rules blurb (distilled from game/README.md) ---------- */
 const RULES = [
@@ -202,8 +277,11 @@ function cardOptions(st, p) {
   const bn = E.CARD_BY_ID[burn].name;
   opts.push({ cardId: burn, mode: 'attack',
     desc: 'Basic Attack — burn "' + bn + '" to order one ordinary attack instead of its printed action.' });
-  opts.push({ cardId: burn, mode: 'reposition',
-    desc: 'Basic Reposition — burn "' + bn + '" to make one ordinary march or swap instead of its printed action.' });
+  // House rule (engine.js): a basic reposition is only legal when no basic attack
+  // is available. Don't offer it otherwise — else playCard() rejects the LLM's pick.
+  if (E.listAttacks(st, p).length === 0)
+    opts.push({ cardId: burn, mode: 'reposition',
+      desc: 'Basic Reposition — burn "' + bn + '" to make one ordinary march or swap instead of its printed action.' });
   return opts;
 }
 
@@ -289,13 +367,15 @@ async function main() {
   const args = parseArgs(process.argv);
   const transport = args.mock ? mockSend : llm.send;
 
+  const allMaps = E.MAPS; // content/maps/*.js — custom maps are first-class here now
   const map = args.map
-    ? E.MAPS.find(function (m) { return m.name.toLowerCase().includes(args.map.toLowerCase()); })
-    : E.MAPS[0];
+    ? allMaps.find(function (m) { return m.name.toLowerCase().includes(args.map.toLowerCase()); })
+    : allMaps[0];
   if (!map) { console.error('no map matches "' + args.map + '"'); process.exit(1); }
 
   console.log('claude-plays: "' + map.name + '" seed ' + args.seed +
-    ' — red=' + args.red + ' vs blue=' + args.blue +
+    ' — red=' + args.red + (args.redEffort ? '(' + args.redEffort + ')' : '') +
+    ' vs blue=' + args.blue + (args.blueEffort ? '(' + args.blueEffort + ')' : '') +
     (args.mock ? '  [MOCK transport: canned responses, no claude spawns]' : ''));
 
   const match = E.newMatch({ maps: [map], seed: args.seed, firstPlayer: 'red' });
@@ -317,9 +397,10 @@ async function main() {
 
   // one LLM call: numbered options in, {choice, why} out; ok:false on any garbage
   async function ask(model, side, userMessage, nOptions) {
+    const effort = side === 'red' ? args.redEffort : args.blueEffort;
     const res = await transport({
       systemPrompt: sysPrompt(side), userMessage: userMessage,
-      model: model, outputSchema: CHOICE_SCHEMA, effort: args.effort
+      model: model, outputSchema: CHOICE_SCHEMA, effort: effort
     });
     usage.inputTokens += res.inputTokens; usage.outputTokens += res.outputTokens;
     if (res.finishReason === 'error') return { ok: false };
@@ -364,7 +445,15 @@ async function main() {
       pick = { cardId: plan.cardId, mode: plan.mode || 'normal' };
       why = '(fallback: engine plan)'; fb = true;
     }
-    E.playCard(st, pick.cardId, pick.mode);
+    try { E.playCard(st, pick.cardId, pick.mode); }
+    catch (e) {
+      // Fail open: an unusable pick (e.g. a reposition the engine forbids) must not
+      // crash the run — fall back to the engine's plan, the same as an unusable reply.
+      const plan = E.aiPlanTurn(st, 'normal');
+      pick = { cardId: plan.cardId, mode: plan.mode || 'normal' };
+      why = '(fallback: illegal pick — ' + e.message + ')'; fb = true;
+      E.playCard(st, pick.cardId, pick.mode);
+    }
     const desc = '"' + E.CARD_BY_ID[pick.cardId].name + '"' + (pick.mode !== 'normal' ? ' as basic ' + pick.mode : '');
     console.log('T' + turn + ' ' + side + ' [' + model + ']: plays ' + desc +
       (why ? ' — "' + why + '"' : '') + (fb ? '  (fallback)' : ''));
@@ -429,7 +518,7 @@ async function main() {
         '. The final campaign journal:\n\n' + journal +
         '\n\nGive short notes (under 150 words) on how the game FELT to play: what felt strong, ' +
         'what felt weak, what felt luck-driven, and ONE suggested change to the game.',
-      model: spec, effort: args.effort
+      model: spec, effort: side === 'red' ? args.redEffort : args.blueEffort
     });
     usage.inputTokens += res.inputTokens; usage.outputTokens += res.outputTokens;
     if (res.finishReason !== 'error' && res.text.trim()) {
@@ -442,9 +531,10 @@ async function main() {
 
   const ts = new Date().toISOString();
   const rec = {
-    ts: ts,
+    ts: ts, version: E.VERSION,
     map: map.name, seed: args.seed,
-    red: args.red, blue: args.blue, effort: args.effort || null,
+    red: args.red, blue: args.blue,
+    redEffort: args.redEffort || null, blueEffort: args.blueEffort || null,
     winner: finished ? st.battleWinner : null,
     winType: finished ? st.winType : 'unfinished',
     turns: st.turnNumber,
@@ -453,17 +543,20 @@ async function main() {
     notes: notes,
     usage: usage
   };
-  try { fs.mkdirSync(LOG_DIR, { recursive: true }); } catch (e) { /* exists */ }
+  try { fs.mkdirSync(TRANSCRIPT_DIR, { recursive: true }); } catch (e) { /* exists */ }
   fs.appendFileSync(args.out, JSON.stringify(rec) + '\n');
 
-  // Per-run human-readable transcript in design-docs/game-logs (the summary skill reads these).
+  // Per-run human-readable transcript in logs/reports/battle/<version>/ (the
+  // review-reports / game-log skills read these).
   const slug = map.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   const stamp = ts.replace(/[:.]/g, '-');
-  const tPath = path.join(LOG_DIR, stamp + '-' + slug + '-' + args.red + '-v-' + args.blue + '.md');
+  const tPath = path.join(TRANSCRIPT_DIR, stamp + '-' + slug + '-' + args.red + '-v-' + args.blue + '.md');
   const md = [];
   md.push('# War of Attrition — "' + map.name + '" (seed ' + args.seed + ')');
   md.push('');
-  md.push('- red: **' + args.red + '** · blue: **' + args.blue + '**' + (args.effort ? ' · effort: ' + args.effort : ''));
+  md.push('- rules version: **' + E.VERSION + '**');
+  md.push('- red: **' + args.red + '**' + (args.redEffort ? ' (effort: ' + args.redEffort + ')' : '') +
+    ' · blue: **' + args.blue + '**' + (args.blueEffort ? ' (effort: ' + args.blueEffort + ')' : ''));
   md.push('- ' + ts);
   md.push('- Result: ' + (finished
     ? '**' + cap(st.battleWinner) + '** wins by ' + st.winType + ' after ' + st.turnNumber + ' turns'
@@ -487,6 +580,11 @@ async function main() {
       md.push('');
       md.push(notes[side]);
     });
+  }
+  if (finished && args.typicalN > 0) {
+    console.log('\ngauging how typical this game was (' + args.typicalN + ' hard-AI baseline battles)…');
+    try { md.push.apply(md, typicalitySection(map, st, args.typicalN)); }
+    catch (e) { md.push('', '_(typicality baseline failed: ' + e.message + ')_'); }
   }
   fs.writeFileSync(tPath, md.join('\n') + '\n');
 

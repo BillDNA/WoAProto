@@ -1,0 +1,367 @@
+{
+  ".claude/settings.local.json": {
+    "mtime": 1783119931.860352,
+    "ast_hash": "687b0ff9d1bb43a6818687a3012c2902",
+    "semantic_hash": ""
+  },
+  "dev/claude-plays.js": {
+    "mtime": 1783191308.5182445,
+    "ast_hash": "10ace6f97de7a6f54adb565de3a93d30",
+    "semantic_hash": ""
+  },
+  "dev/llm-client.js": {
+    "mtime": 1783126400.543507,
+    "ast_hash": "2df4694a31d8938d8108845050ce7b49",
+    "semantic_hash": ""
+  },
+  "dev/llm-client.test.js": {
+    "mtime": 1783119368.6656373,
+    "ast_hash": "a382520ffb610cfef70741d0ece60632",
+    "semantic_hash": "a382520ffb610cfef70741d0ece60632"
+  },
+  "dev/optimize-art.ps1": {
+    "mtime": 1781122093.4471436,
+    "ast_hash": "fccde103149cda6fcbef8795604a54a6",
+    "semantic_hash": "fccde103149cda6fcbef8795604a54a6"
+  },
+  "dev/smoke.js": {
+    "mtime": 1783191929.5953367,
+    "ast_hash": "23f7eb1118d3de0b536bd71b3947a6c5",
+    "semantic_hash": ""
+  },
+  "game/balance.js": {
+    "mtime": 1783119368.6670916,
+    "ast_hash": "b240f2a913b44e67ac322ad3648964f1",
+    "semantic_hash": ""
+  },
+  "game/custom-deck.js": {
+    "mtime": 1783119368.66717,
+    "ast_hash": "1163d3cbdebcd0c45da2d0c0e45bc16d",
+    "semantic_hash": "1163d3cbdebcd0c45da2d0c0e45bc16d"
+  },
+  "game/custom-maps.js": {
+    "mtime": 1783190007.8067906,
+    "ast_hash": "7880e53c443bcb044e4c4a77a9d99979",
+    "semantic_hash": ""
+  },
+  "game/engine.js": {
+    "mtime": 1783190919.6189787,
+    "ast_hash": "4a13297686594f12fdf9f5a92b699795",
+    "semantic_hash": ""
+  },
+  "game/maps.js": {
+    "mtime": 1783137147.2084687,
+    "ast_hash": "c5e720dc68dc260ee83b0861f090b07e",
+    "semantic_hash": ""
+  },
+  "game/server.js": {
+    "mtime": 1783191806.4550602,
+    "ast_hash": "9bcc3e63089d777cd1ae1e754c9c2011",
+    "semantic_hash": ""
+  },
+  "game/test.js": {
+    "mtime": 1783190760.8038352,
+    "ast_hash": "588098da81fa38d38f712b52cdfc140e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/create-card/SKILL.md": {
+    "mtime": 1783119368.6618814,
+    "ast_hash": "2427c1b041f2c179c5a536ee8304d2cf",
+    "semantic_hash": ""
+  },
+  ".claude/skills/create-map/SKILL.md": {
+    "mtime": 1783119368.66205,
+    "ast_hash": "a4d5484837d0341d8566ad1dbab2c997",
+    "semantic_hash": "a4d5484837d0341d8566ad1dbab2c997"
+  },
+  ".claude/skills/run-tournament/SKILL.md": {
+    "mtime": 1783119368.6623757,
+    "ast_hash": "afc43d9fd4b59fb3f015bae437ffc014",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1783054154.5060775,
+    "ast_hash": "b9648f7dc3e17fb74c905e4e2bccd805",
+    "semantic_hash": ""
+  },
+  "design-docs/card-cheatsheet.md": {
+    "mtime": 1783119368.6641152,
+    "ast_hash": "e746a37ec9a4031c549f4475b9b012f7",
+    "semantic_hash": ""
+  },
+  "design-docs/grading-rubrics.md": {
+    "mtime": 1783119368.6643999,
+    "ast_hash": "81b5c3e43dba61d66edea67379e2ad47",
+    "semantic_hash": ""
+  },
+  "dev/balance-80.txt": {
+    "mtime": 1781122093.4469247,
+    "ast_hash": "af603c2dd27ecf7e5d7e2141392b491a",
+    "semantic_hash": "af603c2dd27ecf7e5d7e2141392b491a"
+  },
+  "dev/matchup-16.txt": {
+    "mtime": 1781122093.4470332,
+    "ast_hash": "84e377887ae238607605bf9e2847f20a",
+    "semantic_hash": ""
+  },
+  "game/README.md": {
+    "mtime": 1783190855.4240084,
+    "ast_hash": "cfee3a7e1f09921977ee80d2bfab952a",
+    "semantic_hash": ""
+  },
+  "game/index.html": {
+    "mtime": 1783191851.2783322,
+    "ast_hash": "0713e9924d86e3cb74d6478087d07d13",
+    "semantic_hash": ""
+  },
+  "index.html": {
+    "mtime": 1781122093.4553664,
+    "ast_hash": "2ee710afa3becead7c57b6a94b14552c",
+    "semantic_hash": "2ee710afa3becead7c57b6a94b14552c"
+  },
+  "game/art/airdrop.jpg": {
+    "mtime": 1781122093.4479501,
+    "ast_hash": "d6104b34261bb884e5121128251b9848",
+    "semantic_hash": "d6104b34261bb884e5121128251b9848"
+  },
+  "game/art/attack_plus1.jpg": {
+    "mtime": 1781122093.4481704,
+    "ast_hash": "443e3074fa9a94b36ce9ac6fd3258e28",
+    "semantic_hash": "443e3074fa9a94b36ce9ac6fd3258e28"
+  },
+  "game/art/board.jpg": {
+    "mtime": 1781122093.448892,
+    "ast_hash": "5b5eab8e9833f494a55c0033e1b2bf6a",
+    "semantic_hash": "5b5eab8e9833f494a55c0033e1b2bf6a"
+  },
+  "game/art/careful_maneuvers.jpg": {
+    "mtime": 1781122093.4492896,
+    "ast_hash": "edfa3eea0d6bba208b3faa1840ec4b23",
+    "semantic_hash": "edfa3eea0d6bba208b3faa1840ec4b23"
+  },
+  "game/art/conscription.jpg": {
+    "mtime": 1781122093.4495325,
+    "ast_hash": "be973b0ab916d50384eb16f9d90f1b7a",
+    "semantic_hash": "be973b0ab916d50384eb16f9d90f1b7a"
+  },
+  "game/art/deploy_artillery.jpg": {
+    "mtime": 1781122093.4497697,
+    "ast_hash": "34c233a0a371936afde866942beccb8e",
+    "semantic_hash": "34c233a0a371936afde866942beccb8e"
+  },
+  "game/art/deploy_cavalry.jpg": {
+    "mtime": 1781122093.4500098,
+    "ast_hash": "2014c524849d58c3f48c4a123d3f5045",
+    "semantic_hash": "2014c524849d58c3f48c4a123d3f5045"
+  },
+  "game/art/deploy_inf_start.jpg": {
+    "mtime": 1781122093.4502478,
+    "ast_hash": "8edb82cb9cc78bd2481116fc8b390a14",
+    "semantic_hash": "8edb82cb9cc78bd2481116fc8b390a14"
+  },
+  "game/art/deploy_inf_trench.jpg": {
+    "mtime": 1781122093.450481,
+    "ast_hash": "78819cec06733f0391f910b940ad4144",
+    "semantic_hash": "78819cec06733f0391f910b940ad4144"
+  },
+  "game/art/forced_march.jpg": {
+    "mtime": 1781122093.4508576,
+    "ast_hash": "41c11b0d3308150f521c7ab37f886e87",
+    "semantic_hash": "41c11b0d3308150f521c7ab37f886e87"
+  },
+  "game/art/mass_assault.jpg": {
+    "mtime": 1781122093.4511845,
+    "ast_hash": "e992598f957596e9519296e09cd08109",
+    "semantic_hash": "e992598f957596e9519296e09cd08109"
+  },
+  "game/art/naval_barrage.jpg": {
+    "mtime": 1781122093.4514458,
+    "ast_hash": "bebfe3f2431dce4a0fdba7fe4bf7d98a",
+    "semantic_hash": "bebfe3f2431dce4a0fdba7fe4bf7d98a"
+  },
+  "game/art/ordered_withdraw.jpg": {
+    "mtime": 1781122093.451688,
+    "ast_hash": "66a244090491991e4bddcfdf6f2117f5",
+    "semantic_hash": "66a244090491991e4bddcfdf6f2117f5"
+  },
+  "game/art/reckless_maneuvers.jpg": {
+    "mtime": 1781122093.4519122,
+    "ast_hash": "e92f7d2f4147aca7e9203007ae326e6d",
+    "semantic_hash": "e92f7d2f4147aca7e9203007ae326e6d"
+  },
+  "game/art/table.jpg": {
+    "mtime": 1781122093.4530263,
+    "ast_hash": "e0d8083b44f57c1c1352486ba02978a5",
+    "semantic_hash": "e0d8083b44f57c1c1352486ba02978a5"
+  },
+  "game/art/title.png": {
+    "mtime": 1781122093.4537055,
+    "ast_hash": "02788afa2f93f5e6d484719a68568ab3",
+    "semantic_hash": "02788afa2f93f5e6d484719a68568ab3"
+  },
+  ".claude/settings.json": {
+    "mtime": 1783119368.661623,
+    "ast_hash": "bfee062c3962c14264fd704e975a6b38",
+    "semantic_hash": ""
+  },
+  "design-docs/human-instructions/ai-heuristic-model.md": {
+    "mtime": 1783119368.664573,
+    "ast_hash": "c145f15e2d7fbd4586ae51a66c8bb7b6",
+    "semantic_hash": ""
+  },
+  "design-docs/human-instructions/claude-plays-human-instructions.md": {
+    "mtime": 1783191750.200726,
+    "ast_hash": "6f092362ecbd7d01e7511e2b4b3345fd",
+    "semantic_hash": ""
+  },
+  "design-docs/onboarding/War Of Attrition rule book.md": {
+    "mtime": 1783190839.2989244,
+    "ast_hash": "fca84b4c618b9572a8a0a22116e9608c",
+    "semantic_hash": ""
+  },
+  "design-docs/onboarding/code-overview.md": {
+    "mtime": 1783192152.6709132,
+    "ast_hash": "440d9f58c595daaec23923109e94c956",
+    "semantic_hash": ""
+  },
+  "design-docs/onboarding/workflow.md": {
+    "mtime": 1783119368.6651933,
+    "ast_hash": "3cc92cf2091a8ca039a841b256cc5d35",
+    "semantic_hash": ""
+  },
+  "specs/V0-specs/ai-variety.md": {
+    "mtime": 1783119368.6818447,
+    "ast_hash": "baf392e0dca943ecddc5473a5f40e348",
+    "semantic_hash": ""
+  },
+  "specs/V0-specs/claude-plays.md": {
+    "mtime": 1783119368.6819189,
+    "ast_hash": "6d1a83a9225e5b02fab9bef15f5c3002",
+    "semantic_hash": ""
+  },
+  "specs/V0-specs/claude-skills.md": {
+    "mtime": 1783119368.6819904,
+    "ast_hash": "30f15f671ca0e1bec8f6021889bc90b3",
+    "semantic_hash": ""
+  },
+  "specs/V0-specs/cli-responder-transport.md": {
+    "mtime": 1783119368.6821146,
+    "ast_hash": "a966eca2c05a15461ed94fbd212c6fdf",
+    "semantic_hash": ""
+  },
+  "specs/V0-specs/combat-clarity-qol.md": {
+    "mtime": 1783119368.6821852,
+    "ast_hash": "465f7e4740c58d5b023d01a5031c8d62",
+    "semantic_hash": ""
+  },
+  "specs/V0-specs/deck-editor.md": {
+    "mtime": 1783119368.6822596,
+    "ast_hash": "3eb96d354145ecd7ff705025e3176bfa",
+    "semantic_hash": ""
+  },
+  "specs/V0-specs/grading-rubrics.md": {
+    "mtime": 1783119368.682331,
+    "ast_hash": "c700424d0e383404849bfaaccbb02092",
+    "semantic_hash": ""
+  },
+  "specs/V0-specs/layout-design-pass.md": {
+    "mtime": 1783119368.682427,
+    "ast_hash": "75eadf3620d35c40c435adbfa3e851ed",
+    "semantic_hash": ""
+  },
+  "specs/V0-specs/layout-v2-implementation.md": {
+    "mtime": 1783119368.682644,
+    "ast_hash": "1aa976e19ef8d5079817da406046970e",
+    "semantic_hash": ""
+  },
+  "specs/V0-specs/map-roster-and-shapes.md": {
+    "mtime": 1783119368.682717,
+    "ast_hash": "ef48c09d6b89c049a65ada28aaf2a905",
+    "semantic_hash": ""
+  },
+  "specs/V0-specs/metrics-dashboard.md": {
+    "mtime": 1783119368.6827896,
+    "ast_hash": "9f21f083918441d71c849d84a765bdf2",
+    "semantic_hash": ""
+  },
+  "specs/V0-specs/terrain-crossing-rules.md": {
+    "mtime": 1783119368.6828642,
+    "ast_hash": "bf9f9eab06d264afff2054f235c81f5b",
+    "semantic_hash": ""
+  },
+  "specs/original-specs/Player Card Art direction drafts.md": {
+    "mtime": 1783119368.682995,
+    "ast_hash": "6d58ca7d7f69fb5eac1cdb48e5ce4335",
+    "semantic_hash": ""
+  },
+  "specs/original-specs/art-prompts.md": {
+    "mtime": 1783119368.6830876,
+    "ast_hash": "263eb8dba7f2584922d418a718969713",
+    "semantic_hash": ""
+  },
+  "specs/original-specs/prototype pictures/HexClarificationDiagram.png": {
+    "mtime": 1783119368.6836004,
+    "ast_hash": "dee787b8dcbb63be4991f0f342e3c061",
+    "semantic_hash": ""
+  },
+  "dev/balance-report.js": {
+    "mtime": 1783191476.1898494,
+    "ast_hash": "8965b63c4d3026897cc7a015d318696c",
+    "semantic_hash": ""
+  },
+  ".claude/skills/generate-reports/SKILL.md": {
+    "mtime": 1783191706.8247075,
+    "ast_hash": "3f929d60c084f07be79eec4295f91be4",
+    "semantic_hash": ""
+  },
+  ".claude/skills/review-reports/SKILL.md": {
+    "mtime": 1783191680.091756,
+    "ast_hash": "4c8c8fb72f616fe22958990429b07487",
+    "semantic_hash": ""
+  },
+  "Claude.md": {
+    "mtime": 1783192195.4106567,
+    "ast_hash": "d04c600580333f7f5df791dbe55983e1",
+    "semantic_hash": ""
+  },
+  "logs/reports/balance/0.2/2026-07-02-2319-hard-vs-hard-n60.md": {
+    "mtime": 1783119368.6634996,
+    "ast_hash": "1ae694cef8d1c03b466de680354cafda",
+    "semantic_hash": ""
+  },
+  "logs/reports/balance/0.2/2026-07-03-round3-data-review.md": {
+    "mtime": 1783137538.7306507,
+    "ast_hash": "80427817e9294a069a85e179fdcf0fd5",
+    "semantic_hash": ""
+  },
+  "logs/reports/balance/0.2/2026-07-04-0034-hard-vs-hard-n60.md": {
+    "mtime": 1783150487.2892432,
+    "ast_hash": "2c0b7ccf7df6f62f58a684b1c02a171b",
+    "semantic_hash": ""
+  },
+  "logs/reports/battle/0.2/2026-07-04T01-13-47-690Z-black-forest-haiku-v-haiku.md": {
+    "mtime": 1783127627.7023408,
+    "ast_hash": "7f39c2356ec2adb2e582fc8ec9c3357e",
+    "semantic_hash": ""
+  },
+  "logs/reports/battle/0.2/2026-07-04T02-55-27-522Z-black-forest-haiku-v-haiku.md": {
+    "mtime": 1783133727.535196,
+    "ast_hash": "037bbefeae2278044da34de78524e182",
+    "semantic_hash": ""
+  },
+  "logs/reports/battle/0.2/2026-07-04T17-30-20-554Z-the-ford-haiku-v-haiku.md": {
+    "mtime": 1783186220.5697954,
+    "ast_hash": "d7885b9146c4c2ff7af81e8009e0d38d",
+    "semantic_hash": ""
+  },
+  "logs/reports/battle/0.2/2026-07-04T18-23-09-966Z-the-ford-haiku-v-haiku.md": {
+    "mtime": 1783189389.9791467,
+    "ast_hash": "6d0605671f54ba817e6ba935cb80dc39",
+    "semantic_hash": ""
+  },
+  "specs/graphs-spec.md": {
+    "mtime": 1783192113.6161895,
+    "ast_hash": "a73756bcbc08115cff43d545d1d332d3",
+    "semantic_hash": ""
+  }
+}

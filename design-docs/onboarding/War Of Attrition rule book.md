@@ -1,7 +1,7 @@
 #onboarding #game-rules
 # War of Attrition — Rule Book
 
-**Version 0.2** — matches the code as of V0 feedback round 2 (July 2026). Bump this whenever a rule changes so playtest data can be compared version-to-version.
+**Version 0.3** — matches the code as of V0 feedback round 4 (July 2026). Bump this whenever a rule changes so playtest data can be compared version-to-version. *(0.3 river revision: a river no longer blocks support — support crosses freely — but control no longer extends across a river, so you cannot deploy across one.)*
 
 # Box Contents
 
@@ -42,22 +42,22 @@ War of Attrition is fought across various battlefields, each represented by a un
 Calculating Attacker’s Power
 
 * Start with the attacking unit’s attack value.  
-* Add support from any allied units adjacent to the battle hex — **except** support whose border into the battle hex is covered by a **trench** or a **river** (that support does not arrive).  
-* If your **Headquarters** is adjacent to the battle hex, add \+1 (the HQ’s support — denied by a trench or river on that border, like any support).  
+* Add support from any allied units adjacent to the battle hex — **except** support whose border into the battle hex is covered by a **trench** (that support does not arrive; a river does **not** block support).  
+* If your **Headquarters** is adjacent to the battle hex, add \+1 (the HQ’s support — denied by a trench on that border, like any support).  
 * If the attacker’s hex has a forest along the edge bordering the battle hex, add \+1.  
 * Apply any card modifiers, if applicable.
 
 Calculating Defender’s  Power
 
 * Start with the defending unit’s defense value.  
-* Add support from any allied units adjacent to the battle hex — **except** support whose border into the battle hex is covered by a **river** (trenches never stop the defender’s support).  
-* If the defending **Headquarters** is adjacent to the battle hex, add \+1 (denied only by a river).  
+* Add support from any allied units adjacent to the battle hex — the defender’s support is **never** blocked (neither trenches nor rivers stop it).  
+* If the defending **Headquarters** is adjacent to the battle hex, add \+1.  
 * If a mountain is present in the battle hex along the edge from which the attack is coming, add \+1
 
-Trenches and rivers *(revised July 2026 — trenches previously gave \+1 defense)*
+Trenches and rivers *(trenches revised July 2026 — previously \+1 defense; rivers revised 0.3 — previously blocked support)*
 
 * A **trench** covers two edges of its hex. Attacking support may not cross a covered edge; that is all it does. It adds no defense, never blocks the attack itself, and never hinders the defender. Whoever dug it is irrelevant — a captured trench serves its new occupant.  
-* A **river** sits on one border. **Support never crosses it, for either side** — a hex you control does not count across a river. Attacks and movement cross freely; Airdrop may land beyond it; Naval Barrage cannot remove it.
+* A **river** sits on one border. **Support crosses it freely** for both sides, but **control does not extend across it**: you may not deploy a unit onto a hex whose only link to a hex you control crosses a river (adjacency control stops at the water). Attacks and movement still cross freely; Airdrop may land beyond it; Naval Barrage cannot remove it.
 
 # Victory Conditions
 

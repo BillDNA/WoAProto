@@ -1,0 +1,2219 @@
+{
+ "version": "0.3",
+ "diff": "hard vs hard",
+ "runs": 1,
+ "maps": {
+  "Black Forest": {
+   "shape": "custom",
+   "agg": {
+    "n": 60,
+    "redWins": 36,
+    "firstWins": 40,
+    "hqWins": 12,
+    "turns": 1695,
+    "vpDiff": 153,
+    "unfinished": 0,
+    "cards": {
+     "deploy_inf_start": {
+      "plays": 106,
+      "wins": 52,
+      "simple": 1,
+      "firstSight": 22,
+      "seenSum": 312,
+      "noop": 0
+     },
+     "deploy_artillery": {
+      "plays": 105,
+      "wins": 53,
+      "simple": 0,
+      "firstSight": 68,
+      "seenSum": 155,
+      "noop": 0
+     },
+     "deploy_inf_trench": {
+      "plays": 314,
+      "wins": 155,
+      "simple": 1,
+      "firstSight": 44,
+      "seenSum": 1356,
+      "noop": 0
+     },
+     "airdrop": {
+      "plays": 105,
+      "wins": 54,
+      "simple": 1,
+      "firstSight": 33,
+      "seenSum": 290,
+      "noop": 0
+     },
+     "conscription": {
+      "plays": 104,
+      "wins": 53,
+      "simple": 0,
+      "firstSight": 72,
+      "seenSum": 158,
+      "noop": 0
+     },
+     "deploy_cavalry": {
+      "plays": 112,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 96,
+      "seenSum": 132,
+      "noop": 0
+     },
+     "attack_plus1": {
+      "plays": 196,
+      "wins": 97,
+      "simple": 21,
+      "firstSight": 2,
+      "seenSum": 2067,
+      "noop": 0
+     },
+     "mass_assault": {
+      "plays": 100,
+      "wins": 50,
+      "simple": 22,
+      "firstSight": 6,
+      "seenSum": 691,
+      "noop": 0
+     },
+     "careful_maneuvers": {
+      "plays": 108,
+      "wins": 58,
+      "simple": 0,
+      "firstSight": 13,
+      "seenSum": 425,
+      "noop": 0
+     },
+     "reckless_maneuvers": {
+      "plays": 100,
+      "wins": 49,
+      "simple": 0,
+      "firstSight": 11,
+      "seenSum": 380,
+      "noop": 0
+     },
+     "ordered_withdraw": {
+      "plays": 99,
+      "wins": 49,
+      "simple": 16,
+      "firstSight": 6,
+      "seenSum": 546,
+      "noop": 0
+     },
+     "naval_barrage": {
+      "plays": 100,
+      "wins": 49,
+      "simple": 1,
+      "firstSight": 3,
+      "seenSum": 498,
+      "noop": 0
+     },
+     "forced_march": {
+      "plays": 98,
+      "wins": 50,
+      "simple": 1,
+      "firstSight": 8,
+      "seenSum": 420,
+      "noop": 0
+     }
+    },
+    "attacks": 411,
+    "swaps": 375,
+    "marches": 182,
+    "zeroKill": 2,
+    "tiebreak": 6,
+    "firstBloodGames": 58,
+    "firstBloodWins": 33,
+    "controlGames": 52,
+    "controlWins": 47,
+    "deployedShare": 52.8,
+    "killTail": 90,
+    "leadChanges": 124
+   }
+  },
+  "Causeway": {
+   "shape": "compact",
+   "agg": {
+    "n": 60,
+    "redWins": 25,
+    "firstWins": 33,
+    "hqWins": 10,
+    "turns": 1749,
+    "vpDiff": 161,
+    "unfinished": 0,
+    "cards": {
+     "deploy_inf_start": {
+      "plays": 105,
+      "wins": 53,
+      "simple": 1,
+      "firstSight": 23,
+      "seenSum": 298,
+      "noop": 0
+     },
+     "deploy_artillery": {
+      "plays": 109,
+      "wins": 54,
+      "simple": 1,
+      "firstSight": 72,
+      "seenSum": 168,
+      "noop": 0
+     },
+     "deploy_inf_trench": {
+      "plays": 318,
+      "wins": 158,
+      "simple": 0,
+      "firstSight": 43,
+      "seenSum": 1314,
+      "noop": 0
+     },
+     "airdrop": {
+      "plays": 106,
+      "wins": 54,
+      "simple": 0,
+      "firstSight": 25,
+      "seenSum": 326,
+      "noop": 0
+     },
+     "conscription": {
+      "plays": 111,
+      "wins": 57,
+      "simple": 0,
+      "firstSight": 76,
+      "seenSum": 157,
+      "noop": 0
+     },
+     "deploy_cavalry": {
+      "plays": 112,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 84,
+      "seenSum": 153,
+      "noop": 0
+     },
+     "attack_plus1": {
+      "plays": 208,
+      "wins": 103,
+      "simple": 19,
+      "firstSight": 4,
+      "seenSum": 1931,
+      "noop": 0
+     },
+     "mass_assault": {
+      "plays": 104,
+      "wins": 54,
+      "simple": 29,
+      "firstSight": 2,
+      "seenSum": 730,
+      "noop": 1
+     },
+     "careful_maneuvers": {
+      "plays": 107,
+      "wins": 53,
+      "simple": 0,
+      "firstSight": 14,
+      "seenSum": 444,
+      "noop": 0
+     },
+     "reckless_maneuvers": {
+      "plays": 107,
+      "wins": 52,
+      "simple": 0,
+      "firstSight": 7,
+      "seenSum": 466,
+      "noop": 0
+     },
+     "ordered_withdraw": {
+      "plays": 104,
+      "wins": 52,
+      "simple": 20,
+      "firstSight": 6,
+      "seenSum": 570,
+      "noop": 0
+     },
+     "naval_barrage": {
+      "plays": 103,
+      "wins": 51,
+      "simple": 0,
+      "firstSight": 10,
+      "seenSum": 482,
+      "noop": 0
+     },
+     "forced_march": {
+      "plays": 105,
+      "wins": 52,
+      "simple": 4,
+      "firstSight": 6,
+      "seenSum": 464,
+      "noop": 0
+     }
+    },
+    "attacks": 424,
+    "swaps": 365,
+    "marches": 217,
+    "zeroKill": 1,
+    "tiebreak": 9,
+    "firstBloodGames": 59,
+    "firstBloodWins": 33,
+    "controlGames": 52,
+    "controlWins": 47,
+    "deployedShare": 54.1,
+    "killTail": 109,
+    "leadChanges": 163
+   }
+  },
+  "Frontier": {
+   "shape": "classic",
+   "agg": {
+    "n": 60,
+    "redWins": 33,
+    "firstWins": 29,
+    "hqWins": 10,
+    "turns": 1787,
+    "vpDiff": 138,
+    "unfinished": 0,
+    "cards": {
+     "deploy_inf_start": {
+      "plays": 107,
+      "wins": 53,
+      "simple": 1,
+      "firstSight": 18,
+      "seenSum": 286,
+      "noop": 0
+     },
+     "deploy_artillery": {
+      "plays": 114,
+      "wins": 56,
+      "simple": 0,
+      "firstSight": 83,
+      "seenSum": 148,
+      "noop": 0
+     },
+     "deploy_inf_trench": {
+      "plays": 329,
+      "wins": 164,
+      "simple": 0,
+      "firstSight": 30,
+      "seenSum": 1453,
+      "noop": 0
+     },
+     "airdrop": {
+      "plays": 111,
+      "wins": 56,
+      "simple": 4,
+      "firstSight": 34,
+      "seenSum": 276,
+      "noop": 0
+     },
+     "conscription": {
+      "plays": 113,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 80,
+      "seenSum": 147,
+      "noop": 0
+     },
+     "deploy_cavalry": {
+      "plays": 116,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 92,
+      "seenSum": 140,
+      "noop": 0
+     },
+     "attack_plus1": {
+      "plays": 207,
+      "wins": 104,
+      "simple": 55,
+      "firstSight": 3,
+      "seenSum": 2243,
+      "noop": 4
+     },
+     "mass_assault": {
+      "plays": 106,
+      "wins": 53,
+      "simple": 34,
+      "firstSight": 4,
+      "seenSum": 784,
+      "noop": 3
+     },
+     "careful_maneuvers": {
+      "plays": 109,
+      "wins": 57,
+      "simple": 0,
+      "firstSight": 8,
+      "seenSum": 420,
+      "noop": 0
+     },
+     "reckless_maneuvers": {
+      "plays": 109,
+      "wins": 53,
+      "simple": 1,
+      "firstSight": 11,
+      "seenSum": 413,
+      "noop": 1
+     },
+     "ordered_withdraw": {
+      "plays": 108,
+      "wins": 53,
+      "simple": 44,
+      "firstSight": 11,
+      "seenSum": 696,
+      "noop": 4
+     },
+     "naval_barrage": {
+      "plays": 103,
+      "wins": 51,
+      "simple": 0,
+      "firstSight": 4,
+      "seenSum": 478,
+      "noop": 0
+     },
+     "forced_march": {
+      "plays": 105,
+      "wins": 52,
+      "simple": 0,
+      "firstSight": 11,
+      "seenSum": 407,
+      "noop": 0
+     }
+    },
+    "attacks": 321,
+    "swaps": 300,
+    "marches": 361,
+    "zeroKill": 0,
+    "tiebreak": 5,
+    "firstBloodGames": 60,
+    "firstBloodWins": 39,
+    "controlGames": 47,
+    "controlWins": 41,
+    "deployedShare": 55.7,
+    "killTail": 148,
+    "leadChanges": 171
+   }
+  },
+  "Highwater": {
+   "shape": "compact",
+   "agg": {
+    "n": 60,
+    "redWins": 27,
+    "firstWins": 37,
+    "hqWins": 20,
+    "turns": 1521,
+    "vpDiff": 154,
+    "unfinished": 0,
+    "cards": {
+     "deploy_inf_start": {
+      "plays": 93,
+      "wins": 46,
+      "simple": 2,
+      "firstSight": 16,
+      "seenSum": 304,
+      "noop": 1
+     },
+     "deploy_artillery": {
+      "plays": 95,
+      "wins": 46,
+      "simple": 0,
+      "firstSight": 62,
+      "seenSum": 151,
+      "noop": 0
+     },
+     "deploy_inf_trench": {
+      "plays": 277,
+      "wins": 140,
+      "simple": 0,
+      "firstSight": 42,
+      "seenSum": 1348,
+      "noop": 0
+     },
+     "airdrop": {
+      "plays": 93,
+      "wins": 47,
+      "simple": 3,
+      "firstSight": 32,
+      "seenSum": 260,
+      "noop": 0
+     },
+     "conscription": {
+      "plays": 101,
+      "wins": 54,
+      "simple": 0,
+      "firstSight": 66,
+      "seenSum": 147,
+      "noop": 0
+     },
+     "deploy_cavalry": {
+      "plays": 102,
+      "wins": 56,
+      "simple": 0,
+      "firstSight": 90,
+      "seenSum": 115,
+      "noop": 0
+     },
+     "attack_plus1": {
+      "plays": 182,
+      "wins": 87,
+      "simple": 32,
+      "firstSight": 6,
+      "seenSum": 1713,
+      "noop": 0
+     },
+     "mass_assault": {
+      "plays": 88,
+      "wins": 46,
+      "simple": 17,
+      "firstSight": 4,
+      "seenSum": 554,
+      "noop": 1
+     },
+     "careful_maneuvers": {
+      "plays": 95,
+      "wins": 52,
+      "simple": 0,
+      "firstSight": 16,
+      "seenSum": 409,
+      "noop": 0
+     },
+     "reckless_maneuvers": {
+      "plays": 91,
+      "wins": 46,
+      "simple": 1,
+      "firstSight": 15,
+      "seenSum": 347,
+      "noop": 1
+     },
+     "ordered_withdraw": {
+      "plays": 87,
+      "wins": 44,
+      "simple": 17,
+      "firstSight": 6,
+      "seenSum": 445,
+      "noop": 1
+     },
+     "naval_barrage": {
+      "plays": 90,
+      "wins": 43,
+      "simple": 4,
+      "firstSight": 12,
+      "seenSum": 389,
+      "noop": 0
+     },
+     "forced_march": {
+      "plays": 87,
+      "wins": 42,
+      "simple": 7,
+      "firstSight": 15,
+      "seenSum": 367,
+      "noop": 0
+     }
+    },
+    "attacks": 393,
+    "swaps": 301,
+    "marches": 193,
+    "zeroKill": 3,
+    "tiebreak": 5,
+    "firstBloodGames": 57,
+    "firstBloodWins": 30,
+    "controlGames": 49,
+    "controlWins": 44,
+    "deployedShare": 47.85000000000001,
+    "killTail": 124,
+    "leadChanges": 138
+   }
+  },
+  "Killing Ground": {
+   "shape": "classic",
+   "agg": {
+    "n": 60,
+    "redWins": 28,
+    "firstWins": 26,
+    "hqWins": 6,
+    "turns": 1844,
+    "vpDiff": 157,
+    "unfinished": 0,
+    "cards": {
+     "deploy_inf_start": {
+      "plays": 113,
+      "wins": 56,
+      "simple": 2,
+      "firstSight": 22,
+      "seenSum": 306,
+      "noop": 0
+     },
+     "deploy_artillery": {
+      "plays": 111,
+      "wins": 55,
+      "simple": 0,
+      "firstSight": 82,
+      "seenSum": 150,
+      "noop": 0
+     },
+     "deploy_inf_trench": {
+      "plays": 335,
+      "wins": 168,
+      "simple": 0,
+      "firstSight": 43,
+      "seenSum": 1484,
+      "noop": 0
+     },
+     "airdrop": {
+      "plays": 113,
+      "wins": 56,
+      "simple": 1,
+      "firstSight": 29,
+      "seenSum": 302,
+      "noop": 0
+     },
+     "conscription": {
+      "plays": 113,
+      "wins": 57,
+      "simple": 0,
+      "firstSight": 65,
+      "seenSum": 182,
+      "noop": 0
+     },
+     "deploy_cavalry": {
+      "plays": 117,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 97,
+      "seenSum": 140,
+      "noop": 0
+     },
+     "attack_plus1": {
+      "plays": 220,
+      "wins": 110,
+      "simple": 56,
+      "firstSight": 0,
+      "seenSum": 2411,
+      "noop": 1
+     },
+     "mass_assault": {
+      "plays": 112,
+      "wins": 57,
+      "simple": 31,
+      "firstSight": 2,
+      "seenSum": 791,
+      "noop": 4
+     },
+     "careful_maneuvers": {
+      "plays": 114,
+      "wins": 58,
+      "simple": 0,
+      "firstSight": 9,
+      "seenSum": 511,
+      "noop": 0
+     },
+     "reckless_maneuvers": {
+      "plays": 111,
+      "wins": 55,
+      "simple": 0,
+      "firstSight": 7,
+      "seenSum": 438,
+      "noop": 0
+     },
+     "ordered_withdraw": {
+      "plays": 110,
+      "wins": 55,
+      "simple": 48,
+      "firstSight": 7,
+      "seenSum": 708,
+      "noop": 0
+     },
+     "naval_barrage": {
+      "plays": 110,
+      "wins": 55,
+      "simple": 2,
+      "firstSight": 8,
+      "seenSum": 454,
+      "noop": 0
+     },
+     "forced_march": {
+      "plays": 111,
+      "wins": 56,
+      "simple": 3,
+      "firstSight": 14,
+      "seenSum": 437,
+      "noop": 0
+     }
+    },
+    "attacks": 359,
+    "swaps": 345,
+    "marches": 332,
+    "zeroKill": 2,
+    "tiebreak": 3,
+    "firstBloodGames": 58,
+    "firstBloodWins": 31,
+    "controlGames": 49,
+    "controlWins": 47,
+    "deployedShare": 56.400000000000006,
+    "killTail": 147,
+    "leadChanges": 160
+   }
+  },
+  "Long March": {
+   "shape": "spear",
+   "agg": {
+    "n": 60,
+    "redWins": 35,
+    "firstWins": 27,
+    "hqWins": 3,
+    "turns": 1936,
+    "vpDiff": 127,
+    "unfinished": 0,
+    "cards": {
+     "deploy_inf_start": {
+      "plays": 118,
+      "wins": 59,
+      "simple": 0,
+      "firstSight": 21,
+      "seenSum": 337,
+      "noop": 0
+     },
+     "deploy_artillery": {
+      "plays": 119,
+      "wins": 59,
+      "simple": 0,
+      "firstSight": 83,
+      "seenSum": 165,
+      "noop": 0
+     },
+     "deploy_inf_trench": {
+      "plays": 356,
+      "wins": 180,
+      "simple": 0,
+      "firstSight": 50,
+      "seenSum": 1635,
+      "noop": 0
+     },
+     "airdrop": {
+      "plays": 118,
+      "wins": 60,
+      "simple": 1,
+      "firstSight": 38,
+      "seenSum": 279,
+      "noop": 0
+     },
+     "conscription": {
+      "plays": 119,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 67,
+      "seenSum": 179,
+      "noop": 0
+     },
+     "deploy_cavalry": {
+      "plays": 120,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 104,
+      "seenSum": 136,
+      "noop": 0
+     },
+     "attack_plus1": {
+      "plays": 233,
+      "wins": 115,
+      "simple": 84,
+      "firstSight": 2,
+      "seenSum": 2826,
+      "noop": 1
+     },
+     "mass_assault": {
+      "plays": 115,
+      "wins": 58,
+      "simple": 44,
+      "firstSight": 2,
+      "seenSum": 861,
+      "noop": 1
+     },
+     "careful_maneuvers": {
+      "plays": 117,
+      "wins": 59,
+      "simple": 1,
+      "firstSight": 7,
+      "seenSum": 461,
+      "noop": 0
+     },
+     "reckless_maneuvers": {
+      "plays": 115,
+      "wins": 57,
+      "simple": 0,
+      "firstSight": 10,
+      "seenSum": 465,
+      "noop": 0
+     },
+     "ordered_withdraw": {
+      "plays": 118,
+      "wins": 58,
+      "simple": 40,
+      "firstSight": 6,
+      "seenSum": 670,
+      "noop": 1
+     },
+     "naval_barrage": {
+      "plays": 117,
+      "wins": 58,
+      "simple": 0,
+      "firstSight": 12,
+      "seenSum": 499,
+      "noop": 0
+     },
+     "forced_march": {
+      "plays": 114,
+      "wins": 57,
+      "simple": 2,
+      "firstSight": 8,
+      "seenSum": 458,
+      "noop": 0
+     }
+    },
+    "attacks": 347,
+    "swaps": 449,
+    "marches": 282,
+    "zeroKill": 0,
+    "tiebreak": 7,
+    "firstBloodGames": 60,
+    "firstBloodWins": 36,
+    "controlGames": 44,
+    "controlWins": 42,
+    "deployedShare": 59.4,
+    "killTail": 176,
+    "leadChanges": 186
+   }
+  },
+  "Open Mountain Pass": {
+   "shape": "classic",
+   "agg": {
+    "n": 60,
+    "redWins": 32,
+    "firstWins": 38,
+    "hqWins": 23,
+    "turns": 1442,
+    "vpDiff": 129,
+    "unfinished": 0,
+    "cards": {
+     "deploy_inf_start": {
+      "plays": 84,
+      "wins": 41,
+      "simple": 2,
+      "firstSight": 24,
+      "seenSum": 216,
+      "noop": 0
+     },
+     "deploy_artillery": {
+      "plays": 93,
+      "wins": 46,
+      "simple": 0,
+      "firstSight": 61,
+      "seenSum": 135,
+      "noop": 0
+     },
+     "deploy_inf_trench": {
+      "plays": 269,
+      "wins": 131,
+      "simple": 0,
+      "firstSight": 46,
+      "seenSum": 1146,
+      "noop": 0
+     },
+     "airdrop": {
+      "plays": 89,
+      "wins": 46,
+      "simple": 0,
+      "firstSight": 22,
+      "seenSum": 223,
+      "noop": 0
+     },
+     "conscription": {
+      "plays": 96,
+      "wins": 49,
+      "simple": 0,
+      "firstSight": 62,
+      "seenSum": 134,
+      "noop": 0
+     },
+     "deploy_cavalry": {
+      "plays": 99,
+      "wins": 53,
+      "simple": 0,
+      "firstSight": 83,
+      "seenSum": 123,
+      "noop": 0
+     },
+     "attack_plus1": {
+      "plays": 176,
+      "wins": 94,
+      "simple": 31,
+      "firstSight": 7,
+      "seenSum": 1845,
+      "noop": 4
+     },
+     "mass_assault": {
+      "plays": 82,
+      "wins": 43,
+      "simple": 22,
+      "firstSight": 4,
+      "seenSum": 570,
+      "noop": 0
+     },
+     "careful_maneuvers": {
+      "plays": 85,
+      "wins": 43,
+      "simple": 0,
+      "firstSight": 5,
+      "seenSum": 367,
+      "noop": 0
+     },
+     "reckless_maneuvers": {
+      "plays": 86,
+      "wins": 44,
+      "simple": 0,
+      "firstSight": 7,
+      "seenSum": 326,
+      "noop": 0
+     },
+     "ordered_withdraw": {
+      "plays": 82,
+      "wins": 41,
+      "simple": 20,
+      "firstSight": 6,
+      "seenSum": 494,
+      "noop": 0
+     },
+     "naval_barrage": {
+      "plays": 83,
+      "wins": 41,
+      "simple": 1,
+      "firstSight": 10,
+      "seenSum": 326,
+      "noop": 0
+     },
+     "forced_march": {
+      "plays": 81,
+      "wins": 42,
+      "simple": 1,
+      "firstSight": 4,
+      "seenSum": 333,
+      "noop": 0
+     }
+    },
+    "attacks": 310,
+    "swaps": 211,
+    "marches": 268,
+    "zeroKill": 6,
+    "tiebreak": 2,
+    "firstBloodGames": 54,
+    "firstBloodWins": 27,
+    "controlGames": 43,
+    "controlWins": 36,
+    "deployedShare": 46.150000000000006,
+    "killTail": 82,
+    "leadChanges": 103
+   }
+  },
+  "Riverbend": {
+   "shape": "classic",
+   "agg": {
+    "n": 60,
+    "redWins": 27,
+    "firstWins": 27,
+    "hqWins": 1,
+    "turns": 1967,
+    "vpDiff": 160,
+    "unfinished": 0,
+    "cards": {
+     "deploy_inf_start": {
+      "plays": 119,
+      "wins": 59,
+      "simple": 1,
+      "firstSight": 17,
+      "seenSum": 334,
+      "noop": 0
+     },
+     "deploy_artillery": {
+      "plays": 120,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 83,
+      "seenSum": 171,
+      "noop": 0
+     },
+     "deploy_inf_trench": {
+      "plays": 358,
+      "wins": 179,
+      "simple": 2,
+      "firstSight": 33,
+      "seenSum": 1570,
+      "noop": 0
+     },
+     "airdrop": {
+      "plays": 120,
+      "wins": 60,
+      "simple": 2,
+      "firstSight": 32,
+      "seenSum": 292,
+      "noop": 0
+     },
+     "conscription": {
+      "plays": 120,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 75,
+      "seenSum": 173,
+      "noop": 0
+     },
+     "deploy_cavalry": {
+      "plays": 120,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 104,
+      "seenSum": 138,
+      "noop": 0
+     },
+     "attack_plus1": {
+      "plays": 238,
+      "wins": 119,
+      "simple": 72,
+      "firstSight": 1,
+      "seenSum": 2708,
+      "noop": 1
+     },
+     "mass_assault": {
+      "plays": 118,
+      "wins": 59,
+      "simple": 46,
+      "firstSight": 7,
+      "seenSum": 854,
+      "noop": 1
+     },
+     "careful_maneuvers": {
+      "plays": 119,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 3,
+      "seenSum": 501,
+      "noop": 0
+     },
+     "reckless_maneuvers": {
+      "plays": 120,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 11,
+      "seenSum": 469,
+      "noop": 0
+     },
+     "ordered_withdraw": {
+      "plays": 118,
+      "wins": 59,
+      "simple": 45,
+      "firstSight": 8,
+      "seenSum": 764,
+      "noop": 2
+     },
+     "naval_barrage": {
+      "plays": 119,
+      "wins": 60,
+      "simple": 1,
+      "firstSight": 7,
+      "seenSum": 506,
+      "noop": 0
+     },
+     "forced_march": {
+      "plays": 119,
+      "wins": 59,
+      "simple": 0,
+      "firstSight": 4,
+      "seenSum": 539,
+      "noop": 0
+     }
+    },
+    "attacks": 346,
+    "swaps": 445,
+    "marches": 317,
+    "zeroKill": 0,
+    "tiebreak": 6,
+    "firstBloodGames": 60,
+    "firstBloodWins": 43,
+    "controlGames": 48,
+    "controlWins": 42,
+    "deployedShare": 59.6,
+    "killTail": 195,
+    "leadChanges": 181
+   }
+  },
+  "Saber Ridge": {
+   "shape": "ridge",
+   "agg": {
+    "n": 60,
+    "redWins": 31,
+    "firstWins": 31,
+    "hqWins": 17,
+    "turns": 1743,
+    "vpDiff": 181,
+    "unfinished": 0,
+    "cards": {
+     "deploy_inf_start": {
+      "plays": 106,
+      "wins": 54,
+      "simple": 1,
+      "firstSight": 15,
+      "seenSum": 363,
+      "noop": 0
+     },
+     "deploy_artillery": {
+      "plays": 113,
+      "wins": 56,
+      "simple": 2,
+      "firstSight": 66,
+      "seenSum": 171,
+      "noop": 0
+     },
+     "deploy_inf_trench": {
+      "plays": 331,
+      "wins": 164,
+      "simple": 0,
+      "firstSight": 41,
+      "seenSum": 1472,
+      "noop": 0
+     },
+     "airdrop": {
+      "plays": 113,
+      "wins": 56,
+      "simple": 0,
+      "firstSight": 40,
+      "seenSum": 296,
+      "noop": 0
+     },
+     "conscription": {
+      "plays": 113,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 66,
+      "seenSum": 173,
+      "noop": 0
+     },
+     "deploy_cavalry": {
+      "plays": 113,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 91,
+      "seenSum": 140,
+      "noop": 0
+     },
+     "attack_plus1": {
+      "plays": 198,
+      "wins": 97,
+      "simple": 23,
+      "firstSight": 5,
+      "seenSum": 1745,
+      "noop": 0
+     },
+     "mass_assault": {
+      "plays": 102,
+      "wins": 55,
+      "simple": 18,
+      "firstSight": 12,
+      "seenSum": 656,
+      "noop": 1
+     },
+     "careful_maneuvers": {
+      "plays": 105,
+      "wins": 51,
+      "simple": 2,
+      "firstSight": 9,
+      "seenSum": 470,
+      "noop": 0
+     },
+     "reckless_maneuvers": {
+      "plays": 108,
+      "wins": 53,
+      "simple": 1,
+      "firstSight": 17,
+      "seenSum": 390,
+      "noop": 0
+     },
+     "ordered_withdraw": {
+      "plays": 98,
+      "wins": 51,
+      "simple": 11,
+      "firstSight": 9,
+      "seenSum": 543,
+      "noop": 0
+     },
+     "naval_barrage": {
+      "plays": 98,
+      "wins": 49,
+      "simple": 2,
+      "firstSight": 5,
+      "seenSum": 499,
+      "noop": 0
+     },
+     "forced_march": {
+      "plays": 102,
+      "wins": 51,
+      "simple": 1,
+      "firstSight": 8,
+      "seenSum": 452,
+      "noop": 0
+     }
+    },
+    "attacks": 441,
+    "swaps": 303,
+    "marches": 256,
+    "zeroKill": 0,
+    "tiebreak": 2,
+    "firstBloodGames": 60,
+    "firstBloodWins": 38,
+    "controlGames": 53,
+    "controlWins": 51,
+    "deployedShare": 55.599999999999994,
+    "killTail": 89,
+    "leadChanges": 168
+   }
+  },
+  "The Bulge": {
+   "shape": "classic",
+   "agg": {
+    "n": 60,
+    "redWins": 31,
+    "firstWins": 23,
+    "hqWins": 16,
+    "turns": 1734,
+    "vpDiff": 137,
+    "unfinished": 0,
+    "cards": {
+     "deploy_inf_start": {
+      "plays": 102,
+      "wins": 52,
+      "simple": 1,
+      "firstSight": 18,
+      "seenSum": 309,
+      "noop": 0
+     },
+     "deploy_artillery": {
+      "plays": 114,
+      "wins": 56,
+      "simple": 1,
+      "firstSight": 71,
+      "seenSum": 165,
+      "noop": 0
+     },
+     "deploy_inf_trench": {
+      "plays": 336,
+      "wins": 170,
+      "simple": 0,
+      "firstSight": 45,
+      "seenSum": 1446,
+      "noop": 0
+     },
+     "airdrop": {
+      "plays": 102,
+      "wins": 51,
+      "simple": 0,
+      "firstSight": 40,
+      "seenSum": 228,
+      "noop": 0
+     },
+     "conscription": {
+      "plays": 118,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 62,
+      "seenSum": 197,
+      "noop": 0
+     },
+     "deploy_cavalry": {
+      "plays": 118,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 96,
+      "seenSum": 142,
+      "noop": 0
+     },
+     "attack_plus1": {
+      "plays": 192,
+      "wins": 96,
+      "simple": 44,
+      "firstSight": 2,
+      "seenSum": 1853,
+      "noop": 3
+     },
+     "mass_assault": {
+      "plays": 96,
+      "wins": 48,
+      "simple": 37,
+      "firstSight": 5,
+      "seenSum": 705,
+      "noop": 1
+     },
+     "careful_maneuvers": {
+      "plays": 110,
+      "wins": 59,
+      "simple": 0,
+      "firstSight": 10,
+      "seenSum": 438,
+      "noop": 0
+     },
+     "reckless_maneuvers": {
+      "plays": 105,
+      "wins": 53,
+      "simple": 0,
+      "firstSight": 13,
+      "seenSum": 415,
+      "noop": 0
+     },
+     "ordered_withdraw": {
+      "plays": 100,
+      "wins": 47,
+      "simple": 34,
+      "firstSight": 10,
+      "seenSum": 573,
+      "noop": 0
+     },
+     "naval_barrage": {
+      "plays": 97,
+      "wins": 47,
+      "simple": 3,
+      "firstSight": 3,
+      "seenSum": 455,
+      "noop": 0
+     },
+     "forced_march": {
+      "plays": 100,
+      "wins": 49,
+      "simple": 6,
+      "firstSight": 7,
+      "seenSum": 418,
+      "noop": 0
+     }
+    },
+    "attacks": 345,
+    "swaps": 244,
+    "marches": 373,
+    "zeroKill": 0,
+    "tiebreak": 7,
+    "firstBloodGames": 60,
+    "firstBloodWins": 33,
+    "controlGames": 48,
+    "controlWins": 35,
+    "deployedShare": 56.199999999999996,
+    "killTail": 157,
+    "leadChanges": 176
+   }
+  },
+  "The Cockpit": {
+   "shape": "compact",
+   "agg": {
+    "n": 60,
+    "redWins": 26,
+    "firstWins": 30,
+    "hqWins": 17,
+    "turns": 1585,
+    "vpDiff": 166,
+    "unfinished": 0,
+    "cards": {
+     "deploy_inf_start": {
+      "plays": 91,
+      "wins": 45,
+      "simple": 0,
+      "firstSight": 20,
+      "seenSum": 287,
+      "noop": 0
+     },
+     "deploy_artillery": {
+      "plays": 99,
+      "wins": 48,
+      "simple": 0,
+      "firstSight": 67,
+      "seenSum": 155,
+      "noop": 1
+     },
+     "deploy_inf_trench": {
+      "plays": 287,
+      "wins": 142,
+      "simple": 1,
+      "firstSight": 38,
+      "seenSum": 1240,
+      "noop": 0
+     },
+     "airdrop": {
+      "plays": 98,
+      "wins": 48,
+      "simple": 0,
+      "firstSight": 24,
+      "seenSum": 298,
+      "noop": 0
+     },
+     "conscription": {
+      "plays": 102,
+      "wins": 57,
+      "simple": 0,
+      "firstSight": 60,
+      "seenSum": 154,
+      "noop": 0
+     },
+     "deploy_cavalry": {
+      "plays": 104,
+      "wins": 57,
+      "simple": 0,
+      "firstSight": 86,
+      "seenSum": 127,
+      "noop": 0
+     },
+     "attack_plus1": {
+      "plays": 194,
+      "wins": 96,
+      "simple": 19,
+      "firstSight": 8,
+      "seenSum": 1620,
+      "noop": 0
+     },
+     "mass_assault": {
+      "plays": 94,
+      "wins": 47,
+      "simple": 29,
+      "firstSight": 9,
+      "seenSum": 626,
+      "noop": 1
+     },
+     "careful_maneuvers": {
+      "plays": 97,
+      "wins": 51,
+      "simple": 0,
+      "firstSight": 15,
+      "seenSum": 405,
+      "noop": 0
+     },
+     "reckless_maneuvers": {
+      "plays": 96,
+      "wins": 49,
+      "simple": 0,
+      "firstSight": 16,
+      "seenSum": 346,
+      "noop": 0
+     },
+     "ordered_withdraw": {
+      "plays": 91,
+      "wins": 46,
+      "simple": 22,
+      "firstSight": 3,
+      "seenSum": 551,
+      "noop": 0
+     },
+     "naval_barrage": {
+      "plays": 95,
+      "wins": 46,
+      "simple": 2,
+      "firstSight": 10,
+      "seenSum": 445,
+      "noop": 0
+     },
+     "forced_march": {
+      "plays": 94,
+      "wins": 47,
+      "simple": 3,
+      "firstSight": 6,
+      "seenSum": 406,
+      "noop": 0
+     }
+    },
+    "attacks": 403,
+    "swaps": 348,
+    "marches": 181,
+    "zeroKill": 1,
+    "tiebreak": 5,
+    "firstBloodGames": 59,
+    "firstBloodWins": 32,
+    "controlGames": 49,
+    "controlWins": 47,
+    "deployedShare": 49.2,
+    "killTail": 109,
+    "leadChanges": 165
+   }
+  },
+  "The Ford": {
+   "shape": "compact",
+   "agg": {
+    "n": 60,
+    "redWins": 37,
+    "firstWins": 33,
+    "hqWins": 12,
+    "turns": 1664,
+    "vpDiff": 167,
+    "unfinished": 0,
+    "cards": {
+     "deploy_inf_start": {
+      "plays": 100,
+      "wins": 49,
+      "simple": 0,
+      "firstSight": 23,
+      "seenSum": 308,
+      "noop": 0
+     },
+     "deploy_artillery": {
+      "plays": 100,
+      "wins": 49,
+      "simple": 0,
+      "firstSight": 67,
+      "seenSum": 148,
+      "noop": 0
+     },
+     "deploy_inf_trench": {
+      "plays": 305,
+      "wins": 151,
+      "simple": 1,
+      "firstSight": 30,
+      "seenSum": 1378,
+      "noop": 0
+     },
+     "airdrop": {
+      "plays": 100,
+      "wins": 51,
+      "simple": 2,
+      "firstSight": 19,
+      "seenSum": 314,
+      "noop": 0
+     },
+     "conscription": {
+      "plays": 105,
+      "wins": 56,
+      "simple": 0,
+      "firstSight": 63,
+      "seenSum": 176,
+      "noop": 0
+     },
+     "deploy_cavalry": {
+      "plays": 109,
+      "wins": 58,
+      "simple": 0,
+      "firstSight": 101,
+      "seenSum": 119,
+      "noop": 0
+     },
+     "attack_plus1": {
+      "plays": 200,
+      "wins": 99,
+      "simple": 26,
+      "firstSight": 1,
+      "seenSum": 1810,
+      "noop": 0
+     },
+     "mass_assault": {
+      "plays": 99,
+      "wins": 49,
+      "simple": 32,
+      "firstSight": 5,
+      "seenSum": 700,
+      "noop": 1
+     },
+     "careful_maneuvers": {
+      "plays": 104,
+      "wins": 56,
+      "simple": 0,
+      "firstSight": 10,
+      "seenSum": 470,
+      "noop": 0
+     },
+     "reckless_maneuvers": {
+      "plays": 99,
+      "wins": 49,
+      "simple": 0,
+      "firstSight": 10,
+      "seenSum": 386,
+      "noop": 0
+     },
+     "ordered_withdraw": {
+      "plays": 100,
+      "wins": 50,
+      "simple": 22,
+      "firstSight": 8,
+      "seenSum": 555,
+      "noop": 0
+     },
+     "naval_barrage": {
+      "plays": 97,
+      "wins": 48,
+      "simple": 2,
+      "firstSight": 7,
+      "seenSum": 471,
+      "noop": 0
+     },
+     "forced_march": {
+      "plays": 98,
+      "wins": 49,
+      "simple": 2,
+      "firstSight": 8,
+      "seenSum": 414,
+      "noop": 0
+     }
+    },
+    "attacks": 390,
+    "swaps": 382,
+    "marches": 190,
+    "zeroKill": 2,
+    "tiebreak": 4,
+    "firstBloodGames": 58,
+    "firstBloodWins": 33,
+    "controlGames": 47,
+    "controlWins": 41,
+    "deployedShare": 51.4,
+    "killTail": 126,
+    "leadChanges": 157
+   }
+  },
+  "The Marshes": {
+   "shape": "custom",
+   "agg": {
+    "n": 60,
+    "redWins": 30,
+    "firstWins": 34,
+    "hqWins": 15,
+    "turns": 1646,
+    "vpDiff": 145,
+    "unfinished": 0,
+    "cards": {
+     "deploy_inf_start": {
+      "plays": 101,
+      "wins": 50,
+      "simple": 3,
+      "firstSight": 25,
+      "seenSum": 297,
+      "noop": 0
+     },
+     "deploy_artillery": {
+      "plays": 107,
+      "wins": 52,
+      "simple": 0,
+      "firstSight": 71,
+      "seenSum": 164,
+      "noop": 0
+     },
+     "deploy_inf_trench": {
+      "plays": 305,
+      "wins": 151,
+      "simple": 1,
+      "firstSight": 45,
+      "seenSum": 1292,
+      "noop": 0
+     },
+     "airdrop": {
+      "plays": 97,
+      "wins": 46,
+      "simple": 4,
+      "firstSight": 27,
+      "seenSum": 281,
+      "noop": 0
+     },
+     "conscription": {
+      "plays": 106,
+      "wins": 58,
+      "simple": 0,
+      "firstSight": 79,
+      "seenSum": 137,
+      "noop": 0
+     },
+     "deploy_cavalry": {
+      "plays": 109,
+      "wins": 58,
+      "simple": 0,
+      "firstSight": 80,
+      "seenSum": 148,
+      "noop": 0
+     },
+     "attack_plus1": {
+      "plays": 192,
+      "wins": 96,
+      "simple": 25,
+      "firstSight": 3,
+      "seenSum": 1839,
+      "noop": 1
+     },
+     "mass_assault": {
+      "plays": 95,
+      "wins": 49,
+      "simple": 19,
+      "firstSight": 8,
+      "seenSum": 633,
+      "noop": 1
+     },
+     "careful_maneuvers": {
+      "plays": 96,
+      "wins": 49,
+      "simple": 0,
+      "firstSight": 5,
+      "seenSum": 439,
+      "noop": 0
+     },
+     "reckless_maneuvers": {
+      "plays": 104,
+      "wins": 51,
+      "simple": 0,
+      "firstSight": 14,
+      "seenSum": 385,
+      "noop": 0
+     },
+     "ordered_withdraw": {
+      "plays": 100,
+      "wins": 51,
+      "simple": 22,
+      "firstSight": 6,
+      "seenSum": 575,
+      "noop": 1
+     },
+     "naval_barrage": {
+      "plays": 94,
+      "wins": 47,
+      "simple": 5,
+      "firstSight": 7,
+      "seenSum": 445,
+      "noop": 0
+     },
+     "forced_march": {
+      "plays": 95,
+      "wins": 48,
+      "simple": 2,
+      "firstSight": 8,
+      "seenSum": 393,
+      "noop": 0
+     }
+    },
+    "attacks": 402,
+    "swaps": 349,
+    "marches": 199,
+    "zeroKill": 1,
+    "tiebreak": 5,
+    "firstBloodGames": 59,
+    "firstBloodWins": 29,
+    "controlGames": 50,
+    "controlWins": 49,
+    "deployedShare": 51.45000000000002,
+    "killTail": 104,
+    "leadChanges": 147
+   }
+  },
+  "The Narrows": {
+   "shape": "hourglass",
+   "agg": {
+    "n": 60,
+    "redWins": 33,
+    "firstWins": 27,
+    "hqWins": 8,
+    "turns": 1768,
+    "vpDiff": 124,
+    "unfinished": 0,
+    "cards": {
+     "deploy_inf_start": {
+      "plays": 106,
+      "wins": 52,
+      "simple": 2,
+      "firstSight": 17,
+      "seenSum": 323,
+      "noop": 2
+     },
+     "deploy_artillery": {
+      "plays": 113,
+      "wins": 57,
+      "simple": 3,
+      "firstSight": 72,
+      "seenSum": 160,
+      "noop": 1
+     },
+     "deploy_inf_trench": {
+      "plays": 315,
+      "wins": 156,
+      "simple": 1,
+      "firstSight": 41,
+      "seenSum": 1350,
+      "noop": 0
+     },
+     "airdrop": {
+      "plays": 108,
+      "wins": 56,
+      "simple": 1,
+      "firstSight": 34,
+      "seenSum": 281,
+      "noop": 0
+     },
+     "conscription": {
+      "plays": 112,
+      "wins": 56,
+      "simple": 0,
+      "firstSight": 75,
+      "seenSum": 160,
+      "noop": 0
+     },
+     "deploy_cavalry": {
+      "plays": 113,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 89,
+      "seenSum": 138,
+      "noop": 0
+     },
+     "attack_plus1": {
+      "plays": 212,
+      "wins": 106,
+      "simple": 82,
+      "firstSight": 6,
+      "seenSum": 2465,
+      "noop": 0
+     },
+     "mass_assault": {
+      "plays": 105,
+      "wins": 52,
+      "simple": 52,
+      "firstSight": 5,
+      "seenSum": 805,
+      "noop": 0
+     },
+     "careful_maneuvers": {
+      "plays": 109,
+      "wins": 57,
+      "simple": 1,
+      "firstSight": 13,
+      "seenSum": 435,
+      "noop": 0
+     },
+     "reckless_maneuvers": {
+      "plays": 106,
+      "wins": 52,
+      "simple": 0,
+      "firstSight": 13,
+      "seenSum": 392,
+      "noop": 0
+     },
+     "ordered_withdraw": {
+      "plays": 105,
+      "wins": 52,
+      "simple": 45,
+      "firstSight": 6,
+      "seenSum": 649,
+      "noop": 0
+     },
+     "naval_barrage": {
+      "plays": 106,
+      "wins": 53,
+      "simple": 0,
+      "firstSight": 9,
+      "seenSum": 423,
+      "noop": 0
+     },
+     "forced_march": {
+      "plays": 106,
+      "wins": 53,
+      "simple": 5,
+      "firstSight": 6,
+      "seenSum": 427,
+      "noop": 1
+     }
+    },
+    "attacks": 294,
+    "swaps": 530,
+    "marches": 168,
+    "zeroKill": 0,
+    "tiebreak": 12,
+    "firstBloodGames": 60,
+    "firstBloodWins": 39,
+    "controlGames": 39,
+    "controlWins": 36,
+    "deployedShare": 53.65,
+    "killTail": 245,
+    "leadChanges": 174
+   }
+  },
+  "The Void": {
+   "shape": "custom",
+   "agg": {
+    "n": 60,
+    "redWins": 30,
+    "firstWins": 26,
+    "hqWins": 8,
+    "turns": 1800,
+    "vpDiff": 152,
+    "unfinished": 0,
+    "cards": {
+     "deploy_inf_start": {
+      "plays": 111,
+      "wins": 55,
+      "simple": 1,
+      "firstSight": 22,
+      "seenSum": 298,
+      "noop": 0
+     },
+     "deploy_artillery": {
+      "plays": 114,
+      "wins": 57,
+      "simple": 1,
+      "firstSight": 84,
+      "seenSum": 145,
+      "noop": 0
+     },
+     "deploy_inf_trench": {
+      "plays": 332,
+      "wins": 163,
+      "simple": 1,
+      "firstSight": 40,
+      "seenSum": 1453,
+      "noop": 0
+     },
+     "airdrop": {
+      "plays": 108,
+      "wins": 54,
+      "simple": 2,
+      "firstSight": 38,
+      "seenSum": 260,
+      "noop": 0
+     },
+     "conscription": {
+      "plays": 113,
+      "wins": 58,
+      "simple": 0,
+      "firstSight": 77,
+      "seenSum": 156,
+      "noop": 0
+     },
+     "deploy_cavalry": {
+      "plays": 115,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 78,
+      "seenSum": 152,
+      "noop": 0
+     },
+     "attack_plus1": {
+      "plays": 211,
+      "wins": 105,
+      "simple": 87,
+      "firstSight": 3,
+      "seenSum": 2535,
+      "noop": 1
+     },
+     "mass_assault": {
+      "plays": 107,
+      "wins": 55,
+      "simple": 49,
+      "firstSight": 3,
+      "seenSum": 829,
+      "noop": 1
+     },
+     "careful_maneuvers": {
+      "plays": 109,
+      "wins": 55,
+      "simple": 0,
+      "firstSight": 10,
+      "seenSum": 420,
+      "noop": 0
+     },
+     "reckless_maneuvers": {
+      "plays": 107,
+      "wins": 54,
+      "simple": 0,
+      "firstSight": 11,
+      "seenSum": 400,
+      "noop": 0
+     },
+     "ordered_withdraw": {
+      "plays": 105,
+      "wins": 53,
+      "simple": 58,
+      "firstSight": 6,
+      "seenSum": 650,
+      "noop": 0
+     },
+     "naval_barrage": {
+      "plays": 109,
+      "wins": 55,
+      "simple": 2,
+      "firstSight": 8,
+      "seenSum": 438,
+      "noop": 0
+     },
+     "forced_march": {
+      "plays": 107,
+      "wins": 53,
+      "simple": 1,
+      "firstSight": 5,
+      "seenSum": 425,
+      "noop": 0
+     }
+    },
+    "attacks": 283,
+    "swaps": 501,
+    "marches": 229,
+    "zeroKill": 0,
+    "tiebreak": 7,
+    "firstBloodGames": 60,
+    "firstBloodWins": 37,
+    "controlGames": 41,
+    "controlWins": 39,
+    "deployedShare": 55.8,
+    "killTail": 195,
+    "leadChanges": 166
+   }
+  },
+  "Twin Gates": {
+   "shape": "hourglass",
+   "agg": {
+    "n": 60,
+    "redWins": 36,
+    "firstWins": 26,
+    "hqWins": 3,
+    "turns": 1936,
+    "vpDiff": 105,
+    "unfinished": 0,
+    "cards": {
+     "deploy_inf_start": {
+      "plays": 118,
+      "wins": 59,
+      "simple": 3,
+      "firstSight": 17,
+      "seenSum": 357,
+      "noop": 0
+     },
+     "deploy_artillery": {
+      "plays": 120,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 87,
+      "seenSum": 160,
+      "noop": 0
+     },
+     "deploy_inf_trench": {
+      "plays": 354,
+      "wins": 177,
+      "simple": 1,
+      "firstSight": 39,
+      "seenSum": 1475,
+      "noop": 0
+     },
+     "airdrop": {
+      "plays": 118,
+      "wins": 58,
+      "simple": 3,
+      "firstSight": 24,
+      "seenSum": 349,
+      "noop": 0
+     },
+     "conscription": {
+      "plays": 119,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 74,
+      "seenSum": 169,
+      "noop": 0
+     },
+     "deploy_cavalry": {
+      "plays": 120,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 114,
+      "seenSum": 126,
+      "noop": 0
+     },
+     "attack_plus1": {
+      "plays": 230,
+      "wins": 115,
+      "simple": 112,
+      "firstSight": 3,
+      "seenSum": 2873,
+      "noop": 0
+     },
+     "mass_assault": {
+      "plays": 116,
+      "wins": 58,
+      "simple": 67,
+      "firstSight": 0,
+      "seenSum": 908,
+      "noop": 1
+     },
+     "careful_maneuvers": {
+      "plays": 119,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 9,
+      "seenSum": 475,
+      "noop": 0
+     },
+     "reckless_maneuvers": {
+      "plays": 116,
+      "wins": 58,
+      "simple": 0,
+      "firstSight": 8,
+      "seenSum": 422,
+      "noop": 0
+     },
+     "ordered_withdraw": {
+      "plays": 115,
+      "wins": 58,
+      "simple": 35,
+      "firstSight": 3,
+      "seenSum": 632,
+      "noop": 0
+     },
+     "naval_barrage": {
+      "plays": 117,
+      "wins": 59,
+      "simple": 0,
+      "firstSight": 5,
+      "seenSum": 507,
+      "noop": 0
+     },
+     "forced_march": {
+      "plays": 117,
+      "wins": 58,
+      "simple": 0,
+      "firstSight": 4,
+      "seenSum": 477,
+      "noop": 0
+     }
+    },
+    "attacks": 298,
+    "swaps": 463,
+    "marches": 342,
+    "zeroKill": 1,
+    "tiebreak": 10,
+    "firstBloodGames": 59,
+    "firstBloodWins": 45,
+    "controlGames": 37,
+    "controlWins": 36,
+    "deployedShare": 59.05,
+    "killTail": 328,
+    "leadChanges": 166
+   }
+  },
+  "Twin Woods": {
+   "shape": "classic",
+   "agg": {
+    "n": 60,
+    "redWins": 30,
+    "firstWins": 26,
+    "hqWins": 13,
+    "turns": 1747,
+    "vpDiff": 131,
+    "unfinished": 0,
+    "cards": {
+     "deploy_inf_start": {
+      "plays": 105,
+      "wins": 55,
+      "simple": 1,
+      "firstSight": 16,
+      "seenSum": 305,
+      "noop": 0
+     },
+     "deploy_artillery": {
+      "plays": 113,
+      "wins": 55,
+      "simple": 0,
+      "firstSight": 74,
+      "seenSum": 159,
+      "noop": 0
+     },
+     "deploy_inf_trench": {
+      "plays": 330,
+      "wins": 166,
+      "simple": 0,
+      "firstSight": 47,
+      "seenSum": 1413,
+      "noop": 0
+     },
+     "airdrop": {
+      "plays": 109,
+      "wins": 54,
+      "simple": 0,
+      "firstSight": 40,
+      "seenSum": 245,
+      "noop": 0
+     },
+     "conscription": {
+      "plays": 114,
+      "wins": 58,
+      "simple": 0,
+      "firstSight": 67,
+      "seenSum": 171,
+      "noop": 0
+     },
+     "deploy_cavalry": {
+      "plays": 117,
+      "wins": 60,
+      "simple": 0,
+      "firstSight": 90,
+      "seenSum": 150,
+      "noop": 0
+     },
+     "attack_plus1": {
+      "plays": 198,
+      "wins": 98,
+      "simple": 58,
+      "firstSight": 1,
+      "seenSum": 2255,
+      "noop": 1
+     },
+     "mass_assault": {
+      "plays": 101,
+      "wins": 51,
+      "simple": 42,
+      "firstSight": 1,
+      "seenSum": 783,
+      "noop": 1
+     },
+     "careful_maneuvers": {
+      "plays": 109,
+      "wins": 59,
+      "simple": 1,
+      "firstSight": 17,
+      "seenSum": 388,
+      "noop": 0
+     },
+     "reckless_maneuvers": {
+      "plays": 104,
+      "wins": 51,
+      "simple": 0,
+      "firstSight": 13,
+      "seenSum": 393,
+      "noop": 0
+     },
+     "ordered_withdraw": {
+      "plays": 99,
+      "wins": 49,
+      "simple": 45,
+      "firstSight": 4,
+      "seenSum": 614,
+      "noop": 0
+     },
+     "naval_barrage": {
+      "plays": 100,
+      "wins": 49,
+      "simple": 2,
+      "firstSight": 8,
+      "seenSum": 443,
+      "noop": 0
+     },
+     "forced_march": {
+      "plays": 101,
+      "wins": 50,
+      "simple": 4,
+      "firstSight": 15,
+      "seenSum": 391,
+      "noop": 0
+     }
+    },
+    "attacks": 325,
+    "swaps": 282,
+    "marches": 357,
+    "zeroKill": 2,
+    "tiebreak": 7,
+    "firstBloodGames": 58,
+    "firstBloodWins": 34,
+    "controlGames": 45,
+    "controlWins": 37,
+    "deployedShare": 55.900000000000006,
+    "killTail": 165,
+    "leadChanges": 154
+   }
+  }
+ },
+ "updatedAt": "2026-07-05T17:41:15.007Z",
+ "totalBattles": 1020
+}

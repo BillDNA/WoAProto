@@ -554,6 +554,7 @@
       <span id="roomchip" style="display:none; padding:3px 10px; border:1px dashed var(--brass); border-radius:5px; font-size:13px; letter-spacing:2px;"></span>
       <span id="turnbadge">RED</span>
       <button class="ghost" id="btnConcede" style="padding:3px 10px;font-size:13px;" title="Give up this battle; the campaign moves on">Concede</button>
+      <button class="ghost" id="btnDebug" style="padding:3px 10px;font-size:13px;" title="Save this exact game state to logs/debug/ for a bug report (downloads a copy if the server isn't running)">Debug</button>
       <button class="ghost" id="btnCards" style="padding:3px 10px;font-size:13px;">Cards</button>
       <button class="ghost" id="btnManual2" style="padding:3px 10px;font-size:13px;">Manual</button>
       <button class="ghost" id="btnQuit" style="padding:3px 10px;font-size:13px;">Menu</button>
@@ -614,7 +615,7 @@
       <button id="edMirror" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Mirror &#8635;</button>
       <button id="edClear" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);">Clear</button>
     </div>
-    <p class="small" style="text-align:center;">Terrain belongs to a hex: click just <b>inside</b> a hex's border to cycle <span style="color:var(--forest);font-weight:bold;">forest</span> &rarr; <span style="color:var(--mountain);font-weight:bold;">mountain</span> &rarr; <span style="color:var(--river);font-weight:bold;">river</span> &rarr; empty on that hex's side. Forest = +1 attacking out across it; mountain = +1 defending behind it; river = support never crosses that border. Mirror copies everything point-symmetrically. <b>Board hexes</b> carves the outline itself: click a dashed hex to add it, a solid one to remove it (24-hex ceiling).</p>
+    <p class="small" style="text-align:center;">Terrain belongs to a hex: click just <b>inside</b> a hex's border to cycle <span style="color:var(--forest);font-weight:bold;">forest</span> &rarr; <span style="color:var(--mountain);font-weight:bold;">mountain</span> &rarr; <span style="color:var(--river);font-weight:bold;">river</span> &rarr; empty on that hex's side. Forest = +1 attacking out across it; mountain = +1 defending behind it; river = you can't deploy across it (support still crosses freely). Mirror copies everything point-symmetrically. <b>Board hexes</b> carves the outline itself: click a dashed hex to add it, a solid one to remove it (24-hex ceiling).</p>
     <svg id="edBoard" xmlns="http://www.w3.org/2000/svg"></svg>
     <div id="edStock" class="small" style="text-align:center;"></div>
     <div id="edWarn" class="warn" style="text-align:center;"></div>
@@ -667,7 +668,7 @@
       <label class="small">Maps <select id="dashMap"><option value="all">All in play</option></select></label>
       <button id="dashRun">Run</button>
       <button id="dashStop" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);display:none;">Stop</button>
-      <button id="dashSave" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);" title="Save the report you're looking at to design-docs/ballance-reports/ (needs the server; downloads a copy otherwise)">Save report</button>
+      <button id="dashSave" class="ghost" style="color:var(--ink);border-color:var(--brass-dark);" title="Save the report you're looking at to logs/reports/balance/<version>/ (needs the server; downloads a copy otherwise)">Save report</button>
     </div>
     <p class="small" id="dashStatus" style="text-align:center;"></p>
     <div id="dashOut" class="manual"></div>
@@ -709,11 +710,11 @@
     <tr><td>Cavalry</td><td>3</td><td>0</td><td>0</td><td>2</td></tr>
     <tr><td>Artillery</td><td>0</td><td>0</td><td>2</td><td>3</td></tr></table>
     <h3>Combat</h3>
-    <p><b>Attacker:</b> unit's attack + support of your other units adjacent to the defender's hex (+1 if your HQ is adjacent) + 1 if the attacker's own hex has a <span style="color:var(--forest)">forest</span> on the crossed edge + card modifiers. Attacker support does <b>not</b> arrive across a <b>trenched</b> or <span style="color:var(--river)">river</span> border.<br>
-    <b>Defender:</b> unit's defense + support of their units adjacent (+1 for adjacent HQ) + 1 if the defender's hex has a <span style="color:var(--mountain)">mountain</span> on the crossed edge. Defender support does not arrive across a <span style="color:var(--river)">river</span> border (trenches never stop it).<br>
+    <p><b>Attacker:</b> unit's attack + support of your other units adjacent to the defender's hex (+1 if your HQ is adjacent) + 1 if the attacker's own hex has a <span style="color:var(--forest)">forest</span> on the crossed edge + card modifiers. Attacker support does <b>not</b> arrive across a <b>trenched</b> border (a <span style="color:var(--river)">river</span> no longer blocks support).<br>
+    <b>Defender:</b> unit's defense + support of their units adjacent (+1 for adjacent HQ) + 1 if the defender's hex has a <span style="color:var(--mountain)">mountain</span> on the crossed edge. Defender support is never blocked.<br>
     Higher total wins; loser is destroyed. Winner-attacker advances into the hex. <b>Tie:</b> both destroyed.</p>
     <h3>Terrain &amp; Buildings</h3>
-    <p>Terrain belongs to the hex it sits in (drawn inset inside it). <span style="color:var(--forest)">&#9632;</span> Forest: +1 attack when its hex's occupant attacks <i>out</i> across a covered edge. <span style="color:var(--mountain)">&#9632;</span> Mountain: +1 defense when its hex is attacked across a covered edge. Neither works in the other direction. <span style="color:var(--river)">&#9632;</span> River: <b>support never crosses</b> that border, for either side &mdash; attacks and movement cross freely, and a river can't be barraged. Trench: the enemy's <b>attacking support may not cross</b> its two covered edges (whoever dug it &mdash; a captured trench serves its new master); it adds no defense, never blocks the attack itself, and never hinders the defender. A hex side can't hold both terrain and a trench. HQ: +1 support to all adjacent hexes; units may move, swap, and attack <i>through</i> an HQ hex.</p>
+    <p>Terrain belongs to the hex it sits in (drawn inset inside it). <span style="color:var(--forest)">&#9632;</span> Forest: +1 attack when its hex's occupant attacks <i>out</i> across a covered edge. <span style="color:var(--mountain)">&#9632;</span> Mountain: +1 defense when its hex is attacked across a covered edge. Neither works in the other direction. <span style="color:var(--river)">&#9632;</span> River: <b>you can't deploy across it</b> &mdash; control doesn't extend over the water. Support, attacks and movement all cross freely, and a river can't be barraged. Trench: the enemy's <b>attacking support may not cross</b> its two covered edges (whoever dug it &mdash; a captured trench serves its new master); it adds no defense, never blocks the attack itself, and never hinders the defender. A hex side can't hold both terrain and a trench. HQ: +1 support to all adjacent hexes; units may move, swap, and attack <i>through</i> an HQ hex.</p>
     <h3>Control</h3>
     <p>You control the hexes your units and HQ occupy. Deployments must be adjacent to a controlled hex (Airdrop excepted). Trenches are built on a controlled hex.</p>
   </div>
@@ -724,20 +725,30 @@
 
 <script src="maps.js"></script>
 <script src="custom-deck.js"></script>
+<script src="content/manifest.js"></script>
 <script>
-// A custom deck (Deck Editor) must replace the built-in card list BEFORE the
-// engine snapshots it. This browser's saved deck wins over the shipped
-// custom-deck.js file. WOA_DECK_SRC tells the editor what it is editing.
+// The map roster + card decks are per-item files under content/ (Feedback
+// Round 4 Pass 2). content/manifest.js just above document.write()'d
+// content/decks/*.js + content/maps/*.js into WOA_CONTENT, synchronously, before
+// this runs. A deck applied in the Deck Editor overrides the active content deck
+// BEFORE the engine snapshots the card list; this browser's saved deck
+// (localStorage) wins over the shipped custom-deck.js file. WOA_DECK_SRC tells
+// the editor what it is editing.
 var WOA_DECK_SRC = 'builtin';
 try {
+  window.WOA_CONTENT = window.WOA_CONTENT || { maps: [], cards: [], decks: [] };
   var WOA_LOCAL_DECK = null;
   try { WOA_LOCAL_DECK = JSON.parse(localStorage.getItem('woa-custom-deck')); } catch(e){}
-  if (WOA_LOCAL_DECK && WOA_LOCAL_DECK.length){ WOA_BUILTIN.cards = WOA_LOCAL_DECK; WOA_DECK_SRC = 'local'; }
-  else if (window.WOA_CUSTOM_DECK && window.WOA_CUSTOM_DECK.length){ WOA_BUILTIN.cards = window.WOA_CUSTOM_DECK; WOA_DECK_SRC = 'file'; }
+  var WOA_APPLIED_DECK = (WOA_LOCAL_DECK && WOA_LOCAL_DECK.length) ? WOA_LOCAL_DECK
+    : (window.WOA_CUSTOM_DECK && window.WOA_CUSTOM_DECK.length) ? window.WOA_CUSTOM_DECK : null;
+  if (WOA_APPLIED_DECK){
+    window.WOA_CONTENT.decks.forEach(function(d){ d.active = false; });
+    window.WOA_CONTENT.decks.push({ id: '__applied', name: 'Applied deck', active: true, cards: WOA_APPLIED_DECK });
+    WOA_DECK_SRC = (WOA_LOCAL_DECK && WOA_LOCAL_DECK.length) ? 'local' : 'file';
+  }
 } catch(e){}
 </script>
 <script src="engine.js"></script>
-<script src="custom-maps.js"></script>
 <script>
 'use strict';
 var E = window.Engine;
@@ -827,6 +838,42 @@ $('btnConcede').onclick = function(){
   };
   $('cdNo').onclick = function(){ $('confirmOvr').classList.remove('active'); };
 };
+// Debug snapshot (Feedback Round 4): dump this exact game state to logs/debug/
+// so Bill can hand Claude the situation without pasting a screenshot. The state
+// carries match.maps (full board + terrain defs) so the dump is self-contained.
+$('btnDebug').onclick = function(){
+  var st = APP.st;
+  if (!st){ toast('No battle in progress to snapshot.', 2500); return; }
+  var note = prompt('Save a debug snapshot of the current game.\nDescribe what looks wrong (optional):', '');
+  if (note === null) return; // cancelled
+  var bundle = {
+    savedAt: new Date().toISOString(),
+    rulesVersion: E.VERSION,
+    saveV: SAVE_V,
+    mode: APP.mode, mySide: APP.mySide, diff: APP.diff,
+    note: note || '',
+    turn: st.turnNumber, phase: st.phase, current: st.current,
+    customDeck: !!localStorage.getItem('woa-custom-deck') || !!window.WOA_CUSTOM_DECK,
+    state: st
+  };
+  var json = JSON.stringify(bundle, null, 1);
+  var slug = String(st.mapName || 'battle').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  var d = new Date(), p2 = function(x){ return (x<10?'0':'')+x; };
+  var stamp = d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'-'+p2(d.getHours())+p2(d.getMinutes())+p2(d.getSeconds());
+  var fname = stamp+'-'+slug+'-T'+st.turnNumber+'-'+st.phase+'.json';
+  if (canNet){
+    api('savedebug', { filename: fname, content: json })
+      .then(function(r){ toast('Debug snapshot saved &rarr; '+(r.path || 'logs/debug/'+fname), 4200); })
+      .catch(function(){ downloadDebug(fname, json); });
+  } else downloadDebug(fname, json);
+};
+function downloadDebug(fname, json){
+  var blob = new Blob([json], { type:'application/json' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = fname; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
+  toast('Downloaded '+fname+' &mdash; run <code>node game/server.js</code> to save straight into logs/debug/.', 5600);
+}
 function syncJournalOverlay(){
   // mirror the (possibly hidden) inline journal into the overlay, dropping its
   // sticky header plate since the panel already shows one; newest entry in view
@@ -1969,56 +2016,15 @@ $('btnCards').onclick = showCards;
 $('btnCardsMenu').onclick = showCards;
 
 /* =================== map library & pool =================== */
-function getLocalMaps(){
-  try { return JSON.parse(localStorage.getItem('woa-custom-maps')) || []; } catch(e){ return []; }
-}
-function getTombstones(){
-  try { return JSON.parse(localStorage.getItem('woa-deleted-maps')) || []; } catch(e){ return []; }
-}
-// Custom maps = maps from custom-maps.js (shipped with the folder) merged with
-// this browser's localStorage; localStorage wins on conflicts, deletions are honored.
-function getCustomMaps(){
-  var tomb = getTombstones();
-  var byId = {};
-  (window.WOA_CUSTOM_MAPS || []).forEach(function(m){
-    if (m && m.id && tomb.indexOf(m.id) < 0) byId[m.id] = m;
-  });
-  getLocalMaps().forEach(function(m){ if (m && m.id) byId[m.id] = m; });
-  return Object.keys(byId).map(function(k){ return byId[k]; });
-}
-function saveCustomMaps(list){
-  try { localStorage.setItem('woa-custom-maps', JSON.stringify(list)); } catch(e){}
-  syncMapsFile();
-}
-// One deletion path for customs AND built-ins: the tombstone list. Built-in
-// ids are 'b:<name>', so a tombstoned base map stays gone across reloads.
-function deleteMapById(id){
-  try { localStorage.setItem('woa-custom-maps', JSON.stringify(getLocalMaps().filter(function(x){ return x.id !== id; }))); } catch(e){}
-  var tomb = getTombstones();
-  if (tomb.indexOf(id) < 0) tomb.push(id);
-  try { localStorage.setItem('woa-deleted-maps', JSON.stringify(tomb)); } catch(e){}
-  syncMapsFile(true);
-}
-// When running via the server, mirror custom maps into custom-maps.js in the
-// game folder so zipping the folder shares them.
-function syncMapsFile(allowEmpty){
-  if (!canNet){ updateMapsHint(true); return; }
-  var maps = getCustomMaps();
-  if (!maps.length && !allowEmpty){ updateMapsHint(false); return; }
-  api('savemaps', { maps: maps, allowEmpty: !!allowEmpty })
-    .then(function(){ updateMapsHint(false); })
-    .catch(function(){ updateMapsHint(true); });
-}
-// on load over http: push this browser's maps into custom-maps.js so the folder stays current
-if (canNet && (getLocalMaps().length || getTombstones().length)) setTimeout(function(){ syncMapsFile(true); }, 500);
-function updateMapsHint(needExport){
-  var el = $('mapsHint');
-  if (!el) return;
-  if (!getCustomMaps().length){ el.textContent = ''; return; }
-  el.innerHTML = needExport
-    ? 'Custom maps live in this browser only. To keep them with the folder (and share via zip), click <b>Export maps file</b> and put <b>custom-maps.js</b> next to index.html.'
-    : 'Custom maps are saved to <b>custom-maps.js</b> in the game folder &mdash; zip the folder and friends get them too.';
-}
+// Maps are per-item files under content/maps/ (Feedback Round 4 Pass 2). The
+// engine loads them into E.MAPS at boot; each carries a stable `id` (its
+// filename stem) and an optional `custom:true` flag (a user map — the badge, and
+// exempt from the shipped-roster guideline tests). Saving or deleting a map
+// rewrites/removes its file on the server AND updates E.MAPS in place, so the
+// change shows at once and survives a reload. No more localStorage tombstones
+// (the "defaults keep coming back" friction). Which maps are IN the match pool
+// stays a per-browser preference (woa-disabled-maps).
+function slugifyMap(name){ return String(name||'map').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'map'; }
 function getDisabledIds(){
   try { return JSON.parse(localStorage.getItem('woa-disabled-maps')) || []; } catch(e){ return []; }
 }
@@ -2026,16 +2032,44 @@ function setDisabledIds(ids){
   try { localStorage.setItem('woa-disabled-maps', JSON.stringify(ids)); } catch(e){}
 }
 function allMaps(){
-  var tomb = getTombstones();
-  var out = E.MAPS.map(function(def){ return { def: def, id: 'b:'+def.name, builtin: true }; })
-    .filter(function(m){ return tomb.indexOf(m.id) < 0; });
-  getCustomMaps().forEach(function(def){ out.push({ def: def, id: def.id, builtin: false }); });
-  return out;
+  return E.MAPS.map(function(def){ if (!def.id) def.id = slugifyMap(def.name); return { def: def, id: def.id, builtin: !def.custom }; });
 }
-var MAP_FLOOR = 5; // a first-to-3 match needs enough distinct boards
+var MAP_FLOOR = 5; // keep enough distinct boards for a first-to-3 match
 function getMapPool(){
   var dis = getDisabledIds();
   return allMaps().filter(function(m){ return dis.indexOf(m.id) < 0; }).map(function(m){ return m.def; });
+}
+// E.MAPS is the engine's live roster array — mutate it in place (never reassign).
+function rosterReplace(def){
+  for (var i=0;i<E.MAPS.length;i++){ if (E.MAPS[i].id === def.id){ E.MAPS[i] = def; return; } }
+  E.MAPS.push(def);
+}
+function rosterRemove(id){
+  for (var i=0;i<E.MAPS.length;i++){ if (E.MAPS[i].id === id){ E.MAPS.splice(i,1); return; } }
+}
+// Persist a map to its content file (server writes content/maps/<id>.js and
+// regenerates the loader). The caller updates E.MAPS first so it is usable at
+// once; the file makes it survive a reload.
+function saveMapFile(def){
+  if (!canNet){ updateMapsHint(); return Promise.resolve({ offline: true }); }
+  return api('savemap', { map: def }).then(function(r){ updateMapsHint(); return r; })
+    .catch(function(e){ updateMapsHint(); throw e; });
+}
+function deleteMapById(id){
+  if (!canNet){
+    toast('Deleting a map removes its file, which needs the local server (<code>node game/server.js</code>). Or just untick &ldquo;in play&rdquo; to drop it from matches.', 6500);
+    return;
+  }
+  api('deletemap', { id: id }).then(function(){
+    rosterRemove(id); renderMapsScr();
+  }).catch(function(){ toast('Could not delete the map file.', 3500); });
+}
+function updateMapsHint(){
+  var el = $('mapsHint');
+  if (!el) return;
+  el.innerHTML = canNet
+    ? 'Maps are files in <b>game/content/maps/</b> — deleting one here deletes its file. Zip the folder and friends get your roster.'
+    : 'Maps are files in <b>game/content/maps/</b>. Adding, editing or deleting a map writes/removes a file, which needs the local server (<code>node game/server.js</code>); double-clicked, you can still play and toggle maps in/out of the pool.';
 }
 
 /* mini preview svg (self-contained, no global board state) */
@@ -2116,52 +2150,40 @@ function renderMapsScr(){
     bc.onclick = function(){
       var copy = JSON.parse(JSON.stringify(m.def));
       copy.name = m.def.name + ' (copy)';
-      copy.custom = true; copy.id = 'c' + Date.now();
+      copy.custom = true; copy.id = slugifyMap(copy.name);
       openEditor(copy, true);
     };
     btns.appendChild(bc);
     var bd = document.createElement('button'); bd.textContent='Delete';
     bd.onclick = function(){
       if (allMaps().length <= MAP_FLOOR){
-        toast('The roster keeps a floor of '+MAP_FLOOR+' maps so a first-to-3 campaign always has fresh boards. Add or restore a map first.', 4500);
+        toast('The roster keeps a floor of '+MAP_FLOOR+' maps so a first-to-3 campaign always has fresh boards. Add a map first.', 4500);
         return;
       }
-      if (!confirm('Delete map "'+m.def.name+'"?'+(m.builtin?' (Restore deleted built-ins brings it back.)':''))) return;
-      deleteMapById(m.id);
-      renderMapsScr();
+      if (!confirm('Delete map "'+m.def.name+'"? This removes its file in content/maps/.')) return;
+      deleteMapById(m.id); // updates the roster + re-renders on success
     };
     btns.appendChild(bd);
     grid.appendChild(d);
   });
-  // tombstoned built-ins can come back
-  var deadBuiltins = getTombstones().filter(function(t){ return t.indexOf('b:') === 0; });
-  var rb = $('btnRestoreMaps');
-  rb.style.display = deadBuiltins.length ? '' : 'none';
-  rb.textContent = 'Restore deleted built-ins ('+deadBuiltins.length+')';
-  updateMapsHint(!canNet);
-  if (canNet) syncMapsFile();
+  var rb = $('btnRestoreMaps'); if (rb) rb.style.display = 'none'; // tombstones are gone — every map is a file
+  updateMapsHint();
 }
-$('btnRestoreMaps').onclick = function(){
-  try { localStorage.setItem('woa-deleted-maps', JSON.stringify(getTombstones().filter(function(t){ return t.indexOf('b:') !== 0; }))); } catch(e){}
-  renderMapsScr();
-};
 $('btnMaps').onclick = function(){ renderMapsScr(); show('mapsScr'); };
 $('btnMapsBack').onclick = function(){ show('menu'); checkResume(); };
 $('btnNewMap').onclick = function(){ openEditor(null); };
+// Export the whole roster as a shareable bundle (maps are files now, so this is
+// just a convenient way to hand someone your set); Import writes each map to its
+// own content file via the server.
 $('btnExportMaps').onclick = function(){
-  var maps = getCustomMaps();
-  if (!maps.length){
-    toast('No custom maps in this browser to export. Note: maps made while playing via the server and via double-clicked index.html are stored separately by the browser.', 5500);
-    return;
-  }
-  var content = 'window.WOA_CUSTOM_MAPS = ' + JSON.stringify(maps, null, 1) + ';\n';
-  var blob = new Blob([content], { type: 'text/javascript' });
+  var maps = E.MAPS;
+  var blob = new Blob([JSON.stringify(maps, null, 1)], { type: 'application/json' });
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'custom-maps.js';
+  a.download = 'maps-bundle.json';
   a.click();
   setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
-  toast('Downloaded custom-maps.js &mdash; just move it into the game folder, next to index.html.<br><span class="small">No need to open it: Windows refusing to RUN a downloaded .js file is normal and harmless.</span>', 6500);
+  toast('Downloaded maps-bundle.json ('+maps.length+' maps) &mdash; Import it elsewhere with the Import button.', 4500);
 };
 $('btnImportMaps').onclick = function(){ $('importFile').click(); };
 $('importFile').onchange = function(){
@@ -2170,24 +2192,25 @@ $('importFile').onchange = function(){
   var rd = new FileReader();
   rd.onload = function(){
     try {
-      var txt = String(rd.result);
+      var txt = String(rd.result).trim();
+      // accept a bare array, an assignment (WOA_CUSTOM_MAPS = [...]), or one map
       var eq = txt.indexOf('=');
-      if (txt.trim().charAt(0) !== '[' && eq >= 0) txt = txt.slice(eq + 1);
+      if (txt.charAt(0) !== '[' && txt.charAt(0) !== '{' && eq >= 0) txt = txt.slice(eq + 1);
       txt = txt.trim().replace(/;\s*$/, '');
-      var arr = JSON.parse(txt);
-      if (!Array.isArray(arr)) throw new Error('not a map list');
-      var list = getLocalMaps();
-      var tomb = getTombstones();
+      var data = JSON.parse(txt);
+      var arr = Array.isArray(data) ? data : [data];
+      var saved = 0;
       arr.forEach(function(m){
-        if (!m || !m.id || !m.name) return;
-        list = list.filter(function(x){ return x.id !== m.id; });
-        list.push(m);
-        tomb = tomb.filter(function(t){ return t !== m.id; });
+        if (!m || !m.name) return;
+        m.custom = true;
+        m.id = m.id || slugifyMap(m.name);
+        if (m.shapeDef) m.shape = '@' + m.id;
+        rosterReplace(m);
+        if (canNet) saveMapFile(m);
+        saved++;
       });
-      try { localStorage.setItem('woa-deleted-maps', JSON.stringify(tomb)); } catch(e){}
-      saveCustomMaps(list);
       renderMapsScr();
-      toast('Imported ' + arr.length + ' map(s).', 2600);
+      toast('Imported ' + saved + ' map(s)' + (canNet ? ' &mdash; saved to content/maps/.' : ' for this session; run the server to save them as files.'), 4200);
     } catch(e){ toast('Could not read that file: ' + e.message, 3500); }
     $('importFile').value = '';
   };
@@ -2622,8 +2645,9 @@ $('dashRun').onclick = function(){
   step();
 };
 
-// Save the displayed run to design-docs/ballance-reports/ (Feedback Round 2) so
-// Bill and Claude discuss the same numbers. Markdown mirrors the on-screen folds.
+// Save the displayed run to logs/reports/balance/<version>/ (Feedback Round 4) so
+// Bill, Claude and the report skills discuss the same numbers. Markdown mirrors
+// the on-screen folds; the server files it under the current rules version.
 $('dashSave').onclick = function(){
   if (DASH.running){ toast('Let the run finish first.', 2500); return; }
   if (!DASH.results.length){ toast('Run a report first, then save it.', 3000); return; }
@@ -2632,8 +2656,8 @@ $('dashSave').onclick = function(){
   var stamp = d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+'-'+p2(d.getHours())+p2(d.getMinutes());
   var fname = stamp+'-'+DASH.meta.dr+'-vs-'+DASH.meta.db+'-n'+DASH.meta.n+'.md';
   if (canNet){
-    api('savereport', { filename: fname, content: md })
-      .then(function(r){ toast('Saved &rarr; '+(r.path || 'design-docs/ballance-reports/'+fname), 4200); })
+    api('savereport', { filename: fname, content: md, version: E.VERSION })
+      .then(function(r){ toast('Saved &rarr; '+(r.path || 'logs/reports/balance/'+E.VERSION+'/'+fname), 4200); })
       .catch(function(){ dashDownloadReport(fname, md); });
   } else dashDownloadReport(fname, md);
 };
@@ -2642,7 +2666,7 @@ function dashDownloadReport(fname, md){
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = fname; a.click();
   setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
-  toast('Downloaded '+fname+' &mdash; run <code>node game/server.js</code> to save straight into design-docs/ballance-reports/.', 5600);
+  toast('Downloaded '+fname+' &mdash; run <code>node game/server.js</code> to save straight into logs/reports/balance/'+E.VERSION+'/.', 5600);
 }
 function dashReportMarkdown(){
   var n = DASH.meta.n, dr = DASH.meta.dr, db = DASH.meta.db;
@@ -2651,7 +2675,7 @@ function dashReportMarkdown(){
   var L = [];
   L.push('# Balance report — '+n+' battles/map, '+aiLabel);
   L.push('');
-  L.push('_'+DASH.results.length+' map(s) · ±'+noise+' points at this n · from the in-browser Balance Dashboard_');
+  L.push('_Rules version '+E.VERSION+' · '+DASH.results.length+' map(s) · ±'+noise+' points at this n · from the in-browser Balance Dashboard_');
   L.push('');
   L.push('## Maps');
   L.push('');
@@ -3187,7 +3211,7 @@ function edBuildDef(){
     name: name, shape: ED.shape,
     redHQ: ED.red.slice(), blueHQ: ED.blue.slice(),
     pieces: groupEdgesToPieces(ED.edges),
-    custom: true, id: ED.id
+    custom: true, id: slugifyMap(name)   // filename = name-slug (a rename saves a new file)
   };
   if (ED.hexes){
     var pairs = edHexPairs();
@@ -3204,20 +3228,20 @@ function edBuildDef(){
   return def;
 }
 function edSaveDef(def){
-  var list = getLocalMaps().filter(function(x){ return x.id !== def.id; });
-  list.push(def);
-  try { localStorage.setItem('woa-deleted-maps', JSON.stringify(getTombstones().filter(function(t){ return t !== def.id; }))); } catch(e){}
-  saveCustomMaps(list);
+  def.custom = true;
+  if (!def.id) def.id = slugifyMap(def.name);
+  if (def.shapeDef) def.shape = '@' + def.id;    // ensureMapShape keys off id
+  rosterReplace(def);                            // usable in E.MAPS immediately
+  return saveMapFile(def);                       // persist to content/maps/<id>.js when the server is up
 }
 $('edSave').onclick = function(){
   var def = edBuildDef();
   if (!def) return;
-  edSaveDef(def);
-  if (!getCustomMaps().some(function(m){ return m.id === def.id; })){
-    toast('Warning: the browser refused to store the map (private mode?). Use Export maps file to keep it.', 5500);
-  } else {
-    toast('Map "'+def.name+'" saved.', 2200);
-  }
+  edSaveDef(def).then(function(r){
+    toast(r && r.offline
+      ? 'Map "'+def.name+'" is loaded for this session. Run <code>node game/server.js</code> to save it as a file.'
+      : 'Map "'+def.name+'" saved to content/maps/.', 3200);
+  }).catch(function(){ toast('Could not save the map file.', 3500); });
   renderMapsScr(); show('mapsScr');
 };
 $('edTest').onclick = function(){

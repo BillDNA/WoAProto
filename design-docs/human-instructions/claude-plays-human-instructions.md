@@ -27,16 +27,20 @@ node dev/claude-plays.js [options]
 | `--map <filter>` | first built-in map | case-insensitive substring match against map names |
 | `--red <spec>` | `haiku` | `easy`/`normal`/`hard` = heuristic AI; anything else (`haiku`/`sonnet`/`opus`/a full model id) = LLM |
 | `--blue <spec>` | `normal` | same as `--red` |
-| `--effort <level>` | CLI default | `low`/`medium`/`high`/`xhigh`/`max` reasoning effort for the LLM sides' `claude -p` calls (added round 2) |
+| `--effort <level>` | CLI default | `low`/`medium`/`high`/`xhigh`/`max` reasoning effort, shared default for both LLM sides' `claude -p` calls (added round 2) |
+| `--red-effort <level>` | `--effort` | effort for the red side only, overrides `--effort` for red (added round 3) |
+| `--blue-effort <level>` | `--effort` | effort for the blue side only, overrides `--effort` for blue (added round 3) |
 | `--seed <n>` | `1234` | match seed — reuse a seed to replay the same deal |
 | `--max-turns <n>` | `60` | safety cap; the run reports "unfinished" if it hits this |
 | `--mock` | off | swaps the LLM transport for a canned deterministic fake — no `claude` process spawned, useful for testing the harness itself |
-| `--out <file>` | `design-docs/game-logs/claude-plays-log.jsonl` | where the JSON-lines record is appended |
+| `--out <file>` | `logs/reports/battle/claude-plays-log.jsonl` | where the JSON-lines record is appended |
+| `--typical-n <n>` | `40` | hard-AI baseline battles for the Typicality footer (0 = skip) |
 
 Examples:
 ```
 node dev/claude-plays.js --map thornfield --blue sonnet --red hard --effort high
 node dev/claude-plays.js --red haiku --blue haiku --seed 42
+node dev/claude-plays.js --red haiku --blue haiku --red-effort medium --blue-effort high --map thornfield
 node dev/claude-plays.js --mock          # offline smoke test, no LLM calls
 ```
 
@@ -47,10 +51,15 @@ Every decision prints live to the console as the battle plays out, prefixed
 case-insensitively. Leave it off to use the first built-in map.
 
 **Setting the effort level** — pass `--effort <low|medium|high|xhigh|max>`
-(added round 2). It's threaded straight to the `--effort` flag of every
-`claude -p` call the LLM sides make, so higher = more deliberation per move
-(and per felt-note). Omit it to use the CLI's own default. It has no effect on
-a heuristic side (`easy`/`normal`/`hard`).
+(added round 2) as a shared default for both sides, or set each side
+independently with `--red-effort`/`--blue-effort` (added round 3), which
+override `--effort` for that side only — useful for an apples-to-apples
+"same model, different effort" match (e.g. `--red haiku --blue haiku
+--red-effort medium --blue-effort high`). Whichever applies is threaded
+straight to the `--effort` flag of that side's `claude -p` calls, so higher =
+more deliberation per move (and per felt-note). Omit all three to use the
+CLI's own default. Effort has no effect on a heuristic side
+(`easy`/`normal`/`hard`).
 
 ## What the LLM actually sees
 
@@ -95,30 +104,33 @@ under-150-word notes: what felt strong, what felt weak, what felt
 luck-driven, and one suggested change. This is the qualitative payoff —
 read it before the numbers.
 
-## The logs: `design-docs/game-logs/`
+## The logs: `logs/reports/battle/`
 
-Two artifacts land there per run (round 2 moved them out of `dev/`):
+Artifacts land there per run (Feedback Round 4 moved reports under `logs/reports/`):
 
-- **`claude-plays-log.jsonl`** — the machine record, one JSON object per line
-  (pass `--out` to redirect). Fields:
+- **`claude-plays-log.jsonl`** — the append-only machine record at the folder
+  root, one JSON object per line (pass `--out` to redirect). Fields:
 
   | Field | Meaning |
   |---|---|
-  | `ts`, `map`, `seed`, `red`, `blue`, `effort` | run identity |
+  | `ts`, `version`, `map`, `seed`, `red`, `blue`, `redEffort`, `blueEffort` | run identity (`version` = rules version) |
   | `winner`, `winType`, `turns` | outcome (`winType`: `hq` or `attrition`; `winner: null` + `winType: 'unfinished'` if it hit `--max-turns`) |
   | `fallbacks` | count of forced-default decisions (see above) |
   | `decisions` | full move-by-move list: `{turn, side, kind, choice, why, fallback}` |
   | `notes` | `{red?, blue?}` felt-notes text, only for LLM-controlled sides |
   | `usage` | summed `inputTokens`/`outputTokens` across the whole run |
 
-- **`<timestamp>-<map>-<red>-v-<blue>.md`** — a readable per-run transcript:
-  result, decision list, campaign journal, and felt-notes. Eyeball this one.
+- **`<version>/<timestamp>-<map>-<red>-v-<blue>.md`** — a readable per-run
+  transcript filed by rules version: result, decision list, campaign journal,
+  felt-notes, and a **Typicality vs the map baseline** footer (how this game
+  compared to a hard-AI baseline for the map). Eyeball this one.
 
-To turn a pile of logs into a one-page suggestions summary, run the
-**`game-log-report`** skill ("read the game logs" / "game-log report") — it
-reads this folder and returns scope, outcomes, distilled felt-notes, ranked
-suggestions, and a watch-list. (That's the summarizer the round-2 feedback
-asked for; it now exists.)
+To turn a pile of reports into a graded one-page analysis, run the
+**`review-reports`** skill ("review the reports" / "review-reports") — it reads
+the battle transcripts AND the balance reports, grades them against the rubrics,
+and saves the analysis to `logs/reports/analysis/`. To generate a fresh set
+first (a 60-game balance report + two LLM battles on the best-balance map), run
+**`generate-reports`**.
 
 ## Gotchas
 

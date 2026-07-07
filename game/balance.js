@@ -5,7 +5,7 @@
      node balance.js 60                  60 battles per map
      node balance.js 60 hard             ...with the Field Marshal AI
      node balance.js 40 narrows          only maps whose name matches "narrows"
-                                         (custom maps from custom-maps.js included)
+                                         (all content/maps/*.js are included)
      node balance.js matchup             skill-vs-luck report: better AIs fight
      node balance.js matchup 16          worse ones; the stronger side's win rate
                                          is the skill premium. ~50% = card-draw
@@ -38,16 +38,6 @@
 var E = require('./engine.js');
 var fs = require('fs');
 var path = require('path');
-
-function loadCustomMaps() {
-  try {
-    var txt = fs.readFileSync(path.join(__dirname, 'custom-maps.js'), 'utf8');
-    var eq = txt.indexOf('=');
-    if (eq >= 0 && txt.trim().charAt(0) !== '[') txt = txt.slice(eq + 1);
-    var arr = JSON.parse(txt.trim().replace(/;\s*$/, ''));
-    return Array.isArray(arr) ? arr : [];
-  } catch (e) { return []; }
-}
 
 function pct(a, b) { return b ? Math.round(100 * a / b) : 0; }
 function pad(s, w, right) {
@@ -90,7 +80,7 @@ function matchup(n, a, b) {
 
 /* ---------------- per-map report ---------------- */
 function mapReport(n, diff, filter) {
-  var maps = E.MAPS.concat(loadCustomMaps());
+  var maps = E.MAPS; // content/maps/*.js — custom maps are first-class here now
   if (filter) {
     maps = maps.filter(function (m) { return m.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0; });
     if (!maps.length) { console.log('No map matches "' + filter + '".'); return; }

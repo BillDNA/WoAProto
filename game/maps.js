@@ -1,21 +1,21 @@
-/* War of Attrition — ALL tunable game data: boards, maps, units, cards.
+/* War of Attrition — CORE tunable game data: units, board shapes, terrain stock, AI.
    ============================================================================
    RAPID PROTOTYPING FILE. Everything assigned to WOA_BUILTIN below is PURE
    JSON — edit it freely (double-quoted keys, no trailing commas), save, and
    refresh the browser. `node test.js` validates everything and will point at
    exactly what is wrong. `node balance.js` shows what your change did.
 
+   NOTE (Feedback Round 4, Pass 2): the MAP ROSTER and the CARD DECK no longer
+   live here — they are per-item files under game/content/ (maps/<slug>.js,
+   decks/<slug>.js) that each register into a WOA_CONTENT global, so you can
+   delete a map or a deck by deleting its file (no more localStorage tombstones).
+   The engine assembles the full data set from THIS file (shapes/units/stock/ai)
+   plus WOA_CONTENT (maps + the active deck's cards). See content/manifest.js.
+
    UNITS — stats per unit type: atk/def/sup (support given to adjacent
    fights), vp (bounty the enemy scores for killing it), count (pieces per
    player). "trenchCount" is trenches per player. "terrainStock" caps the
    physical terrain pieces per type+length (the editor warns past it).
-
-   CARDS — the 16-card deck. "count" = copies. "starting": true marks the
-   guaranteed first-hand card. "steps" run in order; types: deploy (unit,
-   optional anywhere:true), trench, attack (optional mod, tieSpare:true,
-   noAdvance:true), reposition, barrage. The ids "airdrop" (kept out of
-   opening hands) and the starting card id are meaningful to the engine —
-   rename with care. Full field guide: ../design-docs/card-cheatsheet.md
 
    SHAPES — a board outline. "rows" is a list of [r, qFrom, qTo] spans of
    pointy-top axial coordinates (row r, hexes q=qFrom..qTo inclusive).
@@ -25,17 +25,12 @@
    laser-cutter ceiling for the physical board, and with all units deployed
    both sides only ever control 22 hexes.
 
-   MAPS — "shape" names a shape above. HQs are [q,r]. Each terrain piece is
-   {"t":"F"|"M"|"R","edges":[[q,r,d],...]}: a side d (0=E 1=NE 2=NW 3=W 4=SW 5=SE)
-   of hex (q,r). ALL sides of one piece must belong to THE SAME hex and wrap
-   adjacent corners (contiguous directions) — exactly like the physical
-   pieces. Forest in hex X: +1 attacking OUT of X across a covered side.
-   Mountain in hex X: +1 defending X when attacked across a covered side.
-   River ("R"): SUPPORT never crosses that border, for either side — attacks
-   and movement still cross freely. Rivers can't be barraged (they act like
-   mountains there). Rivers come in the same physical lengths as forest and
-   mountain (2- and 3-side pieces).
-   There is no automatic mirroring here: list both halves of the map.
+   Card + map field guides now live with the content files and in
+   ../design-docs/card-cheatsheet.md. Terrain reminder (0.3 rules): forest in
+   hex X = +1 attacking OUT across a covered side; mountain in X = +1 defending
+   X across a covered side; river ("R") = support crosses freely but you cannot
+   DEPLOY across it (control does not extend over the water), and it can't be
+   barraged. Terrain pieces come in 2- and 3-side lengths.
    ============================================================================ */
 var WOA_BUILTIN =
 {
@@ -69,48 +64,6 @@ var WOA_BUILTIN =
     }
   },
 
-  "cards": [
-    { "id": "deploy_inf_start", "name": "Deploy Infantry", "count": 1, "starting": true,
-      "text": "Place an Infantry unit adjacent to any controlled hex.",
-      "steps": [{ "type": "deploy", "unit": "infantry" }] },
-    { "id": "deploy_artillery", "name": "Deploy Artillery", "count": 1,
-      "text": "Place an Artillery unit adjacent to any controlled hex.",
-      "steps": [{ "type": "deploy", "unit": "artillery" }] },
-    { "id": "deploy_inf_trench", "name": "Entrench", "count": 3,
-      "text": "Place an Infantry unit adjacent to any controlled hex. Then build a trench on any controlled hex.",
-      "steps": [{ "type": "deploy", "unit": "infantry" }, { "type": "trench" }] },
-    { "id": "airdrop", "name": "Airdrop", "count": 1, "noOpener": true,
-      "text": "Place an Infantry unit on any empty hex. (Never in your opening hand.)",
-      "steps": [{ "type": "deploy", "unit": "infantry", "anywhere": true }] },
-    { "id": "conscription", "name": "Conscription", "count": 1,
-      "text": "Place two Infantry units adjacent to any controlled hex, in sequence.",
-      "steps": [{ "type": "deploy", "unit": "infantry" }, { "type": "deploy", "unit": "infantry" }] },
-    { "id": "deploy_cavalry", "name": "Deploy Cavalry", "count": 1,
-      "text": "Place two Cavalry units adjacent to any controlled hex, in sequence.",
-      "steps": [{ "type": "deploy", "unit": "cavalry" }, { "type": "deploy", "unit": "cavalry" }] },
-    { "id": "attack_plus1", "name": "Attack +1", "count": 2,
-      "text": "Order an attack with +1 support.",
-      "steps": [{ "type": "attack", "mod": 1 }] },
-    { "id": "mass_assault", "name": "Mass Assault", "count": 1,
-      "text": "Order an attack. Then order another attack.",
-      "steps": [{ "type": "attack" }, { "type": "attack" }] },
-    { "id": "careful_maneuvers", "name": "Careful Maneuvers", "count": 1,
-      "text": "Reposition a unit. Then order an attack with −1 support.",
-      "steps": [{ "type": "reposition" }, { "type": "attack", "mod": -1 }] },
-    { "id": "reckless_maneuvers", "name": "Reckless Maneuvers", "count": 1,
-      "text": "Order an attack. Then reposition a unit.",
-      "steps": [{ "type": "attack" }, { "type": "reposition" }] },
-    { "id": "ordered_withdraw", "name": "Ordered Withdraw", "count": 1,
-      "text": "Order an attack. Your attacker survives a tie, and never advances into the hex.",
-      "steps": [{ "type": "attack", "tieSpare": true, "noAdvance": true }] },
-    { "id": "naval_barrage", "name": "Naval Barrage", "count": 1,
-      "text": "Remove any trench or forest on the board (optional). Then order an attack.",
-      "steps": [{ "type": "barrage" }, { "type": "attack" }] },
-    { "id": "forced_march", "name": "Forced March", "count": 1,
-      "text": "Reposition up to three times, in sequence.",
-      "steps": [{ "type": "reposition" }, { "type": "reposition" }, { "type": "reposition" }] }
-  ],
-
   "shapes": {
     "classic":   { "label": "Classic (4-5-6-5-4, 24 hexes)",
                    "rows": [[-2,-1,2],[-1,-2,2],[0,-3,2],[1,-3,1],[2,-3,0]] },
@@ -122,124 +75,6 @@ var WOA_BUILTIN =
                    "rows": [[-1,-2,2],[0,-2,2],[1,-2,2],[2,-2,2]] },
     "spear":     { "label": "Spear (2-3-4-5-4-3-2, 23 hexes)",
                    "rows": [[-3,1,2],[-2,0,2],[-1,-1,2],[0,-2,2],[1,-2,1],[2,-2,0],[3,-2,-1]] }
-  },
-
-  "maps": [
-    { "name": "Frontier", "shape": "classic",
-      "redHQ": [0,-2], "blueHQ": [-1,2],
-      "pieces": [
-        { "t": "F", "edges": [[0,0,1],[0,0,2]] },
-        { "t": "F", "edges": [[-1,0,4],[-1,0,5]] },
-        { "t": "M", "edges": [[2,-1,3],[2,-1,4]] },
-        { "t": "M", "edges": [[-3,1,0],[-3,1,1]] }
-      ] },
-
-    { "name": "The Bulge", "shape": "classic",
-      "redHQ": [2,-2], "blueHQ": [-3,2],
-      "pieces": [
-        { "t": "M", "edges": [[0,-1,4],[0,-1,5],[0,-1,0]] },
-        { "t": "M", "edges": [[-1,1,1],[-1,1,2],[-1,1,3]] },
-        { "t": "F", "edges": [[1,0,1],[1,0,2]] },
-        { "t": "F", "edges": [[-2,0,4],[-2,0,5]] }
-      ] },
-
-    { "name": "Twin Woods", "shape": "classic",
-      "redHQ": [-1,-2], "blueHQ": [0,2],
-      "pieces": [
-        { "t": "F", "edges": [[-1,0,1],[-1,0,2],[-1,0,3]] },
-        { "t": "F", "edges": [[0,0,4],[0,0,5],[0,0,0]] },
-        { "t": "M", "edges": [[1,-2,5],[1,-2,0]] },
-        { "t": "M", "edges": [[-2,2,2],[-2,2,3]] }
-      ] },
-
-    { "name": "Killing Ground", "shape": "classic",
-      "redHQ": [1,-2], "blueHQ": [-3,1],
-      "pieces": [
-        { "t": "M", "edges": [[0,0,2],[0,0,3]] },
-        { "t": "F", "edges": [[-1,1,5],[-1,1,0]] },
-        { "t": "F", "edges": [[1,-1,3],[1,-1,4]] },
-        { "t": "M", "edges": [[-2,0,1],[-2,0,2]] }
-      ] },
-
-    { "name": "The Cockpit", "shape": "compact",
-      "redHQ": [0,-2], "blueHQ": [0,2],
-      "pieces": [
-        { "t": "F", "edges": [[0,0,1],[0,0,2]] },
-        { "t": "F", "edges": [[0,0,4],[0,0,5]] },
-        { "t": "M", "edges": [[2,-2,3],[2,-2,4]] },
-        { "t": "M", "edges": [[-2,2,0],[-2,2,1]] }
-      ] },
-
-    { "name": "Highwater", "shape": "compact",
-      "redHQ": [2,-2], "blueHQ": [-2,2],
-      "pieces": [
-        { "t": "F", "edges": [[0,-1,3],[0,-1,4]] },
-        { "t": "F", "edges": [[0,1,0],[0,1,1]] },
-        { "t": "M", "edges": [[-1,0,5],[-1,0,0]] },
-        { "t": "M", "edges": [[1,0,2],[1,0,3]] }
-      ] },
-
-    { "name": "The Narrows", "shape": "hourglass",
-      "redHQ": [1,-2], "blueHQ": [-1,2],
-      "pieces": [
-        { "t": "M", "edges": [[0,0,1],[0,0,2]] },
-        { "t": "M", "edges": [[0,0,4],[0,0,5]] },
-        { "t": "F", "edges": [[1,-2,4],[1,-2,5]] },
-        { "t": "F", "edges": [[-1,2,1],[-1,2,2]] },
-        { "t": "F", "edges": [[2,-1,2],[2,-1,3]] },
-        { "t": "F", "edges": [[-2,1,5],[-2,1,0]] }
-      ] },
-
-    { "name": "Twin Gates", "shape": "hourglass",
-      "redHQ": [3,-2], "blueHQ": [-3,2],
-      "pieces": [
-        { "t": "F", "edges": [[0,-1,3],[0,-1,4]] },
-        { "t": "F", "edges": [[0,1,0],[0,1,1]] },
-        { "t": "M", "edges": [[1,0,2],[1,0,3]] },
-        { "t": "M", "edges": [[-1,0,5],[-1,0,0]] }
-      ] },
-
-    { "name": "Saber Ridge", "shape": "ridge",
-      "redHQ": [2,-1], "blueHQ": [-2,2],
-      "pieces": [
-        { "t": "M", "edges": [[-1,0,5],[-1,0,0],[-1,0,1]] },
-        { "t": "M", "edges": [[1,1,2],[1,1,3],[1,1,4]] },
-        { "t": "M", "edges": [[0,0,1],[0,0,2]] },
-        { "t": "M", "edges": [[0,1,4],[0,1,5]] },
-        { "t": "F", "edges": [[2,0,2],[2,0,3]] },
-        { "t": "F", "edges": [[-2,1,5],[-2,1,0]] }
-      ] },
-
-    { "name": "Thornfield", "shape": "ridge",
-      "redHQ": [-2,0], "blueHQ": [2,1],
-      "pieces": [
-        { "t": "F", "edges": [[0,0,0],[0,0,1]] },
-        { "t": "F", "edges": [[-1,2,1],[-1,2,2]] },
-        { "t": "M", "edges": [[1,0,1],[1,0,2]] },
-        { "t": "M", "edges": [[-1,1,4],[-1,1,5]] }
-      ] },
-
-    { "name": "Long March", "shape": "spear",
-      "redHQ": [2,-3], "blueHQ": [-2,3],
-      "pieces": [
-        { "t": "M", "edges": [[1,0,2],[1,0,3]] },
-        { "t": "M", "edges": [[-1,0,5],[-1,0,0]] },
-        { "t": "F", "edges": [[1,-1,2],[1,-1,3]] },
-        { "t": "F", "edges": [[-1,1,5],[-1,1,0]] },
-        { "t": "F", "edges": [[-1,-1,4],[-1,-1,5]] },
-        { "t": "F", "edges": [[1,1,1],[1,1,2]] }
-      ] },
-
-    { "name": "Vanguard", "shape": "spear",
-      "redHQ": [1,-3], "blueHQ": [-1,3],
-      "pieces": [
-        { "t": "M", "edges": [[1,-2,3],[1,-2,4]] },
-        { "t": "M", "edges": [[-1,2,0],[-1,2,1]] },
-        { "t": "F", "edges": [[2,-1,3],[2,-1,4]] },
-        { "t": "F", "edges": [[-2,1,0],[-2,1,1]] },
-        { "t": "F", "edges": [[0,0,1],[0,0,2]] },
-        { "t": "F", "edges": [[0,0,4],[0,0,5]] }
-      ] }
-  ]
+  }
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = WOA_BUILTIN;

@@ -18,8 +18,12 @@ specs/original-specs/prototype pictures/*
 # ...except the diagram the terrain rules are defined by
 !specs/original-specs/prototype pictures/HexClarificationDiagram.png
 
-# Generated playtest logs (claude-plays writes here now, not dev/).
-# Keep the folder; archive an interesting run explicitly with `git add -f`.
+# Playtest reports live under logs/reports/ (Feedback Round 4). The balance +
+# battle .md reports ARE the corpus the report skills read, so they're tracked;
+# only the append-only master log, live scratch log, and debug-state dumps are
+# noise — ignored.
+logs/reports/battle/claude-plays-log.jsonl
+logs/reports/battle/run-live.log
+logs/debug/*
+!logs/debug/.gitkeep
 dev/claude-plays-log.jsonl
-design-docs/game-logs/*
-!design-docs/game-logs/.gitkeep
