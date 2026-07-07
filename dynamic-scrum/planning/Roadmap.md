@@ -109,4 +109,4 @@ parking lot (see [[Parking-Lot Index]]).
 
 [[Project-Brief|Brief]] · [[Backlog]] · [[Sprint]].
 
-#roadmap
+#roadmap #project-direction

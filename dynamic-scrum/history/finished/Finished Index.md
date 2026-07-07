@@ -5,7 +5,8 @@ below (**newest first**). Used to sanity-check whether something already shipped
 
 ## Index
 
-_None yet — `close-sprint` archives a finished sprint here and adds its line._
+- **2026-07-07 — [[S1-docs-onto-the-board|S1 · Docs onto the board]]** — `design-docs/` dissolved into the
+  board's docs layer; specs decomposed, rubrics/history homed, CLAUDE.md slimmed (1 ticket: WOA-003).
 
 ## Related
 

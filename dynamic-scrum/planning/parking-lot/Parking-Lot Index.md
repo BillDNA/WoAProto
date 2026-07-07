@@ -13,4 +13,4 @@ Captured via `make-ticket parkinglot` (no ticket ID until it graduates).
 
 [[Roadmap]] · [[Backlog]].
 
-#parking-lot
+#parking-lot #project-direction
