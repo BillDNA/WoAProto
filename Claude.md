@@ -35,17 +35,21 @@ Ten specs built in one autonomous run (July 2, 2026) + five feedback rounds, all
 5. **Round 5 — specced V1.** The `specs/V1-specs/` thinking docs (data persistence, AI search + tuning, claude-plays sessions, content curation, field-manual animations); Bill answered every open question inline in the specs.
 
 **Baselines to protect** (post-V0, details in V0-summary): first mover ~46%, Red ~52%, tie-goes-to-2nd decides ~26% (biggest open lever), hard>normal 60% / hard>easy 78% skill premium, behaviour band ~4.9 attacks / ~6.5 swaps per battle. Sharp moves in these = regression even if win rates look fine.
-## V1
-* a general code review looking at how future versions are looking and sugest a more formalize code architecture - we might establish some new standing goals
-		- start aiming for a steam release of a roughlite deck builder needs more noodling on what exactly that looks like but probably informs some code architecture dessisions get made with that new guiding goal.  we can start to drift away from the physical constraints but i like to keep them around cause the limitation helps focus the game and prevent systems creep.  
-		- then lets implement that overview
-- [[v1-data-persistence]]
-- [[v1-ai-search-and-tuning]]
-- [[v1-content-curation]]
-- [[graphs-spec]]
-- [[v1-claude-plays-and-reports]]
-	- [[claude-session-hub-pipeline]] might help but is not required if you think of something better go for it
-- [[v1-field-manual-animations]] — Ui update to field manual to have animation explanations of the rules (especialy around support and ties), more human readable
+## V1 — SHIPPED (July 2026, rules version 1.0)
+
+Built in one autonomous run (July 6–7). Terse log; the architecture record is
+[[v1-architecture]], current behaviour lives in [[code-overview]].
+
+- **Architecture review → Seam-Split restructure** ✓ — 13-agent review; engine.js → `engine/01..07` parts (shared `WOA_E` namespace), index.html 2816→277 lines + `ui/*.js` (boot.js owns all wiring), `report-model.js` (one copy of the report model), `content/kinds.js`, server routes table. Every step gated on **byte-identical golden balance diffs** + tests + smoke. New standing goals above.
+- [[v1-data-persistence]] ✓ — `logs/woa.db` (node:sqlite, gitignored): every battle from every source lands as per-battle rows (runs/battles/card_plays/per-turn timeline) via `Engine.hooks.onBattleEnd`, balanceMap's onGame, and `/api/recordbattle` (fail-open). `dev/db-query.js` is the query CLI.
+- [[v1-ai-search-and-tuning]] ✓ — random 80-cap → **ranked shortlist** (`AI_WEIGHTS.shortlist`, never drops the best move); **trench orientation is now a real choice** (`trenchFacing` rewards facing live enemy lanes — the Round-3 question answered); `Engine.rankChoices` K-of-N API; `dev/tune-weights.js` (first sweep's suggestions filed in `logs/reports/analysis/` — **not adopted, Bill decides**); `balance-report --parallel` (3.3×); cloneForSim diet (−29% hard-AI time, outcome-identical). Also enforced the Round-3 **same-type swap ban** that two docs claimed shipped but the engine never had.
+- [[v1-claude-plays-and-reports]] ✓ — one persistent claude session per side per match (rules ride the prompt cache; live-verified ~10 fresh input tokens/decision), `--match N` first-to-N with the rush-luck check (`seriesFlipped`), felt-notes per battle AND per match, honesty proven by a sentinel test, ranked `--k` option diet, `--deck`/`--mapset`, crash-safe per-battle JSONL; generate-reports now fires the match detached and walks away. The stale RULES prompt (pre-V0 trench rule, no rivers) is fixed and pinned by tests.
+- [[v1-content-curation]] ✓ — roster trimmed **17 → 12** on two-era evidence (cut: Black Forest, Open Mountain Pass, The Bulge, Twin Woods, Highwater; the 0.3-only list changed after the 1.0 cross-check — table in `logs/reports/analysis/2026-07-06-v1-map-trim.md`); **map-sets** (`content/mapsets/`, 5 slots, one active = THE match pool everywhere, `--mapset` on all tools) replaced `woa-disabled-maps`; ships "Tournament" (active) + "Rivers" demo set.
+- [[graphs-spec]] ✓ — Charts tab in the Balance Dashboard: map-fairness scatter, card quadrant, per-map battle-length histogram (per-battle detail collected during dashboard runs). Palettes machine-validated against the parchment; every chart titled by the question it answers.
+- [[v1-field-manual-animations]] ✓ — step-through diagram player (Support / Ties / Trench-vs-River) on a mini board speaking the live FX language, every number from the real engine at render time; authoring doc at `design-docs/human-instructions/manual-animations-authoring.md`.
+- **Docs** ✓ — `dev/gen-docs.js` regenerates the drift-prone tables (weights/personalities/content) from code; code-overview/workflow/skills/README swept to match reality; rule book bumped to **1.0** with a version-history block.
+
+**For Bill to decide** (filed, not acted on): the weight-tuner suggestions (`logs/reports/analysis/2026-07-06-weight-tuner-sweep-1.md`) and the Steam leverage draft (`design-docs/steam-roadmap.md`).
 
 ## Vision (post-V1, not speced — YAGNI until V1 lands)
 
