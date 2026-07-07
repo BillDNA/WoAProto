@@ -300,6 +300,33 @@ $('dkImportFile').onchange = function(){
   rd.readAsText(f);
 };
 
+// V1 persistence: every REAL finished battle in this browser becomes a row in
+// logs/woa.db via POST /api/recordbattle (fail-open: file:// or a server
+// without dev/ simply skips it). One subscription covers every source —
+// finishBattle fires the hook for human play, hotseat, watch, the LAN peer
+// that dealt the final blow (exactly one of the two), and each dashboard
+// simulation battle. Search clones never fire it (__sim).
+E.hooks.onBattleEnd.push(function (st) {
+  if (!canNet) return;
+  var dash = (typeof DASH !== 'undefined') && DASH.running;
+  var kind = dash ? 'balance' : APP.mode === 'watch' ? 'watch' : 'human';
+  function aiOf(side){
+    if (dash) return side === 'red' ? DASH.meta.dr : DASH.meta.db;
+    if (APP.mode === 'watch') return APP.diff || 'normal';
+    if (APP.mode === 'ai') return side === APP.mySide ? 'human' : (APP.diff || 'normal');
+    return 'human'; // hotseat + LAN
+  }
+  var m = st.match; st.match = null; // the cycle never crosses the wire
+  try {
+    api('recordbattle', {
+      runKey: dash ? DASH.runKey : undefined,
+      run: { version: E.VERSION, kind: kind, redAi: aiOf('red'), blueAi: aiOf('blue'),
+        n: dash ? DASH.meta.n : 1, tool: dash ? 'dashboard' : 'browser' },
+      state: st, firstPlayer: E.other(st.second), seed: st.seed
+    }).catch(function(){ /* persistence is best-effort */ });
+  } finally { st.match = m; }
+});
+
 $('btnDash').onclick = openDash;
 $('dashBack').onclick = function(){ DASH.cancel = true; show('menu'); checkResume(); };
 $('dashStop').onclick = function(){ DASH.cancel = true; };
@@ -317,6 +344,7 @@ $('dashRun').onclick = function(){
   if (probs.length){ toast('Fix these maps first: '+probs.join('; '), 4500); return; }
   DASH.running = true; DASH.cancel = false;
   DASH.results = []; DASH.meta = { n:n, dr:dr, db:db };
+  DASH.runKey = 'dash-' + Date.now(); // groups this run's battles into one DB run row
   $('dashStop').style.display = ''; $('dashRun').disabled = true;
   var mi = 0, g = 0, out = E.balanceNew(n);
   var t0 = Date.now();
