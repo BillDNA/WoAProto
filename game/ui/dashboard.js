@@ -11,7 +11,9 @@
 // seed/first-player schedule is E.balanceSeed/balanceFP, so a run here with
 // the same n/AI/maps reproduces the terminal's numbers exactly.
 var DASH = { running:false, cancel:false, results:[], sort:{key:null, dir:1}, cardSort:{key:'sightPct', dir:-1}, meta:null, adhoc:null };
-function dpct(a, b){ return b ? Math.round(100 * a / b) : 0; }
+// Scoring/threshold/fold/markdown MODEL is shared with the CLI reporters —
+// one implementation per fact, in report-model.js (global WOA_REPORT).
+var dpct = WOA_REPORT.pct;
 
 function openDash(){
   var sel = $('dashMap');
@@ -60,66 +62,21 @@ function dashReportMarkdown(){
   var n = DASH.meta.n, dr = DASH.meta.dr, db = DASH.meta.db;
   var noise = Math.round(100/Math.sqrt(n));
   var aiLabel = dr===db ? dr+' AI both sides' : 'red '+dr+' vs blue '+db;
-  var L = [];
-  L.push('# Balance report — '+n+' battles/map, '+aiLabel);
-  L.push('');
-  L.push('_Rules version '+E.VERSION+' · '+DASH.results.length+' map(s) · ±'+noise+' points at this n · from the in-browser Balance Dashboard_');
-  L.push('');
-  L.push('## Maps');
-  L.push('');
-  L.push('| Map | Shape | Red% | 1st% | HQ% | Turns | VPdiff | Atk | Swp | 0kill% | Tie% | Drag | Swings | Notes |');
-  L.push('|---|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|');
-  DASH.results.forEach(function(r){
-    var o = r.out, done = Math.max(1, n - o.unfinished), notes = [];
-    if (dpct(o.redWins,done)>=62 || dpct(o.redWins,done)<=38) notes.push('SIDE-BIASED');
-    if (dpct(o.firstWins,done)>=62) notes.push('1st-mover strong');
-    if (dpct(o.firstWins,done)<=38) notes.push('2nd-mover strong');
-    if (dpct(o.hqWins,done)<=8) notes.push('attrition-only');
-    if (dpct(o.hqWins,done)>=55) notes.push('HQ-rushable');
-    if (dpct(o.zeroKill,done)>=20) notes.push('STALEMATES');
-    var shape = (r.map.shapeDef || String(r.map.shape||'').charAt(0)==='@') ? 'custom' : (r.map.shape||'?');
-    L.push('| '+r.map.name+' | '+shape+' | '+dpct(o.redWins,done)+' | '+dpct(o.firstWins,done)+' | '+dpct(o.hqWins,done)+
-      ' | '+(o.turns/done).toFixed(1)+' | '+(o.vpDiff/done).toFixed(1)+' | '+(o.attacks/done).toFixed(1)+' | '+(o.swaps/done).toFixed(1)+
-      ' | '+dpct(o.zeroKill,done)+' | '+dpct(o.tiebreak,done)+' | '+((o.killTail||0)/done).toFixed(1)+' | '+((o.leadChanges||0)/done).toFixed(1)+
-      ' | '+notes.join(', ')+' |');
+  var rows = DASH.results.map(function(r){
+    var o = r.out, done = Math.max(1, n - o.unfinished);
+    return { name: r.map.name,
+      shape: (r.map.shapeDef || String(r.map.shape||'').charAt(0)==='@') ? 'custom' : (r.map.shape||'?'),
+      agg: o, done: done, notes: WOA_REPORT.mapNotes(o, done) };
   });
-  var G = { red:0, first:0, hq:0, games:0, turns:0, attacks:0, swaps:0, zeroKill:0, tiebreak:0,
-    fbWins:0, fbGames:0, ctlWins:0, ctlGames:0, depShare:0, killTail:0, leadChanges:0 };
-  var cardAgg = {};
-  DASH.results.forEach(function(r){
-    var o = r.out, done = n - o.unfinished;
-    G.red+=o.redWins; G.first+=o.firstWins; G.hq+=o.hqWins; G.games+=done; G.turns+=o.turns;
-    G.attacks+=o.attacks; G.swaps+=o.swaps; G.zeroKill+=o.zeroKill; G.tiebreak+=o.tiebreak;
-    G.fbWins+=o.firstBloodWins; G.fbGames+=o.firstBloodGames; G.ctlWins+=o.controlWins; G.ctlGames+=o.controlGames; G.depShare+=o.deployedShare;
-    G.killTail+=(o.killTail||0); G.leadChanges+=(o.leadChanges||0);
-    Object.keys(o.cards).forEach(function(cid){
-      var a = cardAgg[cid] || (cardAgg[cid] = { plays:0, wins:0, simple:0, firstSight:0, seenSum:0 });
-      var c = o.cards[cid];
-      a.plays+=c.plays; a.wins+=c.wins; a.simple+=c.simple; a.firstSight+=c.firstSight; a.seenSum+=c.seenSum;
-    });
+  return WOA_REPORT.reportMarkdown({
+    style: 'dashboard',
+    title: n+' battles/map, '+aiLabel,
+    version: E.VERSION,
+    metaTail: '±'+noise+' points at this n · from the in-browser Balance Dashboard',
+    rows: rows,
+    G: WOA_REPORT.foldGlobal(DASH.results.map(function(r){ return { agg: r.out, done: n - r.out.unfinished }; })),
+    cards: E.CARDS
   });
-  var mx = Math.max(1, G.games);
-  L.push('');
-  L.push('## Overall (n='+G.games+' battles)');
-  L.push('');
-  L.push('- Victory: red '+dpct(G.red,G.games)+'% · first mover '+dpct(G.first,G.games)+'% · HQ captures '+dpct(G.hq,G.games)+'% · avg '+(G.turns/mx).toFixed(1)+' turns');
-  L.push('- Aggression: '+(G.attacks/mx).toFixed(1)+' attacks & '+(G.swaps/mx).toFixed(1)+' swaps/battle · '+Math.round(100*G.depShare/mx)+'% of units fielded · zero-kill '+dpct(G.zeroKill,G.games)+'%');
-  L.push('- Decisiveness: tie→2nd '+dpct(G.tiebreak,G.games)+'% · first blood converts '+dpct(G.fbWins,G.fbGames)+'% · board leader wins '+dpct(G.ctlWins,G.ctlGames)+'%');
-  L.push('- Pacing: '+(G.killTail/mx).toFixed(1)+' kill-less turns before end · '+(G.leadChanges/mx).toFixed(1)+' lead swings/battle');
-  L.push('');
-  L.push('## Card report');
-  L.push('');
-  L.push('| Card | Win% | Simple% | 1stSight% | AvgSeen | plays |');
-  L.push('|---|--:|--:|--:|--:|--:|');
-  E.CARDS.map(function(c){
-    var a = cardAgg[c.id] || { plays:0, wins:0, simple:0, firstSight:0, seenSum:0 };
-    return { name:c.name, plays:a.plays, winPct:dpct(a.wins,a.plays), simplePct:dpct(a.simple,a.plays),
-      sightPct:dpct(a.firstSight,a.plays), avgSeen: a.plays ? (a.seenSum/a.plays).toFixed(2) : '-' };
-  }).sort(function(a,b){ return b.sightPct - a.sightPct; }).forEach(function(r){
-    L.push('| '+r.name+' | '+r.winPct+' | '+r.simplePct+' | '+r.sightPct+' | '+r.avgSeen+' | '+r.plays+' |');
-  });
-  L.push('');
-  return L.join('\n');
 }
 
 function dashSort(rows, key, dir){
@@ -162,16 +119,10 @@ function renderDash(){
   var noise = Math.round(100 / Math.sqrt(n));
   var aiLabel = DASH.meta.dr === DASH.meta.db ? DASH.meta.dr + ' AI both sides' : 'red ' + DASH.meta.dr + ' vs blue ' + DASH.meta.db;
 
-  // ---- per-map rows (derived exactly like balance.js) ----
+  // ---- per-map rows (notes/thresholds from the shared report model) ----
   var rows = DASH.results.map(function(r){
     var o = r.out, done = Math.max(1, n - o.unfinished);
-    var notes = [];
-    if (dpct(o.redWins, done) >= 62 || dpct(o.redWins, done) <= 38) notes.push('SIDE-BIASED');
-    if (dpct(o.firstWins, done) >= 62) notes.push('1st-mover strong');
-    if (dpct(o.firstWins, done) <= 38) notes.push('2nd-mover strong');
-    if (dpct(o.hqWins, done) <= 8) notes.push('attrition-only');
-    if (dpct(o.hqWins, done) >= 55) notes.push('HQ-rushable');
-    if (dpct(o.zeroKill, done) >= 20) notes.push('STALEMATES');
+    var notes = WOA_REPORT.mapNotes(o, done);
     return {
       name: r.map.name, shape: (r.map.shapeDef || String(r.map.shape||'').charAt(0)==='@') ? 'custom' : (r.map.shape || '?'), done: done,
       red: dpct(o.redWins, done), first: dpct(o.firstWins, done),
@@ -205,24 +156,9 @@ function renderDash(){
   });
   h += '</table>';
 
-  // ---- overall + behaviour + decisiveness (same folds as balance.js) ----
-  var G = { red:0, first:0, hq:0, games:0, turns:0, attacks:0, swaps:0, zeroKill:0, tiebreak:0,
-    fbWins:0, fbGames:0, ctlWins:0, ctlGames:0, depShare:0, killTail:0, leadChanges:0 };
-  var cardAgg = {};
-  DASH.results.forEach(function(r){
-    var o = r.out, done = n - o.unfinished;
-    G.red += o.redWins; G.first += o.firstWins; G.hq += o.hqWins; G.games += done; G.turns += o.turns;
-    G.attacks += o.attacks; G.swaps += o.swaps; G.zeroKill += o.zeroKill; G.tiebreak += o.tiebreak;
-    G.fbWins += o.firstBloodWins; G.fbGames += o.firstBloodGames;
-    G.ctlWins += o.controlWins; G.ctlGames += o.controlGames; G.depShare += o.deployedShare;
-    G.killTail += (o.killTail||0); G.leadChanges += (o.leadChanges||0);
-    Object.keys(o.cards).forEach(function(cid){
-      var a = cardAgg[cid] || (cardAgg[cid] = { plays:0, wins:0, simple:0, firstSight:0, seenSum:0 });
-      var c = o.cards[cid];
-      a.plays += c.plays; a.wins += c.wins; a.simple += c.simple;
-      a.firstSight += c.firstSight; a.seenSum += c.seenSum;
-    });
-  });
+  // ---- overall + behaviour + decisiveness (the shared foldGlobal — the SAME
+  // fold balance.js and balance-report.js run) ----
+  var G = WOA_REPORT.foldGlobal(DASH.results.map(function(r){ return { agg: r.out, done: n - r.out.unfinished }; }));
   var mx = Math.max(1, G.games);
   h += '<h3>Overall <span class="small">(n='+G.games+' battles)</span></h3>' +
     '<div class="dstats">' +
@@ -248,12 +184,10 @@ function renderDash(){
     '</div>' +
     '<p class="small">Hover any stat or column header for what it means and its healthy range. Full targets in design-docs/grading-rubrics.md.</p>';
 
-  // ---- card report ----
-  var crows = E.CARDS.map(function(c){
-    var a = cardAgg[c.id] || { plays:0, wins:0, simple:0, firstSight:0, seenSum:0 };
-    return { name: c.name, plays: a.plays, winPct: dpct(a.wins,a.plays), simplePct: dpct(a.simple,a.plays),
-      sightPct: dpct(a.firstSight,a.plays),
-      avgSeen: a.plays ? +(a.seenSum/a.plays).toFixed(2) : 0 };
+  // ---- card report (shared derivation; local keys are this table's sort ids) ----
+  var crows = WOA_REPORT.cardRows(G.cards, E.CARDS).map(function(r){
+    return { name: r.name, plays: r.plays, winPct: r.win, simplePct: r.simple,
+      sightPct: r.sight, avgSeen: r.seenNum };
   });
   crows = dashSort(crows, DASH.cardSort.key, DASH.cardSort.dir);
   var ccols = [['name','Card'], ['winPct','Win%'], ['simplePct','Simple%'], ['sightPct','1stSight%'], ['avgSeen','AvgSeen'], ['plays','plays']];

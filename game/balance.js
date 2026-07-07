@@ -36,10 +36,13 @@
    units on the board wins when the cards run out; reserves count for nothing.
 */
 var E = require('./engine.js');
+// Shared report model: thresholds, folds, card-row derivation (report-model.js
+// is the ONE copy — this file keeps only its terminal formatting).
+var R = require('./report-model.js');
 var fs = require('fs');
 var path = require('path');
 
-function pct(a, b) { return b ? Math.round(100 * a / b) : 0; }
+var pct = R.pct;
 function pad(s, w, right) {
   s = String(s);
   while (s.length < w) s = right ? s + ' ' : ' ' + s;
@@ -97,33 +100,13 @@ function mapReport(n, diff, filter) {
   console.log(header);
   console.log(new Array(header.length + 1).join('-'));
 
-  var G = { red: 0, first: 0, hq: 0, games: 0, turns: 0,
-    attacks: 0, swaps: 0, zeroKill: 0, tiebreak: 0,
-    fbWins: 0, fbGames: 0, ctlWins: 0, ctlGames: 0, depShare: 0,
-    killTail: 0, leadChanges: 0 };
-  var cardAgg = {};
+  var mapRows = []; // [{agg, done}] for the shared foldGlobal
 
   maps.forEach(function (map, mi) {
     var r = E.balanceMap(map, n, { diffRed: diff, diffBlue: diff, seedBase: (mi + 1) * 7919 });
     var done = n - r.unfinished;
-    G.red += r.redWins; G.first += r.firstWins; G.hq += r.hqWins; G.games += done; G.turns += r.turns;
-    G.attacks += r.attacks; G.swaps += r.swaps; G.zeroKill += r.zeroKill; G.tiebreak += r.tiebreak;
-    G.fbWins += r.firstBloodWins; G.fbGames += r.firstBloodGames;
-    G.ctlWins += r.controlWins; G.ctlGames += r.controlGames; G.depShare += r.deployedShare;
-    G.killTail += r.killTail; G.leadChanges += r.leadChanges;
-    Object.keys(r.cards).forEach(function (cid) {
-      var a = cardAgg[cid] || (cardAgg[cid] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 });
-      var c = r.cards[cid];
-      a.plays += c.plays; a.wins += c.wins; a.simple += c.simple;
-      a.firstSight += c.firstSight; a.seenSum += c.seenSum; a.noop += (c.noop || 0);
-    });
-    var notes = [];
-    if (pct(r.redWins, done) >= 62 || pct(r.redWins, done) <= 38) notes.push('SIDE-BIASED');
-    if (pct(r.firstWins, done) >= 62) notes.push('1st-mover strong');
-    if (pct(r.firstWins, done) <= 38) notes.push('2nd-mover strong');
-    if (pct(r.hqWins, done) <= 8) notes.push('attrition-only');
-    if (pct(r.hqWins, done) >= 55) notes.push('HQ-rushable');
-    if (pct(r.zeroKill, done) >= 20) notes.push('STALEMATES');
+    mapRows.push({ agg: r, done: done });
+    var notes = R.mapNotes(r, done);
     console.log(
       pad(map.name.slice(0, 15), 16, true) + pad(map.shape || '?', 11, true) +
       pad(pct(r.redWins, done), 6) + pad(pct(done - r.redWins, done), 7) +
@@ -138,6 +121,7 @@ function mapReport(n, diff, filter) {
     );
   });
 
+  var G = R.foldGlobal(mapRows);
   console.log('\nOverall: red ' + pct(G.red, G.games) + '% | first mover ' + pct(G.first, G.games) +
     '% | HQ captures ' + pct(G.hq, G.games) + '% | avg battle ' + (G.turns / Math.max(1, G.games)).toFixed(1) + ' turns');
   console.log('Behaviour: ' + (G.attacks / Math.max(1, G.games)).toFixed(1) + ' attacks & ' +
@@ -153,14 +137,9 @@ function mapReport(n, diff, filter) {
   var ch = pad('Card', 20, true) + pad('Win%', 6) + pad('Simple%', 9) + pad('1stSight%', 11) + pad('AvgSeen', 9) + pad('plays', 8);
   console.log(ch);
   console.log(new Array(ch.length + 1).join('-'));
-  var rows = E.CARDS.map(function (c) {
-    var a = cardAgg[c.id] || { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0 };
-    return { name: c.name, plays: a.plays, winPct: pct(a.wins, a.plays), simplePct: pct(a.simple, a.plays),
-      sightPct: pct(a.firstSight, a.plays), avgSeen: a.plays ? (a.seenSum / a.plays).toFixed(2) : '-' };
-  }).sort(function (a, b) { return b.sightPct - a.sightPct; });
-  rows.forEach(function (r) {
-    console.log(pad(r.name, 20, true) + pad(r.winPct + '%', 6) + pad(r.simplePct + '%', 9) +
-      pad(r.sightPct + '%', 11) + pad(r.avgSeen, 9) + pad(r.plays, 8));
+  R.cardRows(G.cards, E.CARDS).forEach(function (r) {
+    console.log(pad(r.name, 20, true) + pad(r.win + '%', 6) + pad(r.simple + '%', 9) +
+      pad(r.sight + '%', 11) + pad(r.seen, 9) + pad(r.plays, 8));
   });
   console.log('\nHow to read it:');
   console.log('  Win%      share of plays by the eventual winner. Attrition games see both');

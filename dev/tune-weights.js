@@ -27,13 +27,10 @@
 
 var path = require('path');
 var E = require(path.join(__dirname, '..', 'game', 'engine.js'));
-
-var pct = function (a, b) { return b ? 100 * a / b : 0; };
-function balanceScore(agg, done) { // same formula as dev/balance-report.js
-  var red = pct(agg.redWins, done), first = pct(agg.firstWins, done), zk = pct(agg.zeroKill, done),
-    tie = pct(agg.tiebreak, done), swings = agg.leadChanges / Math.max(1, done), drag = agg.killTail / Math.max(1, done);
-  return Math.abs(red - 50) + Math.abs(first - 50) + zk * 0.6 + tie * 0.3 + drag * 0.4 - swings * 3;
-}
+// Fitness = the shared balance score (game/report-model.js) — the SAME
+// implementation dev/balance-report.js ranks maps with, not a drifting copy.
+var R = require(path.join(__dirname, '..', 'game', 'report-model.js'));
+var pct = R.pct, balanceScore = R.balanceScore;
 
 function parseArgs(argv) {
   var a = {

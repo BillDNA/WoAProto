@@ -205,6 +205,18 @@
 </div></div>
 <div class="overlay" id="manualOvr"><div class="panel parchment">
   <h2>Field Manual</h2>
+  <!-- V1 diagram player: worked examples animated from REAL engine states
+       (ui/manual.js). The prose below stays the text canon. -->
+  <div id="manualPlayer">
+    <div id="mpTabs"></div>
+    <svg id="mpBoard" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div id="mpCaption"></div>
+    <div id="mpCtrls">
+      <button id="mpPrev" class="ghost btn-ghost-dark">&#9664; Prev</button>
+      <span id="mpCounter"></span>
+      <button id="mpNext">Next &#9654;</button>
+    </div>
+  </div>
   <div class="manual">
     <h3>Object</h3>
     <p>Win battles by <b>capturing the enemy headquarters</b> (attack into it; a tie counts) or by <b>attrition</b> &mdash; when a player has no cards left, the side with more <b>surviving units on the board</b> wins (1&nbsp;VP per infantry, 2 per cavalry, 3 per artillery; reserves left at home count for nothing; tie goes to whoever moved second). First to <b>3 battle victories</b> wins the campaign.</p>
@@ -261,6 +273,7 @@ try {
 <script src="engine/05-ai.js"></script>
 <script src="engine/06-sim.js"></script>
 <script src="engine/07-export.js"></script>
+<script src="report-model.js"></script>
 <script src="ui/app.js"></script>
 <script src="ui/board.js"></script>
 <script src="ui/fx.js"></script>
