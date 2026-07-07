@@ -58,8 +58,7 @@ var WOA_BUILTIN =
       "weights": { "hqGuard": 12, "enemyDist": 3, "advance": 0.8, "trenchHome": 12, "unitOnBoard": 26 } },
     "hawk": {"noise": 0, "breadth": 0,
       "weights": {
-        "unitOnBoard": 28, "advance": 3, "myThreatKill": 5, "threatKill": 5, "threatTie": 0.5,
-        "advance":3.25
+        "unitOnBoard": 28, "advance": 3.25, "myThreatKill": 5, "threatKill": 5, "threatTie": 0.5
       }
     }
   },
