@@ -9,7 +9,7 @@ Add-Type -AssemblyName System.Drawing
 
 $root = Split-Path $PSScriptRoot -Parent
 $artDir = Join-Path $root 'game\art'
-$origDir = Join-Path $root 'specs\original-specs\art-originals'
+$origDir = Join-Path $root 'dynamic-scrum\planning\specs\original-specs\art-originals'
 New-Item -ItemType Directory -Force $origDir | Out-Null
 
 # 1) sweep heavy PNGs out of game/art into the originals folder
