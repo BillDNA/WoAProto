@@ -104,9 +104,10 @@ var WOA_REPORT = (function () {
      same value as a number for sortable UIs. */
   function cardRows(cardAgg, cards) {
     return cards.map(function (c) {
-      var a = cardAgg[c.id] || { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0 };
+      var a = cardAgg[c.id] || { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 };
       return { id: c.id, name: c.name, plays: a.plays,
         win: pct(a.wins, a.plays), simple: pct(a.simple, a.plays), sight: pct(a.firstSight, a.plays),
+        noop: pct(a.noop || 0, a.plays),
         seen: a.plays ? (a.seenSum / a.plays).toFixed(2) : '-',
         seenNum: a.plays ? +(a.seenSum / a.plays).toFixed(2) : 0 };
     }).sort(function (a, b) { return b.sight - a.sight; });
@@ -183,10 +184,12 @@ var WOA_REPORT = (function () {
       L.push('## Card report');
     }
     L.push('');
-    L.push('| Card | Win% | Simple% | 1stSight% | AvgSeen | ' + (style === 'report' ? 'Plays' : 'plays') + ' |');
-    L.push('|---|--:|--:|--:|--:|--:|');
+    // Noop% restored July 2026 (rules 1.0): new multi-step cards are where dead
+    // turns reappear, and the rubric's dead-card check needs a printed number.
+    L.push('| Card | Win% | Simple% | Noop% | 1stSight% | AvgSeen | ' + (style === 'report' ? 'Plays' : 'plays') + ' |');
+    L.push('|---|--:|--:|--:|--:|--:|--:|');
     cardRows(G.cards, model.cards).forEach(function (r) {
-      L.push('| ' + r.name + ' | ' + r.win + ' | ' + r.simple + ' | ' + r.sight + ' | ' + r.seen + ' | ' + r.plays + ' |');
+      L.push('| ' + r.name + ' | ' + r.win + ' | ' + r.simple + ' | ' + r.noop + ' | ' + r.sight + ' | ' + r.seen + ' | ' + r.plays + ' |');
     });
     L.push('');
     // Obsidian-style tag footer so reports are findable by kind + rules version

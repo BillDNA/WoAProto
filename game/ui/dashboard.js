@@ -112,6 +112,7 @@ var CARD_TIPS = {
   name:'Card',
   winPct:'Win rate when played — hugs 50% in attrition games; treat only big deviations',
   simplePct:'Share resolved as a basic attack/reposition — high = the printed action often was not worth it',
+  noopPct:'Share of plays that resolved zero actions (dead turns) — should be ~0; above 2% = investigate',
   sightPct:'Share played the first turn it was seen — high + low AvgSeen = always-good on sight (OP watchlist)',
   avgSeen:'Average times in hand before it was played — high = situational/hoarded',
   plays:'Total times played across all battles'
@@ -196,10 +197,10 @@ function renderDash(){
   // ---- card report (shared derivation; local keys are this table's sort ids) ----
   var crows = WOA_REPORT.cardRows(G.cards, E.CARDS).map(function(r){
     return { name: r.name, plays: r.plays, winPct: r.win, simplePct: r.simple,
-      sightPct: r.sight, avgSeen: r.seenNum };
+      noopPct: r.noop, sightPct: r.sight, avgSeen: r.seenNum };
   });
   crows = dashSort(crows, DASH.cardSort.key, DASH.cardSort.dir);
-  var ccols = [['name','Card'], ['winPct','Win%'], ['simplePct','Simple%'], ['sightPct','1stSight%'], ['avgSeen','AvgSeen'], ['plays','plays']];
+  var ccols = [['name','Card'], ['winPct','Win%'], ['simplePct','Simple%'], ['noopPct','Noop%'], ['sightPct','1stSight%'], ['avgSeen','AvgSeen'], ['plays','plays']];
   h += '<h3>Card report <span class="small">('+G.games+' battles of AI play)</span></h3><table><tr>';
   ccols.forEach(function(c){
     h += '<th class="sortable'+(DASH.cardSort.key===c[0]?' sorted':'')+'" data-ckey="'+c[0]+'" title="'+(CARD_TIPS[c[0]]||'')+' &middot; click to sort">'+c[1]+(DASH.cardSort.key===c[0]?(DASH.cardSort.dir>0?' &#9650;':' &#9660;'):'')+'</th>';
@@ -207,7 +208,7 @@ function renderDash(){
   h += '<th title="share of plays by the eventual winner">Win share</th></tr>';
   crows.forEach(function(r){
     h += '<tr><td style="text-align:left;"><b>'+r.name+'</b></td><td>'+r.winPct+'%</td><td>'+r.simplePct+'%</td>' +
-      '<td>'+r.sightPct+'%</td><td>'+r.avgSeen+'</td><td>'+r.plays+'</td><td>'+dbar(r.winPct)+'</td></tr>';
+      '<td>'+r.noopPct+'%</td><td>'+r.sightPct+'%</td><td>'+r.avgSeen+'</td><td>'+r.plays+'</td><td>'+dbar(r.winPct)+'</td></tr>';
   });
   h += '</table>' +
     '<p class="small">Hover a column header for what it means and its target.</p>';
