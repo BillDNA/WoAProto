@@ -19,7 +19,7 @@ in the loop. Friction tickets minted mid-sprint count toward the goal, not again
 | WOA-005 | Standard-runs runbook (apples-to-apples recipes) | docs | In Progress | —     |
 | WOA-006 | Load saved balance reports into the Dashboard Charts tab | game-ui | Todo | — |
 | WOA-007 | Define "best map": ideal-range scoring, rubric as SOT | balance | Todo | — |
-| WOA-008 | claude-plays match mode draws maps from the map-set pool | dev-tools | Todo | — |
+| WOA-008 | claude-plays match mode draws maps from the map-set pool | dev-tools | Done | — |
 
 **Suggested order:** WOA-004 first (WOA-005 slots its recipes into the doc's "now iterate" ending).
 
@@ -42,22 +42,6 @@ only if a recipe's command line proves too fiddly to paste.
 - [x] One recipe demonstrated as before/after: run, tweak a data value, rerun, compare (and revert the tweak)
       (attack_plus1 mod 1→2 on The Ford: HQ% 25→42, AvgSeen 10.4→5.6; revert reproduced baseline exactly)
 - [ ] Bill confirms the format works for organizing his own runs
-
-### WOA-008 — claude-plays match mode draws maps from the map-set pool
-**Area:** dev-tools · **Status:** Todo
-
-`dev/claude-plays.js` match mode pins one map for the whole match (`E.newMatch({maps: [map]})`,
-claude-plays.js:608) even with `--mapset` — Bill expected it to cycle the set like browser matches do
-(`match.maps` cycles battle to battle). Change: no `--map` → the match pool is the whole (map-set)
-roster; `--map` keeps pinning a single map (and a single-map set covers that anyway). Needs a decision
-on the per-map Typicality footer for mixed-map matches (per-battle baselines, or drop it there).
-Doc-sync: claude-plays-human-instructions flag table + generate-reports skill (which relies on
-single-map pinning via `--map BEST_MAP` — keep that behavior working).
-
-**Acceptance criteria:**
-- [ ] `--match` without `--map` cycles the map-set pool; `--map` still pins one map
-- [ ] Typicality footer behavior for mixed-map matches decided and implemented
-- [ ] User confirms done
 
 ### WOA-007 — Define "best map": ideal-range scoring, rubric as SOT
 **Area:** balance · **Status:** Todo · **Docs:** grading-rubrics
@@ -88,6 +72,7 @@ minted mid-sprint — counts toward the goal.)
 
 ## Finished
 
+- **WOA-008 — claude-plays match mode draws maps from the map-set pool** (2026-07-09) — shipped as the balance-loop pre-flight (commit bba0dd3): no `--map` → match pool = the (mapset-filtered) roster via the engine's seed-shuffled mapOrder; `--map` still pins; Typicality footer uses the last battle's map; generate-reports reshaped off BEST_MAP pinning same session. Verified across 9 live matches (map rotation observed by Bill mid-run).
 - **WOA-004 — Bill's onboarding doc: driving the balance loop** (2026-07-07) — `human-instructions/driving-the-balance-loop.md` shipped, indexed, every command run live; Bill dogfooded it end-to-end (spawning WOA-006/007/008 friction tickets) and confirmed.
 
 ## Blockers
