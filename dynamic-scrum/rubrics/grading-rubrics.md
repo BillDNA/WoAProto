@@ -82,6 +82,11 @@ data — the accumulator JSON and `logs/woa.db` — no longer a printed column).
    Evidence: AvgSeen (hand appearances before it got played).
    Score: good ≤2; marginal 2–2.5; >2.5 = hoarded (tune me) — ask whether the payoff moment is
    fun (qualitative) or whether the card is just weak.
+   **Hoarding can be functional (July 2026, measured):** hoarded attack cards are the deck's
+   late-game kill supply — deleting them raised tie-decided monotonically 11→15→20% and produced
+   the swap-dance signature. Before condemning a card on AvgSeen, check fleet Tie% and Atk/Swp;
+   also cross-check the LLM population (hard-AI AvgSeen 4–6 is its family norm for ALL action
+   cards, and LLMs played the same cards eagerly at AvgSeen 1.8–3.1).
 6. **Win% — keep, don't over-index.**
    Goal: sanity check for correlation with winning.
    Evidence: Win% (share of plays that were by the eventual winner). In an attrition game both
