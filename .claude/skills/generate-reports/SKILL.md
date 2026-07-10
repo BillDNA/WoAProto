@@ -1,69 +1,68 @@
 ---
 name: generate-reports
-description: Generate a fresh War of Attrition report set — a 60-battle hard-vs-hard balance report, then a fire-and-forget first-to-3 LLM match (claude-plays) on the best-balance map. Saves everything the standard way under logs/reports. Use when asked to "generate reports", "make a fresh report set", "generate-reports", or to refresh the data before a review.
+description: Generate a fresh War of Attrition report set — a 100-battle hard-vs-hard balance sweep plus three fire-and-forget first-to-3 LLM matches (fixed seeds 1001/2002/3003, maps drawn from the mapset pool) against any deck + map-set. Saves everything the standard way under logs/reports. Use when asked to "generate reports", "make a fresh report set", "generate-reports", or to refresh the data before a review.
 ---
 
 # generate-reports
 
-Produce a fresh, standard report set for the current rules version. **This only
-generates data — it changes no game files.** All paths are repo-relative; run
-from the repo root.
+Produce the standard report set for the current rules version, against ANY deck +
+map-set (defaults: the ACTIVE pair). **This only generates data — it changes no game
+files.** Repo-relative paths; run from the repo root.
 
-V1 shape (Feedback Round 5): the balance report runs to completion, then the
-LLM match is **fired into a detached background process and left alone** — no
-babysitting, no polling. Bill (or `review-reports`) reads the transcript when
-it lands.
+This is the data-collection step of the balance-iteration loop (proven across the
+July 2026 4-iteration run): one isolated balance sweep + three seeded LLM matches.
+Every command pins its seeds, so the same recipe against two content slots is an
+apples-to-apples diff — the comparison rules live in
+`dynamic-scrum/docs/human-instructions/standard-runs-runbook.md` (keep the two in sync).
 
 ## Steps
 
-1. **Balance report** — a 60-battle hard-vs-hard run over the roster:
+1. **Balance sweep** — 100 battles/map, hard vs hard, isolated from the accumulator:
 
    ```
-   node dev/balance-report.js 60 hard hard --parallel
+   node dev/balance-report.js 100 hard hard --once --parallel [--deck <id>] [--mapset <id>]
    ```
 
-   (`--parallel` runs one worker per map — same numbers, ~cores× faster. Drop it
-   only if you also want per-battle DB rows from this run; serial writes them,
-   parallel skips them.) It saves the markdown and prints two machine lines:
-   - `SAVED: logs/reports/balance/<version>/<stamp>-hard-vs-hard-n60-rN.md`
-   - `BEST_MAP: <name>` — best Balance score (closest to fair + most
-     back-and-forth). Capture `<name>`.
+   `--once` = the original seed schedule, so two sweeps with the same flags are
+   directly comparable (accumulator runs deliberately shift seeds). `--parallel` =
+   ~cores× faster; drop it only if you also want per-battle DB rows (serial writes
+   them, parallel skips them). `--deck` / `--mapset` select content slots
+   (`game/content/{decks,mapsets}/<id>.js`); the report meta line + filename carry
+   the ids. Capture the `SAVED:` path. `BEST_MAP:` still prints — informational
+   (matches no longer pin to it).
 
-2. **Fire-and-forget LLM match** — one first-to-3 match on the best map,
-   detached, in the background, per-run log file (no shared-redirect interleaving):
+2. **Three fire-and-forget LLM matches** — first-to-3, haiku low both sides,
+   **fixed seeds 1001 / 2002 / 3003** (never change them — they are the
+   apples-to-apples anchor across content iterations). Match mode draws each
+   battle's map from the mapset pool (engine-shuffled by the seed):
 
    ```
-   STAMP=$(date +%Y%m%d-%H%M%S)
-   nohup node dev/claude-plays.js --map "<BEST_MAP>" --match 3 \
-     --red haiku --blue haiku --red-effort low --blue-effort low \
-     --seed 1234 > "logs/reports/battle/run-$STAMP.log" 2>&1 &
+   node dev/claude-plays.js --match 3 --red haiku --blue haiku --effort low --seed 1001 [--deck <id>] [--mapset <id>]
    ```
 
-   Then **return immediately** — do NOT wait for it, tail it, or poll it. The
-   match writes per-battle rows to `claude-plays-log.jsonl` as battles finish
-   (crash-safe), a match-summary row at the end, and one readable transcript to
-   `logs/reports/battle/<version>/<stamp>-<map>-haiku-v-haiku-match.md` with a
-   match summary (including the rush-luck check: did the game-1 winner also
-   take the match?), per-battle + per-match felt-notes, and a cached Typicality
-   footer. Each LLM side plays through ONE persistent claude session for the
-   whole match (rules ride the prompt cache; any session failure falls back to
-   cold per-call transport automatically).
+   Repeat with `--seed 2002` and `--seed 3003`; launch all three in parallel as
+   detached background processes, then **return immediately** — no waiting, no
+   polling. Each match appends crash-safe per-battle rows to
+   `claude-plays-log.jsonl` (+ a match-summary row listing the maps played) and
+   writes one transcript to
+   `logs/reports/battle/<version>/<stamp>-set-<mapset>-haiku-v-haiku-match.md`
+   with per-battle map names, felt-notes, the rush-luck check, and a Typicality
+   footer for the last battle's map.
 
-3. **Report back** — the balance report path + best map and why it scored best,
-   plus: "match running in background — transcript will land at
-   `logs/reports/battle/<version>/…-match.md`, live log at
-   `logs/reports/battle/run-<stamp>.log`." Offer to run **review-reports**
-   later for the graded analysis.
+3. **Report back** — the balance report path, plus "3 matches running in the
+   background — transcripts will land at `logs/reports/battle/<version>/…-match.md`."
+   Offer to run **review-reports** for the graded analysis once they finish.
 
 ## Notes
 
-- "Best balance" = the Balance column (lower is better: |red−50| + |1st−50| +
-  penalties for zero-kill / tie-decided / drag, minus a reward for lead swings).
-  A heuristic to pick an *interesting* map — say so, don't treat it as a verdict.
-- Everything is filed by rules version (`Engine.VERSION`); a run after a rules
-  change lands in a fresh folder and old data stays apples-to-apples.
-- If `claude` isn't available (offline), the balance report still generates;
-  say the LLM match was skipped rather than faking it. `--mock` smoke-tests the
-  pipeline offline (mock runs stay out of the DB by design).
-- Don't tune anything from these numbers here — that's `review-reports` (grades
-  vs the rubrics) and then Bill.
+- Cost: sweep ~2–4 min; each match ~40–90 min wall-clock (they run concurrently),
+  real tokens — haiku + low effort is the cheap shape.
+- Everything files by rules version (`Engine.VERSION`). Content changes do NOT bump
+  the version — the deck/mapset ids in the report meta line are the distinguisher.
+- Fallback rate in the transcripts (fallbacks ÷ decisions) is the data-health gauge:
+  ≲5% is clean; high fallback = a legibility problem, flag it before reading strategy.
+- Offline: the balance sweep still generates; say the LLM matches were skipped rather
+  than faking them. `--mock` smoke-tests the match pipeline (mock runs stay out of
+  the DB by design).
+- Don't tune anything from these numbers here — that's `review-reports` (grades vs
+  the rubrics) and then Bill.
