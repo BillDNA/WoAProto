@@ -5,8 +5,9 @@
    finish (crash-safe); writes one readable .md transcript per run.
 
    Usage: node dev/claude-plays.js [options]
-     --map <filter>     map name filter, case-insensitive (default: first map in
-                        the content roster)
+     --map <filter>     map name filter, case-insensitive — pins ONE map. Default:
+                        MATCH mode draws each battle's map from the roster/mapset
+                        pool (engine-shuffled by seed); single battle = first map
      --red <spec>       easy|normal|hard (or any maps.js "ai" row) = heuristic AI;
      --blue <spec>      anything else (haiku|sonnet|opus|model id) = LLM.
                         Defaults: --red haiku --blue normal
@@ -598,14 +599,20 @@ async function main() {
   if (!map) { console.error('no map matches "' + args.map + '"'); process.exit(1); }
 
   const target = args.matchWins; // 0 = single battle
-  say('claude-plays: "' + map.name + '" seed ' + args.seed +
+  // MATCH mode draws each battle's map from the whole pool (the engine's
+  // seed-shuffled mapOrder); --map or single-battle mode pins one map.
+  const pool = (target && !args.map) ? maps : [map];
+  const poolName = pool.length > 1
+    ? (args.mapset || 'active') + ' set (' + pool.length + ' maps)'
+    : '"' + map.name + '"';
+  say('claude-plays: ' + poolName + ' seed ' + args.seed +
     (target ? ' — MATCH, first to ' + target : ' — single battle') +
     ' — red=' + args.red + (args.redEffort ? '(' + args.redEffort + ')' : '') +
     ' vs blue=' + args.blue + (args.blueEffort ? '(' + args.blueEffort + ')' : '') +
     (args.deck ? ' — deck "' + args.deck + '"' : '') +
     (args.mock ? '  [MOCK]' : args.cold ? '  [cold transport]' : '  [persistent sessions]'));
 
-  const match = E.newMatch({ maps: [map], seed: args.seed, firstPlayer: 'red' });
+  const match = E.newMatch({ maps: pool, seed: args.seed, firstPlayer: 'red' });
   const matchInfo = { targetWins: target, wins: match.wins, battlesPlayed: 0 };
   const transports = {
     red: makeSideTransport(args, 'red', target),
@@ -631,7 +638,7 @@ async function main() {
     const st = E.newBattle(match);
     const firstPlayer = st.current; // battle 1 = match.firstPlayer; later = last loser
     matchInfo.battlesPlayed = battles.length;
-    say('— battle ' + (battles.length + 1) + (target ? ' (match R ' + match.wins.red + '-' + match.wins.blue + ' B)' : '') + ' —');
+    say('— battle ' + (battles.length + 1) + ' on "' + st.mapName + '"' + (target ? ' (match R ' + match.wins.red + '-' + match.wins.blue + ' B)' : '') + ' —');
     const played = await playBattle(st, args, transports, matchInfo, usage);
     const finished = st.phase === 'battle-over';
     say(finished
@@ -649,7 +656,7 @@ async function main() {
     }
 
     const rec = {
-      ts: new Date().toISOString(), version: E.VERSION, map: map.name, seed: args.seed,
+      ts: new Date().toISOString(), version: E.VERSION, map: st.mapName, seed: args.seed,
       transport: args.mock ? 'mock' : args.cold ? 'cold' : 'session',
       matchId: target ? ts0 : null, battleIndex: battles.length + 1,
       red: args.red, blue: args.blue,
@@ -708,11 +715,12 @@ async function main() {
   if (dbm) try { dbm.close(dbh); } catch (e) {}
 
   // ---- transcript ----
-  const slug = map.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const slug = (pool.length > 1 ? 'set-' + (args.mapset || 'active') : map.name)
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   const fstamp = ts0.replace(/[:.]/g, '-');
   const tPath = path.join(TRANSCRIPT_DIR, fstamp + '-' + slug + '-' + args.red + '-v-' + args.blue + (target ? '-match' : '') + '.md');
   const md = [];
-  md.push('# War of Attrition — ' + (target ? 'first-to-' + target + ' match' : 'battle') + ' on "' + map.name + '" (seed ' + args.seed + ')');
+  md.push('# War of Attrition — ' + (target ? 'first-to-' + target + ' match' : 'battle') + ' on ' + poolName + ' (seed ' + args.seed + ')');
   md.push('');
   md.push('- rules version: **' + E.VERSION + '** · transport: ' + (args.mock ? 'mock' : args.cold ? 'cold per-call' : 'persistent session per side'));
   md.push('- red: **' + args.red + '**' + (args.redEffort ? ' (effort: ' + args.redEffort + ')' : '') +
@@ -738,7 +746,7 @@ async function main() {
     tstats.blue.sessionCalls + ' session / ' + tstats.blue.coldCalls + ' cold · tokens in/out ' + usage.inputTokens + '/' + usage.outputTokens);
   battles.forEach(function (b) {
     md.push('');
-    md.push('## Battle ' + b.index + (target ? '' : '') + ' — ' + (b.winner ? cap(b.winner) + ' by ' + b.winType : 'unfinished') + ' (T' + b.turns + ')');
+    md.push('## Battle ' + b.index + ' — "' + b.st.mapName + '" — ' + (b.winner ? cap(b.winner) + ' by ' + b.winType : 'unfinished') + ' (T' + b.turns + ')');
     md.push('');
     md.push('### Decisions');
     b.decisions.forEach(function (d) {
@@ -767,7 +775,10 @@ async function main() {
   const lastFinished = battles.filter(function (b) { return b.winner; }).slice(-1)[0];
   if (lastFinished && args.typicalN > 0) {
     say('gauging typicality (' + args.typicalN + ' hard-AI baseline battles, cached per map+version)…');
-    try { md.push.apply(md, typicalitySection(map, lastFinished.st, args.typicalN)); }
+    try {
+      const lastMap = pool.find(function (m) { return m.name === lastFinished.st.mapName; }) || map;
+      md.push.apply(md, typicalitySection(lastMap, lastFinished.st, args.typicalN));
+    }
     catch (e) { md.push('', '_(typicality baseline failed: ' + e.message + ')_'); }
   }
   md.push('', '#reports #battle #v' + E.VERSION.replace(/\./g, '-')); // tag footer: kind + rules version
@@ -778,7 +789,8 @@ async function main() {
     fs.appendFileSync(args.out, JSON.stringify({
       ts: new Date().toISOString(), version: E.VERSION, type: 'match',
       transport: args.mock ? 'mock' : args.cold ? 'cold' : 'session',
-      matchId: ts0, map: map.name, seed: args.seed, red: args.red, blue: args.blue,
+      matchId: ts0, map: pool.length > 1 ? poolName : map.name,
+      maps: battles.map(function (b) { return b.st.mapName; }), seed: args.seed, red: args.red, blue: args.blue,
       target: target, wins: { red: match.wins.red, blue: match.wins.blue },
       winner: matchWinner, battles: battles.length,
       game1Winner: battles[0].winner, seriesFlipped: !!(matchWinner && battles[0].winner && matchWinner !== battles[0].winner),

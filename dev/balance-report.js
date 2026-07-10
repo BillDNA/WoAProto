@@ -20,6 +20,7 @@
      --quiet   suppress the progress dots
      --mapset <id>  run a specific map-set (default: the ACTIVE set's pool;
                'all' = every map on disk)
+     --deck <id>    report on content/decks/<id>.js instead of the ACTIVE deck
      --parallel [k]  simulate maps in k parallel worker processes (default:
                cores-1). The engine's board state is process-global, so
                parallelism is process-per-map — each worker require()s its own
@@ -31,13 +32,41 @@
    to hand to claude-plays.js. */
 'use strict';
 
-var E = require(require('path').join(__dirname, '..', 'game', 'engine.js'));
+var fs = require('fs');
+var path = require('path');
+
+// --deck <id>: report on content/decks/<id>.js instead of the ACTIVE deck. The
+// engine snapshots the active deck at require() time, so pre-populate
+// WOA_CONTENT with the flipped deck FIRST (same trick, same file order as
+// dev/claude-plays.js preloadContent — node's require cache makes the engine's
+// own loader a no-op afterwards).
+var DECK = (function () {
+  var i = process.argv.indexOf('--deck');
+  if (i < 0) return '';
+  var id = process.argv[i + 1] || '';
+  process.argv.splice(i, 2);
+  if (!id) { console.error('--deck needs a deck id'); process.exit(1); }
+  global.WOA_CONTENT = { maps: [], cards: [], decks: [], mapsets: [] };
+  ['decks', 'maps', 'mapsets'].forEach(function (kind) {
+    var dir = path.join(__dirname, '..', 'game', 'content', kind);
+    var files = [];
+    try { files = fs.readdirSync(dir).filter(function (f) { return /\.js$/.test(f); }).sort(); } catch (e) { return; }
+    files.forEach(function (f) { require(path.join(dir, f)); });
+  });
+  var decks = global.WOA_CONTENT.decks;
+  if (!decks.some(function (d) { return d.id === id; })) {
+    console.error('--deck "' + id + '" not found. Available: ' + decks.map(function (d) { return d.id; }).join(', '));
+    process.exit(1);
+  }
+  decks.forEach(function (d) { d.active = (d.id === id); });
+  return id;
+})();
+
+var E = require(path.join(__dirname, '..', 'game', 'engine.js'));
 // Scoring / thresholds / folds / markdown all live in the shared report model
 // (game/report-model.js) — one implementation per fact; this file keeps only
 // the run/accumulate/save plumbing.
-var R = require(require('path').join(__dirname, '..', 'game', 'report-model.js'));
-var fs = require('fs');
-var path = require('path');
+var R = require(path.join(__dirname, '..', 'game', 'report-model.js'));
 
 var balanceScore = R.balanceScore, addAgg = R.addAgg;
 function accFilePath(ver) { return path.join(__dirname, '..', 'logs', 'reports', 'balance', ver, 'accumulated.json'); }
@@ -90,6 +119,11 @@ async function run() {
       '" — reporting this run only (use --fresh to reset the accumulator to this run).');
     prior = null; flags.once = true;
   }
+  if (prior && (prior.deck || '') !== DECK) {
+    console.error('NOTE: accumulator holds deck "' + (prior.deck || 'active') + '" data but this run is deck "' +
+      (DECK || 'active') + '" — reporting this run only (use --fresh to reset the accumulator to this run).');
+    prior = null; flags.once = true;
+  }
   var priorRuns = (prior && prior.runs) || 0;
 
   // V1: every battle also lands as a per-battle row in logs/woa.db (guarded —
@@ -113,7 +147,14 @@ async function run() {
     // in-process interleaving is unsafe — each worker require()s a fresh engine.
     if (dbm) { try { dbm.close(dbh); } catch (e) {} dbm = null; console.error('(per-battle DB rows skipped in --parallel)'); }
     var cp = require('child_process');
-    var WORKER = 'var E=require(process.argv[1]);var m=E.MAPS.filter(function(x){return x.name===process.argv[2]})[0];' +
+    // each worker require()s a fresh engine, so --deck must preload there too
+    var WORKER = 'var deckId=process.argv[7]||"";' +
+      'if(deckId){var fs=require("fs"),path=require("path");' +
+      'global.WOA_CONTENT={maps:[],cards:[],decks:[],mapsets:[]};' +
+      '["decks","maps","mapsets"].forEach(function(kind){var dir=path.join(path.dirname(process.argv[1]),"content",kind);' +
+      'fs.readdirSync(dir).filter(function(f){return /\\.js$/.test(f)}).sort().forEach(function(f){require(path.join(dir,f))});});' +
+      'global.WOA_CONTENT.decks.forEach(function(d){d.active=(d.id===deckId)});}' +
+      'var E=require(process.argv[1]);var m=E.MAPS.filter(function(x){return x.name===process.argv[2]})[0];' +
       'process.stdout.write(JSON.stringify(E.balanceMap(m,+process.argv[3],{diffRed:process.argv[4],diffBlue:process.argv[5],seedBase:+process.argv[6]})));';
     var enginePath = path.join(__dirname, '..', 'game', 'engine.js');
     await new Promise(function (resolve, reject) {
@@ -121,7 +162,7 @@ async function run() {
       var launchNext = function () {
         if (launched >= maps.length) return;
         var mi = launched++, map = maps[mi];
-        cp.execFile(process.execPath, ['-e', WORKER, enginePath, map.name, String(n), dr, db, String(seedBaseFor(mi))],
+        cp.execFile(process.execPath, ['-e', WORKER, enginePath, map.name, String(n), dr, db, String(seedBaseFor(mi)), DECK],
           { maxBuffer: 64e6 }, function (err, stdout) {
             if (err) return reject(err);
             try { thisRun[map.name] = { shape: shapeOf(map), agg: JSON.parse(stdout) }; }
@@ -152,8 +193,8 @@ async function run() {
   var acc = null, runs = 1, accumulated = false;
   if (!flags.once) {
     {
-      acc = prior || { version: ver, diff: diffLabel, runs: 0, maps: {} };
-      acc.diff = diffLabel; acc.version = ver;
+      acc = prior || { version: ver, diff: diffLabel, deck: DECK, runs: 0, maps: {} };
+      acc.diff = diffLabel; acc.version = ver; acc.deck = DECK;
       Object.keys(thisRun).forEach(function (name) {
         var e = acc.maps[name] || (acc.maps[name] = { shape: thisRun[name].shape, agg: {} });
         e.shape = thisRun[name].shape;
@@ -189,6 +230,7 @@ async function run() {
     version: ver,
     metaTail: totalBattles + ' battles' +
       (accumulated ? ' accumulated across ' + runs + ' run(s) (this run added ' + (n) + '/map)' : ' (this run only, not accumulated)') +
+      (DECK ? ' · deck ' + DECK : '') + (flags.mapset ? ' · mapset ' + flags.mapset : '') +
       ' · ±' + noise + ' pts/map · dev/balance-report.js',
     rows: rows, G: G, cards: E.CARDS
   }) + '\n';
@@ -200,7 +242,7 @@ async function run() {
   fs.mkdirSync(dir, { recursive: true });
   var d = new Date(), p2 = function (x) { return (x < 10 ? '0' : '') + x; };
   var stamp = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + '-' + p2(d.getHours()) + p2(d.getMinutes());
-  var fname = stamp + '-' + dr + '-vs-' + db + '-n' + n + (accumulated ? '-r' + runs : '') + '.md';
+  var fname = stamp + '-' + dr + '-vs-' + db + '-n' + n + (DECK ? '-deck-' + DECK : '') + (accumulated ? '-r' + runs : '') + '.md';
   fs.writeFileSync(path.join(dir, fname), md);
   if (accumulated) {
     acc.updatedAt = d.toISOString();
