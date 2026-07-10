@@ -16,7 +16,7 @@ in the loop. Friction tickets minted mid-sprint count toward the goal, not again
 | Ticket  | Title                                          | Area | Status | Depends on |
 | ------- | ---------------------------------------------- | ---- | ------ | ---------- |
 | WOA-004 | Bill's onboarding doc: driving the balance loop | docs | Done   | —          |
-| WOA-005 | Standard-runs runbook (apples-to-apples recipes) | docs | Todo   | —          |
+| WOA-005 | Standard-runs runbook (apples-to-apples recipes) | docs | In Progress | —     |
 | WOA-006 | Load saved balance reports into the Dashboard Charts tab | game-ui | Todo | — |
 | WOA-007 | Define "best map": ideal-range scoring, rubric as SOT | balance | Todo | — |
 | WOA-008 | claude-plays match mode draws maps from the map-set pool | dev-tools | Todo | — |
@@ -26,7 +26,7 @@ in the loop. Friction tickets minted mid-sprint count toward the goal, not again
 ## In Progress / Todo
 
 ### WOA-005 — Standard-runs runbook (apples-to-apples recipes)
-**Area:** docs · **Status:** Todo · **Type:** opus · **Docs:** data-and-reports
+**Area:** docs · **Status:** In Progress · **Type:** opus · **Docs:** data-and-reports
 
 A named home for repeatable balance runs so a content change can be measured before/after on identical
 settings: each recipe = a name, the exact command line (fixed seeds, battle count, map set, AI levels),
@@ -36,9 +36,11 @@ match) — Bill adds more as he designs them. A markdown runbook is the delivera
 only if a recipe's command line proves too fiddly to paste.
 
 **Acceptance criteria:**
-- [ ] Runbook exists in `human-instructions/`, indexed; ~3 named recipes with exact commands, each run once
-      to verify it works and produces the promised artifact
-- [ ] One recipe demonstrated as before/after: run, tweak a data value, rerun, compare (and revert the tweak)
+- [x] Runbook exists in `human-instructions/`, indexed; ~3 named recipes with exact commands, each run once
+      to verify it works and produces the promised artifact (2026-07-07: quick pulse, standard sweep,
+      LLM match — sweep run live, match verified via Bill's causeway run + --mock)
+- [x] One recipe demonstrated as before/after: run, tweak a data value, rerun, compare (and revert the tweak)
+      (attack_plus1 mod 1→2 on The Ford: HQ% 25→42, AvgSeen 10.4→5.6; revert reproduced baseline exactly)
 - [ ] Bill confirms the format works for organizing his own runs
 
 ### WOA-008 — claude-plays match mode draws maps from the map-set pool
