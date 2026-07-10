@@ -61,7 +61,12 @@ function renderSlots(){
     var b = host.querySelector('.dkslot[data-slot="'+DK.slot+'"]');
     if (b) b.innerHTML = (DK.slot===DK.active?'&#9733; ':'') + dkEsc(this.value);
   };
-  $('dkSetActive').onclick = function(){ DK.active = DK.slot; renderSlots(); dkStatus(); };
+  $('dkSetActive').onclick = function(){
+    DK.active = DK.slot; renderSlots(); dkStatus();
+    // starring is not applying — the engine only reads cards at page load
+    var nm = DK.slots[DK.active] ? (DK.slots[DK.active].name || 'this deck') : 'this deck';
+    toast('"'+nm+'" starred — click Save & Reload to actually play with it.', 3200);
+  };
   var loadSel = $('dkLoadSel');
   if (loadSel) loadSel.onchange = function(){
     var d = contentDecks[+this.value]; this.value = '';
