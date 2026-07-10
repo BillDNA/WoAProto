@@ -28,9 +28,9 @@ attrition rule. Re-measure before grading against them (commands in the footer).
    Baseline: zero-kill ~4%, first-blood→win 62%, control-tracks-win 79%.
    Targets: zero-kill ≤5%; first-blood 55–70% (higher = snowbally); control ≥70% (tune me).
 3. **No dead turns.** A player always feels they can act.
-   Metric: per-card no-op share — plays that resolved zero actions (`noop` in the card data:
-   the balance accumulator / `logs/woa.db`; the printed card table dropped its Skip% column
-   in Round 2 once the no-skip rule pinned it near zero).
+   Metric: per-card no-op share — plays that resolved zero actions. Printed as the card
+   table's **Noop%** column (restored July 2026, rules 1.0 — new multi-step cards are where
+   dead turns reappear); raw counts stay in the accumulator / `logs/woa.db`.
    Baseline: ≈0 across the deck (hard turn-1 dead turns 9%→0 after round 6).
    Target: ~0; any card above 2% gets investigated (tune me).
 4. **Balanced start.** Neither seat nor colour wins the battle before it starts.
@@ -57,9 +57,15 @@ data — the accumulator JSON and `logs/woa.db` — no longer a printed column).
    a re-skin of an existing card's decision.
 2. **Not a dead card — no-ops.**
    Goal: the card never burns a turn doing nothing.
-   Evidence: the card's no-op share (play resolved zero actions; `noop` in the card data).
+   Evidence: the card's Noop% column (play resolved zero actions).
    Score: good ~0%; marginal 1–2%; failing >2% — a dead turn generator (tune me). This is the
    north-star-3 metric applied per card.
+   **Deck-budget corollary (July 2026, measured):** grade the DECK's step budget, not just the
+   card — sum the deck's printed deploy steps per unit type (and trench steps) against reserve
+   stock (7 inf / 2 cav / 1 art / 3 trenches). Oversubscription doesn't show on the new card;
+   it shows as noop on the PURE deploy/trench cards drawn after the stock is spent
+   (iter2 deck: 9 infantry steps vs 7 stock → Deploy Infantry 28% / Airdrop 26% noop). Keep
+   printed steps within ~stock+1 per type, or accept and measure the dead-tail.
 3. **Printed action worth printing — Simple%.**
    Goal: the printed steps beat the house-rule fallback (basic attack/reposition) often enough
    to exist.
@@ -88,6 +94,9 @@ data — the accumulator JSON and `logs/woa.db` — no longer a printed column).
 Evidence source: the per-map row in `node game/balance.js 60` plus the Behaviour/Decisiveness
 lines with a name filter (`node game/balance.js 60 <mapname>` makes the overall lines
 that map's numbers). n=40–60 per map minimum before trusting a read.
+**Map numbers are deck-relative (July 2026, measured):** a deck change moves map reads
+(Causeway Red 54→62, Long March HQ 8→2 between deck slots at n=100). Compare maps only
+against peers measured with the SAME deck, and re-grade the roster after any deck change.
 
 1. **Side balance.**
    Goal: neither colour wins on map geometry.
