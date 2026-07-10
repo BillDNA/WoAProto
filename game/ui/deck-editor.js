@@ -43,6 +43,15 @@ function renderSlots(){
   }).join('');
   html += '<input id="dkName" class="dkslot-name" value="'+dkEsc(DK.slots[DK.slot]?DK.slots[DK.slot].name:'')+'" title="rename this deck" maxlength="20">';
   html += '<button id="dkSetActive" class="dkslot"'+(DK.slot===DK.active?' disabled':'')+' title="make this deck the one the game uses on reload">Set active</button>';
+  // content decks (game/content/decks/*.js) are loadable into the open slot —
+  // how a shipped deck (e.g. the balance-iteration slots) reaches the editor
+  var contentDecks = (typeof WOA_CONTENT !== 'undefined' && WOA_CONTENT.decks) || [];
+  if (contentDecks.length){
+    html += '<select id="dkLoadSel" class="dkslot" title="copy a shipped deck (game/content/decks/) into the open slot">' +
+      '<option value="">Load…</option>' +
+      contentDecks.map(function(d, i){ return '<option value="'+i+'">'+dkEsc(d.name||d.id)+'</option>'; }).join('') +
+      '</select>';
+  }
   host.innerHTML = html;
   host.querySelectorAll('.dkslot[data-slot]').forEach(function(b){
     b.onclick = function(){ flushSlot(); loadSlotIntoEditor(+b.dataset.slot); };
@@ -53,6 +62,16 @@ function renderSlots(){
     if (b) b.innerHTML = (DK.slot===DK.active?'&#9733; ':'') + dkEsc(this.value);
   };
   $('dkSetActive').onclick = function(){ DK.active = DK.slot; renderSlots(); dkStatus(); };
+  var loadSel = $('dkLoadSel');
+  if (loadSel) loadSel.onchange = function(){
+    var d = contentDecks[+this.value]; this.value = '';
+    if (!d) return;
+    var cur = DK.slots[DK.slot];
+    if (cur && !confirm('Replace deck slot "'+(cur.name||('Deck '+(DK.slot+1)))+'" with "'+(d.name||d.id)+'"?')) return;
+    DK.slots[DK.slot] = { name: String(d.name||d.id).slice(0,20), cards: JSON.parse(JSON.stringify(d.cards)) };
+    persistDecks();
+    loadSlotIntoEditor(DK.slot);
+  };
 }
 var DK_STEP_FLAGS = { deploy:{unit:1,anywhere:1}, trench:{}, attack:{mod:1,tieSpare:1,noAdvance:1}, reposition:{}, barrage:{} };
 
