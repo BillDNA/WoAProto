@@ -24,6 +24,15 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   must live on every map — and the old open-ended swing reward is gone (swings ≥2.0 score clean, they
   no longer buy back fairness failures). Control-tracks-win (≥70) joined the score.
 
+- **`D.D:rules-1.1-adoption`** (2026-07-10, WOA-009 pick) — the 1.1 rules bump adopts **S1 only**:
+  trench grants the defender survival in a combat tie, Variant A/A1 (tieSpare attacker vs trenched
+  defender = whiff, nobody dies), and the trench **gates HQ tie-capture** (trench your HQ border and
+  a tie can't take it). Rejected: S2 HQ-win-only (redundant — trenching your HQ half-implements it),
+  S3 tiebreak retune (sudden-death would raise drag; tie% stays a content KPI, live 11% is in-target),
+  S5 deck-out reshuffle (unintended consequences + drag). S4 (split Deploy Cavalry) is deck surgery,
+  not rules — folded into WOA-014's 3-for-3 generation step. Full menu:
+  `logs/reports/analysis/1.0/2026-07-10-rule-change-suggestions.md`.
+
 ## Architecture
 
 - **`D.A:no-build-game`** — `game/` stays plain classic scripts + shared globals in a hand-ordered

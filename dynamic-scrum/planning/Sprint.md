@@ -17,39 +17,19 @@ pool, "best map" is rubric-defined, and the retro'd skills are updated — so ne
 
 | Ticket  | Title                                                    | Area      | Status | Depends on |
 | ------- | -------------------------------------------------------- | --------- | ------ | ---------- |
-| WOA-009 | Rule-change suggestions from the 1.0 final report        | balance   | In Progress | —     |
+| WOA-009 | Rule-change suggestions from the 1.0 final report        | balance   | Done   | —          |
 | WOA-010 | Adopt chosen rule changes, bump rules version to 1.1     | engine    | Todo   | WOA-009    |
 | WOA-011 | Unit composition & values as data levers                 | engine    | Todo   | —          |
 | WOA-012 | AI levels: verify & adopt weight-tuner sweep (Q.2)       | balance   | Todo   | —          |
 | WOA-013 | Trim the active map set to 7                             | content   | Todo   | —          |
 | WOA-014 | Balance-loop v2: retro skill & process updates           | dev-tools | Todo   | —          |
-| WOA-007 | Define "best map": ideal-range scoring, rubric as SOT    | balance   | In Progress | —     |
+| WOA-007 | Define "best map": ideal-range scoring, rubric as SOT    | balance   | Done   | —          |
 
 **Suggested order:** WOA-009 first (it gates WOA-010's 1.1 bump on Bill's picks); WOA-013 / WOA-007 /
 WOA-014 are independent and can interleave; WOA-012's adoption lands with or after the 1.1 bump so any
 number shift rides one version; WOA-011 anytime (defaults unchanged → golden diff).
 
 ## In Progress / Todo
-
-### WOA-009 — Rule-change suggestions from the 1.0 final report
-**Area:** balance · **Status:** In Progress · **Type:** opus · **Docs:** data-and-reports
-
-B.6: a ranked set of rule-change suggestions grounded in the 1.0 final report
-(`logs/reports/analysis/1.0/2026-07-09-1.0-balance-loop-final.md`, which already carries a ranked
-rules-territory list) — each suggestion names the metric it should move (dead turns, swings, turn
-distribution, 0-kill rate, tie-goes-to-2nd ~26%), the mechanism, and how to verify. Must include worked
-options for Bill's trench idea: **trench grants survival in ties** — including how it interacts with
-attack-and-survive cards (B.6.1). Deliverable = an analysis doc Bill picks from; no code.
-
-**Acceptance criteria:**
-- [x] Suggestions doc saved under `logs/reports/analysis/` — ranked, each with target metric + verification recipe
-- [x] Trench tie-survival explored with ≥2 concrete mechanics (incl. the survive-card interaction)
-- [ ] Bill has picked the adoption set for WOA-010
-
-**[runner 2026-07-10]** Doc delivered: `logs/reports/analysis/1.0/2026-07-10-rule-change-suggestions.md`
-(5 ranked suggestions S1–S5 + trench-tie-survival worked section + 3 adoption sets). ACs 1–2 met;
-**AC 3 pending Bill's pick** of the adoption set (Conservative / Moderate⭐ / Aggressive) — ticket
-stays In Progress until then, then WOA-010 implements the pick.
 
 ### WOA-010 — Adopt chosen rule changes, bump rules version to 1.1
 **Area:** engine · **Status:** Todo · **Type:** opus · **Depends on:** WOA-009 · **Docs:** code-architecture
@@ -58,6 +38,13 @@ B.8: implement the rule changes Bill picks from WOA-009 and bump the rules versi
 atomically with the test-pin updates (`D.D:rules-version-on-number-change`). Re-measure the protected
 baselines (first-mover ~46%, Red ~52%, tie-goes-to-2nd ~26%, skill premium, attacks/swaps) on the
 standard sweep and record the new 1.1 baselines.
+
+**Bill's pick (2026-07-10, `D.D:rules-1.1-adoption`): S1 only** — trench grants the defender survival
+in a combat tie, **Variant A/A1** (defender survives; attacker dies unless `tieSpare`; tieSpare vs
+trench = whiff, nobody dies), **HQ included**: a trenched HQ border can't be tie-captured (trench
+gates the `:263` capture on ties). Rejected: S2 (redundant — trenching your HQ half-implements it),
+S3 (sudden-death raises drag; tie% stays a content KPI), S5 (unintended consequences + drag).
+S4 folded into WOA-014 as 3-for-3 generation. Verification recipe in the WOA-009 doc §S1.
 
 **Acceptance criteria:**
 - [ ] Chosen changes implemented; `node game/test.js` green with pins updated in the same commit
@@ -112,7 +99,11 @@ block on it), ship as a new mapset (`content/mapsets/`), make it the loop defaul
 
 B.5's retro, applied to the loop's skills so v2 runs leaner: **(1)** adversarial checkers step down
 2:1 → 1:1 (B.5.1.1); **(2)** one feels-match per iteration, not three (B.5.1.2); **(3)** `create-card`
-receives the current deck and the card it will replace (B.5.2.1); **(4)** profile `create-map` — find
+receives the current deck and generates **3-for-3** (Bill 2026-07-10: one batch of 3 candidates for
+the iteration's 3 replacement slots, judged as a set against the whole deck, instead of three
+independent 1:1 suggest/replace calls; WOA-009's S4 — split Deploy Cavalry — is the kind of deck
+surgery this step should be able to propose, seed it as a candidate for the first batch) (B.5.2.1);
+**(4)** profile `create-map` — find
 whether stage-3 or stage-4 rejections eat the time, report, and apply the cheap fix if one falls out
 (B.5.2.2); **(5)** write the v2 order-of-operations into the loop recipe (gather 100-balance + 1 feels →
 guide generators with findings → judge → adopt → repeat n) and extend the final-report template with
@@ -121,32 +112,22 @@ canonical skill files (`create-card`, `create-map`, `generate-reports`).
 
 **Acceptance criteria:**
 - [ ] Checker ratio 1:1 and one feels-match per iteration reflected in the loop recipe/skills
-- [ ] create-card prompt takes deck + replace-target; create-map timing profiled with findings written up
+- [ ] create-card prompt takes the deck and generates 3-for-3 batches; create-map timing profiled with findings written up
 - [ ] v2 order-of-operations + final-report additions in the recipe; a dry read-through matches B.5.4
-- [ ] User confirms done
-
-### WOA-007 — Define "best map": ideal-range scoring, rubric as SOT
-**Area:** balance · **Status:** In Progress · **Docs:** grading-rubrics · **Type:** brainstorming
-
-Bill wants "best map" properly defined: each metric gets an ideal *range* and the map is scored
-against those ranges — replacing today's ad-hoc formula (`balanceScore`, `game/report-model.js:37` —
-fairness deltas + degeneracy penalties − swing reward; attrition-only deliberately unscored per the
-Round-4 ruling, which this may revisit). The definition lands in the grading rubrics as the SOT;
-`balanceScore` then implements the rubric (one implementation per fact — CLI, dashboard, tuner all
-read it). (S2 dogfood friction; rolled into S3 at the 2026-07-10 close — feeds WOA-013's map picks
-and the v2 loop's judging.)
-
-**Acceptance criteria:**
-- [x] Ideal ranges per metric decided by Bill and written into the rubrics doc as SOT (2026-07-10:
-      8-metric range/weight table in grading-rubrics §Best map; Round-4 attrition ruling reversed,
-      control-tracks-win joins the score — `D.D:best-map-ideal-ranges`)
-- [x] `balanceScore` reimplements the rubric; reports/skills that cite the old formula updated
-      (report footnote + tune-weights comment; no other citers found)
 - [ ] User confirms done
 
 ## Finished
 
-- _None yet._
+- **WOA-007 — Define "best map": ideal-range scoring, rubric as SOT** (2026-07-10) — 8-metric
+  range/weight table in `grading-rubrics.md` §Best map is the SOT; `balanceScore` reimplements it
+  (0 = ideal, lower = better); Round-4 attrition-only exemption reversed, control-tracks-win joins
+  the score (`D.D:best-map-ideal-ranges`). Verified: tests green, full sweep clean, spot-checks
+  vs bestof n=100 (Causeway 0.0 / Frontier 16.0 / Long March 15.4). Commit 1257da4.
+- **WOA-009 — Rule-change suggestions from the 1.0 final report** (2026-07-10) —
+  `logs/reports/analysis/1.0/2026-07-10-rule-change-suggestions.md`: 5 ranked suggestions, trench
+  tie-survival worked in 4 variants with the tieSpare-card interactions, 3 adoption sets. Bill
+  picked **S1 Variant A/A1 incl. HQ gating** (rejected S2/S3/S5; S4 → WOA-014 as 3-for-3
+  generation) — recorded in WOA-010's body. Doc commit bce4609.
 
 ## Blockers
 
