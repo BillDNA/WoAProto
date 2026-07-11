@@ -149,7 +149,9 @@ below is hand-written):
 "turtle": { "noise": 0, "breadth": 0,
   "weights": { "hqGuard": 12, "enemyDist": 3, "advance": 0.8, "trenchHome": 12, "unitOnBoard": 26 } },
 "hawk": { "noise": 0, "breadth": 0,
-  "weights": { "unitOnBoard": 28, "advance": 3.25, "myThreatKill": 5, "threatKill": 5, "threatTie": 0.5 } }
+  "weights": { "unitOnBoard": 28, "advance": 3.25, "myThreatKill": 5, "threatKill": 5, "threatTie": 0.5 } },
+"tuned": { "noise": 0, "breadth": 3,
+  "weights": { "enemyDist": 2.4, "fsDiff": 4, "threatTie": 1.88 } }
 ```
 <!-- /GEN:personalities -->
 
