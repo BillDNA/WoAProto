@@ -314,11 +314,11 @@ playtests say trenches still feel weak after A.
 Three coherent bundles — Bill picks one (or mixes). Each is sized so WOA-010 can bump 1.1 atomically
 with its test-pin updates.
 
-| Set | Contents | Character | Blast radius |
-|---|---|---|---|
-| **Conservative** | **S2** (HQ win-only) + **S3c** (tiebreak by content, no rule change) | One deleted clause; addresses the #1-signal flag; lets content carry tie% | Smallest — one-line engine diff, no new state |
-| **Moderate** ⭐ | **S1 Variant A/A1** + **S2** (S2 unconditional at HQ) | Bill's trench idea in its cleanest form + the top-signal HQ fix; trenches gain identity, rushes get harder | One tie-branch conditional + one HQ-gate edit; `tieSpare` cards keep working |
-| **Aggressive** | **S1 Variant B/B2** + **S2** + **S3a** (overtime) + **S4** (split cavalry, deck) | Trenches become a wall Over-the-Top must breach, rushes nerfed twice, tiebreak de-coin-flipped | Largest — multiple systems; needs the full protect-the-baselines re-anchor |
+| Set              | Contents                                                                         | Character                                                                                                  | Blast radius                                                                 |
+| ---------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| **Conservative** | **S2** (HQ win-only) + **S3c** (tiebreak by content, no rule change)             | One deleted clause; addresses the #1-signal flag; lets content carry tie%                                  | Smallest — one-line engine diff, no new state                                |
+| **Moderate** ⭐   | **S1 Variant A/A1** + **S2** (S2 unconditional at HQ)                            | Bill's trench idea in its cleanest form + the top-signal HQ fix; trenches gain identity, rushes get harder | One tie-branch conditional + one HQ-gate edit; `tieSpare` cards keep working |
+| **Aggressive**   | **S1 Variant B/B2** + **S2** + **S3a** (overtime) + **S4** (split cavalry, deck) | Trenches become a wall Over-the-Top must breach, rushes nerfed twice, tiebreak de-coin-flipped             | Largest — multiple systems; needs the full protect-the-baselines re-anchor   |
 
 **My recommendation: Moderate.** It delivers Bill's explicitly-requested B.6.1 trench idea, folds in
 the highest-signal external flag (S2), stays a *two-hunk* engine diff, and keeps the two shipped
