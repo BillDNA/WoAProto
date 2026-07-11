@@ -1,5 +1,5 @@
 ---
-last-reviewed: 2026-07-07
+last-reviewed: 2026-07-10
 ---
 #human-instructions #game-logs #balance
 

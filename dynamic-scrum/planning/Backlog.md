@@ -6,6 +6,18 @@ sprint-planning. Same ticket format as `Sprint.md` (the `ticket-block` template;
 
 ---
 
+### WOA-006 — Load saved balance reports into the Dashboard Charts tab
+**Area:** game-ui · **Status:** Todo
+
+Dashboard→logs data flow is one-way today: the Balance Dashboard only charts its own live in-browser
+sims. Let it load previous CLI runs (`logs/reports/balance/<version>/` — `accumulated.json` and/or
+saved reports) so `dev/balance-report.js` terminal runs get the Charts tab too. (S2 dogfood friction;
+returned to Backlog at S2 close, 2026-07-10.)
+
+**Acceptance criteria:**
+- [ ] Dashboard can display data from a prior CLI balance run (at minimum the accumulator)
+- [ ] User confirms done
+
 ### WOA-002 — Placeholder audio pass
 **Area:** feel · **Status:** Todo · **Type:** sonnet · **Docs:** code-overview
 

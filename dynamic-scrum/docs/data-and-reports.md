@@ -1,5 +1,5 @@
 ---
-last-reviewed: 2026-07-07
+last-reviewed: 2026-07-10
 ---
 #onboarding #game-logs #code-architecture
 # Data & reports — where every battle lands and how reports flow

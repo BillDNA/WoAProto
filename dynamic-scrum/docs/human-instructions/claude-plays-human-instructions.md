@@ -28,7 +28,7 @@ node dev/claude-plays.js [options]
 
 | Flag | What it does |
 |---|---|
-| `--map <filter>` | pick the map by name substring (default: first in the roster) |
+| `--map <filter>` | pin the map by name substring. Omit it and each battle draws from the (mapset-filtered) roster via the match seed's shuffled map order (WOA-008) |
 | `--red / --blue <spec>` | `easy`/`normal`/`hard`/any maps.js `ai` row = heuristic AI; anything else (`haiku`, `sonnet`, `opus`, full model id) = LLM. Defaults: red haiku, blue normal |
 | `--match [w]` | **match mode**: first to `w` battle wins (bare `--match` = 3). Omit for a single battle |
 | `--effort <lvl>` | `low`\|`medium`\|`high`\|`xhigh`\|`max` for the LLM; `--red-effort`/`--blue-effort` per side |
