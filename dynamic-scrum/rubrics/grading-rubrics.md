@@ -136,6 +136,29 @@ against peers measured with the SAME deck, and re-grade the roster after any dec
    Score: at or below the game-level target (≤15%, tune me); a map far above the fleet average
    is producing symmetric grinds — look at its terrain and HQ spacing.
 
+### "Best map" — the ideal-range score (SOT, WOA-007)
+
+**This table is the definition of "best map."** `balanceScore` in `game/report-model.js` implements
+it (one implementation per fact — CLI `BEST_MAP:`, dashboard, tuner all read that function); if this
+table and the code disagree, this table wins and the code gets fixed. Score = the weighted distance
+each metric sits **outside** its ideal range (0 inside), summed. **Lower = better; 0 = ideal on
+every axis.** All endpoints and weights are tunable targets, Bill's to adjust (decided 2026-07-10).
+
+| Metric | Evidence (per-map aggregate) | Ideal range | Weight per unit outside |
+|---|---|---|---|
+| Red% | `redWins/done` | 45–55 | 1.0 /pt |
+| 1st% | `firstWins/done` | 45–55 | 1.0 /pt |
+| HQ% | `hqWins/done` | 10–40 | 0.5 /pt |
+| 0kill% | `zeroKill/done` | 0–5 | 0.6 /pt |
+| Tie-decided% | `tiebreak/done` | 0–15 | 0.3 /pt |
+| Drag (kill-less end turns) | `killTail/done` | 0–2.5 | 4 /turn |
+| Swings (lead changes/battle) | `leadChanges/done` | ≥2.0 | 6 /swing short |
+| Control-tracks-win% | `controlWins/controlGames` | ≥70 | 0.5 /pt short (skipped when no control games) |
+
+**Round-4 ruling reversed (2026-07-10, Bill):** attrition-only maps ARE now penalized — HQ% below 10
+costs points, because both win paths should live on every map. The old score's open-ended swing
+*reward* is gone too: swings at or above 2.0 score clean, they no longer buy back fairness failures.
+
 ## Unit rubric
 
 Units live in `maps.js` → `"units"`. Current table: infantry atk1/def1/sup1/vp1 ×7,

@@ -137,8 +137,11 @@ read it). (S2 dogfood friction; rolled into S3 at the 2026-07-10 close — feeds
 and the v2 loop's judging.)
 
 **Acceptance criteria:**
-- [ ] Ideal ranges per metric decided by Bill and written into the rubrics doc as SOT
-- [ ] `balanceScore` reimplements the rubric; reports/skills that cite the old formula updated
+- [x] Ideal ranges per metric decided by Bill and written into the rubrics doc as SOT (2026-07-10:
+      8-metric range/weight table in grading-rubrics §Best map; Round-4 attrition ruling reversed,
+      control-tracks-win joins the score — `D.D:best-map-ideal-ranges`)
+- [x] `balanceScore` reimplements the rubric; reports/skills that cite the old formula updated
+      (report footnote + tune-weights comment; no other citers found)
 - [ ] User confirms done
 
 ## Finished

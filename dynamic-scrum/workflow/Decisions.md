@@ -17,6 +17,13 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   the rules version, atomically with its test-pin updates; refactors that shouldn't move numbers prove
   it with a **golden balance diff** (same seeds → byte-identical aggregates).
 
+- **`D.D:best-map-ideal-ranges`** (2026-07-10, WOA-007) — "best map" is defined by the ideal-range
+  table in `dynamic-scrum/rubrics/grading-rubrics.md` §Best map (that table is SOT; `balanceScore`
+  implements it). Score = weighted distance outside each range, 0 = ideal, lower = better. This
+  **reversed the Round-4 ruling**: attrition-only maps (HQ% < 10) are now penalized — both win paths
+  must live on every map — and the old open-ended swing reward is gone (swings ≥2.0 score clean, they
+  no longer buy back fairness failures). Control-tracks-win (≥70) joined the score.
+
 ## Architecture
 
 - **`D.A:no-build-game`** — `game/` stays plain classic scripts + shared globals in a hand-ordered

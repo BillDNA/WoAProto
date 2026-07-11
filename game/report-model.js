@@ -28,16 +28,23 @@ var WOA_REPORT = (function () {
   function pct(a, b) { return b ? Math.round(100 * a / b) : 0; }
   function f1(x) { return (Math.round(x * 10) / 10).toFixed(1); }
 
-  /* Balance-quality score (LOWER = better / more playable). Rewards fairness
-     (red% & first-mover% near 50) and tension (lead swings), penalises
-     degenerate play (zero-kill stalemates, tie-goes-to-2nd deciding it, long
-     kill-less drag). Per Bill's Round-4 note, an attrition-only map is NOT
-     penalised — a map where the lead changed hands right up to the end is a
-     good map. */
+  /* Balance-quality score (LOWER = better, 0 = ideal). Implements the
+     "best map" ideal-range rubric — SOT: dynamic-scrum/rubrics/grading-rubrics.md
+     §Best map (WOA-007, 2026-07-10). Each metric scores its weighted distance
+     OUTSIDE its ideal range, 0 inside. Attrition-only maps are penalised
+     (HQ% < 10) — the Round-4 ruling was reversed 2026-07-10; the open-ended
+     swing reward is gone with it. */
   function balanceScore(agg, done) {
-    var red = pct(agg.redWins, done), first = pct(agg.firstWins, done), zk = pct(agg.zeroKill, done),
-      tie = pct(agg.tiebreak, done), swings = agg.leadChanges / Math.max(1, done), drag = agg.killTail / Math.max(1, done);
-    return Math.abs(red - 50) + Math.abs(first - 50) + zk * 0.6 + tie * 0.3 + drag * 0.4 - swings * 3;
+    function out(v, lo, hi, w) { return w * (v < lo ? lo - v : v > hi ? v - hi : 0); }
+    var d = Math.max(1, done);
+    return out(pct(agg.redWins, done), 45, 55, 1)
+      + out(pct(agg.firstWins, done), 45, 55, 1)
+      + out(pct(agg.hqWins, done), 10, 40, 0.5)
+      + out(pct(agg.zeroKill, done), 0, 5, 0.6)
+      + out(pct(agg.tiebreak, done), 0, 15, 0.3)
+      + out(agg.killTail / d, 0, 2.5, 4)
+      + out(agg.leadChanges / d, 2.0, Infinity, 6)
+      + (agg.controlGames ? out(pct(agg.controlWins, agg.controlGames), 70, 100, 0.5) : 0);
   }
 
   /* Per-map health flags — the 62/38/8/55/20 thresholds every report quotes.
@@ -156,7 +163,7 @@ var WOA_REPORT = (function () {
     });
     L.push('');
     if (style === 'report') {
-      L.push('_Balance column: lower = fairer + more back-and-forth (|red−50| + |1st−50| + penalties for zero-kill/tie-decided/drag, minus a reward for lead swings). Heuristic — Bill decides._');
+      L.push('_Balance column: weighted distance outside each metric\'s ideal range (0 = ideal, lower = better) — Red/1st 45–55, HQ 10–40, 0kill ≤5, Tie ≤15, Drag ≤2.5, Swings ≥2.0, Control ≥70. SOT: grading-rubrics §Best map._');
       L.push('');
       L.push('## Overall');
       L.push('');

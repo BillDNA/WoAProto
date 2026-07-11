@@ -4,8 +4,9 @@
    Coordinate-descent over selected weight keys: for each key, try a few
    multipliers of the current value (both AIs get the candidate weights),
    measure fitness over a map subset, keep the best, repeat. Fitness is the
-   mean of dev/balance-report.js's balance score (lower = fairer + more
-   back-and-forth) plus guardrail checks against the anti-degeneracy bands.
+   mean of report-model's ideal-range balance score (0 = ideal, lower =
+   better; SOT: grading-rubrics §Best map) plus guardrail checks against
+   the anti-degeneracy bands.
 
    SUGGESTIONS ONLY — this tool never writes engine files. Bill decides.
    (Engine guardrail: E.AI_WEIGHTS is exported by reference — we only ever
