@@ -2,7 +2,7 @@
 {
  "id": "tournament",
  "name": "Tournament",
- "active": true,
+ "active": false,
  "maps": [
   "causeway",
   "frontier",

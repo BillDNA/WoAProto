@@ -56,7 +56,7 @@ nothing — persistence is silent; step 4 proves it landed).
 node dev/balance-report.js
 ```
 
-Simulates the active map-set (currently `tournament`, 12 maps) and **saves** a markdown
+Simulates the active map-set (currently `core7`, 7 maps) and **saves** a markdown
 report. Defaults: 60 battles per map, hard vs hard. Expected tail:
 
 ```

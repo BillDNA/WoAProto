@@ -842,8 +842,8 @@ console.log('  battle endings: ' + hqWins + ' HQ captures, ' + attrWins + ' attr
     '0,1': { type: 'cavalry', owner: 'red' }
   };
   // V1 map-sets: the active set IS the pool, one roster for every consumer
-  ok(E.MAPSETS.length >= 1 && E.activeMapset() && E.activeMapset().id === 'tournament',
-    'tournament map-set loaded and active');
+  ok(E.MAPSETS.length >= 1 && E.activeMapset() && E.activeMapset().id === 'core7',
+    'core7 map-set loaded and active');
   ok(E.mapPool().length === E.activeMapset().maps.length && E.mapPool().length <= E.MAPS.length,
     'mapPool = the active set (' + E.mapPool().length + ' maps)');
 

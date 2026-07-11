@@ -21,7 +21,7 @@ pool, "best map" is rubric-defined, and the retro'd skills are updated — so ne
 | WOA-010 | Adopt chosen rule changes, bump rules version to 1.1     | engine    | Done   | WOA-009    |
 | WOA-011 | Unit composition & values as data levers                 | engine    | Done   | —          |
 | WOA-012 | AI levels: verify & adopt weight-tuner sweep (Q.2)       | balance   | Done   | —          |
-| WOA-013 | Trim the active map set to 7                             | content   | Todo   | —          |
+| WOA-013 | Trim the active map set to 7                             | content   | Done   | —          |
 | WOA-014 | Balance-loop v2: retro skill & process updates           | dev-tools | Done   | —          |
 | WOA-007 | Define "best map": ideal-range scoring, rubric as SOT    | balance   | Done   | —          |
 
@@ -33,21 +33,17 @@ number shift rides one version; WOA-011 anytime (defaults unchanged → golden d
 
 
 
-### WOA-013 — Trim the active map set to 7
-**Area:** content · **Status:** Todo · **Type:** sonnet · **Docs:** data-and-reports
-
-B.7: bring the active pool down to 7 maps to speed the loop up — a solid base to expand from later.
-Pick the 7 from the 1.0 final report's map metrics (and WOA-007's ranges once they exist — don't
-block on it), ship as a new mapset (`content/mapsets/`), make it the loop default
-(`D.A:one-active-mapset`); roster files stay on disk. One line of rationale per kept/cut map.
-
-**Acceptance criteria:**
-- [ ] 7-map mapset exists and is the default pool for balance-report / claude-plays / generate-reports
-- [ ] Keep/cut rationale recorded (report or mapset comment)
-- [ ] User confirms done
-
-
 ## Finished
+
+- **WOA-013 — Trim the active map set to 7** (2026-07-10, sprint-run) — `content/mapsets/core7.js`
+  (Core Seven) is the sole active mapset and loop default; `tournament` (12) stays on disk
+  `active:false`. Kept: causeway, frontier, saber-ridge, long-march, the-marshes, the-void,
+  the-narrows — ranked by WOA-007 balanceScore over the fresh 1.1 n60 data, keep/cut rationale one
+  line per map in the mapset header. Cut: twin-gates (37.3), killing-ground (24.5), riverbend
+  (13.5), the-ford (10.0), the-cockpit (6.0). Test re-pinned tournament→core7 (no assertions
+  weakened); gen-docs re-ran; runner-verified live (`balance-report` picked 7 maps, `SAVED:`/
+  `BEST_MAP:` intact, suite green). "User confirms done" satisfied by runner verify per the run
+  protocol. cost: 110k tokens / 6.8 min / 64 tool-calls.
 
 - **WOA-012 — AI levels: verify & adopt weight-tuner sweep (Q.2)** (2026-07-10, sprint-run) —
   **REJECTED**, Q.2 resolved (`D.D:weight-tuner-sweep-rejected`). Bill's firmer recipe ran in full
