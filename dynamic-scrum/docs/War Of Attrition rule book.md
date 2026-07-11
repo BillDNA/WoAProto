@@ -1,9 +1,13 @@
 #onboarding #game-rules
 # War of Attrition — Rule Book
 
-**Version 1.0** — the V1 data era (July 2026). Bump this whenever a rule OR AI-strength change would make playtest data incomparable.
+**Version 1.1** — trench tie-survival (July 2026). Bump this whenever a rule OR AI-strength change would make playtest data incomparable.
 
 Version history:
+- **1.1 — trench tie-survival** (S1 A/A1, `D.D:rules-1.1-adoption`, WOA-010): a trench on the attacked
+  border spares the defender on a combat tie; the attacker still dies unless it carries a survive-a-tie
+  order (then the attack whiffs — nobody falls); a tie can't capture a trenched HQ border. Untrenched
+  ties unchanged.
 - **1.0 — V1.** No rules-text changes from 0.3. The AI search was overhauled (ranked shortlist instead of a random branching cap, orientation-aware trench evaluation), which shifts balance numbers enough that old baselines don't compare — hence the bump. Per-battle data collection (logs/woa.db) begins here.
 - **0.3** — river revision: a river no longer blocks support — support crosses freely — but control no longer extends across a river, so you cannot deploy across one. River-deploy bug fixed.
 - **0.2** — versioning begins (V0 feedback round 2): no-skip rule, same-type-swap ban arrives in round 3.

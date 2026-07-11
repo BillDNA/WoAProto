@@ -217,6 +217,11 @@
     var res = computeAttack(st, atk);
     var au = st.units[atk.from];
     var du = unitAt(st, atk.to), dHQ = isHQ(st, atk.to);
+    // rules 1.1 (S1): a trench on the ATTACKED border of the defending hex lets
+    // the defender survive an even fight, and stops a tie from capturing a
+    // trenched HQ. Same edge test borderBlocked uses (dIn = the defender's side
+    // toward the hex the attack crosses from); trench OWNERSHIP is irrelevant.
+    var borderTrenched = trenchCovers(st, atk.to, I.dirBetween(atk.to, atk.via || atk.from));
     I.ensureStats(st).attacks++;
     var msg = I.cap(p) + ' ' + I.UNITS[au.type].name + ' attacks ' +
       (du ? I.cap(e) + ' ' + I.UNITS[du.type].name : I.cap(e) + ' HQ') +
@@ -250,7 +255,18 @@
       killAttacker();
       msg += 'attack repelled, attacker destroyed.';
     } else { // tie
-      if (atk.tieSpare) {
+      if (borderTrenched) {
+        // rules 1.1 (S1, Variant A/A1): a trenched border spares the defender on
+        // a tie — an even assault bounces off the dug-in line. The attacker still
+        // dies as in a normal tie UNLESS it has tieSpare (Ordered Withdraw / Over
+        // the Top); tieSpare + trench = a whiff where nobody falls (A1).
+        if (atk.tieSpare) {
+          msg += 'a tie against the trench — the assault is thrown back; the attacker withdraws in good order and neither side falls.';
+        } else {
+          killAttacker();
+          msg += 'a tie against the trench — the defender holds the line; the attacker is destroyed.';
+        }
+      } else if (atk.tieSpare) {
         killDefender();
         msg += 'a tie — defender destroyed; attacker withdraws in good order.';
       } else {
@@ -260,7 +276,10 @@
       }
     }
     I.log(st, msg);
-    if (dHQ && (res.outcome === 'attacker' || res.outcome === 'tie')) {
+    // HQ capture: an attacker win always takes it; a tie takes it too UNLESS the
+    // attacked HQ border is trenched (rules 1.1, S1 — trench your HQ and a tie
+    // can't take it). An untrenched-HQ tie still captures exactly as before.
+    if (dHQ && (res.outcome === 'attacker' || (res.outcome === 'tie' && !borderTrenched))) {
       I.finishBattle(st, p, 'hq');
     }
     return res;

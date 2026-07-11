@@ -8,7 +8,7 @@
 
   // apples (drives report/version folders and the persistent-data reset boundary).
   // Must track the rule book header (dynamic-scrum/docs/War Of Attrition rule book.md).
-  var RULES_VERSION = '1.0';
+  var RULES_VERSION = '1.1';
 
   // CORE data (units/shapes/stock/ai) is hand-editable JSON in maps.js, which
   // loads first (browser) / sits next to this file (node).

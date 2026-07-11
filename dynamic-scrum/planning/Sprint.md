@@ -18,7 +18,7 @@ pool, "best map" is rubric-defined, and the retro'd skills are updated — so ne
 | Ticket  | Title                                                    | Area      | Status | Depends on |
 | ------- | -------------------------------------------------------- | --------- | ------ | ---------- |
 | WOA-009 | Rule-change suggestions from the 1.0 final report        | balance   | Done   | —          |
-| WOA-010 | Adopt chosen rule changes, bump rules version to 1.1     | engine    | Todo   | WOA-009    |
+| WOA-010 | Adopt chosen rule changes, bump rules version to 1.1     | engine    | Done   | WOA-009    |
 | WOA-011 | Unit composition & values as data levers                 | engine    | Todo   | —          |
 | WOA-012 | AI levels: verify & adopt weight-tuner sweep (Q.2)       | balance   | Todo   | —          |
 | WOA-013 | Trim the active map set to 7                             | content   | Todo   | —          |
@@ -31,26 +31,6 @@ number shift rides one version; WOA-011 anytime (defaults unchanged → golden d
 
 ## In Progress / Todo
 
-### WOA-010 — Adopt chosen rule changes, bump rules version to 1.1
-**Area:** engine · **Status:** Todo · **Type:** opus · **Depends on:** WOA-009 · **Docs:** code-architecture
-
-B.8: implement the rule changes Bill picks from WOA-009 and bump the rules version to **1.1**
-atomically with the test-pin updates (`D.D:rules-version-on-number-change`). Re-measure the protected
-baselines (first-mover ~46%, Red ~52%, tie-goes-to-2nd ~26%, skill premium, attacks/swaps) on the
-standard sweep and record the new 1.1 baselines.
-
-**Bill's pick (2026-07-10, `D.D:rules-1.1-adoption`): S1 only** — trench grants the defender survival
-in a combat tie, **Variant A/A1** (defender survives; attacker dies unless `tieSpare`; tieSpare vs
-trench = whiff, nobody dies), **HQ included**: a trenched HQ border can't be tie-captured (trench
-gates the `:263` capture on ties). Rejected: S2 (redundant — trenching your HQ half-implements it),
-S3 (sudden-death raises drag; tie% stays a content KPI), S5 (unintended consequences + drag).
-S4 folded into WOA-014 as 3-for-3 generation. Verification recipe in the WOA-009 doc §S1.
-
-**Acceptance criteria:**
-- [ ] Chosen changes implemented; `node game/test.js` green with pins updated in the same commit
-- [ ] Rules version reads 1.1 everywhere it surfaces (reports path `logs/reports/*/1.1/`, DB rows)
-- [ ] New 1.1 baselines measured (standard sweep) and recorded
-- [ ] User confirms done
 
 ### WOA-011 — Unit composition & values as data levers
 **Area:** engine · **Status:** Todo · **Type:** opus · **Docs:** code-architecture
@@ -118,6 +98,13 @@ canonical skill files (`create-card`, `create-map`, `generate-reports`).
 
 ## Finished
 
+- **WOA-010 — Adopt chosen rule changes, bump rules version to 1.1** (2026-07-10, sprint-run) — rules
+  1.1 shipped: S1 A/A1 trench tie-survival + trenched-HQ tie-gate (`game/engine/03-rules.js`), version
+  SoT bumped (everything derives via `E.VERSION`), 9 new test assertions (proven to fail without the
+  fix), README + rule book updated, 1.1 baselines measured (n60 sweep, 720 battles: essentially flat
+  vs 1.0 — tie-decided 11→10% as S1 predicted, 0kill 1%, attacks/swaps held 6.1/5.7). Runner-verified
+  (suite 219 ok, real diff read, fail-without-fix stash check). cost: 140k tokens / 11.7 min / 39
+  tool-calls.
 - **WOA-007 — Define "best map": ideal-range scoring, rubric as SOT** (2026-07-10) — 8-metric
   range/weight table in `grading-rubrics.md` §Best map is the SOT; `balanceScore` reimplements it
   (0 = ideal, lower = better); Round-4 attrition-only exemption reversed, control-tracks-win joins

@@ -535,6 +535,68 @@ console.log('== noAdvance attacks (Ordered Withdraw holds its ground) ==');
     'noAdvance attack still captures the HQ');
 })();
 
+console.log('== rules 1.1 (S1): a trench lets the defender survive a combat tie ==');
+(function () {
+  // dirs of a trench covering the attacked border of `defHex` (the side facing
+  // `fromHex`), plus its clockwise neighbour so it's a legal 2-edge orientation.
+  function coverDir(defHex, fromHex) { var d = E.dirBetween(defHex, fromHex); return [d, (d + 1) % 6]; }
+
+  // (a) tie vs a trenched defender: defender HOLDS, attacker is destroyed.
+  var st = testBattle(201);
+  st.units['0,0'] = { type: 'infantry', owner: 'red' };
+  st.units['1,0'] = { type: 'infantry', owner: 'blue' };
+  st.trenches['1,0'] = [{ dirs: coverDir('1,0', '0,0'), owner: 'blue' }];
+  ok(E.computeAttack(st, { from: '0,0', to: '1,0' }).outcome === 'tie', 'setup: 1v1 is still a tie across the trench');
+  st.hands.red = ['mass_assault'];
+  E.playCard(st, 'mass_assault', 'attack'); // basic attack: plain, no mod/tieSpare
+  E.applyStep(st, { from: '0,0', to: '1,0' });
+  ok(st.units['1,0'] && st.units['1,0'].owner === 'blue', 'tie vs trenched defender: the defender survives');
+  ok(!st.units['0,0'], 'tie vs trenched defender: the attacker is destroyed');
+
+  // (b) tieSpare attacker (Ordered Withdraw) vs a trenched defender = a WHIFF:
+  //     the card spares the attacker, the trench spares the defender — nobody dies.
+  var st2 = testBattle(202);
+  st2.units['0,0'] = { type: 'infantry', owner: 'red' };
+  st2.units['1,0'] = { type: 'infantry', owner: 'blue' };
+  st2.trenches['1,0'] = [{ dirs: coverDir('1,0', '0,0'), owner: 'blue' }];
+  st2.hands.red = ['ordered_withdraw'];
+  E.playCard(st2, 'ordered_withdraw');
+  E.applyStep(st2, { from: '0,0', to: '1,0' });
+  ok(st2.units['1,0'] && st2.units['0,0'], 'tieSpare tie vs trenched defender: nobody dies (whiff, A1)');
+
+  // (e) REGRESSION — a plain tie on an UNtrenched border still kills both units.
+  var st3 = testBattle(203);
+  st3.units['0,0'] = { type: 'infantry', owner: 'red' };
+  st3.units['1,0'] = { type: 'infantry', owner: 'blue' };
+  st3.hands.red = ['mass_assault'];
+  E.playCard(st3, 'mass_assault', 'attack');
+  E.applyStep(st3, { from: '0,0', to: '1,0' });
+  ok(!st3.units['0,0'] && !st3.units['1,0'], 'untrenched plain tie: both units destroyed (unchanged)');
+
+  // (c) tie vs a trenched HQ border: the HQ is NOT captured (trench your HQ and a
+  //     tie can't take it). Power-0 attacker (infantry 1 with a -1 card) vs HQ def 0.
+  var st4 = testBattle(204);
+  st4.units['-2,2'] = { type: 'infantry', owner: 'red' }; // adjacent to blue HQ at -3,2
+  st4.trenches['-3,2'] = [{ dirs: coverDir('-3,2', '-2,2'), owner: 'blue' }];
+  ok(E.computeAttack(st4, { from: '-2,2', to: '-3,2', mod: -1 }).outcome === 'tie', 'setup: infantry(-1) vs HQ is a 0v0 tie');
+  st4.hands.red = ['careful_maneuvers']; // [reposition, attack mod -1]
+  E.playCard(st4, 'careful_maneuvers');
+  if (E.currentStep(st4).type === 'reposition') E.applyStep(st4, { skip: true });
+  E.applyStep(st4, { from: '-2,2', to: '-3,2' });
+  ok(st4.hqAlive.blue && st4.phase !== 'battle-over', 'tie at a trenched HQ does NOT capture it');
+  ok(!st4.units['-2,2'], 'the attacker still dies on that tie (no tieSpare)');
+
+  // (d) REGRESSION — a tie at an UNtrenched HQ still captures it exactly as before.
+  var st5 = testBattle(205);
+  st5.units['-2,2'] = { type: 'infantry', owner: 'red' };
+  st5.hands.red = ['careful_maneuvers'];
+  E.playCard(st5, 'careful_maneuvers');
+  if (E.currentStep(st5).type === 'reposition') E.applyStep(st5, { skip: true });
+  E.applyStep(st5, { from: '-2,2', to: '-3,2' });
+  ok(st5.phase === 'battle-over' && st5.battleWinner === 'red' && st5.winType === 'hq',
+    'tie at an untrenched HQ still captures it (unchanged)');
+})();
+
 console.log('== Barrage targets ANY trench or forest (Feedback Round 5 ruling) ==');
 (function () {
   // forest + trench deep in blue territory, far from anything red controls
