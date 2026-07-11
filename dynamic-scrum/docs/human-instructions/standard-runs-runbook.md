@@ -56,7 +56,7 @@ node dev/claude-plays.js --map "<BEST_MAP>" --match 3 --red haiku --blue haiku -
 *Measures:* how the change *feels* — a first-to-3 LLM mirror match on the sweep's most interesting
 map, with per-battle and per-match felt-notes, the rush-luck check, and a Typicality footer.
 Transcript lands in `logs/reports/battle/1.0/…-match.md`. Fixed `--seed 1234` = same deals every
-time. (The `generate-reports` skill now fires Recipe 4's three-match set instead; this single
+time. (The `generate-reports` skill fires Recipe 4's single seed-1001 match instead; this
 pinned-map match remains the right tool for probing ONE map.)
 *Cost:* tens of minutes wall-clock, real tokens (haiku + low effort is the cheap shape).
 
@@ -68,20 +68,20 @@ a legibility finding).
 ```
 node dev/balance-report.js 100 hard hard --once --parallel [--deck <id>] [--mapset <id>]
 node dev/claude-plays.js --match 3 --red haiku --blue haiku --effort low --seed 1001 [--deck <id>] [--mapset <id>]
-node dev/claude-plays.js --match 3 --red haiku --blue haiku --effort low --seed 2002 [--deck <id>] [--mapset <id>]
-node dev/claude-plays.js --match 3 --red haiku --blue haiku --effort low --seed 3003 [--deck <id>] [--mapset <id>]
 ```
 
-*Measures:* the full iteration read for a content slot — the n=100 sweep (±10/map) plus three
-first-to-3 haiku-low matches whose battles draw maps from the set (felt-notes, HQ-vs-attrition
-meta, fallback health). The FIXED seeds 1001/2002/3003 are the apples-to-apples anchor: the same
-recipe against two deck/mapset slots isolates the content change. Launch the three matches in
-parallel, detached (this is what the `generate-reports` skill fires).
-*Cost:* sweep ~2–4 min; matches ~40–90 min wall-clock, real tokens (haiku-low).
+*Measures:* the full iteration read for a content slot — the n=100 sweep (±10/map) plus **one**
+first-to-3 haiku-low match whose battles draw maps from the set (felt-notes, HQ-vs-attrition
+meta, fallback health). Loop v2 (B.5.1.2) runs **one feels-match per iteration**, not three; the
+FIXED seed 1001 is the apples-to-apples anchor: the same recipe against two deck/mapset slots
+isolates the content change. Launch the match detached (this is what the `generate-reports` skill
+fires). *Optional extras (not the default):* add `--seed 2002` and `--seed 3003` for a deeper
+felt-read on one slot — the v1 three-match set, only when one match's signal is too thin.
+*Cost:* sweep ~2–4 min; the match ~40–90 min wall-clock, real tokens (haiku-low).
 *Verified:* 2026-07-09 (rules 1.0), iterations 1–2 of the balance loop.
 
 *Watch:* the protect-the-baselines list (Recipe 2), the new-card rows of the card table
-(Noop% ≤2, AvgSeen vs the deleted cards), and the matches' fallback rate (≲5% = clean).
+(Noop% ≤2, AvgSeen vs the deleted cards), and the match's fallback rate (≲5% = clean).
 
 ## The before/after procedure (demonstrated)
 

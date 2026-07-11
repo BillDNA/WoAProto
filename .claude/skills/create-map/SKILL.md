@@ -52,13 +52,25 @@ built-ins), point-symmetric outlines keep Mirror and fair-HQ placement working.
    map-rubric self-grade (predicted side balance, HQ-vs-attrition mix, tie-rule
    exposure). Rivers are new — a proposal that actually uses the
    deploy-denial rule is worth more than another forest pair.
-3. Verify before handing over: `node -e "const E=require('./game/engine.js');
-   console.log(E.validateMaps([<def>]))"` must print `[]`.
+   **One adversarial checker per candidate** — a single skeptic pass against the
+   map rubric, trying to break the balance claim before any sim. (Loop v2, B.5.1.1:
+   v1 ran two checkers per candidate; the delta wasn't worth the tokens — one now.)
+3. **Verify structure first — it's free.** `node -e "const E=require('./game/engine.js');
+   console.log(E.validateMaps([<def>]))"` must print `[]`. This structural check
+   (≤24 hexes / HQ / terrain-stock / contiguity) is ~0.06 s; run it, the self-grade,
+   and the checker BEFORE any sim, so no candidate reaches the expensive balance
+   screen until it's structurally sound and has a reason to exist.
 4. Tell Bill how to test: paste into the editor (its Balance button runs the
    Balance Dashboard on the map AS DRAWN, before saving) or Import, then
-   `node game/balance.js 40 <name>`; to put it in the match pool, tick it into
-   the active map-set on the maps screen. Flag thresholds live in
-   game/report-model.js (side ≥62/38, mover ≥62, HQ% ≤8 = attrition-only).
+   the balance screen — **reject cheaply, verdict-check dear**:
+   `node game/balance.js 40 <name>` at the default **normal** AI (~4 s) is enough to
+   *kill* a side-biased / attrition-only candidate; only promote the one or two
+   finalists to a **hard** screen at n=100–200 (a hard screen is ~7× slower —
+   ~28 s at n=40 — so it's a finalist verdict, not triage; profile:
+   `logs/reports/analysis/1.1/2026-07-10-create-map-profile.md`). To put a survivor
+   in the match pool, tick it into the active map-set on the maps screen. Flag
+   thresholds live in game/report-model.js (side ≥62/38, mover ≥62, HQ% ≤8 =
+   attrition-only).
 
 ## Gotchas
 
@@ -71,3 +83,7 @@ built-ins), point-symmetric outlines keep Mirror and fair-HQ placement working.
   barrageable.
 - Barrage removes forests and trenches anywhere — a forest-dependent map plan
   must survive one barrage.
+- Screen cost is all in the sim, and AI difficulty dominates it (~690 ms/battle
+  hard vs ~100 ms normal; n is near-linear on top). When a finalist is screened
+  across the whole active set, `dev/balance-report.js --parallel` is ~3.3× faster
+  for identical numbers — prefer it over serial `balance.js` for multi-map screens.

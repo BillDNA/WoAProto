@@ -42,7 +42,9 @@ text-only renders clean.
    denial). Name the gap you're filling — "another attack card" is not a gap.
 2. Draft 2–4 candidates. For each: the JSON, the decision it adds, and a
    card-rubric self-grade (predicted dead-turn risk, Simple% risk, is it
-   always-good-on-sight?).
+   always-good-on-sight?). **One adversarial checker per candidate** — a single
+   skeptic pass against the card rubric (loop v2, B.5.1.1: down from two per
+   candidate; the 2-checker delta wasn't significant).
 3. State the swap: which copies leave the 16 to make room, and why.
 4. Tell Bill how to test: import via Deck Editor (or hand-edit
    `content/decks/default.js`), then
@@ -57,6 +59,30 @@ text-only renders clean.
    `dev/optimize-art.ps1` on the raw render first). If dig-mcp isn't connected,
    say so and skip — the card renders clean as text-only. Never generate art for
    a card Bill hasn't approved, and never place files without showing him first.
+
+## Loop v2 — the 3-for-3 batch (given the current deck)
+
+When the balance loop drives this skill (B.5.2.1, Bill 2026-07-10), the invocation
+is different from a one-off "design a card": you are **handed the current deck** and
+told it will lose its 3 weakest slots this iteration. Generate **one batch of 3
+candidates for those 3 replacement slots, judged AS A SET against the whole deck** —
+not three independent 1:1 suggest-and-replace calls. Concretely:
+
+- Read the whole deck first; name the 3 slots leaving (dead/hoarded/auto-play cards
+  from the latest card report) and what the batch must add as a *set* (spread the
+  decisions — don't propose three attack buffs).
+- **Deck-budget corollary is a set-level constraint:** printed deploy steps vs stock
+  (`F3:2…` piece stocks; the 9-vs-7 → 26–28% Noop lesson from iter2). Sum the batch's
+  deploy steps with what stays and keep it within stock, or the new cards go dead.
+- Grade the batch together (each card's rubric self-grade + one adversarial checker,
+  per Step 2), then state the 3-out/3-in swap as a single move that keeps the deck at
+  16 and exactly one `starting:true`.
+- **Seed candidate for the first batch: split Deploy Cavalry** (WOA-009 §S4 — one
+  2-cav deploy card → two 1-cav deploy cards). Grounding: Deploy Cavalry holds **80%
+  1stSight across all four decks** — the strongest auto-play in the game and the
+  cavalry-rush engine; splitting the double-deploy halves the opening burst without
+  banning cavalry. Watch the budget shift doesn't reintroduce Noop%. Ref:
+  `logs/reports/analysis/1.0/2026-07-10-rule-change-suggestions.md` §S4.
 
 ## Gotchas
 

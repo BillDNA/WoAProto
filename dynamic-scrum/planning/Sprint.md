@@ -20,9 +20,9 @@ pool, "best map" is rubric-defined, and the retro'd skills are updated — so ne
 | WOA-009 | Rule-change suggestions from the 1.0 final report        | balance   | Done   | —          |
 | WOA-010 | Adopt chosen rule changes, bump rules version to 1.1     | engine    | Done   | WOA-009    |
 | WOA-011 | Unit composition & values as data levers                 | engine    | Todo   | —          |
-| WOA-012 | AI levels: verify & adopt weight-tuner sweep (Q.2)       | balance   | Todo   | —          |
+| WOA-012 | AI levels: verify & adopt weight-tuner sweep (Q.2)       | balance   | In Progress | —     |
 | WOA-013 | Trim the active map set to 7                             | content   | Todo   | —          |
-| WOA-014 | Balance-loop v2: retro skill & process updates           | dev-tools | Todo   | —          |
+| WOA-014 | Balance-loop v2: retro skill & process updates           | dev-tools | Done   | —          |
 | WOA-007 | Define "best map": ideal-range scoring, rubric as SOT    | balance   | Done   | —          |
 
 **Suggested order:** WOA-009 first (it gates WOA-010's 1.1 bump on Bill's picks); WOA-013 / WOA-007 /
@@ -47,7 +47,7 @@ piece stocks stay the design guardrail on what a composition may ask for.
 - [ ] User confirms done
 
 ### WOA-012 — AI levels: verify & adopt weight-tuner sweep (Q.2)
-**Area:** balance · **Status:** Todo · **Type:** opus · **Docs:** data-and-reports
+**Area:** balance · **Status:** In Progress · **Type:** opus · **Docs:** data-and-reports
 
 B.5.3.2 ("the AI should get better") via the already-filed sweep #1 suggestions
 (`logs/reports/analysis/2026-07-06-weight-tuner-sweep-1.md`), run through the firmer recipe Bill
@@ -74,30 +74,18 @@ block on it), ship as a new mapset (`content/mapsets/`), make it the loop defaul
 - [ ] Keep/cut rationale recorded (report or mapset comment)
 - [ ] User confirms done
 
-### WOA-014 — Balance-loop v2: retro skill & process updates
-**Area:** dev-tools · **Status:** Todo · **Type:** opus · **Docs:** data-and-reports
-
-B.5's retro, applied to the loop's skills so v2 runs leaner: **(1)** adversarial checkers step down
-2:1 → 1:1 (B.5.1.1); **(2)** one feels-match per iteration, not three (B.5.1.2); **(3)** `create-card`
-receives the current deck and generates **3-for-3** (Bill 2026-07-10: one batch of 3 candidates for
-the iteration's 3 replacement slots, judged as a set against the whole deck, instead of three
-independent 1:1 suggest/replace calls; WOA-009's S4 — split Deploy Cavalry — is the kind of deck
-surgery this step should be able to propose, seed it as a candidate for the first batch) (B.5.2.1);
-**(4)** profile `create-map` — find
-whether stage-3 or stage-4 rejections eat the time, report, and apply the cheap fix if one falls out
-(B.5.2.2); **(5)** write the v2 order-of-operations into the loop recipe (gather 100-balance + 1 feels →
-guide generators with findings → judge → adopt → repeat n) and extend the final-report template with
-rule-change / stats-to-gather-or-drop / AI-lever suggestion sections (B.5.4). Skill edits land in
-canonical skill files (`create-card`, `create-map`, `generate-reports`).
-
-**Acceptance criteria:**
-- [ ] Checker ratio 1:1 and one feels-match per iteration reflected in the loop recipe/skills
-- [ ] create-card prompt takes the deck and generates 3-for-3 batches; create-map timing profiled with findings written up
-- [ ] v2 order-of-operations + final-report additions in the recipe; a dry read-through matches B.5.4
-- [ ] User confirms done
 
 ## Finished
 
+- **WOA-014 — Balance-loop v2: retro skill & process updates** (2026-07-10, sprint-run) — loop v2
+  codified in the project skills: 1:1 adversarial checkers, one feels-match per iteration (seed 1001;
+  2002/3003 optional), create-card 3-for-3 batch mode judged as a set (split-Deploy-Cavalry seeded as
+  first-batch candidate), v2 order-of-operations + 3 new final-report sections in generate-reports;
+  runbook Recipe 3/4 synced. create-map profiled with real timings
+  (`logs/reports/analysis/1.1/2026-07-10-create-map-profile.md`): stage 3 free (0.06s), stage-4 sims
+  are 100% of wall-clock, hard ≈7× normal — skill now rejects at normal n=40, promotes finalists to
+  hard. Runner-verified (diffs read, greps clean, timings real). Skills are PROJECT-level
+  (`.claude/skills/`), not user-level. cost: 125k tokens / 12 min / 54 tool-calls.
 - **WOA-010 — Adopt chosen rule changes, bump rules version to 1.1** (2026-07-10, sprint-run) — rules
   1.1 shipped: S1 A/A1 trench tie-survival + trenched-HQ tie-gate (`game/engine/03-rules.js`), version
   SoT bumped (everything derives via `E.VERSION`), 9 new test assertions (proven to fail without the

@@ -33,6 +33,14 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   not rules — folded into WOA-014's 3-for-3 generation step. Full menu:
   `logs/reports/analysis/1.0/2026-07-10-rule-change-suggestions.md`.
 
+- **`D.D:balance-loop-v2-shape`** (2026-07-10, WOA-014, from Bill's B.5 retro) — loop v2 runs leaner:
+  **1:1** adversarial checkers per generated candidate (2-checker delta wasn't significant), **one**
+  feels-match per iteration (seed 1001; 2002/3003 optional extras), and card generation is **3-for-3**
+  (one batch of 3 candidates for the iteration's 3 slots, judged as a set against the whole deck with
+  the deck-budget corollary), replacing 1:1 suggest/replace. Order of operations: gather (100-sweep +
+  1 feels) → guide generators with findings → judge → adopt → repeat n → final report (+ rule-change /
+  stats-to-gather-or-drop / AI-lever sections). SoT: the project skills (`.claude/skills/`).
+
 ## Architecture
 
 - **`D.A:no-build-game`** — `game/` stays plain classic scripts + shared globals in a hand-ordered
