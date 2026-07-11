@@ -17,13 +17,13 @@ pool, "best map" is rubric-defined, and the retro'd skills are updated — so ne
 
 | Ticket  | Title                                                    | Area      | Status | Depends on |
 | ------- | -------------------------------------------------------- | --------- | ------ | ---------- |
-| WOA-009 | Rule-change suggestions from the 1.0 final report        | balance   | Todo   | —          |
+| WOA-009 | Rule-change suggestions from the 1.0 final report        | balance   | In Progress | —     |
 | WOA-010 | Adopt chosen rule changes, bump rules version to 1.1     | engine    | Todo   | WOA-009    |
 | WOA-011 | Unit composition & values as data levers                 | engine    | Todo   | —          |
 | WOA-012 | AI levels: verify & adopt weight-tuner sweep (Q.2)       | balance   | Todo   | —          |
 | WOA-013 | Trim the active map set to 7                             | content   | Todo   | —          |
 | WOA-014 | Balance-loop v2: retro skill & process updates           | dev-tools | Todo   | —          |
-| WOA-007 | Define "best map": ideal-range scoring, rubric as SOT    | balance   | Todo   | —          |
+| WOA-007 | Define "best map": ideal-range scoring, rubric as SOT    | balance   | In Progress | —     |
 
 **Suggested order:** WOA-009 first (it gates WOA-010's 1.1 bump on Bill's picks); WOA-013 / WOA-007 /
 WOA-014 are independent and can interleave; WOA-012's adoption lands with or after the 1.1 bump so any
@@ -32,7 +32,7 @@ number shift rides one version; WOA-011 anytime (defaults unchanged → golden d
 ## In Progress / Todo
 
 ### WOA-009 — Rule-change suggestions from the 1.0 final report
-**Area:** balance · **Status:** Todo · **Type:** opus · **Docs:** data-and-reports
+**Area:** balance · **Status:** In Progress · **Type:** opus · **Docs:** data-and-reports
 
 B.6: a ranked set of rule-change suggestions grounded in the 1.0 final report
 (`logs/reports/analysis/1.0/2026-07-09-1.0-balance-loop-final.md`, which already carries a ranked
@@ -42,9 +42,14 @@ options for Bill's trench idea: **trench grants survival in ties** — including
 attack-and-survive cards (B.6.1). Deliverable = an analysis doc Bill picks from; no code.
 
 **Acceptance criteria:**
-- [ ] Suggestions doc saved under `logs/reports/analysis/` — ranked, each with target metric + verification recipe
-- [ ] Trench tie-survival explored with ≥2 concrete mechanics (incl. the survive-card interaction)
+- [x] Suggestions doc saved under `logs/reports/analysis/` — ranked, each with target metric + verification recipe
+- [x] Trench tie-survival explored with ≥2 concrete mechanics (incl. the survive-card interaction)
 - [ ] Bill has picked the adoption set for WOA-010
+
+**[runner 2026-07-10]** Doc delivered: `logs/reports/analysis/1.0/2026-07-10-rule-change-suggestions.md`
+(5 ranked suggestions S1–S5 + trench-tie-survival worked section + 3 adoption sets). ACs 1–2 met;
+**AC 3 pending Bill's pick** of the adoption set (Conservative / Moderate⭐ / Aggressive) — ticket
+stays In Progress until then, then WOA-010 implements the pick.
 
 ### WOA-010 — Adopt chosen rule changes, bump rules version to 1.1
 **Area:** engine · **Status:** Todo · **Type:** opus · **Depends on:** WOA-009 · **Docs:** code-architecture
@@ -121,7 +126,7 @@ canonical skill files (`create-card`, `create-map`, `generate-reports`).
 - [ ] User confirms done
 
 ### WOA-007 — Define "best map": ideal-range scoring, rubric as SOT
-**Area:** balance · **Status:** Todo · **Docs:** grading-rubrics
+**Area:** balance · **Status:** In Progress · **Docs:** grading-rubrics · **Type:** brainstorming
 
 Bill wants "best map" properly defined: each metric gets an ideal *range* and the map is scored
 against those ranges — replacing today's ad-hoc formula (`balanceScore`, `game/report-model.js:37` —
