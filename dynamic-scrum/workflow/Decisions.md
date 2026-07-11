@@ -41,6 +41,16 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   1 feels) → guide generators with findings → judge → adopt → repeat n → final report (+ rule-change /
   stats-to-gather-or-drop / AI-lever sections). SoT: the project skills (`.claude/skills/`).
 
+- **`D.D:weight-tuner-sweep-rejected`** (2026-07-10, WOA-012, resolves Q.2) — the tuner sweep is
+  **rejected** for AI_WEIGHTS; defaults stay untouched, no version bump. Bill's firmer recipe ran in
+  full under rules 1.1 (`tune-weights --n 40 --iters 2`, 34.7 min): survivors enemyDist 2.4 /
+  fsDiff 4 / threatTie 1.88 (advance & myThreatKill from sweep #1 no longer beat baseline — 1.1's
+  trench tie-survival already priced in the aggression), but the "tuned" personality **lost the
+  matchup gate to current hard: 44% of 192 battles**. Fitness-on-a-subset ≠ head-to-head strength.
+  The row stays in `maps.js` as an inactive pit-able personality. Q.3 note: threatTie flipped
+  direction under 1.1 (survivor 1.88 < default 2.5; the 1.0-era 3.75 now scores badly) — the weights
+  lever on ties looks spent. Evidence: `logs/reports/analysis/1.1/2026-07-10-weight-tuner-sweep-2.md`.
+
 ## Architecture
 
 - **`D.A:units-content-kind`** (2026-07-10, WOA-011) — unit composition & values are a content kind

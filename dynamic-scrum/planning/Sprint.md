@@ -20,7 +20,7 @@ pool, "best map" is rubric-defined, and the retro'd skills are updated — so ne
 | WOA-009 | Rule-change suggestions from the 1.0 final report        | balance   | Done   | —          |
 | WOA-010 | Adopt chosen rule changes, bump rules version to 1.1     | engine    | Done   | WOA-009    |
 | WOA-011 | Unit composition & values as data levers                 | engine    | Done   | —          |
-| WOA-012 | AI levels: verify & adopt weight-tuner sweep (Q.2)       | balance   | In Progress | —     |
+| WOA-012 | AI levels: verify & adopt weight-tuner sweep (Q.2)       | balance   | Done   | —          |
 | WOA-013 | Trim the active map set to 7                             | content   | Todo   | —          |
 | WOA-014 | Balance-loop v2: retro skill & process updates           | dev-tools | Done   | —          |
 | WOA-007 | Define "best map": ideal-range scoring, rubric as SOT    | balance   | Done   | —          |
@@ -32,21 +32,6 @@ number shift rides one version; WOA-011 anytime (defaults unchanged → golden d
 ## In Progress / Todo
 
 
-
-### WOA-012 — AI levels: verify & adopt weight-tuner sweep (Q.2)
-**Area:** balance · **Status:** In Progress · **Type:** opus · **Docs:** data-and-reports
-
-B.5.3.2 ("the AI should get better") via the already-filed sweep #1 suggestions
-(`logs/reports/analysis/2026-07-06-weight-tuner-sweep-1.md`), run through the firmer recipe Bill
-required: `node dev/tune-weights.js --n 40 --iters 2`, then a "tuned" personality that **wins** a
-matchup against current hard. Adopt if it holds (weights shift numbers → lands with/after the WOA-010
-1.1 bump), reject with evidence otherwise. Either way Q.2 moves to Decisions; note what it says about
-Q.3 (threatTie lever).
-
-**Acceptance criteria:**
-- [ ] Verification recipe run; tuned-vs-hard matchup result recorded
-- [ ] Adopt or reject recorded in `Decisions.md`; if adopted, weights land coordinated with the 1.1 bump
-- [ ] Q.2 removed from `Questions.md`; Q.3 annotated with the finding
 
 ### WOA-013 — Trim the active map set to 7
 **Area:** content · **Status:** Todo · **Type:** sonnet · **Docs:** data-and-reports
@@ -64,6 +49,16 @@ block on it), ship as a new mapset (`content/mapsets/`), make it the loop defaul
 
 ## Finished
 
+- **WOA-012 — AI levels: verify & adopt weight-tuner sweep (Q.2)** (2026-07-10, sprint-run) —
+  **REJECTED**, Q.2 resolved (`D.D:weight-tuner-sweep-rejected`). Bill's firmer recipe ran in full
+  under 1.1 (`tune-weights --n 40 --iters 2`, 34.7 min, saved to
+  `analysis/1.1/2026-07-10-weight-tuner-sweep-2.md`): survivors enemyDist 2.4 / fsDiff 4 /
+  threatTie 1.88, but tuned **lost the matchup gate to hard (44% of 192)** — defaults untouched, no
+  version bump, golden diff holds (no engine files in the diff). Row kept in maps.js as an inactive
+  personality; Q.3 annotated (threatTie lever flipped under 1.1, looks spent). Run note: the build
+  dispatch died twice on the 35-min tuner (session interrupt, then subagent-can't-wait); runner
+  finished the remainder inline under the same verify gate — suite green, diff read, matchup re-read
+  from log. cost: 98k tokens / 5.4 min / 24 tool-calls (dispatch) + runner-inline remainder.
 - **WOA-011 — Unit composition & values as data levers** (2026-07-10, sprint-run) — new content kind
   `units` (`game/content/units/<id>.js`, active-flag selection like decks/mapsets): a variant fully
   replaces the default unit block (composition + VP + atk/def/sup as data, one-file diff); total-10

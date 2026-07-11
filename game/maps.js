@@ -60,7 +60,11 @@ var WOA_BUILTIN =
       "weights": {
         "unitOnBoard": 28, "advance": 3.25, "myThreatKill": 5, "threatKill": 5, "threatTie": 0.5
       }
-    }
+    },
+    /* sweep-2 survivors (2026-07-10, rules 1.1) — REJECTED for AI_WEIGHTS: lost the
+       matchup gate to hard (44% of 192). Kept as an inactive pit-able personality. */
+    "tuned": { "noise": 0, "breadth": 3, "replySamples": 2, "replyWeight": 0.7,
+      "weights": { "enemyDist": 2.4, "fsDiff": 4, "threatTie": 1.88 } }
   },
 
   "shapes": {
