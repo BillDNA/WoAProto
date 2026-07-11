@@ -43,6 +43,12 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
 
 ## Architecture
 
+- **`D.A:units-content-kind`** (2026-07-10, WOA-011) — unit composition & values are a content kind
+  (`game/content/units/<id>.js`, active-flag selection, the deck/mapset pattern): an active variant
+  **fully replaces** the maps.js default unit block (no sparse patching); stats resolve in exactly one
+  place (`engine/01-core.js` UNIT_DEFS → I.UNITS). The 10-total-pieces physical guardrail is a
+  load-time throw for default and variants alike; atk/def/sup/vp are free data. The shipped example
+  (`shock-army`) stays `active:false` so it can't affect balance data until deliberately enabled.
 - **`D.A:no-build-game`** — `game/` stays plain classic scripts + shared globals in a hand-ordered
   script-tag chain (no ES modules / bundler / build step). Zipping `game/` + double-clicking index.html
   must keep working; `node game/server.js` is the standard dev path and the only one with persistence.

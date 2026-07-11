@@ -17,6 +17,8 @@
      --red-effort/--blue-effort override per side)
      --seed <n>         match seed (default 1234)
      --deck <id>        play with content/decks/<id>.js instead of the active deck
+     --units <id>       play with content/units/<id>.js unit stats (composition +
+                        atk/def/sup/vp) instead of the maps.js default
      --mapset <id>      restrict the roster to a content/mapsets/<id>.js set
      --k <n>            step options shown to the LLM: the n most promising of
                         the full legal list, engine-ranked (default 15; attack
@@ -50,7 +52,7 @@ const path = require('path');
 /* ---------- CLI args (parsed before the engine loads: --deck needs it) ---------- */
 function parseArgs(argv) {
   const a = { map: '', red: 'haiku', blue: 'normal', seed: 1234, maxTurns: 60, mock: false, typicalN: 40,
-    effort: '', redEffort: '', blueEffort: '', deck: '', mapset: '', k: 15, fullOptions: false,
+    effort: '', redEffort: '', blueEffort: '', deck: '', units: '', mapset: '', k: 15, fullOptions: false,
     cold: false, matchWins: 0, out: '' };
   for (let i = 2; i < argv.length; i++) {
     const k = argv[i];
@@ -64,6 +66,7 @@ function parseArgs(argv) {
     else if (k === '--red-effort') a.redEffort = String(argv[++i] || '').toLowerCase();
     else if (k === '--blue-effort') a.blueEffort = String(argv[++i] || '').toLowerCase();
     else if (k === '--deck') a.deck = argv[++i] || '';
+    else if (k === '--units') a.units = argv[++i] || '';
     else if (k === '--mapset') a.mapset = argv[++i] || '';
     else if (k === '--k') a.k = Math.max(3, Number(argv[++i]) | 0);
     else if (k === '--full-options') a.fullOptions = true;
@@ -83,12 +86,13 @@ function parseArgs(argv) {
   return a;
 }
 
-// --deck: the engine snapshots the ACTIVE deck at require time, so to play a
-// different deck we pre-populate WOA_CONTENT ourselves (same files, same sort
-// order the engine's own node loader uses) and flip the active flag first.
-function preloadContent(deckId) {
-  global.WOA_CONTENT = { maps: [], cards: [], decks: [], mapsets: [] };
-  ['decks', 'maps', 'mapsets'].forEach(function (kind) {
+// --deck / --units: the engine snapshots the ACTIVE deck AND unit stats at
+// require time, so to swap either we pre-populate WOA_CONTENT ourselves (same
+// files, same sort order the engine's own node loader uses) and flip the active
+// flag first.
+function preloadContent(deckId, unitsId) {
+  global.WOA_CONTENT = { maps: [], cards: [], decks: [], mapsets: [], units: [] };
+  ['decks', 'maps', 'mapsets', 'units'].forEach(function (kind) {
     const dir = path.join(__dirname, '..', 'game', 'content', kind);
     let files = [];
     try { files = fs.readdirSync(dir).filter(function (f) { return /\.js$/.test(f); }).sort(); } catch (e) { return; }
@@ -103,10 +107,19 @@ function preloadContent(deckId) {
     }
     decks.forEach(function (d) { d.active = (d === want); });
   }
+  if (unitsId) {
+    const us = global.WOA_CONTENT.units || [];
+    const wantU = us.filter(function (u) { return u.id === unitsId; })[0];
+    if (!wantU) {
+      console.error('--units "' + unitsId + '" not found. Available: ' + (us.map(function (u) { return u.id; }).join(', ') || 'none'));
+      process.exit(1);
+    }
+    us.forEach(function (u) { u.active = (u === wantU); });
+  }
 }
 
 const ARGS = parseArgs(process.argv);
-if (ARGS.deck || ARGS.mapset) preloadContent(ARGS.deck);
+if (ARGS.deck || ARGS.units || ARGS.mapset) preloadContent(ARGS.deck, ARGS.units);
 const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
 const llm = require(path.join(__dirname, 'llm-client.js'));
 const { LlmSession } = require(path.join(__dirname, 'llm-session.js'));

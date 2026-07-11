@@ -19,7 +19,7 @@ pool, "best map" is rubric-defined, and the retro'd skills are updated — so ne
 | ------- | -------------------------------------------------------- | --------- | ------ | ---------- |
 | WOA-009 | Rule-change suggestions from the 1.0 final report        | balance   | Done   | —          |
 | WOA-010 | Adopt chosen rule changes, bump rules version to 1.1     | engine    | Done   | WOA-009    |
-| WOA-011 | Unit composition & values as data levers                 | engine    | Todo   | —          |
+| WOA-011 | Unit composition & values as data levers                 | engine    | Done   | —          |
 | WOA-012 | AI levels: verify & adopt weight-tuner sweep (Q.2)       | balance   | In Progress | —     |
 | WOA-013 | Trim the active map set to 7                             | content   | Todo   | —          |
 | WOA-014 | Balance-loop v2: retro skill & process updates           | dev-tools | Done   | —          |
@@ -32,19 +32,6 @@ number shift rides one version; WOA-011 anytime (defaults unchanged → golden d
 ## In Progress / Todo
 
 
-### WOA-011 — Unit composition & values as data levers
-**Area:** engine · **Status:** Todo · **Type:** opus · **Docs:** code-architecture
-
-B.5.3.1: the loop's next levers are unit-level — composition (10 units total, variable
-infantry/cavalry/artillery mix), victory-point values, and attack/defense/support values — all editable
-as content data a slot can carry (content-as-data: a variant stays a one-file diff). Defaults
-unchanged: prove it with a golden balance diff (same seeds → byte-identical aggregates). Physical-board
-piece stocks stay the design guardrail on what a composition may ask for.
-
-**Acceptance criteria:**
-- [ ] Composition + VP + attack/defense/support overridable from content data (one-file diff per variant)
-- [ ] Defaults untouched — golden balance diff byte-identical; `test.js` extended to cover an override
-- [ ] User confirms done
 
 ### WOA-012 — AI levels: verify & adopt weight-tuner sweep (Q.2)
 **Area:** balance · **Status:** In Progress · **Type:** opus · **Docs:** data-and-reports
@@ -77,6 +64,13 @@ block on it), ship as a new mapset (`content/mapsets/`), make it the loop defaul
 
 ## Finished
 
+- **WOA-011 — Unit composition & values as data levers** (2026-07-10, sprint-run) — new content kind
+  `units` (`game/content/units/<id>.js`, active-flag selection like decks/mapsets): a variant fully
+  replaces the default unit block (composition + VP + atk/def/sup as data, one-file diff); total-10
+  piece guardrail enforced at load; `--units` on balance-report + claude-plays (mirrors `--deck`);
+  example `shock-army` ships inactive. Golden diff byte-identical (same SHA256 before/after, no
+  variant active); 11 new test assertions; suite + smoke green under runner re-run. cost: 189k
+  tokens / 18.8 min / 73 tool-calls.
 - **WOA-014 — Balance-loop v2: retro skill & process updates** (2026-07-10, sprint-run) — loop v2
   codified in the project skills: 1:1 adversarial checkers, one feels-match per iteration (seed 1001;
   2002/3003 optional), create-card 3-for-3 batch mode judged as a set (split-Deploy-Cavalry seeded as

@@ -24,10 +24,10 @@
   (function loadContentNode() {
     if (global.WOA_CONTENT) return;                 // browser already populated it
     if (typeof require !== 'function') return;
-    global.WOA_CONTENT = { maps: [], cards: [], decks: [], mapsets: [] };
+    global.WOA_CONTENT = { maps: [], cards: [], decks: [], mapsets: [], units: [] };
     try {
       var fs = require('fs'), path = require('path');
-      var kinds = ['decks', 'maps', 'mapsets'];
+      var kinds = ['decks', 'maps', 'mapsets', 'units'];
       try { kinds = require('../content/kinds.js'); } catch (e2) { /* kinds.js is the source of truth when present */ }
       kinds.forEach(function (kind) {
         var dir = path.join(__dirname, '..', 'content', kind);
@@ -41,14 +41,22 @@
       if (typeof console !== 'undefined') console.error('WoA content load failed: ' + e.message);
     }
   })();
-  var CONTENT = global.WOA_CONTENT || { maps: [], cards: [], decks: [], mapsets: [] };
+  var CONTENT = global.WOA_CONTENT || { maps: [], cards: [], decks: [], mapsets: [], units: [] };
   // the active deck decides the card list; fall back to any deck, then to any
   // loose WOA_CONTENT.cards (belt-and-braces for hand-authored content).
   var ACTIVE_DECK = (CONTENT.decks || []).filter(function (d) { return d && d.active; })[0] ||
     (CONTENT.decks || [])[0] || null;
   var CARD_LIST = (ACTIVE_DECK && ACTIVE_DECK.cards && ACTIVE_DECK.cards.length) ? ACTIVE_DECK.cards : (CONTENT.cards || []);
+  // Unit composition & values as a content lever (WOA-011): a units variant in
+  // content/units/*.js (exactly one flagged active — the deck/map-set pattern)
+  // fully REPLACES the default unit block, so composition (counts), VP, and
+  // atk/def/sup are all editable as data. No active variant falls back to
+  // maps.js CORE.units — the shipped 7/2/1 default — so this is the ONE place
+  // unit stats resolve (every other layer reads I.UNITS).
+  var UNITS_VARIANT = (CONTENT.units || []).filter(function (u) { return u && u.active; })[0] || null;
+  var UNIT_DEFS = (UNITS_VARIANT && UNITS_VARIANT.units) || CORE.units;
   var BUILTIN = {
-    shapes: CORE.shapes, units: CORE.units, trenchCount: CORE.trenchCount,
+    shapes: CORE.shapes, units: UNIT_DEFS, trenchCount: CORE.trenchCount,
     terrainStock: CORE.terrainStock, ai: CORE.ai,
     maps: (CONTENT.maps || []).slice(),
     cards: CARD_LIST
@@ -92,6 +100,15 @@
 
   /* ---------- static data (all tunable in maps.js) ---------- */
   var UNITS = BUILTIN.units;
+  // Physical-board guardrail (WOA-011): a side always fields exactly 10 pieces
+  // (default 7 inf / 2 cav / 1 art). Values are free data; the TOTAL count is
+  // the invariant — enforce it at load so a bad units variant fails loud
+  // instead of quietly skewing every battle. (Default sums to 10, so this never
+  // fires for the shipped config — the golden balance diff is unaffected.)
+  var UNIT_COUNT = Object.keys(UNITS).reduce(function (s, t) { return s + (UNITS[t].count || 0); }, 0);
+  if (UNIT_COUNT !== 10)
+    throw new Error('War of Attrition: unit composition must total 10 pieces (got ' + UNIT_COUNT +
+      (UNITS_VARIANT ? ' from units variant "' + UNITS_VARIANT.id + '"' : ' in maps.js') + ')');
   var TRENCH_COUNT = BUILTIN.trenchCount || 3;
   var TERRAIN_STOCK = BUILTIN.terrainStock || { F3: 2, F2: 4, M3: 2, M2: 4 };
   var CARDS = BUILTIN.cards;
