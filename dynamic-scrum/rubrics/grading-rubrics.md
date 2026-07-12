@@ -49,7 +49,54 @@ attrition rule. Re-measure before grading against them (commands in the footer).
 > strength in a single strike — that's what the 1.1 trench tie-survival change touched. A suggestion
 > aimed at one will not move the other; say which you mean.
 
+## Temperature — how much metric movement a candidate may spend (Bill, 2026-07-12)
+
+The north stars above are **ranges, and every one of them currently passes.** Graded strictly, that makes
+them a ratchet: the only adoptable change is one that improves nothing and breaks nothing, so the loop
+gets pinned at a local maximum. (Measured, loop v2 iter2: `cavsplit-17` improved Drag, Swings, attacks,
+units-fielded, Red% and killed an auto-play, and was *rejected* for putting first-mover 3 points under
+the band.) **Temperature is how much regression the loop is allowed to buy improvement with.** State the
+temperature in the analysis; it is a dial, not a default.
+
+| T | Rule | Use when |
+|---|---|---|
+| **T0 — strict** | Adopt only if **no** north star leaves its band. | Shipping to `default`; protecting a release. |
+| **T1 — explore** *(loop default)* | Adopt if **≥3 metrics improve** and **≤1** leaves its band by **≤1 band-width**. Name the trade in the report. | Iterating. Escaping a local maximum. |
+| **T2 — hot** | Any excursion allowed **except the hard floors**, to map the design space. Nothing ships from T2 without a T0/T1 re-measure. | Deliberate exploration — "what if the 16-card ceiling weren't there?" |
+
+**Hard floors — these never relax at any temperature.** Each is a measured cascade, not a preference:
+- **Tie-goes-to-2nd ≤ 15%** — deleting hoarded attack cards drove it 11→15→20% and *produced* the
+  swap-dance stalemate.
+- **Zero-kill ≤ 5%** and **Noop ≈ 0%** — dead battles and dead turns are the anti-degeneracy guarantees.
+- **Printed deploy steps ≥ stock** per unit type — there is **no deploy fallback** in the house rules, so
+  a stranded unit can never reach the board (measured: infantry steps 7→5 sent Drag 2.3→3.6, attacks −20%).
+
+> **Structural constraints are candidates for the temperature dial too.** The **16-card deck** is a
+> *physical-board* guardrail, not a code one. Iter2 measured its cost directly: the cavalry split is
+> clean at 17 cards and only becomes expensive when a 16th-card cut has to fund it. Before rejecting a
+> change for breaching a guardrail, check whether the *guardrail* is the thing under test.
+
 ## Card rubric
+
+> **⚠ Read this before grading criteria 4 and 5.** `1stSight%` and `AvgSeen` are **readouts of the AI's
+> internals, not properties of the card** (measured, loop v2 iter1–2):
+> - **`1stSight%` ≈ the immediate eval delta of playing the card.** `unitOnBoard: 22` vs
+>   `unitReserve: 16` (`engine/05-ai.js`) means every deploy step crosses a free 6-point gap, times the
+>   unit's value (inf 3 / cav 4 / art 5). That one number rank-orders the whole deploy family's 1stSight
+>   (cav ×2 = +48 → 79%; art = +30 → 69%; inf = +18 → 18%). `aiPlanTurn` has **no hand lookahead** — it
+>   cannot hold a card for a better moment, only fail to pick it.
+> - **`AvgSeen` ≈ `CARD_KEEP`** for action cards. The deep-hoard tail is exactly the two highest
+>   burn-reluctance values (`mass_assault: 9` → 7.07; `attack_plus1: 8` → 10.85). A high AvgSeen means
+>   the AI thinks the card is **precious**, not dead. Attack +1 is hoarded because `+1` is the deck's
+>   only button that turns a mutual-destruction tie into a clean kill.
+> - **Therefore "auto-play" cannot be fixed by card design — it relocates.** Splitting Deploy Cavalry
+>   (1stSight 79→22) simply promoted Deploy Artillery into the vacated slot (69→**77**). The reflex band
+>   belongs to whoever has the top eval delta. This is an **AI lever**, not a card lever.
+>
+> Grade cards on criteria 1–3 (decision / no-ops / Simple%) and on the **game-level** north stars. Treat
+> 4 and 5 as *diagnostics of the AI*, never as design targets. The one population that behaves differently
+> is the LLM (AvgSeen 1.8–3.1 on the same cards the hard AI hoards at 4–6) — the feels-match is the only
+> human-proxy instrument available.
 
 Evidence source for all numbers: the **card report** at the bottom of `node game/balance.js 60`
 (columns: Win% / Simple% / 1stSight% / AvgSeen / plays; per-card no-op counts stay in the

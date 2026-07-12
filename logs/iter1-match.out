@@ -20,3 +20,469 @@
 [16:11:48] T3 red [haiku]: deploy — Deploy Infantry at D2 — "D2 is the deepest penetration toward Blue's HQ at D4, and the forest terrain there supports my future attacks; completes an aggressive forward line."
            | Red deploys Infantry at D2.
 [16:11:48]   score R 3 - B 1 · cards R 14 / B 15 · match R 0 - B 0
+[16:12:49] T4 blue [haiku]: plays "Deploy Cavalry" — "Deploy cavalry to swing board advantage (5 VP vs 3 VP) and gain offensive strength."
+           | Blue plays "Deploy Cavalry".
+[16:13:01] T4 blue [haiku]: deploy — Deploy Cavalry at D3 — "D3 adjacent to my HQ provides defense while threatening Red's D2 infantry."
+           | Blue deploys Cavalry at D3.
+[16:13:21] T4 blue [haiku]: deploy — Deploy Cavalry at E3 — "E3 adjacent to my HQ forms a defensive line with D3 against Red's push."
+           | Blue deploys Cavalry at E3.
+[16:13:21]   score R 3 - B 5 · cards R 14 / B 14 · match R 0 - B 0
+[16:13:45] T5 red [haiku]: plays "Attack +1" — "Attack +1 with my D2 Infantry against the D3 Cavalry (supported by C2 Infantry and forest terrain), killing a 2-VP unit to cut Blue's 5-3 lead."
+           | Red plays "Attack +1".
+[16:13:49] T5 red [haiku]: attack — Attack: Infantry at D2 strikes enemy Cavalry at D3 — power 3 vs 2: defender destroyed — "Kill the Cavalry to equalize field score (3-3) and eliminate Blue's high-attack unit."
+           | Red Infantry attacks Blue Cavalry at D3 (3 vs 2): defender destroyed, attacker advances.
+[16:13:49]   score R 3 - B 3 · cards R 13 / B 14 · match R 0 - B 0
+[16:14:20] T6 blue [haiku]: plays "Ordered Withdraw" — "Ordered Withdraw ensures E3 Cavalry kills D3 Infantry, neutralizing HQ threat."
+           | Blue plays "Ordered Withdraw".
+[16:14:43] T6 blue [haiku]: attack — Attack: Cavalry at E3 strikes enemy Infantry at D3 — power 5 vs 1: defender destroyed — "E3 Cavalry attacks D3 directly with overwhelming power to eliminate the threat."
+           | Blue Cavalry attacks Red Infantry at D3 (5 vs 1): defender destroyed; the attacker holds its ground.
+[16:14:43]   score R 2 - B 3 · cards R 13 / B 13 · match R 0 - B 0
+[16:15:16] T7 red [haiku]: plays "Deploy Cavalry" — "Deploy Cavalry adds 4 VP (two 2-VP units) to swing board score from 2-3 to 6-3, then use their high attack (3) for future assault."
+           | Red plays "Deploy Cavalry".
+[16:15:23] T7 red [haiku]: deploy — Deploy Cavalry at D2 — "D2 deploys Cavalry deep toward Blue's HQ at D4, enabling high-attack threat on next turn and forestalling Blue's options."
+           | Red deploys Cavalry at D2.
+[16:15:31] T7 red [haiku]: deploy — Deploy Cavalry at D3 — "D3 places second Cavalry adjacent to Blue's HQ at D4, forming a lethal attacking pair with D2 Cavalry and threatening both of Blue's units."
+           | Red deploys Cavalry at D3.
+[16:15:31]   score R 6 - B 3 · cards R 12 / B 13 · match R 0 - B 0
+[16:15:58] T8 blue [haiku]: plays "Mass Assault" — "Mass Assault destroys both Red Cavalry with E3, eliminating HQ threat and gaining VP advantage."
+           | Blue plays "Mass Assault".
+[16:16:08] T8 blue [haiku]: attack — Attack: Cavalry at E3 strikes enemy Cavalry at D3 — power 5 vs 0: defender destroyed — "E3 Cavalry destroys D3 and advances toward D2 for the second attack."
+           | Blue Cavalry attacks Red Cavalry at D3 (5 vs 0): defender destroyed, attacker advances.
+[16:16:13] T8 blue [haiku]: attack — Attack: Cavalry at D3 strikes enemy Cavalry at D2 — power 3 vs 1: defender destroyed — "Eliminate D2 Cavalry to secure board advantage (3 VP vs 2 VP)."
+           | Blue Cavalry attacks Red Cavalry at D2 (3 vs 1): defender destroyed, attacker advances.
+[16:16:13]   score R 2 - B 3 · cards R 12 / B 12 · match R 0 - B 0
+[16:16:28] T9 red [haiku]: plays "Attack +1" — "Attack +1 with C2 Infantry against D2 Cavalry: 2 attack vs 0 defense wins decisively, advancing into enemy territory and equalizing VP."
+           | Red plays "Attack +1".
+[16:16:30] T9 red [haiku]: attack — Attack: Infantry at C2 strikes enemy Cavalry at D2 — power 2 vs 0: defender destroyed — "Win the attack and advance Infantry to D2, eliminating Blue's Cavalry and moving closer to HQ at D4."
+           | Red Infantry attacks Blue Cavalry at D2 (2 vs 0): defender destroyed, attacker advances.
+[16:16:30]   score R 2 - B 1 · cards R 11 / B 12 · match R 0 - B 0
+[16:16:59] T10 blue [haiku]: plays "Conscription" — "Conscription swings board advantage to 3 VP vs 2 VP—crucial for attrition."
+           | Blue plays "Conscription".
+[16:17:09] T10 blue [haiku]: deploy — Deploy Infantry at D3 — "D3 adjacent to my HQ and Red's D2 provides defense with offensive positioning."
+           | Blue deploys Infantry at D3.
+[16:17:24] T10 blue [haiku]: deploy — Deploy Infantry at E3 — "E3 adjacent to HQ completes a defensive line with D3 Infantry."
+           | Blue deploys Infantry at E3.
+[16:17:24]   score R 2 - B 3 · cards R 11 / B 11 · match R 0 - B 0
+[16:18:01] T11 red [haiku]: plays "Entrench" — "Entrench to deploy Infantry (+1 VP to 3-3) and build trench; Blue's compact defensive line makes direct attacks losing, need to consolidate and build."
+           | Red plays "Entrench".
+[16:18:07] T11 red [haiku]: deploy — Deploy Infantry at C3 — "C3 supports D2 Infantry and threatens Blue's C4, positioning for coordinated attacks while controlling the river-hex chokepoint."
+           | Red deploys Infantry at C3.
+[16:19:00] T11 red [haiku]: trench — Dig a trench at D2 covering edges SW+SE — "Trench at D2 covering SW+SE blocks E3's support against my advanced Infantry, protecting my most exposed piece and weakening Blue's southern attack vector."
+           | Red digs a trench at D2.
+[16:19:00]   score R 3 - B 3 · cards R 10 / B 11 · match R 0 - B 0
+[16:19:16] T12 blue [haiku]: plays "Airdrop" — "Airdrop gains VP advantage (4 vs 3) critical for attrition endgame with cards running low."
+           | Blue plays "Airdrop".
+[16:19:46] T12 blue [haiku]: deploy — Deploy Infantry at D1 — "D1 consolidates my central column strength, protecting my 4 vs 3 VP advantage."
+           | Blue deploys Infantry at D1.
+[16:19:46]   score R 3 - B 4 · cards R 10 / B 10 · match R 0 - B 0
+[16:20:11] T13 red [haiku]: plays "Reckless Maneuvers" — "Reckless Maneuvers: D2 Infantry attacks isolated D1 Infantry (2 vs 1, wins with C3 support), then reposition to build attacking pressure and swing toward 4-4 VP parity."
+           | Red plays "Reckless Maneuvers".
+[16:20:44] T13 red [haiku]: attack — Attack: Infantry at D2 strikes enemy Infantry at D1 — power 1 vs 1: tie — BOTH destroyed — "TIE attack D2 vs D1 (1 vs 1): both die, eliminating Blue's isolated Infantry, then reposition C3 to D2 to maintain advanced presence near Blue's HQ."
+           | Red Infantry attacks Blue Infantry at D1 (1 vs 1): a tie — both units destroyed.
+[16:20:48] T13 red [haiku]: reposition — March Infantry from C3 to D2 — "March C3 Infantry to D2, maintaining advanced pressure directly beside Blue's HQ at D4 and avoiding retreat after the TIE."
+           | Red marches Infantry from C3 to D2.
+[16:20:48]   score R 2 - B 3 · cards R 9 / B 10 · match R 0 - B 0
+[16:21:08] T14 blue [haiku]: plays "Deploy Artillery" — "Deploy Artillery for 6 VP vs 2 VP lead—attrition victory locked with limited cards remaining."
+           | Blue plays "Deploy Artillery".
+[16:21:32] T14 blue [haiku]: deploy — Deploy Artillery at B3 — "Deploy Artillery at B3 to support C4 and enable attacks on Red's B2 Infantry."
+           | Blue deploys Artillery at B3.
+[16:21:32]   score R 2 - B 6 · cards R 9 / B 9 · match R 0 - B 0
+[16:21:42] T15 red [haiku]: plays "Deploy Artillery" — "Deploy Artillery adds 3 VP to swing from 2-6 (down 4) to 5-6 (down 1), closing the VP gap immediately while preserving remaining cards."
+           | Red plays "Deploy Artillery".
+[16:21:55] T15 red [haiku]: deploy — Deploy Artillery at C2 — "Deploy Artillery at C2, central position supporting both D2 (most advanced) and B2, while staying out of immediate Blue attack range."
+           | Red deploys Artillery at C2.
+[16:21:55]   score R 5 - B 6 · cards R 8 / B 9 · match R 0 - B 0
+[16:22:18] T16 blue [haiku]: plays "Attack +1" — "Attack +1 kills C2 Artillery via D3+B3 support (4 vs 1), making it 6 vs 2—attrition victory."
+           | Blue plays "Attack +1".
+[16:22:46] T16 blue [haiku]: attack — Attack: Infantry at D3 strikes enemy Infantry at D2 — power 2 vs 3: your attacker is DESTROYED — "(fallback: choice failed)"  (fallback)
+           | Blue Infantry attacks Red Infantry at D2 (2 vs 3): attack repelled, attacker destroyed.
+[16:22:46]   score R 5 - B 5 · cards R 8 / B 8 · match R 0 - B 0
+[16:23:48] T17 red [haiku]: plays "Naval Barrage" as basic attack — "Basic Attack (burn Naval Barrage): B2 Infantry vs B3 Artillery = 3 vs 1 (B2 + C2 artillery support beats B3 + C4 support), B2 wins and advances, swinging to 5-2 with maximum VP advantage before endgame."
+           | Red plays "Naval Barrage" as a direct attack order.
+[16:24:04] T17 red [haiku]: attack — Attack: Infantry at B2 strikes enemy Artillery at B3 — power 1 vs 1: tie — BOTH destroyed — "Accept the TIE: both B2 and B3 destroyed, swinging to Red 4 VP vs Blue 2 VP for a decisive 2-VP lead with 7 cards left to finish."
+           | Red Infantry attacks Blue Artillery at B3 (1 vs 1): a tie — both units destroyed.
+[16:24:04]   score R 4 - B 2 · cards R 7 / B 8 · match R 0 - B 0
+[16:24:35] T18 blue [haiku]: plays "Entrench" — "Entrench adds 1 VP + defensive trench to close the 2 vs 4 VP deficit before deck ends."
+           | Blue plays "Entrench".
+[16:24:44] T18 blue [haiku]: deploy — Deploy Infantry at D3 — "D3 adjacent to HQ anchors my position for endgame consolidation when trailing 3 vs 4 VP."
+           | Blue deploys Infantry at D3.
+[16:25:04] T18 blue [haiku]: trench — Dig a trench at D3 covering edges NE+NW — "D3 trench NE+NW blocks support from Red's northern units, protecting vulnerable D3 Infantry."
+           | Blue digs a trench at D3.
+[16:25:04]   score R 4 - B 3 · cards R 7 / B 7 · match R 0 - B 0
+[16:25:32] T19 red [haiku]: plays "Forced March" as basic attack — "Basic Attack (burn Forced March): D2 Infantry vs D3 Infantry = 3 vs 2 (with C2 Artillery support; D3 trench blocks NE+NW, not support from SE). Win kills Blue Infantry, extending lead to 4-2 with 6 cards left."
+           | Red plays "Forced March" as a direct attack order.
+[16:25:52] T19 red [haiku]: attack — Attack: Infantry at D2 strikes enemy Infantry at D3 — power 2 vs 4: your attacker is DESTROYED — "(fallback: choice failed)"  (fallback)
+           | Red Infantry attacks Blue Infantry at D3 (2 vs 4): attack repelled, attacker destroyed.
+[16:25:52]   score R 3 - B 3 · cards R 6 / B 7 · match R 0 - B 0
+[16:26:12] T20 blue [haiku]: plays "Reckless Maneuvers" — "Reckless Maneuvers eliminates C2 Artillery with D3 attack, securing 3 vs 0 endgame advantage."
+           | Blue plays "Reckless Maneuvers".
+[16:26:28] T20 blue [haiku]: reposition — March Infantry from D3 to C3 — "D3 to C3 threatens C2 Artillery directly, maintaining endgame offensive pressure."
+           | Blue marches Infantry from D3 to C3.
+[16:26:28]   score R 3 - B 3 · cards R 6 / B 6 · match R 0 - B 0
+[16:26:47] T21 red [haiku]: plays "Airdrop" — "Airdrop to deploy Infantry on empty hex, adding 1 VP to reach 4-3 lead. With only C2 Artillery remaining and Blue's C3 Infantry dominating adjacent hexes, need to rebuild force before 6 cards exhaust both decks."
+           | Red plays "Airdrop".
+[16:27:02] T21 red [haiku]: deploy — Deploy Infantry at B2 — "Deploy Infantry at B2, adjacent to Blue's C3 and to support C2 Artillery; enables a 3-3 TIE attack next turn (B2 + C2 support vs C3 + support), swinging to 3-2 VP lead with 4 cards left."
+           | Red deploys Infantry at B2.
+[16:27:02]   score R 4 - B 3 · cards R 5 / B 6 · match R 0 - B 0
+[16:27:18] T22 blue [haiku]: plays "Attack +1" — "Attack +1 kills C2 Artillery via C3+C4 support (3 vs 1 power), securing endgame victory."
+           | Blue plays "Attack +1".
+[16:27:38] T22 blue [haiku]: attack — Attack: Infantry at C3 strikes enemy Artillery at C2 — power 2 vs 2: tie — BOTH destroyed — "C3 vs C2 tie eliminates Artillery, securing 2 vs 1 endgame VP advantage for victory."
+           | Blue Infantry attacks Red Artillery at C2 (2 vs 2): a tie — both units destroyed.
+[16:27:38]   score R 1 - B 2 · cards R 5 / B 5 · match R 0 - B 0
+[16:27:56] T23 red [haiku]: plays "Entrench" — "Entrench to deploy Infantry (reaching 2-2 tied VP) and build defensive trench; with 5 cards left each, tie on VP forces Blue to win via attrition tie only if tied at end—need to keep forces alive and strike when possible."
+           | Red plays "Entrench".
+[16:28:01] T23 red [haiku]: deploy — Deploy Infantry at B3 — "Deploy Infantry at B3, where forest terrain provides +1 attack bonus for future strikes and concentrates forces adjacent to Blue's C4."
+           | Red deploys Infantry at B3.
+[16:28:06] T23 red [haiku]: trench — Dig a trench at B3 covering edges E+NE — "Trench at B3 covering E+NE edges blocks support from Blue's C4 Infantry attacking from the east, denying them coordination and protecting my newly deployed B3."
+           | Red digs a trench at B3.
+[16:28:06]   score R 2 - B 2 · cards R 4 / B 5 · match R 0 - B 0
+[16:28:24] T24 blue [haiku]: plays "Entrench" — "Entrench reaches 3 VP—guarantees attrition tie victory as second-mover when deck runs out."
+           | Blue plays "Entrench".
+[16:28:33] T24 blue [haiku]: deploy — Deploy Infantry at D3 — "Deploy D3 adjacent to HQ—reaches 3 VP endgame tie while securing defensive position."
+           | Blue deploys Infantry at D3.
+[16:28:45] T24 blue [haiku]: trench — Dig a trench at C4 covering edges NE+NW — "C4 trench NE+NW blocks Red's northern support, defending central endgame position."
+           | Blue digs a trench at C4.
+[16:28:45]   score R 2 - B 3 · cards R 4 / B 4 · match R 0 - B 0
+[16:29:05] T25 red [haiku]: plays "Entrench" — "Entrench deploys last Infantry reserve to reach 3-3 tie on VP; with 3 cards left each and endgame looming, tying on VP forces Blue to find a killing blow, giving me survival odds on the final turns."
+           | Red plays "Entrench".
+[16:29:12] T25 red [haiku]: deploy — Deploy Infantry at C1 — "Deploy Infantry at C1, pushing toward Blue territory and supporting B2 for coordinated future attacks; avoids C3's exposure to direct Blue strikes."
+           | Red deploys Infantry at C1.
+[16:29:30] T25 red [haiku]: trench — Dig a trench at C1 covering edges E+NE — "Trench at C1 covering E+NE blocks attacks from D3 (east neighbor), protecting my newly deployed Infantry and fortifying for the final 3-card endgame tied at 3-3 VP."
+           | Red digs a trench at C1.
+[16:29:30]   score R 3 - B 3 · cards R 3 / B 4 · match R 0 - B 0
+[16:29:41] T26 blue [haiku]: plays "Deploy Infantry" — "Deploy Infantry to 4 VP—Red has zero reserves and can't match, securing victory."
+           | Blue plays "Deploy Infantry".
+[16:29:51] T26 blue [haiku]: deploy — Deploy Infantry at C5 — "Deploy C5 to reach 4 VP—victory secured, Red has no reserves to match."
+           | Blue deploys Infantry at C5.
+[16:29:51]   score R 3 - B 4 · cards R 3 / B 3 · match R 0 - B 0
+[16:30:17] T27 red [haiku]: plays "Mass Assault" — "Mass Assault: C1 (+ B3 support = 2) vs C4 (3), then B3 (1) vs C5 (3). Desperate play for kills before 3-card endgame expires; down 3-4 requires action over defense."
+           | Red plays "Mass Assault".
+[16:30:31] T27 red [haiku]: attack — Skip this step — "Skip Attack 1: 2 vs 4 loses B3 to no gain. With 2 cards left (Red) vs 3 (Blue) and down 3-4, preserving units for final turn matters more than desperate losses."
+[16:30:48] T27 red [haiku]: attack — Attack: Infantry at B3 strikes enemy Infantry at C4 — power 2 vs 4: your attacker is DESTROYED — "(fallback: choice failed)"  (fallback)
+           | Red Infantry attacks Blue Infantry at C4 (2 vs 4): attack repelled, attacker destroyed.
+[16:30:48]   score R 2 - B 4 · cards R 2 / B 3 · match R 0 - B 0
+[16:30:59] T28 blue [haiku]: plays "Forced March" — "Forced March safely preserves 4 vs 2 VP victory—battle is already won."
+           | Blue plays "Forced March".
+[16:31:03] T28 blue [haiku]: reposition — Skip this step — "Skip—4 vs 2 VP victory is secured, complete turn efficiently."
+[16:31:07] T28 blue [haiku]: reposition — Skip this step — "Victory secured (4 vs 2 VP)—skip remaining repositioning to end battle."
+[16:31:09] T28 blue [haiku]: reposition — March Infantry from C4 to B4 — "(fallback: choice failed)"  (fallback)
+           | Blue marches Infantry from C4 to B4.
+[16:31:09]   score R 2 - B 4 · cards R 2 / B 2 · match R 0 - B 0
+[16:31:30] T29 red [haiku]: plays "Careful Maneuvers" — "Careful Maneuvers: reposition C1 to D2 (forest hex, trench-protected), then attack D2 vs D3 with -1 (loses but positions for final turn); need any edge heading into card exhaustion."
+           | Red plays "Careful Maneuvers".
+[16:31:47] T29 red [haiku]: reposition — March Infantry from C1 to C2 — "Reposition C1 to C2, placing adjacent to D3 for step 2 attack; keeps B2 at B2 for final endgame card; loses anyway (0 vs 3) but optimizes positioning before deck exhaustion."
+           | Red marches Infantry from C1 to C2.
+[16:31:47]   score R 2 - B 4 · cards R 1 / B 2 · match R 0 - B 0
+[16:31:58] T30 blue [haiku]: plays "Naval Barrage" — "Naval Barrage ends game—4 VP victory locked with Red at 1 card remaining."
+           | Blue plays "Naval Barrage".
+[16:32:02] T30 blue [haiku]: barrage — Barrage: destroy the trench at D4 — "(fallback: choice failed)"  (fallback)
+           | Blue's naval barrage obliterates a trench at D4.
+[16:32:02]   score R 2 - B 4 · cards R 1 / B 1 · match R 0 - B 0
+[16:32:11] T31 red [haiku]: plays "Ordered Withdraw" as basic attack — "Basic Attack: C2 Infantry vs D3 Infantry (1 vs 3, lose). Final turn before deck exhaustion—attack with last card rather than waste it on reposition when already down 2-4."
+           | Red plays "Ordered Withdraw" as a direct attack order.
+           | Red finds no opening — the order is spent to no effect.
+[16:32:11]   score R 2 - B 4 · cards R 0 / B 1 · match R 0 - B 0
+[16:32:20] T32 blue [haiku]: plays "Careful Maneuvers" as basic reposition — "Red deck exhausted—Blue wins Battle 1 with 4 VP vs 2 VP."
+           | Blue plays "Careful Maneuvers" as a simple maneuver.
+[16:32:24] T32 blue [haiku]: reposition — March Infantry from E3 to C4 — "(fallback: choice failed)"  (fallback)
+           | Blue marches Infantry from E3 to C4.
+           | Blue wins the battle by attrition (2 VP vs 4 VP of surviving units).
+[16:32:24]   score R 2 - B 4 · cards R 0 / B 0 · match R 0 - B 1
+[16:32:24] == Blue wins battle 1 by attrition after 33 turns ==  (match R 0-1 B)
+[16:32:30] red notes: Frustrating—I clawed back to 5-2 with a good Artillery kill mid-game, but Blue's tight support chains around D3/D4 made every late-game attack mathematically losing, and I spent my final cards repositioning units instead of converting damage. Should've deployed more aggressively while I had reserve Infantry left.
+[16:32:35] blue notes: Battle 1 felt like a recovery—I overextended early with Cavalry deployments and got punished hard (lost 4 VP in one swing), but pivoted to grinding out a VP advantage through careful Artillery placement and trading efficiently. By the endgame, it became a pure math game: I just needed to reach 3 VP (matching Red's reserve ceiling) and hold it until Red's deck ran out, which I did.
+[16:32:35] — battle 2 on "Long March" (match R 0-1 B) —
+           | Battle 2 — "Long March". Red moves first.
+[16:32:39] T1 red [haiku]: plays "Conscription" — "Conscription deploys 2 Infantry immediately, building early presence on Long March board faster than single-unit alternatives; slight card advantage (16 vs 15) favors aggressive opening."
+           | Red plays "Conscription".
+[16:32:43] T1 red [haiku]: deploy — Deploy Infantry at B3 — "Deploy Infantry at B3, advancing right along the top row toward Blue's territory at G1; aggressive positioning for the Long March board."
+           | Red deploys Infantry at B3.
+[16:32:47] T1 red [haiku]: deploy — Deploy Infantry at C3 — "Deploy Infantry at C3, continuing rightward advance and positioning in forest terrain (NW,W edges) for future attack bonuses; aggressive push toward Blue's G1 HQ."
+           | Red deploys Infantry at C3.
+[16:32:47]   score R 2 - B 0 · cards R 15 / B 16 · match R 0 - B 1
+[16:33:02] T2 blue [haiku]: plays "Deploy Infantry" — "Deploy Infantry to establish board presence and catch up from 0 vs 2 VP deficit."
+           | Blue plays "Deploy Infantry".
+[16:33:09] T2 blue [haiku]: deploy — Deploy Infantry at F2 — "Deploy F2 to bridge toward center board and contest territory with Red."
+           | Blue deploys Infantry at F2.
+[16:33:09]   score R 2 - B 1 · cards R 15 / B 15 · match R 0 - B 1
+[16:33:19] T3 red [haiku]: plays "Entrench" — "Entrench to deploy Infantry (extend 2-1 lead to 3-1 VP) and build trench; ahead in VP, should build forces before Blue deploys more units."
+           | Red plays "Entrench".
+[16:33:25] T3 red [haiku]: deploy — Deploy Infantry at D3 — "Deploy Infantry at D3, continuing rightward advance toward Blue's center territory; maintains aggressive momentum along Long March board."
+           | Red deploys Infantry at D3.
+[16:33:32] T3 red [haiku]: trench — Dig a trench at D3 covering edges E+NE — "Trench at D3 covering E+NE blocks Blue's support when attacking from F2 direction (east/northeast), protecting my most advanced Infantry."
+           | Red digs a trench at D3.
+[16:33:32]   score R 3 - B 1 · cards R 14 / B 15 · match R 0 - B 1
+[16:33:48] T4 blue [haiku]: plays "Deploy Cavalry" — "Deploy Cavalry to reach 5 VP—long game favors VP lead with card advantage."
+           | Blue plays "Deploy Cavalry".
+[16:33:57] T4 blue [haiku]: deploy — Deploy Cavalry at E3 — "E3 positions first Cavalry aggressively toward Red's D3 Infantry line."
+           | Blue deploys Cavalry at E3.
+[16:34:08] T4 blue [haiku]: deploy — Deploy Cavalry at D4 — "D4 anchors center with mountain defense, threatening Red's D3 Infantry directly."
+           | Blue deploys Cavalry at D4.
+[16:34:08]   score R 3 - B 5 · cards R 14 / B 14 · match R 0 - B 1
+[16:34:20] T5 red [haiku]: plays "Reckless Maneuvers" — "Reckless Maneuvers: D3 Infantry + C3 support = 2 vs D4 Cavalry defense 0, kill the high-attack Cavalry; then reposition to threaten E3 or consolidate position."
+           | Red plays "Reckless Maneuvers".
+[16:34:24] T5 red [haiku]: attack — Attack: Infantry at D3 strikes enemy Cavalry at D4 — power 2 vs 1: defender destroyed — "D3 Infantry vs D4 Cavalry = 2 vs 1, I win and kill the Cavalry; reduces Blue's advantage and eliminates high-attack threat."
+           | Red Infantry attacks Blue Cavalry at D4 (2 vs 1): defender destroyed, attacker advances.
+[16:34:30] T5 red [haiku]: reposition — March Infantry from D4 to E4 — "Reposition D4 Infantry to E4 forest hex, positioning adjacent to E3 Cavalry for next turn attack; forest terrain (NE,NW) provides attack bonuses."
+           | Red marches Infantry from D4 to E4.
+[16:34:30]   score R 3 - B 3 · cards R 13 / B 14 · match R 0 - B 1
+[16:34:42] T6 blue [haiku]: plays "Attack +1" — "Attack +1 kills E4 Infantry with E3 Cavalry (4 vs 2 power), swinging to 3 vs 2 advantage."
+           | Blue plays "Attack +1".
+[16:34:46] T6 blue [haiku]: attack — Attack: Cavalry at E3 strikes enemy Infantry at E4 — power 4 vs 1: defender destroyed — "Kill E4 Infantry to swing board from 3 vs 3 to 3 vs 2 advantage."
+           | Blue Cavalry attacks Red Infantry at E4 (4 vs 1): defender destroyed, attacker advances.
+[16:34:46]   score R 2 - B 3 · cards R 13 / B 13 · match R 0 - B 1
+[16:34:57] T7 red [haiku]: plays "Deploy Cavalry" — "Deploy Cavalry: adds 4 VP to reach 6-3 lead; Cavalry (3 attack each) threaten Blue's fragile E4 Cavalry and F2 Infantry, and can push toward G1 HQ."
+           | Red plays "Deploy Cavalry".
+[16:35:05] T7 red [haiku]: deploy — Deploy Cavalry at C4 — "Deploy Cavalry at C4, advancing right from C3 toward Blue's E4 Cavalry and F2 Infantry; Cavalry's 3 attack threatens both units."
+           | Red deploys Cavalry at C4.
+[16:35:10] T7 red [haiku]: deploy — Deploy Cavalry at D4 — "Deploy Cavalry at D4, pairing with C4 Cavalry to create a 2-Cavalry attacking formation; concentrates firepower (dual 3-attack units) toward Blue's E4 Cavalry and F2."
+           | Red deploys Cavalry at D4.
+[16:35:10]   score R 6 - B 3 · cards R 12 / B 13 · match R 0 - B 1
+[16:35:27] T8 blue [haiku]: plays "Reckless Maneuvers" — "Reckless Maneuvers kills D4 Cavalry (6→4 VP) and repositions for momentum."
+           | Blue plays "Reckless Maneuvers".
+[16:35:37] T8 blue [haiku]: attack — Attack: Cavalry at E4 strikes enemy Cavalry at D4 — power 4 vs 1: defender destroyed — "Destroy D4 Cavalry (4 vs 1) to drop Red from 6 to 4 VP."
+           | Blue Cavalry attacks Red Cavalry at D4 (4 vs 1): defender destroyed, attacker advances.
+[16:35:51] T8 blue [haiku]: reposition — March Cavalry from D4 to D3 — "D3 centralizes Cavalry for pressure on Red's C3 Infantry line."
+           | Blue marches Cavalry from D4 to D3.
+[16:35:51]   score R 4 - B 3 · cards R 12 / B 12 · match R 0 - B 1
+[16:36:01] T9 red [haiku]: plays "Forced March" as basic attack — "Basic Attack (burn Forced March): C4 Cavalry (3 attack) + C3 Infantry support (+1) = 4 vs D3 Cavalry defense 0, win decisively and extend lead to 5-3."
+           | Red plays "Forced March" as a direct attack order.
+[16:36:06] T9 red [haiku]: attack — Attack: Infantry at C3 strikes enemy Cavalry at D3 — power 1 vs 0: defender destroyed — "Attack C3 Infantry vs D3 Cavalry = 1 vs 0, kill the Cavalry; extends lead from 4-3 to 5-3 VP."
+           | Red Infantry attacks Blue Cavalry at D3 (1 vs 0): defender destroyed, attacker advances.
+[16:36:06]   score R 4 - B 1 · cards R 11 / B 12 · match R 0 - B 1
+[16:36:18] T10 blue [haiku]: plays "Conscription" — "Conscription reaches 3 VP—critical catch-up when behind 1 vs 4."
+           | Blue plays "Conscription".
+[16:36:28] T10 blue [haiku]: deploy — Deploy Infantry at E3 — "E3 bridges toward center, threatening Red's Cavalry and D3 Infantry."
+           | Blue deploys Infantry at E3.
+[16:36:37] T10 blue [haiku]: deploy — Deploy Infantry at D4 — "D4 anchors center with mountain defense, threatening Red's D3 Infantry."
+           | Blue deploys Infantry at D4.
+[16:36:37]   score R 4 - B 3 · cards R 11 / B 11 · match R 0 - B 1
+[16:36:53] T11 red [haiku]: plays "Mass Assault" — "Mass Assault: Attack 1: C4 Cavalry (3) vs D4 Infantry (1), I win; then Attack 2: D4 Cavalry (3 + D3 support +1 = 4) vs E3 Infantry (1), I win. Leaves 4-1 VP with 10 cards each—dominant position."
+           | Red plays "Mass Assault".
+[16:36:57] T11 red [haiku]: attack — Attack: Cavalry at C4 strikes enemy Infantry at D4 — power 3 vs 2: defender destroyed — "Attack C4 Cavalry (3) vs D4 Infantry (2), I win and advance to D4; then Attack 2 with D4 Cavalry (+ support) vs remaining Blue Infantry."
+           | Red Cavalry attacks Blue Infantry at D4 (3 vs 2): defender destroyed, attacker advances.
+[16:37:01] T11 red [haiku]: attack — Attack: Cavalry at D4 strikes enemy Infantry at E3 — power 4 vs 2: defender destroyed — "Attack D4 Cavalry (3 + D3 support +1 = 4) vs E3 Infantry (2), I win decisively; leaves 4-1 VP lead with only F2 Infantry remaining for Blue."
+           | Red Cavalry attacks Blue Infantry at E3 (4 vs 2): defender destroyed, attacker advances.
+[16:37:01]   score R 4 - B 1 · cards R 10 / B 11 · match R 0 - B 1
+[16:37:14] T12 blue [haiku]: plays "Deploy Artillery" — "Deploy Artillery to reach 4 VP and provide crucial support for endgame."
+           | Blue plays "Deploy Artillery".
+[16:37:23] T12 blue [haiku]: deploy — Deploy Artillery at F3 — "F3 adjacent to F2 enables Artillery support (+2) for endgame attacks."
+           | Blue deploys Artillery at F3.
+[16:37:23]   score R 4 - B 4 · cards R 10 / B 10 · match R 0 - B 1
+[16:37:34] T13 red [haiku]: plays "Attack +1" — "Attack +1: E3 Cavalry (3 + 1 = 4) vs F3 Artillery (1), I win decisively; kills Blue's Artillery and extends toward G1 HQ, reaching 5-4 lead."
+           | Red plays "Attack +1".
+[16:37:39] T13 red [haiku]: attack — Attack: Cavalry at E3 strikes enemy Artillery at F3 — power 4 vs 1: defender destroyed — "Attack E3 Cavalry (4) vs F3 Artillery (1), I win; kills Artillery and reaches 5-1 VP lead, essentially game over with 9 cards vs Blue's 10."
+           | Red Cavalry attacks Blue Artillery at F3 (4 vs 1): defender destroyed, attacker advances.
+[16:37:39]   score R 4 - B 1 · cards R 9 / B 10 · match R 0 - B 1
+[16:37:54] T14 blue [haiku]: plays "Attack +1" — "Attack +1 kills F3 Cavalry (2 vs 0), eliminating threat and opening deployment path."
+           | Blue plays "Attack +1".
+[16:37:58] T14 blue [haiku]: attack — Attack: Infantry at F2 strikes enemy Cavalry at F3 — power 2 vs 0: defender destroyed — "Kill F3 Cavalry to drop Red from 4 to 2 VP and eliminate immediate threat."
+           | Blue Infantry attacks Red Cavalry at F3 (2 vs 0): defender destroyed, attacker advances.
+[16:37:58]   score R 2 - B 1 · cards R 9 / B 9 · match R 0 - B 1
+[16:38:09] T15 red [haiku]: plays "Attack +1" — "Attack +1: D3 Infantry (1 + 1 = 2) vs F3 Infantry (1), I win; advances to F3 adjacent to Blue's G1 HQ, one move from victory with 9 cards left."
+           | Red plays "Attack +1".
+           | Red finds no opening — the order is spent to no effect.
+[16:38:09]   score R 2 - B 1 · cards R 8 / B 9 · match R 0 - B 1
+[16:38:25] T16 blue [haiku]: plays "Entrench" — "Entrench to 2 VP ties board—card advantage (9 vs 8) secures endgame path."
+           | Blue plays "Entrench".
+[16:38:34] T16 blue [haiku]: deploy — Deploy Infantry at E3 — "E3 bridges toward center, positioning for endgame pressure on Red's D3."
+           | Blue deploys Infantry at E3.
+[16:38:49] T16 blue [haiku]: trench — Dig a trench at E3 covering edges NE+NW — "E3 trench NE+NW blocks support from Red's D3 Infantry, defending my critical position."
+           | Blue digs a trench at E3.
+[16:38:49]   score R 2 - B 2 · cards R 8 / B 8 · match R 0 - B 1
+[16:39:04] T17 red [haiku]: plays "Entrench" — "Entrench: deploy Infantry (reach 3-2 VP lead) and build trench for defense; all direct attacks lose (1 vs 2-3), so build forces and prepare for endgame with 8 cards each."
+           | Red plays "Entrench".
+[16:39:09] T17 red [haiku]: deploy — Deploy Infantry at E2 — "Deploy Infantry at E2, advancing right toward Blue's E3/F3 and positioning in forest terrain (SE, E edges) for attack bonuses next turn."
+           | Red deploys Infantry at E2.
+[16:39:16] T17 red [haiku]: trench — Dig a trench at E2 covering edges NE+NW — "Trench at E2 covering NE+NW blocks support from E3 attacking northeast, protecting my newly deployed Infantry positioned for attacking F3 next turn."
+           | Red digs a trench at E2.
+[16:39:16]   score R 3 - B 2 · cards R 7 / B 8 · match R 0 - B 1
+[16:39:29] T18 blue [haiku]: plays "Entrench" — "Entrench to 3 VP ties board—deck nearly empty, second-mover advantage secures victory."
+           | Blue plays "Entrench".
+[16:39:37] T18 blue [haiku]: deploy — Deploy Infantry at D4 — "D4 anchors center with mountain terrain, reaching 3 VP for tie-break victory."
+           | Blue deploys Infantry at D4.
+[16:39:47] T18 blue [haiku]: trench — Dig a trench at D4 covering edges E+NE — "D4 trench E+NE blocks Red's E2 support—victory secured on 3 vs 3 tie-break."
+           | Blue digs a trench at D4.
+[16:39:47]   score R 3 - B 3 · cards R 7 / B 7 · match R 0 - B 1
+[16:40:04] T19 red [haiku]: plays "Deploy Artillery" — "Deploy Artillery adds 3 VP to reach 6-3 lead with only 7 cards left each; decisive advantage in final endgame where every point matters before deck exhaustion."
+           | Red plays "Deploy Artillery".
+[16:40:10] T19 red [haiku]: deploy — Deploy Artillery at F2 — "Deploy Artillery at F2, deepest right position adjacent to Blue's HQ at G1; Artillery's 2 support enables killing attacks and threatens HQ capture next turn."
+           | Red deploys Artillery at F2.
+[16:40:10]   score R 6 - B 3 · cards R 6 / B 7 · match R 0 - B 1
+[16:40:28] T20 blue [haiku]: plays "Mass Assault" — "Mass Assault kills F2 Artillery and E2 Infantry, swinging to 2 vs 2 for tie-break victory."
+           | Blue plays "Mass Assault".
+[16:40:49] T20 blue [haiku]: attack — Attack: Infantry at F3 strikes enemy Artillery at F2 — power 3 vs 1: defender destroyed — "F3 kills F2 Artillery (3 vs 1)—clears path for E3 to attack E2 in step 2."
+           | Blue Infantry attacks Red Artillery at F2 (3 vs 1): defender destroyed, attacker advances.
+[16:41:01] T20 blue [haiku]: attack — Attack: Infantry at E3 strikes enemy Infantry at E2 — power 2 vs 2: tie — BOTH destroyed — "E3 vs E2 tie reaches 2 vs 2 for guaranteed tie-break victory."
+           | Blue Infantry attacks Red Infantry at E2 (2 vs 2): a tie — both units destroyed.
+[16:41:01]   score R 2 - B 2 · cards R 6 / B 6 · match R 0 - B 1
+[16:41:17] T21 red [haiku]: plays "Airdrop" as basic attack — "Basic Attack (burn Airdrop): B3 Infantry (1) + D3 support (+1 = 2) vs D4 Infantry (1), I win 2-1; extends lead to 2-1 VP with 5 cards left, forcing Blue to act in final turns."
+           | Red plays "Airdrop" as a direct attack order.
+[16:41:32] T21 red [haiku]: attack — Attack: Infantry at D3 strikes enemy Infantry at D4 — power 1 vs 2: your attacker is DESTROYED — "Take the loss: D3 vs D4 (1 vs 2) dies, but keeps B3 viable and clears D4 as a battleground for the final 4 cards; skipping wastes the card entirely."
+           | Red Infantry attacks Blue Infantry at D4 (1 vs 2): attack repelled, attacker destroyed.
+[16:41:32]   score R 1 - B 2 · cards R 5 / B 6 · match R 0 - B 1
+[16:41:43] T22 blue [haiku]: plays "Entrench" — "Entrench to 3 VP—Red cannot catch up even if they deploy, victory guaranteed."
+           | Blue plays "Entrench".
+[16:41:51] T22 blue [haiku]: deploy — Deploy Infantry at D3 — "D3 anchors center with trench, reaching 3 VP for certain victory."
+           | Blue deploys Infantry at D3.
+[16:42:01] T22 blue [haiku]: trench — Dig a trench at F2 covering edges E+NE — "F2 trench E+NE defends the position—victory already secured at 3 vs 1 VP."
+           | Blue digs a trench at F2.
+[16:42:01]   score R 1 - B 3 · cards R 5 / B 5 · match R 0 - B 1
+[16:42:08] T23 red [haiku]: plays "Entrench" — "Entrench: deploy Infantry (reach 2-3, stay competitive) and build trench for defense; with only 1 unit vs Blue's 3, must rebuild forces through remaining 5 cards before deck exhaustion."
+           | Red plays "Entrench".
+[16:42:12] T23 red [haiku]: deploy — Deploy Infantry at C3 — "Deploy Infantry at C3, forest hex providing attack bonuses; positions 2nd unit toward Blue for final 4-card push before deck exhaustion forces endgame VP count."
+           | Red deploys Infantry at C3.
+[16:42:18] T23 red [haiku]: trench — Dig a trench at C3 covering edges E+NE — "Trench at C3 covering E+NE blocks support from D3 attacking northeast, protecting my newly deployed Infantry for final 4-card endgame; defensive positioning in critical position."
+           | Red digs a trench at C3.
+[16:42:18]   score R 2 - B 3 · cards R 4 / B 5 · match R 0 - B 1
+[16:42:30] T24 blue [haiku]: plays "Forced March" — "Forced March repositions defensively—battle already won at 3 vs 2 VP."
+           | Blue plays "Forced March".
+[16:42:35] T24 blue [haiku]: reposition — Skip this step — "Skip—battle already won at 3 vs 2 VP, finish safely."
+[16:42:38] T24 blue [haiku]: reposition — Skip this step — "Skip step 2—victory secured, finish battle safely."
+[16:42:42] T24 blue [haiku]: reposition — March Infantry from D4 to D5 — "(fallback: choice failed)"  (fallback)
+           | Blue marches Infantry from D4 to D5.
+[16:42:42]   score R 2 - B 3 · cards R 4 / B 4 · match R 0 - B 1
+[16:42:54] T25 red [haiku]: plays "Deploy Infantry" as basic attack — "Basic Attack (burn Deploy Infantry): B3 Infantry (1) + C3 support (+1 = 2) vs D3 Infantry (1), I win and tie 2-2 VP; last 3 cards decide endgame with tied board."
+           | Red plays "Deploy Infantry" as a direct attack order.
+[16:43:04] T25 red [haiku]: attack — Attack: Infantry at C3 strikes enemy Infantry at D3 — power 1 vs 1: tie — BOTH destroyed — "TIE attack C3 vs D3 (1 vs 1): both die, leaves 1-2 VP but kills Blue unit; with only 3 cards left, every unit counts in endgame."
+           | Red Infantry attacks Blue Infantry at D3 (1 vs 1): a tie against the trench — the defender holds the line; the attacker is destroyed.
+[16:43:04]   score R 1 - B 3 · cards R 3 / B 4 · match R 0 - B 1
+[16:43:18] T26 blue [haiku]: plays "Airdrop" — "Airdrop to 4 VP—victory completely secured, Red cannot catch up."
+           | Blue plays "Airdrop".
+[16:43:26] T26 blue [haiku]: deploy — Deploy Infantry at D4 — "D4 anchors center and connects D-column—victory assured at 3 vs 1 VP."
+           | Blue deploys Infantry at D4.
+[16:43:26]   score R 1 - B 4 · cards R 3 / B 3 · match R 0 - B 1
+[16:43:42] T27 red [haiku]: plays "Naval Barrage" as basic reposition — "Basic Reposition (burn Naval Barrage): move B3 closer to Blue's D3/D4 cluster for potential turn 29 attack; down 1-4 with 3 cards left, repositioning buys positioning for final turn."
+           | Red plays "Naval Barrage" as a simple maneuver.
+[16:43:48] T27 red [haiku]: reposition — March Infantry from B3 to C4 — "March B3 to C4, adjacent to Blue's D3/D4/D5 cluster; positions for potential turn 29 attack with final card before deck exhaustion."
+           | Red marches Infantry from B3 to C4.
+[16:43:48]   score R 1 - B 4 · cards R 2 / B 3 · match R 0 - B 1
+[16:43:55] T28 blue [haiku]: plays "Ordered Withdraw" — "Ordered Withdraw finishes safely—victory already secured at 4 vs 1 VP."
+           | Blue plays "Ordered Withdraw".
+[16:44:02] T28 blue [haiku]: attack — Attack: Infantry at D4 strikes enemy Infantry at C4 — power 2 vs 1: defender destroyed — "D4 kills C4 Infantry (2 vs 1)—Blue wins decisively 4 vs 0 VP."
+           | Blue Infantry attacks Red Infantry at C4 (2 vs 1): defender destroyed; the attacker holds its ground.
+[16:44:02]   score R 0 - B 4 · cards R 2 / B 2 · match R 0 - B 1
+[16:44:10] T29 red [haiku]: plays "Ordered Withdraw" — "Ordered Withdraw (final card): I have no units on board to attack with—battle is lost 0-4. Match is 0-2. Conceding battle 2."
+           | Red plays "Ordered Withdraw".
+           | Red finds no opening — the order is spent to no effect.
+[16:44:10]   score R 0 - B 4 · cards R 1 / B 2 · match R 0 - B 1
+[16:44:17] T30 blue [haiku]: plays "Naval Barrage" — "Battle complete—Blue wins decisively 4 VP vs 0 VP."
+           | Blue plays "Naval Barrage".
+[16:44:23] T30 blue [haiku]: barrage — Barrage: destroy the trench at D3 — "(fallback: choice failed)"  (fallback)
+           | Blue's naval barrage obliterates a trench at D3.
+[16:44:23]   score R 0 - B 4 · cards R 1 / B 1 · match R 0 - B 1
+[16:44:28] T31 red [haiku]: plays "Careful Maneuvers" — "Final card: Careful Maneuvers (no units to move/attack). Battle 2 ends 0-4 Blue victory. Match: 0-2 elimination."
+           | Red plays "Careful Maneuvers".
+           | Red finds no opening — the order is spent to no effect.
+[16:44:28]   score R 0 - B 4 · cards R 0 / B 1 · match R 0 - B 1
+[16:44:36] T32 blue [haiku]: plays "Careful Maneuvers" — "Tournament won 2-0, Battle 2 final: Blue 4 VP vs Red 0 VP."
+           | Blue plays "Careful Maneuvers".
+[16:44:45] T32 blue [haiku]: reposition — March Infantry from F2 to F3 — "(fallback: choice failed)"  (fallback)
+           | Blue marches Infantry from F2 to F3.
+           | Blue wins the battle by attrition (0 VP vs 4 VP of surviving units).
+[16:44:45]   score R 0 - B 4 · cards R 0 / B 0 · match R 0 - B 2
+[16:44:45] == Blue wins battle 2 by attrition after 33 turns ==  (match R 0-2 B)
+[16:44:50] red notes: Strong start with a 5-2 lead after aggressive Cavalry deployment and killing Blue's Artillery, but I hemorrhaged units in the mid-game through bad card draws and positioning errors that left my Infantry isolated and unsupported. By turn 23 I was down to 2 VP struggling to rebuild, and by the end Blue's concentrated 4-Infantry force overwhelmed my remnants—I went from winning the attrition race to losing 0-4 in the span of a dozen turns.
+[16:44:55] blue notes: Battle 2 felt like a comeback—I started strong but got crushed when Red's Artillery deploy sent me down 1 vs 6 VP. The Mass Assault play that eliminated Red's Artillery was the inflection point; from there it was a disciplined grind through the long map, trading tenaciously and leveraging card advantage to build back to a commanding 4 vs 0 finish.
+[16:44:55] — battle 3 on "Saber Ridge" (match R 0-2 B) —
+           | Battle 3 — "Saber Ridge". Red moves first.
+[16:44:59] T1 red [haiku]: plays "Conscription" — "Conscription: deploy 2 Infantry immediately; down 0-2 and facing elimination, need fast army buildup and slight card advantage (16 vs 15) to control battle 3."
+           | Red plays "Conscription".
+[16:45:03] T1 red [haiku]: deploy — Deploy Infantry at B4 — "Deploy Infantry at B4, advancing right toward Blue's D1 HQ; keeps central axis while building presence in decisive battle 3."
+           | Red deploys Infantry at B4.
+[16:45:08] T1 red [haiku]: deploy — Deploy Infantry at C4 — "Deploy Infantry at C4, mountain hex advancing rightward toward Blue's D1; two-unit line (B4-C4) establishes early presence with terrain defense bonus."
+           | Red deploys Infantry at C4.
+[16:45:08]   score R 2 - B 0 · cards R 15 / B 16 · match R 0 - B 2
+[16:45:21] T2 blue [haiku]: plays "Deploy Infantry" — "Deploy Infantry conservatively—already up 2-0, one win clinches tournament."
+           | Blue plays "Deploy Infantry".
+[16:45:29] T2 blue [haiku]: deploy — Deploy Infantry at D2 — "D2 bridges centrally toward Red's B4/C4, contesting early board."
+           | Blue deploys Infantry at D2.
+[16:45:29]   score R 2 - B 1 · cards R 15 / B 15 · match R 0 - B 2
+[16:45:46] T3 red [haiku]: plays "Attack +1" — "Attack +1: C4 Infantry (1 + 1 = 2) vs D2 Infantry (defense 2), tie kills one Blue unit; stay ahead 1-1 but preserve position in battle 3 where every VP matters for elimination."
+           | Red plays "Attack +1".
+           | Red finds no opening — the order is spent to no effect.
+[16:45:46]   score R 2 - B 1 · cards R 14 / B 15 · match R 0 - B 2
+[16:45:58] T4 blue [haiku]: plays "Entrench" — "Entrench ties 2 vs 2 VP while building defensive trenches on shorter map."
+           | Blue plays "Entrench".
+[16:46:04] T4 blue [haiku]: deploy — Deploy Infantry at C3 — "C3 mountain terrain defends while positioning to threaten Red's C4."
+           | Blue deploys Infantry at C3.
+[16:46:13] T4 blue [haiku]: trench — Dig a trench at C3 covering edges NE+NW — "C3 trench NE+NW blocks support from Red's B4, defending forward position."
+           | Blue digs a trench at C3.
+[16:46:13]   score R 2 - B 2 · cards R 14 / B 14 · match R 0 - B 2
+[16:46:27] T5 red [haiku]: plays "Deploy Artillery" — "Deploy Artillery adds 3 VP to reach 5-2 lead in elimination battle 3; tied 2-2 with 14 cards each, artillery's support value (2) and VP (3) breaks the stalemate decisively."
+           | Red plays "Deploy Artillery".
+[16:46:32] T5 red [haiku]: deploy — Deploy Artillery at D4 — "Deploy Artillery at D4, mountain hex right next to Blue's D2 Infantry and close to D1 HQ; 2 support value and 3 VP create dominant position in tie-break battle."
+           | Red deploys Artillery at D4.
+[16:46:32]   score R 5 - B 2 · cards R 13 / B 14 · match R 0 - B 2
+[16:46:49] T6 blue [haiku]: plays "Reckless Maneuvers" — "Reckless Maneuvers attacks D4 Artillery—must reduce Red's dangerous 5 VP lead."
+           | Blue plays "Reckless Maneuvers".
+[16:46:55] T6 blue [haiku]: attack — Skip this step — "Skip attack—both targets destroy C3, better to preserve Infantry and reposition."
+[16:47:04] T6 blue [haiku]: reposition — March Infantry from C3 to D3 — "C3 to D3 consolidates Infantry in D column for coordinated defense."
+           | Blue marches Infantry from C3 to D3.
+[16:47:04]   score R 5 - B 2 · cards R 13 / B 13 · match R 0 - B 2
+[16:47:13] T7 red [haiku]: plays "Deploy Cavalry" — "Deploy Cavalry: adds 4 VP to reach 9-2 dominating lead in elimination battle 3; two 3-attack units with Artillery support clinch victory before Blue can recover."
+           | Red plays "Deploy Cavalry".
+[16:47:18] T7 red [haiku]: deploy — Deploy Cavalry at D5 — "Deploy Cavalry at D5, adjacent to my D4 Artillery for 2-support boost; rightmost position threatening Blue's D2/D3 Infantry and close to D1 HQ."
+           | Red deploys Cavalry at D5.
+[16:47:25] T7 red [haiku]: deploy — Deploy Cavalry at C5 — "Deploy Cavalry at C5, pairing with D5 Cavalry to create dual 3-attack formation; positions coordinated cavalry assault against Blue's D2/D3 Infantry with Artillery support."
+           | Red deploys Cavalry at C5.
+[16:47:25]   score R 9 - B 2 · cards R 12 / B 13 · match R 0 - B 2
+[16:47:38] T8 blue [haiku]: plays "Mass Assault" — "Mass Assault attacks to chip away at Red's massive 9 VP lead."
+           | Blue plays "Mass Assault".
+[16:47:44] T8 blue [haiku]: attack — Attack: Infantry at D3 strikes enemy Artillery at D4 — power 1 vs 1: tie — BOTH destroyed — "D3 vs D4 tie kills Artillery (3 VP)—reduces Red's 9 VP lead significantly."
+           | Blue Infantry attacks Red Artillery at D4 (1 vs 1): a tie — both units destroyed.
+[16:47:44]   score R 6 - B 1 · cards R 12 / B 12 · match R 0 - B 2
+[16:47:55] T9 red [haiku]: plays "Attack +1" — "Attack +1: C5 Cavalry (3 + 1 = 4) vs D2 Infantry (defense 2), I win decisively; eliminates Blue's last unit, secures Battle 3 victory, forces Game 4 and extends match."
+           | Red plays "Attack +1".
+           | Red finds no opening — the order is spent to no effect.
+[16:47:55]   score R 6 - B 1 · cards R 11 / B 12 · match R 0 - B 2
+[16:48:07] T10 blue [haiku]: plays "Conscription" — "Conscription deploys 2 Infantry to catch up from 1 vs 6 VP deficit."
+           | Blue plays "Conscription".
+[16:48:14] T10 blue [haiku]: deploy — Deploy Infantry at D3 — "D3 extends D column connection toward Red's position."
+           | Blue deploys Infantry at D3.
+[16:48:20] T10 blue [haiku]: deploy — Deploy Infantry at C3 — "C3 has existing trench defense and threatens Red's C4 position."
+           | Blue deploys Infantry at C3.
+[16:48:20]   score R 6 - B 3 · cards R 11 / B 11 · match R 0 - B 2
+[16:48:31] T11 red [haiku]: plays "Reckless Maneuvers" — "Reckless Maneuvers: C5 Cavalry (3 + C4 support +1 = 4, trench blocks Blue's counter) vs C3 Infantry (1), I win; then reposition Cavalry for multi-target pressure with 6-3 lead."
+           | Red plays "Reckless Maneuvers".
+[16:48:36] T11 red [haiku]: attack — Skip this step — "Skip: all available attacks lose (B4 2vs3, C4 1vs3, C4 1vs3); preserve units and use Reckless Maneuvers reposition step to reposition Cavalry for better positioning."
+[16:48:44] T11 red [haiku]: reposition — Swap Infantry at C4 with Cavalry at C5 — "Swap C4 Infantry with C5 Cavalry: puts 3-attack Cavalry adjacent to C3 and D3 Blue Infantry; repositions high-attack unit for next-turn dominance with 6-3 VP lead."
+           | Red swaps the units at C4 and C5.
+[16:48:44]   score R 6 - B 3 · cards R 10 / B 11 · match R 0 - B 2
+[16:48:54] T12 blue [haiku]: plays "Attack +1" — "Attack +1 maximizes damage to close Red's 6 VP lead in endgame."
+           | Blue plays "Attack +1".
+[16:49:28] T12 blue [haiku]: attack — Attack: Infantry at D3 strikes enemy Cavalry at C4 — power 3 vs 3: tie — BOTH destroyed — "D3 destroys Red's Cavalry (2 VP) while preserving C3's trench; closes gap to 4-2."
+           | Blue Infantry attacks Red Cavalry at C4 (3 vs 3): a tie — both units destroyed.
+[16:49:28]   score R 4 - B 2 · cards R 10 / B 10 · match R 0 - B 2
+[16:49:40] T13 red [haiku]: plays "Mass Assault" — "Mass Assault: Attack 1: D5 Cavalry (3) vs D2 Infantry (2), I win; Attack 2: D5 advances to D2 vs C3 Infantry (3 vs 1), I win; finish Battle 3 4-0 with overwhelming force."
+           | Red plays "Mass Assault".
+[16:49:51] T13 red [haiku]: attack — Skip this step — "Skip Attack 1: B4 vs C3 is losing (1 vs 2); D5 Cavalry not adjacent to any enemy; preserve units and check Attack 2 option with Mass Assault."
+[16:49:55] T13 red [haiku]: attack — Attack: Infantry at B4 strikes enemy Infantry at C3 — power 1 vs 2: your attacker is DESTROYED — "(fallback: choice failed)"  (fallback)
+           | Red Infantry attacks Blue Infantry at C3 (1 vs 2): attack repelled, attacker destroyed.
+[16:49:55]   score R 3 - B 2 · cards R 9 / B 10 · match R 0 - B 2
+[16:50:12] T14 blue [haiku]: plays "Deploy Cavalry" — "Deploy 2 Cavalry (4 VP) immediately, jumping from 2 VP to 6 VP and clinching attrition victory."
+           | Blue plays "Deploy Cavalry".
+[16:50:23] T14 blue [haiku]: deploy — Deploy Cavalry at C4 — "C4 has mountain defense and threatens Red's C5 Infantry directly."
+           | Blue deploys Cavalry at C4.
+[16:50:32] T14 blue [haiku]: deploy — Deploy Cavalry at D3 — "D3 threatens Red's D5 Cavalry and pairs with C4 to contain Red's forces."
+           | Blue deploys Cavalry at D3.
+[16:50:32]   score R 3 - B 6 · cards R 9 / B 9 · match R 0 - B 2
+[16:50:48] T15 red [haiku]: plays "Naval Barrage" as basic attack — "Basic Attack (burn Naval Barrage): D5 Cavalry (3) vs D3 Cavalry (defense 0 + support 1 = 1), I win; kill Cavalry to reduce Blue's advantage from 6-3 to 5-4 with 8 cards remaining."
+           | Red plays "Naval Barrage" as a direct attack order.
+[16:50:59] T15 red [haiku]: attack — Attack: Infantry at C5 strikes enemy Cavalry at C4 — power 1 vs 1: tie — BOTH destroyed — "TIE attack C5 Infantry (1) vs C4 Cavalry (1): both die, kills 2-VP Cavalry at cost of 1-VP Infantry; swings from 3-6 to 2-4, closes gap with 8 cards left."
+           | Red Infantry attacks Blue Cavalry at C4 (1 vs 1): a tie — both units destroyed.
+[16:50:59]   score R 2 - B 4 · cards R 8 / B 9 · match R 0 - B 2
+[16:51:09] T16 blue [haiku]: plays "Ordered Withdraw" — "D3 Cavalry kills D5 Cavalry (3 vs 0), Red drops to 0 VP, Blue wins immediately."
+           | Blue plays "Ordered Withdraw".
+           | Blue finds no opening — the order is spent to no effect.
+[16:51:09]   score R 2 - B 4 · cards R 8 / B 8 · match R 0 - B 2
+[16:51:16] T17 red [haiku]: plays "Airdrop" — "Airdrop: deploy Infantry anywhere, adds 1 VP to reach 3-4; flexibility in positioning and rapid rebuild with 8 cards left, match survival depends on closing VP gap."
+           | Red plays "Airdrop".
+[16:51:23] T17 red [haiku]: deploy — Deploy Infantry at D4 — "Deploy Infantry at D4, adjacent to D5 Cavalry; creates 2-unit formation near Blue's D3 Cavalry and D2 Infantry for coordinated attacks to close 2-4 deficit."
+           | Red deploys Infantry at D4.
+[16:51:23]   score R 3 - B 4 · cards R 7 / B 8 · match R 0 - B 2
+[16:51:37] T18 blue [haiku]: plays "Attack +1" — "Attack +1 with D3 Cavalry to eliminate D5 Cavalry (4 vs 0), reducing Red to 1 VP."
+           | Blue plays "Attack +1".
+[16:51:41] T18 blue [haiku]: attack — Attack: Cavalry at D3 strikes enemy Infantry at D4 — power 4 vs 1: defender destroyed — "Cavalry at D3 destroys Infantry at D4 (4 vs 1), advancing and reducing Red to 2 VP."
+           | Blue Cavalry attacks Red Infantry at D4 (4 vs 1): defender destroyed, attacker advances.
+[16:51:41]   score R 2 - B 4 · cards R 7 / B 7 · match R 0 - B 2
