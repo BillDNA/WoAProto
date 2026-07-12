@@ -486,3 +486,31 @@
 [16:51:41] T18 blue [haiku]: attack — Attack: Cavalry at D3 strikes enemy Infantry at D4 — power 4 vs 1: defender destroyed — "Cavalry at D3 destroys Infantry at D4 (4 vs 1), advancing and reducing Red to 2 VP."
            | Blue Cavalry attacks Red Infantry at D4 (4 vs 1): defender destroyed, attacker advances.
 [16:51:41]   score R 2 - B 4 · cards R 7 / B 7 · match R 0 - B 2
+[16:51:51] T19 red [haiku]: plays "Ordered Withdraw" — "Ordered Withdraw: attack D5 Cavalry vs Blue's D4 Cavalry (3 attack, 0 defense); survive ties and pressure before final 6 cards; match survival depends on next turn breakthrough."
+           | Red plays "Ordered Withdraw".
+[16:51:57] T19 red [haiku]: attack — Attack: Cavalry at D5 strikes enemy Cavalry at D4 — power 3 vs 0: defender destroyed — "Kill D4 Cavalry (3 vs 0): D5 advances, swings from 2-4 down to 2-2 tied; critical breakthrough heading into final 6 cards—match survival depends on this tie."
+           | Red Cavalry attacks Blue Cavalry at D4 (3 vs 0): defender destroyed; the attacker holds its ground.
+[16:51:57]   score R 2 - B 2 · cards R 6 / B 7 · match R 0 - B 2
+[16:52:06] T20 blue [haiku]: plays "Naval Barrage" — "Naval Barrage then attack: D2 Infantry kills D5 Cavalry (1 vs 0), Red drops to 0 VP."
+           | Blue plays "Naval Barrage".
+[16:52:11] T20 blue [haiku]: barrage — Barrage: destroy the trench at C3 — "(fallback: choice failed)"  (fallback)
+           | Blue's naval barrage obliterates a trench at C3.
+[16:52:11]   score R 2 - B 2 · cards R 6 / B 6 · match R 0 - B 2
+[16:52:19] T21 red [haiku]: plays "Forced March" as basic attack — "Basic Attack (burn Forced March): D4 Cavalry (3) vs D2 Infantry (1), likely wins decisively; close battle at 2-2 with 6 cards left, attack to break tie and force Game 4."
+           | Red plays "Forced March" as a direct attack order.
+           | Red finds no opening — the order is spent to no effect.
+[16:52:19]   score R 2 - B 2 · cards R 5 / B 6 · match R 0 - B 2
+[16:52:37] T22 blue [haiku]: plays "Airdrop" — "Airdrop adds 1 VP (3-2 lead), guarantees attrition victory with 5 Red cards remaining."
+           | Blue plays "Airdrop".
+[16:52:47] T22 blue [haiku]: deploy — Deploy Infantry at D4 — "D4 places Infantry north of Red's D5 Cavalry, adding 1 VP (3-2 lead)."
+           | Blue deploys Infantry at D4.
+[16:52:47]   score R 2 - B 3 · cards R 5 / B 5 · match R 0 - B 2
+[16:52:57] T23 red [haiku]: plays "Entrench" — "Entrench: deploy Infantry to reach 3-3 VP parity; with 5 cards left each, cannot afford to lose attrition tie at 2-3; must match Blue's VP before deck exhaustion."
+           | Red plays "Entrench".
+[16:53:05] T23 red [haiku]: deploy — Deploy Infantry at C5 — "Deploy Infantry at C5, adjacent to D5 Cavalry; reaches 3 VP after this Entrench card completes, tying 3-3 before final 4 cards determine winner."
+           | Red deploys Infantry at C5.
+[16:53:12] T23 red [haiku]: trench — Dig a trench at D5 covering edges NE+NW — "Trench at D5 covering NE+NW protects Cavalry from incoming attacks; reaches 3-3 VP tie, survive endgame with 3 cards left vs Blue's 4—one card behind but still alive."
+           | Red digs a trench at D5.
+[16:53:12]   score R 3 - B 3 · cards R 4 / B 5 · match R 0 - B 2
+[16:53:23] T24 blue [haiku]: plays "Deploy Artillery" — "Deploy Artillery adds 3 VP (6-3 lead), securing certain attrition victory."
+           | Blue plays "Deploy Artillery".
