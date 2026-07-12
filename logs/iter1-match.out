@@ -1,0 +1,22 @@
+[16:08:53] claude-plays: core7 set (7 maps) seed 1001 — MATCH, first to 3 — red=haiku(low) vs blue=haiku(low) — deck "default"  [persistent sessions]
+[16:08:53] — battle 1 on "The Marshes" (match R 0-0 B) —
+           | Battle 1 — "The Marshes". Red moves first.
+[16:09:05] T1 red [haiku]: plays "Deploy Infantry" — "Turn 1 with no units on board; Deploy Infantry is the only action that puts units into play, must establish presence adjacent to HQ at B1."
+           | Red plays "Deploy Infantry".
+[16:09:19] T1 red [haiku]: deploy — Deploy Infantry at B2 — "B2 is the most central position from HQ, positioning for advance toward Blue's HQ at D4 while maintaining support options."
+           | Red deploys Infantry at B2.
+[16:09:19]   score R 1 - B 0 · cards R 15 / B 16 · match R 0 - B 0
+[16:10:08] T2 blue [haiku]: plays "Entrench" — "Entrench deploys a unit and adds a trench, more value than Deploy alone."
+           | Blue plays "Entrench".
+[16:10:30] T2 blue [haiku]: deploy — Deploy Infantry at C4 — "Central position to contest Red's board control."
+           | Blue deploys Infantry at C4.
+[16:11:19] T2 blue [haiku]: trench — Dig a trench at D4 covering edges NE+NW — "Protects my HQ from northern attacks, the most critical piece."
+           | Blue digs a trench at D4.
+[16:11:19]   score R 1 - B 1 · cards R 15 / B 15 · match R 0 - B 0
+[16:11:32] T3 red [haiku]: plays "Conscription" — "Conscription deploys two Infantry, doubling my board presence to 3 units and building force concentration faster than single-unit alternatives."
+           | Red plays "Conscription".
+[16:11:41] T3 red [haiku]: deploy — Deploy Infantry at C2 — "C2 advances directly toward Blue's Infantry at C4 and the critical river-choke area at C3, building offensive pressure."
+           | Red deploys Infantry at C2.
+[16:11:48] T3 red [haiku]: deploy — Deploy Infantry at D2 — "D2 is the deepest penetration toward Blue's HQ at D4, and the forest terrain there supports my future attacks; completes an aggressive forward line."
+           | Red deploys Infantry at D2.
+[16:11:48]   score R 3 - B 1 · cards R 14 / B 15 · match R 0 - B 0
