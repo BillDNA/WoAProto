@@ -104,7 +104,7 @@ var MAP_TIPS = {
   vpdiff:'Average field-score margin of victory — higher = more decisive',
   atk:'Attacks per battle. Healthy ~5', swp:'Swaps per battle. Healthy ~7',
   zk:'Zero-kill battles. Healthy ~4%; ≥20% flags stalemates',
-  tie:'Battles decided by the tie-goes-to-2nd rule — lower is better (~25% baseline)',
+  tie:'Battles decided by the tie-goes-to-2nd rule — lower is better (10% baseline, rules 1.1)',
   drag:'Avg trailing turns with no kill before the game ended. 0 = decisive finish; high = the AIs marched in circles',
   swing:'Avg times the field-score lead flipped to the other side per battle. High = real back-and-forth; 0 = wire-to-wire'
 };

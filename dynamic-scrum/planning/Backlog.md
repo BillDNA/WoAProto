@@ -6,6 +6,24 @@ sprint-planning. Same ticket format as `Sprint.md` (the `ticket-block` template;
 
 ---
 
+### WOA-015 — ds-board-hub drops a well-formed ticket on live parse
+**Area:** workflow · **Status:** Todo
+
+During the S3 run the hub at :4841 served `/api/board` fine but `GET /api/ticket/WOA-009` returned
+"ticket not found on board", and the move endpoint then errored (`reading 'chunks'` on the missing
+ticket). WOA-009 was correctly formatted in `Sprint.md` — byte-identical in shape to WOA-010, which
+*did* parse — so the hub's live parse was silently dropping it. Runner fell back to direct `Sprint.md`
+edits (run-ticket Precondition 4), so nothing was lost, but a run that trusts the API mid-sprint will
+corrupt its own board state.
+
+**This is canonical DynamicScrum tooling, not WoA code** — WoA can't fix it here. Route upstream via
+`send-report` rather than patching locally. Filed from the drained WOA-009 observations report
+(2026-07-10).
+
+**Acceptance criteria:**
+- [ ] Reported to canonical DynamicScrum (send-report), or root-caused if the parse bug turns out to be WoA-side board formatting
+- [ ] User confirms done
+
 ### WOA-006 — Load saved balance reports into the Dashboard Charts tab
 **Area:** game-ui · **Status:** Todo
 

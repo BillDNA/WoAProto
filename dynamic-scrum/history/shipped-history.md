@@ -32,7 +32,29 @@ Ten specs built in one autonomous run (July 2, 2026) + five feedback rounds, all
 4. **Round 4 — data infrastructure (0.3).** Per-version accumulation (`accumulated.json`), Typicality footer on LLM battles, `content/` reorg (every map + deck a deletable file, one roster for all modes), reports → `logs/reports/{balance,battle,analysis}/<version>/`, Debug state-dump button, generate-reports + review-reports skills, `graphs-spec` drafted; river-deploy bug fixed.
 5. **Round 5 — specced V1.** The V1 thinking docs (now `dynamic-scrum/planning/specs/`) (data persistence, AI search + tuning, claude-plays sessions, content curation, field-manual animations); Bill answered every open question inline in the specs.
 
-**Baselines to protect** (post-V0, details in V0-summary): first mover ~46%, Red ~52%, tie-goes-to-2nd decides ~26% (biggest open lever), hard>normal 60% / hard>easy 78% skill premium, behaviour band ~4.9 attacks / ~6.5 swaps per battle. Sharp moves in these = regression even if win rates look fine.
+**Baselines to protect** — *V0-era numbers, superseded. The live guardrails are the rules-1.1 figures
+below; these are kept only as the historical record of what V0 measured:* first mover ~46%, Red ~52%,
+tie-goes-to-2nd decides ~26%, hard>normal 60% / hard>easy 78% skill premium, ~4.9 attacks / ~6.5 swaps
+per battle.
+
+**LIVE baselines to protect (rules 1.1, n60 hard-vs-hard, 2026-07-10)** — measure regressions against
+*these*, not the V0 row above:
+
+| Metric | 1.1 baseline | Was (V0) |
+| --- | --- | --- |
+| first mover | 48% | ~46% |
+| Red | 50% | ~52% |
+| tie-goes-to-2nd decides | **10%** | ~26% |
+| attacks / swaps per battle | **6.1 / 5.7** | ~4.9 / ~6.5 |
+| zero-kill | 1% | — |
+| HQ captures | 19% | ~22% |
+| avg battle length | 29.0 turns | — |
+| Drag (kill-less turns before end) | 2.3 | — |
+| Swings (lead changes/battle) | 2.8 | — |
+
+Sharp moves in these = regression even if win rates look fine. Note attacks/swaps **inverted** between
+eras (V0 4.9/6.5 → 1.1 6.1/5.7) — grading a fresh run against the V0 row flags healthy decks as broken.
+Skill premium (60/78%) has **not** been re-measured under 1.1; treat it as unverified, not as a pin.
 
 ## V1 — SHIPPED (July 2026, rules version 1.0)
 

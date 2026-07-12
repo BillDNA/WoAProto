@@ -5,6 +5,10 @@ below (**newest first**). Used to sanity-check whether something already shipped
 
 ## Index
 
+- **2026-07-12 — [[S3-balance-loop-v2-prep|S3 · Balance loop v2 prep]]** — the v2 loop armed: rules 1.1
+  (trench tie-survival), unit comp as data, `core7` the active map pool, "best map" rubric-scored, loop
+  skills retro'd (7 tickets: WOA-007/009/010/011/012/013/014). Weight tuner verified and **rejected** —
+  Q.2 closed, AI knob shut. Stale 0.x baselines corrected at close.
 - **2026-07-10 — [[S2-bill-drives-v1|S2 · Bill drives V1]]** — Bill runs the balance loop solo: onboarding
   doc + standard-runs runbook shipped and dogfooded, match mode draws from the mapset pool (3 tickets:
   WOA-004/005/008; WOA-006 → Backlog, WOA-007 rolled forward).

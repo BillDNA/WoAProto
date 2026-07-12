@@ -79,9 +79,14 @@ This skill is step 1 of the balance loop. The full v2 order (B.5.4) is:
 
 The **v2 levers** the loop can now pull, beyond cards/maps: **unit composition & values
 as slot data** (WOA-011 — infantry/cavalry/artillery mix, VP, atk/def/support, all a
-one-file content diff) and **AI weights as a tunable** (WOA-012 — a tuned personality
-that measurably beats current hard). Cards, maps, unit values, and AI weights are the
-four knobs an iteration may turn.
+one-file content diff). Cards, maps, and unit values are the three knobs an iteration
+may turn.
+
+**AI weights are NOT a live knob.** WOA-012 verified and **rejected** the tuner sweep under
+1.1: the tuned personality lost the matchup gate to hard (44% of 192). No weight set is known
+to beat current hard, so `AI_WEIGHTS` defaults stand and the hard AI is a *fixed measuring
+instrument*. Re-opening weights means clearing the beat-hard gate first — and remember that
+tuning the AI to flatter the balance metrics moves the ruler, not the game.
 
 ## The final report
 

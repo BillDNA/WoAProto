@@ -39,8 +39,15 @@ attrition rule. Re-measure before grading against them (commands in the footer).
    Target: 45–55% overall and per map (tune me).
 5. **Tie-rule not deciding too much.** Tie-goes-to-2nd should break ties, not decide games.
    Metric: "tie-goes-to-2nd decided N%" Decisiveness line (attrition wins with EQUAL field scores).
-   Baseline: **~25% — the biggest open lever**.
-   Target: ≤15% (placeholder — Bill hasn't ruled; tune me, or change the rule).
+   Baseline: **10% (rules 1.1, n60)** — in target. The old "~25–26%, biggest open lever" is a 0.x-era
+   number; the 1.1 trench tie-survival rules (WOA-010) brought it to 10%. Cite the live number.
+   Target: ≤15% — currently MET, so treat this as a guardrail to hold, not a lever to pull.
+
+> **Two different "ties" — don't conflate them.** The **attrition tiebreak** ("tie-goes-to-2nd") is
+> this metric: an attrition win where both sides have EQUAL field scores, awarded to whoever moved
+> second. The **combat tie** (`game/engine/03-rules.js`) is a separate rule about equal attack/defence
+> strength in a single strike — that's what the 1.1 trench tie-survival change touched. A suggestion
+> aimed at one will not move the other; say which you mean.
 
 ## Card rubric
 
@@ -132,7 +139,7 @@ against peers measured with the SAME deck, and re-grade the roster after any dec
    Score: good ≥70; marginal 60–70; failing near 50 (tune me) — ground is decorative there.
 6. **Tie-rule share.**
    Goal: the map doesn't funnel battles into equal-field-score stand-offs.
-   Evidence: "tie-goes-to-2nd decided" line, per map via name filter. Baseline ~25% overall.
+   Evidence: "tie-goes-to-2nd decided" line, per map via name filter. Baseline 10% overall (1.1).
    Score: at or below the game-level target (≤15%, tune me); a map far above the fleet average
    is producing symmetric grinds — look at its terrain and HQ spacing.
 

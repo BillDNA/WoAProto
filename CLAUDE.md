@@ -57,13 +57,16 @@ Start in [[code-architecture]] (`dynamic-scrum/docs/`) — it is the orientation
 ## Shipped history
 
 The June-2026 feedback rounds, V0, and V1 all shipped pre-board; the terse log lives in
-[[shipped-history]] (`dynamic-scrum/history/`), including the **baselines to protect** (first mover ~46%,
-Red ~52%, tie-goes-to-2nd ~26%, skill premium 60/78%, ~4.9 attacks / ~6.5 swaps per battle — sharp
-moves in these = regression even if win rates look fine). Post-adopt work is tracked on the board.
+[[shipped-history]] (`dynamic-scrum/history/`), including the **baselines to protect** — now the
+**rules-1.1** figures (first mover 48%, Red 50%, tie-goes-to-2nd **10%**, **6.1 attacks / 5.7 swaps**
+per battle, zero-kill 1%, Drag 2.3, Swings 2.8 — sharp moves in these = regression even if win rates
+look fine). The old V0 row (~46 / ~52 / ~26%, 4.9 attacks / 6.5 swaps) is **superseded** — attacks and
+swaps inverted between eras, so grading fresh runs against it flags healthy decks as broken. Skill
+premium (60/78%) is unverified under 1.1. Post-adopt work is tracked on the board.
 
-**For Bill to decide** (filed, not acted on): the weight-tuner suggestions
-(`logs/reports/analysis/2026-07-06-weight-tuner-sweep-1.md`) and the Steam leverage draft
-([[steam-roadmap]]).
+**For Bill to decide** (filed, not acted on): the Steam leverage draft ([[steam-roadmap]]).
+*(The weight-tuner suggestions are closed — WOA-012 verified and **rejected** the sweep under 1.1;
+tuned lost the matchup gate to hard, 44% of 192. Defaults stand.)*
 
 ## Vision (post-V1, not speced — YAGNI until V1 lands)
 
