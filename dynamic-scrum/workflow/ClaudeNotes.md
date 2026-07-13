@@ -5,28 +5,39 @@ start. **Overwrite** this each session — it is state, not a log.
 
 ## Where things stand (2026-07-12, balance-loop-v2 session)
 
-- **S3 (Balance loop v2 prep) CLOSED** — 7/7 Done, archived to
-  `dynamic-scrum/history/finished/S3-balance-loop-v2-prep.md`. **No sprint is active** — the v2 loop is
-  running *between* sprints, by Bill's call. The next sprint gets planned from the loop's final report.
-- **Balance loop v2 is RUNNING** — 3 iterations, **cards as the only variable knob** (Bill considered
-  adding weights, then dropped it once reminded WOA-012 rejected the tuner). Maps/rules/units/weights
-  frozen → the three iterations are apples-to-apples.
-- **The ruler was stale, and is now fixed.** The WOA-009 inbound report (drained + deleted this session)
-  caught it: the "baselines to protect" were 0.x-era and **attacks/swaps had inverted** (V0 4.9/6.5 →
-  1.1 6.1/5.7) — grading the loop against them would have flagged healthy decks as regressions. Live 1.1
-  baselines now table-ised in `shipped-history` + `CLAUDE.md`; tie-rule baseline corrected 25% → 10% in
-  `grading-rubrics.md`.
+- **S3 CLOSED** (7/7, archived). **No sprint active.** Balance loop v2 ran **between sprints**: 3
+  iterations, 6 deck slots, **4,200 battles**, 1 LLM feels-match. Cards were the only knob (Bill dropped
+  weights once reminded WOA-012 rejected the tuner).
+- **The loop is DONE.** Final report:
+  `logs/reports/analysis/1.1/2026-07-12-1.1-balance-loop-final.md`. **The next sprint is planned from
+  its §5** (three ranked suggestion lists). Don't plan one before reading it.
+- **Two results.** (1) An adopt-worthy deck, `cavsplit17-raid-paid` — passes every north star at T0 and
+  beats baseline on both of Bill's goals (Drag 2.4→2.2, Swings 2.8→3.3). **Awaiting Bill: it's a 17-card
+  deck.** (2) **The AI's eval function encodes a losing strategy** — and that's the bigger one.
+
+## The one thing to carry forward
+
+**`unitOnBoard: 22` vs `unitReserve: 16` tells the AI to deploy on sight. The LLM match found the
+opposite wins** — both players, independently: *"the rules heavily favor whoever saves Infantry/Cavalry
+reserves for turn 15+"*, *"early VP leads feel hollow"*. Both AI sides share the error, so it **cancels
+out in AI-vs-AI** — 4,200 hard-vs-hard battles could not see it; one LLM match could. The second-mover
+advantage and the drag we've been attacking with cards may both be downstream of this single wrong
+heuristic. **Fix this before designing more cards** (final report §5a.1; gate: WOA-012's beat-hard matchup).
 
 ## Threads to carry
 
-- **The tie-rule lever is spent, not open.** Target ≤15% is now MET (10%) — hold it as a guardrail; any
-  doc still calling it "the biggest open lever" is 0.x-era text.
-- **Two different "ties"** — attrition tiebreak ("tie-goes-to-2nd") vs the *combat* tie in
-  `engine/03-rules.js`. Documented in `grading-rubrics.md`; don't let a suggestion aim at the wrong one.
-- **AI weights are a closed knob** — hard is a fixed measuring instrument. Re-opening means clearing the
-  beat-hard gate first, and tuning the AI to flatter the metrics moves the ruler, not the game.
-- WOA-015 (new, Backlog): the ds-board-hub live-parse bug — canonical tooling, route via `send-report`.
-- Steam-roadmap draft still parked, Bill-decides. Skill premium (60/78%) unverified under 1.1.
+- **Card metrics are AI readouts, not card properties** — `1stSight%` ≈ eval delta, `AvgSeen` ≈
+  `CARD_KEEP`. `aiPlanTurn` has no hand lookahead, so "hoarding" isn't hoarding. Rubric now says so.
+  Corollary, measured: **auto-play RELOCATES** (split cavalry → Deploy Artillery jumps 69→77%). No card
+  batch can ever fix it.
+- **Temperature dial** now in `grading-rubrics.md` (Bill's idea): T0 strict / T1 explore / T2 hot, with
+  hard floors that never relax (Tie ≤15, 0-kill, **deploy-steps ≥ stock** — there is *no deploy fallback*,
+  so a stranded unit never reaches the board).
+- **The Void is geometrically broken** — a donut; two hexes missing from `shapeDef` split the HQs, so
+  there are fewer *legal* attacks. Not a card problem. Fix the shape or cut it from `core7`.
+- **The 16-card ceiling has a price tag now** — it's the only thing making the good change expensive.
+- WOA-015 (Backlog): ds-board-hub live-parse bug — canonical tooling, route via `send-report`.
+- Steam-roadmap draft still parked. Skill premium (60/78%) still unverified under 1.1.
 
 ## Related
 
