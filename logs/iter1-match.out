@@ -514,3 +514,78 @@
 [16:53:12]   score R 3 - B 3 · cards R 4 / B 5 · match R 0 - B 2
 [16:53:23] T24 blue [haiku]: plays "Deploy Artillery" — "Deploy Artillery adds 3 VP (6-3 lead), securing certain attrition victory."
            | Blue plays "Deploy Artillery".
+[16:53:31] T24 blue [haiku]: deploy — Deploy Artillery at D3 — "D3 places Artillery to support D4 Infantry's attacks on D5 Cavalry."
+           | Blue deploys Artillery at D3.
+[16:53:31]   score R 3 - B 6 · cards R 4 / B 4 · match R 0 - B 2
+[16:53:43] T25 red [haiku]: plays "Deploy Infantry" as basic attack — "(fallback: engine plan)"  (fallback)
+           | Red plays "Deploy Infantry" as a direct attack order.
+[16:53:48] T25 red [haiku]: attack — Attack: Cavalry at D5 strikes enemy Infantry at D4 — power 4 vs 3: defender destroyed — "D5 Cavalry (4) vs D4 Infantry (3): win decisively, close to 4-5 down; last-stand attack with 3 cards remaining before match ends 0-3."
+           | Red Cavalry attacks Blue Infantry at D4 (4 vs 3): defender destroyed, attacker advances.
+[16:53:48]   score R 3 - B 5 · cards R 3 / B 4 · match R 0 - B 2
+[16:53:58] T26 blue [haiku]: plays "Entrench" — "Entrench twice adds 2 VP (7-3 lead), guaranteeing attrition victory."
+           | Blue plays "Entrench".
+[16:54:05] T26 blue [haiku]: deploy — Deploy Infantry at C2 — "C2 centralizes forces and supports C3 and D2."
+           | Blue deploys Infantry at C2.
+[16:54:18] T26 blue [haiku]: trench — Dig a trench at D3 covering edges NE+NW — "Trench at D3 (NE+NW) protects Artillery from D4 Cavalry."
+           | Blue digs a trench at D3.
+[16:54:18]   score R 3 - B 6 · cards R 3 / B 3 · match R 0 - B 2
+[16:54:25] T27 red [haiku]: plays "Entrench" — "Entrench: deploy final Infantry to reach 4-6 down; with 3 cards left each, battle is lost but complete the final deployment sequence before deck exhaustion."
+           | Red plays "Entrench".
+[16:54:32] T27 red [haiku]: deploy — Deploy Infantry at D5 — "Deploy Infantry at D5, adjacent to D4 Cavalry; completes final 2-unit formation before series end, down 3-6 with 2 cards remaining—match lost 0-3."
+           | Red deploys Infantry at D5.
+[16:54:38] T27 red [haiku]: trench — Dig a trench at D4 covering edges E+NE — "Trench at D4 covering E+NE protects Cavalry from Blue's eastern approach; final card play as match concludes 0-3 Blue victory."
+           | Red digs a trench at D4.
+[16:54:38]   score R 4 - B 6 · cards R 2 / B 3 · match R 0 - B 2
+[16:54:48] T28 blue [haiku]: plays "Entrench" — "Entrench adds 1 VP (7-4 lead), guaranteeing attrition victory with 2 Red cards left."
+           | Blue plays "Entrench".
+[16:54:53] T28 blue [haiku]: deploy — Deploy Infantry at C4 — "C4 has mountain defense and blocks Red's C5 Infantry."
+           | Blue deploys Infantry at C4.
+[16:55:05] T28 blue [haiku]: trench — Dig a trench at C4 covering edges E+NE — "Trench at C4 (E+NE) protects Infantry from D4/D5 attacks."
+           | Blue digs a trench at C4.
+[16:55:05]   score R 4 - B 7 · cards R 2 / B 2 · match R 0 - B 2
+[16:55:13] T29 red [haiku]: plays "Careful Maneuvers" as basic attack — "Basic Attack (burn Careful Maneuvers): attack with Cavalry at D4 or Infantry at D5 without -1 penalty; final attempt with 2 cards left, down 4-7 to Blue's final card."
+           | Red plays "Careful Maneuvers" as a direct attack order.
+[16:55:20] T29 red [haiku]: attack — Attack: Cavalry at D4 strikes enemy Artillery at D3 — power 3 vs 3: tie — BOTH destroyed — "TIE attack D4 Cavalry (3) vs D3 Artillery (3): trade 2-VP Cavalry for 3-VP Artillery, swing to 2-4; final card play before battle ends 4-7 loss, series 0-3."
+           | Red Cavalry attacks Blue Artillery at D3 (3 vs 3): a tie — both units destroyed.
+[16:55:20]   score R 2 - B 4 · cards R 1 / B 2 · match R 0 - B 2
+[16:55:35] T30 blue [haiku]: plays "Forced March" as basic attack — "Basic Attack: D2 Infantry destroys D5 Infantry (1 vs 1 tie), reducing Red to 1 VP."
+           | Blue plays "Forced March" as a direct attack order.
+[16:55:44] T30 blue [haiku]: attack — Attack: Infantry at C4 strikes enemy Infantry at C5 — power 1 vs 2: your attacker is DESTROYED — "(fallback: choice failed)"  (fallback)
+           | Blue Infantry attacks Red Infantry at C5 (1 vs 2): attack repelled, attacker destroyed.
+[16:55:44]   score R 2 - B 3 · cards R 1 / B 1 · match R 0 - B 2
+[16:55:53] T31 red [haiku]: plays "Entrench" as basic attack — "Basic Attack (burn Entrench): final turn down 2-3, series already lost 0-3; attack with Infantry for last tactical play before battle ends on attrition tie."
+           | Red plays "Entrench" as a direct attack order.
+           | Red finds no opening — the order is spent to no effect.
+[16:55:53]   score R 2 - B 3 · cards R 0 / B 1 · match R 0 - B 2
+[16:56:06] T32 blue [haiku]: plays "Careful Maneuvers" as basic attack — "Basic Attack; already winning 3-2 after Red deck exhausted; secure victory."
+           | Blue plays "Careful Maneuvers" as a direct attack order.
+           | Blue finds no opening — the order is spent to no effect.
+           | Blue wins the battle by attrition (2 VP vs 3 VP of surviving units).
+[16:56:06]   score R 2 - B 3 · cards R 0 / B 0 · match R 0 - B 3
+[16:56:06] == Blue wins battle 3 by attrition after 33 turns ==  (match R 0-3 B)
+[16:56:49] red notes: Felt like I had early momentum (5-2 VP lead) but failed to convert it—Blue's Artillery pivot and superior unit clustering made my isolated pieces untenable by mid-game, and I spent the final turns just burning cards with no winning path. A complete series loss (0-3) that exposed my fundamental mistakes: poor force concentration and card sequencing.
+[16:56:54] blue notes: **Battle 3 reflection:**
+
+That was a grinding comeback—I recovered from a disastrous 1-6 deficit by pivoting to aggressive Cavalry deployment, then had to grind through a tight endgame where we traded blows and both decks emptied. The win felt earned through patient rebuilding rather than decisive dominance.
+[16:56:54] ==== MATCH: Blue wins 0-3 ====
+
+-- red match felt-notes --
+**Match reflection (0-3 loss):**
+
+No early luck decided this—Blue simply outplayed me consistently. I built 5-2 VP leads in all three battles but couldn't adapt or sustain them; Blue adapted by clustering units for mutual support and deploying Artillery strategically to deny my advance. My weakness: poor force concentration and card timing (burning powerful cards without positioning to capitalize). Blue's strength: disciplined unit grouping and support denial.
+
+**Suggested change:** Reduce Artillery support value from 2 to 1, or limit support range to only orthogonally-adjacent hexes (not diagonal). The current Artillery clustering mechanic makes superior positioning unbeatable—early VP leads feel hollow against a single well-placed support unit.
+
+-- blue match felt-notes --
+**Match Summary (0-3 Blue sweep):**
+
+Blue won all three battles decisively, each via attrition after ~33 turns. Early luck *didn't* decide it—I fell behind in every game (1-6, 2-3, 2-3 VP respectively) but recovered by recognizing when to deploy high-value units (Cavalry, Artillery) to spike VP quickly. Adaptation worked: the winning pattern emerged across games—fall back, deploy aggressively, grind to endgame.
+
+**Strengths:** Deployment sequencing, late-game defensive positioning (trenches), reading when attrition favors my side with fewer cards left.
+
+**Weaknesses:** Early positioning felt passive; Red was outdeployed in all three games, suggesting Red's deck or strategy may be underpowered relative to Blue's reserve access.
+
+**One suggested change:** Cap total deployments per side or add an "entrenchment tax" (deployments cost a card action) to reward early positioning over late-game recovery plays. Current rules heavily favor whoever saves Infantry/Cavalry reserves for turn 15+.
+[16:57:09] gauging typicality (40 hard-AI baseline battles, cached per map+version)…
+[16:57:47] record(s) appended to C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\logs\reports\battle\claude-plays-log.jsonl
+[16:57:47] transcript written to C:\Users\Bill\Documents\DynamicNewAlgorithms\WarOfAttrition\logs\reports\battle\1.1\2026-07-12T23-08-53-214Z-set-core7-haiku-v-haiku-match.md
