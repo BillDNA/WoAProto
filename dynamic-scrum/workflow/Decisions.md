@@ -51,6 +51,16 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   direction under 1.1 (survivor 1.88 < default 2.5; the 1.0-era 3.75 now scores badly) — the weights
   lever on ties looks spent. Evidence: `logs/reports/analysis/1.1/2026-07-10-weight-tuner-sweep-2.md`.
 
+- **`D.D:roadmap-3-pillar-reframe`** (2026-07-15) — the Roadmap is reworked around Bill's three
+  short-term pillars, **foundation-first**: M1 trustworthy + autonomous balance loop → M2 actionable data
+  → M3 roguelite design intake, with **pillar 3 gated by 1 & 2**. Content growth (grow the card pool)
+  moved *after* the run design (was the next milestone; now M4, gated on M3), and the AI-eval "bent
+  ruler" fix (final report §5a.1) is promoted to the leading sprint (**M1 · Fix the bent ruler**). *Why:*
+  the AI eval encodes a losing strategy invisible to AI-vs-AI (both sides share it, so 4,200 battles
+  can't see it) — measuring a roguelite content explosion on that ruler is unsafe, so the loop must
+  measure the real game before the content multiplies. The 16-card-ceiling / 17-card-deck call is parked
+  in [[constraint-temperature]] pending a temperature policy, not decided here.
+
 ## Architecture
 
 - **`D.A:units-content-kind`** (2026-07-10, WOA-011) — unit composition & values are a content kind

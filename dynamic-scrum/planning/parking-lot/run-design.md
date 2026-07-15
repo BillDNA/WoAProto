@@ -19,6 +19,19 @@ What *is* a run? Candidate shapes to argue and **physically playtest on the boar
   abilities" vision).
 - **Lose-condition** — lose-a-battle-lose-the-run vs attrition-of-resources across the campaign.
 
+## Bill's tentative loop (2026-07-15)
+
+A first sketch to argue with (from `Questions.md` Q.1) — establishes the vocabulary **battle < operation < campaign**:
+
+1. **Select commander** (the run-defining pick — see [[commander-traits]]).
+2. **Select the 1st operation** — term TBD ("operation" needs noodling), loosely the current first-to-3.
+3. **Play the battles.**
+4. **Rewards / update your deck** — unit upgrades or new unit types? (the meta-progression step — see [[metaprogression]]).
+5. **Select the next operation.**
+6. A **campaign** = a series of operations.
+
+Still tentative ("needs noodling"), so Q.1 stays open — but it's the leading candidate, and it already resolves the deck-evolution cadence (between operations, not between battles).
+
 ## When it graduates
 
 One page, three candidate shapes, each physically playtested, one chosen and written as the M3 spec.

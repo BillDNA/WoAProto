@@ -3,44 +3,41 @@
 Claude's compact snapshot of where things stand, so "take a look at where we are" is fast at session
 start. **Overwrite** this each session — it is state, not a log.
 
-## Where things stand (2026-07-12, balance-loop-v2 session)
+## Where things stand (2026-07-15, roadmapping + sprint-planning session)
 
-- **S3 CLOSED** (7/7, archived). **No sprint active.** Balance loop v2 ran **between sprints**: 3
-  iterations, 6 deck slots, **4,200 battles**, 1 LLM feels-match. Cards were the only knob (Bill dropped
-  weights once reminded WOA-012 rejected the tuner).
-- **The loop is DONE.** Final report:
-  `logs/reports/analysis/1.1/2026-07-12-1.1-balance-loop-final.md`. **The next sprint is planned from
-  its §5** (three ranked suggestion lists). Don't plan one before reading it.
-- **Two results.** (1) An adopt-worthy deck, `cavsplit17-raid-paid` — passes every north star at T0 and
-  beats baseline on both of Bill's goals (Drag 2.4→2.2, Swings 2.8→3.3). **Awaiting Bill: it's a 17-card
-  deck.** (2) **The AI's eval function encodes a losing strategy** — and that's the bigger one.
+- **Sprint OPENED: `M1 · Fix the bent ruler`** — 6 tickets (WOA-016…021), planned from the
+  balance-loop-v2 final report §5. **0 Done — not started.** Build order: WOA-016 → WOA-017 → WOA-018
+  (dep 016) → WOA-019 → WOA-020 → WOA-021.
+- **Roadmap reworked** around Bill's three short-term pillars, foundation-first (`D.D:roadmap-3-pillar-reframe`):
+  M1 trustworthy+autonomous loop → M2 actionable data → M3 roguelite intake, **3 gated by 1 & 2**.
+  Content growth moved *after* run design (now M4). 5 new parking-lot specs added.
 
 ## The one thing to carry forward
 
-**`unitOnBoard: 22` vs `unitReserve: 16` tells the AI to deploy on sight. The LLM match found the
-opposite wins** — both players, independently: *"the rules heavily favor whoever saves Infantry/Cavalry
-reserves for turn 15+"*, *"early VP leads feel hollow"*. Both AI sides share the error, so it **cancels
-out in AI-vs-AI** — 4,200 hard-vs-hard battles could not see it; one LLM match could. The second-mover
-advantage and the drag we've been attacking with cards may both be downstream of this single wrong
-heuristic. **Fix this before designing more cards** (final report §5a.1; gate: WOA-012's beat-hard matchup).
+**WOA-018 is the flagship — and its gate is behavioral, not cosmetic.** The AI eval (`unitOnBoard 22 >
+unitReserve 16`, `game/engine/05-ai.js`) encodes a losing strategy: the LLM match proved *hold reserve,
+deploy late* wins, but the AI deploys on sight. Both AI sides share the error so AI-vs-AI can't see it.
+Fix = narrow/urgency-scale the gap. **Gate: beat current `hard` (WOA-012 matchup, must clear 44%) + the
+new reserve metric shows it actually holds reserve — NEVER "the metrics look nicer."** WOA-016 (reserve
+metric) is its instrument and lands first.
 
 ## Threads to carry
 
-- **Card metrics are AI readouts, not card properties** — `1stSight%` ≈ eval delta, `AvgSeen` ≈
-  `CARD_KEEP`. `aiPlanTurn` has no hand lookahead, so "hoarding" isn't hoarding. Rubric now says so.
-  Corollary, measured: **auto-play RELOCATES** (split cavalry → Deploy Artillery jumps 69→77%). No card
-  batch can ever fix it.
-- **Temperature dial** now in `grading-rubrics.md` (Bill's idea): T0 strict / T1 explore / T2 hot, with
-  hard floors that never relax (Tie ≤15, 0-kill, **deploy-steps ≥ stock** — there is *no deploy fallback*,
-  so a stranded unit never reaches the board).
-- **The Void is geometrically broken** — a donut; two hexes missing from `shapeDef` split the HQs, so
-  there are fewer *legal* attacks. Not a card problem. Fix the shape or cut it from `core7`.
-- **The 16-card ceiling has a price tag now** — it's the only thing making the good change expensive.
+- **17-card deck (`cavsplit17-raid-paid`) + 16-card ceiling** — parked in [[constraint-temperature]];
+  decide once the (search-side) temperature policy is defined. The report's recommended adopt deck, on hold.
+- **Q.1 "what is a run" — tentatively answered** (Bill, in Questions.md): commander → operations →
+  campaign; deck-update *between operations*. Establishes vocabulary battle < operation < campaign. Still
+  tentative → Q.1 stays open; feeds M3 + [[metaprogression]] / [[run-design]].
+- **Deferred M1 follow-ons in Backlog:** WOA-022 (`aiPlanTurn` lookahead), WOA-023 (`CARD_KEEP` review),
+  WOA-024 (gated reserve-economy-as-rules — measure WOA-018 first).
+- **Goals flag (Bill's):** the `zero-build-game` long-term goal carries his own "is this still valid?"
+  margin note — worth deciding when the Tauri shell (M7) gets real. Left for Bill (his file).
 - WOA-015 (Backlog): ds-board-hub live-parse bug — canonical tooling, route via `send-report`.
-- Steam-roadmap draft still parked. Skill premium (60/78%) still unverified under 1.1.
+- Reconnect ran at session top: machine bootstrap clean; **CRLF drift (DS-211) fixed** (77 files
+  re-checked-out to LF, no commit needed); hub started detached on :4841 (MCP attaches next session).
 
 ## Related
 
-[[Sprint]].
+[[Sprint]] · [[Roadmap]] · [[constraint-temperature]].
 
 #claudenotes

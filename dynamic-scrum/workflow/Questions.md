@@ -7,6 +7,13 @@ move to `Decisions.md` (and out of here).
    shell, the save system, the content targets, and the pitch. Blocks M3 (and shapes M1). Expected to
    resolve via a one-page paper design + physical playtest of three candidate shapes (M0 / [[run-design]])
    before any code. `[dynamic-scrum/planning/parking-lot/steam-roadmap.md]`
+	1. tentative run loop
+		1. select commander
+		2. select 1st operation (new term needs noodling but loosely what our current first to 3 is)
+			1. play the battles
+		3. get rewards / update your deck / are there unit upgrade or new types of units ?
+		4. select next operation
+		5. a campaign is a serries of operations
 2. **(Q.3) Is "tie-goes-to-2nd decides ~26% of battles" the biggest open balance lever — and how to
    address it?** Named the biggest 0.x complaint; the tuner surfaced threatTie↑ as one lever.
    *2026-07-10 (WOA-012): the threatTie lever flipped under rules 1.1 — sweep #2's survivor was 1.88

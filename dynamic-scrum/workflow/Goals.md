@@ -32,7 +32,7 @@ moment: a `session-start roadmapping` glance.
 
 ## Long-term
 <!-- project altitude — why does this project exist, and what does "done" look like? -->
-- **zero-build-game** — `game/` stays plain scripts, no bundler, zip-and-double-click keeps working; `node game/server.js` is the standard dev path. 
+- **zero-build-game** — `game/` stays plain scripts, no bundler, zip-and-double-click keeps working; `node game/server.js` is the standard dev path.  (is this still valid or are we making things harder by having this goal)
 - **steam-release** — ship a Steam roguelite deck-builder.
 
 ## Related

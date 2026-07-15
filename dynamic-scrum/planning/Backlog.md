@@ -6,6 +6,44 @@ sprint-planning. Same ticket format as `Sprint.md` (the `ticket-block` template;
 
 ---
 
+<!-- M1 follow-ons deferred from the "Fix the bent ruler" sprint (balance-loop-v2 final report §5). -->
+
+### WOA-022 — Give `aiPlanTurn` real hand lookahead (or keep its metrics diagnostic-only)
+**Area:** ai · **Status:** Todo · **Type:** opus · **Docs:** code-architecture
+
+From the balance-loop-v2 final report (§5a.2). `aiPlanTurn` (`game/engine/05-ai.js`) has **no hand
+lookahead** — it can't hold a card for a better moment, only fail to pick it, which is why `1stSight%` /
+`AvgSeen` are AI readouts, not card properties. The cheap half is done (the rubric flags them as
+diagnostics, never targets); the expensive half is real planning. Follow-on to WOA-018 — worth it only if
+reserve-timing behavior needs more than a weight fix.
+
+**Acceptance criteria:**
+- [ ] Either `aiPlanTurn` gains hand lookahead (a card can be held for a better turn) with a measured effect on the reflex band, or a decision is recorded to keep it lookahead-free and treat its card metrics as diagnostics permanently
+- [ ] User confirms done
+
+### WOA-023 — Review `CARD_KEEP` — the unexamined balance lever
+**Area:** ai · **Status:** Todo · **Type:** sonnet · **Docs:** code-architecture
+
+From the final report (§5a.3). `CARD_KEEP` (`game/engine/05-ai.js`) alone separates the hoard band (keep
+3–5 → AvgSeen 3.8–5.7) from the deep-hoard tail (keep 8–9 → AvgSeen 7–11), yet it's hand-authored and
+never reviewed — balance work nobody signed off on. Audit the per-card keep values; re-justify or tune.
+
+**Acceptance criteria:**
+- [ ] The `CARD_KEEP` values are reviewed against what they should encode; either re-justified in a note or adjusted with a golden-diff re-baseline
+- [ ] User confirms done
+
+### WOA-024 — (gated) Reserve-vs-board economy as a RULES change
+**Area:** rules · **Status:** Todo · **Type:** sonnet · **Docs:** code-architecture, grading-rubrics
+
+From the final report (§5b.1). Both LLMs independently proposed a *rules* fix for late-deploy dominance
+(cap total deployments per side, or an entrenchment tax — deployments cost a card action). **Gated on
+WOA-018:** pursue only if fixing the AI eval does *not* dissolve the pathology — measure first (WOA-018's
+sweep), then rule. If the AI fix suffices for humans too, this closes unbuilt.
+
+**Acceptance criteria:**
+- [ ] WOA-018's post-fix sweep is assessed: if late-deploy dominance survives, a rules change (deployment cap / entrenchment tax) is designed + measured; if it dissolved, this is closed with that finding recorded
+- [ ] User confirms done
+
 ### WOA-015 — ds-board-hub drops a well-formed ticket on live parse
 **Area:** workflow · **Status:** Todo
 
