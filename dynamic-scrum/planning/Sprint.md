@@ -31,23 +31,6 @@ ceiling / 17-card-deck call → [[constraint-temperature]]. **Already done:** §
 
 ## Tickets
 
-### WOA-020 — Fix or cut The Void from core7
-**Area:** content · **Status:** Todo · **Type:** sonnet · **Docs:** code-architecture
-
-§5b.4. The Void is geometrically broken — a **donut**: hexes `(-1,0)` and `(0,0)` are absent from its
-`shapeDef` (`game/content/maps/the-void.js`), splitting the HQs by a hole into two narrow arms. Fewer
-adjacencies → fewer *legal* attacks (Atk 4.5 vs fleet 6.1; Drag 3.7 vs a 2.5 ceiling), and instrumented
-on The Void the AI commits attackers into outright **losses 44%** of the time — nowhere to fight from,
-not cold feet. While it's in `core7` (`game/content/mapsets/core7.js`) it contaminates the sweep.
-**Default: repair first** — fill the two missing hexes so the HQs reconnect, then re-measure; cut it from
-`core7` only if the repair can't bring Atk/Drag into band (keeping map variety is worth the two hexes).
-
-**Acceptance criteria:**
-- [ ] `shapeDef` repaired (HQs connected, legal-attack count back in band, re-measured) — **or**, only if repair fails to land Atk/Drag in band, the-void removed from `core7`; the path taken + rationale in the closing note
-- [ ] If repaired: a `core7` sweep shows The Void's Atk/Drag within band. If cut: `core7` resolves as 6 maps and stays the loop default
-- [ ] `node game/test.js` green
-- [ ] User confirms done
-
 ### WOA-021 — Document `starting:true` as a tunable balance lever
 **Area:** rubric · **Status:** Todo · **Type:** sonnet · **Docs:** grading-rubrics
 
@@ -68,6 +51,7 @@ _None._
 
 ## Finished
 
+- **WOA-020 — fix or cut The Void** (Done/**CUT** 2026-07-15, sprint-run): repair-first tried per the report (fill (-1,0)/(0,0)) but the filled centre is a straight HQ-rush lane — **1st 84% / HQ 78% / 0-kill 42%** at n50, far WORSE than the broken donut (Atk 4.9 / Drag 2.6). The HQs are fundamentally 3 hexes apart; a real fix is a redesign, not a hole-fill. **CUT** from core7 per the fallback → core7 now **6 maps** (id stays `core7` frozen; name→"Core Six"), `the-void.js` reverted + preserved on disk. test.js green (237). Note: core7 baseline shifts (6 maps) — its balanceScore 4.4 was a false-good masking the geometry. Follow-on: restore to 7 (redesign The Void / promote the-cockpit) — Bill's roster call. cost: inline (runner), ~4 hard sweeps.
 - **WOA-019 — drop dead per-card Win%** (Done 2026-07-15, sprint-run): removed the Win% column from the terminal (`balance.js`) + saved-markdown (`report-model.js`, both styles) card tables + its "how to read it" note (§5c.1: dead at n=700, all cards 49–52 vs ±8 — invited reading noise as signal). `won` stays in `logs/woa.db` (30072 card_plays rows, independent write path). test.js green (237); golden diff = only the dropped column. Held: dashboard live winPct column/bar untouched (out of scope — parity follow-on). cost: ~84k tok / 22 tools.
 - **WOA-018 — fix AI reserve/board eval bias** (Done/**REJECTED** 2026-07-15, sprint-run): the §5a.1 "bent ruler" hypothesis does **not** survive AI-vs-AI measurement. Both levers measured vs current `hard` on core7 and rejected — narrow-gap (`unitReserve`→19) is a coin-flip (**50.7% of 672** agent; **49.5% of 196** runner re-check), urgency-scale monotonically WEAKER (uu6 38% → uu12 4%; it turtles into a loss). No lever clears the beat-`hard` gate → eval reverted to pristine, defaults stand, RULES_VERSION unchanged (1.1), test.js green (237). **Finding:** deploy-on-sight is ~neutral for this attrition dynamic (`fieldScore` counts only deployed units; the attrition projection already punishes undeployment) — the ruler is NOT distorted; the LLM's hold-reserve edge doesn't transfer to the greedy heuristic. If the felt-note is real it's a **rules/content** question → WOA-024. See [[Decisions]] `D.D:ai-reserve-eval-rejected`. cost: ~127k tok / 33 tools / ~43min sim.
 - **WOA-017 — deploy-step-budget test** (Done 2026-07-15, sprint-run): `game/test.js` sums printed deploy steps per unit type over the active deck (`E.CARDS`) and asserts ≤ `E.PIECE_TOTALS[type]` (stock from resolved defs, not hardcoded; trench skipped); 234→237. Failing-first proven on `cavsplit17-raid` (8 infantry > 7 stock). Finding: `default` saturates stock exactly (7/7·2/2·1/1) — zero headroom, so any deploy-step-adding card trips it. cost: ~104k tok / 20 tools.

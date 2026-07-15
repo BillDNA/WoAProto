@@ -23,11 +23,20 @@
    - killing-ground(24.5) SIDE-BIASED 2nd-mover-strong, attrition-only (Red 70/1st 37/HQ 7%).
    - riverbend     (13.5) same failure mode as Killing Ground (1st 35%, HQ 3%) — redundant to keep both.
    - the-ford      (10.0) biggest 1st-mover skew of the remainder (1st 60%) — cut to make room.
-   - the-cockpit   (6.0)  solid but ranked 8th of 12 — edged out, pool only needed 7. */
+   - the-cockpit   (6.0)  solid but ranked 8th of 12 — edged out, pool only needed 7.
+
+   WOA-020 (2026-07-15): the-void CUT — its donut geometry is broken (HQs only 3
+   apart, split by a 2-hex hole; the AI commits attackers into outright losses 44%
+   of the time). Its balanceScore 4.4 was a FALSE-good: healthy aggregate metrics
+   masking a geometric pathology. Repair-first was tried (fill (-1,0)/(0,0)) but the
+   filled centre is a straight HQ-rush lane — 1st-mover 84% / HQ 78% / 0-kill 42% at
+   n50, far worse — so cut per the ticket's fallback. Pool is now 6 (id stays "core7",
+   a frozen reference; name -> "Core Six"). Restore to 7 later by redesigning The Void
+   (HQs farther apart) or promoting the-cockpit — a roster call for Bill. */
 (function(g){var c=g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],decks:[],mapsets:[]};(c.mapsets=c.mapsets||[]).push(
 {
  "id": "core7",
- "name": "Core Seven",
+ "name": "Core Six",
  "active": true,
  "maps": [
   "causeway",
@@ -35,8 +44,7 @@
   "long-march",
   "saber-ridge",
   "the-marshes",
-  "the-narrows",
-  "the-void"
+  "the-narrows"
  ]
 }
 );})(typeof window!=='undefined'?window:globalThis);
