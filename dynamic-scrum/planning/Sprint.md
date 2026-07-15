@@ -31,27 +31,6 @@ ceiling / 17-card-deck call → [[constraint-temperature]]. **Already done:** §
 
 ## Tickets
 
-### WOA-018 — Fix the AI reserve/board eval bias  *(flagship)*
-**Area:** ai · **Status:** Todo · **Depends on:** WOA-016 · **Type:** opus · **Docs:** code-architecture
-
-The highest-leverage finding in the report (§5a.1). `unitOnBoard: 22` vs `unitReserve: 16` in
-`game/engine/05-ai.js` tells the AI a board unit always beats a reserve unit — deploy now, always. Two
-independent LLM players found the opposite wins (*hold reserve, deploy late*); both AI sides share the
-error so it cancels in AI-vs-AI. Narrow the gap (`unitReserve` 16 → 19–20) or make it **urgency-scaled**
-(reserve worth more early, less late). This may also compress the reflex band contaminating card metrics
-and dissolve the second-mover advantage + drag we've been chasing with cards.
-
-**Hazard (respect it):** tuning the AI to flatter the balance metrics *moves the ruler, not the game*.
-This change is justified **only** because an independent population (the LLM match) says the heuristic is
-wrong — not because the metrics would look nicer. The gate is behavioral + strength, below.
-
-**Acceptance criteria:**
-- [ ] The modified AI **beats current `hard`** in the WOA-012 beat-hard matchup gate — must win the matchup (the rejected weight-tuner sweep got **44% of 192**; that's the bar to clear)
-- [ ] The reserve-held metric (WOA-016) shows the modified AI **actually holds reserve / deploys later** than current `hard` — the behavior, not just a win rate
-- [ ] Full `core7` sweep re-run recorded, reporting whether **second-mover advantage and Drag move** (dissolve / unchanged) — a finding either way, not a pass/fail
-- [ ] The change alters battle aggregates, so it is a deliberate **re-baseline**: bump the version SoT and update test pins atomically (golden-diff contract) — not a silent golden-diff break
-- [ ] User confirms done
-
 ### WOA-019 — Drop per-card Win% from printed reports
 **Area:** data · **Status:** Todo · **Type:** sonnet · **Docs:** data-and-reports
 
@@ -101,6 +80,7 @@ _None._
 
 ## Finished
 
+- **WOA-018 — fix AI reserve/board eval bias** (Done/**REJECTED** 2026-07-15, sprint-run): the §5a.1 "bent ruler" hypothesis does **not** survive AI-vs-AI measurement. Both levers measured vs current `hard` on core7 and rejected — narrow-gap (`unitReserve`→19) is a coin-flip (**50.7% of 672** agent; **49.5% of 196** runner re-check), urgency-scale monotonically WEAKER (uu6 38% → uu12 4%; it turtles into a loss). No lever clears the beat-`hard` gate → eval reverted to pristine, defaults stand, RULES_VERSION unchanged (1.1), test.js green (237). **Finding:** deploy-on-sight is ~neutral for this attrition dynamic (`fieldScore` counts only deployed units; the attrition projection already punishes undeployment) — the ruler is NOT distorted; the LLM's hold-reserve edge doesn't transfer to the greedy heuristic. If the felt-note is real it's a **rules/content** question → WOA-024. See [[Decisions]] `D.D:ai-reserve-eval-rejected`. cost: ~127k tok / 33 tools / ~43min sim.
 - **WOA-017 — deploy-step-budget test** (Done 2026-07-15, sprint-run): `game/test.js` sums printed deploy steps per unit type over the active deck (`E.CARDS`) and asserts ≤ `E.PIECE_TOTALS[type]` (stock from resolved defs, not hardcoded; trench skipped); 234→237. Failing-first proven on `cavsplit17-raid` (8 infantry > 7 stock). Finding: `default` saturates stock exactly (7/7·2/2·1/1) — zero headroom, so any deploy-step-adding card trips it. cost: ~104k tok / 20 tools.
 
 - **WOA-016 — reserve-held-at-end metric** (Done 2026-07-15, sprint-run): per-side reserve-at-end share computed in the engine agg (`engine/06-sim.js`, split of the same `deployedShare` read) + folded/rendered in `report-model.js` (both styles) + `res_end_red/blue` columns in `logs/woa.db`; documented in `data-and-reports.md`. Additive — golden diff holds live (red 48% / 6.0 atk / 5.8 swp match 1.1 baselines); test.js 230→234 with a reconciliation invariant. Baseline reading: hard-vs-hard holds **10%/10%** at end (the deploy-on-sight number WOA-018 must move). cost: ~187k tok / 81 tools.

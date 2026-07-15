@@ -61,6 +61,21 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   measure the real game before the content multiplies. The 16-card-ceiling / 17-card-deck call is parked
   in [[constraint-temperature]] pending a temperature policy, not decided here.
 
+- **`D.D:ai-reserve-eval-rejected`** (2026-07-15, WOA-018) — the balance-loop-v2 §5a.1 flagship claim —
+  *"the AI's `unitOnBoard 22 > unitReserve 16` eval encodes a losing strategy"* — is **verified and
+  rejected under AI-vs-AI measurement**. Neither proposed lever beats current `hard` on core7:
+  narrow-gap (`unitReserve`→19) is a coin-flip (50.7% of 672; runner re-check 49.5% of 196), and
+  urgency-scaling reserve value (a golden-diff-safe `unitReserveUrgent` term, default 0) is monotonically
+  WEAKER (uu6 38% → uu12 4% — it turtles into a loss). *Why the hypothesis fails:* deploy-on-sight is ~correct
+  for this attrition dynamic — `fieldScore` counts only DEPLOYED units and the attrition projection already
+  punishes undeployment — so the eval is at worst neutral, **not** distorting the balance ruler. The LLM
+  feels-match's hold-reserve edge does not transfer to the greedy/hard heuristic (the LLM springs reserves
+  with timing the heuristic lacks). Defaults stand, no version bump (RULES_VERSION 1.1). A sibling of
+  `D.D:weight-tuner-sweep-rejected`: an eval "improvement" motivated by prettier strategy, measured and
+  rejected. **Corollary:** if the reserve-timing dominance is real for HUMANS, it's a **rules/content**
+  question (WOA-024), not an AI-eval one — and the reserve-held-at-end metric (WOA-016) is the instrument
+  to detect it.
+
 ## Architecture
 
 - **`D.A:units-content-kind`** (2026-07-10, WOA-011) — unit composition & values are a content kind

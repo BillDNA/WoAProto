@@ -36,12 +36,16 @@ never reviewed — balance work nobody signed off on. Audit the per-card keep va
 **Area:** rules · **Status:** Todo · **Type:** sonnet · **Docs:** code-architecture, grading-rubrics
 
 From the final report (§5b.1). Both LLMs independently proposed a *rules* fix for late-deploy dominance
-(cap total deployments per side, or an entrenchment tax — deployments cost a card action). **Gated on
-WOA-018:** pursue only if fixing the AI eval does *not* dissolve the pathology — measure first (WOA-018's
-sweep), then rule. If the AI fix suffices for humans too, this closes unbuilt.
+(cap total deployments per side, or an entrenchment tax — deployments cost a card action). **Gate
+resolved by WOA-018 (2026-07-15):** the AI-eval route is CLOSED — §5a.1 was refuted under AI-vs-AI
+(deploy-on-sight is ~neutral, not a distorting bias; `D.D:ai-reserve-eval-rejected`). So there is no
+AI-vs-AI pathology to dissolve. This ticket now stands ONLY on whether the reserve-timing dominance is
+real for **humans/LLMs** — which AI-vs-AI cannot see. It needs a fresh human/LLM-match signal before any
+rules change, using the reserve-held-at-end metric (WOA-016) as the instrument. Do not build a rules
+change on the AI-vs-AI sweep alone.
 
 **Acceptance criteria:**
-- [ ] WOA-018's post-fix sweep is assessed: if late-deploy dominance survives, a rules change (deployment cap / entrenchment tax) is designed + measured; if it dissolved, this is closed with that finding recorded
+- [ ] A human/LLM-match signal is gathered (reserve-held-at-end + win correlation): if late-deploy dominance is real for humans, a rules change (deployment cap / entrenchment tax) is designed + measured; if the LLM felt-note doesn't reproduce, this closes with that finding recorded
 - [ ] User confirms done
 
 ### WOA-015 — ds-board-hub drops a well-formed ticket on live parse
