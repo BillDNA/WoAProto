@@ -31,18 +31,6 @@ ceiling / 17-card-deck call → [[constraint-temperature]]. **Already done:** §
 
 ## Tickets
 
-### WOA-019 — Drop per-card Win% from printed reports
-**Area:** data · **Status:** Todo · **Type:** sonnet · **Docs:** data-and-reports
-
-§5c.1. Per-card Win% is dead at n=700 — all 13 cards read 49–52 against a ±8 rubric threshold — and it
-invites exactly the wrong grading instinct (reading noise as signal). Keep it in the DB (`logs/woa.db`);
-stop **printing** it in the markdown report / card tables (`game/report-model.js`).
-
-**Acceptance criteria:**
-- [ ] Per-card Win% no longer appears in printed balance reports / card tables; still recorded in `logs/woa.db`
-- [ ] `node game/test.js` green; golden diff otherwise unchanged (only the dropped column differs)
-- [ ] User confirms done
-
 ### WOA-020 — Fix or cut The Void from core7
 **Area:** content · **Status:** Todo · **Type:** sonnet · **Docs:** code-architecture
 
@@ -80,6 +68,7 @@ _None._
 
 ## Finished
 
+- **WOA-019 — drop dead per-card Win%** (Done 2026-07-15, sprint-run): removed the Win% column from the terminal (`balance.js`) + saved-markdown (`report-model.js`, both styles) card tables + its "how to read it" note (§5c.1: dead at n=700, all cards 49–52 vs ±8 — invited reading noise as signal). `won` stays in `logs/woa.db` (30072 card_plays rows, independent write path). test.js green (237); golden diff = only the dropped column. Held: dashboard live winPct column/bar untouched (out of scope — parity follow-on). cost: ~84k tok / 22 tools.
 - **WOA-018 — fix AI reserve/board eval bias** (Done/**REJECTED** 2026-07-15, sprint-run): the §5a.1 "bent ruler" hypothesis does **not** survive AI-vs-AI measurement. Both levers measured vs current `hard` on core7 and rejected — narrow-gap (`unitReserve`→19) is a coin-flip (**50.7% of 672** agent; **49.5% of 196** runner re-check), urgency-scale monotonically WEAKER (uu6 38% → uu12 4%; it turtles into a loss). No lever clears the beat-`hard` gate → eval reverted to pristine, defaults stand, RULES_VERSION unchanged (1.1), test.js green (237). **Finding:** deploy-on-sight is ~neutral for this attrition dynamic (`fieldScore` counts only deployed units; the attrition projection already punishes undeployment) — the ruler is NOT distorted; the LLM's hold-reserve edge doesn't transfer to the greedy heuristic. If the felt-note is real it's a **rules/content** question → WOA-024. See [[Decisions]] `D.D:ai-reserve-eval-rejected`. cost: ~127k tok / 33 tools / ~43min sim.
 - **WOA-017 — deploy-step-budget test** (Done 2026-07-15, sprint-run): `game/test.js` sums printed deploy steps per unit type over the active deck (`E.CARDS`) and asserts ≤ `E.PIECE_TOTALS[type]` (stock from resolved defs, not hardcoded; trench skipped); 234→237. Failing-first proven on `cavsplit17-raid` (8 infantry > 7 stock). Finding: `default` saturates stock exactly (7/7·2/2·1/1) — zero headroom, so any deploy-step-adding card trips it. cost: ~104k tok / 20 tools.
 

@@ -29,8 +29,8 @@
    - Swings                  -> avg times the field-score lead flipped to the OTHER
                                 side per battle. High = real back-and-forth (you can
                                 feel you'll come back); 0 = one side led wire-to-wire.
-   - Card report             -> how often each card was in the WINNER's spent pile
-                                when it got played at all (55%+ = strong, 45%- = weak)
+   - Card report             -> Simple%/1stSight%/AvgSeen per card (per-card Win% was
+                                dropped from print, WOA-019: dead at n=700, still in logs/woa.db)
 
    Attrition victory (June 2026 rules): the player with more VP of SURVIVING
    units on the board wins when the cards run out; reserves count for nothing.
@@ -148,16 +148,17 @@ function mapReport(n, diff, filter, maps) {
     (G.leadChanges / Math.max(1, G.games)).toFixed(1) + ' lead swings per battle (higher = more back-and-forth)');
 
   console.log('\nCard report (' + G.games + ' battles of AI play — biases noted below):');
-  var ch = pad('Card', 20, true) + pad('Win%', 6) + pad('Simple%', 9) + pad('1stSight%', 11) + pad('AvgSeen', 9) + pad('plays', 8);
+  // Win% dropped from print July 2026 (WOA-019): dead at n=700, all cards read
+  // 49-52 against the +/-8 rubric threshold — still computed in cardRows()
+  // and recorded per-battle in logs/woa.db, just not shown here.
+  var ch = pad('Card', 20, true) + pad('Simple%', 9) + pad('1stSight%', 11) + pad('AvgSeen', 9) + pad('plays', 8);
   console.log(ch);
   console.log(new Array(ch.length + 1).join('-'));
   R.cardRows(G.cards, E.CARDS).forEach(function (r) {
-    console.log(pad(r.name, 20, true) + pad(r.win + '%', 6) + pad(r.simple + '%', 9) +
+    console.log(pad(r.name, 20, true) + pad(r.simple + '%', 9) +
       pad(r.sight + '%', 11) + pad(r.seen, 9) + pad(r.plays, 8));
   });
   console.log('\nHow to read it:');
-  console.log('  Win%      share of plays by the eventual winner. Attrition games see both');
-  console.log('            sides play everything, so this hugs 50 — treat big deviations only.');
   console.log('  Simple%   resolved as a basic attack/reposition instead of the printed action.');
   console.log('            High = the printed action often was not worth it. (Bias: when the AI');
   console.log('            burns a card it prefers its least precious one, per CARD_KEEP.)');

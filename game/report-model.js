@@ -199,10 +199,13 @@ var WOA_REPORT = (function () {
     L.push('');
     // Noop% restored July 2026 (rules 1.0): new multi-step cards are where dead
     // turns reappear, and the rubric's dead-card check needs a printed number.
-    L.push('| Card | Win% | Simple% | Noop% | 1stSight% | AvgSeen | ' + (style === 'report' ? 'Plays' : 'plays') + ' |');
-    L.push('|---|--:|--:|--:|--:|--:|--:|');
+    // Win% dropped from print July 2026 (WOA-019): dead at n=700, all cards
+    // read 49-52 against the +/-8 rubric threshold — still computed in
+    // cardRows() and recorded in logs/woa.db, just not shown here.
+    L.push('| Card | Simple% | Noop% | 1stSight% | AvgSeen | ' + (style === 'report' ? 'Plays' : 'plays') + ' |');
+    L.push('|---|--:|--:|--:|--:|--:|');
     cardRows(G.cards, model.cards).forEach(function (r) {
-      L.push('| ' + r.name + ' | ' + r.win + ' | ' + r.simple + ' | ' + r.noop + ' | ' + r.sight + ' | ' + r.seen + ' | ' + r.plays + ' |');
+      L.push('| ' + r.name + ' | ' + r.simple + ' | ' + r.noop + ' | ' + r.sight + ' | ' + r.seen + ' | ' + r.plays + ' |');
     });
     L.push('');
     // Obsidian-style tag footer so reports are findable by kind + rules version
