@@ -31,19 +31,7 @@ ceiling / 17-card-deck call → [[constraint-temperature]]. **Already done:** §
 
 ## Tickets
 
-### WOA-021 — Document `starting:true` as a tunable balance lever
-**Area:** rubric · **Status:** Todo · **Type:** sonnet · **Docs:** grading-rubrics
-
-§5b.2. The `starting: true` card (the guaranteed opener) is a live balance lever nobody was treating as
-one — measured: one flag moved first-mover **42 → 40**, HQ **17 → 10**, battle length **+1.8 turns** (the
-`cavsplit17-tempo` slot). It deserves a line in `grading-rubrics.md` flagging it as a deliberate tunable
-(alongside the Temperature / Best-map lines), so future card design treats the opener as a lever, not a
-default.
-
-**Acceptance criteria:**
-- [ ] `grading-rubrics.md` carries a line documenting `starting: true` as a tunable balance lever, with the measured first-mover / HQ / battle-length effect as evidence
-- [ ] The line names which metrics it moves, so a card-design pass can tune it deliberately
-- [ ] User confirms done
+_All 6 tickets dispositioned — see Finished below._
 
 ## In Progress
 
@@ -51,6 +39,7 @@ _None._
 
 ## Finished
 
+- **WOA-021 — `starting:true` lever documented** (Done 2026-07-15, sprint-run): added a `starting: true` guaranteed-opener lever subsection to `grading-rubrics.md` — the flag is a live balance knob (measured: first-mover 42→40, HQ 17→10, battle +1.8 turns on `cavsplit17-tempo`), with how-to-read guidance (check the opener before other levers when first-mover%/HQ% drift). Inline doc-only; test.js green (237), wikilinks 0-dead. cost: inline (runner).
 - **WOA-020 — fix or cut The Void** (Done/**CUT** 2026-07-15, sprint-run): repair-first tried per the report (fill (-1,0)/(0,0)) but the filled centre is a straight HQ-rush lane — **1st 84% / HQ 78% / 0-kill 42%** at n50, far WORSE than the broken donut (Atk 4.9 / Drag 2.6). The HQs are fundamentally 3 hexes apart; a real fix is a redesign, not a hole-fill. **CUT** from core7 per the fallback → core7 now **6 maps** (id stays `core7` frozen; name→"Core Six"), `the-void.js` reverted + preserved on disk. test.js green (237). Note: core7 baseline shifts (6 maps) — its balanceScore 4.4 was a false-good masking the geometry. Follow-on: restore to 7 (redesign The Void / promote the-cockpit) — Bill's roster call. cost: inline (runner), ~4 hard sweeps.
 - **WOA-019 — drop dead per-card Win%** (Done 2026-07-15, sprint-run): removed the Win% column from the terminal (`balance.js`) + saved-markdown (`report-model.js`, both styles) card tables + its "how to read it" note (§5c.1: dead at n=700, all cards 49–52 vs ±8 — invited reading noise as signal). `won` stays in `logs/woa.db` (30072 card_plays rows, independent write path). test.js green (237); golden diff = only the dropped column. Held: dashboard live winPct column/bar untouched (out of scope — parity follow-on). cost: ~84k tok / 22 tools.
 - **WOA-018 — fix AI reserve/board eval bias** (Done/**REJECTED** 2026-07-15, sprint-run): the §5a.1 "bent ruler" hypothesis does **not** survive AI-vs-AI measurement. Both levers measured vs current `hard` on core7 and rejected — narrow-gap (`unitReserve`→19) is a coin-flip (**50.7% of 672** agent; **49.5% of 196** runner re-check), urgency-scale monotonically WEAKER (uu6 38% → uu12 4%; it turtles into a loss). No lever clears the beat-`hard` gate → eval reverted to pristine, defaults stand, RULES_VERSION unchanged (1.1), test.js green (237). **Finding:** deploy-on-sight is ~neutral for this attrition dynamic (`fieldScore` counts only deployed units; the attrition projection already punishes undeployment) — the ruler is NOT distorted; the LLM's hold-reserve edge doesn't transfer to the greedy heuristic. If the felt-note is real it's a **rules/content** question → WOA-024. See [[Decisions]] `D.D:ai-reserve-eval-rejected`. cost: ~127k tok / 33 tools / ~43min sim.

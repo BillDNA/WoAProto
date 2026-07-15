@@ -76,6 +76,17 @@ temperature in the analysis; it is a dial, not a default.
 > clean at 17 cards and only becomes expensive when a 16th-card cut has to fund it. Before rejecting a
 > change for breaching a guardrail, check whether the *guardrail* is the thing under test.
 
+## `starting: true` — the guaranteed-opener lever (WOA-021, 2026-07-15)
+
+The `starting: true` flag (the card guaranteed into the opening hand) is a **live balance lever, not a
+neutral default** — treat it as a deliberate tuning knob. Measured (loop v2, the `cavsplit17-tempo` slot):
+making Conscription the guaranteed opener moved **first-mover 42 → 40%**, **HQ captures 17 → 10%**, and
+**battle length +1.8 turns** — one flag, three metrics. How to read it: a stronger / more committal opener
+pushes first-mover% **down** and lengthens battles (it hands the first mover a play the second mover
+answers); a cheaper / defensive opener does the reverse. So when **first-mover% or HQ%** drifts, check
+whether the `starting` card is the cause *before* reaching for the temperature dial or other levers — and
+when tuning first-mover balance deliberately, the opener is one of the knobs.
+
 ## Card rubric
 
 > **⚠ Read this before grading criteria 4 and 5.** `1stSight%` and `AvgSeen` are **readouts of the AI's
