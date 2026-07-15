@@ -31,20 +31,6 @@ ceiling / 17-card-deck call → [[constraint-temperature]]. **Already done:** §
 
 ## Tickets
 
-### WOA-017 — Deploy-step-budget-vs-stock assertion in test.js
-**Area:** test · **Status:** Todo · **Type:** sonnet · **Docs:** code-architecture
-
-The *"single highest-value one-liner in the report"* (§5c.3). Oversubscription is invisible until
-simulated and silently produces dead turns (measured: Raiding Party's 8th infantry step vs stock 7 →
-Deploy Infantry Noop 26%); undersubscription strands units unrecoverably (there is **no deploy fallback**).
-An assertion in `game/test.js` turns it into a load-time failure, not a 700-battle surprise: for every
-active deck/unit config, summed printed deploy steps per unit type must be **≤ that unit's stock**.
-
-**Acceptance criteria:**
-- [ ] `game/test.js` asserts, for each active deck, printed deploy steps per unit type ≤ unit stock; `node game/test.js` green
-- [ ] The assertion is shown to FAIL on a deliberately oversubscribed fixture (the `cavsplit17-raid` shape: 8 infantry steps vs stock 7) and pass once budgeted — the failing-first proof
-- [ ] User confirms done
-
 ### WOA-018 — Fix the AI reserve/board eval bias  *(flagship)*
 **Area:** ai · **Status:** Todo · **Depends on:** WOA-016 · **Type:** opus · **Docs:** code-architecture
 
@@ -114,6 +100,8 @@ default.
 _None._
 
 ## Finished
+
+- **WOA-017 — deploy-step-budget test** (Done 2026-07-15, sprint-run): `game/test.js` sums printed deploy steps per unit type over the active deck (`E.CARDS`) and asserts ≤ `E.PIECE_TOTALS[type]` (stock from resolved defs, not hardcoded; trench skipped); 234→237. Failing-first proven on `cavsplit17-raid` (8 infantry > 7 stock). Finding: `default` saturates stock exactly (7/7·2/2·1/1) — zero headroom, so any deploy-step-adding card trips it. cost: ~104k tok / 20 tools.
 
 - **WOA-016 — reserve-held-at-end metric** (Done 2026-07-15, sprint-run): per-side reserve-at-end share computed in the engine agg (`engine/06-sim.js`, split of the same `deployedShare` read) + folded/rendered in `report-model.js` (both styles) + `res_end_red/blue` columns in `logs/woa.db`; documented in `data-and-reports.md`. Additive — golden diff holds live (red 48% / 6.0 atk / 5.8 swp match 1.1 baselines); test.js 230→234 with a reconciliation invariant. Baseline reading: hard-vs-hard holds **10%/10%** at end (the deploy-on-sight number WOA-018 must move). cost: ~187k tok / 81 tools.
 

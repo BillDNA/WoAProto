@@ -308,6 +308,41 @@ console.log('== deck composition (data-driven from maps.js) ==');
   ok(Object.keys(E.PIECE_TOTALS).length >= 2 && E.PIECE_TOTALS.trench >= 0, 'piece totals derive from maps.js: ' + JSON.stringify(E.PIECE_TOTALS));
 })();
 
+console.log('== deploy step budget vs stock (WOA-017: no deploy fallback, oversubscription = broken content) ==');
+(function () {
+  // Printed deploy steps per unit type, weighted by each card's deck count. A
+  // single card can print more than one deploy step for the same type (e.g.
+  // Conscription: two infantry steps on one card) and/or the same step can be
+  // spread across several copies (e.g. Entrench x3, one infantry step each) --
+  // both must count toward the total.
+  function deploySumsByType(cards) {
+    var sums = {};
+    cards.forEach(function (c) {
+      (c.steps || []).forEach(function (s) {
+        if (s.type === 'deploy' && s.unit) sums[s.unit] = (sums[s.unit] || 0) + (c.count || 0);
+      });
+    });
+    return sums;
+  }
+  // E.CARDS IS the active deck's resolved card list (engine/01-core.js:
+  // ACTIVE_DECK -> CARD_LIST), so this checks exactly the deck that's live --
+  // no separate "which deck is active" lookup needed. Stock comes from
+  // E.PIECE_TOTALS, which itself resolves from the active units variant (or
+  // the maps.js default), never a hardcoded 7/2/1. There is NO deploy
+  // fallback in the house rules: printing more deploy steps for a type than
+  // its stock guarantees a stranded unit / a dead turn once the stock runs
+  // out (measured: Raiding Party's 8th infantry step vs a 7-stock cavsplit17
+  // variant -> Deploy Infantry Noop 26%, balance-loop-v2 final report S5c.3).
+  var deploySums = deploySumsByType(E.CARDS);
+  Object.keys(E.PIECE_TOTALS).forEach(function (t) {
+    if (t === 'trench') return; // trenches aren't a deploy-step unit type
+    var printed = deploySums[t] || 0;
+    ok(printed <= E.PIECE_TOTALS[t],
+      'active deck: ' + printed + ' printed ' + t + ' deploy steps <= stock ' + E.PIECE_TOTALS[t] +
+      ' (got ' + printed + '/' + E.PIECE_TOTALS[t] + ')');
+  });
+})();
+
 console.log('== combat math ==');
 (function () {
   var st = testBattle(42);
