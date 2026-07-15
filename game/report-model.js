@@ -87,13 +87,15 @@ var WOA_REPORT = (function () {
      the card fold under G.cards. */
   function foldGlobal(rows) {
     var G = { red: 0, first: 0, hq: 0, games: 0, turns: 0, attacks: 0, swaps: 0, zeroKill: 0, tiebreak: 0,
-      fbWins: 0, fbGames: 0, ctlWins: 0, ctlGames: 0, depShare: 0, killTail: 0, leadChanges: 0, cards: {} };
+      fbWins: 0, fbGames: 0, ctlWins: 0, ctlGames: 0, depShare: 0, resEndRed: 0, resEndBlue: 0,
+      killTail: 0, leadChanges: 0, cards: {} };
     rows.forEach(function (x) {
       var a = x.agg;
       G.red += a.redWins; G.first += a.firstWins; G.hq += a.hqWins; G.games += x.done; G.turns += a.turns;
       G.attacks += a.attacks; G.swaps += a.swaps; G.zeroKill += a.zeroKill; G.tiebreak += a.tiebreak;
       G.fbWins += a.firstBloodWins; G.fbGames += a.firstBloodGames;
       G.ctlWins += a.controlWins; G.ctlGames += a.controlGames; G.depShare += a.deployedShare;
+      G.resEndRed += (a.reserveEndRed || 0); G.resEndBlue += (a.reserveEndBlue || 0);
       G.killTail += (a.killTail || 0); G.leadChanges += (a.leadChanges || 0);
       Object.keys(a.cards || {}).forEach(function (cid) {
         var c = G.cards[cid] || (G.cards[cid] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 });
@@ -171,6 +173,8 @@ var WOA_REPORT = (function () {
         pct(G.hq, G.games) + '% · avg battle ' + f1(G.turns / G.games) + ' turns');
       L.push('- Behaviour: ' + f1(G.attacks / G.games) + ' attacks & ' + f1(G.swaps / G.games) + ' swaps/battle · zero-kill ' +
         pct(G.zeroKill, G.games) + '% · ' + Math.round(100 * G.depShare / G.games) + '% of units ever fielded');
+      L.push('- Reserves at end: red ' + Math.round(100 * G.resEndRed / G.games) + '% · blue ' +
+        Math.round(100 * G.resEndBlue / G.games) + '% of that side\'s pieces still undeployed when the battle ended (high = turtling)');
       L.push('- Decisiveness: tie-goes-to-2nd decided ' + pct(G.tiebreak, G.games) + '% · first blood won ' +
         pct(G.fbWins, G.fbGames) + '% of the ' + pct(G.fbGames, G.games) + '% of battles with a kill · more-hexes side won ' + pct(G.ctlWins, G.ctlGames) + '%');
       L.push('- Pacing: ' + f1(G.killTail / G.games) + ' kill-less turns before end (0=decisive, ~32=circling) · ' +
@@ -184,6 +188,8 @@ var WOA_REPORT = (function () {
         '% · HQ captures ' + pct(G.hq, G.games) + '% · avg ' + f1(G.turns / mx) + ' turns');
       L.push('- Aggression: ' + f1(G.attacks / mx) + ' attacks & ' + f1(G.swaps / mx) + ' swaps/battle · ' +
         Math.round(100 * G.depShare / mx) + '% of units fielded · zero-kill ' + pct(G.zeroKill, G.games) + '%');
+      L.push('- Reserves at end: red ' + Math.round(100 * G.resEndRed / mx) + '% · blue ' +
+        Math.round(100 * G.resEndBlue / mx) + '% of pieces still undeployed at battle end');
       L.push('- Decisiveness: tie→2nd ' + pct(G.tiebreak, G.games) + '% · first blood converts ' +
         pct(G.fbWins, G.fbGames) + '% · board leader wins ' + pct(G.ctlWins, G.ctlGames) + '%');
       L.push('- Pacing: ' + f1(G.killTail / mx) + ' kill-less turns before end · ' + f1(G.leadChanges / mx) + ' lead swings/battle');

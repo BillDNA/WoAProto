@@ -139,6 +139,8 @@ function mapReport(n, diff, filter, maps) {
   console.log('Behaviour: ' + (G.attacks / Math.max(1, G.games)).toFixed(1) + ' attacks & ' +
     (G.swaps / Math.max(1, G.games)).toFixed(1) + ' swaps per battle | zero-kill battles ' + pct(G.zeroKill, G.games) +
     '% | ' + Math.round(100 * G.depShare / Math.max(1, G.games)) + '% of units ever fielded');
+  console.log('Reserves at end: red holds ' + Math.round(100 * G.resEndRed / Math.max(1, G.games)) +
+    '% of its pieces undeployed | blue holds ' + Math.round(100 * G.resEndBlue / Math.max(1, G.games)) + '%');
   console.log('Decisiveness: tie-goes-to-2nd decided ' + pct(G.tiebreak, G.games) +
     '% of battles | first blood won ' + pct(G.fbWins, G.fbGames) + '% of the ' + pct(G.fbGames, G.games) +
     '% of battles that had a kill | side holding more hexes won ' + pct(G.ctlWins, G.ctlGames) + '%');
@@ -167,6 +169,10 @@ function mapReport(n, diff, filter, maps) {
   console.log('            shuffle units instead of fighting (the round-6 stalemate bug).');
   console.log('  zero-kill battles  nobody died all battle: degenerate, should be ~0%.');
   console.log('  units fielded  share of all reserves that ever deployed. Low = turtling at home.');
+  console.log('  reserves at end  share of a side\'s pieces still undeployed when the battle ended');
+  console.log('            (per side, unlike "units fielded" above). High = that side hoarded pieces');
+  console.log('            instead of committing them — the instrument for the "saving reserves wins"');
+  console.log('            felt-note; cross-reference against Red%/1st% to see if it correlates with winning.');
   console.log('  tie-goes-to-2nd  attrition wins with EQUAL field scores. High = that one rule');
   console.log('            is deciding battles, not play.');
   console.log('  first blood won  how often the first kill decided the battle. Very high = one');

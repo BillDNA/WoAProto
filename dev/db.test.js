@@ -73,6 +73,13 @@ try {
      b.marches === (st.stats.marches || 0) && b.deploys === (st.stats.deploys || 0),
     'attacks/swaps/marches/deploys copied from st.stats');
   ok(b.first_blood === (st.stats.firstBlood || null), 'first_blood matches (' + b.first_blood + ')');
+  // WOA-016: reserve-held-at-end, computed independently here from st.reserves
+  // to prove db.js's own reservesLeft() reads the same source of truth.
+  function reservesLeft(sideReserves) {
+    var n = 0; Object.keys(E.UNITS).forEach(function (t) { n += sideReserves[t] || 0; }); return n;
+  }
+  ok(b.res_end_red === reservesLeft(st.reserves.red) && b.res_end_blue === reservesLeft(st.reserves.blue),
+    'res_end_red/res_end_blue = pieces left in st.reserves at battle end (' + b.res_end_red + '/' + b.res_end_blue + ')');
 
   /* ---------- card_plays ---------- */
   section('card_plays');

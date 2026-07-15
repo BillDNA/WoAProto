@@ -1,5 +1,5 @@
 ---
-last-reviewed: 2026-07-10
+last-reviewed: 2026-07-15
 ---
 #onboarding #game-logs #code-architecture
 # Data & reports — where every battle lands and how reports flow
@@ -21,6 +21,30 @@ delete freely). Three funnels, one writer (`dev/db.js`):
 
 Schema: `runs` / `battles` / `card_plays` / per-turn `timeline` (from `st.fsTimeline`). Query read-only
 with `node dev/db-query.js "<sql>"` (no SQL = schema + row counts).
+
+## Reserve-held-at-end (WOA-016)
+
+Per side, how much of that side's pieces were still undeployed (in reserve) when the battle ended —
+`reserveEndRed`/`reserveEndBlue` in the balance aggregate (a 0..1 share per battle, summed like every
+other aggregate field), `res_end_red`/`res_end_blue` (raw piece counts) in the `battles` table. It's the
+per-side split of the SAME reserves-at-end read the existing `deployedShare` metric already folds
+combined across both sides (`game/engine/06-sim.js` `balanceAdd`, right where `deployedShare` is
+computed) — the two reconcile exactly (`deployedShare = done − 0.5×(reserveEndRed + reserveEndBlue)`,
+asserted in `game/test.js`), so trust in the older metric transfers to the new one.
+
+Shows as `Reserves at end: red X% · blue Y%` on every report surface — `node game/balance.js`'s
+terminal output and `dev/balance-report.js`'s saved markdown both fold through `game/report-model.js`
+(`foldGlobal` + `reportMarkdown`, the ONE report model), so the number is identical everywhere it
+appears by construction.
+
+**Interpretation**: high = that side hoarded pieces instead of committing them (turtling). This is the
+instrument for the balance-loop-v2 felt-note "saving Infantry/Cavalry reserves for turn 15+ wins" (final
+report §5c.4) — cross-reference a side's reserve-held share against its win rate (Red%/1st%) to prove or
+disprove that the hoarding actually correlates with winning; WOA-018 is the follow-up that acts on
+whatever this shows. Aggregate-per-side only (not broken out by unit type): unit composition is itself a
+content lever (`content/units/*.js`, WOA-011), so a per-type breakdown would tie the DB schema/report
+lines to today's `infantry`/`cavalry`/`artillery` ids — a fragility the per-side aggregate avoids while
+still satisfying the instrument's purpose.
 
 ## Reports — the committed human record
 

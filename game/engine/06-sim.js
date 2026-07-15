@@ -36,6 +36,11 @@
       attacks: 0, swaps: 0, marches: 0, zeroKill: 0, tiebreak: 0,
       firstBloodGames: 0, firstBloodWins: 0, controlGames: 0, controlWins: 0,
       deployedShare: 0,
+      // WOA-016: per-side split of the SAME reserves-at-end read deployedShare
+      // uses above — share (0..1 per battle, summed) of THAT side's pieces
+      // still undeployed when the battle ended. Instrument for the "hoarding
+      // reserves wins" felt-note (balance-loop-v2 final report §5c.4).
+      reserveEndRed: 0, reserveEndBlue: 0,
       // Feedback Round 2 pacing metrics:
       killTail: 0,      // trailing kill-less turns (0 = ended on a kill/HQ, ~32 = no-kill grind)
       leadChanges: 0 }; // field-score lead flips per battle (higher = more back-and-forth)
@@ -71,11 +76,13 @@
       out.controlGames++;
       if ((w === 'red') === (hr > hb)) out.controlWins++;        // winner also held more hexes
     }
-    var resLeft = 0;
+    var resLeft = 0, resSide = { red: 0, blue: 0 };
     ['red', 'blue'].forEach(function (p) {
-      Object.keys(I.UNITS).forEach(function (t) { resLeft += st.reserves[p][t] || 0; });
+      Object.keys(I.UNITS).forEach(function (t) { var v = st.reserves[p][t] || 0; resLeft += v; resSide[p] += v; });
     });
     out.deployedShare += 1 - resLeft / (2 * unitTotal);
+    out.reserveEndRed += resSide.red / unitTotal;
+    out.reserveEndBlue += resSide.blue / unitTotal;
     (st.playLog || []).forEach(function (e) {
       var c = out.cards[e.id] || (out.cards[e.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 });
       c.plays++;

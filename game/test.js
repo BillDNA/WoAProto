@@ -677,10 +677,17 @@ console.log('== behaviour counters (balance-lab metrics) ==');
   ok(st.stats.deploys === 1, 'deploy increments stats.deploys');
   var r = E.balanceMap(E.MAPS[0], 2, { seedBase: 5 });
   ['attacks', 'swaps', 'marches', 'zeroKill', 'tiebreak', 'firstBloodGames', 'controlGames', 'deployedShare',
-   'killTail', 'leadChanges']
+   'reserveEndRed', 'reserveEndBlue', 'killTail', 'leadChanges']
     .forEach(function (k) { ok(k in r, 'balanceMap reports ' + k); });
   ok(r.killTail >= 0 && r.killTail <= r.turns, 'kill-less tail within [0, turns] (got ' + r.killTail + '/' + r.turns + ')');
   ok(r.leadChanges >= 0, 'lead changes non-negative (got ' + r.leadChanges + ')');
+  // WOA-016: reserveEndRed/Blue are the per-side split of the SAME reserves-at-end
+  // read deployedShare folds (both only accumulate over finished battles) — they
+  // must reconcile: deployedShare = done - 0.5*(reserveEndRed + reserveEndBlue).
+  var done = r.n - r.unfinished;
+  ok(r.reserveEndRed >= 0 && r.reserveEndBlue >= 0, 'reserveEndRed/Blue are non-negative');
+  ok(Math.abs(r.deployedShare - (done - 0.5 * (r.reserveEndRed + r.reserveEndBlue))) < 1e-9,
+    'reserveEndRed/Blue reconcile with deployedShare (same reserves-at-end read, split by side)');
 })();
 
 console.log('== trench orientations are never fully off-board (Feedback Round 2) ==');

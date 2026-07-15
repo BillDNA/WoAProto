@@ -38,7 +38,8 @@ var SCHEMA = [
   '  first_player TEXT, winner TEXT, win_type TEXT, turns INTEGER,',
   '  fs_red INTEGER, fs_blue INTEGER, first_blood TEXT, lead_changes INTEGER,',
   '  kill_tail INTEGER, zero_kill INTEGER, tiebreak INTEGER,',
-  '  attacks INTEGER, swaps INTEGER, marches INTEGER, deploys INTEGER',
+  '  attacks INTEGER, swaps INTEGER, marches INTEGER, deploys INTEGER,',
+  '  res_end_red INTEGER, res_end_blue INTEGER',
   ');',
   'CREATE TABLE IF NOT EXISTS card_plays (',
   '  id INTEGER PRIMARY KEY, battle_id INTEGER, side TEXT, card_id TEXT,',
@@ -56,6 +57,23 @@ var SCHEMA = [
 // node:sqlite refuses `undefined` params — normalize to NULL.
 function nz(v) { return v === undefined ? null : v; }
 
+// Additive migration for a pre-existing woa.db (CREATE TABLE IF NOT EXISTS
+// doesn't add columns to an already-created table) — safe/idempotent, keeps
+// prior battle history instead of forcing a delete-and-regenerate.
+function ensureColumn(db, table, col, type) {
+  var cols = db.prepare('PRAGMA table_info(' + table + ')').all().map(function (c) { return c.name; });
+  if (cols.indexOf(col) < 0) db.exec('ALTER TABLE ' + table + ' ADD COLUMN ' + col + ' ' + type + ';');
+}
+
+// Sum of a side's reserves at battle end, across every unit type in the
+// active content (excludes the trench reserve — same convention as the
+// engine's deployedShare, which this metric is a per-side split of).
+function reservesLeft(st, side) {
+  var n = 0, r = st && st.reserves && st.reserves[side];
+  if (r) Object.keys(E.UNITS).forEach(function (t) { n += r[t] || 0; });
+  return n;
+}
+
 /* Open (creating if needed) the DB, ensure the schema, switch on WAL, and
    prepare every statement once. Returns the handle the other calls take. */
 function open(dbPath) {
@@ -64,6 +82,8 @@ function open(dbPath) {
   var db = new sqlite.DatabaseSync(file);
   db.exec('PRAGMA journal_mode = WAL;');
   db.exec(SCHEMA);
+  ensureColumn(db, 'battles', 'res_end_red', 'INTEGER');
+  ensureColumn(db, 'battles', 'res_end_blue', 'INTEGER');
   var stmts = {
     insertRun: db.prepare(
       'INSERT INTO runs (version, ts, kind, red_ai, blue_ai, n, tool, notes) VALUES (?,?,?,?,?,?,?,?)'),
@@ -71,7 +91,7 @@ function open(dbPath) {
     insertBattle: db.prepare(
       'INSERT INTO battles (run_id, version, map, seed, first_player, winner, win_type, turns,' +
       ' fs_red, fs_blue, first_blood, lead_changes, kill_tail, zero_kill, tiebreak,' +
-      ' attacks, swaps, marches, deploys) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'),
+      ' attacks, swaps, marches, deploys, res_end_red, res_end_blue) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'),
     insertCardPlay: db.prepare(
       'INSERT INTO card_plays (battle_id, side, card_id, mode, turn, seen, noop, won) VALUES (?,?,?,?,?,?,?,?)'),
     insertTimeline: db.prepare(
@@ -132,7 +152,8 @@ function insertBattle(h, runId, st, firstPlayer, extra) {
       Math.max(0, (st.turnNumber || 0) - (st.lastKillTurn || 0)),      // trailing kill-less turns
       (vp.red + vp.blue === 0) ? 1 : 0,                                // no unit ever died
       (st.winType === 'attrition' && fsr === fsb) ? 1 : 0,             // decided only by tie-goes-to-2nd
-      stats.attacks || 0, stats.swaps || 0, stats.marches || 0, stats.deploys || 0);
+      stats.attacks || 0, stats.swaps || 0, stats.marches || 0, stats.deploys || 0,
+      reservesLeft(st, 'red'), reservesLeft(st, 'blue'));  // WOA-016: pieces left in reserve at battle end
     var battleId = Number(res.lastInsertRowid);
     (st.playLog || []).forEach(function (e) {
       h.stmts.insertCardPlay.run(battleId, e.p, e.id, nz(e.mode), nz(e.turn),

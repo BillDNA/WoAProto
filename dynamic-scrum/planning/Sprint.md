@@ -31,23 +31,6 @@ ceiling / 17-card-deck call → [[constraint-temperature]]. **Already done:** §
 
 ## Tickets
 
-### WOA-016 — Add reserve-held-at-end-of-battle metric (per side)
-**Area:** data · **Status:** Todo · **Type:** sonnet · **Docs:** data-and-reports, code-architecture
-
-The LLM feels-match's central claim — *"saving Infantry/Cavalry reserves for turn 15+ wins"* — is
-currently unmeasurable from any report we produce (final report §5c.4). This metric is the instrument
-that proves or disproves the AI-eval finding (WOA-018): per side, how much of each unit type was still
-**undeployed (in reserve)** at battle end. Build it **first** — WOA-018's verification depends on it.
-Content-as-data seam: it should be a one-file addition to the balance fold (`game/report-model.js`) per
-the *one-implementation-per-fact* goal; if it isn't, fix the seam before adding the metric.
-
-**Acceptance criteria:**
-- [ ] Every battle records reserve-held-at-end per side (per unit type, or at minimum aggregate reserve count), landing as a per-battle row in `logs/woa.db` and folded into the balance report
-- [ ] The metric shows in a `balance-report` run (markdown + accumulator) with a documented interpretation/band in `data-and-reports`
-- [ ] Adding it is a one-file diff to the balance fold (`report-model.js`) — or the seam was fixed first and that's noted in the closing note
-- [ ] Golden balance diff: existing aggregates byte-identical (the metric is additive; no existing number moves); `node game/test.js` green
-- [ ] User confirms done
-
 ### WOA-017 — Deploy-step-budget-vs-stock assertion in test.js
 **Area:** test · **Status:** Todo · **Type:** sonnet · **Docs:** code-architecture
 
@@ -132,7 +115,7 @@ _None._
 
 ## Finished
 
-_None._
+- **WOA-016 — reserve-held-at-end metric** (Done 2026-07-15, sprint-run): per-side reserve-at-end share computed in the engine agg (`engine/06-sim.js`, split of the same `deployedShare` read) + folded/rendered in `report-model.js` (both styles) + `res_end_red/blue` columns in `logs/woa.db`; documented in `data-and-reports.md`. Additive — golden diff holds live (red 48% / 6.0 atk / 5.8 swp match 1.1 baselines); test.js 230→234 with a reconciliation invariant. Baseline reading: hard-vs-hard holds **10%/10%** at end (the deploy-on-sight number WOA-018 must move). cost: ~187k tok / 81 tools.
 
 ## Blockers
 
