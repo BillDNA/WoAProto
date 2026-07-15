@@ -3,41 +3,48 @@
 Claude's compact snapshot of where things stand, so "take a look at where we are" is fast at session
 start. **Overwrite** this each session — it is state, not a log.
 
-## Where things stand (2026-07-15, roadmapping + sprint-planning session)
+## Where things stand (2026-07-15 — M1 sprint RAN autonomously; awaiting Bill's review)
 
-- **Sprint OPENED: `M1 · Fix the bent ruler`** — 6 tickets (WOA-016…021), planned from the
-  balance-loop-v2 final report §5. **0 Done — not started.** Build order: WOA-016 → WOA-017 → WOA-018
-  (dep 016) → WOA-019 → WOA-020 → WOA-021.
-- **Roadmap reworked** around Bill's three short-term pillars, foundation-first (`D.D:roadmap-3-pillar-reframe`):
-  M1 trustworthy+autonomous loop → M2 actionable data → M3 roguelite intake, **3 gated by 1 & 2**.
-  Content growth moved *after* run design (now M4). 5 new parking-lot specs added.
+- **Sprint `M1 · Fix the bent ruler` ran end-to-end** (`run-sprint`, full autonomy). **6/6 dispositioned:
+  4 built+closed, WOA-018 REJECTED, WOA-020 CUT.** Suite 230→237 green throughout; 8 commits, **pushed**.
+  Sprint is NOT yet closed — Bill reviews first. Run report:
+  `dynamic-scrum/planning/sprint-runs/2026-07-15-M1-fix-the-bent-ruler.md`.
 
 ## The one thing to carry forward
 
-**WOA-018 is the flagship — and its gate is behavioral, not cosmetic.** The AI eval (`unitOnBoard 22 >
-unitReserve 16`, `game/engine/05-ai.js`) encodes a losing strategy: the LLM match proved *hold reserve,
-deploy late* wins, but the AI deploys on sight. Both AI sides share the error so AI-vs-AI can't see it.
-Fix = narrow/urgency-scale the gap. **Gate: beat current `hard` (WOA-012 matchup, must clear 44%) + the
-new reserve metric shows it actually holds reserve — NEVER "the metrics look nicer."** WOA-016 (reserve
-metric) is its instrument and lands first.
+**The flagship refuted the sprint's own premise.** WOA-018 (§5a.1 "the AI eval encodes a losing strategy")
+does **not** survive AI-vs-AI measurement — no lever beats `hard` (narrow-gap 50.7%/672 + runner re-check
+49.5%/196; urgency-scaling monotonically weaker). **Deploy-on-sight is ~neutral for this attrition dynamic**
+(`fieldScore` counts only deployed units; the attrition projection already punishes hoarding) — the ruler
+is NOT distorted. Recorded `D.D:ai-reserve-eval-rejected`. **M1's "Fix the bent ruler" framing needs
+revisiting** — the reserve-timing question moved to WOA-024 (rules/content + a fresh human/LLM signal, not
+an AI-eval tweak).
 
-## Threads to carry
+## Delivered (the trustworthy-instrument half — all real)
 
-- **17-card deck (`cavsplit17-raid-paid`) + 16-card ceiling** — parked in [[constraint-temperature]];
-  decide once the (search-side) temperature policy is defined. The report's recommended adopt deck, on hold.
-- **Q.1 "what is a run" — tentatively answered** (Bill, in Questions.md): commander → operations →
-  campaign; deck-update *between operations*. Establishes vocabulary battle < operation < campaign. Still
-  tentative → Q.1 stays open; feeds M3 + [[metaprogression]] / [[run-design]].
-- **Deferred M1 follow-ons in Backlog:** WOA-022 (`aiPlanTurn` lookahead), WOA-023 (`CARD_KEEP` review),
-  WOA-024 (gated reserve-economy-as-rules — measure WOA-018 first).
-- **Goals flag (Bill's):** the `zero-build-game` long-term goal carries his own "is this still valid?"
-  margin note — worth deciding when the Tauri shell (M7) gets real. Left for Bill (his file).
-- WOA-015 (Backlog): ds-board-hub live-parse bug — canonical tooling, route via `send-report`.
-- Reconnect ran at session top: machine bootstrap clean; **CRLF drift (DS-211) fixed** (77 files
-  re-checked-out to LF, no commit needed); hub started detached on :4841 (MCP attaches next session).
+- **WOA-016** reserve-held-at-end metric (per side; baseline hard-vs-hard = 10%/10%).
+- **WOA-017** deploy-step-budget test (`default` saturates stock exactly 7/7·2/2·1/1 — zero headroom).
+- **WOA-019** dead per-card Win% dropped from reports (kept in DB).
+- **WOA-020** The Void CUT (repair-first made it worse) → **core7 is now 6 maps** (name→"Core Six", id frozen).
+- **WOA-021** `starting:true` documented as a tunable lever in grading-rubrics.
+
+## Awaiting Bill's review / decision
+
+1. **Revisit M1's framing** given the WOA-018 refutation (roadmap-level).
+2. **core7 = 6 maps** — sweeps no longer comparable to 7-map baselines. Restore to 7 (redesign The Void, HQs
+   are fundamentally too close; or promote the-cockpit) is a roster call. `the-void.js` preserved on disk.
+3. **Dashboard parity follow-ons** — WOA-016 reserve tile + WOA-019 live winPct still in `ui/dashboard.js`.
+4. **Deferred closing step:** the refine pass (route run-sprint/run-ticket signal — Agent-vs-Workflow
+   dispatch, inline-carve-out extension, measured-rejection scorecard — to canonical). Not run; captured in
+   the run report. Offer stands.
+
+## Next
+
+Bill reviews → then `end-session close-sprint` (once satisfied) or a roadmap revisit on M1. WOA-024 is the
+live thread for the reserve-timing question.
 
 ## Related
 
-[[Sprint]] · [[Roadmap]] · [[constraint-temperature]].
+[[Sprint]] · [[Roadmap]] · [[Decisions]] · [[Backlog]].
 
 #claudenotes
