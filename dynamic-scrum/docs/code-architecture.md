@@ -128,17 +128,23 @@ Determinism is the free regression net: the same seed schedule → **byte-identi
 
 
 
-## Known balance signals (from balance.js — re-measured July 2026 AFTER the V0 terrain-crossing rules: trench = support denial, rivers added; verify before acting; present findings to Bill, he decides rule changes)
+## Known balance signals — pointer (WOA-026, 2026-07-16)
 
-> **Dated (rules 0.x era).** The 1.0 search overhaul (and the 1.1 trench tie-survival bump since) shifted the AI's strength, so these numbers no longer compare directly to fresh runs — that is exactly why the rules version got bumped, twice. Current-era data accumulates under `logs/reports/balance/1.1/` (and per-battle in `logs/woa.db`); the numbers below are kept as the historical baseline the anti-degeneracy work was measured against. The current rules-1.1 baselines (first mover 48%, Red 50%, tie-goes-to-2nd 10%, 6.1 attacks / 5.7 swaps, zero-kill 1%) live in `grading-rubrics.md`'s north stars / Behaviour guard and `CLAUDE.md` — WOA-026 re-baselines this whole section next.
+**One implementation per fact:** this section used to carry its own numbers, re-dated across three
+eras (0.x, the V0 terrain-crossing pass, pre-WOA-020's 7-map pool) without ever quite catching up —
+exactly the bent-ruler failure mode. Rather than re-date a fourth copy, this is now a pointer:
 
-- Mover advantage stays healed at normal (first mover 46% overall, n=40/map incl. 2 shipped customs). Red 52% overall.
-- **Tie-goes-to-2nd still decides ~26% of battles** — unchanged by the trench rework; still the biggest open lever for Bill.
-- Attrition ends ~78% of battles (HQ captures 22%); compact dist-4 maps stay the healthiest. First blood converts 61%; board control tracks winning 81%.
-- Side/mover flags under the NEW rules (n=40, normal — ±16pts noise): Thornfield 73/28 red and The Cockpit 63/38 red read SIDE-BIASED; the spear maps (Long March 30/70, Vanguard 28/73) and Killing Ground (33/68) read strongly second-mover; Twin Gates/Thornfield/Long March/Vanguard are attrition-only (HQ% ≤3). Map edits are Bill's call.
-- Skill premium (matchup, n=16/map = 192/pairing, July 2026): normal beats easy **71%**, hard beats normal **60%**, hard beats easy **78%**, sanity 50%. Hard's edge over normal WIDENED from ~54% pre-change — the support-denial rules appear to reward the deeper search; good news for skill-over-luck.
-- Behaviour baselines (normal AI, n=40/map, post-change): ~4.9 attacks & ~6.5 swaps per battle, zero-kill 3%, 88% of units ever fielded — within June's bands, so the trench/river change didn't re-open the stalemate. If a heuristic change moves these sharply, treat it as a regression even if win rates look fine.
-- New instruments: the Balance Dashboard runs all of this in-browser (same aggregation as the CLI); `balance.js matchup <n> <a> <b>` pits any two personalities (first read: turtle beat brawler 65/35 at n=48 — untuned examples); `dev/claude-plays.js` gives an LLM reference point + felt-notes.
+- **Numbers** (first mover, Red%, tie-goes-to-2nd, Behaviour attacks/swaps/fielded, skill premium,
+  zero-kill, Drag, Swings, reserve-held-at-end) live in **`grading-rubrics.md`**'s north stars +
+  Game-level rubric — every figure there is dated, setup-labeled (AI tier, n, mapset), and measured
+  on the current **Core Six** pool (`core7`). `CLAUDE.md`'s "Shipped history" carries the terse
+  protect-the-baselines summary for a quick session-start read.
+- **Tools** that produce these numbers (`dev/balance-report.js`, `game/balance.js matchup`, the
+  Balance Dashboard, `dev/claude-plays.js`) are covered in [[data-and-reports]].
+
+If a future pass needs per-map side-bias / mover-bias examples again, re-measure them fresh against
+Core Six rather than trusting anything that was here before — every prior bullet in this section was
+measured on a map pool that no longer exists.
 
 ## Related
 

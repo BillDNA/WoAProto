@@ -1,5 +1,5 @@
 ---
-last-reviewed: 2026-07-15
+last-reviewed: 2026-07-16
 ---
 #onboarding #human-instructions
 # Grading rubrics — north stars + what to measure
@@ -23,20 +23,30 @@ Bill's Goal/Evidence/Score shape instead, so running `rubric-rubric` against it 
 mismatch, not real drift. Kept as a local note rather than editing the canonical-served rubric-rubric,
 which would change it for every consuming project.)*
 
-Baselines below were measured June 2026 (**pre-rules-1.1**), after the round-6 AI fixes and the
-surviving-units attrition rule. Rules 1.1 (current) **inverted attacks↔swaps**, so the Behaviour
-baseline (game-level guard #1) is swept to 1.1 below, as is north star 5. **North stars 1/2/4 still
-carry pre-1.1 June figures — re-measure before grading against them** (commands in the footer).
+**Re-baselined 2026-07-16 (WOA-026)** on rules 1.1 / the **Core Six** map pool (mapset id `core7`,
+6 maps since WOA-020 cut The Void — the pool was still 7 maps when the prior 1.1 figures below were
+taken). Every figure below is dated and setup-labeled (AI tier, n, mapset); **no rubric number below
+still needs a "re-measure before grading" caveat.** Default setup is hard-vs-hard, Core Six, `--once`
+(the standard sweep, `dev/balance-report.js <n> hard hard --parallel --once`); a figure notes its own
+setup where it documents a different one (the Behaviour guard is normal AI n=40/map; the skill-premium
+north star is the `matchup` recipe across AI tiers, neither is hard-vs-hard). Superseded pre-1.1
+(June) and pre-WOA-020 (7-map) figures are marked **superseded** inline rather than deleted, so drift
+stays traceable rather than erased.
 
 ## North stars (what "good" means for this game)
 
 1. **Skill over luck.** A stronger player should win more.
    Metric: `balance.js matchup` skill premium.
-   Baseline: normal>easy 70%, hard>easy 83%, hard>normal 54% (thin, within noise at n=96), sanity 44%.
+   Baseline (**measured 2026-07-16**, `game/balance.js matchup 96 <a> <b>`, Core Six, n=96/map =
+   576 battles/pairing): normal>easy 69%, hard>easy 73%, hard>normal 56% (thin, within noise at
+   n=96), sanity 50%. *Superseded* pre-1.1 June (7-map) figure: normal>easy 70%, hard>easy 83%,
+   hard>normal 54%, sanity 44%.
    Target: adjacent tiers ≥60%, two tiers apart ≥75% (tune me).
 2. **Decisive games.** Fights happen, kills matter, holding ground matters.
    Metrics: `0kill%` column, "first blood won" and "side holding more hexes won" Decisiveness lines.
-   Baseline: zero-kill ~4%, first-blood→win 62%, control-tracks-win 79%.
+   Baseline (**measured 2026-07-16**, hard-vs-hard, Core Six, n=60/map = 360 battles): zero-kill
+   1%, first-blood→win 63%, control-tracks-win 93%. *Superseded* pre-1.1 June figure: zero-kill
+   ~4%, first-blood→win 62%, control-tracks-win 79%.
    Targets: zero-kill ≤5%; first-blood 55–70% (higher = snowbally); control ≥70% (tune me).
 3. **No dead turns.** A player always feels they can act.
    Metric: per-card no-op share — plays that resolved zero actions. Printed as the card
@@ -46,12 +56,17 @@ carry pre-1.1 June figures — re-measure before grading against them** (command
    Target: ~0; any card above 2% gets investigated (tune me).
 4. **Balanced start.** Neither seat nor colour wins the battle before it starts.
    Metrics: overall "first mover" line + per-map Red%/1st% columns.
-   Baseline: first mover 46% overall at normal; at hard the second player still wins ~56%.
+   Baseline (**measured 2026-07-16**, hard-vs-hard, Core Six, n=60/map = 360 battles): first mover
+   45% overall (second player wins 55%). Normal-vs-normal reading (same date, n=40/map = 240
+   battles): first mover 48%. *Superseded* pre-1.1 June figure: first mover 46% overall at normal;
+   ~56% second-player win at hard.
    Target: 45–55% overall and per map (tune me).
 5. **Tie-rule not deciding too much.** Tie-goes-to-2nd should break ties, not decide games.
    Metric: "tie-goes-to-2nd decided N%" Decisiveness line (attrition wins with EQUAL field scores).
-   Baseline: **10% (rules 1.1, n60)** — in target. The old "~25–26%, biggest open lever" is a 0.x-era
-   number; the 1.1 trench tie-survival rules (WOA-010) brought it to 10%. Cite the live number.
+   Baseline: **9% (rules 1.1, hard-vs-hard, Core Six, n=60/map = 360, measured 2026-07-16)** — in
+   target, materially unchanged from the prior 1.1 read (10%, n60, 7-map pool, *superseded* by the
+   WOA-020 map cut). The old "~25–26%, biggest open lever" is a 0.x-era number; the 1.1 trench
+   tie-survival rules (WOA-010) brought it down. Cite the live number.
    Target: ≤15% — currently MET, so treat this as a guardrail to hold, not a lever to pull.
 
 > **Two different "ties" — don't conflate them.** The **attrition tiebreak** ("tie-goes-to-2nd") is
@@ -277,9 +292,16 @@ These are the additional regression guards:
 
 1. **Behaviour health.**
    Goal: the AIs (and by proxy the incentive structure) fight rather than shuffle.
-   Evidence: Behaviour line — attacks & swaps per battle, % of units ever fielded.
-   Baseline (normal, n=40/map): 6.1 attacks, 5.7 swaps, 88% fielded (rules 1.1 — attacks↔swaps
-   inverted from the pre-1.1 ~5/~7 reading, which is the superseded V0 signature).
+   Evidence: Behaviour line — attacks & swaps per battle, % of units ever fielded; per-side
+   reserve-held-at-end (WOA-016, `data-and-reports.md`) for hoarding.
+   Baseline (**normal, n=40/map, Core Six, measured 2026-07-16**): 6.8 attacks, 4.3 swaps, 86%
+   fielded; reserves at end red 14% / blue 14%. Hard-vs-hard reading (Core Six, n=60/map, same
+   date): 6.3 attacks, 5.4 swaps, 90% fielded; reserves at end red 10% / blue 9%. *Superseded*
+   pre-WOA-020 (7-map) 1.1 figure: 6.1 attacks, 5.7 swaps, 88% fielded — note that number was
+   actually produced by a 12-map **hard-vs-hard** sweep despite its "normal" label (flagged for
+   Bill, not corrected retroactively); this pass's normal-AI figure above is the first genuine
+   normal-AI read against this baseline's documented setup. Pre-1.1 signature for reference:
+   attacks↔swaps inverted from the ~5/~7 V0 reading.
    Score: readings near baseline = good; a sharp move in any of them after a change is a
    regression **even if win rates look fine** (tune me — "sharp" ≈ ±30%+). Low Atk + high Swp
    is the round-6 swap-dance signature.
@@ -298,12 +320,16 @@ These are the additional regression guards:
 
 ## How to run the numbers
 
+All commands below run against the ACTIVE map-set with no flag needed — today that's **Core Six**
+(mapset id `core7`, 6 maps). Pass `--mapset <id>` to target a different pool.
+
 ```
 node game/test.js                 # legality first — always green before measuring
 node game/balance.js 60           # full report: per-map rows, Behaviour/Decisiveness, card report
 node game/balance.js 60 hard      # same with the Field Marshal (behaviour differs; grade like-for-like)
 node game/balance.js 40 narrows   # one map's numbers — the overall lines become that map's lines
 node game/balance.js matchup 96   # skill premium (the luck-o-meter), 96 battles per pairing
+node dev/balance-report.js 60 hard hard --parallel --once   # saved, apples-to-apples standard sweep
 ```
 
 Sample-size honesty: n=24 (the default) is a sniff test; grade at n≥40 per map and n≥96 per

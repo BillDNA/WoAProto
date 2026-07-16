@@ -29,22 +29,6 @@ sonnet ticket.
 
 ## Tickets
 
-### WOA-026 — Re-baseline the rubric under rules 1.1 / Core Six
-**Area:** balance-data · **Status:** Todo · **Type:** sonnet · **Skill:** /generate-reports · **Docs:** grading-rubrics, data-and-reports
-
-Every figure `grading-rubrics.md` cites must be a current measurement, or grading is the bent-ruler
-mistake in doc form. Two staleness sources compound: north stars 1/2/4 still carry pre-1.1 June
-figures (the rubric's own caveat says "re-measure before grading"), and WOA-020 cut The Void, so
-core7 = 6 maps ("Core Six") — even the 1.1-era numbers were measured on a 7-map pool. Run the standard
-hard-vs-hard sweeps (fixed seeds 1001/2002/3003) on Core Six and land dated figures — including the
-new WOA-016 reserve-held-at-end baseline — in one pass.
-
-**Acceptance criteria:**
-- [ ] Fresh hard-vs-hard Core Six figures for every number the rubric cites: north stars 1/2/4, behaviour guard (attacks/swaps/fielded), first-mover %, Red %, tie-decided %, zero-kill %, Drag, Swings, reserve-held-at-end
-- [ ] Figures written into `grading-rubrics.md` dated with n; superseded June/7-map figures removed or explicitly marked superseded
-- [ ] CLAUDE.md "baselines to protect" block updated to the Core Six figures (flag the diff to Bill — doctrine file)
-- [ ] User confirms done
-
 ### WOA-027 — Refactor `grading-rubrics.md` — every metric Goal/Evidence/Score-shaped and lever-naming
 **Area:** rubrics · **Status:** Todo · **Type:** opus · **Docs:** grading-rubrics
 **Depends on:** WOA-025, WOA-026
@@ -109,6 +93,7 @@ _None._
 
 ## Finished
 
+- **WOA-026 — Re-baseline the rubric under rules 1.1 / Core Six** (Done 2026-07-16, sprint-run): every rubric figure re-measured on Core Six and landed dated + setup-labeled — hard-vs-hard n=60/map (SAVED `2026-07-16-1418`), normal n=40/map (SAVED `2026-07-16-1435`), 4 bounded `matchup 96` runs (576/pairing). Headlines: first-mover 45 / Red 51 / tie 9% / atk 6.3 / swp 5.4 / 0-kill 1% / Drag 2.1 / Swings 2.7 / reserves 10-9%; skill premium NOW VERIFIED under 1.1 (n>e 69, h>e 73, h>n 56 thin, sanity 50); Behaviour guard's first genuine normal-AI read (6.8/4.3/86, reserves 14/14). Superseded figures marked, not deleted. CLAUDE.md baselines block updated (Bill pre-approved; diff flagged in run report). code-architecture "Known balance signals" converted to a POINTER (one numbers-home; 3-eras-stale pattern ended). **Finding for Bill:** the old "normal n=40" Behaviour baseline (6.1/5.7/88) was actually a 12-map hard-vs-hard read — mislabeled at recording; flagged inline, not retro-corrected. Suite 237/237, wikilinks 0-dead, all numbers runner-cross-checked vs saved reports. cost: 145k tok / 30.4 min / 64 tools.
 - **WOA-025 — Alignment M1 drift sweep** (Done 2026-07-16, sprint-run): all 17 ACs landed across 20 files — dead `code-overview` pointers repointed; rules 1.0→1.1 era swept (incl. `run-tournament`/`review-reports` Behaviour-baseline checks repointed to `grading-rubrics.md`'s live 1.1 figures); gen-docs rerun (Decks 4→9); `version-control-policy.md` + `glossary.md` FILLED (not folded — rationale inline); `#onboarding`→`#claude-orientation`; Roadmap M1 reframed post-refutation (beat-hard gate retired; overnight loop = remaining scope); Project-Brief open-decisions closed; CLAUDE.md 20→16-card; `D.D:balance-loop-v2-shape` trimmed to a link; grading-rubrics card columns aligned (minimal, refactor left to WOA-027); rubric-rubric meta-coverage noted locally (canonical-served file untouched); AI headcount 6→7 (+1 same-class drive-by in code-architecture, flagged); M0 refs → M3; drafts staging deleted. Suite 237/237, wikilinks 0-dead (both runner-verified). cost: 213k tok / 11.7 min / 99 tools.
 
 ## Blockers
