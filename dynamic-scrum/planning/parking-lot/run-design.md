@@ -1,6 +1,6 @@
 # Parking Lot — The run design
 
-**Status:** not started · captured 2026-07-07 (adopt) · graduates to [[Roadmap]] M0 when brainstormed
+**Status:** not started · captured 2026-07-07 (adopt) · graduates to [[Roadmap]] M3 when brainstormed
 
 > "There is no run. The roguelite loop — the actual product — is undesigned."
 > — `dynamic-scrum/planning/parking-lot/steam-roadmap.md`

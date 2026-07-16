@@ -10,6 +10,14 @@ Run the sims, read the spread against the rubrics, hand Bill a graded report.
 (dynamic-scrum/docs/code-architecture.md: findings go to Bill, he decides rule
 changes).
 
+**Stays in its lane:** this skill both *measures* (the sweep) and *grades*
+(the rubric read) in one pass — the combined job `generate-reports` +
+`review-reports` split across two skills. Use `run-tournament` for a quick
+one-shot roster-wide meta check with no saved artifact; use the
+`generate-reports` → `review-reports` pair when you want the fuller loop (a
+seeded LLM felt-note match, a saved `logs/reports/analysis/` write-up, or
+findings meant to feed `create-card`/`create-map`).
+
 ## Inputs to settle first (ask only if genuinely unclear)
 
 - Scope: the default pool is the ACTIVE map-set (12-map roster as shipped);
@@ -54,10 +62,11 @@ changes).
 - Win% hugs 50 in attrition games — flag only big deviations, never Win% alone.
 - The card report's Simple% carries the CARD_KEEP burn bias (the AI burns its
   least precious card) — say so when citing it.
-- If Behaviour numbers moved sharply vs the baselines in
-  dynamic-scrum/docs/code-architecture.md "Known balance signals" (~5 attacks /
-  ~7 swaps / zero-kill ~4% / ~88% fielded — 0.x-era numbers; prefer the 1.0
-  accumulator under logs/reports/balance/1.0/ once it has volume), treat it as
+- If Behaviour numbers moved sharply vs the rules-1.1 baseline in
+  dynamic-scrum/rubrics/grading-rubrics.md "Game-level rubric" (6.1 attacks /
+  5.7 swaps / 88% fielded, n=40/map — the code-architecture.md "Known balance
+  signals" table is still the superseded 0.x/V0-era reading; prefer the 1.1
+  accumulator under logs/reports/balance/1.1/ once it has volume), treat it as
   an AI regression signal even when win rates look fine.
 - Keep `node game/test.js` out of scope here — this skill measures balance, not
   correctness.

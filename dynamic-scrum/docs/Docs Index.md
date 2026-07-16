@@ -7,7 +7,7 @@ the `_orientation-doc` template.
 This is the ONE docs home — the pre-adopt `design-docs/` dissolved into it (2026-07-07, WOA-003).
 The **human-instructions / claude-onboarding divide** is kept: `human-instructions/` holds docs written
 for Bill (plain-English maps of a system, authoring guides); everything else is claude-facing
-orientation. Tags mark the class: `#onboarding` (claude orientation), `#human-instructions` (Bill-facing),
+orientation. Tags mark the class: `#claude-orientation` (claude orientation), `#human-instructions` (Bill-facing),
 plus topic tags (`#game-rules`, `#code-architecture`, `#ai`, `#game-logs`, `#history`, `#project-direction`).
 
 ## Claude orientation
@@ -19,7 +19,7 @@ plus topic tags (`#game-rules`, `#code-architecture`, `#ai`, `#game-logs`, `#his
 | [[data-and-reports]]             | Where every battle lands (`logs/woa.db`) and how reports/skills flow |
 | [[War Of Attrition rule book]]   | The rules SOT (versioned — tracks `Engine.VERSION`)            |
 | [[glossary]]                     | Project lexicon                                                |
-| [[version-control-policy]]       | Git protocol — single source of truth                          |
+| [[version-control-policy]]       | Git protocol — short pointer to root `CLAUDE.md`'s canonical policy |
 
 History lives in `dynamic-scrum/history/`: [[shipped-history]] (June-rounds / V0 / V1 terse log, parsed
 out of root `CLAUDE.md`) and [[V0-summary]] (the full V0 arc). Templates `_orientation-doc.md` /

@@ -70,5 +70,5 @@ tuned lost the matchup gate to hard, 44% of 192. Defaults stand.)*
 
 ## Vision (post-V1, not speced — YAGNI until V1 lands)
 
-- **Roguelite deck-builder**: a card pool larger than the 20-card deck plus a deck-building loop between battles.
+- **Roguelite deck-builder**: a card pool larger than the 16-card deck plus a deck-building loop between battles.
 - **Side asymmetry**: different decks per side, and Commander abilities that bend the rules (e.g. guaranteed Conscription in the opening hand). Expect bigger balance swings — which is why the rubrics + metrics tooling above come first.

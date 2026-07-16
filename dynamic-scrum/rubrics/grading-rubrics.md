@@ -17,6 +17,12 @@ Every rubric item has three parts (Bill's shape):
 - **Score meaning** — what a good / marginal / failing reading looks like. All thresholds are
   **tunable targets, Bill's to adjust** — written as "target: X (tune me)", never hardcoded gates.
 
+*(Meta note, WOA-025 AC12: this project rubric is **deliberately outside** the canonical
+`rubric-rubric`'s enumerated set — it predates that rubric's MUST/SHOULD/NICE handle scheme and uses
+Bill's Goal/Evidence/Score shape instead, so running `rubric-rubric` against it would fire on schema
+mismatch, not real drift. Kept as a local note rather than editing the canonical-served rubric-rubric,
+which would change it for every consuming project.)*
+
 Baselines below were measured June 2026 (**pre-rules-1.1**), after the round-6 AI fixes and the
 surviving-units attrition rule. Rules 1.1 (current) **inverted attacks↔swaps**, so the Behaviour
 baseline (game-level guard #1) is swept to 1.1 below, as is north star 5. **North stars 1/2/4 still
@@ -115,8 +121,12 @@ when tuning first-mover balance deliberately, the opener is one of the knobs.
 > human-proxy instrument available.
 
 Evidence source for all numbers: the **card report** at the bottom of `node game/balance.js 60`
-(columns: Win% / Simple% / 1stSight% / AvgSeen / plays; per-card no-op counts stay in the
-data — the accumulator JSON and `logs/woa.db` — no longer a printed column).
+(columns: Simple% / 1stSight% / AvgSeen / plays) or a saved report from `dev/balance-report.js` /
+the Balance Dashboard (`game/report-model.js` — same columns plus **Noop%**, which IS printed there
+but NOT in the `balance.js` terminal table). **Win%** is no longer printed anywhere (dropped July
+2026, WOA-019 — at n=700 every card read 49-52% against the ±8 rubric threshold, so it wasn't
+earning its column); it's still computed in `cardRows()` and recorded per-battle in `logs/woa.db` if
+a specific card's Win% is ever needed.
 
 1. **Adds a decision.**
    Goal: the card offers a choice the rest of the deck doesn't already offer — a new line of
@@ -157,10 +167,12 @@ data — the accumulator JSON and `logs/woa.db` — no longer a printed column).
    the swap-dance signature. Before condemning a card on AvgSeen, check fleet Tie% and Atk/Swp;
    also cross-check the LLM population (hard-AI AvgSeen 4–6 is its family norm for ALL action
    cards, and LLMs played the same cards eagerly at AvgSeen 1.8–3.1).
-6. **Win% — keep, don't over-index.**
+6. **Win% — deprioritized; pull from the DB if genuinely needed.**
    Goal: sanity check for correlation with winning.
-   Evidence: Win% (share of plays that were by the eventual winner). In an attrition game both
-   sides play nearly everything, so this hugs 50 by construction.
+   Evidence: Win% (share of plays that were by the eventual winner) — **dropped from the printed
+   card report** (WOA-019, July 2026): at n=700 every card read 49-52% against the ±8 threshold
+   below, so it wasn't earning its column. Still computed in `cardRows()` and recorded per-battle in
+   `logs/woa.db` — query it there if one card's Win% is specifically in question.
    Score: only deviations beyond ~±8 at n≥60 mean anything (tune me); never grade a card on
    Win% alone.
 

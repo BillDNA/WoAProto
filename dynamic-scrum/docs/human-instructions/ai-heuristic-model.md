@@ -1,5 +1,5 @@
 ---
-last-reviewed: 2026-07-10
+last-reviewed: 2026-07-16
 ---
 #human-instructions #ai #code-architecture
 # The AI, in plain English — how it thinks and every knob you can turn
@@ -14,10 +14,10 @@ weights**, and **where are the "5 AIs"**. Everything here lives in
 > engine by `node dev/gen-docs.js` — edit the code (or gen-docs' description
 > map), rerun the tool, and never hand-edit between the markers.
 
-## Where the 6 AIs are (the "AI_PRESETS has only 3" question)
+## Where the 7 AIs are (the "AI_PRESETS has only 3" question)
 
 There is **one** AI engine. What looks like different opponents are just
-different *rows of numbers* fed to it. Six ship today:
+different *rows of numbers* fed to it. Seven ship today:
 
 | Name    | Lives in            | What it is |
 |---------|---------------------|------------|
@@ -27,11 +27,14 @@ different *rows of numbers* fed to it. Six ship today:
 | brawler | `maps.js` `"ai"` block | a normal AI tuned to trade and push forward |
 | turtle  | `maps.js` `"ai"` block | a normal AI tuned to hug its HQ and dig in |
 | hawk    | `maps.js` `"ai"` block | a normal AI that prizes its army and takes even trades |
+| tuned   | `maps.js` `"ai"` block | the WOA-012 weight-tuner's output — **rejected** as the `AI_WEIGHTS` defaults (lost the beat-hard matchup gate, 44% of 192), kept shipped as an inactive pit-able personality |
 
 So `AI_PRESETS` in `engine/05-ai.js` holds **3**; the engine then merges in
 every row of the `"ai"` block from `maps.js` (`Object.keys(BUILTIN.ai)…`),
-which adds brawler, turtle, and hawk → **6 total**. They all show up
-automatically in the menu AI pickers, the Balance Dashboard, and `balance.js`.
+which adds brawler, turtle, hawk, and tuned → **7 total**. They all show up
+automatically in the menu AI pickers, the Balance Dashboard, and `balance.js`
+(`boot.js` puts every `AI_PRESETS` key other than easy/normal/hard into the
+live pickers — `tuned` included; it isn't gated out, per `D.D:weight-tuner-sweep-rejected`).
 **Adding another AI is adding a row to `maps.js`, not writing code.**
 
 ## How a turn is decided (the heuristic)

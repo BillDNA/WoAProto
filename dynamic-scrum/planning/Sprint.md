@@ -29,30 +29,6 @@ sonnet ticket.
 
 ## Tickets
 
-### WOA-025 — Alignment M1 drift sweep (docs / skills / board currency)
-**Area:** docs+board+skills · **Status:** Todo · **Type:** sonnet · **Docs:** code-architecture, grading-rubrics
-
-From the 2026-07-15 M1-close alignment pass — 17 confirmed SHOULD drifts (the 2 MUSTs are already fixed). Currency/duplication drift across docs, skills, and the board; left unswept it misdirects the next runner (dead doc pointers, superseded rules era, stale roadmap framing). Full evidence + `file:line` for every item in `dynamic-scrum/planning/drafts/alignment-drafts.md` (WOA-DRAFT-1). Delete the drafts file on close (drained staging).
-
-**Acceptance criteria:**
-- [ ] Dead `code-overview` pointers repointed to `code-architecture` — WOA-001 + WOA-002 `Docs:` fields; `workflow.md:13` gen-docs target list
-- [ ] rules `1.0` → `1.1` era swept — `code-architecture.md:133`, `driving-the-balance-loop.md:31/108-110/113`, `run-tournament/SKILL.md:60` + `review-reports/SKILL.md:91` (accumulator → `logs/reports/balance/1.1/`)
-- [ ] gen-docs rerun for content roster — `code-architecture.md:78` "Decks (4)" vs 9 on disk (`node dev/gen-docs.js`)
-- [ ] `version-control-policy.md` empty SOT stub — filled (point to CLAUDE.md as canonical) or folded + the Docs-Index "single source of truth" claim dropped
-- [ ] `#onboarding` → `#claude-orientation` tag — `code-architecture.md:4`, `workflow.md:4`, `data-and-reports.md:4`, `War Of Attrition rule book.md:1`, `driving-the-balance-loop.md:4`, and the `Docs Index.md:10` legend
-- [ ] Roadmap M1 AI-eval framing reconciled post-WOA-018 (`Roadmap.md:28/36`) — the refuted reserve-lever no longer framed as achievable (Bill's roadmap-revisit call per ClaudeNotes; M1's overnight-autonomous half stays open)
-- [ ] Project-Brief "Open decisions" reconciled to closed (`Project-Brief.md:50-51` vs CLAUDE.md — Q.2 weight-tuner + ~26% tie-lever are dead)
-- [ ] `CLAUDE.md:73` Vision "20-card deck" → "16-card"
-- [ ] `D.D:balance-loop-v2-shape` (`Decisions.md:40-42`) restated loop order trimmed to a link to `generate-reports/SKILL.md` (keep the parametric decisions)
-- [ ] `grading-rubrics.md` card report aligned to live columns — criterion 6 Win% (WOA-019-removed) + Noop% self-contradiction (`:112-160`)
-- [ ] `run-tournament` stays-in-lane boundary stated vs generate-reports / review-reports
-- [ ] Project-rubric meta-coverage — `grading-rubrics.md` added to `rubric-rubric` `Related` (with a Goal/Evidence/Score shape carve-out) or noted as a deliberately-uncovered project rubric
-- [ ] *(folded NICE)* `ai-heuristic-model.md` personality headcount 6 → 7 (`tuned` still in the live pickers per `boot.js:12-21`) — recount, or gate `tuned` out of the pickers
-- [ ] *(folded NICE)* stale `M0` references — `run-design.md:3` + `Backlog.md` "(Arguably M0 gates this)" → M3 / drop (milestones start at M1 since the 2026-07-15 renumber)
-- [ ] *(folded NICE)* `glossary.md` empty scaffold — fill, or drop + prune from Docs Index
-- [ ] `dynamic-scrum/planning/drafts/alignment-drafts.md` deleted (staging drained)
-- [ ] User confirms done
-
 ### WOA-026 — Re-baseline the rubric under rules 1.1 / Core Six
 **Area:** balance-data · **Status:** Todo · **Type:** sonnet · **Skill:** /generate-reports · **Docs:** grading-rubrics, data-and-reports
 
@@ -130,6 +106,10 @@ decision only — loop automation of the dial is M2's operationalize step ([[Roa
 ## In Progress
 
 _None._
+
+## Finished
+
+- **WOA-025 — Alignment M1 drift sweep** (Done 2026-07-16, sprint-run): all 17 ACs landed across 20 files — dead `code-overview` pointers repointed; rules 1.0→1.1 era swept (incl. `run-tournament`/`review-reports` Behaviour-baseline checks repointed to `grading-rubrics.md`'s live 1.1 figures); gen-docs rerun (Decks 4→9); `version-control-policy.md` + `glossary.md` FILLED (not folded — rationale inline); `#onboarding`→`#claude-orientation`; Roadmap M1 reframed post-refutation (beat-hard gate retired; overnight loop = remaining scope); Project-Brief open-decisions closed; CLAUDE.md 20→16-card; `D.D:balance-loop-v2-shape` trimmed to a link; grading-rubrics card columns aligned (minimal, refactor left to WOA-027); rubric-rubric meta-coverage noted locally (canonical-served file untouched); AI headcount 6→7 (+1 same-class drive-by in code-architecture, flagged); M0 refs → M3; drafts staging deleted. Suite 237/237, wikilinks 0-dead (both runner-verified). cost: 213k tok / 11.7 min / 99 tools.
 
 ## Blockers
 

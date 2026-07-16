@@ -1,7 +1,7 @@
 ---
-last-reviewed: 2026-07-15
+last-reviewed: 2026-07-16
 ---
-#onboarding #game-logs #code-architecture
+#claude-orientation #game-logs #code-architecture
 # Data & reports — where every battle lands and how reports flow
 
 The one primer for the V1 data pipeline: per-battle persistence, the report tree, and the

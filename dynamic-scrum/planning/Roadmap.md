@@ -22,19 +22,25 @@ short-term pillars: **1** a better balance loop, **2** actionable data, **3** ro
 **Goal:** the loop measures the *right* thing, unattended — before we build content on top of it.
 
 **Deliverables:**
-- Fix/validate the **AI-eval bias** (the "bent ruler"): `unitOnBoard 22 > unitReserve 16`
-  (`engine/05-ai.js`) tells the AI to deploy on sight, but the loop-v2 LLM match found *hoarding
-  reserves for turn 15+ wins* — both AI sides share the error, so 4,200 AI-vs-AI battles can't see it.
-  Make the AI able to play **and value** the reserve strategy.
-- Loop runs **overnight, unguided**, to a graded report ([[Goals]] balance-iteration-loop).
+- ~~Fix/validate the **AI-eval bias** (the "bent ruler")~~ — **measured and refuted-closed** (WOA-018,
+  `D.D:ai-reserve-eval-rejected`): `unitOnBoard 22 > unitReserve 16` (`engine/05-ai.js`) tells the AI
+  to deploy on sight, and the loop-v2 LLM match's felt-note (*hoarding reserves for turn 15+ wins*)
+  does **not** reproduce under AI-vs-AI measurement — no proposed lever beat current `hard` on core7,
+  so deploy-on-sight is ~neutral, not a distorting bias. If the reserve-timing dominance is real for
+  **humans/LLMs**, that's now WOA-024's question, not this milestone's.
+- Loop runs **overnight, unguided**, to a graded report ([[Goals]] balance-iteration-loop) — **the
+  remaining open scope of M1.**
 
-**Planned sprint (trustworthy half): [[Sprint|M1 · Fix the bent ruler]]** — WOA-016 reserve-held metric ·
-WOA-017 deploy-step-budget test · **WOA-018 AI eval fix (flagship)** · WOA-019 drop dead per-card Win% ·
-WOA-020 fix/cut The Void · WOA-021 `starting:true` lever. *(The overnight-autonomous half is a follow-on;
-deferred AI/rules follow-ons WOA-022/023/024 are in [[Backlog]].)*
+**Sprint history: [[Sprint|M1 · Fix the bent ruler]]** (closed) — WOA-016 reserve-held metric ·
+WOA-017 deploy-step-budget test · **WOA-018 AI eval fix — measured and refuted** · WOA-019 drop dead
+per-card Win% · WOA-020 fix/cut The Void · WOA-021 `starting:true` lever. *(Deferred AI/rules
+follow-ons WOA-022/023/024 are in [[Backlog]]; WOA-024 now carries the human/LLM reserve-timing
+question the AI-vs-AI sweep couldn't see.)*
 
-**Done when:** a reserve-hoarding AI beats current `hard` (the WOA-012 beat-hard matchup gate), and a
-loop runs unattended from start to graded report. *(Source: balance-loop-v2 final report §5a.1.)*
+**Done when:** the loop runs unattended from start to graded report. *(The WOA-012 beat-hard matchup
+gate is retired as M1's bar — no AI-eval lever ever beat `hard`, and AI-vs-AI measurement was never
+blind to a real bias here. Source: balance-loop-v2 final report §5a.1; refutation:
+`D.D:ai-reserve-eval-rejected`.)*
 
 ---
 

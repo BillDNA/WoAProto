@@ -1,7 +1,7 @@
 ---
-last-reviewed: 2026-07-07
+last-reviewed: 2026-07-16
 ---
-#onboarding #workflow
+#claude-orientation #workflow
 ## Workflow — build/test/tooling conventions for this game
 
 *(Process — sessions, board, tickets — is DynamicScrum's `WORKFLOW.md`, surfaced by the SessionStart
@@ -10,7 +10,7 @@ hook. This doc is the game-side build workflow only.)*
 - **The server is the standard dev path**: `run-server.command` (Mac) / `run-server.bat` (Windows) / `node game/server.js`. It serves the app, regenerates `content/manifest.js` at boot, enables every save endpoint (maps, decks, map-sets, reports, debug dumps), and records finished battles into `logs/woa.db` (fail-open — play works without `dev/`). Double-clicked `file://` still plays but persists nothing.
 - After ANY engine change: `node game/test.js`. After UI changes: `node dev/smoke.js`. After touching their areas, also run the focused dev suites: `node dev/claude-plays.test.js` (claude-plays / prompt surfaces — includes the honesty invariant), `node dev/db.test.js` (dev/db.js or the `/api/recordbattle` proxy), `node dev/llm-session.test.js` (the persistent LLM transport).
 - For balance questions: `node game/balance.js 60` prints to the terminal; **`node dev/balance-report.js --parallel`** is the fast path to a SAVED report (process-per-map workers, folds into the per-version accumulator, prints `BEST_MAP:`; `--mapset <id|all>` picks the roster). The `generate-reports` / `review-reports` skills wrap the whole loop.
-- After changing `AI_WEIGHTS`, AI personalities, or `game/content/`: `node dev/gen-docs.js` regenerates the doc tables between the `<!-- GEN:x -->` markers (ai-heuristic-model.md, code-overview.md). New weights need a description in its map or they render "TODO — describe me".
+- After changing `AI_WEIGHTS`, AI personalities, or `game/content/`: `node dev/gen-docs.js` regenerates the doc tables between the `<!-- GEN:x -->` markers (ai-heuristic-model.md, code-architecture.md). New weights need a description in its map or they render "TODO — describe me".
 - Content lives in per-item files under `game/content/` — the kinds are `decks`, `maps`, and (V1) `mapsets` (named map rosters, one active = the match pool); `content/kinds.js` is the one list. Add/edit/delete through the app while the server runs — it rewrites the files AND regenerates `content/manifest.js`. If you hand-add a content file with the server down, the file:// browser won't see it until the manifest is refreshed (start the server once, or it's picked up on the next save). Node tools read the `content/` dirs directly, so they see hand-added files immediately.
 - **Refactors ride the golden-diff oracle** (decision record: the retired `v1-architecture` spec, git history): capture `node game/balance.js 24 normal` AND `24 easy` output before moving code; every refactor commit must reproduce both byte-identically, on top of test.js + smoke.js green. A change that legitimately moves the numbers is a rules/AI-strength change, not a refactor — bump `RULES_VERSION` in `game/engine/01-core.js` atomically with the rule-book header and the test-pin updates.
 - `logs/woa.db` (+ `-wal`/`-shm`) is **regenerable and gitignored** — delete it freely; the committed markdown under `logs/reports/` stays the human record. Query it read-only with `node dev/db-query.js` (no SQL = schema + row counts).

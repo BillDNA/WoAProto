@@ -1,12 +1,14 @@
 ---
-last-reviewed: 2026-07-10
+last-reviewed: 2026-07-16
 ---
-#human-instructions #game-logs #onboarding
+#human-instructions #game-logs #claude-orientation
 
 # Driving the balance loop — Bill's guide
 
 Zero to reading balance data, at the command line, no Claude required. Every command below was
-run and verified on 2026-07-07 (rules 1.0). Run everything **from the repo root**.
+run and verified on 2026-07-07 (rules 1.0); the paths/version strings below are swept to the
+current rules-1.1 naming (2026-07-16) — a full command re-verify under 1.1 is not in scope here.
+Run everything **from the repo root**.
 
 ## The loop in one breath
 
@@ -28,7 +30,7 @@ node game/server.js
 Expected:
 
 ```
-  WAR OF ATTRITION — server running   (rules 1.0)
+  WAR OF ATTRITION — server running   (rules 1.1)
   ---------------------------------
   On this computer:  http://localhost:8420
   Battle persistence: ON -> logs/woa.db
@@ -60,8 +62,8 @@ Simulates the active map-set (currently `core7`, 7 maps) and **saves** a markdow
 report. Defaults: 60 battles per map, hard vs hard. Expected tail:
 
 ```
-SAVED: logs\reports\balance\1.0/2026-07-07-1100-hard-vs-hard-n6-r2.md
-ACCUMULATED: logs\reports\balance\1.0/accumulated.json (360 battles across 2 runs)
+SAVED: logs\reports\balance\1.1/2026-07-07-1100-hard-vs-hard-n6-r2.md
+ACCUMULATED: logs\reports\balance\1.1/accumulated.json (360 battles across 2 runs)
 BEST_MAP: The Ford
 ```
 
@@ -99,18 +101,18 @@ node dev/claude-plays.js --mock --map cockpit
 ```
 
 Expected: a full battle in seconds ("mock: always the first option"), transcript written to
-`logs/reports/battle/1.0/`.
+`logs/reports/battle/1.1/`.
 
 ## 4. Where everything lands
 
 | Path | What | Committed? |
 |---|---|---|
-| `logs/reports/balance/1.0/` | saved balance reports + `accumulated.json` | yes — the human record |
-| `logs/reports/battle/1.0/` | claude-plays transcripts (+ JSONL master log one level up) | yes |
-| `logs/reports/analysis/1.0/` | graded reviews, one-off analyses | yes |
+| `logs/reports/balance/1.1/` | saved balance reports + `accumulated.json` | yes — the human record |
+| `logs/reports/battle/1.1/` | claude-plays transcripts (+ JSONL master log one level up) | yes |
+| `logs/reports/analysis/1.1/` | graded reviews, one-off analyses | yes |
 | `logs/woa.db` | one row per battle, every source (browser, CLI, LLM) | **no — gitignored, delete freely** |
 
-`1.0` is the rules version (`Engine.VERSION`) — it bumps when rules change, so data stays
+`1.1` is the rules version (`Engine.VERSION`) — it bumps when rules change, so data stays
 apples-to-apples per era. The DB is a regenerable index over the same battles the reports
 summarize; deleting it loses nothing you can't re-sim.
 

@@ -80,19 +80,18 @@ returned to Backlog at S2 close, 2026-07-10.)
 - [ ] User confirms done
 
 ### WOA-002 — Placeholder audio pass
-**Area:** feel · **Status:** Todo · **Type:** sonnet · **Docs:** code-overview
+**Area:** feel · **Status:** Todo · **Type:** sonnet · **Docs:** code-architecture
 
 ~10 placeholder SFX + one ambient loop wired to the existing FX event seams (deal / deploy / march /
 strike / HQ-fall / win / loss). The cheapest perceived-quality jump before the run exists; the FX layer
-already has the event seams to hang them on. *(Arguably M0 gates this — but it needs no run-design to
-start.)*
+already has the event seams to hang them on.
 
 **Acceptance criteria:**
 - [ ] Sounds hang off the FX event layer; a battle plays start-to-finish with audio; mute + reduced-motion respected
 - [ ] User confirms done
 
 ### WOA-001 — First 5-card batch through the V1 pipeline
-**Area:** content · **Status:** Todo · **Type:** sonnet · **Skill:** /create-card · **Docs:** code-overview
+**Area:** content · **Status:** Todo · **Type:** sonnet · **Skill:** /create-card · **Docs:** code-architecture
 
 Run one batch of ~5 candidate cards end-to-end (create-card → deck slot → `balance-report --parallel`
 → Charts → LLM match felt-notes → keep/kill) to prove the "an evening, not a week" loop and start the

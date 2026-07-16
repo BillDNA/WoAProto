@@ -85,9 +85,10 @@ Then tell Bill the saved path and give a 3-line verbal summary.
   not player choices; don't read strategy into them.
 - The card table's Simple% carries the CARD_KEEP burn bias (the AI burns its
   least precious card) — say so when citing it.
-- If Behaviour numbers moved sharply vs the baselines in
-  dynamic-scrum/docs/code-architecture.md "Known balance signals" (~5 attacks
-  / ~7 swaps / zero-kill ~4% / ~88% fielded — 0.x-era numbers; the 1.0
-  accumulator is the growing current-era baseline), treat it as an AI
-  regression signal even when win rates look fine.
+- If Behaviour numbers moved sharply vs the rules-1.1 baseline in
+  dynamic-scrum/rubrics/grading-rubrics.md "Game-level rubric" (6.1 attacks /
+  5.7 swaps / 88% fielded, n=40/map — the code-architecture.md "Known balance
+  signals" table is still the superseded 0.x/V0-era reading; the 1.1
+  accumulator under logs/reports/balance/1.1/ is the growing current-era
+  baseline), treat it as an AI regression signal even when win rates look fine.
 - One page of analysis is plenty. If there's nothing worth suggesting, say so.

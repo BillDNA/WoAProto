@@ -1,4 +1,4 @@
-#onboarding #game-rules
+#claude-orientation #game-rules
 # War of Attrition — Rule Book
 
 **Version 1.1** — trench tie-survival (July 2026). Bump this whenever a rule OR AI-strength change would make playtest data incomparable.

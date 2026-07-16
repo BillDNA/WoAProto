@@ -46,9 +46,14 @@ decide — the weight-tuner sweep and the Steam leverage draft (Q.2, Q.3, `dynam
 ## Open decisions
 
 1. **(Q.1)** What *is* a run? The roguelite loop is undesigned and gates the shell, saves, content
-   targets, and the pitch.
-2. **(Q.2)** Adopt the weight-tuner sweep #1 suggestions (needs firmer verification first)?
-3. **(Q.3)** Is the tie-goes-to-2nd lever (~26% of battles) the biggest balance target, and how?
+   targets, and the pitch. **Open** — see [[Roadmap]] M3 / `run-design`.
+2. ~~**(Q.2)** Adopt the weight-tuner sweep #1 suggestions?~~ **Closed — rejected** (WOA-012,
+   `D.D:weight-tuner-sweep-rejected`): the tuned personality lost the beat-hard matchup gate (44% of
+   192 under rules 1.1). `AI_WEIGHTS` defaults stand.
+3. ~~**(Q.3)** Is the tie-goes-to-2nd lever (~26% of battles) the biggest balance target?~~ **Closed**
+   — the ~26% reading was a pre-1.1 (V0-era) number; rules 1.1's trench tie-survival (WOA-010) brought
+   it to **10%**, inside `grading-rubrics.md`'s north-star-5 target band. It's a guardrail to hold now,
+   not a lever to pull.
 
 ## Related
 

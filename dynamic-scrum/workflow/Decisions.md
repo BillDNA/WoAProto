@@ -37,9 +37,8 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   **1:1** adversarial checkers per generated candidate (2-checker delta wasn't significant), **one**
   feels-match per iteration (seed 1001; 2002/3003 optional extras), and card generation is **3-for-3**
   (one batch of 3 candidates for the iteration's 3 slots, judged as a set against the whole deck with
-  the deck-budget corollary), replacing 1:1 suggest/replace. Order of operations: gather (100-sweep +
-  1 feels) → guide generators with findings → judge → adopt → repeat n → final report (+ rule-change /
-  stats-to-gather-or-drop / AI-lever sections). SoT: the project skills (`.claude/skills/`).
+  the deck-budget corollary), replacing 1:1 suggest/replace. Order of operations SoT:
+  `.claude/skills/generate-reports/SKILL.md` § The v2 loop (order of operations) — don't restate it here.
 
 - **`D.D:weight-tuner-sweep-rejected`** (2026-07-10, WOA-012, resolves Q.2) — the tuner sweep is
   **rejected** for AI_WEIGHTS; defaults stay untouched, no version bump. Bill's firmer recipe ran in
