@@ -47,6 +47,9 @@ From the 2026-07-15 M1-close alignment pass — 17 confirmed SHOULD drifts (the 
 - [ ] `grading-rubrics.md` card report aligned to live columns — criterion 6 Win% (WOA-019-removed) + Noop% self-contradiction (`:112-160`)
 - [ ] `run-tournament` stays-in-lane boundary stated vs generate-reports / review-reports
 - [ ] Project-rubric meta-coverage — `grading-rubrics.md` added to `rubric-rubric` `Related` (with a Goal/Evidence/Score shape carve-out) or noted as a deliberately-uncovered project rubric
+- [ ] *(folded NICE)* `ai-heuristic-model.md` personality headcount 6 → 7 (`tuned` still in the live pickers per `boot.js:12-21`) — recount, or gate `tuned` out of the pickers
+- [ ] *(folded NICE)* stale `M0` references — `run-design.md:3` + `Backlog.md` "(Arguably M0 gates this)" → M3 / drop (milestones start at M1 since the 2026-07-15 renumber)
+- [ ] *(folded NICE)* `glossary.md` empty scaffold — fill, or drop + prune from Docs Index
 - [ ] `dynamic-scrum/planning/drafts/alignment-drafts.md` deleted (staging drained)
 - [ ] User confirms done
 

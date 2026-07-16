@@ -41,7 +41,7 @@ Each AC clusters ≥1 confirmed finding; decomposable into smaller tickets at mi
 
 ---
 
-## NICE — candidates
+## NICE — dispositioned 2026-07-16 (Bill, M1.1 open): 3 local items folded into WOA-025 as ACs; the canonical-scoped cosmetic below DROPPED (not worth a send-report)
 
 - **ai-heuristic-model.md headcount stale** (doc-vs-reality). `:17` "Six ship today" / `:28-31` "→ 6 total" omit the `tuned` row its own GEN:personalities block (`:153`) lists; `boot.js:12-21` puts every non-preset key in the live pickers, so the real roster is 7. `tuned` was WOA-012-rejected but still ships in `maps.js "ai"`. Fix: recount to 7, or gate `tuned` out of the pickers.
 - **Stale `M0` references** (doc-vs-reality, cluster `stale-M0`). `run-design.md:3` "graduates to Roadmap M0" + `Backlog.md:86` "(Arguably M0 gates this)". Milestones start at M1 after the 2026-07-15 renumber; run-design intake is now M3. Fix: M0 → M3 / drop.

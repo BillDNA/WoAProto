@@ -77,6 +77,16 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   question (WOA-024), not an AI-eval one — and the reserve-held-at-end metric (WOA-016) is the instrument
   to detect it.
 
+- **`D.D:m11-measure-before-redefining`** (2026-07-16, M1.1 planning) — the M1.1 "Measuring good" sprint
+  runs **re-baseline before rubric refactor** (WOA-026 → WOA-027): every figure the refactored rubric
+  cites must be a dated rules-1.1 / Core Six measurement, because north stars 1/2/4 still carry pre-1.1
+  June figures and WOA-020's Void cut changed the map pool under even the 1.1 numbers — redefining
+  "good" against stale baselines would be the bent-ruler mistake in doc form. Scope calls: constraint-
+  temperature is **design + the 17-card `cavsplit17-raid-paid` call only** (WOA-029; loop automation of
+  the dial stays in M2's operationalize step), and WOA-025 runs as one sonnet ticket (its 17 SHOULDs are
+  mechanical `file:line` fixes; 3 alignment NICEs folded in 2026-07-16, the canonical-scoped cosmetic
+  dropped).
+
 ## Architecture
 
 - **`D.A:units-content-kind`** (2026-07-10, WOA-011) — unit composition & values are a content kind
