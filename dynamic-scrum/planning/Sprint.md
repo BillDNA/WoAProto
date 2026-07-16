@@ -29,35 +29,13 @@ sonnet ticket.
 
 ## Tickets
 
-### WOA-029 — Constraint-temperature: design the escape mechanism + settle the 17-card call
-**Area:** balance-loop · **Status:** Todo · **Type:** opus · **Skill:** brainstorming · **Docs:** grading-rubrics
-**Depends on:** WOA-027
-
-Graduated from the `constraint-temperature` parking-lot note (2026-07-15, deleted at graduation —
-substance carried here). Bill: *"if the constraints are too tight in the balance loop, we can't make
-big enough steps to move out of a local maximum of the search space."* `grading-rubrics.md` §Temperature
-already defines the **acceptance-tolerance** face (T0 strict / T1 explore / T2 hot); this ticket designs
-the undeveloped **search-exploration** face: (1) a **local-max signal** — how the loop knows it's stuck
-(every north star passing, nothing adoptable) rather than a human noticing after the fact; (2) a
-**ranked list of dial-able constraints** (16-card ceiling, piece stocks, deploy-step counts) vs. the
-hard floors that never relax (Tie ≤15, 0-kill ≤5, deploy-steps ≥ stock); (3) a **re-measure-to-ship
-rule** — big steps taken hot get re-graded at T0/T1 before anything ships. Then the live example:
-`cavsplit17-raid-paid` (loop v2's 17-card deck — beat baseline on Drag *and* Swings but breaches the
-16-card guardrail) gets its pending adopt/reject decided **under the policy**, not ad hoc. Design +
-decision only — loop automation of the dial is M2's operationalize step ([[Roadmap]]).
-
-**Acceptance criteria:**
-- [ ] The policy is written (rubric §Temperature and/or a `dynamic-scrum/planning/specs/` note): local-max signal, ranked dial-able constraints vs. hard floors, re-measure-to-ship rule
-- [ ] `cavsplit17-raid-paid` adopt/reject decided under the policy, measured (Core Six, WOA-026 baselines) and recorded in `Decisions.md`
-- [ ] Physical-limitations goal respected: any relaxed guardrail is an explicit temperature move with a re-measure gate, not a silent default change ([[Goals]] physical-limitations)
-- [ ] User confirms done
-
 ## In Progress
 
 _None._
 
 ## Finished
 
+- **WOA-029 — constraint-temperature search-side policy + the 17-card probe** (Done 2026-07-16, sprint-run — **adopt/reject held for Bill per steer**, so the "recorded in Decisions.md" AC is deliberately satisfied as recommendation-pending, not decided): the search-side policy landed in the rubric's reserved §Temperature slot — local-max signal (T0 all-pass + zero adoptable candidates, worked example = today's analysis), ranked dial (1 16-card ceiling · 2 piece stocks · 3 deploy-steps, with the ≥/≤ stock-pin coupling finding), re-measure-to-ship (a shipped relaxed guardrail becomes the NEW documented guardrail). Live example measured as a declared T2 probe via `--deck` (shipped state never touched; baseline re-runs byte-identical): `cavsplit17-raid-paid` reads **T0-clean on both tiers** — Swings +25–30% (2.7→3.5 / 2.9→3.6), fielded +4, reserves-at-end −4, Drag flat, for +3 turns and normal 0-kill 1→4% (in band, near floor). Step-budget finding: the deck pins printed==stock (7/2/1) so WOA-017 stays green at 17 cards. **Recommendation: ADOPT gated on one n≥100 normal confirmation run — BILL'S CALL (pending)**; full numbers in `logs/reports/analysis/1.1/2026-07-16-1.1-analysis-cavsplit17-T2probe.md`. Suite 237/237 (default active), wikilinks 0-dead, all numbers runner-cross-checked. cost: 123k tok / 12 min / 33 tools.
 - **WOA-028 — review-reports skill refactor** (Done 2026-07-16, sprint-run): the skill now grades pointer-only against the refactored rubric (zero restated baseline figures — runner-grepped; the WOA-027-gate defect fixed), mandates a `Temperature: TX — why` header with a T0/T1/T2 picking rule, carries every watch/✗ metric's rubric **Lever** line into the analysis, and adds a match-setup rule (grade hard reports against hard readings). **Dry-run proven**: `logs/reports/analysis/1.1/2026-07-16-1.1-analysis.md` — an honest T0 all-pass (correct: the reports ARE the baselines' source), with the haiku felt-note ("hold reserves wins") cross-checked against the WOA-016 reserve metric (AI fleet 10/9% — doesn't reproduce; stays a WOA-024 watch item), Deploy Cavalry's auto-play trigger correctly held as diagnostic-only, and 5 leverd watch items. **Rubric shakedown gaps for Bill (reported, not patched):** north star 1 is ungradeable without a `matchup`-shape report in the set; Game-level §2 Pacing has no pinned baseline (candidate measured: hard 28.7t/23% HQ, normal 27.4t/25%). Suite 237/237, wikilinks 0-dead, analysis numbers runner-cross-checked vs the 1418 report. cost: 141k tok / 7.4 min / 30 tools.
 - **WOA-027 — grading-rubrics.md refactor** (Done 2026-07-16, sprint-run): the rubric is now four-part everywhere — **Goal / Evidence / Score / Lever** — with 25 lever statements across all 23 criteria + `starting:true` + the Best-map table; 3 honest "none — diagnostic" calls (Card 4/5/6) with reasons. Superseded figures compacted to trailing `_Superseded:_` notes (mislabel ⚠ flag preserved); only 2026-07-16 Core Six figures sit in grading positions. §Temperature first-class with a reserved **Search-side policy (WOA-029)** slot; setup-label rule (AI tier/n/mapset/date, WOA-026's structural fix) written into the intro; stale Thornfield-era map examples replaced with live 1418-report Core Six reads + a read-the-live-report pointer. All skill-cited anchors kept verbatim (no citing-skill edits needed). Every target value verbatim, "tune me" preserved. Suite 237/237, wikilinks 0-dead (runner-verified); per-map examples runner-cross-checked vs the 1418 report. Runner follow-up caught at gate: run-tournament/review-reports restated the superseded 6.1/5.7/88 inline — run-tournament fixed as a runner commit; review-reports folds into WOA-028. cost: 117k tok / 10.5 min / 23 tools.
 - **WOA-026 — Re-baseline the rubric under rules 1.1 / Core Six** (Done 2026-07-16, sprint-run): every rubric figure re-measured on Core Six and landed dated + setup-labeled — hard-vs-hard n=60/map (SAVED `2026-07-16-1418`), normal n=40/map (SAVED `2026-07-16-1435`), 4 bounded `matchup 96` runs (576/pairing). Headlines: first-mover 45 / Red 51 / tie 9% / atk 6.3 / swp 5.4 / 0-kill 1% / Drag 2.1 / Swings 2.7 / reserves 10-9%; skill premium NOW VERIFIED under 1.1 (n>e 69, h>e 73, h>n 56 thin, sanity 50); Behaviour guard's first genuine normal-AI read (6.8/4.3/86, reserves 14/14). Superseded figures marked, not deleted. CLAUDE.md baselines block updated (Bill pre-approved; diff flagged in run report). code-architecture "Known balance signals" converted to a POINTER (one numbers-home; 3-eras-stale pattern ended). **Finding for Bill:** the old "normal n=40" Behaviour baseline (6.1/5.7/88) was actually a 12-map hard-vs-hard read — mislabeled at recording; flagged inline, not retro-corrected. Suite 237/237, wikilinks 0-dead, all numbers runner-cross-checked vs saved reports. cost: 145k tok / 30.4 min / 64 tools.

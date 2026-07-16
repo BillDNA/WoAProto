@@ -133,15 +133,40 @@ buy improvement with.** State the temperature in the analysis; it is a dial, not
 > clean at 17 cards and only becomes expensive when a 16th-card cut has to fund it. Before rejecting a
 > change for breaching a guardrail, check whether the *guardrail* is the thing under test.
 
-### Search-side policy (WOA-029) — reserved
+### Search-side policy (WOA-029)
 
-*Empty slot — WOA-029 lands the search-side temperature policy here.* It will state:
-- the **local-maximum signal** — how the loop detects it is pinned (every north star passing = a
-  ratchet, per the paragraph above) and when that licenses raising the temperature;
-- which constraints are **dial-able** (structural guardrails like the 16-card ceiling) vs the
-  **hard floors** above that never relax at any temperature;
-- the **re-measure-to-ship rule** — nothing adopted at an exploratory temperature (T1/T2) ships to
-  `default` without a T0/T1 re-measure.
+The ACCEPTANCE face (T0/T1/T2 above) sets how much a candidate may *spend*; this SEARCH face sets
+when the loop may *reach for a bigger step* and which walls it may move to take it.
+
+**Local-maximum signal — when the loop is pinned.** The loop sits at a local maximum when a standard
+review-reports analysis shows **both**: (a) a **T0 all-pass scoreboard** — every north star +
+Game-level guard in-band on both AI tiers; and (b) **zero adoptable candidates** in the iteration —
+nothing clears even T1 (no change bought ≥3 improvements for ≤1 in-band excursion). Both are read
+straight off the analysis; the worked example is
+`logs/reports/analysis/1.1/2026-07-16-1.1-analysis.md` (T0, all-pass, "None rise to an actionable
+suggestion at T0"). That state is a ratchet, not success (section intro). It **licenses** raising
+temperature: re-grade the iteration at **T1**; if T1 is also dry, that licenses a **declared T2
+probe** — named in the analysis, exactly one dial-able constraint under test, hard floors still binding.
+
+**Dial-able constraints (ranked) vs hard floors.** A T2 probe relaxes exactly one structural
+guardrail, smallest / best-understood blast radius first:
+1. **16-card deck ceiling** — a pure physical-board guardrail (no code depends on it) with a measured
+   cost on file (iter2: the cav split is clean at 17, expensive only when a 16th-card cut funds it).
+   +1 card is the smallest escape step. *(Probed under this policy — WOA-029: `cavsplit17-raid-paid`
+   at 17 cards, analysis `2026-07-16-1.1-analysis-cavsplit17-T2probe.md`.)*
+2. **Piece stocks** (7 inf / 2 cav / 1 art / 3 trench) — physical too, but a stock change *cascades*:
+   it moves the deploy-step floor (≥ stock) and the WOA-017 test ceiling (≤ stock) together, and
+   shifts attrition field-score math. Bigger radius → second.
+3. **Deploy-step counts** — not an independent dial: the ≥/≤ stock pin couples them to (2); move only
+   in lockstep with a stock change, never alone.
+
+The **hard floors** listed in §Temperature above never relax at any temperature — they are not on
+this dial (the deploy-step *floor* included; only the structural *ceiling* of item 1 is dial-able).
+
+**Re-measure-to-ship.** Nothing adopted at T1/T2 ships to `default` without a **T0/T1 re-measure on
+the standard setup** (hard n=60 + normal n=40, Core Six). A relaxed guardrail that ships **becomes
+the new documented guardrail** — the constraint change is recorded here and in [[Goals]]
+physical-limitations, atomically with the ship; a guardrail is never moved silently.
 
 ## `starting: true` — the guaranteed-opener lever (WOA-021, 2026-07-15)
 
