@@ -3,15 +3,15 @@
 Claude's compact snapshot of where things stand, so "take a look at where we are" is fast at session
 start. **Overwrite** this each session — it is state, not a log.
 
-## Where things stand (2026-07-16 — M1 closed; planning M1.1)
+## Where things stand (2026-07-16 — M1 closed; M1.1 planned)
 
 - **M1 · Fix the bent ruler is CLOSED** (archived: `dynamic-scrum/history/finished/M1-fix-the-bent-ruler.md`).
   Headline: WOA-018 refuted the "bent ruler" premise — the eval is NOT distorted
   (`D.D:ai-reserve-eval-rejected`); reserve-timing lives on as WOA-024 (needs a human/LLM signal).
-- **M1.1 being planned now** (sprint-planning session, 2026-07-16). Bill's frame: theme = *refine how we
-  define and measure "good"* — refactor `dynamic-scrum/rubrics/grading-rubrics.md` + the `review-reports`
-  skill; do [[constraint-temperature]] (graduate the parking-lot note — local-max signal, dial-able
-  constraints, re-measure rule; holds the 17-card adopt/reject call); pull WOA-025 (alignment sweep).
+- **M1.1 · Measuring "good" is planned** (2026-07-16), 5 tickets in build order: WOA-025 alignment sweep →
+  WOA-026 re-baseline (rules 1.1 / Core Six) → WOA-027 `grading-rubrics.md` refactor → WOA-028
+  `review-reports` refactor → WOA-029 constraint-temperature policy + 17-card call (parking-lot note
+  graduated + deleted). Roadmap M1.1 entry added; scope calls recorded in the Sprint orientation.
 
 ## Open threads
 

@@ -59,7 +59,8 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   the AI eval encodes a losing strategy invisible to AI-vs-AI (both sides share it, so 4,200 battles
   can't see it) — measuring a roguelite content explosion on that ruler is unsafe, so the loop must
   measure the real game before the content multiplies. The 16-card-ceiling / 17-card-deck call is parked
-  in [[constraint-temperature]] pending a temperature policy, not decided here.
+  in the `constraint-temperature` parking-lot note pending a temperature policy, not decided here
+  *(graduated 2026-07-16 → WOA-029, which settles that call)*.
 
 - **`D.D:ai-reserve-eval-rejected`** (2026-07-15, WOA-018) — the balance-loop-v2 §5a.1 flagship claim —
   *"the AI's `unitOnBoard 22 > unitReserve 16` eval encodes a losing strategy"* — is **verified and

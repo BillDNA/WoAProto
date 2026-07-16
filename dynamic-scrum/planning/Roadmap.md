@@ -38,6 +38,23 @@ loop runs unattended from start to graded report. *(Source: balance-loop-v2 fina
 
 ---
 
+## M1.1 — Measuring "good"  ·  size: S–M  *(pillars 1+2 — the ruler itself)*
+
+**Goal:** the definition and measurement of "good" is current, shaped, and lever-naming — before more
+content or loop automation grades against it.
+
+**Deliverables:** WOA-025 M1 drift sweep · WOA-026 re-baseline (rules 1.1 / Core Six) · WOA-027
+`grading-rubrics.md` refactor (Goal/Evidence/Score everywhere, every metric names its lever) · WOA-028
+`review-reports` refactor (temperature-stated grading) · WOA-029 constraint-temperature policy design +
+the 17-card `cavsplit17-raid-paid` call (graduated from the parking lot; automation stays in M2).
+
+**Active sprint: [[Sprint|M1.1 · Measuring "good"]]** (opened 2026-07-16).
+
+**Done when:** every rubric figure is a dated Core Six measurement, every criterion names its lever,
+`review-reports` grades temperature-aware, and the temperature policy has settled the 17-card call.
+
+---
+
 ## M2 — Actionable, visible data  ·  size: S–M  *(pillar 2)*
 
 **Goal:** every metric points at a lever, and is actually seen.
@@ -46,8 +63,8 @@ loop runs unattended from start to graded report. *(Source: balance-loop-v2 fina
 - **WOA-006** — load saved CLI balance runs into the Dashboard Charts tab (close the one-way
   logs→dashboard gap; today the dashboard only charts its own live sims).
 - **increase-data-value** — each report metric names the knob it implies and surfaces where it's used.
-- Operationalize the **[[constraint-temperature]]** dial (from `grading-rubrics.md` §Temperature) so the
-  loop can escape local maxima on purpose, not by luck.
+- Operationalize the **constraint-temperature** dial (policy designed in M1.1 / WOA-029;
+  `grading-rubrics.md` §Temperature) so the loop drives its own escapes from local maxima, not by luck.
 
 **Done when:** a balance report's every metric maps to a lever and shows in the dashboard.
 
@@ -152,8 +169,6 @@ parking lot (see [[Parking-Lot Index]]).
 
 - **The run design + its pieces** — the load-bearing brainstorms M3 draws from: [[run-design]],
   [[metaprogression]], [[commander-traits]], [[narrative]], [[map-points-of-interest]].
-- **[[constraint-temperature]]** — the search-side temperature dial (escape local maxima); feeds M1/M2.
-  Holds the pending 17-card-deck (`cavsplit17-raid-paid`) adopt/reject call.
 - **Cross-run meta-progression + unlock cadence** — the *between-campaigns* layer (a content-scheduling
   problem for the data pipeline); [[metaprogression]] is the within-run layer.
 - Localization string-extraction (YAGNI until the card pool stabilizes).

@@ -13,9 +13,6 @@ Captured via `make-ticket parkinglot` (no ticket ID until it graduates).
 - [[narrative]] — the field-journal story frame for the run.
 - [[map-points-of-interest]] — capture points, ammo dumps, other interactive map features.
 
-**Balance loop:**
-- [[constraint-temperature]] — loosen constraints to escape local maxima; extends `grading-rubrics.md` §Temperature. Holds the pending 17-card-deck decision.
-
 **Direction:**
 - [[steam-roadmap]] — the Steam leverage map (July 2026 draft, end of the V1 run) — future-looking, **for Bill to decide**; adopted milestones graduate to [[Roadmap]].
 

@@ -13,7 +13,7 @@ So meta-progression = the **between-operation reward-and-deck-update step**. Thi
 
 ## Open questions to noodle
 - **Reward types:** new cards? card upgrades? *unit* upgrades or entirely new unit types (Bill's open question)?
-- **Deck-change verbs:** add / remove / upgrade / swap — against the 16-card ceiling (a physical-limitations guardrail, or a [[constraint-temperature]] dial?).
+- **Deck-change verbs:** add / remove / upgrade / swap — against the 16-card ceiling (a physical-limitations guardrail, or a constraint-temperature dial? — policy = WOA-029, M1.1).
 - **Persistence altitude:** reset each campaign (pure roguelite) or carry across (meta-unlocks)? The Roadmap's deferred *meta-progression + unlock cadence* is the cross-run layer; this note is the within-run layer.
 - **Data hook:** unlock cadence is *"a content-scheduling problem for the data pipeline"* (steam-roadmap) — the same charts that tune balance schedule the unlocks.
 
@@ -21,6 +21,6 @@ So meta-progression = the **between-operation reward-and-deck-update step**. Thi
 When reward set + deck-change rules + persistence altitude are concrete. Gated by the run design (Q.1). See `brainstorming` when ready.
 
 ## Related
-[[run-design]] · [[commander-traits]] · [[constraint-temperature]] · [[Roadmap]]
+[[run-design]] · [[commander-traits]] · [[Roadmap]]
 
 #parking-lot #project-direction
