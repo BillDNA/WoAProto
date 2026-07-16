@@ -1,3 +1,6 @@
+---
+last-reviewed: 2026-07-10
+---
 #human-instructions #ai #code-architecture
 # The AI, in plain English — how it thinks and every knob you can turn
 

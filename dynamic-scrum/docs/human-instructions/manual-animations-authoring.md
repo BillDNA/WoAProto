@@ -1,3 +1,6 @@
+---
+last-reviewed: 2026-07-07
+---
 #human-instructions #code-architecture #game-rules
 
 # Field Manual animations — authoring guide for future sessions

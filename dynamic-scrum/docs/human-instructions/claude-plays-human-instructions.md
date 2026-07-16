@@ -1,3 +1,6 @@
+---
+last-reviewed: 2026-07-10
+---
 #human-instructions #claude-skills #game-logs
 
 # Claude Plays — human instructions

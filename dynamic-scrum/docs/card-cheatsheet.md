@@ -1,3 +1,6 @@
+---
+last-reviewed: 2026-07-07
+---
 #game-rules #human-instructions #code-architecture
 # Card editing cheat sheet
 

@@ -1,3 +1,6 @@
+---
+last-reviewed: 2026-07-15
+---
 #onboarding #human-instructions
 # Grading rubrics — north stars + what to measure
 
@@ -14,8 +17,10 @@ Every rubric item has three parts (Bill's shape):
 - **Score meaning** — what a good / marginal / failing reading looks like. All thresholds are
   **tunable targets, Bill's to adjust** — written as "target: X (tune me)", never hardcoded gates.
 
-Baselines below were measured June 2026, after the round-6 AI fixes and the surviving-units
-attrition rule. Re-measure before grading against them (commands in the footer).
+Baselines below were measured June 2026 (**pre-rules-1.1**), after the round-6 AI fixes and the
+surviving-units attrition rule. Rules 1.1 (current) **inverted attacks↔swaps**, so the Behaviour
+baseline (game-level guard #1) is swept to 1.1 below, as is north star 5. **North stars 1/2/4 still
+carry pre-1.1 June figures — re-measure before grading against them** (commands in the footer).
 
 ## North stars (what "good" means for this game)
 
@@ -261,7 +266,8 @@ These are the additional regression guards:
 1. **Behaviour health.**
    Goal: the AIs (and by proxy the incentive structure) fight rather than shuffle.
    Evidence: Behaviour line — attacks & swaps per battle, % of units ever fielded.
-   Baseline (normal, n=40/map): ~5 attacks, ~7 swaps, 88% fielded.
+   Baseline (normal, n=40/map): 6.1 attacks, 5.7 swaps, 88% fielded (rules 1.1 — attacks↔swaps
+   inverted from the pre-1.1 ~5/~7 reading, which is the superseded V0 signature).
    Score: readings near baseline = good; a sharp move in any of them after a change is a
    regression **even if win rates look fine** (tune me — "sharp" ≈ ±30%+). Low Atk + high Swp
    is the round-6 swap-dance signature.
