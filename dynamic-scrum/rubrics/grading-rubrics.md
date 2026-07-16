@@ -49,35 +49,35 @@ range that reads "good", and where the full criterion (detail + Lever) lives. Ro
 report's own order. **The criterion below is the SOT** — if this table and a criterion disagree, the
 criterion wins and this table gets fixed. All bands are targets (tune me).
 
-| Report line / column | Good range | Rubric item |
-|---|---|---|
-| **Per-map table** | | |
-| Red% | 45–55 (marginal to 40–60; 62/38 = SIDE-BIASED) | Map §1 |
-| 1st% | 45–55 (marginal to 40–60) | Map §2 |
-| HQ% | 10–40 (≤8 attrition-only, ≥55 rushable) | Map §3 |
-| Turns | comfortably under the play cap (2× deck size, 32 today) | Game §2 |
-| VPdiff | no band — context only | — |
-| Atk / Swp | near the dated Behaviour baseline; ±30% move = regression | Game §1 |
-| 0kill% | ≤5 — **hard floor** | NS2 |
-| Tie% | ≤15 — **hard floor** | NS5 / Map §6 |
-| Drag | ≤2.5 | Best map |
-| Swings | ≥2.0 | Best map |
-| Balance | 0 = ideal, lower = better (ranking, not a band) | Best map |
-| **Overall lines** | | |
-| red / first mover | 45–55% | NS4 |
-| HQ captures | 10–40% | Map §3 |
-| Behaviour: attacks & swaps, % fielded | near dated baseline; ±30% = regression | Game §1 |
-| Reserves at end (red/blue) | near dated baseline; high = turtling | Game §1 |
-| tie-goes-to-2nd decided | ≤15% — **hard floor** | NS5 |
-| first blood won | 55–70% (higher = snowbally) | NS2 |
-| more-hexes side won | ≥70% | NS2 / Map §5 |
-| Pacing: Drag / Swings | ≤2.5 / ≥2.0 | Best map |
-| **Card table** | | |
-| Simple% | <40 good, 40–60 marginal, >60 failing | Card 3 |
-| Noop% | ~0; >2% investigate — **hard floor ≈0** | NS3 / Card 2 |
-| 1stSight% / AvgSeen | no band — **diagnostic of the AI** (>70 with AvgSeen ~1 = watchlist only) | Card 4–5, ⚠ box |
-| **Matchup report** | | |
-| skill premium | adjacent tiers ≥60%, two apart ≥75% | NS1 |
+| Report line / column                  | Good range                                                                | Rubric item     |
+| ------------------------------------- | ------------------------------------------------------------------------- | --------------- |
+| **Per-map table**                     |                                                                           |                 |
+| Red%                                  | 45–55 (marginal to 40–60; 62/38 = SIDE-BIASED)                            | Map §1          |
+| 1st%                                  | 45–55 (marginal to 40–60)                                                 | Map §2          |
+| HQ%                                   | 10–40 (≤8 attrition-only, ≥55 rushable)                                   | Map §3          |
+| Turns                                 | comfortably under the play cap (2× deck size, 32 today)                   | Game §2         |
+| VPdiff                                | no band — context only                                                    | —               |
+| Atk / Swp                             | near the dated Behaviour baseline; ±30% move = regression                 | Game §1         |
+| 0kill%                                | ≤5 — **hard floor**                                                       | NS2             |
+| Tie%                                  | ≤15 — **hard floor**                                                      | NS5 / Map §6    |
+| Drag                                  | ≤2.5                                                                      | Best map        |
+| Swings                                | ≥2.0                                                                      | Best map        |
+| Balance                               | 0 = ideal, lower = better (ranking, not a band)                           | Best map        |
+| **Overall lines**                     |                                                                           |                 |
+| red / first mover                     | 45–55%                                                                    | NS4             |
+| HQ captures                           | 10–40%                                                                    | Map §3          |
+| Behaviour: attacks & swaps, % fielded | near dated baseline; ±30% = regression                                    | Game §1         |
+| Reserves at end (red/blue)            | near dated baseline; high = turtling                                      | Game §1         |
+| tie-goes-to-2nd decided               | ≤15% — **hard floor**                                                     | NS5             |
+| first blood won                       | 55–70% (higher = snowbally)                                               | NS2             |
+| more-hexes side won                   | ≥70%                                                                      | NS2 / Map §5    |
+| Pacing: Drag / Swings                 | ≤2.5 / ≥2.0                                                               | Best map        |
+| **Card table**                        |                                                                           |                 |
+| Simple%                               | <40 good, 40–60 marginal, >60 failing                                     | Card 3          |
+| Noop%                                 | ~0; >2% investigate — **hard floor ≈0**                                   | NS3 / Card 2    |
+| 1stSight% / AvgSeen                   | no band — **diagnostic of the AI** (>70 with AvgSeen ~1 = watchlist only) | Card 4–5, ⚠ box |
+| **Matchup report**                    |                                                                           |                 |
+| skill premium                         | adjacent tiers ≥60%, two apart ≥75%                                       | NS1             |
 
 ## North stars (what "good" means for this game)
 

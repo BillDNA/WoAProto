@@ -54,10 +54,11 @@ content or loop automation grades against it.
 `review-reports` refactor (temperature-stated grading) · WOA-029 constraint-temperature policy design +
 the 17-card `cavsplit17-raid-paid` call (graduated from the parking lot; automation stays in M2).
 
-**Active sprint: [[Sprint|M1.1 · Measuring "good"]]** (opened 2026-07-16).
-
-**Done when:** every rubric figure is a dated Core Six measurement, every criterion names its lever,
-`review-reports` grades temperature-aware, and the temperature policy has settled the 17-card call.
+**Sprint history: [[M1.1-measuring-good|M1.1 · Measuring "good"]]** (ran + closed 2026-07-16 — 5/5,
+zero bounces). **CLOSED — done-when met:** every rubric figure is a dated Core Six measurement, every
+criterion names its lever, `review-reports` grades temperature-aware, and the temperature policy
+settled the 17-card call — **ADOPTED** (`D.D:seventeen-card-adopt`; execution ticket WOA-030 in
+[[Backlog]] — the flip exposed card-pinned tests coupled to the active deck).
 
 ---
 

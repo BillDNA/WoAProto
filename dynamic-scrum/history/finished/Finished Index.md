@@ -5,6 +5,11 @@ below (**newest first**). Used to sanity-check whether something already shipped
 
 ## Index
 
+- **2026-07-16 — [[M1.1-measuring-good|M1.1 · Measuring "good"]]** — ran fully autonomously same-day
+  (5/5 closed, zero bounces). The ruler refreshed end-to-end: every figure re-measured on Core Six
+  (dated + setup-labeled), rubric refactored to Goal/Evidence/Score/**Lever**, review-reports grades
+  temperature-stated, search-side temperature policy shipped — and its first T2 probe got the 17-card
+  deck **ADOPTED by Bill** (`D.D:seventeen-card-adopt`; execution = WOA-030).
 - **2026-07-16 — [[M1-fix-the-bent-ruler|M1 · Fix the bent ruler]]** — ran fully autonomously 2026-07-15
   (6/6 dispositioned: 4 built, WOA-018 REJECTED, WOA-020 CUT). Flagship refuted the premise: the ruler
   is NOT bent (`D.D:ai-reserve-eval-rejected`); reserve-timing → WOA-024. Shipped: reserve-held metric,

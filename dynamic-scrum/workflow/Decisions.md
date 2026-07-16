@@ -86,6 +86,20 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   mechanical `file:line` fixes; 3 alignment NICEs folded in 2026-07-16, the canonical-scoped cosmetic
   dropped).
 
+- **`D.D:seventeen-card-adopt`** (2026-07-16, WOA-029 → Bill at M1.1 close) — **ADOPT
+  `cavsplit17-raid-paid`**: the 16-card ceiling is relaxed to **17 for this deck** (16 stays the
+  default guardrail for every other deck), per the first live application of the search-side
+  temperature policy (rubric §Temperature → Search-side). *Why:* the declared T2 probe measured
+  T0-clean on both tiers — Swings +25–30% (2.7→3.5 hard / 2.9→3.6 normal), fielded +4 pts,
+  reserves-at-end −4 pts, Drag flat — for +3 turns and a normal-tier 0-kill drift 1→4% (in band);
+  the deck pins printed==stock (7/2/1) so the deploy-step floor and WOA-017 both hold. Evidence:
+  `logs/reports/analysis/1.1/2026-07-16-1.1-analysis-cavsplit17-T2probe.md`. **Execution gated on
+  WOA-030**: the first live flip found card-pinned tests coupled to the active deck
+  (`test.js:543` resolves Ordered Withdraw — a card this deck cuts — suite crashed at 136/237), so
+  the flip ships with the test decoupling + the atomic guardrail/baseline records, not from the
+  close-sprint wrap. The n≥100 normal 0-kill confirmation rides along as a watch item, not a gate —
+  Bill adopted without it.
+
 ## Architecture
 
 - **`D.A:units-content-kind`** (2026-07-10, WOA-011) — unit composition & values are a content kind

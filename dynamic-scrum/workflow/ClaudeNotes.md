@@ -3,51 +3,34 @@
 Claude's compact snapshot of where things stand, so "take a look at where we are" is fast at session
 start. **Overwrite** this each session — it is state, not a log.
 
-## Where things stand (2026-07-16 — M1.1 sprint RAN autonomously; awaiting Bill's review)
+## Where things stand (2026-07-16 — M1.1 CLOSED; 17-card ADOPTED, execution pending)
 
-- **Sprint `M1.1 · Measuring "good"` ran end-to-end** (`run-sprint`, full autonomy): **5/5 closed,
-  zero bounces**, suite 237 green throughout, 6 commits + the run report — **NOT pushed** (end-session
-  integrates) and the sprint is NOT closed on the board — Bill reviews first. Run report:
-  `dynamic-scrum/planning/sprint-runs/2026-07-16-M1.1-measuring-good.md`.
+- **M1.1 · Measuring "good" is CLOSED** (ran autonomously 5/5 zero-bounce, Bill reviewed same day;
+  archive: `dynamic-scrum/history/finished/M1.1-measuring-good.md`). The ruler is current, shaped,
+  lever-naming; review-reports grades temperature-stated; the search-side temperature policy is live
+  in the rubric (+ Bill's quick-reference table, report line → band).
+- **Bill ADOPTED `cavsplit17-raid-paid`** (`D.D:seventeen-card-adopt`) — but the first flip attempt
+  crashed the suite (`test.js:543` resolves the cut Ordered Withdraw from the active deck), so the
+  flip was reverted (trunk green, default still active) and the adopt executes as **WOA-030**
+  (Backlog, next pull): decouple card-pinned tests → flip → atomic guardrail/baseline records →
+  matchup re-measure (+ generate-reports matchup leg) → n≥100 0-kill confirmation (watch item).
 
-## The one thing to carry forward
+## Open threads
 
-**The 17-card call is on Bill's desk, measured.** `cavsplit17-raid-paid` probed at T2 under the new
-search-side policy: **T0-clean on both tiers** — Swings +25–30%, turtling down, Drag flat — for +3
-turns and normal 0-kill 1→4% (in band, near the 5% floor). **Recommendation: ADOPT gated on one
-n≥100 normal confirmation run. Decision: BILL'S CALL (pending)** —
-`logs/reports/analysis/1.1/2026-07-16-1.1-analysis-cavsplit17-T2probe.md`. On adopt, 17 becomes that
-deck's documented ceiling (recorded in rubric + Goals atomically), 16 stays the default guardrail.
-
-## Delivered
-
-- **WOA-025** M1 drift swept (17 ACs, 20 files; drafts staging drained).
-- **WOA-026** every rubric figure re-measured on Core Six, dated + setup-labeled; CLAUDE.md baselines
-  updated (steer-approved); code-architecture numbers block → pointer. Finding: the old "normal"
-  Behaviour baseline was a mislabeled hard-vs-hard read (flagged, not retro-fixed).
-- **WOA-027** rubric refactored — **Goal/Evidence/Score/Lever** on all 23 criteria; §Temperature
-  first-class; setup-label rule mandatory.
-- **WOA-028** review-reports refactored — pointer-only, `Temperature: TX` header mandatory, levers
-  carried; proven by a committed T0 all-pass dry-run analysis (`2026-07-16-1.1-analysis.md`).
-- **WOA-029** search-side temperature policy in the rubric slot (local-max signal / ranked dial /
-  re-measure-to-ship) + the T2 probe above.
-
-## Awaiting Bill's review / decision
-
-1. **17-card ADOPT/REJECT** (above) — the confirmation run is one ask away.
-2. **Rubric gaps to pin (WOA-028 shakedown):** north star 1 needs a `matchup`-shape report in the
-   standard set (consider adding to generate-reports); Pacing baseline candidate measured (hard
-   28.7t/23% HQ, normal 27.4t/25%) — Bill owns the rubric.
-3. **CLAUDE.md baselines diff** — flagged per steer; prior rows kept as superseded.
-4. **Refine pass (M1 + M1.1 combined) still offered, not run** — signal preserved in 5 observation
-   drops in canonical inbound + both run reports. Also offered: scaffold `rig-notes.md` to home the
-   WoA sim lore (--parallel timings, --deck selection, printed==stock pin, here-string→`-F` commits).
+- **Alignment pass DUE** — M1.1's close flipped a Roadmap milestone Closed (flagged, not run;
+  `D.D:alignment-pass-on-request`). Also still offered: the combined M1+M1.1 canonical refine pass
+  (signal preserved in 5 observation drops in canonical inbound + both run reports) and a
+  `rig-notes.md` scaffold for WoA sim lore (--parallel timings, --deck selection, printed==stock pin,
+  here-string→`-F` commit recipe).
+- **Pacing baseline** unpinned in the rubric — candidate measured pre-adopt (hard 28.7t/23% HQ,
+  normal 27.4t/25%); re-measure under the adopted deck in WOA-030's sweep anyway.
+- Earlier carried threads: core7 roster call (restore to 7 maps?), Roadmap M1 overnight-autonomous
+  half, dashboard parity follow-ons (WOA-016 reserve tile, WOA-019 live winPct).
 
 ## Next
 
-Bill reviews → `end-session close-sprint` (which pushes), or the 17-card confirmation run / refine
-pass on ask. M2 (actionable, visible data — dashboard + operationalize the temperature dial) is next
-on the Roadmap.
+`session-start tickets WOA-030` (or `run-ticket WOA-030`) → then M2 planning. Alignment pass /
+refine pass / rig-notes on Bill's ask.
 
 ## Related
 
