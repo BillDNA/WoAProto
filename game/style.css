@@ -525,11 +525,29 @@
 /* the parchment ghost button (was 26 inline style copies) */
 button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
 
-/* V1 Charts view (Balance Dashboard): the Tables|Charts toggle, one card per
-   chart, and the hover tooltip. Chart internals are inline SVG (ui/charts.js). */
-.dash-tabs{display:flex; gap:6px; justify-content:center; margin:2px 0 4px;}
-.dash-tabs .dtab{font-family:inherit; font-size:13px; font-weight:normal; padding:4px 18px; border:1px solid var(--brass-dark); border-radius:14px; background:rgba(255,255,255,.3); color:var(--ink); cursor:pointer; box-shadow:none; letter-spacing:.5px;}
-.dash-tabs .dtab.sel{background:var(--brass); color:#fff; font-weight:bold;}
+/* WOA-034: dashboard shell chrome — dark header (run A/B pickers), pill nav
+   (Overview|Maps|Cards|Units|Tables) + temperature selector. Design tokens
+   from dynamic-scrum/planning/specs/design_handoff_metrics_dashboard/README.md
+   ("Design Tokens" / Screen 1). Tables' own controls live in #dashRunControls
+   (hidden outside the Tables pill — the charts context is view-only). */
+#dashHead{background:#2c2517; color:var(--parch); border-radius:8px; padding:9px 16px; margin:0 0 10px; display:flex; flex-wrap:wrap; align-items:center; column-gap:16px; row-gap:4px;}
+#dashHead .dash-head-title{font-variant:small-caps; font-size:16px; letter-spacing:.03em; white-space:nowrap;}
+#dashHead .dash-head-ab{display:flex; align-items:center; gap:8px; font-size:12.5px; flex:1 1 auto;}
+#dashHead .dash-head-ab .small{color:var(--parch); display:flex; align-items:center; gap:5px;}
+#dashHead .dash-head-ab select{font-family:inherit; font-size:12.5px; padding:3px 6px; border:1px solid var(--brass-dark); border-radius:5px; background:rgba(255,255,255,.14); color:var(--parch); max-width:min(260px,32vw);}
+#dashHead .dash-head-ab select:disabled{opacity:.6;}
+#dashHead .dash-vs{opacity:.7; font-style:italic;}
+#dashHead .dash-head-cap{font-size:11px; font-style:italic; opacity:.75; width:100%; text-align:right;}
+#dashNav{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 10px; flex-wrap:wrap;}
+#dashPills{display:flex; gap:6px; flex-wrap:wrap;}
+#dashPills .dpill{font-family:inherit; font-size:13px; font-weight:normal; padding:4px 18px; border:1px solid var(--brass-dark); border-radius:14px; background:rgba(255,255,255,.3); color:var(--ink); cursor:pointer; box-shadow:none; letter-spacing:.5px;}
+#dashPills .dpill.sel{background:var(--brass); color:#fff; font-weight:bold;}
+.dash-temp select{font-family:inherit; font-size:12.5px; padding:3px 8px; border:1px solid var(--brass-dark); border-radius:6px; background:rgba(255,255,255,.35); color:var(--ink); cursor:pointer; margin-left:4px;}
+.dash-pane{min-height:140px; padding:26px 10px; text-align:center;}
+.dash-pane p.small{max-width:560px; margin:6px auto;}
+
+/* V1 Charts (ui/charts.js chart primitives — reused by Cards/Maps/Units, WOA-035+):
+   one card per chart, and the hover tooltip. Chart internals are inline SVG. */
 .chcard{border:1px solid var(--brass-dark); border-radius:8px; padding:12px 16px 12px; margin:14px 0; background:rgba(255,255,255,.22);}
 .chcard .chhead{display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap;}
 .chcard h3{margin-top:0;}

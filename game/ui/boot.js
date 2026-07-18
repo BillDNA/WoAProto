@@ -48,11 +48,13 @@ if (/screen=/.test(location.search)) setTimeout(function(){
   if (s==='deck') openDeck();
   else if (s==='dash'){
     openDash();
-    var wantCharts = /[?&]charts/.test(location.search); // &charts auto-opens the Charts tab
-    if (wantCharts){ DASH.view = 'charts'; renderDash(); }
+    // &charts auto-opens the view-only pane (WOA-034: Overview, closest analog
+    // to the old single-run Charts tab — screenshots & quick testing)
+    var wantCharts = /[?&]charts/.test(location.search);
+    if (wantCharts){ DASH.view = 'overview'; renderDash(); }
     if (/[?&]run/.test(location.search)){
       $('dashN').value='20';
-      // charts read across maps, so &charts keeps "All in play"; otherwise one map for speed
+      // the view-only panes read across maps, so &charts keeps "All in play"; otherwise one map for speed
       if (!wantCharts && $('dashMap').options[1]) $('dashMap').value = $('dashMap').options[1].value;
       setTimeout(function(){ $('dashRun').click(); }, 40);
     }
@@ -347,9 +349,15 @@ E.hooks.onBattleEnd.push(function (st) {
 $('btnDash').onclick = openDash;
 $('dashBack').onclick = function(){ DASH.cancel = true; show('menu'); checkResume(); };
 $('dashStop').onclick = function(){ DASH.cancel = true; };
-// Tables|Charts toggle — per-run state on DASH; charts re-render from memory
-$('dashTabTables').onclick = function(){ DASH.view = 'tables'; renderDash(); };
-$('dashTabCharts').onclick = function(){ DASH.view = 'charts'; renderDash(); };
+// WOA-034: pill nav (Overview|Maps|Cards|Units|Tables) replaces the old
+// Tables|Charts toggle — per-view state stays on DASH, panes re-render from
+// memory/the fetched runs list. Header run-A/B pickers + temperature selector.
+document.querySelectorAll('#dashPills .dpill').forEach(function(b){
+  b.onclick = function(){ DASH.view = b.dataset.view; renderDash(); };
+});
+$('dashTemp').onchange = function(){ DASH.temperature = this.value; renderDash(); };
+$('dashRunA').onchange = function(){ DASH.runA = this.value ? +this.value : null; renderDash(); };
+$('dashRunB').onchange = function(){ DASH.runB = this.value ? +this.value : null; renderDash(); };
 
 $('dashRun').onclick = function(){
   if (DASH.running) return;

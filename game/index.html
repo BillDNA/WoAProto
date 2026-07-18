@@ -164,24 +164,54 @@
   </div>
 </div>
 
-<!-- ============ BALANCE DASHBOARD ============ -->
+<!-- ============ BALANCE DASHBOARD (WOA-034: shell — dark header run-A/B
+     pickers, pill nav, temperature selector; Tables is the pre-existing
+     dashboard UNCHANGED below the chrome. Overview/Maps/Cards/Units are
+     placeholder mounts — WOA-035 fills Overview next.) ============ -->
 <div id="dashScr" class="screen">
-  <div class="panel parchment">
-    <h2 style="font-variant:small-caps;text-align:center;">The War Office &mdash; Balance Dashboard</h2>
-    <p class="small" style="text-align:center;">The full <code>balance.js</code> report, in the browser: AI-vs-AI battles across the roster, every metric laid out. Same aggregation as the terminal — the numbers can't disagree.</p>
-    <div class="opt-row" style="align-items:center;">
-      <label class="small">Battles/map <select id="dashN"><option>20</option><option selected>40</option><option>60</option><option>100</option></select></label>
-      <label class="small">Red AI <select id="dashRed"><option value="easy">Green Recruit</option><option value="normal" selected>Old Veteran</option><option value="hard">Field Marshal</option></select></label>
-      <label class="small">Blue AI <select id="dashBlue"><option value="easy">Green Recruit</option><option value="normal" selected>Old Veteran</option><option value="hard">Field Marshal</option></select></label>
-      <label class="small">Maps <select id="dashMap"><option value="all">All in play</option></select></label>
-      <button id="dashRun">Run</button>
-      <button id="dashStop" class="ghost btn-ghost-dark" style="display:none;">Stop</button>
-      <button id="dashSave" class="ghost btn-ghost-dark" title="Save the report you're looking at to logs/reports/balance/<version>/ (needs the server; downloads a copy otherwise)">Save report</button>
+  <div class="panel parchment" id="dashPanel">
+    <div id="dashHead">
+      <div class="dash-head-title">The War Office &mdash; Metrics</div>
+      <div class="dash-head-ab">
+        <label class="small">Run A <select id="dashRunA"></select></label>
+        <span class="dash-vs">vs</span>
+        <label class="small">Run B <select id="dashRunB"></select></label>
+      </div>
+      <div class="dash-head-cap small">view-only &middot; reads saved runs from woa.db</div>
     </div>
-    <p class="small" id="dashStatus" style="text-align:center;"></p>
-    <div id="dashTabs" class="dash-tabs">
-      <button id="dashTabTables" class="dtab sel" type="button">Tables</button>
-      <button id="dashTabCharts" class="dtab" type="button" title="The same run as three pictures: map fairness, card watchlist, battle-length spread">Charts</button>
+    <div id="dashNav">
+      <div id="dashPills">
+        <button class="dpill" data-view="overview" type="button">Overview</button>
+        <button class="dpill" data-view="maps" type="button">Maps</button>
+        <button class="dpill" data-view="cards" type="button">Cards</button>
+        <button class="dpill" data-view="units" type="button">Units</button>
+        <button class="dpill sel" data-view="tables" type="button">Tables</button>
+      </div>
+      <label class="small dash-temp">Temperature
+        <select id="dashTemp"><option value="T0">T0</option><option value="T1">T1</option><option value="T2">T2</option></select>
+      </label>
+    </div>
+
+    <div id="dashPaneOverview" class="dash-pane" style="display:none;"></div>
+    <div id="dashPaneMaps" class="dash-pane" style="display:none;"></div>
+    <div id="dashPaneCards" class="dash-pane" style="display:none;"></div>
+    <div id="dashPaneUnits" class="dash-pane" style="display:none;"></div>
+
+    <div id="dashTablesIntro">
+      <h2 style="font-variant:small-caps;text-align:center;">Balance Dashboard &mdash; Tables</h2>
+      <p class="small" style="text-align:center;">The full <code>balance.js</code> report, in the browser: AI-vs-AI battles across the roster, every metric laid out. Same aggregation as the terminal — the numbers can't disagree.</p>
+    </div>
+    <div id="dashRunControls">
+      <div class="opt-row" style="align-items:center;">
+        <label class="small">Battles/map <select id="dashN"><option>20</option><option selected>40</option><option>60</option><option>100</option></select></label>
+        <label class="small">Red AI <select id="dashRed"><option value="easy">Green Recruit</option><option value="normal" selected>Old Veteran</option><option value="hard">Field Marshal</option></select></label>
+        <label class="small">Blue AI <select id="dashBlue"><option value="easy">Green Recruit</option><option value="normal" selected>Old Veteran</option><option value="hard">Field Marshal</option></select></label>
+        <label class="small">Maps <select id="dashMap"><option value="all">All in play</option></select></label>
+        <button id="dashRun">Run</button>
+        <button id="dashStop" class="ghost btn-ghost-dark" style="display:none;">Stop</button>
+        <button id="dashSave" class="ghost btn-ghost-dark" title="Save the report you're looking at to logs/reports/balance/<version>/ (needs the server; downloads a copy otherwise)">Save report</button>
+      </div>
+      <p class="small" id="dashStatus" style="text-align:center;"></p>
     </div>
     <div id="dashOut" class="manual"></div>
     <div class="ovr-btns"><button id="dashBack" class="ghost btn-ghost-dark">Back</button></div>

@@ -21,21 +21,6 @@ temperature — with aggregates byte-identical to pre-sprint (golden diff holds 
 
 ## Tickets
 
-### WOA-034 — Dashboard shell: view-only, run pickers, tabs (P1.4)
-**Area:** game-ui · **Status:** Todo · **Type:** sonnet · **Depends on:** WOA-032 · **Docs:** specs/design_handoff_metrics_dashboard, code-architecture
-
-The chrome the Overview lands in (README *Screens*): dark header, run-A/B pickers over the `runs`
-table, pill nav, temperature selector — charts become **view-only** (the Tables view keeps today's
-run loop untouched). Files: `game/ui/dashboard.js`, `game/ui/boot.js`, `game/index.html`.
-
-**Acceptance criteria:**
-- [ ] Header run-A/B pickers list runs from the `runs` table via server fetch; A defaults to the run flagged `baseline` for the current rules version
-- [ ] Pill nav Overview | Maps | Cards | Units | Tables; Tables is today's dashboard unchanged (run loop + Save intact there); Run/Save removed from the charts context
-- [ ] Temperature selector T0/T1/T2 wired into extended `DASH` state (`{runA, runB, view, mapFocus, abMode, temperature, runs}` per README *State Management*)
-- [ ] Under `file://` (no server): charts tab shows the current in-memory run only + a "start the server for run history" note — zip-and-double-click keeps working
-- [ ] `node dev/smoke.js` + `node game/test.js` green; **visual check is human/vision** — header, pills, pickers render per the design reference (mockup 4a chrome)
-- [ ] User confirms done
-
 ### WOA-035 — Overview screen: band board, map dumbbells, verdict, pacing minis (P1.5)
 **Area:** game-ui · **Status:** Todo · **Type:** sonnet · **Depends on:** WOA-033, WOA-034 · **Docs:** specs/design_handoff_metrics_dashboard
 
@@ -56,6 +41,8 @@ the design canvas). All numbers from woa.db via WOA-033's folds; charts in the e
 _None._
 
 ## Finished
+
+- **WOA-034 — Dashboard shell: view-only, run pickers, tabs (P1.4)** (2026-07-18) — Shell live: GET /api/runs (+ listRuns in dev/db.js, +5 tests), A/B header pickers with baseline-else-latest default, 5-pill nav (Tables = old dashboard verbatim, Run/Save hidden elsewhere), T0/T1/T2 selector in extended DASH, file:// graceful fallback (smoke-asserted). Runner vision-verified both screenshots (chrome matches 4a; Tables intact with live 20-battle run — which visibly plays the applied deck, WOA-036 confirmed on-screen). Old single-run Charts tab retired per spec pill nav; charts.js primitives kept dormant for 035+. Label/pin UI skipped (declared; setBaseline ready). cost: 232,206 tok / 54.5 min / 89 calls
 
 - **WOA-033 — report-model.js: bands as data + trace folds (P1.3)** (2026-07-18) — BANDS table (8 scored + 1 guard, {lo,hi,weight,feedsScore}) unified INTO balanceScore (200k-sample equivalence + golden diff byte-identical, sha-matched); bands(metric,T0|T1|T2) widening live (half-open rule → D.D:half-open-band-widening); 6 folds pure over the SPEC §4 envelope, runner live-smoked on a real DB row; suite 1124→1150 ok. vpDiffTrack needs env.fs — engine doesn't capture fsTimeline yet → WOA-037 (Backlog, pre-P2.2); fact-fix for 035: table is `timeline`, not `battle_timeline`. cost: 170,957 tok / 22.5 min / 40 calls
 

@@ -134,6 +134,17 @@ try {
   ok(g[0].n === 3, 'all three battles counted (n=' + g[0].n + ')');
   ok(g[0].avg_turns === st.turnNumber, 'AVG(turns) is sane (' + g[0].avg_turns + ')');
 
+  /* ---------- listRuns (WOA-034: the dashboard header's run-A/B pickers) ---------- */
+  section('listRuns (WOA-034)');
+  var runId2 = db.insertRun(h, { version: E.VERSION, kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 40, tool: 'db.test.js', label: 'r2' });
+  var runs = db.listRuns(h);
+  ok(runs.length === 2, 'listRuns returns every run on this handle (' + runs.length + ')');
+  ok(runs[0].id === runId2 && runs[1].id === runId, 'ordered id DESC — most recent first');
+  ok(runs[0].redAi === 'hard' && runs[0].blueAi === 'hard' && runs[0].label === 'r2',
+    'camelCase columns (redAi/blueAi/label) round-trip from the snake_case table');
+  ok(runs.every(function (r) { return 'seedBase' in r && 'baseline' in r; }), 'seedBase/baseline columns present (nullable)');
+  ok(db.listRuns(h, 1).length === 1, 'limit is honoured');
+
   db.close(h);
 
   /* ---------- db-query.js CLI against the temp db ---------- */

@@ -117,6 +117,13 @@ function open(dbPath) {
     // SQL `= NULL` never matches, `IS ?` does.
     clearBaseline: db.prepare('UPDATE runs SET baseline = 0 WHERE baseline = 1 AND version IS ?'),
     setBaselineFlag: db.prepare('UPDATE runs SET baseline = 1 WHERE id = ?'),
+    // WOA-034: the header run-A/B pickers' listing — id DESC (most recent
+    // first) so "no baseline pinned yet" falls back to runs[0] with no
+    // extra query. Aliased to the camelCase shape the dashboard/GET /api/runs
+    // hand across the wire, so the server stays a dumb pass-through.
+    listRuns: db.prepare(
+      'SELECT id, version, ts, kind, red_ai AS redAi, blue_ai AS blueAi, n, tool, notes,' +
+      ' deck, mapset, seed_base AS seedBase, label, baseline FROM runs ORDER BY id DESC LIMIT ?'),
     insertBattle: db.prepare(
       'INSERT INTO battles (run_id, version, map, seed, first_player, winner, win_type, turns,' +
       ' fs_red, fs_blue, first_blood, lead_changes, kill_tail, zero_kill, tiebreak,' +
@@ -239,9 +246,16 @@ function insertBattle(h, runId, st, firstPlayer, extra) {
   });
 }
 
+/* List runs, most recent first (WOA-034: the dashboard header's run-A/B
+   pickers, via GET /api/runs). limit defaults to 200 — plenty for a picker,
+   cheap even on a DB with years of balance sweeps in it. */
+function listRuns(h, limit) {
+  return h.stmts.listRuns.all(limit || 200);
+}
+
 function close(h) { h.db.close(); }
 
 module.exports = {
   open: open, insertRun: insertRun, insertBattle: insertBattle, setBaseline: setBaseline,
-  close: close, DEFAULT_DB: DEFAULT_DB
+  listRuns: listRuns, close: close, DEFAULT_DB: DEFAULT_DB
 };

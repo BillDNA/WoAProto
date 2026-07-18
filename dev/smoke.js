@@ -197,6 +197,33 @@ setTimeout(function () {
       doc.getElementById('btnDash').click();
       ok(doc.getElementById('dashScr').classList.contains('active'), 'dashboard opens from the menu');
       ok(doc.querySelectorAll('#dashMap option').length >= win.Engine.MAPS.length, 'map picker lists the pool');
+
+      console.log('== dashboard shell: header pickers + pill nav + temperature (WOA-034) ==');
+      ok(doc.getElementById('dashHead') && doc.getElementById('dashRunA') && doc.getElementById('dashRunB'),
+        'dark header + run A/B pickers present');
+      ok(doc.getElementById('dashRunA').disabled && doc.getElementById('dashRunA').options[0].textContent === '(no server)',
+        'file:// — run pickers show the no-server fallback (dashLoadRuns never calls fetch, AC4)');
+      ok(doc.querySelectorAll('#dashPills .dpill').length === 5, 'five pills: Overview | Maps | Cards | Units | Tables');
+      ok(doc.querySelector('#dashPills .dpill[data-view="tables"]').classList.contains('sel'), 'Tables is the selected pill');
+      ok(doc.getElementById('dashRunControls').style.display !== 'none', 'Run/Save controls visible on Tables');
+      doc.querySelector('#dashPills .dpill[data-view="overview"]').click();
+      ok(win.DASH.view === 'overview', 'clicking Overview switches DASH.view');
+      ok(doc.getElementById('dashRunControls').style.display === 'none' && doc.getElementById('dashOut').style.display === 'none',
+        'Run/Save + the Tables output hide outside Tables (AC2: charts context is view-only)');
+      ok(doc.getElementById('dashPaneOverview').style.display !== 'none' &&
+         /no server/i.test(doc.getElementById('dashPaneOverview').textContent) &&
+         /map row/.test(doc.getElementById('dashPaneOverview').textContent),
+        'Overview pane: file:// "no server, in-memory run only" fallback note (AC4)');
+      ok(doc.getElementById('dashPaneMaps').style.display === 'none' && doc.getElementById('dashPaneUnits').style.display === 'none',
+        'the other three panes stay hidden while Overview is active');
+      doc.getElementById('dashTemp').value = 'T2';
+      doc.getElementById('dashTemp').dispatchEvent(new win.Event('change', { bubbles: true }));
+      ok(win.DASH.temperature === 'T2', 'temperature selector writes DASH.temperature');
+      doc.querySelector('#dashPills .dpill[data-view="tables"]').click();
+      ok(win.DASH.view === 'tables' && doc.getElementById('dashRunControls').style.display !== 'none' &&
+         doc.getElementById('dashOut').style.display !== 'none',
+        'back on Tables: run controls + output reappear');
+
       doc.getElementById('dashN').value = '20';
       doc.getElementById('dashMap').value = win.Engine.MAPS[4].name; // The Cockpit (fast battles)
       doc.getElementById('dashRun').click();
@@ -221,34 +248,29 @@ setTimeout(function () {
           ok(doc.getElementById('dashSave') && /## Maps/.test(rpt) && /## Card report/.test(rpt) && /Drag \| Swings/.test(rpt),
             'Save report button + markdown report (maps, card report, pacing cols)');
 
-          console.log('== charts view (V1 graphs spec) ==');
-          doc.getElementById('dashTabCharts').click();
-          ok(doc.querySelectorAll('#dashOut svg').length === 3, 'Charts tab renders three svg charts');
-          ok(doc.querySelectorAll('#dashOut #chScatter .ch-dot').length === win.DASH.results.length,
-            'fairness scatter: one dot per map row (' + doc.querySelectorAll('#dashOut #chScatter .ch-dot').length + ')');
-          ok(doc.querySelectorAll('#dashOut #chQuad .ch-bub').length >= 5,
-            'card quadrant: bubbles for the played cards (' + doc.querySelectorAll('#dashOut #chQuad .ch-bub').length + ')');
-          ok(doc.querySelectorAll('#dashOut #chHist .ch-bar').length >= 1,
-            'histogram: winType bars drawn from per-battle detail (' + doc.querySelectorAll('#dashOut #chHist .ch-bar').length + ')');
+          // per-battle detail still collected for ui/charts.js's primitives, which
+          // WOA-035+ reuses (spec README: Cards tab "evolves the existing charts.js
+          // card quadrant") — not wired to a pill yet, so check the data survives.
           var detKey = win.DASH.results[0].map.name;
           ok(win.DASH.detail[detKey] && win.DASH.detail[detKey].turns.length === 20 &&
              win.DASH.detail[detKey].winTypes.length === 20,
             'dashRun collected per-battle turns + winTypes (' + (win.DASH.detail[detKey] || { turns: [] }).turns.length + ' battles)');
-          ok(doc.querySelector('#chHistMap option'), 'histogram map knob present');
-          ok(doc.querySelectorAll('#dashOut .ch-hit').length >= win.DASH.results.length + 5,
-            'hover hit-targets cover dots, bubbles and bins');
-          // the hover layer: entering a hit fills + shows the tooltip, leaving hides it
-          var hit = doc.querySelector('#dashOut #chScatter .ch-hit');
-          hit.dispatchEvent(new win.Event('mouseenter'));
-          var tip = doc.getElementById('chTip');
-          ok(tip && tip.style.display === 'block' && tip.textContent.indexOf(detKey) >= 0 &&
-             /balance score/.test(tip.textContent),
-            'scatter tooltip shows the map name + metrics on hover');
-          hit.dispatchEvent(new win.Event('mouseleave'));
-          ok(tip.style.display === 'none', 'tooltip hides on mouseleave');
-          doc.getElementById('dashTabTables').click();
+
+          console.log('== view-only panes: pill switch keeps the last run in memory (WOA-034, AC4) ==');
+          doc.querySelector('#dashPills .dpill[data-view="maps"]').click();
+          ok(win.DASH.view === 'maps', 'Maps pill selected');
+          ok(doc.getElementById('dashRunControls').style.display === 'none' && doc.getElementById('dashOut').style.display === 'none',
+            'Run/Save + the Tables table hide on the Maps pane');
+          var mapsTxt = doc.getElementById('dashPaneMaps').textContent;
+          ok(/no server/i.test(mapsTxt) && /1 map row/.test(mapsTxt),
+            'Maps pane: file:// fallback note references the 1 in-memory map row from the run just finished');
+          doc.querySelector('#dashPills .dpill[data-view="cards"]').click();
+          ok(win.DASH.view === 'cards' && doc.getElementById('dashPaneCards').style.display !== 'none' &&
+             doc.getElementById('dashPaneMaps').style.display === 'none',
+            'Cards pill shows its own pane and hides Maps');
+          doc.querySelector('#dashPills .dpill[data-view="tables"]').click();
           ok(doc.querySelectorAll('#dashOut table').length === 2, 'back on Tables: map table + card report still render');
-          ok(doc.querySelector('#dashOut th.sorted'), 'sort state survived the tab round-trip');
+          ok(doc.querySelector('#dashOut th.sorted'), 'sort state survived the pill round-trip');
           return startWatch();
         }
         if ((dw += 100) > 60000) { ok(false, 'dashboard run never finished'); return startWatch(); }

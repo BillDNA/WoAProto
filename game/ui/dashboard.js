@@ -10,12 +10,21 @@
 // E.balanceAdd — the SAME code the CLI folds battles through — and the
 // seed/first-player schedule is E.balanceSeed/balanceFP, so a run here with
 // the same n/AI/maps reproduces the terminal's numbers exactly.
-// view: 'tables' | 'charts' (the Tables|Charts tabs above #dashOut).
-// detail: per-battle rows the charts need ({mapName: {turns:[], winTypes:[]}}),
-// collected by the dashRun loop in ui/boot.js and reset each run. chartMap is
-// the histogram's map knob (null = the run's best-balance map).
+// view: 'tables' (today's dashboard, unchanged) | 'overview'|'maps'|'cards'|
+// 'units' (the WOA-034 shell's pill nav — view-only, reads saved runs;
+// content lands in WOA-035+). detail: per-battle rows the OLD single-run
+// charts view used ({mapName: {turns:[], winTypes:[]}}), collected by the
+// dashRun loop in ui/boot.js and reset each run — kept for ui/charts.js's
+// primitives, which WOA-035+ reuses (spec README "Cards tab evolves the
+// existing charts.js card quadrant"). chartMap is its histogram map knob.
+//
+// WOA-034 (spec README "State Management"): runA/runB/mapFocus/abMode/
+// temperature/runs extend this SAME global — the header run-A/B pickers,
+// pill nav and temperature selector read/write these fields; runs is the
+// GET /api/runs listing (empty + a fallback note under file://, AC4).
 var DASH = { running:false, cancel:false, results:[], sort:{key:null, dir:1}, cardSort:{key:'sightPct', dir:-1}, meta:null, adhoc:null,
-  view:'tables', detail:{}, chartMap:null };
+  view:'tables', detail:{}, chartMap:null,
+  runA:null, runB:null, mapFocus:null, abMode:'B', temperature:'T0', runs:[] };
 // Scoring/threshold/fold/markdown MODEL is shared with the CLI reporters —
 // one implementation per fact, in report-model.js (global WOA_REPORT).
 var dpct = WOA_REPORT.pct;
@@ -31,6 +40,89 @@ function openDash(){
   });
   if (cur) sel.value = [].some.call(sel.options, function(o){ return o.value===cur; }) ? cur : 'all';
   show('dashScr');
+  dashLoadRuns(); // WOA-034: (re)populate the header run-A/B pickers every time the screen opens
+}
+
+/* ---- WOA-034: run-A/B pickers (GET /api/runs; view-only, server-mediated) ---
+   Under file:// (no server, canNet false) this never fetches — the picker
+   shows "(no server)" and the panes note the in-memory-run-only fallback
+   (AC4). A defaults to the CURRENT rules version's baseline row; no baseline
+   yet in the real db falls back to the most recent run (runs sorted id DESC
+   by GET /api/runs) — never an error. */
+function dashRunLabel(r){
+  var ai = (r.redAi && r.blueAi) ? (r.redAi === r.blueAi ? r.redAi : r.redAi+'/'+r.blueAi) : '';
+  var bits = ['#'+r.id, r.version||'?', r.kind||'', ai, r.n?('n='+r.n):'', r.label||''].filter(function(s){ return !!s; });
+  return bits.join(' · ') + (r.baseline ? '  ★baseline' : '');
+}
+function dashFillRunSelect(sel, val, loading){
+  if (!sel) return;
+  sel.innerHTML = '';
+  var o = document.createElement('option');
+  if (loading){ o.value=''; o.textContent='Loading…'; sel.appendChild(o); sel.disabled = true; return; }
+  if (!DASH.runs.length){
+    o.value = ''; o.textContent = canNet ? 'No runs yet' : '(no server)';
+    sel.appendChild(o); sel.disabled = true; return;
+  }
+  sel.disabled = false;
+  DASH.runs.forEach(function(r){
+    var opt = document.createElement('option');
+    opt.value = String(r.id); opt.textContent = dashRunLabel(r);
+    sel.appendChild(opt);
+  });
+  if (val != null && [].some.call(sel.options, function(op){ return op.value === String(val); })) sel.value = String(val);
+}
+// Baseline for E.VERSION if pinned, else the most recent run (runs[0] — the
+// server lists id DESC) — "falls back sensibly ... without error" (AC1).
+function dashPickDefaultRuns(){
+  if (DASH.runA == null){
+    var base = null;
+    for (var i=0; i<DASH.runs.length; i++){ if (DASH.runs[i].baseline && DASH.runs[i].version === E.VERSION){ base = DASH.runs[i]; break; } }
+    DASH.runA = base ? base.id : (DASH.runs[0] ? DASH.runs[0].id : null);
+  }
+  if (DASH.runB == null){
+    for (var j=0; j<DASH.runs.length; j++){ if (DASH.runs[j].id !== DASH.runA){ DASH.runB = DASH.runs[j].id; break; } }
+  }
+}
+function dashLoadRuns(){
+  if (!canNet){ DASH.runs = []; renderDash(); return; } // file:// — never fetch, never console-spam
+  dashFillRunSelect($('dashRunA'), DASH.runA, true);
+  dashFillRunSelect($('dashRunB'), DASH.runB, true);
+  fetch('/api/runs').then(function(r){ return r.ok ? r.json() : []; }).then(function(runs){
+    DASH.runs = Array.isArray(runs) ? runs : [];
+    dashPickDefaultRuns();
+    renderDash();
+  }).catch(function(){ DASH.runs = []; renderDash(); }); // best-effort, same idiom as api() callers
+}
+
+/* ---- chrome: header pickers + pill nav + temperature (every render — cheap) ---- */
+function renderDashChrome(){
+  document.querySelectorAll('#dashPills .dpill').forEach(function(b){
+    b.classList.toggle('sel', b.dataset.view === DASH.view);
+  });
+  var temp = $('dashTemp');
+  if (temp) temp.value = DASH.temperature;
+  dashFillRunSelect($('dashRunA'), DASH.runA);
+  dashFillRunSelect($('dashRunB'), DASH.runB);
+}
+
+var DASH_PANE_LABEL = { overview:'Overview', maps:'Maps', cards:'Cards', units:'Units' };
+// Placeholder mounts for the four new pill views — WOA-035 fills Overview
+// next (later tickets: Maps drill-down, Cards, Units). Stable mount points:
+// #dashPaneOverview / #dashPaneMaps / #dashPaneCards / #dashPaneUnits.
+function renderDashPane(view){
+  var el = $('dashPane' + view.charAt(0).toUpperCase() + view.slice(1));
+  if (!el) return;
+  var h = '<p class="small" style="font-variant:small-caps; letter-spacing:.05em; font-size:15px;">' + DASH_PANE_LABEL[view] + '</p>';
+  if (!canNet){
+    h += '<p class="small">No server on this page (file://) — showing the current in-memory run only' +
+      (DASH.results.length ? ' (' + DASH.results.length + ' map row(s) from the last Tables run)' : '') +
+      '. Start <code>node game/server.js</code> for run history.</p>';
+  } else if (!DASH.runs.length){
+    h += '<p class="small">No saved runs yet in <code>logs/woa.db</code> — run a report on the Tables tab, or play a battle, then come back.</p>';
+  } else {
+    h += '<p class="small">Run A → B comparison lands here in WOA-035 (Overview) and later tickets (Maps / Cards / Units).</p>';
+  }
+  el.innerHTML = h;
 }
 
 // Balance a map AS DRAWN — possibly unsaved (the map editor's Balance button).
@@ -118,12 +210,27 @@ var CARD_TIPS = {
   plays:'Total times played across all battles'
 };
 function dstat(label, val, tip){ return '<div class="dstat" title="'+tip+'"><span>'+label+'</span><span>'+val+'</span></div>'; }
+
+// WOA-034: the shell dispatcher — chrome (header/pills/temperature) every
+// call, then either the Tables pane (today's dashboard, run controls + save
+// intact — byte-equivalent to pre-shell behaviour) or one of the view-only
+// placeholder panes (Run/Save hidden; AC2/AC4). Every dash* button handler
+// in ui/boot.js keeps calling renderDash() — the entry point doesn't move.
 function renderDash(){
-  var el = $('dashOut');
-  // Tables|Charts toggle (V1 graphs spec) — charts view is ui/charts.js
-  var tt = $('dashTabTables'), tc = $('dashTabCharts');
-  if (tt){ tt.classList.toggle('sel', DASH.view !== 'charts'); tc.classList.toggle('sel', DASH.view === 'charts'); }
-  if (DASH.view === 'charts'){ renderCharts(el); return; }
+  renderDashChrome();
+  var isTables = DASH.view === 'tables';
+  var runControls = $('dashRunControls'), intro = $('dashTablesIntro'), out = $('dashOut');
+  if (runControls) runControls.style.display = isTables ? '' : 'none';
+  if (intro) intro.style.display = isTables ? '' : 'none';
+  if (out) out.style.display = isTables ? '' : 'none';
+  ['overview','maps','cards','units'].forEach(function(v){
+    var el = $('dashPane' + v.charAt(0).toUpperCase() + v.slice(1));
+    if (el) el.style.display = (DASH.view === v) ? '' : 'none';
+  });
+  if (!isTables){ renderDashPane(DASH.view); return; }
+  renderDashTables(out);
+}
+function renderDashTables(el){
   if (!DASH.results.length){ el.innerHTML = ''; return; }
   var n = DASH.meta.n;
   var noise = Math.round(100 / Math.sqrt(n));

@@ -238,6 +238,17 @@ var ROUTES = {
       json(res, r.status, r.out);
     } catch (e) { json(res, 500, { error: e.message }); }
   },
+  'GET /api/runs': function (req, res) {
+    // WOA-034: the dashboard header's run-A/B pickers. Guarded like recordBattle
+    // above — a zipped game/ without dev/ (or a db that's never been opened)
+    // answers a clean [] rather than 501/error; the dashboard's fetch().catch
+    // falls back the same way under file:// where this is never even called.
+    if (!db) return json(res, 200, []);
+    try {
+      if (!dbHandle) dbHandle = db.open();
+      json(res, 200, db.listRuns(dbHandle));
+    } catch (e) { json(res, 500, { error: e.message }); }
+  },
   'GET /api/poll': function (req, res, body, u) {
     var r = rooms[(u.searchParams.get('room') || '').toUpperCase()];
     if (!r) return json(res, 404, { error: 'room not found' });
