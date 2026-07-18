@@ -21,20 +21,6 @@ temperature — with aggregates byte-identical to pre-sprint (golden diff holds 
 
 ## Tickets
 
-### WOA-033 — report-model.js: bands as data + trace folds (P1.3)
-**Area:** data · **Status:** Todo · **Type:** opus · **Depends on:** WOA-031 · **Docs:** specs/design_handoff_metrics_dashboard, data-and-reports, grading-rubrics
-
-The pattern-setter: every derivation the dashboard renders is a **fold in `game/report-model.js`**
-(one implementation per fact — node and browser both consume). Also moves the rubric's bands into
-data so the temperature selector can widen them (SPEC §6). No printed numbers change yet.
-
-**Acceptance criteria:**
-- [ ] Per-metric band table in `report-model.js` — `{lo, hi, weight, feedsScore}` per scored metric — with an SOT comment pointing at `dynamic-scrum/rubrics/grading-rubrics.md`; T1/T2 effective bands = each *closed* edge widened by 20%/40% of band width (open edges stay open), exposed as a function of (metric, temperature)
-- [ ] Trace folds added as pure functions over battle rows: deploy interleave, first-contact turn, settle point, per-turn action-octile lanes, |VP-diff| track, per-card play-turn quartiles (SPEC §1–2)
-- [ ] Folds are consumable from both node and the browser (same shared-global idiom as the rest of `report-model.js`); unit assertions in `node game/test.js` cover each fold on a known trace fixture
-- [ ] No printed report numbers change — golden balance diff byte-identical
-- [ ] User confirms done
-
 ### WOA-034 — Dashboard shell: view-only, run pickers, tabs (P1.4)
 **Area:** game-ui · **Status:** Todo · **Type:** sonnet · **Depends on:** WOA-032 · **Docs:** specs/design_handoff_metrics_dashboard, code-architecture
 
@@ -70,6 +56,8 @@ the design canvas). All numbers from woa.db via WOA-033's folds; charts in the e
 _None._
 
 ## Finished
+
+- **WOA-033 — report-model.js: bands as data + trace folds (P1.3)** (2026-07-18) — BANDS table (8 scored + 1 guard, {lo,hi,weight,feedsScore}) unified INTO balanceScore (200k-sample equivalence + golden diff byte-identical, sha-matched); bands(metric,T0|T1|T2) widening live (half-open rule → D.D:half-open-band-widening); 6 folds pure over the SPEC §4 envelope, runner live-smoked on a real DB row; suite 1124→1150 ok. vpDiffTrack needs env.fs — engine doesn't capture fsTimeline yet → WOA-037 (Backlog, pre-P2.2); fact-fix for 035: table is `timeline`, not `battle_timeline`. cost: 170,957 tok / 22.5 min / 40 calls
 
 - **WOA-032 — Trace rows + `runs` table in woa.db (P1.2)** (2026-07-18) — Runs table extended per SPEC §7 (additive ALTERs, old rows survive); battle rows carry trace JSON (~4KB/battle, over spec's 1.3KB estimate — accepted); baseline pin-twice uniqueness proven in dev/db.test.js (66 ok); Engine.ACTIVE_DECK exported as the one deck-identity read (WOA-036-safe); balance.js + dashboard Run loop stamp identity (runner live-verified: run 67, deck=cavsplit17-raid-paid, trace on rows); charts side untouched. matchup mode deliberately not persisted (not a §7 run). No label/pin UI yet → WOA-034. cost: 219,165 tok / 17.9 min / 78 calls
 

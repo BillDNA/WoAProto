@@ -6,6 +6,19 @@ sprint-planning. Same ticket format as `Sprint.md` (the `ticket-block` template;
 
 ---
 
+### WOA-037 — Engine captures st.fsTimeline (per-turn field scores) — feeds timeline table + vpDiffTrack
+**Area:** engine · **Status:** Todo · **Type:** sonnet · **Docs:** specs/design_handoff_metrics_dashboard, data-and-reports
+
+From WOA-033's verify (2026-07-18): `dev/db.js` already writes a `timeline` table (battle_id/turn/fs_red/fs_blue) whenever `st.fsTimeline` exists — but no engine code populates that field yet, so the table has never received a row and `WOA_REPORT.vpDiffTrack(env)` always returns null (the dashboard greys the |VP-diff| track). Needed before P2.2's map drill-down ships its |VP-diff| sparkline. Capture: push `[fsRed, fsBlue]` per turn (endTurn) onto `st.fsTimeline`; golden balance diff must stay byte-identical (capture-only, same discipline as WOA-031). Envelope wiring: DB-sourced folds attach `env.fs` by joining `timeline`; live states pass `st.fsTimeline` directly.
+
+**Acceptance criteria:**
+- [ ] st.fsTimeline populated per turn by the engine; timeline table receives rows on persisted battles (live-verified query)
+- [ ] vpDiffTrack returns a real margin track for a fresh persisted battle (no longer null)
+- [ ] node game/test.js green with a timeline-shape assertion; golden balance diff byte-identical
+- [ ] User confirms done
+
+---
+
 <!-- WOA-030 pulled into Sprint M2 · Metrics v2 + dashboard, phase 1 (2026-07-18). -->
 <!-- WOA-025 pulled into Sprint M1.1 (2026-07-16). -->
 <!-- M1 follow-ons deferred from the "Fix the bent ruler" sprint (balance-loop-v2 final report §5). -->

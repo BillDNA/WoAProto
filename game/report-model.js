@@ -15,36 +15,95 @@
 
    - pct(a, b)                 rounded percentage (0 when b is 0)
    - f1(x)                     one-decimal string, round-half-up
-   - balanceScore(agg, done)   balance-quality score, LOWER = better
+   - BANDS / bands(m,temp)     per-metric band table as DATA + effective band at
+                               a temperature (WOA-033, SPEC §6)
+   - balanceScore(agg, done)   balance-quality score, LOWER = better (folds BANDS)
    - mapNotes(agg, done)       health-flag strings for one map's aggregate
                                (the '**best balance**' marker is the caller's)
    - addAgg(dst, src)          fold one balanceMap aggregate into another
    - foldGlobal(rows)          [{agg, done}] -> G totals (incl. G.cards)
    - cardRows(cardAgg, cards)  derived card-table rows, 1stSight% desc
-   - reportMarkdown(model)     the full saved-report markdown document */
+   - reportMarkdown(model)     the full saved-report markdown document
+   - trace folds (WOA-033, one battle envelope in, derived value out):
+       firstContactTurn · deployInterleave · settlePoint · actionOctileLanes ·
+       vpDiffTrack · cardPlayTurnQuartiles */
 
 var WOA_REPORT = (function () {
 
   function pct(a, b) { return b ? Math.round(100 * a / b) : 0; }
   function f1(x) { return (Math.round(x * 10) / 10).toFixed(1); }
 
-  /* Balance-quality score (LOWER = better, 0 = ideal). Implements the
-     "best map" ideal-range rubric — SOT: dynamic-scrum/rubrics/grading-rubrics.md
-     §Best map (WOA-007, 2026-07-10). Each metric scores its weighted distance
-     OUTSIDE its ideal range, 0 inside. Attrition-only maps are penalised
-     (HQ% < 10) — the Round-4 ruling was reversed 2026-07-10; the open-ended
-     swing reward is gone with it. */
+  /* ===== Metric bands as DATA (WOA-033, SPEC §6) =====
+     The ONE band table. SOT for the prose is
+     dynamic-scrum/rubrics/grading-rubrics.md §"Best map" (the ideal-range
+     table, WOA-007) + the North stars / Game-level guards; if that doc and
+     this table disagree, the doc wins and this table is fixed. `balanceScore`
+     folds over THIS table (no second copy of the ranges) — the eight
+     feedsScore:true rows ARE the old ideal-range list, so its output is
+     byte-for-byte unchanged (golden-diff gate).
+
+     Per row: { key, label, lo, hi, weight, feedsScore, val(agg,done) }
+       lo / hi     band edges; null = OPEN on that side (no penalty there).
+                   0 is a real closed edge, NOT open (only null/absent is open).
+       weight      points per unit outside the band (feeds the score).
+       feedsScore  true = summed into balanceScore; false = a shaded GUARD band
+                   the dashboard renders but the score ignores.
+       val         pulls this metric's value out of a balanceMap aggregate the
+                   SAME way the old scorer did (denominators preserved exactly:
+                   pct() for %-metrics; /max(1,done), raw, for Drag & Swings —
+                   so a NaN from a malformed agg scores 0, as before). */
+  var BANDS = [
+    { key: 'red',    label: 'Red%',    lo: 45,  hi: 55,   weight: 1,   feedsScore: true,  val: function (a, done) { return pct(a.redWins, done); } },
+    { key: 'first',  label: '1st%',    lo: 45,  hi: 55,   weight: 1,   feedsScore: true,  val: function (a, done) { return pct(a.firstWins, done); } },
+    { key: 'hq',     label: 'HQ%',     lo: 10,  hi: 40,   weight: 0.5, feedsScore: true,  val: function (a, done) { return pct(a.hqWins, done); } },
+    { key: 'zeroKill', label: '0kill%', lo: 0, hi: 5,     weight: 0.6, feedsScore: true,  val: function (a, done) { return pct(a.zeroKill, done); } },
+    { key: 'tie',    label: 'Tie%',    lo: 0,   hi: 15,   weight: 0.3, feedsScore: true,  val: function (a, done) { return pct(a.tiebreak, done); } },
+    { key: 'drag',   label: 'Drag',    lo: 0,   hi: 2.5,  weight: 4,   feedsScore: true,  val: function (a, done) { return a.killTail / Math.max(1, done); } },
+    { key: 'swings', label: 'Swings',  lo: 2.0, hi: null, weight: 6,   feedsScore: true,  val: function (a, done) { return a.leadChanges / Math.max(1, done); } },
+    { key: 'control', label: 'Control%', lo: 70, hi: 100, weight: 0.5, feedsScore: true,  val: function (a) { return a.controlGames ? pct(a.controlWins, a.controlGames) : null; } },
+    // Guard band — shaded on the dashboard, NOT scored (SPEC §1: First-blood→win
+    // 55–70, the snowball check). feedsScore:false ⇒ never touches balanceScore.
+    { key: 'firstBlood', label: 'First-blood→win', lo: 55, hi: 70, weight: 0, feedsScore: false, val: function (a) { return a.firstBloodGames ? pct(a.firstBloodWins, a.firstBloodGames) : null; } }
+  ];
+  var BAND_BY_KEY = {};
+  BANDS.forEach(function (b) { BAND_BY_KEY[b.key] = b; });
+
+  /* Weighted distance of v OUTSIDE [lo, hi] (0 inside; null edge = unbounded on
+     that side). null/NaN value scores 0 — reproduces the old scorer's control
+     guard (skip when controlGames == 0) and its NaN-is-0 behaviour exactly. */
+  function outBand(v, lo, hi, w) {
+    if (v == null || v !== v) return 0;
+    if (lo != null && v < lo) return w * (lo - v);
+    if (hi != null && v > hi) return w * (v - hi);
+    return 0;
+  }
+
+  /* Effective band for a metric at a temperature (SPEC §6). T1/T2 widen each
+     CLOSED edge outward by 20%/40% of band width; OPEN (null) edges stay open.
+     Band width = hi - lo when both edges are finite; for a half-open band
+     (exactly one finite edge — only Swings among the scored eight) there is no
+     finite hi-lo, so the closed edge widens by the same fraction of |edge|
+     (Swings lo 2.0 → 1.6 at T1, 1.2 at T2 — a proportional relaxation). T0
+     returns the stored edges unchanged. `metric` is a key string or a band row. */
+  function bands(metric, temperature) {
+    var b = (typeof metric === 'string') ? BAND_BY_KEY[metric] : metric;
+    if (!b) return null;
+    var frac = temperature === 'T1' ? 0.2 : temperature === 'T2' ? 0.4 : 0;
+    var lo = b.lo, hi = b.hi, loOpen = (lo == null), hiOpen = (hi == null);
+    var w = (!loOpen && !hiOpen) ? (hi - lo) : (!loOpen ? Math.abs(lo) : (!hiOpen ? Math.abs(hi) : 0));
+    return { key: b.key, label: b.label, weight: b.weight, feedsScore: b.feedsScore,
+      lo: loOpen ? null : lo - frac * w, hi: hiOpen ? null : hi + frac * w };
+  }
+
+  /* Balance-quality score (LOWER = better, 0 = ideal) — the "best map"
+     ideal-range rubric (SOT: grading-rubrics §"Best map", WOA-007). Sums the
+     feedsScore rows of the ONE band table above; attrition-only maps (HQ% < 10)
+     are penalised (Round-4 ruling reversed 2026-07-10, swing reward gone with
+     it). T0 bands only — the score is temperature-independent by design. */
   function balanceScore(agg, done) {
-    function out(v, lo, hi, w) { return w * (v < lo ? lo - v : v > hi ? v - hi : 0); }
-    var d = Math.max(1, done);
-    return out(pct(agg.redWins, done), 45, 55, 1)
-      + out(pct(agg.firstWins, done), 45, 55, 1)
-      + out(pct(agg.hqWins, done), 10, 40, 0.5)
-      + out(pct(agg.zeroKill, done), 0, 5, 0.6)
-      + out(pct(agg.tiebreak, done), 0, 15, 0.3)
-      + out(agg.killTail / d, 0, 2.5, 4)
-      + out(agg.leadChanges / d, 2.0, Infinity, 6)
-      + (agg.controlGames ? out(pct(agg.controlWins, agg.controlGames), 70, 100, 0.5) : 0);
+    var s = 0;
+    BANDS.forEach(function (b) { if (b.feedsScore) s += outBand(b.val(agg, done), b.lo, b.hi, b.weight); });
+    return s;
   }
 
   /* Per-map health flags — the 62/38/8/55/20 thresholds every report quotes.
@@ -120,6 +179,128 @@ var WOA_REPORT = (function () {
         seen: a.plays ? (a.seenSum / a.plays).toFixed(2) : '-',
         seenNum: a.plays ? +(a.seenSum / a.plays).toFixed(2) : 0 };
     }).sort(function (a, b) { return b.sight - a.sight; });
+  }
+
+  /* ===== Trace folds (WOA-033, SPEC §1–2) =====
+     Pure functions over ONE battle's trace ENVELOPE — the SPEC §4 row shape
+     both a DB trace row (JSON.parse) and a live battle state (trivial wrapper)
+     produce:
+       { v, map, seed, fp, winner, winType, turns,
+         trace: [ {p,id,mode,turn,seen, a?,h?,k?,ld?,u?,noop?} ... ],  // st.playLog
+         units: { infantry:{dep:[..],atk,abs,kill,die}, cavalry:{..}, artillery:{..} }, // st.unitMetrics
+         fs?:  [ [redFieldScore, blueFieldScore] ... ]  // per turn; only vpDiffTrack needs it }
+     No DB, no DOM, nothing mutated. WOA-034/035 fold these across many rows.
+     Absent fields are omitted in the trace (WOA-031), so every reader guards.
+
+     Fidelity note (WOA-031): mixed deploy+attack plays are tagged a:'attack'
+     (attack is sticky), so deploy TIMING is read from units.*.dep (exact
+     per-type deploy turns), never by scanning the a-stream for 'deploy'. First
+     contact is the first a:'attack' entry (exact). */
+  function traceOf(env) { return (env && (env.trace || env.playLog)) || []; }
+  function unitsOf(env) { return (env && (env.units || env.unitMetrics)) || {}; }
+  function turnsOf(env) {
+    if (env && env.turns) return env.turns;
+    var tr = traceOf(env), mx = 0;
+    tr.forEach(function (e) { if ((e.turn || 0) > mx) mx = e.turn; });
+    return mx;
+  }
+
+  /* First-contact turn: the turn of the first attack (raw turn number, exact),
+     or null if the battle had no attack. SPEC §1 (population: all). */
+  function firstContactTurn(env) {
+    var tr = traceOf(env);
+    for (var i = 0; i < tr.length; i++) if (tr[i].a === 'attack') return tr[i].turn;
+    return null;
+  }
+
+  /* Deploy interleave: share (0..1) of deploys occurring STRICTLY AFTER first
+     contact — 0 = all up-front, 1 = all after the shooting starts. Deploy turns
+     come from units.*.dep (exact), compared against firstContactTurn (SPEC §1;
+     population: all). No deploys, or no contact ⇒ 0 (nothing lands post-contact). */
+  function deployInterleave(env) {
+    var u = unitsOf(env), depTurns = [];
+    Object.keys(u).forEach(function (t) { (u[t] && u[t].dep || []).forEach(function (tn) { depTurns.push(tn); }); });
+    if (!depTurns.length) return 0;
+    var fc = firstContactTurn(env);
+    if (fc == null) return 0;
+    var after = depTurns.filter(function (tn) { return tn > fc; }).length;
+    return after / depTurns.length;
+  }
+
+  /* Settle point: percent of battle length (0..100) after which the field-score
+     leader never flips again. Read off the trace `ld` field (leader after each
+     turn, which carries through ties — it changes exactly on a real lead flip);
+     the % of the LAST flip's turn. 0 = settled from the opening (no flips).
+     SPEC §1 (population: all; normalized to battle length %). */
+  function settlePoint(env) {
+    var tr = traceOf(env), turns = turnsOf(env), prev = null, lastFlip = 0;
+    tr.forEach(function (e) {
+      if (e.ld == null) return;
+      if (prev != null && e.ld !== prev) lastFlip = e.turn;
+      prev = e.ld;
+    });
+    return turns ? 100 * lastFlip / turns : 0;
+  }
+
+  /* Per-turn action-octile lanes: 8 rows (turn-octiles 0..7), each the avg
+     plays-per-turn of each action type in that octile = (count of that action)
+     / (turns in the octile). One card is played per turn, so each value is in
+     [0,1] for a single battle; the dashboard averages across battles onto each
+     lane's own scale. Octile of a turn = floor((turn-1)*8/turns), clamped 0..7.
+     Noop turns (no `a`) count toward the denominator, no numerator. SPEC §2 /
+     design 3a (population: all). Returns [{deploy,attack,swap,march} × 8]. */
+  var LANE_ACTIONS = ['deploy', 'attack', 'swap', 'march'];
+  function actionOctileLanes(env) {
+    var tr = traceOf(env), turns = turnsOf(env) || 1, lanes = [];
+    for (var o = 0; o < 8; o++) { var row = { _turns: 0 }; LANE_ACTIONS.forEach(function (a) { row[a] = 0; }); lanes.push(row); }
+    tr.forEach(function (e) {
+      var oi = Math.min(7, Math.max(0, Math.floor((e.turn - 1) * 8 / turns)));
+      lanes[oi]._turns++;
+      if (e.a && lanes[oi][e.a] != null) lanes[oi][e.a]++;
+    });
+    return lanes.map(function (row) {
+      var d = row._turns, o = {};
+      LANE_ACTIONS.forEach(function (a) { o[a] = d ? row[a] / d : 0; });
+      return o;
+    });
+  }
+
+  /* |VP-diff| track: the per-turn field-score margin. This is the EXACT VP diff
+     (the same field scores the report's VPdiff column and woa.db store), which
+     the play/kill stream alone can't reconstruct (a kill's victim VP isn't in
+     the trace) — so it reads env.fs, the per-turn [red,blue] field-score
+     timeline (live state: st.fsTimeline; DB: battle_timeline joined by
+     WOA-035). Returns null when fs is absent (the caller greys it — no
+     fabricated magnitude). { track:|r-b|/turn, signed:r-b/turn, peak, final }.
+     SPEC §1 VPdiff / design 2b-3a (population: all). */
+  function vpDiffTrack(env) {
+    var fs = env && env.fs;
+    if (!Array.isArray(fs) || !fs.length) return null;
+    var track = fs.map(function (p) { return Math.abs((p[0] || 0) - (p[1] || 0)); });
+    var signed = fs.map(function (p) { return (p[0] || 0) - (p[1] || 0); });
+    return { track: track, signed: signed, peak: track.reduce(function (m, v) { return v > m ? v : m; }, 0), final: track[track.length - 1] };
+  }
+
+  /* Linear-interpolation quantile (numpy default) over a pre-SORTED array. */
+  function quantile(sorted, p) {
+    if (!sorted.length) return 0;
+    if (sorted.length === 1) return sorted[0];
+    var idx = p * (sorted.length - 1), lo = Math.floor(idx), frac = idx - lo;
+    return (lo + 1 < sorted.length) ? sorted[lo] + frac * (sorted[lo + 1] - sorted[lo]) : sorted[lo];
+  }
+
+  /* Per-card play-turn quartiles: for each card played, the quartiles + median
+     of its play times over NORMALIZED battle time (turn / turns ∈ (0,1]) — the
+     "when cards fire" strip. Keyed by cardId ⇒ { n, q1, median, q3 }. SPEC §2
+     (population: per card; normalized to battle length). */
+  function cardPlayTurnQuartiles(env) {
+    var tr = traceOf(env), turns = turnsOf(env) || 1, byCard = {}, out = {};
+    tr.forEach(function (e) { (byCard[e.id] || (byCard[e.id] = [])).push(e.turn / turns); });
+    Object.keys(byCard).forEach(function (id) {
+      var arr = byCard[id].sort(function (a, b) { return a - b; });
+      out[id] = { n: arr.length, q1: quantile(arr, 0.25), median: quantile(arr, 0.5), q3: quantile(arr, 0.75) };
+    });
+    return out;
   }
 
   /* The full saved-report markdown. dev/balance-report.js and the dashboard's
@@ -215,7 +396,11 @@ var WOA_REPORT = (function () {
   }
 
   return { pct: pct, f1: f1, balanceScore: balanceScore, mapNotes: mapNotes,
-    addAgg: addAgg, foldGlobal: foldGlobal, cardRows: cardRows, reportMarkdown: reportMarkdown };
+    addAgg: addAgg, foldGlobal: foldGlobal, cardRows: cardRows, reportMarkdown: reportMarkdown,
+    // WOA-033: bands-as-data + trace folds (node + browser both consume)
+    BANDS: BANDS, bands: bands, outBand: outBand, quantile: quantile,
+    firstContactTurn: firstContactTurn, deployInterleave: deployInterleave, settlePoint: settlePoint,
+    actionOctileLanes: actionOctileLanes, vpDiffTrack: vpDiffTrack, cardPlayTurnQuartiles: cardPlayTurnQuartiles };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = WOA_REPORT;

@@ -1070,6 +1070,79 @@ console.log('  battle endings: ' + hqWins + ' HQ captures, ' + attrWins + ' attr
   }
 })();
 
+console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
+(function () {
+  var R = require('./report-model.js');
+  function near(a, b) { return Math.abs(a - b) < 1e-9; }
+
+  // ---- band table unifies with balanceScore (golden-diff-gated: outputs pinned) ----
+  ok(R.BANDS.filter(function (b) { return b.feedsScore; }).length === 8, 'BANDS has the 8 scored metrics (feedsScore:true)');
+  ok(R.BANDS.every(function (b) { return 'lo' in b && 'hi' in b && 'weight' in b && 'feedsScore' in b; }),
+    'each band row carries {lo, hi, weight, feedsScore}');
+  var sc = { redWins: 60, firstWins: 50, hqWins: 5, zeroKill: 10, tiebreak: 20,
+    killTail: 300, leadChanges: 100, controlGames: 100, controlWins: 60, firstBloodGames: 40, firstBloodWins: 30 };
+  // Red 5 + 1st 0 + HQ 2.5 + 0kill 3 + Tie 1.5 + Drag 2 + Swings 6 + Control 5 = 25
+  ok(near(R.balanceScore(sc, 100), 25), 'balanceScore folds the band table to the hand-computed 25.0 (was ' + R.balanceScore(sc, 100) + ')');
+  // the guard band (First-blood→win, feedsScore:false) must NOT move the score
+  var scGuardBad = Object.assign({}, sc, { firstBloodWins: 0 }); // first-blood 0% — way outside 55–70
+  ok(near(R.balanceScore(scGuardBad, 100), 25), 'feedsScore:false guard band never touches balanceScore');
+  // control guard: controlGames == 0 drops the control term entirely (0kill etc unchanged)
+  ok(near(R.balanceScore(Object.assign({}, sc, { controlGames: 0, controlWins: 0 }), 100), 20),
+    'controlGames == 0 skips the control term (25 - 5 = 20)');
+
+  // ---- bands(metric, temperature): closed edges widen 20%/40%, open edges stay open ----
+  ok(near(R.bands('red', 'T0').lo, 45) && near(R.bands('red', 'T0').hi, 55), 'T0 = stored edges (Red 45–55)');
+  ok(near(R.bands('red', 'T1').lo, 43) && near(R.bands('red', 'T1').hi, 57), 'T1 widens both closed edges 20% of width (Red 43–57)');
+  ok(near(R.bands('red', 'T2').lo, 41) && near(R.bands('red', 'T2').hi, 59), 'T2 widens both closed edges 40% of width (Red 41–59)');
+  ok(near(R.bands('zeroKill', 'T1').lo, -1) && near(R.bands('zeroKill', 'T1').hi, 6), '0kill lo=0 is a CLOSED edge, widens to -1 at T1');
+  ok(R.bands('swings', 'T1').hi === null && near(R.bands('swings', 'T1').lo, 1.6), 'Swings hi=null stays OPEN; closed lo 2.0 → 1.6 at T1 (half-open: |edge| basis)');
+  ok(R.bands('swings', 'T2').hi === null && near(R.bands('swings', 'T2').lo, 1.2), 'Swings lo 2.0 → 1.2 at T2');
+  ok(R.bands('firstBlood', 'T0').feedsScore === false, 'bands() carries feedsScore (guard band = false)');
+
+  // ---- trace folds on a hand-built fixture with known answers ----
+  var env = {
+    turns: 8,
+    trace: [
+      { p: 'red', id: 'A', turn: 1, a: 'deploy', u: 'infantry' },
+      { p: 'blue', id: 'B', turn: 2, a: 'deploy', u: 'cavalry' },
+      { p: 'red', id: 'C', turn: 3, a: 'attack', k: 1, ld: 'red' },   // first contact
+      { p: 'blue', id: 'A', turn: 4, a: 'deploy', u: 'infantry', ld: 'red' },
+      { p: 'red', id: 'D', turn: 5, a: 'swap', ld: 'blue' },          // flip red→blue
+      { p: 'blue', id: 'C', turn: 6, a: 'attack', k: 2, ld: 'blue' },
+      { p: 'red', id: 'E', turn: 7, a: 'march', ld: 'red' },          // flip blue→red (last flip)
+      { p: 'blue', id: 'C', turn: 8, a: 'attack', ld: 'red' }
+    ],
+    units: { infantry: { dep: [1, 4], atk: 0, abs: 0, kill: 0, die: 0 },
+      cavalry: { dep: [2], atk: 0, abs: 0, kill: 0, die: 0 },
+      artillery: { dep: [], atk: 0, abs: 0, kill: 0, die: 0 } },
+    fs: [[0, 0], [1, 0], [3, 0], [3, 2], [1, 4], [2, 4], [5, 4], [5, 5]]
+  };
+  ok(R.firstContactTurn(env) === 3, 'firstContactTurn = turn of first a:attack (3)');
+  ok(R.firstContactTurn({ trace: [{ turn: 1, a: 'deploy' }] }) === null, 'firstContactTurn = null when no attack');
+  ok(near(R.deployInterleave(env), 1 / 3), 'deployInterleave: 1 of 3 deploys (turn 4) is after contact turn 3 → 1/3 (from units.dep, not the a-stream)');
+  ok(R.deployInterleave({ units: { inf: { dep: [1, 2] } }, trace: [{ turn: 1, a: 'deploy' }], turns: 3 }) === 0, 'deployInterleave = 0 when there is no contact');
+  ok(near(R.settlePoint(env), 87.5), 'settlePoint: last lead flip at turn 7 of 8 → 87.5%');
+  ok(R.settlePoint({ turns: 5, trace: [{ turn: 1, ld: 'red' }, { turn: 2, ld: 'red' }] }) === 0, 'settlePoint = 0 when the lead never flips');
+  var lanes = R.actionOctileLanes(env);
+  ok(lanes.length === 8, 'actionOctileLanes returns 8 octiles');
+  ok(near(lanes[0].deploy, 1) && near(lanes[2].attack, 1) && near(lanes[4].swap, 1) && near(lanes[6].march, 1),
+    'octile lanes place each action in its turn-octile at 1 play/turn');
+  ok(near(lanes[2].deploy, 0) && near(lanes[2].swap, 0), 'non-firing lanes read 0 in that octile');
+  var vp = R.vpDiffTrack(env);
+  ok(JSON.stringify(vp.track) === JSON.stringify([0, 1, 3, 1, 3, 2, 1, 0]) && vp.peak === 3 && vp.final === 0,
+    '|VP-diff| track = |red-blue| per turn (peak 3, final 0)');
+  ok(R.vpDiffTrack({ turns: 3, trace: [] }) === null, 'vpDiffTrack = null when env.fs is absent (caller greys it)');
+  var q = R.cardPlayTurnQuartiles(env);
+  ok(q.C.n === 3 && near(q.C.median, 0.75) && near(q.C.q1, 0.5625) && near(q.C.q3, 0.875),
+    'cardPlayTurnQuartiles: card C plays at turns 3,6,8/8 → median 0.75, q1 0.5625, q3 0.875');
+  ok(q.B.n === 1 && near(q.B.median, 0.25) && near(q.A.median, 0.3125),
+    'single-play card = its own normalized time; card A (turns 1,4) median 0.3125');
+
+  // ---- consumable from node here; browser gets the same WOA_REPORT global (dual export) ----
+  ok(typeof R.bands === 'function' && typeof R.actionOctileLanes === 'function' && typeof R.BANDS === 'object',
+    'folds + band table exported on the shared WOA_REPORT surface');
+})();
+
 console.log(fails === 0 ? '\nALL TESTS PASSED' : '\n' + fails + ' FAILURES');
 process.exit(fails === 0 ? 0 : 1);
 /* end */

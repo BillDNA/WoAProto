@@ -117,6 +117,14 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   closed as absorbed** — saved-run loading ships as the runs table + run pickers (WOA-032/034), a
   stronger shape than parsing `accumulated.json`.
 
+- **`D.D:half-open-band-widening`** (2026-07-18, WOA-033) — SPEC §6's T1/T2 widening (20%/40% of band
+  width) is undefined for a half-open band (Swings `[2.0, ∞)` has no finite width): the finite edge
+  widens by that fraction of **|edge|** instead (Swings lo 2.0 → 1.6 at T1, 1.2 at T2), open edges
+  stay open. Pinned by a test; only Swings among the 8 scored metrics is affected. Folds take ONE row
+  shape — the SPEC §4 trace envelope (+ optional `fs` for vpDiffTrack); `balanceScore` stays
+  temperature-independent (T0 bands), temperature only re-shades the dashboard via
+  `bands(metric, temperature)`.
+
 ## Architecture
 
 - **`D.A:units-content-kind`** (2026-07-10, WOA-011) — unit composition & values are a content kind
