@@ -38,3 +38,8 @@ logs/woa.db-shm
 .claude-status
 .claude/settings.local.json
 .board-log.jsonl
+
+# DynamicScrum — vision-gate run screenshots are local scratch, not committed (disposable once a
+# ticket closes; git can't delta PNGs). A genuine keeper is *moved* to the tracked
+# dynamic-scrum/planning/attachments/ instead — no `git add -f` needed, this rule doesn't reach it.
+dynamic-scrum/planning/sprint-runs/*-screenshots/
