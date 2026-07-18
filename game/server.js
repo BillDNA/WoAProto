@@ -260,7 +260,29 @@ var ROUTES = {
     if (!runId) return json(res, 200, []);
     try {
       if (!dbHandle) dbHandle = db.open();
-      json(res, 200, db.listBattles(dbHandle, runId));
+      var rows = db.listBattles(dbHandle, runId);
+      // WOA-037: attach each battle's per-turn field-score timeline as a
+      // sibling `fs: [[fsRed,fsBlue], ...]` (turn-ordered) — env.fs for
+      // WOA_REPORT.vpDiffTrack/envelopeFromRow. ONE grouped query over the
+      // `timeline` table for this run's battle ids (never N+1 per battle).
+      // dev/db.js owns the write path (insertTimeline, tested by db.test.js)
+      // and stays untouched — this read is dashboard-only, so it lives here.
+      // Fails open: a timeline-read hiccup still returns the scalar battle
+      // rows, just without fs (same shape as before this ticket).
+      var ids = rows.map(function (r) { return r.id; });
+      if (ids.length) {
+        try {
+          var qs = ids.map(function () { return '?'; }).join(',');
+          var stmt = dbHandle.db.prepare(
+            'SELECT battle_id, turn, fs_red, fs_blue FROM timeline WHERE battle_id IN (' + qs + ') ORDER BY battle_id, turn');
+          var byBattle = {};
+          stmt.all.apply(stmt, ids).forEach(function (t) {
+            (byBattle[t.battle_id] || (byBattle[t.battle_id] = [])).push([t.fs_red, t.fs_blue]);
+          });
+          rows.forEach(function (r) { if (byBattle[r.id]) r.fs = byBattle[r.id]; });
+        } catch (e2) { /* fail open: rows above are still valid without fs */ }
+      }
+      json(res, 200, rows);
     } catch (e) { json(res, 500, { error: e.message }); }
   },
   'GET /api/poll': function (req, res, body, u) {

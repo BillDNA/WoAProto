@@ -269,14 +269,24 @@ var WOA_REPORT = (function () {
      with a string .trace gets JSON.parse'd (defensively: a malformed/absent
      trace returns null rather than throwing), an already-parsed envelope
      object passes through unchanged. One place, so WOA-035's Overview and
-     later map/card/unit drill-downs never hand-roll the parse. */
+     later map/card/unit drill-downs never hand-roll the parse.
+     WOA-037: the trace blob itself never carries `fs` (dev/db.js's insertBattle
+     doesn't put it there) — GET /api/battles attaches it as a sibling `row.fs`
+     (the per-turn [fsRed,fsBlue] timeline, one grouped query over the
+     `timeline` table). So once the envelope's parsed, fold row.fs in too —
+     the one place every envelope consumer (vpDiffTrack) gets it, regardless
+     of whether env.fs already arrived pre-attached (a live battle wrapper). */
   function envelopeFromRow(row) {
     if (!row) return null;
+    var env = null;
     if (typeof row.trace === 'string') {
-      try { return JSON.parse(row.trace); } catch (e) { return null; }
+      try { env = JSON.parse(row.trace); } catch (e) { return null; }
+    } else if (row.trace && typeof row.trace === 'object') {
+      env = row.trace;
     }
-    if (row.trace && typeof row.trace === 'object') return row.trace;
-    return null;
+    if (!env) return null;
+    if (env.fs == null && row.fs) env.fs = row.fs;
+    return env;
   }
   function traceOf(env) { return (env && (env.trace || env.playLog)) || []; }
   function unitsOf(env) { return (env && (env.units || env.unitMetrics)) || {}; }
@@ -351,8 +361,9 @@ var WOA_REPORT = (function () {
      (the same field scores the report's VPdiff column and woa.db store), which
      the play/kill stream alone can't reconstruct (a kill's victim VP isn't in
      the trace) — so it reads env.fs, the per-turn [red,blue] field-score
-     timeline (live state: st.fsTimeline; DB: battle_timeline joined by
-     WOA-035). Returns null when fs is absent (the caller greys it — no
+     timeline (live state: st.fsTimeline; DB: the `timeline` table, joined
+     in by GET /api/battles and folded into the row by envelopeFromRow,
+     WOA-037). Returns null when fs is absent (the caller greys it — no
      fabricated magnitude). { track:|r-b|/turn, signed:r-b/turn, peak, final }.
      SPEC §1 VPdiff / design 2b-3a (population: all). */
   function vpDiffTrack(env) {

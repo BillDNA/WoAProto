@@ -913,6 +913,36 @@ seeds.forEach(function (seed) {
 });
 console.log('  battle endings: ' + hqWins + ' HQ captures, ' + attrWins + ' attrition; longest battle ' + maxTurns + ' turns');
 
+console.log('== fsTimeline: one [fsRed,fsBlue] pair per completed turn (WOA-037) ==');
+(function () {
+  // A REAL (non-sim) battle, played the same way the AI-vs-AI loop above
+  // does — st here is never cloneForSim'd (that's the AI search's hot-loop
+  // clone, engine/05-ai.js), so st.fsTimeline is the live capture engine/
+  // 04-battle.js pushes to every completed turn (endTurn), not the stripped
+  // copy a search clone carries.
+  var st = E.newBattle(E.newMatch({ seed: 42 }));
+  var guard = 0;
+  while (st.phase !== 'battle-over' && guard++ < 400) {
+    var plan = E.aiPlanTurn(st, 'normal');
+    if (!plan) break;
+    E.playCard(st, plan.cardId, plan.mode || 'normal');
+    var g2 = 0;
+    while (st.phase === 'step' && g2++ < 12) {
+      E.stepOptions(st);
+      var c = plan.choices.shift();
+      if (!c) c = { skip: true };
+      try { E.applyStep(st, c); }
+      catch (e) { E.applyStep(st, { skip: true }); }
+    }
+  }
+  ok(st.phase === 'battle-over', 'fsTimeline fixture battle finished (seed 42)');
+  ok(Array.isArray(st.fsTimeline) && st.fsTimeline.length === st.turnNumber - 1,
+    'fsTimeline has one [fsRed,fsBlue] pair per completed turn (' + st.fsTimeline.length +
+    ' entries == turnNumber-1 = ' + (st.turnNumber - 1) + ')');
+  ok(st.fsTimeline.every(function (p) { return Array.isArray(p) && p.length === 2 && typeof p[0] === 'number' && typeof p[1] === 'number'; }),
+    'every fsTimeline entry is a [number, number] pair');
+})();
+
 /* ---------- V1 AI search: orientation-aware trenches + ranked choice APIs ---------- */
 (function () {
   console.log('== V1 AI search ==');
@@ -1132,6 +1162,16 @@ console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
   ok(JSON.stringify(vp.track) === JSON.stringify([0, 1, 3, 1, 3, 2, 1, 0]) && vp.peak === 3 && vp.final === 0,
     '|VP-diff| track = |red-blue| per turn (peak 3, final 0)');
   ok(R.vpDiffTrack({ turns: 3, trace: [] }) === null, 'vpDiffTrack = null when env.fs is absent (caller greys it)');
+
+  // ---- envelopeFromRow attaches the DB-sibling fs (WOA-037: GET /api/battles
+  // joins the timeline table onto the row; row.fs sits beside row.trace, not
+  // inside the trace blob, since dev/db.js's insertBattle never put it there) ----
+  var dbRow = { trace: JSON.stringify({ turns: 3, trace: [] }), fs: [[1, 0], [2, 0], [2, 1]] };
+  var envFromRow = R.envelopeFromRow(dbRow);
+  ok(R.vpDiffTrack(envFromRow) !== null, 'envelopeFromRow folds row.fs into the parsed envelope, so vpDiffTrack sees it');
+  ok(R.vpDiffTrack(envFromRow).peak === 2, 'the attached fs really is what vpDiffTrack reads (|1-0|,|2-0|,|2-1| -> peak 2)');
+  ok(R.vpDiffTrack(R.envelopeFromRow({ trace: JSON.stringify({ turns: 3, trace: [] }) })) === null,
+    'a row with no fs (older DB rows before this ticket) still yields vpDiffTrack = null');
   var q = R.cardPlayTurnQuartiles(env);
   ok(q.C.n === 3 && near(q.C.median, 0.75) && near(q.C.q1, 0.5625) && near(q.C.q3, 0.875),
     'cardPlayTurnQuartiles: card C plays at turns 3,6,8/8 → median 0.75, q1 0.5625, q3 0.875');

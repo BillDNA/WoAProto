@@ -16,17 +16,6 @@ the spec for the next pull._
 
 ## Tickets
 
-### WOA-037 — Engine captures st.fsTimeline (per-turn field scores) — feeds timeline table + vpDiffTrack
-**Area:** engine · **Status:** Todo · **Type:** sonnet · **Docs:** specs/design_handoff_metrics_dashboard, data-and-reports
-
-From WOA-033's verify (2026-07-18): `dev/db.js` already writes a `timeline` table (battle_id/turn/fs_red/fs_blue) whenever `st.fsTimeline` exists — but no engine code populates that field yet, so the table has never received a row and `WOA_REPORT.vpDiffTrack(env)` always returns null (the dashboard greys the |VP-diff| track). Needed before WOA-040 ships its |VP-diff| sparkline. Capture: push `[fsRed, fsBlue]` per turn (endTurn) onto `st.fsTimeline`; golden balance diff must stay byte-identical (capture-only, same discipline as WOA-031). Envelope wiring: DB-sourced folds attach `env.fs` by joining `timeline`; live states pass `st.fsTimeline` directly. File owner note: shares engine capture seams + `dev/db.js` with WOA-038 — WOA-037 owns them first; WOA-038 rebases on its result.
-
-**Acceptance criteria:**
-- [ ] st.fsTimeline populated per turn by the engine; timeline table receives rows on persisted battles (live-verified query)
-- [ ] vpDiffTrack returns a real margin track for a fresh persisted battle (no longer null)
-- [ ] node game/test.js green with a timeline-shape assertion; golden balance diff byte-identical
-- [ ] User confirms done
-
 ### WOA-038 — Capture board-control at battle end so Control% can score on the dashboard
 **Area:** engine · **Status:** Todo · **Type:** sonnet · **Depends on:** WOA-037 (shared capture seams — land second) · **Docs:** specs/design_handoff_metrics_dashboard, data-and-reports
 
@@ -79,6 +68,8 @@ Found during WOA-030's verify (2026-07-18). `index.html` (~line 268) force-clear
 _None._
 
 ## Finished
+
+- **WOA-037 — Engine captures st.fsTimeline (per-turn field scores) — feeds timeline table + vpDiffTrack** (2026-07-18) — Premise was stale (engine capture + timeline writes already shipped pre-Phase-1); re-scoped at dispatch to the real gap — GET /api/battles now joins the timeline table (one grouped query, fail-open) and envelopeFromRow folds row.fs into the envelope, so vpDiffTrack is real on the DB path; +6 test.js assertions (fsTimeline shape + row.fs fold); golden diff byte-identical; live-verified 144/144 rows carry fs. cost: 149,844 tok / 13.6m / 77 calls
 
 _None._
 
