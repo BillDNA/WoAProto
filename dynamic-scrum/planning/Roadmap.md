@@ -70,7 +70,8 @@ settled the 17-card call — **ADOPTED** (`D.D:seventeen-card-adopt`; execution 
 A/B balance dashboard; agreed with Bill 2026-07-18 — graduated the [[metric-bands-by-temperature]]
 parking-lot note). Ships in phases; **Phase 1 is the active sprint** ([[Sprint]]).
 
-**Deliverables (Phase 1 — active sprint, golden-diff-safe):**
+**Deliverables (Phase 1 — SHIPPED 2026-07-18, sprint closed 6/6:
+[[M2-metrics-v2-dashboard-phase1]]):**
 - **WOA-030** — execute the 17-card adopt first, so all capture/baselines land on the adopted deck.
 - **WOA-031** — per-play trace capture in the engine (SPEC §4) · **WOA-032** — trace rows + `runs`
   table in woa.db (absorbs **WOA-006**, closed 2026-07-18) · **WOA-033** — bands-as-data +
@@ -80,7 +81,8 @@ parking-lot note). Ships in phases; **Phase 1 is the active sprint** ([[Sprint]]
 
 **Deliverables (Phase 2/3 — next sprint, from TICKETS.md):** the rules-1.2 metric re-baseline
 (rates not counts, win-path conditioning — atomic with rubric + test pins), map drill-down with tempo
-lanes + hex lenses, Cards tab, Units tab.
+lanes + hex lenses, Cards tab, Units tab — plus the capture riders WOA-037 (fsTimeline → |VP-diff|)
+and WOA-038 (control-at-end), and WOA-036 (browser deck override, Bugs — Bill's call).
 
 **Done when:** a balance report's every metric maps to a lever and shows in the dashboard — two saved
 runs comparable A/B at a selectable temperature, verdicts naming their levers.

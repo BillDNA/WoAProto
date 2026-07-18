@@ -5,6 +5,11 @@ below (**newest first**). Used to sanity-check whether something already shipped
 
 ## Index
 
+- **2026-07-18 — [[M2-metrics-v2-dashboard-phase1|M2 · Metrics v2 + dashboard, phase 1]]** — planned
+  and ran fully autonomously same-day (6/6 closed, zero bounces, golden diff held throughout). The
+  17-card adopt executed; every battle now leaves a SPEC §4 trace with run identity in woa.db; bands
+  live as data; the view-only A/B dashboard Overview ships on real saved runs. Found the browser
+  applied-deck override (WOA-036). Phase 2/3 (rules-1.2 re-baseline, drill-downs) next sprint.
 - **2026-07-16 — [[M1.1-measuring-good|M1.1 · Measuring "good"]]** — ran fully autonomously same-day
   (5/5 closed, zero bounces). The ruler refreshed end-to-end: every figure re-measured on Core Six
   (dated + setup-labeled), rubric refactored to Goal/Evidence/Score/**Lever**, review-reports grades

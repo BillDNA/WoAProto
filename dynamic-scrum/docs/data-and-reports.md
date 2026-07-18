@@ -1,5 +1,5 @@
 ---
-last-reviewed: 2026-07-16
+last-reviewed: 2026-07-18
 ---
 #claude-orientation #game-logs #code-architecture
 # Data & reports — where every battle lands and how reports flow
@@ -19,8 +19,21 @@ delete freely). Three funnels, one writer (`dev/db.js`):
 | Live play in the browser | `Engine.hooks.onBattleEnd` → `POST /api/recordbattle` (server proxy, **fail-open** — a zipped `game/` without `dev/` answers 501 and play continues) |
 | LLM battles (`dev/claude-plays.js`) | direct `dev/db.js` insert |
 
-Schema: `runs` / `battles` / `card_plays` / per-turn `timeline` (from `st.fsTimeline`). Query read-only
-with `node dev/db-query.js "<sql>"` (no SQL = schema + row counts).
+Schema: `runs` / `battles` / `card_plays` / per-turn `timeline` (from `st.fsTimeline` — a field no
+engine code populates yet, so the table is empty until WOA-037). Query read-only with
+`node dev/db-query.js "<sql>"` (no SQL = schema + row counts).
+
+**Run identity + trace (metrics-v2 Phase 1, WOA-031/032, 2026-07-18).** `runs` carries SPEC §7
+identity — `deck` (always `Engine.ACTIVE_DECK.id`, which also covers the browser's `__applied`
+sandbox deck), `mapset`, `seed_base`, `label`, `baseline` — with **exactly one `baseline` pin per
+rules version** (`dev/db.js` `setBaseline` clears the old pin; asserted in `dev/db.test.js`).
+`battles` rows carry a `trace` JSON column: the SPEC §4 envelope
+`{v,map,seed,fp,winner,winType,turns,trace:[per-play {t,s,a,h,k,ld,u}…],units:{<type>:{dep,atk,abs,kill,die}}}`
+(~4 KB/battle; unit keys are full names `infantry`/`cavalry`/`artillery`). Gotcha for folds: mixed
+deploy+attack plays tag `a:'attack'` (sticky) — deploy *timing* reads `units.*.dep`, never the
+`a`-stream. `game/balance.js` `matchup` mode deliberately writes no runs (a comparison sweep, not a
+§7 run). Server reads: `GET /api/runs` (list) and `GET /api/battles?run=<id>` (rows incl. trace),
+both guarded — no `dev/db.js` → empty, play continues.
 
 ## Reserve-held-at-end (WOA-016)
 
@@ -72,8 +85,14 @@ skills below) — moving any requires a same-commit sweep of `.claude/skills/` +
    `--mapset <id|all>` picks the roster; prints `BEST_MAP:`.
 2. `node dev/claude-plays.js --match N` — LLM felt-notes on the best map (persistent session per side,
    honesty invariant: the model only sees what a player sees).
-3. Charts tab in the in-browser Balance Dashboard — map-fairness scatter, card quadrant, battle-length
-   histogram, same aggregation as the CLI (`game/report-model.js` is the ONE report model).
+3. The in-browser Balance Dashboard (metrics-v2 Phase 1, WOA-034/035): pill nav **Overview | Maps |
+   Cards | Units | Tables**. Overview is the **view-only A/B landing view** — run-A/B pickers over
+   the `runs` table (A defaults to the version's `baseline` pin, else newest), T0/T1/T2 temperature
+   selector re-shading `WOA_REPORT.bands()`, triage band board + per-map balance-score dumbbells +
+   pacing minis, all folded from saved battle rows (`WOA_REPORT.foldBattles`, same aggregation as the
+   CLI — `game/report-model.js` is the ONE report model). Tables is the old run-loop dashboard,
+   unchanged; the pre-P1 single-run Charts tab is retired (its chart primitives live on in
+   `ui/charts.js` for the P2 tabs). Maps/Cards/Units are stubs until P2/P3.
 4. Skills wrap the loop: `generate-reports` (1+2, fire-and-forget), `review-reports` (grade against
    [[grading-rubrics]]), `run-tournament` (roster-wide meta read).
 
