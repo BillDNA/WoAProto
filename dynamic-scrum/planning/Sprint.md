@@ -1,16 +1,84 @@
-# Sprint — (between sprints)
+# Sprint — M2 · Metrics v2 + dashboard, phase 2
 
-_No active sprint. Last closed: [[M2-metrics-v2-dashboard-phase1|M2 · Metrics v2 + dashboard,
-phase 1]] (2026-07-18, 6/6 autonomous, zero bounces). Suggested next pull: **M2 Phase 2** (rules-1.2
-re-baseline + map drill-down — decomposition ready in
-`specs/design_handoff_metrics_dashboard/TICKETS.md` P2.1–P2.4, with WOA-037/038 capture riders), or
-**WOA-036** (browser deck-override fix) once Bill picks its shape._
+**Goal:** complete the capture the dashboard still greys out (fsTimeline, control-at-end), then land
+the rules-1.2 metric re-baseline atomically and ship the map drill-down — every Phase-1 grey path
+turns real.
+
+_Orientation: Phase 2 of the metrics-v2 spec (`specs/design_handoff_metrics_dashboard/` — SPEC.md +
+TICKETS.md P2.1–P2.2; Phase 1 shipped 2026-07-18, [[M2-metrics-v2-dashboard-phase1]]). Build order
+matters: the two capture riders (WOA-037/038) are golden-diff-safe and land FIRST so the WOA-039
+re-baseline measures on complete capture; WOA-040's |VP-diff| track needs WOA-037's timeline rows and
+WOA-039's 1.2 bands. WOA-039 is the one ticket where the golden diff intentionally breaks — the
+rules-version bump to 1.2 justifies it, atomic with rubric + test pins. WOA-036 (browser
+deck-override bug, shape decided 2026-07-18: no-op the checked-in custom-deck.js + override badge)
+rides along, independent of the other four. P2.3 (hex lenses) / P2.4 (Cards) / P3.1 (Units) stay in
+the spec for the next pull._
 
 ## Tickets
 
-_None._
+### WOA-037 — Engine captures st.fsTimeline (per-turn field scores) — feeds timeline table + vpDiffTrack
+**Area:** engine · **Status:** Todo · **Type:** sonnet · **Docs:** specs/design_handoff_metrics_dashboard, data-and-reports
+
+From WOA-033's verify (2026-07-18): `dev/db.js` already writes a `timeline` table (battle_id/turn/fs_red/fs_blue) whenever `st.fsTimeline` exists — but no engine code populates that field yet, so the table has never received a row and `WOA_REPORT.vpDiffTrack(env)` always returns null (the dashboard greys the |VP-diff| track). Needed before WOA-040 ships its |VP-diff| sparkline. Capture: push `[fsRed, fsBlue]` per turn (endTurn) onto `st.fsTimeline`; golden balance diff must stay byte-identical (capture-only, same discipline as WOA-031). Envelope wiring: DB-sourced folds attach `env.fs` by joining `timeline`; live states pass `st.fsTimeline` directly. File owner note: shares engine capture seams + `dev/db.js` with WOA-038 — WOA-037 owns them first; WOA-038 rebases on its result.
+
+**Acceptance criteria:**
+- [ ] st.fsTimeline populated per turn by the engine; timeline table receives rows on persisted battles (live-verified query)
+- [ ] vpDiffTrack returns a real margin track for a fresh persisted battle (no longer null)
+- [ ] node game/test.js green with a timeline-shape assertion; golden balance diff byte-identical
+- [ ] User confirms done
+
+### WOA-038 — Capture board-control at battle end so Control% can score on the dashboard
+**Area:** engine · **Status:** Todo · **Type:** sonnet · **Depends on:** WOA-037 (shared capture seams — land second) · **Docs:** specs/design_handoff_metrics_dashboard, data-and-reports
+
+From WOA-035's verify (2026-07-18): the Overview band board renders Control% as `n/a (n=0)` — hex-ownership/control state at battle end isn't a stored `battles` column and can't be rebuilt from the trace envelope, so `WOA_REPORT.foldBattles` can't derive controlGames/controlWins from DB rows (handled honestly via the small-n grey path, excluded from the verdict). Fix is a capture addition (WOA-031 discipline: golden diff byte-identical): store the control/hex-lead summary the live `balanceMap` agg already computes as a battles column (or in the trace envelope).
+
+**Acceptance criteria:**
+- [ ] Control/hex-lead at battle end persisted per battle (column or envelope field); foldBattles derives controlGames/controlWins from DB rows matching the live agg's numbers
+- [ ] Overview Control% row shows a real value on a fresh run (no longer n/a)
+- [ ] Suites green; golden balance diff byte-identical
+- [ ] User confirms done
+
+### WOA-039 — Rules-1.2 metric re-baseline: rates not counts, win-path conditioning — atomic bump
+**Area:** metrics · **Status:** Todo · **Type:** opus · **Depends on:** WOA-037, WOA-038 (re-baseline measures on complete capture) · **Docs:** specs/design_handoff_metrics_dashboard, grading-rubrics, data-and-reports
+
+TICKETS.md P2.1, per SPEC §1's verdict column. Reshape the printed metrics: Attack/Swap counts → **share of actions taken** (attacks+swaps+marches+deploys — deck-size-proof); Tie% and Drag → conditioned to **attrition endings only**; Reserves-at-end → **HQ endings only, turn-normalized** with the SPEC §8 small-n rule (slice-n < 40/map or < 240 fleet-wide → greyed, `(n=N)`, out of the verdict). Raw Atk/Swp counts stay DB-only (cut from print). Then re-measure the Core Six baselines (hard-vs-hard, n=60/map, `cavsplit17-raid-paid` on the core7 mapset pool — the shipped-history setup) and update every pin **in one commit**: the band table in `report-model.js`, `dynamic-scrum/docs/grading-rubrics.md` band prose, the shipped-history baseline row (CLAUDE.md), and the test pins in `game/test.js`. Rules version bumps to **1.2**. The golden balance diff **intentionally breaks** here — the version bump is the justification (doctrine: "anything that legitimately changes numbers bumps the rules version instead, atomically with its test-pin updates"). New measured band edges are recorded with their setup (date, n, deck, mapset) — provenance travels with the number.
+
+**Acceptance criteria:**
+- [ ] Attack share / Swap share printed as % of actions; Tie%, Drag conditioned to attrition endings; Reserves-at-end HQ-only + turn-normalized with small-n greying; raw counts DB-only
+- [ ] Fresh Core Six baselines measured at n=60/map hard-vs-hard on `cavsplit17-raid-paid` / core7 pool; band edges in report-model.js's band table updated from those measurements, setup-stamped
+- [ ] One atomic commit updates report-model.js bands + grading-rubrics.md + shipped-history baseline row + test.js pins, with the rules version at 1.2; node game/test.js green against the new pins
+- [ ] Dashboard verdict banner and band board render correctly from the 1.2 bands (T0/T1/T2 widening unchanged in mechanism)
+- [ ] User confirms done
+
+### WOA-040 — Map drill-down screen: tempo lanes, |VP-diff| track, per-map bands, settle curve
+**Area:** game-ui · **Status:** Todo · **Type:** sonnet · **Depends on:** WOA-037 (|VP-diff| data), WOA-039 (1.2 bands) · **Docs:** specs/design_handoff_metrics_dashboard
+
+TICKETS.md P2.2 (`game/ui/charts.js`). The screen WOA-035's map dumbbells already click into: breadcrumb map switcher; A|B|A/B toggle (default B; A/B renders B solid with A as ghost overlay); tempo lanes per design 3a — **absolute per-lane scales, never 100%-stacked**; |VP-diff| track from `WOA_REPORT.vpDiffTrack` (greys honestly when a run predates WOA-037's capture); per-map band board reusing the Overview row renderer; settle curve. Small-n greying per SPEC §8 throughout. View-only, same dashboard discipline as WOA-034/035.
+
+**Acceptance criteria:**
+- [ ] Clicking an Overview map dumbbell opens that map's drill-down; breadcrumb switches maps without losing run selection
+- [ ] A|B|A/B toggle works (default B, ghost overlay for A/B); tempo lanes use absolute per-lane scales; |VP-diff| track renders from timeline data and greys with a note on pre-WOA-037 runs
+- [ ] Per-map band board + settle curve render at the selected temperature; small-n slices greyed per SPEC §8
+- [ ] node dev/smoke.js green; node game/test.js green; frozen paths untouched
+- [ ] User confirms done
+
+### WOA-036 — Browser plays a stray "applied deck" override, never the active-flagged deck
+**Area:** game-ui · **Status:** Todo · **Type:** bug · **Docs:** code-architecture
+
+Found during WOA-030's verify (2026-07-18). `index.html` (~line 268) force-clears every `content/decks/` deck's `active` flag and substitutes a browser-only "applied deck" whenever one is present — and one always is: `game/custom-deck.js` is a checked-in, non-empty 16-card leftover (commit 4ba14fa, "Vanguard") with cards distinct from both `default` and `cavsplit17-raid-paid`. Override precedence: `woa-custom-deck` localStorage → `custom-deck.js` → active flag. Consequence: interactive browser play has NEVER reflected the active flag — including the adopted 17-card deck — while every CLI/sim/test path (balance.js, test.js, dev/) bypasses the override and is correct. The mechanism itself stays (it's how zipped file:// and LAN play get a custom deck — export the file, drop it next to index.html). **Decided shape (Bill, 2026-07-18): both fixes** — (1) ship `custom-deck.js` as a no-op (empty/absent override) so the active deck shows through by default; (2) whenever an override IS active (localStorage or a dropped file), show a visible "custom deck applied: <name> [reset]" badge so it can never be silent again. Also reconcile `deck-editor.js` `deckProblems()`'s hard-coded `total !== 16` with the 17-card adopt. Independent of the other four tickets — can land anytime in the sprint.
+
+**Acceptance criteria:**
+- [ ] Checked-in `game/custom-deck.js` is a no-op; a fresh browser load (node game/server.js AND zipped file://, no localStorage) plays the active-flagged deck (`cavsplit17-raid-paid`, 17 cards visible in a dealt game)
+- [ ] An active override (localStorage or dropped custom-deck.js) shows a visible badge naming the applied deck with a working reset; no override = no badge
+- [ ] deck-editor.js's deck-size validation accepts the 17-card adopted deck (hard-coded 16 reconciled)
+- [ ] node dev/smoke.js green; node game/test.js green
+- [ ] User confirms done
 
 ## In Progress
+
+_None._
+
+## Finished
 
 _None._
 
@@ -20,6 +88,6 @@ _None._
 
 ## Related
 
-[[Roadmap]] · [[Backlog]] · [[ClaudeNotes]].
+[[Roadmap]] · [[Backlog]] · [[ClaudeNotes]] · specs/design_handoff_metrics_dashboard.
 
 #sprint

@@ -125,6 +125,14 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   temperature-independent (T0 bands), temperature only re-shades the dashboard via
   `bands(metric, temperature)`.
 
+- **`D.D:deck-override-noop-plus-badge`** (2026-07-18, WOA-036 shape, Bill at M2-P2 planning) — the
+  browser's applied-deck override (`game/custom-deck.js` + `woa-custom-deck` localStorage, which
+  outranks the `content/decks/` active flag) **stays** — it's the only custom-deck path for zipped
+  file:// and LAN play — but it must never be silent: the checked-in `custom-deck.js` ships as a
+  **no-op** (the active-flagged deck shows through by default), and any live override renders a
+  visible "custom deck applied: <name> [reset]" badge. Chosen over delete-the-mechanism (kills the
+  file:// path) and over badge-only (leaves the stray checked-in Vanguard deck as the default).
+
 ## Architecture
 
 - **`D.A:units-content-kind`** (2026-07-10, WOA-011) — unit composition & values are a content kind

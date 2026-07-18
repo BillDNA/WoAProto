@@ -79,10 +79,17 @@ parking-lot note). Ships in phases; **Phase 1 is the active sprint** ([[Sprint]]
   **WOA-034** — view-only dashboard shell with run-A/B pickers · **WOA-035** — Overview screen
   (triage band board, map dumbbells, verdict banner, pacing minis).
 
-**Deliverables (Phase 2/3 — next sprint, from TICKETS.md):** the rules-1.2 metric re-baseline
-(rates not counts, win-path conditioning — atomic with rubric + test pins), map drill-down with tempo
-lanes + hex lenses, Cards tab, Units tab — plus the capture riders WOA-037 (fsTimeline → |VP-diff|)
-and WOA-038 (control-at-end), and WOA-036 (browser deck override, Bugs — Bill's call).
+**Deliverables (Phase 2 — the active sprint, planned 2026-07-18, [[Sprint]]):**
+- **WOA-037** — engine captures `st.fsTimeline` (feeds the timeline table + |VP-diff| track) ·
+  **WOA-038** — control-at-end capture (Control% scores for real) — both golden-diff-safe, landing
+  first · **WOA-039** — the rules-1.2 metric re-baseline (rates not counts, win-path conditioning —
+  atomic with rubric + test pins; the one intentional golden-diff break) · **WOA-040** — map
+  drill-down screen (tempo lanes, |VP-diff| track, per-map bands, settle curve) · **WOA-036** —
+  browser deck-override bug (no-op the checked-in custom-deck.js + visible override badge; shape
+  decided 2026-07-18).
+
+**Deliverables (Phase 3 — next pull, from TICKETS.md):** P2.3 hex lenses, P2.4 Cards tab, P3.1
+Units tab.
 
 **Done when:** a balance report's every metric maps to a lever and shows in the dashboard — two saved
 runs comparable A/B at a selectable temperature, verdicts naming their levers.

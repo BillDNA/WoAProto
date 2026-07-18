@@ -6,32 +6,7 @@ sprint-planning. Same ticket format as `Sprint.md` (the `ticket-block` template;
 
 ---
 
-### WOA-038 — Capture board-control at battle end so Control% can score on the dashboard
-**Area:** engine · **Status:** Todo · **Type:** sonnet · **Docs:** specs/design_handoff_metrics_dashboard, data-and-reports
-
-From WOA-035's verify (2026-07-18): the Overview band board renders Control% as `n/a (n=0)` — hex-ownership/control state at battle end isn't a stored `battles` column and can't be rebuilt from the trace envelope, so `WOA_REPORT.foldBattles` can't derive controlGames/controlWins from DB rows (handled honestly via the small-n grey path, excluded from the verdict). Fix is a capture addition (WOA-031 discipline: golden diff byte-identical): store the control/hex-lead summary the live `balanceMap` agg already computes as a battles column (or in the trace envelope). Sibling of WOA-037 (fsTimeline); consider landing both in one capture pass.
-
-**Acceptance criteria:**
-- [ ] Control/hex-lead at battle end persisted per battle (column or envelope field); foldBattles derives controlGames/controlWins from DB rows matching the live agg's numbers
-- [ ] Overview Control% row shows a real value on a fresh run (no longer n/a)
-- [ ] Suites green; golden balance diff byte-identical
-- [ ] User confirms done
-
----
-
-### WOA-037 — Engine captures st.fsTimeline (per-turn field scores) — feeds timeline table + vpDiffTrack
-**Area:** engine · **Status:** Todo · **Type:** sonnet · **Docs:** specs/design_handoff_metrics_dashboard, data-and-reports
-
-From WOA-033's verify (2026-07-18): `dev/db.js` already writes a `timeline` table (battle_id/turn/fs_red/fs_blue) whenever `st.fsTimeline` exists — but no engine code populates that field yet, so the table has never received a row and `WOA_REPORT.vpDiffTrack(env)` always returns null (the dashboard greys the |VP-diff| track). Needed before P2.2's map drill-down ships its |VP-diff| sparkline. Capture: push `[fsRed, fsBlue]` per turn (endTurn) onto `st.fsTimeline`; golden balance diff must stay byte-identical (capture-only, same discipline as WOA-031). Envelope wiring: DB-sourced folds attach `env.fs` by joining `timeline`; live states pass `st.fsTimeline` directly.
-
-**Acceptance criteria:**
-- [ ] st.fsTimeline populated per turn by the engine; timeline table receives rows on persisted battles (live-verified query)
-- [ ] vpDiffTrack returns a real margin track for a fresh persisted battle (no longer null)
-- [ ] node game/test.js green with a timeline-shape assertion; golden balance diff byte-identical
-- [ ] User confirms done
-
----
-
+<!-- WOA-037 + WOA-038 pulled into Sprint M2 · Metrics v2 + dashboard, phase 2 (2026-07-18). -->
 <!-- WOA-030 pulled into Sprint M2 · Metrics v2 + dashboard, phase 1 (2026-07-18). -->
 <!-- WOA-025 pulled into Sprint M1.1 (2026-07-16). -->
 <!-- M1 follow-ons deferred from the "Fix the bent ruler" sprint (balance-loop-v2 final report §5). -->
