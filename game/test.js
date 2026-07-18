@@ -1183,6 +1183,39 @@ console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
     'folds + band table exported on the shared WOA_REPORT surface');
 })();
 
+console.log('\n== report-model: foldBattles control% from hexesRed/hexesBlue (WOA-038) ==');
+(function () {
+  var R = require('./report-model.js');
+  // A mixed row set: real control battles (some ties), plus legacy rows that
+  // predate WOA-038 (hexesRed/hexesBlue never written -> NULL, one row with
+  // only ONE side null to prove the guard needs BOTH, not either).
+  var rows = [
+    { winner: 'red',  hexesRed: 6,    hexesBlue: 3 },    // control: red held more, red won -> WIN
+    { winner: 'blue', hexesRed: 6,    hexesBlue: 3 },    // control: red held more, blue won -> not a win
+    { winner: 'blue', hexesRed: 3,    hexesBlue: 6 },    // control: blue held more, blue won -> WIN
+    { winner: 'red',  hexesRed: 5,    hexesBlue: 5 },    // a REAL hex tie -> not a control game (matches balanceAdd)
+    { winner: 'red',  hexesRed: null, hexesBlue: null }, // legacy row (pre-WOA-038) -> excluded, not 0/0
+    { winner: 'blue', hexesRed: 4,    hexesBlue: null }  // malformed/partial -> excluded (needs BOTH non-null)
+  ];
+  var f = R.foldBattles(rows);
+  ok(f.done === 6, 'done = rows.length regardless of control data (6)');
+  ok(f.agg.controlGames === 3, 'controlGames counts only rows with both hexes non-null and unequal (3, got ' + f.agg.controlGames + ')');
+  ok(f.agg.controlWins === 2, 'controlWins counts winner-held-more-hexes among those (2, got ' + f.agg.controlWins + ')');
+
+  // The Overview band board reads this straight through BANDS' control row —
+  // pct(2,3) = 67%, n=3 (bandN), not the "n=0" placeholder foldBattles used
+  // to be stuck at before hexesRed/hexesBlue existed as stored columns.
+  var controlBand = R.BANDS.filter(function (b) { return b.key === 'control'; })[0];
+  ok(controlBand.val(f.agg, f.done) === 67, 'control band val() = 67% off the folded agg (got ' + controlBand.val(f.agg, f.done) + ')');
+  ok(R.bandN(controlBand, f.agg, f.done) === 3, 'control band n = controlGames (3), not the row count (6)');
+
+  // All-legacy rows (no run has ever recorded control data) still render the
+  // ordinary small-n path, not a fabricated 0/0 tie.
+  var legacyOnly = R.foldBattles([{ winner: 'red' }, { winner: 'blue', hexesRed: null, hexesBlue: null }]);
+  ok(legacyOnly.agg.controlGames === 0, 'an all-legacy row set folds to controlGames = 0');
+  ok(controlBand.val(legacyOnly.agg, legacyOnly.done) === null, 'control band val() = null (not 0) when no row carries control data');
+})();
+
 console.log(fails === 0 ? '\nALL TESTS PASSED' : '\n' + fails + ' FAILURES');
 process.exit(fails === 0 ? 0 : 1);
 /* end */

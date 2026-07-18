@@ -80,6 +80,17 @@ try {
   }
   ok(b.res_end_red === reservesLeft(st.reserves.red) && b.res_end_blue === reservesLeft(st.reserves.blue),
     'res_end_red/res_end_blue = pieces left in st.reserves at battle end (' + b.res_end_red + '/' + b.res_end_blue + ')');
+  // WOA-038: hexes_red/hexes_blue = hex-ownership tally at battle end, computed
+  // independently here from st.units (the SAME read balanceAdd does live) to
+  // prove db.js's hexesHeld() reads the same source of truth.
+  function hexTally(units) {
+    var hr = 0, hb = 0;
+    for (var h in units) (units[h].owner === 'red' ? hr++ : hb++);
+    return { red: hr, blue: hb };
+  }
+  var hexesExpected = hexTally(st.units);
+  ok(b.hexes_red === hexesExpected.red && b.hexes_blue === hexesExpected.blue,
+    'hexes_red/hexes_blue match a hex-ownership tally of st.units (' + b.hexes_red + '/' + b.hexes_blue + ')');
 
   /* ---------- card_plays ---------- */
   section('card_plays');
@@ -154,9 +165,11 @@ try {
   var bRow = battlesForRun1[0];
   ['id', 'map', 'seed', 'firstPlayer', 'winner', 'winType', 'turns', 'fsRed', 'fsBlue', 'firstBlood',
     'leadChanges', 'killTail', 'zeroKill', 'tiebreak', 'attacks', 'swaps', 'marches', 'deploys',
-    'resEndRed', 'resEndBlue', 'trace'].forEach(function (k) {
+    'resEndRed', 'resEndBlue', 'trace', 'hexesRed', 'hexesBlue'].forEach(function (k) {
     ok(k in bRow, 'listBattles row carries camelCase "' + k + '"');
   });
+  ok(bRow.hexesRed === hexesExpected.red && bRow.hexesBlue === hexesExpected.blue,
+    'listBattles hexesRed/hexesBlue round-trip the same tally (' + bRow.hexesRed + '/' + bRow.hexesBlue + ')');
   ok(bRow.map === E.MAPS[0].name && bRow.firstPlayer === 'red' && bRow.winner === st.battleWinner,
     'listBattles row matches the round-trip battle inserted above (map/firstPlayer/winner)');
   ok(typeof bRow.trace === 'string' && JSON.parse(bRow.trace).map === E.MAPS[0].name,
@@ -218,6 +231,37 @@ try {
     'trace.units = st.unitMetrics verbatim');
   ok(Object.keys(trace.units).indexOf('infantry') >= 0,
     'unitMetrics keyed by FULL unit-type name "infantry" (WOA-031 feed-forward), not "inf" shorthand');
+
+  /* ---------- hexes_red/hexes_blue: known-units column mapping (WOA-038) ---------- */
+  section('hex-ownership tally (WOA-038)');
+  var stHex = JSON.parse(JSON.stringify(st2)); stHex.match = st2.match;
+  stHex.units = { // a deliberately uneven, hand-known split: 3 red hexes, 1 blue hex
+    '0,0': { type: 'infantry', owner: 'red' },
+    '1,0': { type: 'infantry', owner: 'red' },
+    '2,0': { type: 'cavalry', owner: 'red' },
+    '-1,0': { type: 'infantry', owner: 'blue' }
+  };
+  var battleIdHex = db.insertBattle(h2, runIdA, stHex, 'red', { seed: 9001 });
+  var bHex = h2.db.prepare('SELECT hexes_red, hexes_blue FROM battles WHERE id = ?').get(battleIdHex);
+  ok(bHex.hexes_red === 3 && bHex.hexes_blue === 1,
+    'hexes_red/hexes_blue = 3/1 for a hand-built 4-unit board (' + bHex.hexes_red + '/' + bHex.hexes_blue + ')');
+
+  var stEmpty = JSON.parse(JSON.stringify(st2)); stEmpty.match = st2.match; stEmpty.units = {};
+  var battleIdEmpty = db.insertBattle(h2, runIdA, stEmpty, 'red', { seed: 9002 });
+  var bEmpty = h2.db.prepare('SELECT hexes_red, hexes_blue FROM battles WHERE id = ?').get(battleIdEmpty);
+  ok(bEmpty.hexes_red === 0 && bEmpty.hexes_blue === 0,
+    'an empty board tallies 0/0 — a REAL tie, still stored as numbers, not NULL');
+
+  // Legacy rows (written before this ticket) never had hexes_red/hexes_blue
+  // populated — simulate one with a direct INSERT that omits the columns
+  // entirely, and confirm listBattles surfaces NULL rather than 0
+  // (foldBattles' "a missing pair is not a fabricated 0/0 tie" contract).
+  h2.db.prepare(
+    'INSERT INTO battles (run_id, version, map, winner, first_player, turns) VALUES (?,?,?,?,?,?)'
+  ).run(runIdA, '9.9-test', E.MAPS[0].name, 'red', 'red', 10);
+  var legacyRows = db.listBattles(h2, runIdA).filter(function (r) { return r.hexesRed == null; });
+  ok(legacyRows.length === 1 && legacyRows[0].hexesBlue == null,
+    'a pre-WOA-038 row (hexes columns never written) round-trips as NULL, not 0');
 
   /* ---------- baseline uniqueness (WOA-032, SPEC §7) ---------- */
   section('baseline uniqueness (WOA-032)');

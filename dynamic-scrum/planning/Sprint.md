@@ -16,17 +16,6 @@ the spec for the next pull._
 
 ## Tickets
 
-### WOA-038 — Capture board-control at battle end so Control% can score on the dashboard
-**Area:** engine · **Status:** Todo · **Type:** sonnet · **Depends on:** WOA-037 (shared capture seams — land second) · **Docs:** specs/design_handoff_metrics_dashboard, data-and-reports
-
-From WOA-035's verify (2026-07-18): the Overview band board renders Control% as `n/a (n=0)` — hex-ownership/control state at battle end isn't a stored `battles` column and can't be rebuilt from the trace envelope, so `WOA_REPORT.foldBattles` can't derive controlGames/controlWins from DB rows (handled honestly via the small-n grey path, excluded from the verdict). Fix is a capture addition (WOA-031 discipline: golden diff byte-identical): store the control/hex-lead summary the live `balanceMap` agg already computes as a battles column (or in the trace envelope).
-
-**Acceptance criteria:**
-- [ ] Control/hex-lead at battle end persisted per battle (column or envelope field); foldBattles derives controlGames/controlWins from DB rows matching the live agg's numbers
-- [ ] Overview Control% row shows a real value on a fresh run (no longer n/a)
-- [ ] Suites green; golden balance diff byte-identical
-- [ ] User confirms done
-
 ### WOA-039 — Rules-1.2 metric re-baseline: rates not counts, win-path conditioning — atomic bump
 **Area:** metrics · **Status:** Todo · **Type:** opus · **Depends on:** WOA-037, WOA-038 (re-baseline measures on complete capture) · **Docs:** specs/design_handoff_metrics_dashboard, grading-rubrics, data-and-reports
 
@@ -68,6 +57,8 @@ Found during WOA-030's verify (2026-07-18). `index.html` (~line 268) force-clear
 _None._
 
 ## Finished
+
+- **WOA-038 — Capture board-control at battle end so Control% can score on the dashboard** (2026-07-18) — battles grew hexes_red/hexes_blue (ALTER precedent, NULL on legacy rows); insertBattle tallies via hexesHeld(st) mirroring balanceAdd; foldBattles derives controlGames/controlWins with the null-guard + tie gate — fold matched the live agg exactly (85%/85% on the same run); Overview Control% now a real n. Suites 1163/104/smoke green; golden diff byte-identical vs pre-sprint baseline. cost: 148,561 tok / 10.9m / 57 calls
 
 - **WOA-037 — Engine captures st.fsTimeline (per-turn field scores) — feeds timeline table + vpDiffTrack** (2026-07-18) — Premise was stale (engine capture + timeline writes already shipped pre-Phase-1); re-scoped at dispatch to the real gap — GET /api/battles now joins the timeline table (one grouped query, fail-open) and envelopeFromRow folds row.fs into the envelope, so vpDiffTrack is real on the DB path; +6 test.js assertions (fsTimeline shape + row.fs fold); golden diff byte-identical; live-verified 144/144 rows carry fs. cost: 149,844 tok / 13.6m / 77 calls
 

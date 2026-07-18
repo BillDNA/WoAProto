@@ -198,16 +198,20 @@ var WOA_REPORT = (function () {
        leadChanges/attacks/swaps/marches/deploys/firstBloodGames/
        firstBloodWins — bit-for-bit the same source (fs_red/fs_blue ARE
        E.fieldScore at battle end, per db.js insertBattle).
-     controlGames/controlWins are NOT recoverable from a battles row (board
-     hex-ownership at battle end isn't a stored column, and the trace's `h`
-     fields are per-play, not a final snapshot) — left at 0, which makes
-     BANDS' control.val() return null and bandN() report n=0, so the
-     Control% band board row renders through the ordinary small-n path
-     ("Control% (n=0)", greyed, excluded from the verdict banner) rather
-     than a fabricated number. cards stays {} for the same reason: card_plays
-     is a separate table this fold doesn't touch (out of scope here).
-     Returns { agg, done } — the exact shape foldGlobal/balanceScore/BANDS
-     already consume. */
+     controlGames/controlWins (WOA-038): board hex-ownership at battle end IS
+     a stored column pair now (hexesRed/hexesBlue — dev/db.js insertBattle's
+     hexesHeld(st), the same tally balanceAdd folds live). A row only feeds
+     controlGames when BOTH are non-null (older rows, written before this
+     ticket, carry NULL/NULL — "no control data", never a fabricated 0/0
+     tie) AND unequal (a real hex tie contributes to done but not to
+     controlGames, same as balanceAdd) — controlWins then increments when the
+     winner also held more hexes. Rows missing the pair fall out of both
+     counters, so BANDS' control.val()/bandN() see a smaller-but-real n
+     instead of 0 (small-n path only kicks in when genuinely few battles
+     carry the columns, e.g. a run mixing pre/post-WOA-038 rows). cards stays
+     {} — card_plays is a separate table this fold doesn't touch (out of
+     scope here). Returns { agg, done } — the exact shape
+     foldGlobal/balanceScore/BANDS already consume. */
   function foldBattles(rows) {
     var agg = { redWins: 0, firstWins: 0, hqWins: 0, turns: 0, vpDiff: 0,
       zeroKill: 0, tiebreak: 0, killTail: 0, leadChanges: 0,
@@ -228,6 +232,12 @@ var WOA_REPORT = (function () {
       if (r.firstBlood) {
         agg.firstBloodGames++;
         if (r.firstBlood === r.winner) agg.firstBloodWins++;
+      }
+      // WOA-038: hexesRed/hexesBlue are NULL on legacy rows — guard both,
+      // don't coerce to 0 (a missing pair must never read as a 0/0 tie).
+      if (r.hexesRed != null && r.hexesBlue != null && r.hexesRed !== r.hexesBlue) {
+        agg.controlGames++;
+        if ((r.winner === 'red') === (r.hexesRed > r.hexesBlue)) agg.controlWins++;
       }
     });
     return { agg: agg, done: (rows || []).length };

@@ -33,7 +33,13 @@
    engine wrote it — action/hex/kill/leader/unit fields already folded in by
    WOA-031) plus the per-unit-type `units` fold (st.unitMetrics). Everything
    in SPEC §1-3 derivable from the trace is meant to be derived FROM this
-   column (report-model.js folds), not re-captured as new battles columns. */
+   column (report-model.js folds), not re-captured as new battles columns.
+
+   WOA-038 (Control% on the dashboard): `battles` grew `hexes_red`/`hexes_blue`
+   INTEGER columns -- hex-ownership tally at battle end (hexesHeld(st) below),
+   bit-for-bit the same count balanceAdd folds live (game/engine/06-sim.js:73-74).
+   NULL on rows written before this ticket (report-model.js's foldBattles
+   treats a NULL pair as "no control data", never a fabricated 0/0 tie). */
 'use strict';
 
 var fs = require('fs');
@@ -56,7 +62,8 @@ var SCHEMA = [
   '  fs_red INTEGER, fs_blue INTEGER, first_blood TEXT, lead_changes INTEGER,',
   '  kill_tail INTEGER, zero_kill INTEGER, tiebreak INTEGER,',
   '  attacks INTEGER, swaps INTEGER, marches INTEGER, deploys INTEGER,',
-  '  res_end_red INTEGER, res_end_blue INTEGER, trace TEXT',
+  '  res_end_red INTEGER, res_end_blue INTEGER, trace TEXT,',
+  '  hexes_red INTEGER, hexes_blue INTEGER',
   ');',
   'CREATE TABLE IF NOT EXISTS card_plays (',
   '  id INTEGER PRIMARY KEY, battle_id INTEGER, side TEXT, card_id TEXT,',
@@ -91,6 +98,15 @@ function reservesLeft(st, side) {
   return n;
 }
 
+// WOA-038: hexes held per side at battle end — the SAME count balanceAdd
+// (game/engine/06-sim.js:73-74) folds live, kept here so the DB path
+// reproduces it exactly: for (var h in st.units) owner red/blue tally.
+function hexesHeld(st) {
+  var hr = 0, hb = 0;
+  for (var h in (st && st.units) || {}) (st.units[h].owner === 'red' ? hr++ : hb++);
+  return { red: hr, blue: hb };
+}
+
 /* Open (creating if needed) the DB, ensure the schema, switch on WAL, and
    prepare every statement once. Returns the handle the other calls take. */
 function open(dbPath) {
@@ -102,6 +118,8 @@ function open(dbPath) {
   ensureColumn(db, 'battles', 'res_end_red', 'INTEGER');
   ensureColumn(db, 'battles', 'res_end_blue', 'INTEGER');
   ensureColumn(db, 'battles', 'trace', 'TEXT');       // WOA-032 (SPEC §4): per-battle trace JSON
+  ensureColumn(db, 'battles', 'hexes_red', 'INTEGER'); // WOA-038: hex-ownership tally at battle end
+  ensureColumn(db, 'battles', 'hexes_blue', 'INTEGER');
   ensureColumn(db, 'runs', 'deck', 'TEXT');           // WOA-032 (SPEC §7): run identity for the A/B picker
   ensureColumn(db, 'runs', 'mapset', 'TEXT');
   ensureColumn(db, 'runs', 'seed_base', 'INTEGER');
@@ -132,13 +150,14 @@ function open(dbPath) {
       'SELECT id, map, seed, first_player AS firstPlayer, winner, win_type AS winType, turns,' +
       ' fs_red AS fsRed, fs_blue AS fsBlue, first_blood AS firstBlood, lead_changes AS leadChanges,' +
       ' kill_tail AS killTail, zero_kill AS zeroKill, tiebreak, attacks, swaps, marches, deploys,' +
-      ' res_end_red AS resEndRed, res_end_blue AS resEndBlue, trace' +
+      ' res_end_red AS resEndRed, res_end_blue AS resEndBlue, trace,' +
+      ' hexes_red AS hexesRed, hexes_blue AS hexesBlue' +
       ' FROM battles WHERE run_id = ? ORDER BY id'),
     insertBattle: db.prepare(
       'INSERT INTO battles (run_id, version, map, seed, first_player, winner, win_type, turns,' +
       ' fs_red, fs_blue, first_blood, lead_changes, kill_tail, zero_kill, tiebreak,' +
-      ' attacks, swaps, marches, deploys, res_end_red, res_end_blue, trace)' +
-      ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'),
+      ' attacks, swaps, marches, deploys, res_end_red, res_end_blue, trace, hexes_red, hexes_blue)' +
+      ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'),
     insertCardPlay: db.prepare(
       'INSERT INTO card_plays (battle_id, side, card_id, mode, turn, seen, noop, won) VALUES (?,?,?,?,?,?,?,?)'),
     insertTimeline: db.prepare(
@@ -228,6 +247,7 @@ function insertBattle(h, runId, st, firstPlayer, extra) {
     winner: winner, winType: nz(st.winType), turns: nz(st.turnNumber),
     trace: st.playLog || [], units: st.unitMetrics || {}
   });
+  var hexes = hexesHeld(st); // WOA-038: hex-ownership tally at battle end (mirrors balanceAdd)
   return txn(h, function () {
     var res = h.stmts.insertBattle.run(
       runId, version, nz(st.mapName), seed,
@@ -239,7 +259,7 @@ function insertBattle(h, runId, st, firstPlayer, extra) {
       (st.winType === 'attrition' && fsr === fsb) ? 1 : 0,             // decided only by tie-goes-to-2nd
       stats.attacks || 0, stats.swaps || 0, stats.marches || 0, stats.deploys || 0,
       reservesLeft(st, 'red'), reservesLeft(st, 'blue'),  // WOA-016: pieces left in reserve at battle end
-      trace);
+      trace, hexes.red, hexes.blue);
     var battleId = Number(res.lastInsertRowid);
     (st.playLog || []).forEach(function (e) {
       h.stmts.insertCardPlay.run(battleId, e.p, e.id, nz(e.mode), nz(e.turn),
