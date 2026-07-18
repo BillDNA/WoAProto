@@ -2,7 +2,7 @@
 {
  "id": "cavsplit17-raid-paid",
  "name": "Cav split + Raiding Party (-OrdWdrw, -Airdrop)",
- "active": false,
+ "active": true,
  "cards": [
   {
    "id": "deploy_inf_start",

@@ -98,7 +98,11 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   (`test.js:543` resolves Ordered Withdraw — a card this deck cuts — suite crashed at 136/237), so
   the flip ships with the test decoupling + the atomic guardrail/baseline records, not from the
   close-sprint wrap. The n≥100 normal 0-kill confirmation rides along as a watch item, not a gate —
-  Bill adopted without it.
+  Bill adopted without it. **EXECUTED 2026-07-18 (WOA-030):** flip live for all CLI/sim/test paths;
+  suite green with either deck (fixture-decoupled via `test.js` `fixtureCard()`); baselines +
+  skill premium re-stamped (hard>easy 76%, sanity 46% — thin, within noise); 0-kill watch item
+  settles at **2%** (n=100/map). Browser play was found to bypass the active flag entirely
+  (stray applied-deck override) — filed as **WOA-036**, Bill's call.
 
 - **`D.D:metrics-v2-phased-adopt`** (2026-07-18, M2 planning) — the metrics-v2 + dashboard spec
   (`dynamic-scrum/planning/specs/design_handoff_metrics_dashboard/`, agreed with Bill in the Claude

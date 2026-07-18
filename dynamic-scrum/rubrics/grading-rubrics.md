@@ -42,6 +42,14 @@ Bill's Goal/Evidence/Score/Lever shape instead, so running `rubric-rubric` again
 schema mismatch, not real drift. Kept as a local note rather than editing the canonical-served
 rubric-rubric, which would change it for every consuming project.)*
 
+**Deck flip (2026-07-18, WOA-030 — `D.D:seventeen-card-adopt`): `cavsplit17-raid-paid` (17 cards)
+is now the ADOPTED/active deck; `default.js` (16 cards) is superseded but stays in `content/decks/`
+active:false.** Every figure below re-stamped from the already-saved candidate sweeps
+(`logs/reports/balance/1.1/2026-07-16-1514-hard-vs-hard-n60-deck-cavsplit17-raid-paid.md` and
+`...-1515-normal-vs-normal-n40-deck-cavsplit17-raid-paid.md`) carries the new deck in its setup
+label; the prior default-deck reading trails as a `_Superseded (default deck, pre-WOA-030):_` note
+on the same item, same pattern as the pre-1.1/pre-WOA-020 rows above it.
+
 ## Quick reference — report line → target band
 
 Condensed lookup for reading a balance report side-by-side: every number the report prints, the
@@ -55,7 +63,7 @@ criterion wins and this table gets fixed. All bands are targets (tune me).
 | Red%                                  | 45–55 (marginal to 40–60; 62/38 = SIDE-BIASED)                            | Map §1          |
 | 1st%                                  | 45–55 (marginal to 40–60)                                                 | Map §2          |
 | HQ%                                   | 10–40 (≤8 attrition-only, ≥55 rushable)                                   | Map §3          |
-| Turns                                 | comfortably under the play cap (2× deck size, 32 today)                   | Game §2         |
+| Turns                                 | comfortably under the play cap (2× deck size, 34 today — 17-card ADOPTED) | Game §2         |
 | VPdiff                                | no band — context only                                                    | —               |
 | Atk / Swp                             | near the dated Behaviour baseline; ±30% move = regression                 | Game §1         |
 | 0kill%                                | ≤5 — **hard floor**                                                       | NS2             |
@@ -86,25 +94,35 @@ The five headline items — grade any rules / content / AI change against these 
 1. **Skill over luck.**
    Goal: a stronger player wins more; the game rewards decisions over draws.
    Evidence: `balance.js matchup` skill premium (the stronger AI's win rate against a weaker one).
-   Baseline (**AI tiers, n=96/map = 576 battles/pairing, Core Six, 2026-07-16**,
-   `game/balance.js matchup 96 <a> <b>`): normal>easy 69%, hard>easy 73%, hard>normal 56% (thin —
-   within noise at n=96), sanity (self vs self) 50%.
+   Baseline (**AI tiers, n=96/map = 576 battles/pairing, Core Six, 2026-07-18, deck
+   `cavsplit17-raid-paid` — ADOPTED WOA-030**, `game/balance.js matchup 96 <a> <b>`): normal>easy
+   69%, hard>easy 76%, hard>normal 56% (thin — within noise at n=96), sanity (self vs self) 46%
+   (thin — within noise at n=96).
    Score: adjacent tiers ≥60%, two tiers apart ≥75% (tune me).
    Lever: AI tier separation — `AI_PRESETS` breadth / replySamples / noise in `game/engine/05-ai.js`
    (widen the gap when a premium reads low). A *low* premium can also mean the rules/content leave
    too little room for skill — that's a design read, not a single knob.
-   _Superseded: pre-1.1 June (7-map) — normal>easy 70%, hard>easy 83%, hard>normal 54%, sanity 44%._
+   _Superseded (default deck, pre-WOA-030, Core Six, 2026-07-16): normal>easy 69%, hard>easy 73%,
+   hard>normal 56% (thin), sanity 50%. Pre-1.1 June (7-map) — normal>easy 70%, hard>easy 83%,
+   hard>normal 54%, sanity 44%._
 2. **Decisive games.**
    Goal: fights happen, kills matter, holding ground matters.
    Evidence: the `0kill%` column + the "first blood won" and "more-hexes side won" Decisiveness
-   lines. Baseline (**hard-vs-hard, n=60/map = 360, Core Six, 2026-07-16**): zero-kill 1%,
-   first-blood→win 63%, control-tracks-win 93%.
+   lines. Baseline (**hard-vs-hard, n=60/map = 360, Core Six, 2026-07-16, deck
+   `cavsplit17-raid-paid` — ADOPTED WOA-030, 2026-07-18**): zero-kill 2%, first-blood→win 66%,
+   control-tracks-win 93%. Normal-vs-normal, same date/deck, n=40/map = 240 (the T2-probe read):
+   zero-kill 4%, first-blood→win 64%, control 86%. **0-kill n≥100 confirmation (WOA-030,
+   2026-07-18, normal-vs-normal, n=100/map = 600, Core Six, same deck):** zero-kill **2%** — the
+   probe's 1→4% drift was thin-n noise, not a real regression; settles well inside the ≤5% hard
+   floor.
    Score: zero-kill ≤5%; first-blood 55–70% (higher = snowbally); control ≥70% (tune me).
    Lever: zero-kill → the attrition-projection weight in `evalState` + the deck's attack-card supply
    (`game/engine/05-ai.js`, `content/decks/`); first-blood snowball → combat/advance rules
    (`game/engine/03-rules.js`); control-tracks-win is mostly diagnostic (does ground *deserve* to
    matter) — its knob is map geometry (`content/maps/`).
-   _Superseded: pre-1.1 June — zero-kill ~4%, first-blood→win 62%, control-tracks-win 79%._
+   _Superseded (default deck, pre-WOA-030, hard-vs-hard, Core Six, 2026-07-16): zero-kill 1%,
+   first-blood→win 63%, control-tracks-win 93%. Pre-1.1 June — zero-kill ~4%, first-blood→win 62%,
+   control-tracks-win 79%._
 3. **No dead turns.**
    Goal: a player always feels they can act.
    Evidence: the per-card **Noop%** column (plays that resolved zero actions) — printed on the
@@ -118,24 +136,28 @@ The five headline items — grade any rules / content / AI change against these 
 4. **Balanced start.**
    Goal: neither seat nor colour wins the battle before it starts.
    Evidence: the overall "first mover" line + per-map Red%/1st% columns. Baseline (**hard-vs-hard,
-   n=60/map = 360, Core Six, 2026-07-16**): first mover 45% overall (second player 55%).
-   Normal-vs-normal, same date, **n=40/map = 240**: first mover 48%.
+   n=60/map = 360, Core Six, 2026-07-16, deck `cavsplit17-raid-paid` — ADOPTED WOA-030,
+   2026-07-18**): first mover 47% overall (red 49%). Normal-vs-normal, same date/deck, **n=40/map =
+   240**: first mover 45% (red 50%).
    Score: 45–55% overall and per map (tune me).
    Lever: the `starting:true` opener card (see §`starting: true` — it moves first-mover% directly)
    + per-map geometry & HQ/colour placement (`content/maps/`).
-   _Superseded: pre-1.1 June — first mover 46% at normal; ~56% second-player win at hard._
+   _Superseded (default deck, pre-WOA-030, Core Six, 2026-07-16): hard first mover 45% (second player
+   55%); normal first mover 48%. Pre-1.1 June — first mover 46% at normal; ~56% second-player win at
+   hard._
 5. **Tie-rule not deciding too much.**
    Goal: tie-goes-to-2nd should break ties, not decide games.
    Evidence: the "tie-goes-to-2nd decided N%" Decisiveness line (an attrition win where both sides
-   have EQUAL field scores, awarded to whoever moved second). Baseline: **9% (hard-vs-hard,
-   n=60/map = 360, Core Six, 2026-07-16)** — in target, materially unchanged from the prior 1.1 read.
+   have EQUAL field scores, awarded to whoever moved second). Baseline: **11% (hard-vs-hard,
+   n=60/map = 360, Core Six, 2026-07-16, deck `cavsplit17-raid-paid` — ADOPTED WOA-030,
+   2026-07-18)**; normal-vs-normal, same date/deck, n=40/map = 240: 12% — both in target.
    Score: ≤15% — currently MET; treat as a guardrail to hold, not a lever to pull. **Hard floor**
    (see §Temperature).
    Lever: the deck's attack-card supply (`content/decks/` — deleting hoarded attack cards drove it
    11→15→20%) + the trench tie-survival rules (`game/engine/03-rules.js`).
-   _Superseded: prior 1.1 read 10% (n=60, 7-map pool, pre-WOA-020). The 0.x-era "~25–26%, biggest
-   open lever" predates the 1.1 trench tie-survival rules (WOA-010) that brought it down — cite the
-   live 9%._
+   _Superseded (default deck, pre-WOA-030, Core Six, 2026-07-16): hard 9%, normal 10%. Prior 1.1 read
+   10% (n=60, 7-map pool, pre-WOA-020). The 0.x-era "~25–26%, biggest open lever" predates the 1.1
+   trench tie-survival rules (WOA-010) that brought it down._
 
 > **Two different "ties" — don't conflate them.** The **attrition tiebreak** ("tie-goes-to-2nd") is
 > north star 5: an attrition win where both sides have EQUAL field scores, awarded to whoever moved
@@ -156,7 +178,7 @@ buy improvement with.** State the temperature in the analysis; it is a dial, not
 |---|---|---|
 | **T0 — strict** | Adopt only if **no** north star leaves its band. | Shipping to `default`; protecting a release. |
 | **T1 — explore** *(loop default)* | Adopt if **≥3 metrics improve** and **≤1** leaves its band by **≤1 band-width**. Name the trade in the report. | Iterating. Escaping a local maximum. |
-| **T2 — hot** | Any excursion allowed **except the hard floors**, to map the design space. Nothing ships from T2 without a T0/T1 re-measure. | Deliberate exploration — "what if the 16-card ceiling weren't there?" |
+| **T2 — hot** | Any excursion allowed **except the hard floors**, to map the design space. Nothing ships from T2 without a T0/T1 re-measure. | Deliberate exploration — "what if the deck-size ceiling weren't there?" (the WOA-029 probe that led to the 17-card ADOPT below) |
 
 **Hard floors — these never relax at any temperature.** Each is a measured cascade, not a preference:
 - **Tie-goes-to-2nd ≤ 15%** — deleting hoarded attack cards drove it 11→15→20% and *produced* the
@@ -169,6 +191,11 @@ buy improvement with.** State the temperature in the analysis; it is a dial, not
 > *physical-board* guardrail, not a code one. Iter2 measured its cost directly: the cavalry split is
 > clean at 17 cards and only becomes expensive when a 16th-card cut has to fund it. Before rejecting a
 > change for breaching a guardrail, check whether the *guardrail* is the thing under test.
+>
+> **ADOPTED (2026-07-18, WOA-030 — `D.D:seventeen-card-adopt`).** The ceiling is relaxed to **17 for
+> `cavsplit17-raid-paid`** specifically (flipped `active:true`, `default` flipped `active:false`) —
+> **16 stays the default guardrail for every other deck**, including `default.js` itself. A future
+> deck proposal is still graded against 16 unless it re-earns the same T2-probe-then-adopt path.
 
 ### Search-side policy (WOA-029)
 
@@ -190,7 +217,8 @@ guardrail, smallest / best-understood blast radius first:
 1. **16-card deck ceiling** — a pure physical-board guardrail (no code depends on it) with a measured
    cost on file (iter2: the cav split is clean at 17, expensive only when a 16th-card cut funds it).
    +1 card is the smallest escape step. *(Probed under this policy — WOA-029: `cavsplit17-raid-paid`
-   at 17 cards, analysis `2026-07-16-1.1-analysis-cavsplit17-T2probe.md`.)*
+   at 17 cards, analysis `2026-07-16-1.1-analysis-cavsplit17-T2probe.md`. **ADOPTED WOA-030,
+   2026-07-18** — see the ADOPTED note above; 16 remains the ceiling for every other deck.)*
 2. **Piece stocks** (7 inf / 2 cav / 1 art / 3 trench) — physical too, but a stock change *cascades*:
    it moves the deploy-step floor (≥ stock) and the WOA-017 test ceiling (≤ stock) together, and
    shifts attrition field-score math. Bigger radius → second.
@@ -216,8 +244,9 @@ hands the first mover a play the second mover answers); a cheaper / defensive op
 So when **first-mover% or HQ%** drifts, check whether the `starting` card is the cause *before*
 reaching for the temperature dial or other levers — and when tuning first-mover balance deliberately,
 the opener is one of the knobs.
-**Lever + where it lives:** the `starting:true` card in the active deck (`content/decks/default.js`;
-exactly one card carries the flag, enforced by `deckProblems`).
+**Lever + where it lives:** the `starting:true` card in the active deck (`content/decks/` — the
+adopted deck is `cavsplit17-raid-paid.js` as of WOA-030, 2026-07-18; still `deploy_inf_start`, same
+as the superseded `default.js`; exactly one card carries the flag, enforced by `deckProblems`).
 
 ## Card rubric
 
@@ -252,8 +281,9 @@ a specific card's Win% is ever needed.
 1. **Adds a decision.**
    Goal: the card offers a choice the rest of the deck doesn't already offer — a new line of
    play, not a stat-tweaked duplicate.
-   Evidence: qualitative — playtest judgment; compare `steps` against the existing deck in
-   `game/content/decks/default.js` (vocabulary in `card-cheatsheet.md`).
+   Evidence: qualitative — playtest judgment; compare `steps` against the existing deck — the
+   adopted deck is `game/content/decks/cavsplit17-raid-paid.js` as of WOA-030, 2026-07-18
+   (vocabulary in `card-cheatsheet.md`).
    Score: good = you can name the situation where you'd pick THIS card; failing = it's strictly
    a re-skin of an existing card's decision.
    Lever: the card's `steps` design in the active deck (`content/decks/`).
@@ -325,26 +355,31 @@ the *aspect* of geometry each one implies.
    Evidence: Red%/Blue% columns (the report stamps SIDE-BIASED at 62/38).
    Score: good 45–55; marginal 40–60; failing outside (tune me).
    Lever: terrain sides + HQ/colour placement (`content/maps/`).
-   Live reads (**hard-vs-hard, n=60/map, Core Six, 2026-07-16** — the 1418 report): no Core Six map
-   trips the 62/38 SIDE-BIASED stamp; the most side-leaning are Long March and Saber Ridge at 57%
-   Red (marginal). Per-map side reads drift with every deck/run — read the live report rather than
-   trusting a pinned example here.
+   Live reads (**hard-vs-hard, n=60/map, Core Six, 2026-07-16, deck `cavsplit17-raid-paid` —
+   ADOPTED WOA-030, 2026-07-18**): no Core Six map trips the 62/38 SIDE-BIASED stamp; the most
+   side-leaning is The Narrows at 45% Red (marginal). Per-map side reads drift with every deck/run —
+   read the live report rather than trusting a pinned example here.
+   _Superseded (default deck, pre-WOA-030, same setup — the 1418 report): most side-leaning were
+   Long March and Saber Ridge at 57% Red (marginal)._
 2. **Mover balance.**
    Goal: going first (or second) isn't the map's real victory condition.
    Evidence: 1st%/2nd% columns (stamped at 62/38).
    Score: good 45–55; marginal 40–60; failing outside (tune me).
    Lever: HQ spacing + lane geometry (`content/maps/`).
-   Live reads (**hard-vs-hard, n=60/map, Core Six, 2026-07-16**): the mover-strong maps are **Long
-   March 30% 1st** (attrition-only) and **The Narrows 37% 1st**. The hard AI carries a global ~55%
-   second-player lean (first-mover 45% overall this run), so grade each map against its peers at the
-   same difficulty, not against 50.
+   Live reads (**hard-vs-hard, n=60/map, Core Six, 2026-07-16, deck `cavsplit17-raid-paid` —
+   ADOPTED WOA-030, 2026-07-18**): the mover-strong maps are **Long March 35% 1st** (attrition-only)
+   and **The Narrows 38% 1st**. The hard AI carries a global ~53% second-player lean (first-mover 47%
+   overall this run), so grade each map against its peers at the same difficulty, not against 50.
+   _Superseded (default deck, pre-WOA-030, same setup): Long March 30% 1st, The Narrows 37% 1st,
+   first-mover 45% overall (~55% second-player lean)._
 3. **HQ-vs-attrition mix.**
    Goal: both win paths live — the HQ is threatenable but not rushable.
    Evidence: HQ% column (report notes: ≤8 = attrition-only, ≥55 = HQ-rushable). Overall baseline:
-   HQ captures 23% (**hard-vs-hard, n=60/map, Core Six, 2026-07-16**) / 25% (**normal, n=40/map,
-   same date**); attrition the rest.
+   HQ captures 17% (**hard-vs-hard, n=60/map, Core Six, 2026-07-16, deck `cavsplit17-raid-paid` —
+   ADOPTED WOA-030, 2026-07-18**) / 24% (**normal, n=40/map, same date/deck**); attrition the rest.
    Score: good ~10–40; marginal 8–10 or 40–55; failing at the note thresholds (tune me).
    Lever: HQ spacing (`content/maps/`) — close HQs raise HQ%, distant ones force attrition.
+   _Superseded (default deck, pre-WOA-030, same setup): HQ captures 23% hard / 25% normal._
 4. **Distance-4 compactness.**
    Goal: HQs close enough that the HQ path stays real — the dist-4 maps are the healthiest.
    Evidence: hex distance between the two HQs, counted on the map def / in the editor
@@ -355,18 +390,22 @@ the *aspect* of geometry each one implies.
 5. **Board control tracks winning.**
    Goal: holding ground on THIS map matters, not just on average.
    Evidence: "side holding more hexes won" Decisiveness line, per map via name filter.
-   Baseline 93% overall (**hard-vs-hard & normal, Core Six, 2026-07-16**).
+   Baseline (**Core Six, 2026-07-16, deck `cavsplit17-raid-paid` — ADOPTED WOA-030, 2026-07-18**):
+   hard-vs-hard 93%, normal 86%.
    Score: good ≥70; marginal 60–70; failing near 50 (tune me) — ground is decorative there.
    Lever: mostly diagnostic — whether ground *should* matter here; the knob (if a map reads near
    50) is its geometry (`content/maps/`), e.g. chokepoints that make holding hexes decisive.
+   _Superseded (default deck, pre-WOA-030): 93% overall (hard-vs-hard & normal, same date)._
 6. **Tie-rule share.**
    Goal: the map doesn't funnel battles into equal-field-score stand-offs.
-   Evidence: "tie-goes-to-2nd decided" line, per map via name filter. Baseline 9% overall
-   (**hard-vs-hard, n=60/map, Core Six, 2026-07-16**; normal 10%, n=40/map, same date).
+   Evidence: "tie-goes-to-2nd decided" line, per map via name filter. Baseline 11% overall
+   (**hard-vs-hard, n=60/map, Core Six, 2026-07-16, deck `cavsplit17-raid-paid` — ADOPTED WOA-030,
+   2026-07-18**; normal 12%, n=40/map, same date/deck).
    Score: at or below the game-level target (≤15%, tune me); a map far above the fleet average
    is producing symmetric grinds — look at its terrain and HQ spacing.
    Lever: terrain + HQ spacing (`content/maps/`) — symmetric grinds come from too-distant HQs and
    defensible terrain on both sides.
+   _Superseded (default deck, pre-WOA-030, same setup): hard 9%; normal 10%._
 
 ### "Best map" — the ideal-range score (SOT, WOA-007)
 
@@ -440,35 +479,38 @@ These are the additional regression guards:
    Goal: the AIs (and by proxy the incentive structure) fight rather than shuffle.
    Evidence: the Behaviour line — attacks & swaps per battle, % of units ever fielded; per-side
    reserve-held-at-end (WOA-016, [[data-and-reports]]) for hoarding. Baseline (**normal, n=40/map =
-   240, Core Six, 2026-07-16**): 6.8 attacks, 4.3 swaps, 86% fielded; reserves at end red 14% / blue
-   14%. Hard-vs-hard reading (**n=60/map = 360, Core Six, same date**): 6.3 attacks, 5.4 swaps, 90%
-   fielded; reserves red 10% / blue 9%.
+   240, Core Six, 2026-07-16, deck `cavsplit17-raid-paid` — ADOPTED WOA-030, 2026-07-18**): 7.2
+   attacks, 4.2 swaps, 90% fielded; reserves at end red 10% / blue 10%. Hard-vs-hard reading
+   (**n=60/map = 360, Core Six, same date, same deck**): 6.7 attacks, 5.8 swaps, 94% fielded;
+   reserves red 6% / blue 6%.
    Score: readings near baseline = good; a sharp move (~±30%+) in any of them after a change is a
    regression **even if win rates look fine** (tune me). Low Atk + high Swp is the round-6 swap-dance
    signature.
    Lever: the AI anti-degeneracy weights — `noopPenalty` / `antiShuffle` / the attrition projection
    in `game/engine/05-ai.js` (don't zero them in a preset without re-measuring these lines) + the
    active deck's attack supply (`content/decks/`).
-   _Superseded: pre-WOA-020 (7-map) 1.1 figure 6.1 attacks / 5.7 swaps / 88% fielded — **⚠ flagged
+   _Superseded (default deck, pre-WOA-030, Core Six, 2026-07-16): normal 6.8 attacks / 4.3 swaps /
+   86% fielded, reserves red 14% / blue 14%; hard 6.3 attacks / 5.4 swaps / 90% fielded, reserves red
+   10% / blue 9%. Pre-WOA-020 (7-map) 1.1 figure 6.1 attacks / 5.7 swaps / 88% fielded — **⚠ flagged
    for Bill: that number was actually produced by a 12-map hard-vs-hard sweep despite its "normal"
-   label** (not corrected retroactively; the normal-AI figure above is the first genuine normal read
-   against this baseline's documented setup). Pre-1.1 V0 signature: attacks↔swaps inverted from the
-   ~5/~7 reading._
+   label**. Pre-1.1 V0 signature: attacks↔swaps inverted from the ~5/~7 reading._
 2. **Pacing.**
-   Goal: battles resolve before the deck does the resolving; the 16-card deck caps a battle at
-   32 plays.
-   Evidence: Turns column, read with HQ%. No numeric baseline recorded — establish one (dated,
-   setup-labelled) on the next full run.
-   Score: good = comfortably under the 32-play cap with a live HQ threat; failing = battles
+   Goal: battles resolve before the deck does the resolving; the **ADOPTED 17-card deck** (WOA-030,
+   2026-07-18) caps a battle at **34 plays** (16-card `default.js`, superseded, capped at 32).
+   Evidence: Turns column, read with HQ%. Baseline (**hard-vs-hard, n=60/map = 360, Core Six,
+   2026-07-16, deck `cavsplit17-raid-paid`**): avg 31.9 turns. Normal-vs-normal, same date/deck,
+   n=40/map = 240: avg 30.2 turns.
+   Score: good = comfortably under the 34-play cap with a live HQ threat; failing = battles
    routinely run to deck-out on maps that also read attrition-only (tune me).
    Lever: deck size (`content/decks/`) sets the cap; per-map HQ threat (`content/maps/`) sets
    whether battles end before it.
 3. **Deck as attrition clock.**
-   Goal: total card count (sum of `count` in the active deck, `game/content/decks/default.js`) keeps
-   the attrition endgame meaningful — changing deck size moves every pacing and tie-rule number above.
+   Goal: total card count (sum of `count` in the active deck — `content/decks/cavsplit17-raid-paid.js`,
+   17 cards as of WOA-030, 2026-07-18; `default.js` superseded at 16) keeps the attrition endgame
+   meaningful — changing deck size moves every pacing and tie-rule number above.
    Evidence: qualitative — playtest judgment, then re-run the full report after any count change.
    Score: good = attrition endings feel like the climax of positioning, not a timeout (tune me).
-   Lever: total card count in the active deck (`content/decks/default.js`) — the master dial behind
+   Lever: total card count in the active deck (`content/decks/`) — the master dial behind
    pacing (§2) and the tie-rule north star.
 
 ## How to run the numbers

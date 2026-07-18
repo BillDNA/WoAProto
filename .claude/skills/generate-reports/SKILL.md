@@ -33,7 +33,13 @@ sync).
    the ids. Capture the `SAVED:` path. `BEST_MAP:` still prints — informational
    (matches no longer pin to it).
 
-2. **One fire-and-forget LLM match** — first-to-3, haiku low both sides,
+2. **Skill premium, on a deck/AI change only** (WOA-030) — `node game/balance.js matchup 96
+   [--mapset <id>]` (all 4 pairings) or `matchup 96 <a> <b>` per pairing (chunked, ~1-5 min
+   each) against the ACTIVE deck. Record the 4 %s in the rubric's north star 1 row (adjacent
+   ≥60%, two-tier ≥75%, sanity ~50%); skip on report sets that don't touch card/deck/AI
+   balance.
+
+3. **One fire-and-forget LLM match** — first-to-3, haiku low both sides,
    **fixed seed 1001** (never change it — it is the apples-to-apples anchor across
    content iterations). Match mode draws each battle's map from the mapset pool
    (engine-shuffled by the seed):
@@ -55,7 +61,7 @@ sync).
    one match's signal is genuinely too thin — v2's default is the single seed-1001
    match (B.5.1.2).
 
-3. **Report back** — the balance report path, plus "1 match running in the
+4. **Report back** — the balance report path, plus "1 match running in the
    background — the transcript will land at `logs/reports/battle/<version>/…-match.md`."
    Offer to run **review-reports** for the graded analysis once it finishes.
 
@@ -63,8 +69,8 @@ sync).
 
 This skill is step 1 of the balance loop. The full v2 order (B.5.4) is:
 
-1. **Gather data** — the sweep + one feels-match above (Steps 1–2). One iteration = one
-   content slot measured.
+1. **Gather data** — the sweep + one feels-match above (Steps 1 and 3; Step 2 skill-premium
+   is conditional, only on a deck/AI change). One iteration = one content slot measured.
 2. **Guide the generate skills with the findings** — hand `review-reports`' read to
    `create-card` (the 3-for-3 batch: current deck in, 3 replacement slots out) and
    `create-map` (fill a *measured* gap). The findings steer what gets generated, not a

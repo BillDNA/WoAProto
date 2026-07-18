@@ -2,7 +2,7 @@
 {
  "id": "default",
  "name": "Default",
- "active": true,
+ "active": false,
  "cards": [
   {
    "id": "deploy_inf_start",

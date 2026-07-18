@@ -21,24 +21,6 @@ temperature — with aggregates byte-identical to pre-sprint (golden diff holds 
 
 ## Tickets
 
-### WOA-030 — Execute the 17-card adopt (`D.D:seventeen-card-adopt`)
-**Area:** content+tests · **Status:** Todo · **Type:** sonnet · **Docs:** grading-rubrics, code-architecture
-
-Bill adopted `cavsplit17-raid-paid` (2026-07-16, per the WOA-029 T2 probe). The first flip attempt
-found **card-pinned tests coupled to the active deck** (`game/test.js:543` resolves Ordered Withdraw
-from the active deck; the adopted deck cuts that card + Airdrop → suite crashes at 136/237), so the
-adopt ships as one atomic ticket: decouple, flip, record, re-baseline. **Runs first in this sprint**
-so every later golden diff and baseline is taken on the adopted deck.
-
-**Acceptance criteria:**
-- [ ] Card-behavior tests decoupled from the active deck (pin their card defs from the full content catalog or an explicit fixture deck — a cut card must never crash the suite); suite green with EITHER deck active
-- [ ] `cavsplit17-raid-paid` flipped `active:true` (default → false); suite green at the new count
-- [ ] Guardrail recorded atomically per the policy's re-measure-to-ship clause: rubric §Temperature (ceiling 17 for this deck, ADOPTED note) + `Goals.md` physical-limitations annotation (flag to Bill — his file) + play-cap references 32→34 where deck-size-derived
-- [ ] Rubric + CLAUDE.md baselines re-stamped for the adopted deck — transcribe from the already-saved candidate sweeps (`2026-07-16-1514/1515-...-deck-cavsplit17-raid-paid.md`, no new sims needed for hard/normal); old default-deck figures marked superseded
-- [ ] Skill premium (north star 1) re-measured under the adopted deck (`matchup 96` recipe) — the only baseline the saved sweeps don't cover; add a matchup leg to the `generate-reports` standard set while there (WOA-028 shakedown gap)
-- [ ] n≥100 normal-tier confirmation run for the 0-kill drift (1→4%) — watch item, record the reading either way
-- [ ] User confirms done
-
 ### WOA-031 — Per-play trace capture in the engine (P1.1)
 **Area:** engine · **Status:** Todo · **Type:** sonnet · **Depends on:** WOA-030 · **Docs:** specs/design_handoff_metrics_dashboard, code-architecture
 
@@ -117,6 +99,8 @@ the design canvas). All numbers from woa.db via WOA-033's folds; charts in the e
 _None._
 
 ## Finished
+
+- **WOA-030 — Execute the 17-card adopt (`D.D:seventeen-card-adopt`)** (2026-07-18) — 17-card adopt executed: tests deck-decoupled (fixtureCard), cavsplit17-raid-paid active, rubric+CLAUDE.md baselines re-stamped (superseded chains kept), skill premium re-measured (n>e 69 / h>e 76 / h>n 56 / sanity 46, all n=576), 0-kill confirms 2% n=100/map; matchup leg added to generate-reports; manifest.js regenerated (was stale, -5 decks); browser applied-deck override found → WOA-036 (Bill decides); Goals.md annotation held for Bill. cost: 298,190 tok / 48.4 min / 182 calls
 
 _None._
 

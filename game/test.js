@@ -14,6 +14,26 @@ function testBattle(seed) {
   return E.newBattle(m);
 }
 
+// Card-behaviour fixtures (WOA-030): pin a card's DEF from the full content
+// catalog -- every deck loaded from content/decks/ (node's require() loop in
+// engine/01-core.js pushes them all into the global WOA_CONTENT regardless of
+// which one is flagged active) -- not just the active deck's resolved card
+// list (E.CARDS / E.CARD_BY_ID). A deck that cuts the card (e.g. the 17-card
+// adopt cuts Ordered Withdraw + Airdrop) must never crash a test that only
+// wants to exercise the card's STEP MECHANICS. Registers into E.CARD_BY_ID
+// (same object I.playCard/I.stepOptions read) without touching E.CARDS, so
+// the fixture never leaks into an actual shuffled deck.
+var ALL_DECK_CARDS = [].concat.apply([], ((typeof global !== 'undefined' && global.WOA_CONTENT && global.WOA_CONTENT.decks) || [])
+  .map(function (d) { return d.cards || []; }));
+function fixtureCard(id) {
+  if (!E.CARD_BY_ID[id]) {
+    var def = ALL_DECK_CARDS.filter(function (c) { return c.id === id; })[0];
+    if (!def) throw new Error('fixtureCard: "' + id + '" not found in any loaded deck');
+    E.CARD_BY_ID[id] = def;
+  }
+  return E.CARD_BY_ID[id];
+}
+
 console.log('== shapes (data-driven from maps.js) ==');
 (function () {
   var names = Object.keys(E.SHAPES);
@@ -212,17 +232,25 @@ console.log('== HexClarificationDiagram A/B/C table ==');
   });
 })();
 
-console.log('== airdrop never in the opening hand ==');
+console.log('== noOpener cards never in the opening hand (e.g. Airdrop) ==');
 (function () {
+  // WOA-030: derive from the ACTIVE deck rather than hardcoding a card id/deck
+  // size -- a deck that cuts every noOpener card (the 17-card adopt cuts
+  // Airdrop) still exercises the "nothing lost" bookkeeping and passes clean.
+  var noOpenerIds = E.CARDS.filter(function (c) { return c.noOpener; }).map(function (c) { return c.id; });
+  var deckTotal = E.CARDS.reduce(function (s, c) { return s + c.count; }, 0);
   var bad = 0;
   for (var seed = 200; seed < 240; seed++) {
     var m = E.newMatch({ seed: seed, firstPlayer: 'red' });
     var st = E.newBattle(m);
-    if (st.hands.red.indexOf('airdrop') >= 0) bad++;
-    if (st.decks.red.indexOf('airdrop') < 0) bad++;            // returned to the deck
-    if (st.decks.red.length + st.hands.red.length !== 16) bad++; // nothing lost
+    noOpenerIds.forEach(function (id) {
+      if (st.hands.red.indexOf(id) >= 0) bad++;
+      if (st.decks.red.indexOf(id) < 0) bad++;                  // returned to the deck
+    });
+    if (st.decks.red.length + st.hands.red.length !== deckTotal) bad++; // nothing lost
   }
-  ok(bad === 0, 'airdrop excluded from 40 opening hands and returned to the deck (' + bad + ' problems)');
+  ok(bad === 0, noOpenerIds.length + ' noOpener card(s) (' + noOpenerIds.join(', ') +
+    ') excluded from 40 opening hands and returned to the deck (' + bad + ' problems)');
 })();
 
 console.log('== house rule: play any card as basic attack/reposition ==');
@@ -539,7 +567,7 @@ console.log('== Field Marshal AI & battle sim ==');
 
 console.log('== noAdvance attacks (Ordered Withdraw holds its ground) ==');
 (function () {
-  var card = E.CARD_BY_ID.ordered_withdraw;
+  var card = fixtureCard('ordered_withdraw'); // WOA-030: fixture, not the active deck
   ok(card.steps[0].tieSpare === true && card.steps[0].noAdvance === true,
     'Ordered Withdraw carries tieSpare + noAdvance');
   // outright victory: cavalry (atk 3) vs lone infantry (def 1) — defender dies, attacker stays put
@@ -572,6 +600,7 @@ console.log('== noAdvance attacks (Ordered Withdraw holds its ground) ==');
 
 console.log('== rules 1.1 (S1): a trench lets the defender survive a combat tie ==');
 (function () {
+  fixtureCard('ordered_withdraw'); // WOA-030: fixture, not the active deck (used in (b) below)
   // dirs of a trench covering the attacked border of `defHex` (the side facing
   // `fromHex`), plus its clockwise neighbour so it's a legal 2-edge orientation.
   function coverDir(defHex, fromHex) { var d = E.dirBetween(defHex, fromHex); return [d, (d + 1) % 6]; }

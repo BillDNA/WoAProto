@@ -58,16 +58,21 @@ Start in [[code-architecture]] (`dynamic-scrum/docs/`) — it is the orientation
 
 The June-2026 feedback rounds, V0, and V1 all shipped pre-board; the terse log lives in
 [[shipped-history]] (`dynamic-scrum/history/`), including the **baselines to protect** — now the
-**rules-1.1 / Core Six** figures (measured 2026-07-16, hard-vs-hard, n=60/map, `core7`'s 6-map pool
-post-WOA-020: first mover 45%, Red 51%, tie-goes-to-2nd **9%**, **6.3 attacks / 5.4 swaps** per
-battle, zero-kill 1%, Drag 2.1, Swings 2.7 — sharp moves in these = regression even if win rates look
-fine). The prior rules-1.1 row (first mover 48%, Red 50%, tie 10%, 6.1/5.7 atk/swp, Drag 2.3, Swings
-2.8) was measured on the pre-WOA-020 7-to-12-map pool and is **superseded**; the old V0 row (~46 /
-~52 / ~26%, 4.9 attacks / 6.5 swaps) is superseded further back — attacks and swaps inverted between
-eras, so grading fresh runs against either flags healthy decks as broken. Skill premium is now
-verified under 1.1 / Core Six (`matchup 96`, n=96/map=576/pairing, 2026-07-16): normal>easy 69%,
-hard>easy 73%, hard>normal 56% (thin, within noise), sanity 50%. Post-adopt work is tracked on the
-board.
+**rules-1.1 / Core Six / `cavsplit17-raid-paid`** figures (17-card deck **ADOPTED** 2026-07-18,
+WOA-030, `D.D:seventeen-card-adopt`; measured 2026-07-16, hard-vs-hard, n=60/map, `core7`'s 6-map
+pool post-WOA-020: first mover 47%, Red 49%, tie-goes-to-2nd **11%**, **6.7 attacks / 5.8 swaps**
+per battle, zero-kill 2%, Drag 2.0, Swings 3.5 — sharp moves in these = regression even if win rates
+look fine). The prior rules-1.1 / Core Six row on the superseded **`default` 16-card deck** (first
+mover 45%, Red 51%, tie 9%, 6.3/5.4 atk/swp, zero-kill 1%, Drag 2.1, Swings 2.7, same setup) is
+**superseded**; the row before that (first mover 48%, Red 50%, tie 10%, 6.1/5.7 atk/swp, Drag 2.3,
+Swings 2.8) was measured on the pre-WOA-020 7-to-12-map pool and is superseded further back; the old
+V0 row (~46 / ~52 / ~26%, 4.9 attacks / 6.5 swaps) is superseded further back still — attacks and
+swaps inverted between eras, so grading fresh runs against any of them flags a healthy deck as
+broken. Skill premium is now verified under 1.1 / Core Six / `cavsplit17-raid-paid` (`matchup 96`,
+n=96/map=576/pairing, 2026-07-18): normal>easy 69%, hard>easy 76%, hard>normal 56% (thin, within
+noise), sanity 46% (thin, within noise) (**superseded, default 16-card deck, 2026-07-16**:
+normal>easy 69%, hard>easy 73%, hard>normal 56% — thin, within noise — sanity 50%). Post-adopt work
+is tracked on the board.
 
 **For Bill to decide** (filed, not acted on): the Steam leverage draft ([[steam-roadmap]]).
 *(The weight-tuner suggestions are closed — WOA-012 verified and **rejected** the sweep under 1.1;
