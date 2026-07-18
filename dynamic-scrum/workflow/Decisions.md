@@ -100,6 +100,19 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   close-sprint wrap. The n≥100 normal 0-kill confirmation rides along as a watch item, not a gate —
   Bill adopted without it.
 
+- **`D.D:metrics-v2-phased-adopt`** (2026-07-18, M2 planning) — the metrics-v2 + dashboard spec
+  (`dynamic-scrum/planning/specs/design_handoff_metrics_dashboard/`, agreed with Bill in the Claude
+  design session 2026-07-18; graduated the `metric-bands-by-temperature` parking-lot note) ships
+  **phased with WOA-030 first**: the 17-card adopt executes before any capture, so every golden diff
+  and baseline in the sprint is taken on the adopted deck — attack/swap *shares* are deck-size-proof,
+  raw counts are not, and re-measuring Core Six on the old deck would be thrown away at the rules-1.2
+  re-baseline anyway. **Phase 1 (this sprint, WOA-031…035) is golden-diff-safe** — trace capture,
+  runs table, bands-as-data + folds, view-only shell, Overview — no printed number changes; **the
+  metric redefinitions (rates not counts, win-path conditioning) land only in Phase 2's atomic
+  rules-1.2 bump** (per `D.D:rules-version-on-number-change`), held for the next sprint. **WOA-006 is
+  closed as absorbed** — saved-run loading ships as the runs table + run pickers (WOA-032/034), a
+  stronger shape than parsing `accumulated.json`.
+
 ## Architecture
 
 - **`D.A:units-content-kind`** (2026-07-10, WOA-011) — unit composition & values are a content kind

@@ -6,6 +6,3 @@ Strike through (~~like this~~) when addressed; the next `session-start` clears s
 > Ephemeral input, not a durable citation: when an idea is promoted into a ticket or `Decisions`, its
 > *substance* is captured there so the artifact stands alone — a `B.N` pointer is never load-bearing
 > (it's cleared once struck).
-
-1. 
-

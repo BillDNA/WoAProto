@@ -6,23 +6,7 @@ sprint-planning. Same ticket format as `Sprint.md` (the `ticket-block` template;
 
 ---
 
-### WOA-030 — Execute the 17-card adopt (`D.D:seventeen-card-adopt`)
-**Area:** content+tests · **Status:** Todo · **Type:** sonnet · **Docs:** grading-rubrics, code-architecture
-
-Bill adopted `cavsplit17-raid-paid` (2026-07-16, per the WOA-029 T2 probe). The first flip attempt
-found **card-pinned tests coupled to the active deck** (`game/test.js:543` resolves Ordered Withdraw
-from the active deck; the adopted deck cuts that card + Airdrop → suite crashes at 136/237), so the
-adopt ships as one atomic ticket: decouple, flip, record, re-baseline.
-
-**Acceptance criteria:**
-- [ ] Card-behavior tests decoupled from the active deck (pin their card defs from the full content catalog or an explicit fixture deck — a cut card must never crash the suite); suite green with EITHER deck active
-- [ ] `cavsplit17-raid-paid` flipped `active:true` (default → false); suite green at the new count
-- [ ] Guardrail recorded atomically per the policy's re-measure-to-ship clause: rubric §Temperature (ceiling 17 for this deck, ADOPTED note) + `Goals.md` physical-limitations annotation (flag to Bill — his file) + play-cap references 32→34 where deck-size-derived
-- [ ] Rubric + CLAUDE.md baselines re-stamped for the adopted deck — transcribe from the already-saved candidate sweeps (`2026-07-16-1514/1515-...-deck-cavsplit17-raid-paid.md`, no new sims needed for hard/normal); old default-deck figures marked superseded
-- [ ] Skill premium (north star 1) re-measured under the adopted deck (`matchup 96` recipe) — the only baseline the saved sweeps don't cover; add a matchup leg to the `generate-reports` standard set while there (WOA-028 shakedown gap)
-- [ ] n≥100 normal-tier confirmation run for the 0-kill drift (1→4%) — watch item, record the reading either way
-- [ ] User confirms done
-
+<!-- WOA-030 pulled into Sprint M2 · Metrics v2 + dashboard, phase 1 (2026-07-18). -->
 <!-- WOA-025 pulled into Sprint M1.1 (2026-07-16). -->
 <!-- M1 follow-ons deferred from the "Fix the bent ruler" sprint (balance-loop-v2 final report §5). -->
 
@@ -84,17 +68,9 @@ corrupt its own board state.
 - [ ] Reported to canonical DynamicScrum (send-report), or root-caused if the parse bug turns out to be WoA-side board formatting
 - [ ] User confirms done
 
-### WOA-006 — Load saved balance reports into the Dashboard Charts tab
-**Area:** game-ui · **Status:** Todo
-
-Dashboard→logs data flow is one-way today: the Balance Dashboard only charts its own live in-browser
-sims. Let it load previous CLI runs (`logs/reports/balance/<version>/` — `accumulated.json` and/or
-saved reports) so `dev/balance-report.js` terminal runs get the Charts tab too. (S2 dogfood friction;
-returned to Backlog at S2 close, 2026-07-10.)
-
-**Acceptance criteria:**
-- [ ] Dashboard can display data from a prior CLI balance run (at minimum the accumulator)
-- [ ] User confirms done
+<!-- WOA-006 closed as absorbed (2026-07-18): superseded by the metrics-v2 dashboard spec — saved-run
+     loading ships as WOA-032 (runs table in woa.db) + WOA-034 (run pickers reading it), a stronger
+     shape than parsing accumulated.json. -->
 
 ### WOA-002 — Placeholder audio pass
 **Area:** feel · **Status:** Todo · **Type:** sonnet · **Docs:** code-architecture

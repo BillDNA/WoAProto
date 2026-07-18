@@ -3,34 +3,33 @@
 Claude's compact snapshot of where things stand, so "take a look at where we are" is fast at session
 start. **Overwrite** this each session — it is state, not a log.
 
-## Where things stand (2026-07-16 — M1.1 CLOSED; 17-card ADOPTED, execution pending)
+## Where things stand (2026-07-18 — Sprint M2 OPENED, nothing worked yet)
 
-- **M1.1 · Measuring "good" is CLOSED** (ran autonomously 5/5 zero-bounce, Bill reviewed same day;
-  archive: `dynamic-scrum/history/finished/M1.1-measuring-good.md`). The ruler is current, shaped,
-  lever-naming; review-reports grades temperature-stated; the search-side temperature policy is live
-  in the rubric (+ Bill's quick-reference table, report line → band).
-- **Bill ADOPTED `cavsplit17-raid-paid`** (`D.D:seventeen-card-adopt`) — but the first flip attempt
-  crashed the suite (`test.js:543` resolves the cut Ordered Withdraw from the active deck), so the
-  flip was reverted (trunk green, default still active) and the adopt executes as **WOA-030**
-  (Backlog, next pull): decouple card-pinned tests → flip → atomic guardrail/baseline records →
-  matchup re-measure (+ generate-reports matchup leg) → n≥100 0-kill confirmation (watch item).
+- **Sprint M2 · Metrics v2 + dashboard, phase 1 is planned and committed** (6 tickets, all Todo):
+  **WOA-030** (17-card adopt — runs FIRST so all baselines/diffs land on the adopted deck) →
+  WOA-031 trace capture → WOA-032 db `runs` table → WOA-033 bands-as-data + folds (opus) →
+  WOA-034 view-only shell → WOA-035 Overview screen. Shape decision: `D.D:metrics-v2-phased-adopt`.
+- **Source spec:** `dynamic-scrum/planning/specs/design_handoff_metrics_dashboard/` (SPEC.md = metric
+  SOT, README.md = screens/design SOT, `Metrics and Charts.dc.html` = visual reference). Phase 1 is
+  golden-diff-safe; the rules-1.2 re-baseline + drill-down/cards/units (P2.1–P3.1 in its TICKETS.md)
+  are the **next** sprint.
+- Board housekeeping done at plan time: WOA-006 closed-as-absorbed (→ WOA-032/034);
+  `metric-bands-by-temperature` parking-lot note graduated + deleted; Roadmap M2 rewritten.
 
 ## Open threads
 
-- **Alignment pass DUE** — M1.1's close flipped a Roadmap milestone Closed (flagged, not run;
-  `D.D:alignment-pass-on-request`). Also still offered: the combined M1+M1.1 canonical refine pass
-  (signal preserved in 5 observation drops in canonical inbound + both run reports) and a
-  `rig-notes.md` scaffold for WoA sim lore (--parallel timings, --deck selection, printed==stock pin,
-  here-string→`-F` commit recipe).
-- **Pacing baseline** unpinned in the rubric — candidate measured pre-adopt (hard 28.7t/23% HQ,
-  normal 27.4t/25%); re-measure under the adopted deck in WOA-030's sweep anyway.
+- **Alignment pass still DUE** (flagged at M1.1 close, not run; `D.D:alignment-pass-on-request`) —
+  runs on Bill's ask. Also still offered: the combined M1+M1.1 canonical refine pass.
+- **Pacing baseline** unpinned in the rubric — re-measures under the adopted deck in WOA-030's sweep.
 - Earlier carried threads: core7 roster call (restore to 7 maps?), Roadmap M1 overnight-autonomous
-  half, dashboard parity follow-ons (WOA-016 reserve tile, WOA-019 live winPct).
+  half. `rig-notes.md` stub scaffolded (committed this session) — fill-in still pending.
+- WOA-035 scope note: map-dumbbell click lands on a Maps **stub** (sets `DASH.mapFocus`); P2.2 builds
+  the real drill-down next sprint.
 
 ## Next
 
-`session-start tickets WOA-030` (or `run-ticket WOA-030`) → then M2 planning. Alignment pass /
-refine pass / rig-notes on Bill's ask.
+`session-start tickets WOA-030` (or `run-sprint` for the whole board). Alignment pass / refine pass
+on Bill's ask.
 
 ## Related
 

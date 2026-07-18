@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><style>
+body{margin:0;background:linear-gradient(160deg,#e8dcc0 0%,#dccfae 55%,#cfc09a 100%);min-height:100vh;font-family:Georgia,'Times New Roman',serif;color:#3a2f1d}
+a{color:#77582e}a:hover{color:#3a2f1d}
+.dv-turn{padding:40px 44px 32px;scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#3a2f1d;color:#e8dcc0;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 15px/1.2 Georgia,serif;color:#3a2f1d}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(58,47,29,.12);color:#3a2f1d;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 12px/1.3 Georgia,serif;color:#5a4c33}
+.dv-card{max-width:100%;background:#e8dcc0;border:1px solid #b9a878;border-radius:8px;box-shadow:0 2px 8px rgba(58,47,29,.18);overflow:hidden}
+.dv-opt:target .dv-oid{background:#77582e;color:#e8dcc0}
+.dv-next{margin:22px 0 0;font:italic 12.5px/1.5 Georgia,serif;color:#5a4c33}
+</style></helmet>
+<section class="dv-turn" id="t5" style="border-bottom:1px solid rgba(58,47,29,.18)">
+<div class="dv-thd"><a class="dv-tid" href="#t5">5</a><span class="dv-tname">The Cards and Units tabs</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="5a">
+<div class="dv-olabel"><a class="dv-oid" href="#5a">5a</a>Cards tab — OP watchlist, dead-card check, and when cards actually fire</div>
+<div class="dv-card" style="width:1060px">
+<div style="display:flex;gap:8px;padding:10px 18px;border-bottom:1px solid #b9a878;font-size:12.5px;align-items:center;background:rgba(255,255,255,.15)">
+<span style="border:1px solid #b9a878;border-radius:14px;padding:3px 16px;color:#3a2f1d">Overview</span>
+<span style="border:1px solid #b9a878;border-radius:14px;padding:3px 16px;color:#3a2f1d">Maps</span>
+<span style="border:1px solid #77582e;border-radius:14px;padding:3px 16px;background:#77582e;color:#e8dcc0;font-weight:bold">Cards</span>
+<span style="border:1px solid #b9a878;border-radius:14px;padding:3px 16px;color:#3a2f1d">Units</span>
+<span style="margin-left:auto;display:inline-flex;border:1px solid #b9a878;border-radius:14px;overflow:hidden;font-size:11.5px"><span style="padding:3px 12px;color:#3a2f1d">A</span><span style="padding:3px 12px;background:#77582e;color:#e8dcc0;font-weight:bold">B</span><span style="padding:3px 12px;color:#3a2f1d">A/B</span></span>
+</div>
+<div style="display:grid;grid-template-columns:1.15fr 1fr;gap:18px;padding:16px 18px 20px">
+<div>
+<div style="font-size:13px;font-weight:bold;margin-bottom:2px">Sight quadrant <span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">(the existing chart, now A/B-aware)</span></div>
+<div style="font-size:11px;font-style:italic;color:#75643f;margin-bottom:8px">x = AvgSeen (instant → hoarded) · y = 1stSight% · top-left = played on sight, every time = OP watchlist</div>
+<div style="position:relative;height:280px;background:rgba(255,255,255,.18);border:1px solid #d8caa2;border-radius:6px">
+<div style="position:absolute;left:33%;top:0;bottom:0;width:1px;background:#d8caa2"></div>
+<div style="position:absolute;top:33%;left:0;right:0;height:1px;background:#d8caa2"></div>
+<div style="position:absolute;top:6px;left:10px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9e2b25">OP watchlist</div>
+<div style="position:absolute;bottom:6px;left:10px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#75643f">situational / hoarded</div>
+<div style="position:absolute;left:10%;top:16%"><div style="width:13px;height:13px;border-radius:50%;background:#9e2b25"></div><div style="font-size:10.5px;margin-top:1px"><b>Deploy Cavalry</b> 79%</div></div>
+<div style="position:absolute;left:12%;top:28%"><div style="width:12px;height:12px;border-radius:50%;background:#9c5449"></div><div style="font-size:10.5px;margin-top:1px">Deploy Artillery 69%</div></div>
+<div style="position:absolute;left:12%;top:40%;"><div style="width:12px;height:12px;border-radius:50%;background:#9c5449"></div><div style="font-size:10.5px;margin-top:1px">Conscription 66%</div></div>
+<div style="position:absolute;left:21%;top:56%"><div style="width:11px;height:11px;border-radius:50%;background:#97753f"></div><div style="font-size:10.5px;margin-top:1px">Airdrop</div></div>
+<div style="position:absolute;left:24%;top:68%"><div style="width:11px;height:11px;border-radius:50%;background:#97753f"></div><div style="font-size:10.5px;margin-top:1px">Deploy Infantry</div></div>
+<div style="position:absolute;left:40%;top:70%"><div style="width:10px;height:10px;border-radius:50%;background:#77582e"></div><div style="font-size:10.5px;margin-top:1px">Entrench · Reckless</div></div>
+<div style="position:absolute;left:34%;top:84%"><div style="width:10px;height:10px;border-radius:50%;background:#77582e"></div><div style="font-size:10.5px;margin-top:1px">Naval · Careful · Forced M.</div></div>
+<div style="position:absolute;left:56%;top:76%"><div style="width:10px;height:10px;border-radius:50%;background:#77582e"></div><div style="font-size:10.5px;margin-top:1px">Ordered W.</div></div>
+<div style="position:absolute;left:64%;top:86%"><div style="width:10px;height:10px;border-radius:50%;background:#5a4c33"></div><div style="font-size:10.5px;margin-top:1px">Mass Assault</div></div>
+<div style="position:absolute;right:8px;top:72%;text-align:right"><div style="width:10px;height:10px;border-radius:50%;background:#5a4c33;margin-left:auto"></div><div style="font-size:10.5px;margin-top:1px">Attack +1</div></div>
+</div>
+<div style="font-size:10.5px;font-style:italic;color:#75643f;margin-top:6px">A/B mode: ghost dot + arrow per card — a card sprinting toward the top-left after a buff is the OP early-warning</div>
+</div>
+<div>
+<div style="font-size:13px;font-weight:bold;margin-bottom:2px">Dead-card check <span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">Simple% A→B (Noop% flagged inline)</span></div>
+<div style="display:grid;grid-template-columns:92px 1fr 62px;gap:7px 10px;align-items:center;font-size:11px;margin-top:8px">
+<div style="text-align:right;font-weight:bold;color:#9e2b25">Mass Assault ↗</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:6px;height:2px;left:60%;width:16%;background:#9c5449"></div><div style="position:absolute;top:1px;width:9px;height:9px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:calc(60% - 6px)"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;background:#9e2b25;left:calc(76% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#9e2b25;font-weight:bold">30→38</div>
+<div style="text-align:right">Ordered Withdraw</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:1px;width:9px;height:9px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:calc(60% - 6px)"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;background:#3a2f1d;left:calc(58% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#5a4c33">30→29</div>
+<div style="text-align:right">Attack +1</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:6px;height:2px;left:48%;width:4%;background:#97753f"></div><div style="position:absolute;top:1px;width:9px;height:9px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:calc(52% - 6px)"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;background:#77582e;left:calc(48% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#5a4c33">26→24</div>
+<div style="text-align:right">Forced March</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:1px;width:9px;height:9px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:calc(6% - 6px)"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;background:#3a2f1d;left:calc(8% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#5a4c33">3→4</div>
+</div>
+<div style="font-size:10.5px;font-style:italic;color:#75643f;margin:6px 0 0">sorted by B · Noop% &gt; 2 would stamp a red ⚠ on the row (none this run) · a Simple% climb = the printed action stopped being worth it</div>
+<div style="font-size:13px;font-weight:bold;margin:16px 0 2px">When cards fire <span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">(NEW — from the trace: play-turn quartiles, run B)</span></div>
+<div style="display:grid;grid-template-columns:92px 1fr;gap:7px 10px;align-items:center;font-size:11px;margin-top:6px">
+<div style="text-align:right">Deploy Cavalry</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:1px;background:#d8caa2"></div><div style="position:absolute;top:4px;height:6px;left:2%;width:14%;background:#b6925a;border-radius:3px"></div><div style="position:absolute;top:1px;width:3px;height:12px;background:#3a2f1d;left:7%"></div></div>
+<div style="text-align:right">Conscription</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:1px;background:#d8caa2"></div><div style="position:absolute;top:4px;height:6px;left:4%;width:20%;background:#b6925a;border-radius:3px"></div><div style="position:absolute;top:1px;width:3px;height:12px;background:#3a2f1d;left:12%"></div></div>
+<div style="text-align:right">Entrench</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:1px;background:#d8caa2"></div><div style="position:absolute;top:4px;height:6px;left:18%;width:38%;background:#97753f;border-radius:3px"></div><div style="position:absolute;top:1px;width:3px;height:12px;background:#3a2f1d;left:34%"></div></div>
+<div style="text-align:right">Naval Barrage</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:1px;background:#d8caa2"></div><div style="position:absolute;top:4px;height:6px;left:38%;width:34%;background:#77582e;border-radius:3px"></div><div style="position:absolute;top:1px;width:3px;height:12px;background:#3a2f1d;left:52%"></div></div>
+<div style="text-align:right;font-weight:bold">Mass Assault</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:1px;background:#d8caa2"></div><div style="position:absolute;top:4px;height:6px;left:58%;width:36%;background:#59421f;border-radius:3px"></div><div style="position:absolute;top:1px;width:3px;height:12px;background:#3a2f1d;left:78%"></div></div>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:10px;color:#75643f;margin-top:4px;font-style:italic"><span style="margin-left:102px">turn 1</span><span>battle end</span></div>
+<div style="font-size:10.5px;font-style:italic;color:#75643f;margin-top:6px">bar = middle 50% of plays, tick = median · pairs with AvgSeen: hoarded-AND-late (Mass Assault) = a card the hand carries all game — cost or timing is off</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="5b">
+<div class="dv-olabel"><a class="dv-oid" href="#5b">5b</a>Units tab — role map + the numbers behind each role</div>
+<div class="dv-card" style="width:1060px">
+<div style="display:flex;gap:8px;padding:10px 18px;border-bottom:1px solid #b9a878;font-size:12.5px;align-items:center;background:rgba(255,255,255,.15)">
+<span style="border:1px solid #b9a878;border-radius:14px;padding:3px 16px;color:#3a2f1d">Overview</span>
+<span style="border:1px solid #b9a878;border-radius:14px;padding:3px 16px;color:#3a2f1d">Maps</span>
+<span style="border:1px solid #b9a878;border-radius:14px;padding:3px 16px;color:#3a2f1d">Cards</span>
+<span style="border:1px solid #77582e;border-radius:14px;padding:3px 16px;background:#77582e;color:#e8dcc0;font-weight:bold">Units</span>
+<span style="margin-left:auto;display:inline-flex;border:1px solid #b9a878;border-radius:14px;overflow:hidden;font-size:11.5px"><span style="padding:3px 12px;color:#3a2f1d">A</span><span style="padding:3px 12px;color:#3a2f1d">B</span><span style="padding:3px 12px;background:#77582e;color:#e8dcc0;font-weight:bold">A/B</span></span>
+</div>
+<div style="display:grid;grid-template-columns:1.15fr 1fr;gap:18px;padding:16px 18px 20px">
+<div>
+<div style="font-size:13px;font-weight:bold;margin-bottom:2px">Role map <span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">(<a class="dv-oid" href="#2c">2c</a> — A/B mode: ghost + arrow)</span></div>
+<div style="position:relative;height:280px;background:rgba(255,255,255,.18);border:1px solid #d8caa2;border-radius:6px;margin-top:8px">
+<div style="position:absolute;top:50%;left:0;right:0;height:1px;background:#b9a878"></div>
+<div style="position:absolute;top:8px;left:0;right:0;text-align:center;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#75643f">Leading the charge</div>
+<div style="position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#75643f">Supporting role</div>
+<div style="position:absolute;left:23%;top:32%;width:56px;border-top:2px dashed #9e2b25;transform:rotate(-32deg)"></div>
+<div style="position:absolute;left:18%;top:38%"><div style="width:22px;height:22px;border-radius:50%;border:2px dashed #9c5449;background:transparent"></div></div>
+<div style="position:absolute;left:30%;top:22%"><div style="width:26px;height:26px;border-radius:50%;background:#9c5449"></div><div style="font-size:11px;margin-top:2px"><b>Cavalry</b> <span style="color:#9e2b25">↗ chargier on B</span></div></div>
+<div style="position:absolute;left:62%;top:64%"><div style="width:24px;height:24px;border-radius:50%;background:#97753f"></div><div style="font-size:11px;margin-top:2px"><b>Artillery</b> <span style="color:#75643f">steady</span></div></div>
+<div style="position:absolute;left:28%;top:60%"><div style="width:30px;height:30px;border-radius:50%;background:#54708e"></div><div style="font-size:11px;margin-top:2px"><b>Infantry</b> <span style="color:#75643f">steady</span></div></div>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:10.5px;color:#75643f;margin-top:6px;font-style:italic"><span>← deploys early</span><span>deploys late →</span></div>
+</div>
+<div>
+<div style="font-size:13px;font-weight:bold;margin-bottom:8px">Breakthrough point <span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">attacks absorbed / battle · A→B</span></div>
+<div style="display:grid;grid-template-columns:64px 1fr 62px;gap:7px 10px;align-items:center;font-size:11px">
+<div style="text-align:right"><b>Infantry</b></div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:1px;width:9px;height:9px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:calc(72% - 6px)"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;background:#3a2f1d;left:calc(75% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#5a4c33">2.9→3.0</div>
+<div style="text-align:right">Artillery</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:6px;height:2px;left:33%;width:12%;background:#9c5449"></div><div style="position:absolute;top:1px;width:9px;height:9px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:calc(45% - 6px)"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;background:#9e2b25;left:calc(33% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#9e2b25">1.8→1.3</div>
+<div style="text-align:right">Cavalry</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:1px;width:9px;height:9px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:calc(22% - 6px)"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;background:#3a2f1d;left:calc(24% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#5a4c33">0.9→1.0</div>
+</div>
+<div style="font-size:13px;font-weight:bold;margin:16px 0 8px">Lifespan <span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">(NEW — median turns alive after deploy)</span></div>
+<div style="display:grid;grid-template-columns:64px 1fr 62px;gap:7px 10px;align-items:center;font-size:11px">
+<div style="text-align:right">Infantry</div><div style="height:10px;background:#ded0ab;border-radius:3px"><div style="height:10px;width:78%;background:#54708e;border-radius:3px"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#5a4c33">14.2 t</div>
+<div style="text-align:right">Artillery</div><div style="height:10px;background:#ded0ab;border-radius:3px"><div style="height:10px;width:56%;background:#97753f;border-radius:3px"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#5a4c33">10.1 t</div>
+<div style="text-align:right;font-weight:bold;color:#9e2b25">Cavalry ↘</div><div style="height:10px;background:#ded0ab;border-radius:3px"><div style="height:10px;width:24%;background:#9e2b25;border-radius:3px"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#9e2b25;font-weight:bold">4.3 t</div>
+</div>
+<div style="font-size:13px;font-weight:bold;margin:16px 0 8px">Exchange <span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">(NEW — kills per death, 1.0 = trades even)</span></div>
+<div style="display:grid;grid-template-columns:64px 1fr 62px;gap:7px 10px;align-items:center;font-size:11px">
+<div style="text-align:right">Cavalry</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:0;bottom:0;left:50%;width:1px;background:#b9a878"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;background:#3a2f1d;left:calc(66% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#5a4c33">1.4</div>
+<div style="text-align:right">Artillery</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:0;bottom:0;left:50%;width:1px;background:#b9a878"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;background:#3a2f1d;left:calc(58% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#5a4c33">1.2</div>
+<div style="text-align:right">Infantry</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:0;bottom:0;left:50%;width:1px;background:#b9a878"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;background:#3a2f1d;left:calc(42% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#5a4c33">0.8</div>
+</div>
+<div style="margin-top:14px;padding:9px 11px;background:rgba(158,43,37,.08);border-left:3px solid #9e2b25;font-size:11.5px;color:#5a4c33;line-height:1.5"><b style="color:#9e2b25">The role-collapse read:</b> Cavalry drifting "chargier" on the map + lifespan collapsing to 4.3 turns = it's being spent as a suicide opener, not a breakthrough tool. That story needs all three panels — no single number says it.</div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "draft the capture tickets (trace + per-hex + per-unit fields)" · "hover/tooltip spec for every chart" · "which of these ship in v1 of the dashboard vs later"</p>
+</section>
+<section class="dv-turn" id="t4" style="border-bottom:1px solid rgba(58,47,29,.18)">
+<div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">The interface — how you navigate the charts</span></div>
+<div style="max-width:1100px;font-size:12.5px;line-height:1.55;color:#5a4c33;margin-bottom:20px">Two screens, one rule: <b style="color:#3a2f1d">land on the verdict, drill to the cause.</b> The Charts tab becomes a two-level dashboard — an Overview (triage board <a class="dv-oid" href="#1c">1c</a> + map deltas <a class="dv-oid" href="#1f">1f</a>) and a per-map drill-down (lanes <a class="dv-oid" href="#3a">3a</a>, hex lenses <a class="dv-oid" href="#2a">2a</a>, roles <a class="dv-oid" href="#2c">2c</a>). Run A/B live in the header so every view inherits the comparison; anything red is a link into its cause.</div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="4a">
+<div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a>Screen 1 · Overview — the landing view after a run</div>
+<div class="dv-card" style="width:1060px">
+<div style="display:flex;align-items:center;gap:14px;background:#2c2517;color:#e8dcc0;padding:10px 18px">
+<div style="font-size:15px;font-weight:bold;letter-spacing:.5px">Balance Dashboard</div>
+<div style="display:flex;align-items:center;gap:8px;margin-left:auto;font-size:12px">
+<span style="color:#b6925a;font-style:italic">A</span>
+<span style="border:1px solid #77582e;border-radius:6px;padding:4px 10px;background:rgba(232,220,192,.08)">baseline · core6 hard n=60 · 07-16 ▾</span>
+<span style="color:#b6925a">vs</span>
+<span style="color:#b6925a;font-style:italic">B</span>
+<span style="border:1px solid #77582e;border-radius:6px;padding:4px 10px;background:rgba(232,220,192,.08)">WOA-030 deck-17 hard n=60 ▾</span>
+<span style="font-size:11px;font-style:italic;color:#b6925a;margin-left:4px">view-only · reads saved runs from woa.db</span>
+</div>
+</div>
+<div style="display:flex;gap:8px;padding:10px 18px;border-bottom:1px solid #b9a878;font-size:12.5px;align-items:center">
+<span style="border:1px solid #77582e;border-radius:14px;padding:3px 16px;background:#77582e;color:#e8dcc0;font-weight:bold">Overview</span>
+<span style="border:1px solid #b9a878;border-radius:14px;padding:3px 16px;color:#3a2f1d">Maps</span>
+<span style="border:1px solid #b9a878;border-radius:14px;padding:3px 16px;color:#3a2f1d">Cards</span>
+<span style="border:1px solid #b9a878;border-radius:14px;padding:3px 16px;color:#3a2f1d">Units</span>
+<span style="border:1px solid #b9a878;border-radius:14px;padding:3px 16px;color:#3a2f1d">Tables</span>
+<span style="margin-left:auto;font-size:11.5px;font-style:italic;color:#75643f">temperature: <b style="color:#3a2f1d">T0 ▾</b> — bands render to match</span>
+</div>
+<div style="padding:14px 18px;display:flex;gap:10px;align-items:center;background:rgba(158,43,37,.07);border-bottom:1px solid #d8caa2">
+<span style="font-size:13px"><b style="color:#9e2b25">Verdict: 2 breaches at T0.</b> Drag (attrition) 2.1→2.8 · The Narrows balance 10.0→16.5</span>
+<span style="margin-left:auto;font-size:11.5px;color:#77582e;font-style:italic">breaches are links ↘ they open the view that explains them</span>
+</div>
+<div style="display:grid;grid-template-columns:1.15fr 1fr;gap:0;padding:16px 18px 20px">
+<div style="border-right:1px solid #d8caa2;padding-right:18px">
+<div style="font-size:13px;font-weight:bold;margin-bottom:10px">Scored metrics vs band <span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">(<a class="dv-oid" href="#1c">1c</a> — all maps folded)</span></div>
+<div style="display:grid;grid-template-columns:110px 1fr 64px;gap:8px 10px;align-items:center;font-size:11.5px">
+<div style="text-align:right">1st-mover %</div><div style="position:relative;height:16px"><div style="position:absolute;inset:6px 0;background:#ded0ab;border-radius:2px"></div><div style="position:absolute;top:6px;bottom:6px;left:41.7%;width:16.6%;background:#bfa96e"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;border:2px solid #3a2f1d;background:#e8dcc0;left:calc(41.7% - 6px)"></div><div style="position:absolute;top:4px;width:9px;height:9px;border-radius:50%;background:#3a2f1d;left:calc(45% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#5a4c33">45→47</div>
+<div style="text-align:right">Red %</div><div style="position:relative;height:16px"><div style="position:absolute;inset:6px 0;background:#ded0ab;border-radius:2px"></div><div style="position:absolute;top:6px;bottom:6px;left:41.7%;width:16.6%;background:#bfa96e"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;border:2px solid #3a2f1d;background:#e8dcc0;left:calc(51.7% - 6px)"></div><div style="position:absolute;top:4px;width:9px;height:9px;border-radius:50%;background:#3a2f1d;left:calc(56.7% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#5a4c33">51→54</div>
+<div style="text-align:right">Tie % <i style="font-size:9px">(attr)</i></div><div style="position:relative;height:16px"><div style="position:absolute;inset:6px 0;background:#ded0ab;border-radius:2px"></div><div style="position:absolute;top:6px;bottom:6px;left:0;width:50%;background:#bfa96e"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;border:2px solid #3a2f1d;background:#e8dcc0;left:calc(30% - 6px)"></div><div style="position:absolute;top:4px;width:9px;height:9px;border-radius:50%;background:#3a2f1d;left:calc(40% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#5a4c33">9→12</div>
+<div style="text-align:right;color:#9e2b25;font-weight:bold">Drag (attr) ↗</div><div style="position:relative;height:16px;outline:1.5px solid #9e2b25;outline-offset:2px;border-radius:2px"><div style="position:absolute;inset:6px 0;background:#ded0ab;border-radius:2px"></div><div style="position:absolute;top:6px;bottom:6px;left:0;width:41.7%;background:#bfa96e"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;border:2px solid #3a2f1d;background:#e8dcc0;left:calc(35% - 6px)"></div><div style="position:absolute;top:4px;width:9px;height:9px;border-radius:50%;background:#9e2b25;left:calc(46.7% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#9e2b25;font-weight:bold">2.1→2.8</div>
+<div style="text-align:right">Swings</div><div style="position:relative;height:16px"><div style="position:absolute;inset:6px 0;background:#ded0ab;border-radius:2px"></div><div style="position:absolute;top:6px;bottom:6px;left:40%;width:60%;background:#bfa96e"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;border:2px solid #3a2f1d;background:#e8dcc0;left:calc(54% - 6px)"></div><div style="position:absolute;top:4px;width:9px;height:9px;border-radius:50%;background:#3a2f1d;left:calc(48% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#5a4c33">2.7→2.4</div>
+</div>
+<div style="font-size:10.5px;font-style:italic;color:#75643f;margin-top:8px">…all 8 scored + guards below the fold · hover = definition + band SOT · click Drag ⇒ Maps tab pre-filtered to attrition endings</div>
+</div>
+<div style="padding-left:18px">
+<div style="font-size:13px;font-weight:bold;margin-bottom:10px">Balance score by map, A→B <span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">(<a class="dv-oid" href="#1f">1f</a> — sorted by B)</span></div>
+<div style="display:grid;grid-template-columns:86px 1fr 70px;gap:8px 10px;align-items:center;font-size:11.5px">
+<div style="text-align:right">Frontier</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:6px;height:2px;left:0;width:12.5%;background:#9c5449"></div><div style="position:absolute;top:1px;width:9px;height:9px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:0"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;background:#9e2b25;left:calc(12.5% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#9e2b25">0.0→2.5</div>
+<div style="text-align:right">Causeway</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:1px;width:9px;height:9px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:calc(10% - 6px)"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;background:#77582e;left:calc(5% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#5a4c33">2.0→1.0</div>
+<div style="text-align:right;font-weight:bold;color:#9e2b25">The Narrows ↗</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:6px;height:2px;left:50%;width:32.5%;background:#9c5449"></div><div style="position:absolute;top:1px;width:9px;height:9px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:calc(50% - 6px)"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;background:#9e2b25;left:calc(82.5% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#9e2b25;font-weight:bold">10→16.5</div>
+<div style="text-align:right">Long March</div><div style="position:relative;height:14px"><div style="position:absolute;top:6px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:6px;height:2px;left:45%;width:29%;background:#97753f"></div><div style="position:absolute;top:1px;width:9px;height:9px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:calc(74% - 6px)"></div><div style="position:absolute;top:2px;width:9px;height:9px;border-radius:50%;background:#77582e;left:calc(45% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#5a4c33">14.8→9.0</div>
+</div>
+<div style="font-size:10.5px;font-style:italic;color:#75643f;margin:8px 0 12px">…7 rows · <b style="color:#3a2f1d">click a row ⇒ Screen 2</b> for that map</div>
+<div style="font-size:13px;font-weight:bold;margin-bottom:8px">Pacing, fleet-wide <span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">(<a class="dv-oid" href="#1e">1e</a> minis)</span></div>
+<div style="display:flex;gap:14px">
+<div style="flex:1;border:1px solid #d8caa2;border-radius:6px;padding:8px 10px"><div style="font-size:10.5px;color:#5a4c33;margin-bottom:4px">deploy interleave <b style="color:#9e2b25">34%→21%</b></div><div style="display:flex;gap:2px;align-items:flex-end;height:34px"><div style="flex:1;height:34px;background:#77582e"></div><div style="flex:1;height:20px;background:#77582e"></div><div style="flex:1;height:9px;background:#77582e"></div><div style="flex:1;height:5px;background:#77582e"></div><div style="flex:1;height:3px;background:#77582e"></div><div style="flex:1;height:2px;background:#77582e"></div></div></div>
+<div style="flex:1;border:1px solid #d8caa2;border-radius:6px;padding:8px 10px"><div style="font-size:10.5px;color:#5a4c33;margin-bottom:4px">median settle <b style="color:#77582e">48%→55%</b></div><svg viewBox="0 0 120 34" style="display:block;width:100%"><polyline points="0,34 24,27 48,20 72,13 96,7 120,2" fill="none" stroke="#5a4c33" stroke-width="1.5" stroke-dasharray="4 2"></polyline><polyline points="0,34 24,30 48,24 72,17 96,9 120,2" fill="none" stroke="#77582e" stroke-width="2"></polyline></svg></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="4b">
+<div class="dv-olabel"><a class="dv-oid" href="#4b">4b</a>Screen 2 · Map drill-down — clicked "The Narrows" from the overview</div>
+<div class="dv-card" style="width:1060px">
+<div style="display:flex;align-items:center;gap:14px;background:#2c2517;color:#e8dcc0;padding:10px 18px">
+<div style="font-size:15px;font-weight:bold;letter-spacing:.5px">Balance Dashboard</div>
+<div style="font-size:12px;color:#b6925a;font-style:italic">A baseline · B WOA-030 deck-17 (unchanged)</div>
+</div>
+<div style="display:flex;gap:8px;padding:10px 18px;border-bottom:1px solid #b9a878;font-size:12.5px;align-items:center">
+<span style="border:1px solid #b9a878;border-radius:14px;padding:3px 16px;color:#3a2f1d">Overview</span>
+<span style="border:1px solid #77582e;border-radius:14px;padding:3px 16px;background:#77582e;color:#e8dcc0;font-weight:bold">Maps</span>
+<span style="border:1px solid #b9a878;border-radius:14px;padding:3px 16px;color:#3a2f1d">Cards</span>
+<span style="border:1px solid #b9a878;border-radius:14px;padding:3px 16px;color:#3a2f1d">Units</span>
+<span style="margin-left:14px;font-size:12px;color:#5a4c33">‹ Frontier · <b style="color:#3a2f1d;border-bottom:2px solid #77582e;padding-bottom:1px">The Narrows</b> · The Void ›</span>
+<span style="margin-left:auto;display:inline-flex;border:1px solid #b9a878;border-radius:14px;overflow:hidden;font-size:11.5px"><span style="padding:3px 12px;color:#3a2f1d">A</span><span style="padding:3px 12px;background:#77582e;color:#e8dcc0;font-weight:bold">B</span><span style="padding:3px 12px;color:#3a2f1d">A/B</span></span>
+<span style="font-size:12px;font-family:ui-monospace,Menlo,monospace;color:#9e2b25;font-weight:bold">balance 10.0 → 16.5 ✗</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:16px 18px 20px">
+<div>
+<div style="font-size:13px;font-weight:bold;margin-bottom:8px">Tempo lanes <span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">(<a class="dv-oid" href="#3a">3a</a> — showing B; A/B mode adds A as a ghost outline)</span></div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;gap:8px;align-items:flex-end"><div style="flex:none;width:48px;text-align:right;font-size:10.5px;color:#5a4c33;padding-bottom:2px"><b>deploy</b></div><div style="flex:1;display:flex;gap:2px;align-items:flex-end;height:34px;border-bottom:1px solid #b9a878"><div style="flex:1;height:32px;background:#b6925a"></div><div style="flex:1;height:19px;background:#b6925a"></div><div style="flex:1;height:9px;background:#b6925a"></div><div style="flex:1;height:5px;background:#b6925a"></div><div style="flex:1;height:3px;background:#b6925a"></div><div style="flex:1;height:2px;background:#b6925a"></div><div style="flex:1;height:2px;background:#b6925a"></div><div style="flex:1;height:1px;background:#b6925a"></div></div></div>
+<div style="display:flex;gap:8px;align-items:flex-end"><div style="flex:none;width:48px;text-align:right;font-size:10.5px;color:#5a4c33;padding-bottom:2px"><b>attack</b></div><div style="flex:1;display:flex;gap:2px;align-items:flex-end;height:34px;border-bottom:1px solid #b9a878"><div style="flex:1;height:4px;background:#9c5449"></div><div style="flex:1;height:8px;background:#9c5449"></div><div style="flex:1;height:11px;background:#9c5449"></div><div style="flex:1;height:13px;background:#9c5449"></div><div style="flex:1;height:13px;background:#9c5449"></div><div style="flex:1;height:12px;background:#9c5449"></div><div style="flex:1;height:11px;background:#9c5449"></div><div style="flex:1;height:9px;background:#9c5449"></div></div></div>
+<div style="display:flex;gap:8px;align-items:flex-end"><div style="flex:none;width:48px;text-align:right;font-size:10.5px;color:#5a4c33;padding-bottom:2px"><b>swap</b></div><div style="flex:1;display:flex;gap:2px;align-items:flex-end;height:34px;border-bottom:1px solid #b9a878"><div style="flex:1;height:5px;background:#54708e"></div><div style="flex:1;height:10px;background:#54708e"></div><div style="flex:1;height:15px;background:#54708e"></div><div style="flex:1;height:19px;background:#54708e"></div><div style="flex:1;height:23px;background:#54708e"></div><div style="flex:1;height:26px;background:#54708e"></div><div style="flex:1;height:28px;background:#54708e"></div><div style="flex:1;height:30px;background:#54708e"></div></div></div>
+</div>
+<div style="font-size:10.5px;font-style:italic;color:#9e2b25;margin-top:6px">the regression, visible: swaps climb all game on B — swap-dance returning on this geometry</div>
+<div style="font-size:13px;font-weight:bold;margin:14px 0 8px">This map vs its bands <span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">(<a class="dv-oid" href="#1c">1c</a> filtered)</span></div>
+<div style="display:grid;grid-template-columns:96px 1fr 64px;gap:7px 10px;align-items:center;font-size:11px">
+<div style="text-align:right">1st-mover %</div><div style="position:relative;height:14px;outline:1.5px solid #9e2b25;outline-offset:2px;border-radius:2px"><div style="position:absolute;inset:5px 0;background:#ded0ab;border-radius:2px"></div><div style="position:absolute;top:5px;bottom:5px;left:41.7%;width:16.6%;background:#bfa96e"></div><div style="position:absolute;top:1px;width:8px;height:8px;border-radius:50%;border:2px solid #3a2f1d;background:#e8dcc0;left:calc(28% - 6px)"></div><div style="position:absolute;top:2px;width:8px;height:8px;border-radius:50%;background:#9e2b25;left:calc(22% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#9e2b25;font-weight:bold">37→33</div>
+<div style="text-align:right">Drag (attr)</div><div style="position:relative;height:14px;outline:1.5px solid #9e2b25;outline-offset:2px;border-radius:2px"><div style="position:absolute;inset:5px 0;background:#ded0ab;border-radius:2px"></div><div style="position:absolute;top:5px;bottom:5px;left:0;width:41.7%;background:#bfa96e"></div><div style="position:absolute;top:1px;width:8px;height:8px;border-radius:50%;border:2px solid #3a2f1d;background:#e8dcc0;left:calc(43% - 6px)"></div><div style="position:absolute;top:2px;width:8px;height:8px;border-radius:50%;background:#9e2b25;left:calc(58% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#9e2b25;font-weight:bold">2.6→3.5</div>
+<div style="text-align:right">HQ %</div><div style="position:relative;height:14px"><div style="position:absolute;inset:5px 0;background:#ded0ab;border-radius:2px"></div><div style="position:absolute;top:5px;bottom:5px;left:16.7%;width:50%;background:#bfa96e"></div><div style="position:absolute;top:1px;width:8px;height:8px;border-radius:50%;border:2px solid #3a2f1d;background:#e8dcc0;left:calc(36.7% - 6px)"></div><div style="position:absolute;top:2px;width:8px;height:8px;border-radius:50%;background:#3a2f1d;left:calc(31.7% - 4px)"></div></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#5a4c33">22→19</div>
+</div>
+</div>
+<div>
+<div style="font-size:13px;font-weight:bold;margin-bottom:8px">Hex lenses <span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">(<a class="dv-oid" href="#2a">2a</a> · occupancy | flips | kills — run B)</span></div>
+<div style="display:flex;gap:12px">
+<div style="display:flex;flex-direction:column;gap:2px">
+<div style="display:flex;gap:2px"><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#97753f"></div><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#b6925a"></div><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:repeating-linear-gradient(45deg,#dccfae 0,#dccfae 3px,#b09b6d 3px,#b09b6d 4.5px)"></div></div>
+<div style="display:flex;gap:2px;margin-left:14px"><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#59421f"></div><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#3a2f1d"></div></div>
+<div style="display:flex;gap:2px"><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#77582e"></div><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#97753f"></div><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#b6925a"></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:2px">
+<div style="display:flex;gap:2px"><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#d3b784"></div><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div></div>
+<div style="display:flex;gap:2px;margin-left:14px"><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#9e2b25;display:flex;align-items:center;justify-content:center"><div style="width:20px;height:17px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#3a2f1d"></div></div><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#9e2b25;display:flex;align-items:center;justify-content:center"><div style="width:20px;height:17px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#59421f"></div></div></div>
+<div style="display:flex;gap:2px"><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#d3b784"></div><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#b6925a"></div><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:2px">
+<div style="display:flex;gap:2px"><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#b6925a"></div><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div></div>
+<div style="display:flex;gap:2px;margin-left:14px"><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#59421f"></div><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#97753f"></div></div>
+<div style="display:flex;gap:2px"><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#d3b784"></div><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#b6925a"></div><div style="width:26px;height:23px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div></div>
+</div>
+</div>
+<div style="font-size:10.5px;font-style:italic;color:#75643f;margin-top:6px">lenses follow the A|B toggle above · hover a hex = numbers · flips lane with no kill heat = rush corridor</div>
+<div style="font-size:13px;font-weight:bold;margin:14px 0 8px">Settle curve, this map <span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">(<a class="dv-oid" href="#1e">1e</a> filtered)</span></div>
+<svg viewBox="0 0 220 90" style="display:block;width:100%;max-width:340px"><line x1="10" y1="80" x2="215" y2="80" stroke="#b9a878" stroke-width="1"></line><polyline points="10,80 44,62 78,45 112,30 146,18 180,9 215,4" fill="none" stroke="#5a4c33" stroke-width="1.5" stroke-dasharray="4 2"></polyline><polyline points="10,80 44,70 78,58 112,40 146,24 180,11 215,4" fill="none" stroke="#77582e" stroke-width="2"></polyline><text x="120" y="88" font-size="8" fill="#75643f" font-style="italic">battle time →</text></svg>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "mock the Cards and Units tabs" · "how does run B get picked — mock the run-history picker" · "spec the click-through wiring (what filters pass between screens)"</p>
+</section>
+<section class="dv-turn" id="t3" style="border-bottom:1px solid rgba(58,47,29,.18)">
+<div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Unstacked tempo — fixes the 100%-mix confusion in <a class="dv-oid" href="#2b">2b</a></span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="3a">
+<div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>Tempo lanes — one lane per action, absolute heights, trends read independently</div>
+<div class="dv-card" style="width:620px;padding:20px 24px">
+<div style="font-size:15px;font-weight:bold">THE QUESTION: is each action actually rising or falling — not just its share?</div>
+<div style="font-size:12px;font-style:italic;color:#75643f;margin:2px 0 14px">Frontier. Each lane = plays per turn for that action (avg/battle, turn-octiles), scaled to its own axis label — a deploy decline is a real decline, not attacks crowding it out. VP-diff track stays on top.</div>
+<svg viewBox="0 0 400 34" style="display:block;width:100%;height:auto">
+<line x1="76" y1="28" x2="400" y2="28" stroke="#b9a878" stroke-width="1"></line>
+<text x="2" y="12" font-size="9" fill="#75643f" font-style="italic">avg |VP diff|</text>
+<polyline points="76,28 116,27 157,25 197,22 238,19 278,15 319,11 359,8 400,5" fill="none" stroke="#3a2f1d" stroke-width="2"></polyline>
+</svg>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+<div style="display:flex;gap:8px;align-items:flex-end"><div style="flex:none;width:68px;text-align:right;font-size:11.5px;color:#5a4c33;padding-bottom:2px"><b style="color:#3a2f1d">deploy</b><br><span style="font-size:9.5px;font-style:italic">max 2.8/turn</span></div><div style="flex:1;display:flex;gap:3px;align-items:flex-end;height:48px;border-bottom:1.5px solid #b9a878"><div style="flex:1;height:45px;background:#b6925a"></div><div style="flex:1;height:30px;background:#b6925a"></div><div style="flex:1;height:18px;background:#b6925a"></div><div style="flex:1;height:11px;background:#b6925a"></div><div style="flex:1;height:8px;background:#b6925a"></div><div style="flex:1;height:6px;background:#b6925a"></div><div style="flex:1;height:4px;background:#b6925a"></div><div style="flex:1;height:3px;background:#b6925a"></div></div></div>
+<div style="display:flex;gap:8px;align-items:flex-end"><div style="flex:none;width:68px;text-align:right;font-size:11.5px;color:#5a4c33;padding-bottom:2px"><b style="color:#3a2f1d">attack</b><br><span style="font-size:9.5px;font-style:italic">max 1.6/turn</span></div><div style="flex:1;display:flex;gap:3px;align-items:flex-end;height:48px;border-bottom:1.5px solid #b9a878"><div style="flex:1;height:8px;background:#9c5449"></div><div style="flex:1;height:14px;background:#9c5449"></div><div style="flex:1;height:21px;background:#9c5449"></div><div style="flex:1;height:24px;background:#9c5449"></div><div style="flex:1;height:26px;background:#9c5449"></div><div style="flex:1;height:26px;background:#9c5449"></div><div style="flex:1;height:24px;background:#9c5449"></div><div style="flex:1;height:20px;background:#9c5449"></div></div></div>
+<div style="display:flex;gap:8px;align-items:flex-end"><div style="flex:none;width:68px;text-align:right;font-size:11.5px;color:#5a4c33;padding-bottom:2px"><b style="color:#3a2f1d">swap</b><br><span style="font-size:9.5px;font-style:italic">max 1.5/turn</span></div><div style="flex:1;display:flex;gap:3px;align-items:flex-end;height:48px;border-bottom:1.5px solid #b9a878"><div style="flex:1;height:6px;background:#54708e"></div><div style="flex:1;height:13px;background:#54708e"></div><div style="flex:1;height:16px;background:#54708e"></div><div style="flex:1;height:18px;background:#54708e"></div><div style="flex:1;height:20px;background:#54708e"></div><div style="flex:1;height:20px;background:#54708e"></div><div style="flex:1;height:22px;background:#54708e"></div><div style="flex:1;height:24px;background:#54708e"></div></div></div>
+<div style="display:flex;gap:8px;align-items:flex-end"><div style="flex:none;width:68px;text-align:right;font-size:11.5px;color:#5a4c33;padding-bottom:2px"><b style="color:#3a2f1d">march</b><br><span style="font-size:9.5px;font-style:italic">max 1.0/turn</span></div><div style="flex:1;display:flex;gap:3px;align-items:flex-end;height:48px;border-bottom:1.5px solid #b9a878"><div style="flex:1;height:5px;background:#9a9180"></div><div style="flex:1;height:8px;background:#9a9180"></div><div style="flex:1;height:10px;background:#9a9180"></div><div style="flex:1;height:10px;background:#9a9180"></div><div style="flex:1;height:10px;background:#9a9180"></div><div style="flex:1;height:12px;background:#9a9180"></div><div style="flex:1;height:14px;background:#9a9180"></div><div style="flex:1;height:16px;background:#9a9180"></div></div></div>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:10.5px;color:#75643f;margin-top:6px;font-style:italic"><span style="margin-left:76px">turn 1</span><span>normalized battle time →</span><span>battle end</span></div>
+<div style="margin-top:12px;font-size:12px;color:#5a4c33;font-style:italic;line-height:1.55">Your read was right: in a 100% stack the opening bar is always all-deploy and a "shrinking" deploy band can just be attacks growing. Lanes decouple them — each is plays-per-turn on its own scale. The deploy lane is where the unit-type split from <a class="dv-oid" href="#2b">2b</a> belongs if wanted (stack inf/cav/art inside the brass bars only). Interleave still reads directly: a deploy lane with a fat tail = deploy/fight/deploy rhythm; this taper = mostly-up-front. Supersedes <a class="dv-oid" href="#2b">2b</a>/<a class="dv-oid" href="#1d">1d</a> as the per-map tempo view.</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "lanes for all seven maps, small-multiple grid" · "add run B as a ghost outline in each lane" · "draft the capture tickets"</p>
+</section>
+<section class="dv-turn" id="t2" style="border-bottom:1px solid rgba(58,47,29,.18)">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Hex heatmaps + riffs on <a class="dv-oid" href="#1d">1d</a> and <a class="dv-oid" href="#1g">1g</a></span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="2a">
+<div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Map hex heatmaps — dead hexes, avenues of attack, the rush lane</div>
+<div class="dv-card" style="width:760px;padding:20px 24px">
+<div style="font-size:15px;font-weight:bold">THE QUESTION: which hexes does this map actually use — and which one needs a river?</div>
+<div style="font-size:12px;font-style:italic;color:#75643f;margin:2px 0 14px">Same map (Saber Ridge, n=60), three lenses from the trace. Darker = more. Needs per-hex fold: occupancy turns, ownership flips, kills — all derivable from <a class="dv-oid" href="#1b">1b</a> if the trace adds a hex field per action (+~4 B/play).</div>
+<div style="display:flex;gap:24px;flex-wrap:wrap">
+<div style="flex:none">
+<div style="font-size:12.5px;font-weight:bold;margin-bottom:6px">Occupancy <span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">% of turns held</span></div>
+<div style="display:flex;flex-direction:column;gap:2px">
+<div style="display:flex;gap:2px"><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#97753f;display:flex;align-items:center;justify-content:center;font-size:8.5px;color:#e8dcc0;font-weight:bold">HQ</div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#b6925a"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#d3b784"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:repeating-linear-gradient(45deg,#dccfae 0,#dccfae 3px,#b09b6d 3px,#b09b6d 4.5px)"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:repeating-linear-gradient(45deg,#dccfae 0,#dccfae 3px,#b09b6d 3px,#b09b6d 4.5px)"></div></div>
+<div style="display:flex;gap:2px;margin-left:19px"><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#77582e"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#59421f"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#97753f"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#d3b784"></div></div>
+<div style="display:flex;gap:2px"><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#59421f"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#3a2f1d"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#3a2f1d"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#59421f"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#97753f"></div></div>
+<div style="display:flex;gap:2px;margin-left:19px"><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#77582e"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#59421f"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#97753f"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#b6925a"></div></div>
+<div style="display:flex;gap:2px"><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#b6925a"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#97753f"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#d3b784"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:repeating-linear-gradient(45deg,#dccfae 0,#dccfae 3px,#b09b6d 3px,#b09b6d 4.5px)"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#97753f;display:flex;align-items:center;justify-content:center;font-size:8.5px;color:#e8dcc0;font-weight:bold">HQ</div></div>
+</div>
+<div style="font-size:11px;color:#9e2b25;margin-top:6px;font-style:italic">hatched = dead hex (&lt;5% of turns)</div>
+</div>
+<div style="flex:none">
+<div style="font-size:12.5px;font-weight:bold;margin-bottom:6px">Ownership flips <span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">changed hands / battle</span></div>
+<div style="display:flex;flex-direction:column;gap:2px">
+<div style="display:flex;gap:2px"><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4;display:flex;align-items:center;justify-content:center;font-size:8.5px;color:#75643f;font-weight:bold">HQ</div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div></div>
+<div style="display:flex;gap:2px;margin-left:19px"><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#d3b784"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#b6925a"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#d3b784"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div></div>
+<div style="display:flex;gap:2px"><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#97753f"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#9e2b25;display:flex;align-items:center;justify-content:center"><div style="width:28px;height:24px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#3a2f1d"></div></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#9e2b25;display:flex;align-items:center;justify-content:center"><div style="width:28px;height:24px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#3a2f1d"></div></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#9e2b25;display:flex;align-items:center;justify-content:center"><div style="width:28px;height:24px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#59421f"></div></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#97753f"></div></div>
+<div style="display:flex;gap:2px;margin-left:19px"><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#b6925a"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#97753f"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#b6925a"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#d3b784"></div></div>
+<div style="display:flex;gap:2px"><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#d3b784"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#d3b784"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4;display:flex;align-items:center;justify-content:center;font-size:8.5px;color:#75643f;font-weight:bold">HQ</div></div>
+</div>
+<div style="font-size:11px;color:#9e2b25;margin-top:6px;font-style:italic">red ring = avenue of attack (top-quartile flips)</div>
+</div>
+<div style="flex:none">
+<div style="font-size:12.5px;font-weight:bold;margin-bottom:6px">Kills <span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">deaths on hex / battle</span></div>
+<div style="display:flex;flex-direction:column;gap:2px">
+<div style="display:flex;gap:2px"><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4;display:flex;align-items:center;justify-content:center;font-size:8.5px;color:#75643f;font-weight:bold">HQ</div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div></div>
+<div style="display:flex;gap:2px;margin-left:19px"><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#d3b784"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#97753f"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#b6925a"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div></div>
+<div style="display:flex;gap:2px"><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#b6925a"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#59421f"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#3a2f1d"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#77582e"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#d3b784"></div></div>
+<div style="display:flex;gap:2px;margin-left:19px"><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#97753f"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#77582e"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#b6925a"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#d3b784"></div></div>
+<div style="display:flex;gap:2px"><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#d3b784"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#b6925a"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#d3b784"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4"></div><div style="width:36px;height:32px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:#e3d6b4;display:flex;align-items:center;justify-content:center;font-size:8.5px;color:#75643f;font-weight:bold">HQ</div></div>
+</div>
+<div style="font-size:11px;color:#75643f;margin-top:6px;font-style:italic">the killing field: where the map's fights actually are</div>
+</div>
+</div>
+<div style="margin-top:14px;padding:10px 12px;background:rgba(158,43,37,.08);border-left:3px solid #9e2b25;font-size:12px;color:#5a4c33;line-height:1.55"><b style="color:#9e2b25">The actionable read:</b> a rushable map shows as a bright uncontested corridor in <i>flips</i> with no matching heat in <i>kills</i> — units walk it, nobody dies on it. Drop a river/impassable hex on the corridor's pinch point and re-run. Dead hexes (hatched) are free real estate for terrain edits: nothing happens there, so nothing breaks. Row 2's corridor here is the candidate.</div>
+</div>
+</div>
+
+<div class="dv-opt" id="2b">
+<div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>Tempo strip v2 — VP-diff track above, deploys split by unit type</div>
+<div class="dv-card" style="width:560px;padding:20px 24px">
+<div style="font-size:15px;font-weight:bold">THE QUESTION: how does the battle unfold — and when does the margin open?</div>
+<div style="display:flex;gap:12px;font-size:11.5px;color:#5a4c33;margin:8px 0 12px;flex-wrap:wrap">
+<span><span style="display:inline-block;width:10px;height:10px;background:#c9a468;border-radius:2px;vertical-align:-1px"></span> dep·inf</span>
+<span><span style="display:inline-block;width:10px;height:10px;background:#a87e46;border-radius:2px;vertical-align:-1px"></span> dep·cav</span>
+<span><span style="display:inline-block;width:10px;height:10px;background:#77582e;border-radius:2px;vertical-align:-1px"></span> dep·art</span>
+<span><span style="display:inline-block;width:10px;height:10px;background:#9c5449;border-radius:2px;vertical-align:-1px"></span> attack</span>
+<span><span style="display:inline-block;width:10px;height:10px;background:#54708e;border-radius:2px;vertical-align:-1px"></span> swap</span>
+<span><span style="display:inline-block;width:10px;height:10px;background:#9a9180;border-radius:2px;vertical-align:-1px"></span> march</span>
+</div>
+<div style="font-size:12.5px;margin-bottom:2px"><b>Frontier</b> <span style="font-style:italic;color:#75643f;font-size:11.5px">— avg |VP diff| track on top: flat then late fan-out = healthy attrition</span></div>
+<svg viewBox="0 0 400 58" style="display:block;width:100%;height:auto">
+<line x1="0" y1="40" x2="400" y2="40" stroke="#b9a878" stroke-width="1"></line>
+<text x="2" y="10" font-size="9" fill="#75643f" font-style="italic">avg |VP diff|</text>
+<polyline points="0,40 50,39 100,37 150,33 200,29 250,24 300,18 350,13 400,8" fill="none" stroke="#3a2f1d" stroke-width="2"></polyline>
+<polyline points="0,40 50,38 100,34 150,26 200,20 250,16 300,13 350,11 400,10" fill="none" stroke="#9e2b25" stroke-width="1.5" stroke-dasharray="4 3"></polyline>
+<text x="200" y="53" font-size="9.5" fill="#9e2b25" font-style="italic" text-anchor="middle">run B (dashed): margin opens early — snowballier</text>
+</svg>
+<div style="position:relative;display:flex;gap:3px;align-items:flex-end;height:64px;margin-top:4px">
+<div style="position:absolute;top:-6px;left:19%;color:#3a2f1d;font-size:9px">▼</div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:26px;background:#c9a468"></div><div style="height:12px;background:#a87e46"></div><div style="height:6px;background:#77582e"></div><div style="height:8px;background:#9c5449"></div><div style="height:6px;background:#54708e"></div><div style="height:6px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:14px;background:#c9a468"></div><div style="height:10px;background:#a87e46"></div><div style="height:6px;background:#77582e"></div><div style="height:14px;background:#9c5449"></div><div style="height:12px;background:#54708e"></div><div style="height:8px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:6px;background:#c9a468"></div><div style="height:6px;background:#a87e46"></div><div style="height:6px;background:#77582e"></div><div style="height:20px;background:#9c5449"></div><div style="height:16px;background:#54708e"></div><div style="height:10px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:4px;background:#c9a468"></div><div style="height:2px;background:#a87e46"></div><div style="height:6px;background:#77582e"></div><div style="height:24px;background:#9c5449"></div><div style="height:18px;background:#54708e"></div><div style="height:10px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:2px;background:#c9a468"></div><div style="height:2px;background:#a87e46"></div><div style="height:4px;background:#77582e"></div><div style="height:26px;background:#9c5449"></div><div style="height:20px;background:#54708e"></div><div style="height:10px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:2px;background:#c9a468"></div><div style="height:2px;background:#a87e46"></div><div style="height:2px;background:#77582e"></div><div style="height:26px;background:#9c5449"></div><div style="height:20px;background:#54708e"></div><div style="height:12px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:2px;background:#c9a468"></div><div style="height:0px;background:#a87e46"></div><div style="height:2px;background:#77582e"></div><div style="height:24px;background:#9c5449"></div><div style="height:22px;background:#54708e"></div><div style="height:14px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:2px;background:#c9a468"></div><div style="height:0px;background:#a87e46"></div><div style="height:2px;background:#77582e"></div><div style="height:20px;background:#9c5449"></div><div style="height:24px;background:#54708e"></div><div style="height:16px;background:#9a9180"></div></div>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:10.5px;color:#75643f;margin-top:6px;font-style:italic"><span>turn 1</span><span>normalized battle time →</span><span>battle end</span></div>
+<div style="margin-top:12px;font-size:12px;color:#5a4c33;font-style:italic;line-height:1.55">Unit-typed deploys answer "when does the artillery land" without leaving the strip — cavalry (mid-brass) front-loads, artillery (dark) trickles in through the midgame. If the 6-way split reads as noise at real n, fall back to <a class="dv-oid" href="#1d">1d</a>'s 4-way and move the unit split to <a class="dv-oid" href="#1e">1e</a>'s histogram (one bar series per unit type). The VP-diff track doubles as a snowball detector: run B's early fan-out (dashed red) is what "first blood decides it" looks like over time.</div>
+</div>
+</div>
+
+<div class="dv-opt" id="2c">
+<div class="dv-olabel"><a class="dv-oid" href="#2c">2c</a>Unit roles v2 — deploy timing × charge↔support; breakthrough = who gets attacked</div>
+<div class="dv-card" style="width:640px;padding:20px 24px">
+<div style="font-size:15px;font-weight:bold">THE QUESTION: is each unit doing its job?</div>
+<div style="font-size:12px;font-style:italic;color:#75643f;margin:2px 0 12px">x = median deploy timing · y = attacks made vs attacks absorbed (top = initiates, bottom = soaks). Breakthrough point drops off the axes — it's <b>who gets attacked</b>, so it gets its own gauge on the right.</div>
+<div style="display:flex;gap:18px">
+<div style="flex:1">
+<div style="position:relative;height:280px;background:rgba(255,255,255,.18);border:1px solid #d8caa2;border-radius:6px">
+<div style="position:absolute;top:50%;left:0;right:0;height:1px;background:#b9a878"></div>
+<div style="position:absolute;top:8px;left:0;right:0;text-align:center;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#75643f">Leading the charge</div>
+<div style="position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#75643f">Supporting role</div>
+<div style="position:absolute;left:20%;top:28%;transform:translate(-50%,-50%);text-align:center"><div style="width:34px;height:34px;border-radius:50%;background:#9c5449;margin:0 auto"></div><div style="font-size:11.5px;margin-top:3px"><b>Cavalry</b></div></div>
+<div style="position:absolute;left:64%;top:66%;transform:translate(-50%,-50%);text-align:center"><div style="width:30px;height:30px;border-radius:50%;background:#97753f;margin:0 auto"></div><div style="font-size:11.5px;margin-top:3px"><b>Artillery</b></div></div>
+<div style="position:absolute;left:32%;top:58%;transform:translate(-50%,-50%);text-align:center"><div style="width:38px;height:38px;border-radius:50%;background:#54708e;margin:0 auto"></div><div style="font-size:11.5px;margin-top:3px"><b>Infantry</b></div></div>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:10.5px;color:#75643f;margin-top:6px;font-style:italic"><span>← deploys early</span><span>deploys late →</span></div>
+</div>
+<div style="flex:none;width:190px">
+<div style="font-size:12px;font-weight:bold;margin-bottom:8px">Breakthrough point<br><span style="font-weight:normal;font-style:italic;color:#75643f;font-size:11px">attacks absorbed / battle fielded</span></div>
+<div style="display:flex;flex-direction:column;gap:10px;font-size:11.5px">
+<div><div style="display:flex;justify-content:space-between;margin-bottom:2px"><b>Infantry</b><span style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px">2.9</span></div><div style="height:10px;background:#ded0ab;border-radius:3px"><div style="height:10px;width:92%;background:#9e2b25;border-radius:3px"></div></div></div>
+<div><div style="display:flex;justify-content:space-between;margin-bottom:2px"><b>Artillery</b><span style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px">1.8</span></div><div style="height:10px;background:#ded0ab;border-radius:3px"><div style="height:10px;width:57%;background:#9c5449;border-radius:3px"></div></div></div>
+<div><div style="display:flex;justify-content:space-between;margin-bottom:2px"><b>Cavalry</b><span style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px">0.9</span></div><div style="height:10px;background:#ded0ab;border-radius:3px"><div style="height:10px;width:28%;background:#b6925a;border-radius:3px"></div></div></div>
+</div>
+<div style="margin-top:12px;font-size:11.5px;color:#5a4c33;font-style:italic;line-height:1.5">The unit the enemy spends attacks on IS the breakthrough point. Infantry topping this while sitting in "supporting role" on the plot = it's the wall being battered — hold-the-line confirmed from the enemy's side of the board.</div>
+</div>
+</div>
+<div style="margin-top:12px;font-size:12px;color:#5a4c33;font-style:italic">Still needs per-unit capture (<a class="dv-oid" href="#1b">1b</a>'s units block, + an "absorbed" counter). A/B: ghost dot + arrow per unit. Supersedes <a class="dv-oid" href="#1g">1g</a>.</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "the flips lens on all seven maps in a grid" · "fold 2b's VP track into 1d for every map" · "draft the capture-ticket list for the trace + per-hex + per-unit fields"</p>
+</section>
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Metric set v2 + the charts that read it</span></div>
+
+<div style="max-width:1080px;background:#e8dcc0;border:1px solid #b9a878;border-radius:8px;padding:22px 26px;margin-bottom:28px;font-size:13.5px;line-height:1.55;color:#5a4c33">
+<div style="font-size:16px;font-weight:bold;color:#3a2f1d;margin-bottom:8px">Assumptions &amp; reasoning</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 28px">
+<div><b style="color:#3a2f1d">Context I built from:</b> <span style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px">report-model.js</span> (the one metric seam), <span style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px">engine/06-sim.js</span> (balanceNew/balanceAdd — end-of-battle scalars only today), <span style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px">ui/charts.js</span> (parchment palette, "every chart answers a question"), the parked metric-bands doc, the 7-map n=700 sample report, and the 07-16 Core Six analysis.</div>
+<div><b style="color:#3a2f1d">Audience:</b> you, mid-iteration. Every view is triage-first: baseline run A (hollow) vs candidate run B (filled) everywhere, band breaches jump out, drill-down second.</div>
+<div><b style="color:#3a2f1d">Adopting from the parked doc:</b> attacks/swaps become % of actions; tie% and drag condition on attrition endings; reserves condition on HQ endings; card win% stays DB-only (HQ + non-simple slice); unit role buckets; per-metric T0/T1/T2 bands as data.</div>
+<div><b style="color:#3a2f1d">Flagged disagreements:</b> ① reserves double-conditioned (HQ-only <i>and</i> turn-normalized) at HQ%~23 leaves n≈14/map at n=60 — I'd band it on the HQ slice but print raw n beside it. ② The per-T band table should live as data on each metric (rubric stays SOT), not a second rubric — charts render it as nested shading, <a class="dv-oid" href="#1c">1c</a>. ③ Re-baseline is atomic: rates land with a rules-version bump, one commit, test pins swept.</div>
+</div>
+</div>
+
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Metric spec v2 — keep / split / condition / cut, with T-bands as data</div>
+<div class="dv-card" style="width:1080px;padding:20px 24px">
+<div style="font-size:15px;font-weight:bold;margin-bottom:2px">The captured set, rules-1.2 proposal</div>
+<div style="font-style:italic;font-size:12px;color:#75643f;margin-bottom:14px">★ = feeds balanceScore (8 of 20) · others are guards/diagnostics · bands shown are T0; T1/T2 widen by ±20% / ±40% of band width</div>
+<table style="border-collapse:collapse;width:100%;font-size:12.5px">
+<thead><tr style="font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:#5a4c33">
+<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #b9a878">Metric</th>
+<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #b9a878">Verdict</th>
+<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #b9a878">Population (win-path slice)</th>
+<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #b9a878">Normalized to</th>
+<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #b9a878">T0 band</th>
+<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #b9a878">Why / note</th>
+</tr></thead>
+<tbody style="vertical-align:top">
+<tr><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>Red% ★</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#59421f">keep</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">all battles</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">—</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">45–55</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">side fairness</td></tr>
+<tr><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>1st-mover% ★</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#59421f">keep</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">all battles</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">—</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">45–55</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">turn-order fairness</td></tr>
+<tr><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>HQ-capture% ★</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#59421f">keep</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">all battles</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">—</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">10–40</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">also the slicer for every conditioned metric below</td></tr>
+<tr style="background:rgba(182,146,90,.14)"><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>Attack share ★</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#9e2b25"><b>split</b> from Atk count</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">all battles</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>% of actions taken</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">re-baseline</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">deck 16→17 (WOA-030) stops moving it; denominator = attacks+swaps+marches+deploys</td></tr>
+<tr style="background:rgba(182,146,90,.14)"><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>Swap share ★</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#9e2b25"><b>split</b> from Swp count</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">all battles</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">% of actions taken</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">re-baseline</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">swap-dance detector, now deck-size-proof</td></tr>
+<tr style="background:rgba(182,146,90,.14)"><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>Deploy interleave</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#9e2b25"><b>new</b> (temporal)</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">all battles</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">battle length (turn deciles)</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">baseline TBD</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">share of deploys after first contact — 0 = all-up-front, see <a class="dv-oid" href="#1e">1e</a></td></tr>
+<tr style="background:rgba(182,146,90,.14)"><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>First-contact turn</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#9e2b25"><b>new</b> (temporal)</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">all battles</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">battle length</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">baseline TBD</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">turn of first attack — the "phoney war" length</td></tr>
+<tr style="background:rgba(158,43,37,.10)"><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>Reserves at end</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#9e2b25"><b>condition</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>HQ-capture endings only</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">turn count</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">re-baseline</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">⚠ small-n: HQ%≈23 → n≈14/map at n=60; print n beside it</td></tr>
+<tr><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>0-kill% ★</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#59421f">keep</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">all battles</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">—</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">≤5</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">stalemate detector</td></tr>
+<tr style="background:rgba(158,43,37,.10)"><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>Tie% ★</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#9e2b25"><b>condition</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>attrition endings only</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">—</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">re-baseline (~12?)</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">HQ games can't tie; pooling diluted it by ~HQ%</td></tr>
+<tr><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>First-blood→win</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#59421f">keep</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">battles with a kill</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">—</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">55–70</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">snowball check (already sliced)</td></tr>
+<tr><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>Control→win ★</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#59421f">keep</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">battles w/ hex lead</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">—</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">≥70</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">ground must matter</td></tr>
+<tr><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>Turns / VPdiff</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#59421f">keep</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">all battles</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">—</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">guard</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">under the 32-play cap; margin of victory</td></tr>
+<tr style="background:rgba(158,43,37,.10)"><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>Drag ★</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#9e2b25"><b>condition</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>attrition endings only</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">battle length</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">re-baseline (≤3?)</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">HQ endings pull it to 0 by definition — pooled Drag under-reads grind</td></tr>
+<tr><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>Swings ★</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#59421f">keep</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">all battles</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">—</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">≥2.0</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">back-and-forth feel</td></tr>
+<tr style="background:rgba(182,146,90,.14)"><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>Settle point</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#9e2b25"><b>new</b> (temporal)</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">all battles</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">battle length (%)</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">baseline TBD</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">turn after which the lead never flips again — "when is it decided", see <a class="dv-oid" href="#1e">1e</a></td></tr>
+<tr><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>Cards: Simple / Noop / 1stSight / AvgSeen</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#59421f">keep</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">all plays</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">plays</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">Noop ~0</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">unchanged</td></tr>
+<tr style="background:rgba(158,43,37,.10)"><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>Card Win%</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#9e2b25"><b>condition, DB-only</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2"><b>HQ endings · non-simple plays</b></td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2">sliced plays</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;font-family:ui-monospace,Menlo,monospace;font-size:11px">±8 of 50</td><td style="padding:5px 8px;border-bottom:1px solid #d8caa2;color:#5a4c33">stays out of print (WOA-019); this is the slice to pull when needed</td></tr>
+<tr style="background:rgba(182,146,90,.14)"><td style="padding:5px 8px"><b>Unit role profile</b></td><td style="padding:5px 8px;color:#9e2b25"><b>new</b></td><td style="padding:5px 8px">per unit type</td><td style="padding:5px 8px">battles fielded</td><td style="padding:5px 8px;font-family:ui-monospace,Menlo,monospace;font-size:11px">rubric TBD</td><td style="padding:5px 8px;color:#5a4c33">deploy timing × aggression × survival → the four role buckets, see <a class="dv-oid" href="#1g">1g</a></td></tr>
+</tbody></table>
+<div style="margin-top:12px;font-size:12px;font-style:italic;color:#75643f">Cut from print, kept in DB: raw Atk/Swp counts (superseded by shares), card Win% pooled. Every "re-baseline" lands together as rules-1.2 — one commit, golden-diff exempt, test pins swept.</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Per-turn trace — the one new capture that feeds every temporal metric</div>
+<div class="dv-card" style="width:520px;padding:20px 24px">
+<div style="font-size:15px;font-weight:bold;margin-bottom:8px">Trace row shape (woa.db, per battle)</div>
+<pre style="margin:0;background:#2c2517;color:#e8dcc0;border-radius:6px;padding:14px 16px;font:11.5px/1.6 ui-monospace,Menlo,monospace;overflow:auto">{ v:"1.2", map:"frontier", seed:81103, fp:"red",
+  winner:"blue", winType:"attrition", turns:29,
+  trace:[            // one entry per play, in order
+    { t:1,  s:"red",  a:"deploy" },
+    { t:2,  s:"blue", a:"deploy" },
+    { t:9,  s:"red",  a:"attack", k:1, ld:"red" },
+    { t:10, s:"blue", a:"swap" },
+    …                // a: deploy|attack|swap|march
+  ],                 // k: kills, ld: leader after turn
+  units:{ cav:{dep:[3,5], atk:6, kill:3, die:1},
+          inf:{…}, art:{…} } }</pre>
+<div style="font-size:12.5px;line-height:1.6;color:#5a4c33;margin-top:12px">
+<b style="color:#3a2f1d">Why this shape:</b> deploy interleave, first contact, settle point, kill tempo, Drag, Swings, action shares and the unit buckets are all <i>folds over the trace</i> — the metric definitions move into <span style="font-family:ui-monospace,Menlo,monospace;font-size:11px">report-model.js</span> and stay one-implementation-per-fact. Scalars in <span style="font-family:ui-monospace,Menlo,monospace;font-size:11px">balanceAdd</span> become derived, not separately counted.<br><br>
+<b style="color:#3a2f1d">Cost:</b> ~32 plays × ~30 B ≈ 1 KB/battle → a 700-battle run ≈ 0.7 MB. Fine for woa.db; markdown reports keep printing folded numbers only.<br><br>
+<b style="color:#3a2f1d">Capture point:</b> extend the existing <span style="font-family:ui-monospace,Menlo,monospace;font-size:11px">playLog</span> (it already records per-play card events) rather than a second log — add action/kill/leader fields to what's there.</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Triage board — every scored metric vs its band, run A/B · THE first screen</div>
+<div class="dv-card" style="width:640px;padding:20px 24px">
+<div style="font-size:15px;font-weight:bold">THE QUESTION: what regressed?</div>
+<div style="font-size:12px;font-style:italic;color:#75643f;margin:2px 0 10px">Nested shading = T2 / T1 / T0 bands (darkest = strict). ○ baseline (Core Six 07-16) · ● candidate (WOA-030 deck-17, n=60)</div>
+<div style="display:flex;gap:16px;font-size:11.5px;color:#5a4c33;margin-bottom:14px;align-items:center">
+<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;border:2px solid #3a2f1d;background:#e8dcc0"></span>run A</span>
+<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:#3a2f1d"></span>run B in-band</span>
+<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:#9e2b25"></span>run B outside T0</span>
+</div>
+<div style="display:grid;grid-template-columns:150px 1fr 74px;gap:10px 12px;align-items:center;font-size:12.5px">
+<div style="text-align:right;color:#3a2f1d">1st-mover %</div>
+<div style="position:relative;height:22px"><div style="position:absolute;inset:8px 0;background:#ded0ab;border-radius:3px"></div><div style="position:absolute;top:8px;bottom:8px;left:25.7%;width:48.6%;background:#ded0ab"></div><div style="position:absolute;top:8px;bottom:8px;left:33.7%;width:32.6%;background:#d3c294"></div><div style="position:absolute;top:8px;bottom:8px;left:41.7%;width:16.6%;background:#bfa96e"></div><div style="position:absolute;top:10px;height:2px;left:41.7%;width:3.3%;background:#5a4c33;opacity:.5"></div><div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid #3a2f1d;background:#e8dcc0;left:calc(41.7% - 8px)"></div><div style="position:absolute;top:5px;width:12px;height:12px;border-radius:50%;background:#3a2f1d;left:calc(45% - 6px)"></div></div>
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#5a4c33">45 → 47</div>
+<div style="text-align:right;color:#3a2f1d">Red %</div>
+<div style="position:relative;height:22px"><div style="position:absolute;inset:8px 0;background:#ded0ab;border-radius:3px"></div><div style="position:absolute;top:8px;bottom:8px;left:33.7%;width:32.6%;background:#d3c294"></div><div style="position:absolute;top:8px;bottom:8px;left:41.7%;width:16.6%;background:#bfa96e"></div><div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid #3a2f1d;background:#e8dcc0;left:calc(51.7% - 8px)"></div><div style="position:absolute;top:5px;width:12px;height:12px;border-radius:50%;background:#3a2f1d;left:calc(56.7% - 6px)"></div></div>
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#5a4c33">51 → 54</div>
+<div style="text-align:right;color:#3a2f1d">HQ capture %</div>
+<div style="position:relative;height:22px"><div style="position:absolute;inset:8px 0;background:#ded0ab;border-radius:3px"></div><div style="position:absolute;top:8px;bottom:8px;left:8.7%;width:66%;background:#d3c294"></div><div style="position:absolute;top:8px;bottom:8px;left:16.7%;width:50%;background:#bfa96e"></div><div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid #3a2f1d;background:#e8dcc0;left:calc(38.3% - 8px)"></div><div style="position:absolute;top:5px;width:12px;height:12px;border-radius:50%;background:#3a2f1d;left:calc(35% - 6px)"></div></div>
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#5a4c33">23 → 21</div>
+<div style="text-align:right;color:#3a2f1d">0-kill %</div>
+<div style="position:relative;height:22px"><div style="position:absolute;inset:8px 0;background:#ded0ab;border-radius:3px"></div><div style="position:absolute;top:8px;bottom:8px;left:0;width:41%;background:#d3c294"></div><div style="position:absolute;top:8px;bottom:8px;left:0;width:25%;background:#bfa96e"></div><div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid #3a2f1d;background:#e8dcc0;left:calc(5% - 8px)"></div><div style="position:absolute;top:5px;width:12px;height:12px;border-radius:50%;background:#3a2f1d;left:calc(10% - 6px)"></div></div>
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#5a4c33">1 → 2</div>
+<div style="text-align:right;color:#3a2f1d">Tie % <i style="font-size:10px">(attrition)</i></div>
+<div style="position:relative;height:22px"><div style="position:absolute;inset:8px 0;background:#ded0ab;border-radius:3px"></div><div style="position:absolute;top:8px;bottom:8px;left:0;width:66%;background:#d3c294"></div><div style="position:absolute;top:8px;bottom:8px;left:0;width:50%;background:#bfa96e"></div><div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid #3a2f1d;background:#e8dcc0;left:calc(30% - 8px)"></div><div style="position:absolute;top:5px;width:12px;height:12px;border-radius:50%;background:#3a2f1d;left:calc(40% - 6px)"></div></div>
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#5a4c33">9 → 12</div>
+<div style="text-align:right;color:#3a2f1d"><b>Drag</b> <i style="font-size:10px">(attrition)</i></div>
+<div style="position:relative;height:22px;outline:1.5px solid #9e2b25;outline-offset:2px;border-radius:3px"><div style="position:absolute;inset:8px 0;background:#ded0ab;border-radius:3px"></div><div style="position:absolute;top:8px;bottom:8px;left:0;width:57.7%;background:#d3c294"></div><div style="position:absolute;top:8px;bottom:8px;left:0;width:41.7%;background:#bfa96e"></div><div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid #3a2f1d;background:#e8dcc0;left:calc(35% - 8px)"></div><div style="position:absolute;top:5px;width:12px;height:12px;border-radius:50%;background:#9e2b25;left:calc(46.7% - 6px)"></div></div>
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#9e2b25;font-weight:bold">2.1 → 2.8 ✗</div>
+<div style="text-align:right;color:#3a2f1d">Swings</div>
+<div style="position:relative;height:22px"><div style="position:absolute;inset:8px 0;background:#ded0ab;border-radius:3px"></div><div style="position:absolute;top:8px;bottom:8px;left:32%;width:68%;background:#d3c294"></div><div style="position:absolute;top:8px;bottom:8px;left:40%;width:60%;background:#bfa96e"></div><div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid #3a2f1d;background:#e8dcc0;left:calc(54% - 8px)"></div><div style="position:absolute;top:5px;width:12px;height:12px;border-radius:50%;background:#3a2f1d;left:calc(48% - 6px)"></div></div>
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#5a4c33">2.7 → 2.4</div>
+<div style="text-align:right;color:#3a2f1d">Control→win %</div>
+<div style="position:relative;height:22px"><div style="position:absolute;inset:8px 0;background:#ded0ab;border-radius:3px"></div><div style="position:absolute;top:8px;bottom:8px;left:32%;width:68%;background:#d3c294"></div><div style="position:absolute;top:8px;bottom:8px;left:40%;width:60%;background:#bfa96e"></div><div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid #3a2f1d;background:#e8dcc0;left:calc(86% - 8px)"></div><div style="position:absolute;top:5px;width:12px;height:12px;border-radius:50%;background:#3a2f1d;left:calc(80% - 6px)"></div></div>
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#5a4c33">93 → 90</div>
+</div>
+<div style="margin-top:14px;padding:10px 12px;background:rgba(158,43,37,.08);border-left:3px solid #9e2b25;font-size:12px;color:#5a4c33"><b style="color:#9e2b25">1 breach at T0:</b> Drag (attrition) 2.8, inside T1 — at T1 temperature this candidate may spend it; at T0 it's a stop. The verdict line writes itself from the band table in <a class="dv-oid" href="#1a">1a</a>.</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1d">
+<div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Battle-tempo strips — how a battle on this map actually unfolds</div>
+<div class="dv-card" style="width:560px;padding:20px 24px">
+<div style="font-size:15px;font-weight:bold">THE QUESTION: what does a battle here look like over time?</div>
+<div style="font-size:12px;font-style:italic;color:#75643f;margin:2px 0 12px">Avg action mix per turn-octile (all battles, one map). Dots below = kill density. ▼ = median first contact.</div>
+<div style="display:flex;gap:14px;font-size:11.5px;color:#5a4c33;margin-bottom:14px">
+<span><span style="display:inline-block;width:10px;height:10px;background:#b6925a;border-radius:2px;vertical-align:-1px"></span> deploy</span>
+<span><span style="display:inline-block;width:10px;height:10px;background:#9c5449;border-radius:2px;vertical-align:-1px"></span> attack</span>
+<span><span style="display:inline-block;width:10px;height:10px;background:#54708e;border-radius:2px;vertical-align:-1px"></span> swap</span>
+<span><span style="display:inline-block;width:10px;height:10px;background:#9a9180;border-radius:2px;vertical-align:-1px"></span> march</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+<div><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px"><b>Frontier</b><span style="font-style:italic;color:#75643f;font-size:11.5px">healthy: deploys taper, attacks carry the midgame</span></div>
+<div style="position:relative;display:flex;gap:3px;align-items:flex-end;height:64px">
+<div style="position:absolute;top:-6px;left:19%;color:#3a2f1d;font-size:9px">▼</div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:44px;background:#b6925a"></div><div style="height:8px;background:#9c5449"></div><div style="height:6px;background:#54708e"></div><div style="height:6px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:30px;background:#b6925a"></div><div style="height:14px;background:#9c5449"></div><div style="height:12px;background:#54708e"></div><div style="height:8px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:18px;background:#b6925a"></div><div style="height:20px;background:#9c5449"></div><div style="height:16px;background:#54708e"></div><div style="height:10px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:12px;background:#b6925a"></div><div style="height:24px;background:#9c5449"></div><div style="height:18px;background:#54708e"></div><div style="height:10px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:8px;background:#b6925a"></div><div style="height:26px;background:#9c5449"></div><div style="height:20px;background:#54708e"></div><div style="height:10px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:6px;background:#b6925a"></div><div style="height:26px;background:#9c5449"></div><div style="height:20px;background:#54708e"></div><div style="height:12px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:4px;background:#b6925a"></div><div style="height:24px;background:#9c5449"></div><div style="height:22px;background:#54708e"></div><div style="height:14px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:4px;background:#b6925a"></div><div style="height:20px;background:#9c5449"></div><div style="height:24px;background:#54708e"></div><div style="height:16px;background:#9a9180"></div></div>
+</div>
+<div style="display:flex;gap:3px;margin-top:4px">
+<div style="flex:1;text-align:center;font-size:10px;color:#75643f"></div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">•</div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">••</div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">•••</div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">•••</div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">••</div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">••</div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">•</div>
+</div></div>
+<div><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px"><b>Long March</b><span style="font-style:italic;color:#9e2b25;font-size:11.5px">swap-dance: swaps grow all game, kills thin</span></div>
+<div style="position:relative;display:flex;gap:3px;align-items:flex-end;height:64px">
+<div style="position:absolute;top:-6px;left:31%;color:#3a2f1d;font-size:9px">▼</div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:42px;background:#b6925a"></div><div style="height:6px;background:#9c5449"></div><div style="height:10px;background:#54708e"></div><div style="height:6px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:26px;background:#b6925a"></div><div style="height:10px;background:#9c5449"></div><div style="height:18px;background:#54708e"></div><div style="height:10px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:14px;background:#b6925a"></div><div style="height:14px;background:#9c5449"></div><div style="height:24px;background:#54708e"></div><div style="height:12px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:8px;background:#b6925a"></div><div style="height:14px;background:#9c5449"></div><div style="height:28px;background:#54708e"></div><div style="height:14px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:6px;background:#b6925a"></div><div style="height:12px;background:#9c5449"></div><div style="height:32px;background:#54708e"></div><div style="height:14px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:4px;background:#b6925a"></div><div style="height:10px;background:#9c5449"></div><div style="height:34px;background:#54708e"></div><div style="height:16px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:4px;background:#b6925a"></div><div style="height:8px;background:#9c5449"></div><div style="height:36px;background:#54708e"></div><div style="height:16px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:2px;background:#b6925a"></div><div style="height:6px;background:#9c5449"></div><div style="height:38px;background:#54708e"></div><div style="height:18px;background:#9a9180"></div></div>
+</div>
+<div style="display:flex;gap:3px;margin-top:4px">
+<div style="flex:1"></div><div style="flex:1"></div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">•</div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">•</div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">••</div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">••</div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">•</div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">•</div>
+</div></div>
+<div><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px"><b>Causeway</b><span style="font-style:italic;color:#75643f;font-size:11.5px">fast &amp; violent: early contact, heavy kill midgame</span></div>
+<div style="position:relative;display:flex;gap:3px;align-items:flex-end;height:64px">
+<div style="position:absolute;top:-6px;left:9%;color:#3a2f1d;font-size:9px">▼</div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:40px;background:#b6925a"></div><div style="height:12px;background:#9c5449"></div><div style="height:6px;background:#54708e"></div><div style="height:6px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:24px;background:#b6925a"></div><div style="height:22px;background:#9c5449"></div><div style="height:10px;background:#54708e"></div><div style="height:8px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:12px;background:#b6925a"></div><div style="height:30px;background:#9c5449"></div><div style="height:12px;background:#54708e"></div><div style="height:10px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:8px;background:#b6925a"></div><div style="height:34px;background:#9c5449"></div><div style="height:12px;background:#54708e"></div><div style="height:10px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:6px;background:#b6925a"></div><div style="height:34px;background:#9c5449"></div><div style="height:14px;background:#54708e"></div><div style="height:10px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:6px;background:#b6925a"></div><div style="height:32px;background:#9c5449"></div><div style="height:14px;background:#54708e"></div><div style="height:12px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:4px;background:#b6925a"></div><div style="height:30px;background:#9c5449"></div><div style="height:16px;background:#54708e"></div><div style="height:14px;background:#9a9180"></div></div>
+<div style="flex:1;display:flex;flex-direction:column-reverse"><div style="height:4px;background:#b6925a"></div><div style="height:26px;background:#9c5449"></div><div style="height:18px;background:#54708e"></div><div style="height:16px;background:#9a9180"></div></div>
+</div>
+<div style="display:flex;gap:3px;margin-top:4px">
+<div style="flex:1"></div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">••</div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">•••</div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">••••</div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">•••</div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">•••</div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">••</div><div style="flex:1;text-align:center;color:#3a2f1d;letter-spacing:2px;font-size:9px">•</div>
+</div></div>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:10.5px;color:#75643f;margin-top:8px;font-style:italic"><span>turn 1</span><span>normalized battle time →</span><span>battle end</span></div>
+<div style="margin-top:12px;font-size:12px;color:#5a4c33;font-style:italic">Reads at a glance which maps are all-deploy-then-fight vs interleaved — the "deploys need a time axis" ask. A/B compare: render B's strip as a half-height ghost row under each map.</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1e">
+<div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a>Deploy timing + settle curve — the two new pacing metrics, A/B overlaid</div>
+<div class="dv-card" style="width:560px;padding:20px 24px">
+<div style="font-size:15px;font-weight:bold">THE QUESTION: when do deploys happen, and when is the battle decided?</div>
+<div style="display:flex;gap:14px;font-size:11.5px;color:#5a4c33;margin:8px 0 12px">
+<span><span style="display:inline-block;width:12px;height:8px;border:1.5px solid #5a4c33;background:transparent;vertical-align:-1px"></span> run A (baseline)</span>
+<span><span style="display:inline-block;width:12px;height:8px;background:#77582e;vertical-align:-1px"></span> run B (candidate)</span>
+</div>
+<div style="font-size:12.5px;font-weight:bold;margin-bottom:6px">Deploys by turn decile <span style="font-weight:normal;font-style:italic;color:#75643f">(% of all deploys)</span></div>
+<div style="display:flex;gap:6px;align-items:flex-end;height:110px;border-bottom:1.5px solid #b9a878;padding:0 4px">
+<div style="flex:1;display:flex;gap:2px;align-items:flex-end;height:100%"><div style="flex:1;height:74px;border:1.5px solid #5a4c33"></div><div style="flex:1;height:100px;background:#77582e"></div></div>
+<div style="flex:1;display:flex;gap:2px;align-items:flex-end;height:100%"><div style="flex:1;height:48px;border:1.5px solid #5a4c33"></div><div style="flex:1;height:61px;background:#77582e"></div></div>
+<div style="flex:1;display:flex;gap:2px;align-items:flex-end;height:100%"><div style="flex:1;height:30px;border:1.5px solid #5a4c33"></div><div style="flex:1;height:26px;background:#77582e"></div></div>
+<div style="flex:1;display:flex;gap:2px;align-items:flex-end;height:100%"><div style="flex:1;height:22px;border:1.5px solid #5a4c33"></div><div style="flex:1;height:13px;background:#77582e"></div></div>
+<div style="flex:1;display:flex;gap:2px;align-items:flex-end;height:100%"><div style="flex:1;height:17px;border:1.5px solid #5a4c33"></div><div style="flex:1;height:9px;background:#77582e"></div></div>
+<div style="flex:1;display:flex;gap:2px;align-items:flex-end;height:100%"><div style="flex:1;height:13px;border:1.5px solid #5a4c33"></div><div style="flex:1;height:4px;background:#77582e"></div></div>
+<div style="flex:1;display:flex;gap:2px;align-items:flex-end;height:100%"><div style="flex:1;height:9px;border:1.5px solid #5a4c33"></div><div style="flex:1;height:2px;background:#77582e"></div></div>
+<div style="flex:1;display:flex;gap:2px;align-items:flex-end;height:100%"><div style="flex:1;height:4px;border:1.5px solid #5a4c33"></div><div style="flex:1;height:2px;background:#77582e"></div></div>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:10.5px;color:#75643f;margin:3px 4px 0;font-style:italic"><span>turn 1</span><span>battle end</span></div>
+<div style="margin:8px 0 18px;font-size:12px;color:#5a4c33"><b>Interleave 34% → 21%</b> — the candidate front-loads deploys; the deploy/fight/deploy rhythm is fading. This is the scalar the strip in <a class="dv-oid" href="#1d">1d</a> expands.</div>
+<div style="font-size:12.5px;font-weight:bold;margin-bottom:6px">Settle curve <span style="font-weight:normal;font-style:italic;color:#75643f">(% of battles whose lead never flips again by time t)</span></div>
+<svg viewBox="0 0 400 220" style="display:block;width:100%;height:auto">
+<line x1="20" y1="10" x2="20" y2="200" stroke="#b9a878" stroke-width="1.5"></line>
+<line x1="20" y1="200" x2="390" y2="200" stroke="#b9a878" stroke-width="1.5"></line>
+<line x1="20" y1="105" x2="390" y2="105" stroke="#d8caa2" stroke-width="1" stroke-dasharray="3 3"></line>
+<text x="14" y="109" font-size="10" fill="#75643f" text-anchor="end">50%</text>
+<text x="14" y="16" font-size="10" fill="#75643f" text-anchor="end">100</text>
+<polyline points="20,200 76,166 132,135 189,101 245,71 301,40 357,20 385,10" fill="none" stroke="#5a4c33" stroke-width="2" stroke-dasharray="5 3"></polyline>
+<polyline points="20,200 76,177 132,151 189,116 245,86 301,52 357,25 385,10" fill="none" stroke="#77582e" stroke-width="2.5"></polyline>
+<line x1="200" y1="10" x2="200" y2="200" stroke="#9e2b25" stroke-width="1" stroke-dasharray="2 3"></line>
+<text x="205" y="22" font-size="10.5" fill="#9e2b25" font-style="italic">median settle A: 48% of battle</text>
+<text x="205" y="36" font-size="10.5" fill="#77582e" font-style="italic">B: 55% — later drama, good</text>
+<text x="385" y="214" font-size="10" fill="#75643f" text-anchor="end" font-style="italic">battle end</text>
+<text x="22" y="214" font-size="10" fill="#75643f" font-style="italic">turn 1</text>
+</svg>
+<div style="margin-top:8px;font-size:12px;color:#5a4c33;font-style:italic">A curve hugging the top-left = battles decided early then played out (feels bad even when Swings look fine). Settle point is the pacing metric Swings can't see: Swings counts flips, this says when they stop.</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1f">
+<div class="dv-olabel"><a class="dv-oid" href="#1f">1f</a>Per-map A/B delta — which maps moved, and which way</div>
+<div class="dv-card" style="width:560px;padding:20px 24px">
+<div style="font-size:15px;font-weight:bold">THE QUESTION: which map regressed?</div>
+<div style="font-size:12px;font-style:italic;color:#75643f;margin:2px 0 14px">Balance score (lower = better), run A ○ → run B ●. Brass = improved, red = regressed. Same idiom works per-metric.</div>
+<div style="display:grid;grid-template-columns:96px 1fr 86px;gap:12px 12px;align-items:center;font-size:12.5px">
+<div style="text-align:right">Frontier</div>
+<div style="position:relative;height:18px"><div style="position:absolute;top:8px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:8px;height:2px;left:0%;width:12.5%;background:#9c5449"></div><div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:calc(0% - 2px)"></div><div style="position:absolute;top:4px;width:11px;height:11px;border-radius:50%;background:#9e2b25;left:calc(12.5% - 5px)"></div></div>
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#9e2b25">0.0 → 2.5</div>
+<div style="text-align:right">Causeway</div>
+<div style="position:relative;height:18px"><div style="position:absolute;top:8px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:8px;height:2px;left:5%;width:5%;background:#97753f"></div><div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:calc(10% - 8px)"></div><div style="position:absolute;top:4px;width:11px;height:11px;border-radius:50%;background:#77582e;left:calc(5% - 5px)"></div></div>
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#5a4c33">2.0 → 1.0</div>
+<div style="text-align:right">The Marshes</div>
+<div style="position:relative;height:18px"><div style="position:absolute;top:8px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:calc(10% - 8px)"></div><div style="position:absolute;top:4px;width:11px;height:11px;border-radius:50%;background:#3a2f1d;left:calc(10% - 1px)"></div></div>
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#5a4c33">2.0 → 2.0</div>
+<div style="text-align:right">Saber Ridge</div>
+<div style="position:relative;height:18px"><div style="position:absolute;top:8px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:8px;height:2px;left:20%;width:22.5%;background:#9c5449"></div><div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:calc(20% - 8px)"></div><div style="position:absolute;top:4px;width:11px;height:11px;border-radius:50%;background:#9e2b25;left:calc(42.5% - 5px)"></div></div>
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#9e2b25">4.0 → 8.5</div>
+<div style="text-align:right">The Void</div>
+<div style="position:relative;height:18px"><div style="position:absolute;top:8px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:8px;height:2px;left:20%;width:8.5%;background:#97753f"></div><div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:calc(28.5% - 8px)"></div><div style="position:absolute;top:4px;width:11px;height:11px;border-radius:50%;background:#77582e;left:calc(20% - 5px)"></div></div>
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#5a4c33">5.7 → 4.0</div>
+<div style="text-align:right"><b>The Narrows</b></div>
+<div style="position:relative;height:18px"><div style="position:absolute;top:8px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:8px;height:2px;left:50%;width:32.5%;background:#9c5449"></div><div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:calc(50% - 8px)"></div><div style="position:absolute;top:4px;width:11px;height:11px;border-radius:50%;background:#9e2b25;left:calc(82.5% - 5px)"></div></div>
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#9e2b25;font-weight:bold">10.0 → 16.5 ✗</div>
+<div style="text-align:right">Long March</div>
+<div style="position:relative;height:18px"><div style="position:absolute;top:8px;left:0;right:0;height:2px;background:#d8caa2"></div><div style="position:absolute;top:8px;height:2px;left:45%;width:29%;background:#97753f"></div><div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid #5a4c33;background:#e8dcc0;left:calc(74% - 8px)"></div><div style="position:absolute;top:4px;width:11px;height:11px;border-radius:50%;background:#77582e;left:calc(45% - 5px)"></div></div>
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#5a4c33">14.8 → 9.0</div>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:10.5px;color:#75643f;margin-top:10px;font-style:italic"><span>0 (ideal)</span><span>balance score →</span><span>20</span></div>
+<div style="margin-top:12px;font-size:12px;color:#5a4c33;font-style:italic">Sorted by run-B score. The eye lands on long red arrows first — that's the triage. Clicking a row would open <a class="dv-oid" href="#1d">1d</a>'s strip + the map's band board filtered to it.</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1g">
+<div class="dv-olabel"><a class="dv-oid" href="#1g">1g</a>Unit role map — Bill's four buckets as a plot, not a table</div>
+<div class="dv-card" style="width:560px;padding:20px 24px">
+<div style="font-size:15px;font-weight:bold">THE QUESTION: is each unit doing its job?</div>
+<div style="font-size:12px;font-style:italic;color:#75643f;margin:2px 0 12px">x = median deploy timing · y = attacks per battle fielded · ring = share of kills that break the settle point (breakthrough). <b style="color:#9e2b25">Layout proposal — needs per-unit capture (1b's units block); no data exists yet.</b></div>
+<div style="position:relative;width:100%;height:300px;background:rgba(255,255,255,.18);border:1px solid #d8caa2;border-radius:6px">
+<div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:#b9a878"></div>
+<div style="position:absolute;top:50%;left:0;right:0;height:1px;background:#b9a878"></div>
+<div style="position:absolute;top:8px;left:12px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#75643f">Lead the charge</div>
+<div style="position:absolute;top:8px;right:12px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#75643f">Supporting role</div>
+<div style="position:absolute;bottom:8px;left:12px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#75643f">Hold the line</div>
+<div style="position:absolute;bottom:8px;right:12px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#75643f">Breakthrough point</div>
+<div style="position:absolute;left:22%;top:26%;transform:translate(-50%,-50%);text-align:center"><div style="width:34px;height:34px;border-radius:50%;background:#9c5449;border:3px solid #9e2b25;margin:0 auto"></div><div style="font-size:11.5px;margin-top:3px"><b>Cavalry</b></div></div>
+<div style="position:absolute;left:68%;top:34%;transform:translate(-50%,-50%);text-align:center"><div style="width:30px;height:30px;border-radius:50%;background:#97753f;border:2px solid transparent;margin:0 auto"></div><div style="font-size:11.5px;margin-top:3px"><b>Artillery</b></div></div>
+<div style="position:absolute;left:30%;top:72%;transform:translate(-50%,-50%);text-align:center"><div style="width:38px;height:38px;border-radius:50%;background:#54708e;border:2px solid transparent;margin:0 auto"></div><div style="font-size:11.5px;margin-top:3px"><b>Infantry</b></div></div>
+<div style="position:absolute;left:80%;top:66%;transform:translate(-50%,-50%);text-align:center"><div style="width:26px;height:26px;border-radius:50%;background:#9a9180;border:3px solid #9e2b25;margin:0 auto"></div><div style="font-size:11.5px;margin-top:3px"><b>(new unit)</b></div></div>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:10.5px;color:#75643f;margin-top:6px;font-style:italic"><span>← deploys early</span><span>deploys late →</span></div>
+<div style="margin-top:10px;font-size:12px;color:#5a4c33;font-style:italic">Dot size = battles fielded. A/B: ghost dot + arrow per unit, same as <a class="dv-oid" href="#1f">1f</a>. Actionable read: a "hold the line" unit drifting into "lead the charge" after a stat buff is a role collapse, visible before win rates move.</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "adopt <a class="dv-oid" href="#1a">1a</a> as the spec, draft the WOA tickets" · "riff on <a class="dv-oid" href="#1d">1d</a> with per-battle rows instead of averages" · "mock the full dashboard page combining <a class="dv-oid" href="#1c">1c</a>+<a class="dv-oid" href="#1f">1f</a> as the landing view"</p>
+</section>
+</x-dc>
+</body>
+</html>

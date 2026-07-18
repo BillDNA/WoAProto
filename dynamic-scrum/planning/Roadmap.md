@@ -62,18 +62,28 @@ settled the 17-card call — **ADOPTED** (`D.D:seventeen-card-adopt`; execution 
 
 ---
 
-## M2 — Actionable, visible data  ·  size: S–M  *(pillar 2)*
+## M2 — Actionable, visible data  ·  size: M  *(pillar 2 — spec'd 2026-07-18)*
 
 **Goal:** every metric points at a lever, and is actually seen.
 
-**Deliverables:**
-- **WOA-006** — load saved CLI balance runs into the Dashboard Charts tab (close the one-way
-  logs→dashboard gap; today the dashboard only charts its own live sims).
-- **increase-data-value** — each report metric names the knob it implies and surfaces where it's used.
-- Operationalize the **constraint-temperature** dial (policy designed in M1.1 / WOA-029;
-  `grading-rubrics.md` §Temperature) so the loop drives its own escapes from local maxima, not by luck.
+**Spec:** `dynamic-scrum/planning/specs/design_handoff_metrics_dashboard/` (metric spec v2 + view-only
+A/B balance dashboard; agreed with Bill 2026-07-18 — graduated the [[metric-bands-by-temperature]]
+parking-lot note). Ships in phases; **Phase 1 is the active sprint** ([[Sprint]]).
 
-**Done when:** a balance report's every metric maps to a lever and shows in the dashboard.
+**Deliverables (Phase 1 — active sprint, golden-diff-safe):**
+- **WOA-030** — execute the 17-card adopt first, so all capture/baselines land on the adopted deck.
+- **WOA-031** — per-play trace capture in the engine (SPEC §4) · **WOA-032** — trace rows + `runs`
+  table in woa.db (absorbs **WOA-006**, closed 2026-07-18) · **WOA-033** — bands-as-data +
+  trace folds in `report-model.js` (temperature-widened bands = the dial made visible) ·
+  **WOA-034** — view-only dashboard shell with run-A/B pickers · **WOA-035** — Overview screen
+  (triage band board, map dumbbells, verdict banner, pacing minis).
+
+**Deliverables (Phase 2/3 — next sprint, from TICKETS.md):** the rules-1.2 metric re-baseline
+(rates not counts, win-path conditioning — atomic with rubric + test pins), map drill-down with tempo
+lanes + hex lenses, Cards tab, Units tab.
+
+**Done when:** a balance report's every metric maps to a lever and shows in the dashboard — two saved
+runs comparable A/B at a selectable temperature, verdicts naming their levers.
 
 ---
 
