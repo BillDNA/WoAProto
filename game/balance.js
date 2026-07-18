@@ -41,6 +41,11 @@ var E = require('./engine.js');
 var R = require('./report-model.js');
 var fs = require('fs');
 var path = require('path');
+// V1/WOA-032 battle persistence — guarded exactly like game/server.js's own
+// require: a zipped game/ without dev/ still runs and prints, just doesn't
+// persist. dev/ may carry deps (node:sqlite); game/ itself stays dependency-free.
+var db = null;
+try { db = require(path.join(__dirname, '..', 'dev', 'db.js')); } catch (e) { /* persistence off */ }
 
 var pct = R.pct;
 function pad(s, w, right) {
@@ -95,7 +100,10 @@ function matchup(n, a, b, maps) {
 }
 
 /* ---------------- per-map report ---------------- */
-function mapReport(n, diff, filter, maps) {
+// mapsetArg: the --mapset value the caller resolved `maps` from (null = the
+// active map-set's pool) — WOA-032 run-identity stamp only, doesn't affect
+// which maps run.
+function mapReport(n, diff, filter, maps, mapsetArg) {
   if (filter) {
     maps = maps.filter(function (m) { return m.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0; });
     if (!maps.length) { console.log('No map matches "' + filter + '".'); return; }
@@ -103,7 +111,23 @@ function mapReport(n, diff, filter, maps) {
   var probs = E.validateMaps(maps);
   if (probs.length) { console.log('Fix these first:\n  ' + probs.join('\n  ')); return; }
 
-  console.log('Simulating ' + n + ' battles per map (' + maps.length + ' maps, ' + diff + ' AI)...\n');
+  // V1/WOA-032: one runs row per invocation (SPEC §7), battles reference it.
+  // Best-effort — a persistence hiccup must never break the report itself.
+  var dbh = null, runId = null;
+  if (db) {
+    try {
+      dbh = db.open();
+      runId = db.insertRun(dbh, {
+        version: E.VERSION, kind: 'balance', redAi: diff, blueAi: diff, n: n, tool: 'balance.js',
+        deck: E.ACTIVE_DECK && E.ACTIVE_DECK.id,
+        mapset: mapsetArg || (E.activeMapset() && E.activeMapset().id) || 'all',
+        seedBase: 7919 // the SAME base the per-map (mi+1)*7919 schedule below multiplies
+      });
+    } catch (e) { dbh = null; runId = null; }
+  }
+
+  console.log('Simulating ' + n + ' battles per map (' + maps.length + ' maps, ' + diff + ' AI)...' +
+    (dbh ? '  [persisting to logs/woa.db]' : '') + '\n');
   var header = pad('Map', 16, true) + pad('Shape', 11, true) +
     pad('Red%', 6) + pad('Blue%', 7) + pad('1st%', 6) + pad('2nd%', 6) +
     pad('HQ%', 6) + pad('Turns', 7) + pad('VPdiff', 8) +
@@ -115,7 +139,13 @@ function mapReport(n, diff, filter, maps) {
   var mapRows = []; // [{agg, done}] for the shared foldGlobal
 
   maps.forEach(function (map, mi) {
-    var r = E.balanceMap(map, n, { diffRed: diff, diffBlue: diff, seedBase: (mi + 1) * 7919 });
+    var seedBase = (mi + 1) * 7919;
+    var r = E.balanceMap(map, n, { diffRed: diff, diffBlue: diff, seedBase: seedBase,
+      onGame: dbh && function (g1, nn, st) {
+        try {
+          db.insertBattle(dbh, runId, st, E.balanceFP(g1 - 1), { seed: E.balanceSeed(seedBase, g1 - 1), version: E.VERSION });
+        } catch (e) { /* persistence is best-effort */ }
+      } });
     var done = n - r.unfinished;
     mapRows.push({ agg: r, done: done });
     var notes = R.mapNotes(r, done);
@@ -184,6 +214,7 @@ function mapReport(n, diff, filter, maps) {
   console.log('            the game ended. 0 = a decisive finish; high = marching in circles.');
   console.log('  lead swings  times the field-score lead flipped sides per battle. High = a real');
   console.log('            back-and-forth (a losing player can feel a comeback); 0 = wire-to-wire.');
+  if (dbh) { console.log('\nPersisted ' + G.games + ' battles to logs/woa.db (run ' + runId + ').'); db.close(dbh); }
 }
 
 /* ---------------- args ---------------- */
@@ -205,5 +236,5 @@ if (args[0] === 'matchup') {
     else if (E.AI_PRESETS[a]) diff = a; // easy/normal/hard or a maps.js personality
     else filter = filter ? filter + ' ' + a : a;
   });
-  mapReport(n, diff, filter, rosterFor(setArg));
+  mapReport(n, diff, filter, rosterFor(setArg), setArg);
 }

@@ -229,7 +229,10 @@ var ROUTES = {
   },
   'POST /api/recordbattle': function (req, res, body) {
     // V1: one finished battle -> a per-battle row in logs/woa.db.
-    // body = { run:{version,kind,redAi,blueAi,n,tool,notes}, runKey?, state, firstPlayer, seed }
+    // body = { run:{version,kind,redAi,blueAi,n,tool,notes,deck,mapset,seedBase,label,baseline},
+    //   runKey?, state, firstPlayer, seed } — run is forwarded to db.insertRun as-is
+    // (WOA-032, SPEC §7: run identity); the caller (the dashboard Run loop) stamps
+    // deck/mapset/seedBase, never this proxy — the server stays a dumb pass-through.
     try {
       var r = recordBattle(body);
       json(res, r.status, r.out);

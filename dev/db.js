@@ -12,12 +12,28 @@
      var db = require('./db.js');
      var h = db.open();                          // default <repo>/logs/woa.db
      var runId = db.insertRun(h, { version: E.VERSION, kind: 'balance',
-       redAi: 'hard', blueAi: 'hard', n: 60, tool: 'balance-report.js' });
+       redAi: 'hard', blueAi: 'hard', n: 60, tool: 'balance-report.js',
+       deck: 'default', mapset: 'active', seedBase: 7919, label: 'r1',
+       baseline: false });
      db.insertBattle(h, runId, st, firstPlayer); // + card_plays + timeline rows
      db.close(h);
 
    Query it with dev/db-query.js. The .db file is gitignored (regenerable);
-   the markdown reports remain the committed human-readable record. */
+   the markdown reports remain the committed human-readable record.
+
+   WOA-032 (SPEC §7, run identity for the A/B picker): `runs` grew deck/
+   mapset/seed_base/label/baseline columns. Exactly one baseline=1 row per
+   `version` is enforced by db.js itself (insertRun's baseline:true, or the
+   standalone setBaseline(h, runId)) — pinning a new baseline atomically
+   clears the old one(s) for that version, never left to callers. Callers
+   never create a baseline implicitly; baseline is opt-in per insertRun call.
+
+   WOA-032 (SPEC §4, the trace): `battles` grew a `trace` TEXT column — one
+   JSON blob per battle holding the full per-play trace (st.playLog, as the
+   engine wrote it — action/hex/kill/leader/unit fields already folded in by
+   WOA-031) plus the per-unit-type `units` fold (st.unitMetrics). Everything
+   in SPEC §1-3 derivable from the trace is meant to be derived FROM this
+   column (report-model.js folds), not re-captured as new battles columns. */
 'use strict';
 
 var fs = require('fs');
@@ -31,7 +47,8 @@ var RUN_KINDS = ['balance', 'llm', 'human', 'watch'];
 var SCHEMA = [
   'CREATE TABLE IF NOT EXISTS runs (',
   '  id INTEGER PRIMARY KEY, version TEXT, ts TEXT, kind TEXT,',
-  '  red_ai TEXT, blue_ai TEXT, n INTEGER, tool TEXT, notes TEXT',
+  '  red_ai TEXT, blue_ai TEXT, n INTEGER, tool TEXT, notes TEXT,',
+  '  deck TEXT, mapset TEXT, seed_base INTEGER, label TEXT, baseline INTEGER',
   ');',
   'CREATE TABLE IF NOT EXISTS battles (',
   '  id INTEGER PRIMARY KEY, run_id INTEGER, version TEXT, map TEXT, seed INTEGER,',
@@ -39,7 +56,7 @@ var SCHEMA = [
   '  fs_red INTEGER, fs_blue INTEGER, first_blood TEXT, lead_changes INTEGER,',
   '  kill_tail INTEGER, zero_kill INTEGER, tiebreak INTEGER,',
   '  attacks INTEGER, swaps INTEGER, marches INTEGER, deploys INTEGER,',
-  '  res_end_red INTEGER, res_end_blue INTEGER',
+  '  res_end_red INTEGER, res_end_blue INTEGER, trace TEXT',
   ');',
   'CREATE TABLE IF NOT EXISTS card_plays (',
   '  id INTEGER PRIMARY KEY, battle_id INTEGER, side TEXT, card_id TEXT,',
@@ -84,14 +101,27 @@ function open(dbPath) {
   db.exec(SCHEMA);
   ensureColumn(db, 'battles', 'res_end_red', 'INTEGER');
   ensureColumn(db, 'battles', 'res_end_blue', 'INTEGER');
+  ensureColumn(db, 'battles', 'trace', 'TEXT');       // WOA-032 (SPEC §4): per-battle trace JSON
+  ensureColumn(db, 'runs', 'deck', 'TEXT');           // WOA-032 (SPEC §7): run identity for the A/B picker
+  ensureColumn(db, 'runs', 'mapset', 'TEXT');
+  ensureColumn(db, 'runs', 'seed_base', 'INTEGER');
+  ensureColumn(db, 'runs', 'label', 'TEXT');
+  ensureColumn(db, 'runs', 'baseline', 'INTEGER');
   var stmts = {
     insertRun: db.prepare(
-      'INSERT INTO runs (version, ts, kind, red_ai, blue_ai, n, tool, notes) VALUES (?,?,?,?,?,?,?,?)'),
+      'INSERT INTO runs (version, ts, kind, red_ai, blue_ai, n, tool, notes,' +
+      ' deck, mapset, seed_base, label, baseline) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)'),
     getRunVersion: db.prepare('SELECT version FROM runs WHERE id = ?'),
+    // WOA-032: exactly one baseline=1 row per rules version. `version IS ?`
+    // (not `=`) so a NULL-version run's baseline still clears correctly —
+    // SQL `= NULL` never matches, `IS ?` does.
+    clearBaseline: db.prepare('UPDATE runs SET baseline = 0 WHERE baseline = 1 AND version IS ?'),
+    setBaselineFlag: db.prepare('UPDATE runs SET baseline = 1 WHERE id = ?'),
     insertBattle: db.prepare(
       'INSERT INTO battles (run_id, version, map, seed, first_player, winner, win_type, turns,' +
       ' fs_red, fs_blue, first_blood, lead_changes, kill_tail, zero_kill, tiebreak,' +
-      ' attacks, swaps, marches, deploys, res_end_red, res_end_blue) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'),
+      ' attacks, swaps, marches, deploys, res_end_red, res_end_blue, trace)' +
+      ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'),
     insertCardPlay: db.prepare(
       'INSERT INTO card_plays (battle_id, side, card_id, mode, turn, seen, noop, won) VALUES (?,?,?,?,?,?,?,?)'),
     insertTimeline: db.prepare(
@@ -107,17 +137,46 @@ function txn(h, fn) {
   catch (e) { try { h.db.exec('ROLLBACK'); } catch (e2) {} throw e; }
 }
 
-/* Record one run (a batch of battles from one tool invocation).
+// Pin runId as the baseline: clears every OTHER baseline=1 row sharing its
+// version, then flags runId — all inside the caller's transaction, so a
+// concurrent read never sees two baselines (or zero) for a version. Shared
+// by insertRun(..., {baseline:true}) and the standalone setBaseline below.
+function pinBaseline(h, version, runId) {
+  h.stmts.clearBaseline.run(nz(version));
+  h.stmts.setBaselineFlag.run(runId);
+}
+
+/* Record one run (a batch of battles from one tool invocation) — SPEC §7.
    r = { version, kind('balance'|'llm'|'human'|'watch'), redAi, blueAi, n,
-         tool, notes?, ts? (ISO string; default now) }. Returns runId. */
+         tool, notes?, ts? (ISO string; default now),
+         deck?, mapset?, seedBase?, label?, baseline?(bool) }. Returns runId.
+   baseline:true pins this run as ITS version's one baseline, atomically
+   clearing any prior baseline for that version (SPEC §7: "pinning a new one
+   clears the old") — never left half-done even if the insert or the clear
+   fails partway (both run inside one transaction). */
 function insertRun(h, r) {
   r = r || {};
   if (RUN_KINDS.indexOf(r.kind) < 0)
     throw new Error('insertRun: kind must be one of ' + RUN_KINDS.join('|') + ' (got "' + r.kind + '")');
-  var res = h.stmts.insertRun.run(
-    nz(r.version), r.ts || new Date().toISOString(), r.kind,
-    nz(r.redAi), nz(r.blueAi), nz(r.n), nz(r.tool), nz(r.notes));
-  return Number(res.lastInsertRowid);
+  return txn(h, function () {
+    var res = h.stmts.insertRun.run(
+      nz(r.version), r.ts || new Date().toISOString(), r.kind,
+      nz(r.redAi), nz(r.blueAi), nz(r.n), nz(r.tool), nz(r.notes),
+      nz(r.deck), nz(r.mapset), nz(r.seedBase), nz(r.label), 0); // insert baseline=0; pin below
+    var runId = Number(res.lastInsertRowid);
+    if (r.baseline) pinBaseline(h, r.version, runId);
+    return runId;
+  });
+}
+
+/* Pin an EXISTING run as its version's baseline (e.g. promoting a run after
+   the fact). Same atomic clear-then-set as insertRun's baseline:true —
+   exposed standalone so callers never hand-roll the two UPDATEs themselves.
+   Returns runId. Throws if runId doesn't exist. */
+function setBaseline(h, runId) {
+  var row = h.stmts.getRunVersion.get(runId);
+  if (!row) throw new Error('setBaseline: no run with id ' + runId);
+  return txn(h, function () { pinBaseline(h, row.version, runId); return runId; });
 }
 
 /* Fold one FINISHED battle state into the DB — the same extractions
@@ -142,10 +201,19 @@ function insertBattle(h, runId, st, firstPlayer, extra) {
   var stats = st.stats || {};
   var fsr = E.fieldScore(st, 'red'), fsb = E.fieldScore(st, 'blue'); // VP of surviving units, same as balanceAdd
   var vp = st.vp || { red: 0, blue: 0 };
+  var seed = extra.seed !== undefined ? extra.seed : nz(st.seed);
+  // WOA-032 (SPEC §4): the trace envelope — st.playLog + st.unitMetrics
+  // verbatim as the engine wrote them (WOA-031), not renamed to the spec
+  // doc's shorthand keys ("store what the engine gives", feed-forward).
+  // ~1.3 KB/battle (SPEC §4 cost estimate) — accepted.
+  var trace = JSON.stringify({
+    v: version, map: nz(st.mapName), seed: seed, fp: nz(firstPlayer),
+    winner: winner, winType: nz(st.winType), turns: nz(st.turnNumber),
+    trace: st.playLog || [], units: st.unitMetrics || {}
+  });
   return txn(h, function () {
     var res = h.stmts.insertBattle.run(
-      runId, version, nz(st.mapName),
-      extra.seed !== undefined ? extra.seed : nz(st.seed),
+      runId, version, nz(st.mapName), seed,
       nz(firstPlayer), winner, nz(st.winType), nz(st.turnNumber),
       fsr, fsb, nz(stats.firstBlood),
       st.leadChanges || 0,
@@ -153,7 +221,8 @@ function insertBattle(h, runId, st, firstPlayer, extra) {
       (vp.red + vp.blue === 0) ? 1 : 0,                                // no unit ever died
       (st.winType === 'attrition' && fsr === fsb) ? 1 : 0,             // decided only by tie-goes-to-2nd
       stats.attacks || 0, stats.swaps || 0, stats.marches || 0, stats.deploys || 0,
-      reservesLeft(st, 'red'), reservesLeft(st, 'blue'));  // WOA-016: pieces left in reserve at battle end
+      reservesLeft(st, 'red'), reservesLeft(st, 'blue'),  // WOA-016: pieces left in reserve at battle end
+      trace);
     var battleId = Number(res.lastInsertRowid);
     (st.playLog || []).forEach(function (e) {
       h.stmts.insertCardPlay.run(battleId, e.p, e.id, nz(e.mode), nz(e.turn),
@@ -172,4 +241,7 @@ function insertBattle(h, runId, st, firstPlayer, extra) {
 
 function close(h) { h.db.close(); }
 
-module.exports = { open: open, insertRun: insertRun, insertBattle: insertBattle, close: close, DEFAULT_DB: DEFAULT_DB };
+module.exports = {
+  open: open, insertRun: insertRun, insertBattle: insertBattle, setBaseline: setBaseline,
+  close: close, DEFAULT_DB: DEFAULT_DB
+};

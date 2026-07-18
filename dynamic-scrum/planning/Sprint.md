@@ -21,21 +21,6 @@ temperature — with aggregates byte-identical to pre-sprint (golden diff holds 
 
 ## Tickets
 
-### WOA-032 — Trace rows + `runs` table in woa.db (P1.2)
-**Area:** data · **Status:** Todo · **Type:** sonnet · **Depends on:** WOA-031 · **Docs:** specs/design_handoff_metrics_dashboard, data-and-reports
-
-The dashboard's A/B model needs run identity: today `logs/woa.db` has per-battle rows but no notion of
-"a run" or a pinned baseline (SPEC §7). Persistence path is the existing `dev/db.js` behind
-`game/server.js` / `Engine.hooks.onBattleEnd`.
-
-**Acceptance criteria:**
-- [ ] Per-battle rows gain the trace JSON (SPEC §4 shape, incl. the `units` block); ~1.3 KB/battle cost accepted per spec
-- [ ] New `runs` table per SPEC §7 (`{id, ts, rulesVersion, deck, mapset, aiRed, aiBlue, nPerMap, seedBase, label, baseline}`); battle rows reference their run id
-- [ ] Exactly one `baseline` flag per rules version — pinning a new baseline clears the old (asserted in a test or a `dev/` check)
-- [ ] `game/balance.js` and the dashboard Run loop stamp run identity on the runs they write; the charts side stays view-only (never creates runs)
-- [ ] `node game/test.js` + `node dev/smoke.js` green; zipped `file://` copy still works (db absent is fine, as today)
-- [ ] User confirms done
-
 ### WOA-033 — report-model.js: bands as data + trace folds (P1.3)
 **Area:** data · **Status:** Todo · **Type:** opus · **Depends on:** WOA-031 · **Docs:** specs/design_handoff_metrics_dashboard, data-and-reports, grading-rubrics
 
@@ -85,6 +70,8 @@ the design canvas). All numbers from woa.db via WOA-033's folds; charts in the e
 _None._
 
 ## Finished
+
+- **WOA-032 — Trace rows + `runs` table in woa.db (P1.2)** (2026-07-18) — Runs table extended per SPEC §7 (additive ALTERs, old rows survive); battle rows carry trace JSON (~4KB/battle, over spec's 1.3KB estimate — accepted); baseline pin-twice uniqueness proven in dev/db.test.js (66 ok); Engine.ACTIVE_DECK exported as the one deck-identity read (WOA-036-safe); balance.js + dashboard Run loop stamp identity (runner live-verified: run 67, deck=cavsplit17-raid-paid, trace on rows); charts side untouched. matchup mode deliberately not persisted (not a §7 run). No label/pin UI yet → WOA-034. cost: 219,165 tok / 17.9 min / 78 calls
 
 - **WOA-031 — Per-play trace capture in the engine (P1.1)** (2026-07-18) — Trace capture live: playLog entries carry a/h/k/ld/u (attack sticky vs mixed plays), st.unitMetrics {dep,atk,abs,kill,die} per type folded incrementally; suite 237→1124 ok; golden diff independently verified byte-identical (1232 vs 1239 reports); runner live-exercised a fresh battle (32/34 tagged, kills==die). Fidelity note for folds: mixed deploy+attack plays tag 'attack' — deploy timing reads unitMetrics.dep, not the a-stream. cost: 182,680 tok / 18.8 min / 72 calls
 

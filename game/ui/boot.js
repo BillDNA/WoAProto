@@ -331,7 +331,14 @@ E.hooks.onBattleEnd.push(function (st) {
     api('recordbattle', {
       runKey: dash ? DASH.runKey : undefined,
       run: { version: E.VERSION, kind: kind, redAi: aiOf('red'), blueAi: aiOf('blue'),
-        n: dash ? DASH.meta.n : 1, tool: dash ? 'dashboard' : 'browser' },
+        n: dash ? DASH.meta.n : 1, tool: dash ? 'dashboard' : 'browser',
+        // WOA-032 (SPEC §7): run identity for the A/B picker. deck reads the
+        // deck the ENGINE actually resolved THIS load — never content/decks/'s
+        // active flag directly (WOA-036 gotcha: the Deck Editor's applied-deck
+        // sandbox overrides it, see index.html's WOA_APPLIED_DECK wiring).
+        deck: E.ACTIVE_DECK && E.ACTIVE_DECK.id,
+        mapset: dash ? DASH.meta.mapset : undefined,
+        seedBase: dash ? DASH.meta.seedBase : undefined },
       state: st, firstPlayer: E.other(st.second), seed: st.seed
     }).catch(function(){ /* persistence is best-effort */ });
   } finally { st.match = m; }
@@ -356,7 +363,11 @@ $('dashRun').onclick = function(){
   var probs = E.validateMaps(maps);
   if (probs.length){ toast('Fix these maps first: '+probs.join('; '), 4500); return; }
   DASH.running = true; DASH.cancel = false;
-  DASH.results = []; DASH.meta = { n:n, dr:dr, db:db };
+  // mapset/seedBase (WOA-032, SPEC §7 run identity): `pick` IS this run's map
+  // selection ('all' = the active map-set's pool, a map name, or '@adhoc');
+  // 7919 is the SAME seed-schedule base the per-map E.balanceSeed((mi+1)*7919, g)
+  // call below already uses — one fact, not a second number invented here.
+  DASH.results = []; DASH.meta = { n:n, dr:dr, db:db, mapset:pick, seedBase:7919 };
   DASH.detail = {}; DASH.chartMap = null; // per-battle rows for the Charts view (histogram)
   DASH.runKey = 'dash-' + Date.now(); // groups this run's battles into one DB run row
   $('dashStop').style.display = ''; $('dashRun').disabled = true;

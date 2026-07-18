@@ -157,6 +157,77 @@ try {
       { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   } catch (e) { wrote = false; }
   ok(!wrote, 'CLI connection is read-only (DELETE rejected)');
+
+  /* ---------- run identity + trace (WOA-032, SPEC §7 / §4) ---------- */
+  // Separate handle/file from the counts-pinned assertions above (the CLI
+  // section just asserted exact row counts on dbFile — don't perturb it).
+  section('run identity + trace (WOA-032)');
+  var dbFile2 = path.join(tmpDir, 'runs.db');
+  var h2 = db.open(dbFile2);
+
+  var runIdA = db.insertRun(h2, {
+    version: '9.9-test', kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 5, tool: 'db.test.js',
+    deck: 'default', mapset: 'core7', seedBase: 7919, label: 'run A'
+  });
+  var rowA = h2.db.prepare('SELECT * FROM runs WHERE id = ?').get(runIdA);
+  ok(rowA.deck === 'default' && rowA.mapset === 'core7' && rowA.seed_base === 7919 && rowA.label === 'run A',
+    'runs row carries deck/mapset/seed_base/label (SPEC §7)');
+  ok(rowA.baseline === 0, 'baseline defaults to 0 when not requested');
+
+  var st2 = E.simBattle(E.MAPS[0], 4242, 'red', 'normal', 'normal');
+  var battleIdA = db.insertBattle(h2, runIdA, st2, 'red', { seed: 4242 });
+  var bA = h2.db.prepare('SELECT run_id, trace FROM battles WHERE id = ?').get(battleIdA);
+  ok(bA.run_id === runIdA, 'battle row references its run id (run_id column)');
+  var trace = JSON.parse(bA.trace);
+  ok(trace && typeof trace === 'object', 'battles.trace is valid JSON');
+  ['v', 'map', 'seed', 'fp', 'winner', 'winType', 'turns', 'trace', 'units'].forEach(function (k) {
+    ok(k in trace, 'trace envelope has "' + k + '" (SPEC §4 shape)');
+  });
+  ok(Array.isArray(trace.trace) && trace.trace.length === st2.playLog.length,
+    'trace.trace = st.playLog verbatim (' + trace.trace.length + ' entries)');
+  ok(JSON.stringify(trace.units) === JSON.stringify(st2.unitMetrics),
+    'trace.units = st.unitMetrics verbatim');
+  ok(Object.keys(trace.units).indexOf('infantry') >= 0,
+    'unitMetrics keyed by FULL unit-type name "infantry" (WOA-031 feed-forward), not "inf" shorthand');
+
+  /* ---------- baseline uniqueness (WOA-032, SPEC §7) ---------- */
+  section('baseline uniqueness (WOA-032)');
+  var vBase = '9.9-baseline-test';
+  var runX = db.insertRun(h2, { version: vBase, kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 1, tool: 'db.test.js', baseline: true });
+  ok(h2.db.prepare('SELECT baseline FROM runs WHERE id = ?').get(runX).baseline === 1,
+    'first baseline pin for a fresh version sets baseline=1');
+
+  var runY = db.insertRun(h2, { version: vBase, kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 1, tool: 'db.test.js', baseline: true });
+  var flagsAfterY = h2.db.prepare('SELECT id, baseline FROM runs WHERE version = ? ORDER BY id').all(vBase);
+  ok(flagsAfterY.filter(function (r) { return r.baseline === 1; }).length === 1,
+    'exactly one baseline=1 row after a SECOND pin (pinning-twice, pin #1)');
+  ok(flagsAfterY.filter(function (r) { return r.id === runY; })[0].baseline === 1 &&
+     flagsAfterY.filter(function (r) { return r.id === runX; })[0].baseline === 0,
+    'the newer run (Y) is now baseline; the older one (X) was cleared');
+
+  db.setBaseline(h2, runX); // pinning-twice, pin #2: promote X back over Y via the standalone helper
+  var flagsAfterX = h2.db.prepare('SELECT id, baseline FROM runs WHERE version = ? ORDER BY id').all(vBase);
+  ok(flagsAfterX.filter(function (r) { return r.baseline === 1; }).length === 1,
+    'exactly one baseline=1 row after re-pinning via setBaseline (pinning-twice, pin #2)');
+  ok(flagsAfterX.filter(function (r) { return r.id === runX; })[0].baseline === 1 &&
+     flagsAfterX.filter(function (r) { return r.id === runY; })[0].baseline === 0,
+    'setBaseline(runX) promotes X and clears Y');
+
+  // a pin scoped to ONE version must never touch another version's flag
+  db.insertRun(h2, { version: '9.9-other-version', kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 1, tool: 'db.test.js', baseline: true });
+  var stillX = h2.db.prepare('SELECT baseline FROM runs WHERE id = ?').get(runX).baseline;
+  ok(stillX === 1, 'pinning a baseline on a DIFFERENT version leaves this version’s baseline untouched');
+
+  // NULL-version runs: `version IS ?` must clear NULL-version baselines too (not just non-NULL, "= NULL" never matches in SQL)
+  db.insertRun(h2, { kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 1, tool: 'db.test.js', baseline: true }); // version omitted -> NULL
+  var nullB = db.insertRun(h2, { kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 1, tool: 'db.test.js', baseline: true });
+  var nullFlags = h2.db.prepare('SELECT id, baseline FROM runs WHERE version IS NULL ORDER BY id').all();
+  ok(nullFlags.filter(function (r) { return r.baseline === 1; }).length === 1,
+    'NULL-version runs also keep exactly one baseline (IS, not =, comparison)');
+  ok(nullFlags.filter(function (r) { return r.id === nullB; })[0].baseline === 1,
+    'the later NULL-version pin wins, the earlier one cleared');
+
+  db.close(h2);
 } catch (e) {
   failures++;
   console.error('\nUNEXPECTED ERROR: ' + (e && e.stack || e));

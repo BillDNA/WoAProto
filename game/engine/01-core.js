@@ -128,6 +128,12 @@
   /* shared-namespace exports */
   I.RULES_VERSION = RULES_VERSION;
   I.BUILTIN = BUILTIN;
+  // WOA-032: the deck the ENGINE actually resolved this load (id + name) — the
+  // one place to read "which deck is live", incl. the browser's '__applied'
+  // sandbox deck (index.html pushes it before this file runs, see WOA-036
+  // gotcha). Run-identity stampers (game/balance.js, the dashboard Run loop)
+  // read this instead of re-deriving from content/decks/'s active flag.
+  I.ACTIVE_DECK = ACTIVE_DECK;
   I.rnd = rnd;
   I.shuffle = shuffle;
   I.UNITS = UNITS;
