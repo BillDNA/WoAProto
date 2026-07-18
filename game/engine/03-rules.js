@@ -223,6 +223,14 @@
     // toward the hex the attack crosses from); trench OWNERSHIP is irrelevant.
     var borderTrenched = trenchCovers(st, atk.to, I.dirBetween(atk.to, atk.via || atk.from));
     I.ensureStats(st).attacks++;
+    // WOA-031 (SPEC §4): tag the play as an attack + tally attacks-made/absorbed
+    // by unit type. 'attack' is sticky on the trace entry (see I.recordPlay) so
+    // a reposition step later in the SAME play (Reckless Maneuvers) can't steal
+    // the tag out from under this attack's kill.
+    I.recordPlay(st, 'attack', atk.to);
+    var um = I.ensureUnitMetrics(st);
+    um[au.type].atk++;
+    if (du) um[du.type].abs++;
     var msg = I.cap(p) + ' ' + I.UNITS[au.type].name + ' attacks ' +
       (du ? I.cap(e) + ' ' + I.UNITS[du.type].name : I.cap(e) + ' HQ') +
       ' at ' + I.hexLabel(atk.to) +
@@ -231,7 +239,11 @@
 
     // st.vp tracks kills for stats/journal only — victory reads I.fieldScore.
     function killDefender() {
-      if (du) { delete st.units[atk.to]; st.vp[p] += I.UNITS[du.type].vp; if (!st.stats.firstBlood) st.stats.firstBlood = p; }
+      if (du) {
+        delete st.units[atk.to]; st.vp[p] += I.UNITS[du.type].vp; if (!st.stats.firstBlood) st.stats.firstBlood = p;
+        um[du.type].die++; um[au.type].kill++;
+        I.recordKill(st, 1);
+      }
       if (dHQ) { st.hqAlive[dHQ] = false; }
       st.lastKillTurn = st.turnNumber;
     }
@@ -239,6 +251,9 @@
       delete st.units[atk.from];
       st.vp[e] += I.UNITS[au.type].vp;
       if (!st.stats.firstBlood) st.stats.firstBlood = e;
+      um[au.type].die++;
+      if (du) um[du.type].kill++;
+      I.recordKill(st, 1);
       st.lastKillTurn = st.turnNumber;
     }
 

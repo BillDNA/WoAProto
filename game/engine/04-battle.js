@@ -61,6 +61,7 @@
       decks: {}, discards: { red: [], blue: [] }, removed: { red: [], blue: [] }, hands: { red: [], blue: [] },
       seen: { red: {}, blue: {} },  // cardId -> times it has appeared in p's hand
       playLog: [],                  // {p, id, mode, turn, seen-at-play} per card played
+      unitMetrics: initUnitMetrics(), // WOA-031 (SPEC §4 "units"): per-unit-type {dep,atk,abs,kill,die} fold
       lastSwap: { red: null, blue: null }, // p's most recent swap pair (AI anti-I.shuffle)
       stats: { attacks: 0, swaps: 0, marches: 0, deploys: 0, firstBlood: null }, // behaviour counters for the balance lab
       firstTurnDone: { red: false, blue: false },
@@ -88,6 +89,19 @@
     var r = { trench: I.TRENCH_COUNT };
     Object.keys(I.UNITS).forEach(function (t) { r[t] = I.UNITS[t].count || 0; });
     return r;
+  }
+  // WOA-031 (SPEC §4): per-battle, per-unit-type fold — keyed by I.UNITS' own
+  // type keys (infantry/cavalry/artillery), not the spec doc's shorthand.
+  // Named unitMetrics (not "units") because st.units already means the
+  // hexKey->{type,owner} board map.
+  function initUnitMetrics() {
+    var u = {};
+    Object.keys(I.UNITS).forEach(function (t) { u[t] = { dep: [], atk: 0, abs: 0, kill: 0, die: 0 }; });
+    return u;
+  }
+  function ensureUnitMetrics(st) { // self-heal pre-metrics saves/sims
+    if (!st.unitMetrics) st.unitMetrics = initUnitMetrics();
+    return st.unitMetrics;
   }
   function log(st, msg) { st.log.push({ turn: st.turnNumber, player: st.current, msg: msg }); }
 
@@ -334,6 +348,27 @@
   }
   function swapKey(a, b) { return a < b ? a + '|' + b : b + '|' + a; }
 
+  // WOA-031 (SPEC §4): tag the CURRENT play's trace fields as its steps
+  // resolve. 'attack' is sticky — once an attack resolves in a play, a later
+  // reposition step (e.g. Reckless Maneuvers: attack THEN reposition) must
+  // not steal the tag and strand that attack's kill off an 'attack' entry.
+  // Terse — omit absent fields rather than writing null (cost ~40B/play).
+  function recordPlay(st, action, hex, unit) {
+    if (!st.pending) return;
+    var entry = st.playLog[st.pending.logIdx];
+    if (!entry) return;
+    if (action === 'attack' || entry.a !== 'attack') {
+      entry.a = action;
+      if (hex) entry.h = hex;
+    }
+    if (unit) entry.u = unit; // deploys always record their unit, even under a later attack tag
+  }
+  function recordKill(st, n) {
+    if (!st.pending || !n) return;
+    var entry = st.playLog[st.pending.logIdx];
+    if (entry) entry.k = (entry.k || 0) + n;
+  }
+
   function applyStep(st, choice) {
     if (st.phase !== 'step') throw new Error('no step pending');
     var p = st.current;
@@ -351,6 +386,8 @@
       st.reserves[p][step.unit]--;
       st.units[choice.hex] = { type: step.unit, owner: p };
       st.stats.deploys++;
+      recordPlay(st, 'deploy', choice.hex, step.unit);
+      ensureUnitMetrics(st)[step.unit].dep.push(st.turnNumber);
       log(st, I.cap(p) + ' deploys ' + I.UNITS[step.unit].name + ' at ' + I.hexLabel(choice.hex) + '.');
     } else if (step.type === 'trench') {
       if (st.reserves[p].trench <= 0 || I.trenchTargets(st, p).indexOf(choice.hex) < 0) throw new Error('invalid trench hex');
@@ -380,6 +417,7 @@
         st.units[choice.a] = ub; st.units[choice.b] = ua;
         st.lastSwap[p] = swapKey(choice.a, choice.b);
         st.stats.swaps++;
+        recordPlay(st, 'swap', choice.a);
         log(st, I.cap(p) + ' swaps the units at ' + I.hexLabel(choice.a) + ' and ' + I.hexLabel(choice.b) + '.');
       } else {
         var okm = r.moves.some(function (m) { return m.from === choice.from && m.to === choice.to; });
@@ -387,6 +425,7 @@
         st.units[choice.to] = st.units[choice.from];
         delete st.units[choice.from];
         st.stats.marches++;
+        recordPlay(st, 'march', choice.to);
         log(st, I.cap(p) + ' marches ' + I.UNITS[st.units[choice.to].type].name + ' from ' + I.hexLabel(choice.from) + ' to ' + I.hexLabel(choice.to) + '.');
       }
     } else if (step.type === 'barrage') {
@@ -423,11 +462,12 @@
       st.lastLeader = lead;
     }
     if (st.fsTimeline) st.fsTimeline.push([fr, fb]); // absent on sims + pre-V1 saves
+    var entry = st.playLog[st.pending.logIdx];
+    if (entry && st.lastLeader) entry.ld = st.lastLeader; // WOA-031: leader after this turn (carries through ties)
     if (st.pending.acted === 0) {
       // The play resolved zero actions — an effective skipped turn. Bill wants
       // these visible in the journal AND measurable in the card report.
       log(st, I.cap(p) + ' finds no opening — the order is spent to no effect.');
-      var entry = st.playLog[st.pending.logIdx];
       if (entry && entry.id === st.pending.cardId) entry.noop = true;
     }
     st.removed[p].push(st.pending.cardId);
@@ -465,6 +505,10 @@
   I.mustPlayStep = mustPlayStep;
   I.ensureStats = ensureStats;
   I.swapKey = swapKey;
+  I.initUnitMetrics = initUnitMetrics;
+  I.ensureUnitMetrics = ensureUnitMetrics;
+  I.recordPlay = recordPlay;
+  I.recordKill = recordKill;
   I.applyStep = applyStep;
   I.endTurn = endTurn;
 })(typeof window !== 'undefined' ? window : globalThis);

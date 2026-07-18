@@ -21,20 +21,6 @@ temperature — with aggregates byte-identical to pre-sprint (golden diff holds 
 
 ## Tickets
 
-### WOA-031 — Per-play trace capture in the engine (P1.1)
-**Area:** engine · **Status:** Todo · **Type:** sonnet · **Depends on:** WOA-030 · **Docs:** specs/design_handoff_metrics_dashboard, code-architecture
-
-Every temporal/hex/unit metric in the spec derives from a per-play battle trace that doesn't exist
-yet — this ticket creates the capture (SPEC §4), extending the existing `playLog` (already per-play,
-`game/engine/04-battle.js`). Capture only: adds fields, changes **no** aggregate.
-
-**Acceptance criteria:**
-- [ ] `playLog` entries carry the SPEC §4 per-play fields — `a` (deploy|attack|swap|march), `h` (hex), `k` (kills), `ld` (leader after turn), `u` (unit type on deploys) — for every play in a simulated battle
-- [ ] A per-battle `units` block (`{dep:[…], atk, abs, kill, die}` per unit type fielded — `abs` = attacks absorbed) is folded at battle end onto the battle result
-- [ ] `node game/test.js` green, extended with a trace-shape assertion (a simmed battle's trace has one entry per play with the §4 fields; `units` totals consistent with the trace)
-- [ ] Golden balance diff **byte-identical** vs pre-change HEAD on the adopted deck (same seeds → identical aggregates)
-- [ ] User confirms done
-
 ### WOA-032 — Trace rows + `runs` table in woa.db (P1.2)
 **Area:** data · **Status:** Todo · **Type:** sonnet · **Depends on:** WOA-031 · **Docs:** specs/design_handoff_metrics_dashboard, data-and-reports
 
@@ -99,6 +85,8 @@ the design canvas). All numbers from woa.db via WOA-033's folds; charts in the e
 _None._
 
 ## Finished
+
+- **WOA-031 — Per-play trace capture in the engine (P1.1)** (2026-07-18) — Trace capture live: playLog entries carry a/h/k/ld/u (attack sticky vs mixed plays), st.unitMetrics {dep,atk,abs,kill,die} per type folded incrementally; suite 237→1124 ok; golden diff independently verified byte-identical (1232 vs 1239 reports); runner live-exercised a fresh battle (32/34 tagged, kills==die). Fidelity note for folds: mixed deploy+attack plays tag 'attack' — deploy timing reads unitMetrics.dep, not the a-stream. cost: 182,680 tok / 18.8 min / 72 calls
 
 - **WOA-030 — Execute the 17-card adopt (`D.D:seventeen-card-adopt`)** (2026-07-18) — 17-card adopt executed: tests deck-decoupled (fixtureCard), cavsplit17-raid-paid active, rubric+CLAUDE.md baselines re-stamped (superseded chains kept), skill premium re-measured (n>e 69 / h>e 76 / h>n 56 / sanity 46, all n=576), 0-kill confirms 2% n=100/map; matchup leg added to generate-reports; manifest.js regenerated (was stale, -5 decks); browser applied-deck override found → WOA-036 (Bill decides); Goals.md annotation held for Bill. cost: 298,190 tok / 48.4 min / 182 calls
 

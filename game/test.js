@@ -754,6 +754,49 @@ console.log('== behaviour counters (balance-lab metrics) ==');
     'reserveEndRed/Blue reconcile with deployedShare (same reserves-at-end read, split by side)');
 })();
 
+console.log('== metrics-v2 trace capture (WOA-031: per-play trace + units fold, SPEC §4) ==');
+(function () {
+  var VALID_A = { deploy: 1, attack: 1, swap: 1, march: 1 };
+  var seeds = [4242, 5150, 8181, 9091, 1212];
+  var totalAtkEntries = 0, totalDeployEntries = 0, totalKillSum = 0, totalDieSum = 0, totalLd = 0, totalPlays = 0;
+  seeds.forEach(function (seed) {
+    var st = E.simBattle(E.MAPS[seed % E.MAPS.length], seed, 'red', 'hard', 'hard');
+    ok(st.phase === 'battle-over', 'seed ' + seed + ': battle finishes (' + st.turnNumber + ' turns)');
+    var killSum = 0, dieSum = 0;
+    st.playLog.forEach(function (e) {
+      totalPlays++;
+      ok(!e.a || VALID_A[e.a], 'trace entry a is deploy|attack|swap|march or absent (got ' + e.a + ')');
+      if (e.a === 'attack') { totalAtkEntries++; killSum += e.k || 0; ok(!!e.h, 'attack entry carries h (target hex)'); }
+      if (e.a === 'deploy') { totalDeployEntries++; ok(!!e.u, 'deploy entry carries u (unit type)'); ok(!!e.h, 'deploy entry carries h'); }
+      if (e.a === 'swap' || e.a === 'march') ok(!!e.h, e.a + ' entry carries h');
+      if (e.ld) totalLd++;
+      // untouched pre-existing fields still present (capture-only, no field removed)
+      ok(e.p === 'red' || e.p === 'blue', 'entry keeps its original p field');
+      ok(typeof e.turn === 'number', 'entry keeps its original turn field');
+    });
+    Object.keys(E.UNITS).forEach(function (t) {
+      var u = st.unitMetrics[t];
+      ok(u && Array.isArray(u.dep) && typeof u.atk === 'number' && typeof u.abs === 'number' &&
+        typeof u.kill === 'number' && typeof u.die === 'number',
+        'seed ' + seed + ': unitMetrics.' + t + ' has {dep,atk,abs,kill,die} (' + JSON.stringify(u) + ')');
+      dieSum += u.die;
+      u.dep.forEach(function (turn) { ok(turn >= 1 && turn <= st.turnNumber, t + ' dep turn within battle range'); });
+    });
+    totalKillSum += killSum; totalDieSum += dieSum;
+    ok(killSum === dieSum, 'seed ' + seed + ': sum of k across attack entries == sum of units[*].die (' +
+      killSum + ' == ' + dieSum + ')');
+    var totalAtkByType = 0;
+    Object.keys(E.UNITS).forEach(function (t) { totalAtkByType += st.unitMetrics[t].atk; });
+    ok(totalAtkByType === st.stats.attacks, 'seed ' + seed + ': sum of unitMetrics[*].atk == stats.attacks (' +
+      totalAtkByType + ' == ' + st.stats.attacks + ')');
+  });
+  ok(totalAtkEntries > 0 && totalDeployEntries > 0, 'trace produced attack and deploy entries across seeds (' +
+    totalAtkEntries + ' atk / ' + totalDeployEntries + ' deploy of ' + totalPlays + ' plays)');
+  ok(totalLd > 0, 'some plays record ld (leader after turn) once a lead is established (' + totalLd + '/' + totalPlays + ')');
+  ok(totalKillSum === totalDieSum, 'fleet-wide: sum of k across attack entries == total kills == sum of units[*].die (' +
+    totalKillSum + ' == ' + totalDieSum + ')');
+})();
+
 console.log('== trench orientations are never fully off-board (Feedback Round 2) ==');
 (function () {
   var st = testBattle(77);
