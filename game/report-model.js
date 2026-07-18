@@ -26,7 +26,10 @@
    - reportMarkdown(model)     the full saved-report markdown document
    - trace folds (WOA-033, one battle envelope in, derived value out):
        firstContactTurn · deployInterleave · settlePoint · actionOctileLanes ·
-       vpDiffTrack · cardPlayTurnQuartiles */
+       vpDiffTrack · cardPlayTurnQuartiles
+   - bandN(bandRow,agg,done) / SMALL_N / smallN(n,scope)  small-n rule (SPEC §8)
+   - foldBattles(rows)         DB `battles` rows (GET /api/battles) -> {agg, done}
+   - envelopeFromRow(row)      a DB battle row's .trace TEXT -> parsed envelope */
 
 var WOA_REPORT = (function () {
 
@@ -60,13 +63,31 @@ var WOA_REPORT = (function () {
     { key: 'tie',    label: 'Tie%',    lo: 0,   hi: 15,   weight: 0.3, feedsScore: true,  val: function (a, done) { return pct(a.tiebreak, done); } },
     { key: 'drag',   label: 'Drag',    lo: 0,   hi: 2.5,  weight: 4,   feedsScore: true,  val: function (a, done) { return a.killTail / Math.max(1, done); } },
     { key: 'swings', label: 'Swings',  lo: 2.0, hi: null, weight: 6,   feedsScore: true,  val: function (a, done) { return a.leadChanges / Math.max(1, done); } },
-    { key: 'control', label: 'Control%', lo: 70, hi: 100, weight: 0.5, feedsScore: true,  val: function (a) { return a.controlGames ? pct(a.controlWins, a.controlGames) : null; } },
+    { key: 'control', label: 'Control%', lo: 70, hi: 100, weight: 0.5, feedsScore: true,  val: function (a) { return a.controlGames ? pct(a.controlWins, a.controlGames) : null; },
+      nFor: function (a) { return a.controlGames || 0; } },
     // Guard band — shaded on the dashboard, NOT scored (SPEC §1: First-blood→win
     // 55–70, the snowball check). feedsScore:false ⇒ never touches balanceScore.
-    { key: 'firstBlood', label: 'First-blood→win', lo: 55, hi: 70, weight: 0, feedsScore: false, val: function (a) { return a.firstBloodGames ? pct(a.firstBloodWins, a.firstBloodGames) : null; } }
+    { key: 'firstBlood', label: 'First-blood→win', lo: 55, hi: 70, weight: 0, feedsScore: false, val: function (a) { return a.firstBloodGames ? pct(a.firstBloodWins, a.firstBloodGames) : null; },
+      nFor: function (a) { return a.firstBloodGames || 0; } }
   ];
   var BAND_BY_KEY = {};
   BANDS.forEach(function (b) { BAND_BY_KEY[b.key] = b; });
+
+  /* Sample size backing a band row's val() — most rows are denominated over
+     every finished battle (`done`); control/firstBlood are conditioned on a
+     sub-population (battles with a hex lead / a kill) and carry their own
+     nFor(agg,done). WOA-035 (SPEC §8 small-n rule): callers compare this
+     against SMALL_N.map/.fleet instead of re-deriving each metric's
+     denominator by hand. */
+  function bandN(bandRow, agg, done) {
+    var b = (typeof bandRow === 'string') ? BAND_BY_KEY[bandRow] : bandRow;
+    if (!b) return done;
+    return b.nFor ? b.nFor(agg, done) : done;
+  }
+  // SPEC §8: any conditioned metric with slice-n < 40 per map (or < 240
+  // fleet-wide) renders greyed, '(n=N)', excluded from the verdict banner.
+  var SMALL_N = { map: 40, fleet: 240 };
+  function smallN(n, scope) { return (n == null) || n < (scope === 'map' ? SMALL_N.map : SMALL_N.fleet); }
 
   /* Weighted distance of v OUTSIDE [lo, hi] (0 inside; null edge = unbounded on
      that side). null/NaN value scores 0 — reproduces the old scorer's control
@@ -166,6 +187,52 @@ var WOA_REPORT = (function () {
     return G;
   }
 
+  /* ===== DB battle rows -> agg (WOA-035, Overview) =====
+     Fold an array of `battles` table rows (as GET /api/battles?run=<id>
+     returns them — camelCase scalar columns, one row per finished battle;
+     insertBattle only ever stores battle-over states, so `done` is simply
+     rows.length, no unfinished count to subtract) into the SAME aggregate
+     shape balanceAdd builds server-side in-memory, restricted to the fields
+     every stored column can rebuild exactly:
+       redWins/firstWins/hqWins/turns/vpDiff/zeroKill/tiebreak/killTail/
+       leadChanges/attacks/swaps/marches/deploys/firstBloodGames/
+       firstBloodWins — bit-for-bit the same source (fs_red/fs_blue ARE
+       E.fieldScore at battle end, per db.js insertBattle).
+     controlGames/controlWins are NOT recoverable from a battles row (board
+     hex-ownership at battle end isn't a stored column, and the trace's `h`
+     fields are per-play, not a final snapshot) — left at 0, which makes
+     BANDS' control.val() return null and bandN() report n=0, so the
+     Control% band board row renders through the ordinary small-n path
+     ("Control% (n=0)", greyed, excluded from the verdict banner) rather
+     than a fabricated number. cards stays {} for the same reason: card_plays
+     is a separate table this fold doesn't touch (out of scope here).
+     Returns { agg, done } — the exact shape foldGlobal/balanceScore/BANDS
+     already consume. */
+  function foldBattles(rows) {
+    var agg = { redWins: 0, firstWins: 0, hqWins: 0, turns: 0, vpDiff: 0,
+      zeroKill: 0, tiebreak: 0, killTail: 0, leadChanges: 0,
+      attacks: 0, swaps: 0, marches: 0, deploys: 0,
+      firstBloodGames: 0, firstBloodWins: 0, controlGames: 0, controlWins: 0, cards: {} };
+    (rows || []).forEach(function (r) {
+      if (r.winner === 'red') agg.redWins++;
+      if (r.winner && r.winner === r.firstPlayer) agg.firstWins++;
+      if (r.winType === 'hq') agg.hqWins++;
+      agg.turns += r.turns || 0;
+      agg.vpDiff += Math.abs((r.fsRed || 0) - (r.fsBlue || 0));
+      if (r.zeroKill) agg.zeroKill++;
+      if (r.tiebreak) agg.tiebreak++;
+      agg.killTail += r.killTail || 0;
+      agg.leadChanges += r.leadChanges || 0;
+      agg.attacks += r.attacks || 0; agg.swaps += r.swaps || 0;
+      agg.marches += r.marches || 0; agg.deploys += r.deploys || 0;
+      if (r.firstBlood) {
+        agg.firstBloodGames++;
+        if (r.firstBlood === r.winner) agg.firstBloodWins++;
+      }
+    });
+    return { agg: agg, done: (rows || []).length };
+  }
+
   /* Derived card-table rows (one per card in `cards`, i.e. E.CARDS), sorted
      by 1stSight% descending. win/simple/sight are rounded percentages of
      plays; seen is the display string ('-' when never played) and seenNum the
@@ -196,6 +263,21 @@ var WOA_REPORT = (function () {
      (attack is sticky), so deploy TIMING is read from units.*.dep (exact
      per-type deploy turns), never by scanning the a-stream for 'deploy'. First
      contact is the first a:'attack' entry (exact). */
+  /* A DB battle row's `trace` column is the envelope JSON as TEXT (WOA-032
+     SPEC §4); a live battle state can be handed to the same folds already
+     wrapped as an envelope object. envelopeFromRow accepts either — a row
+     with a string .trace gets JSON.parse'd (defensively: a malformed/absent
+     trace returns null rather than throwing), an already-parsed envelope
+     object passes through unchanged. One place, so WOA-035's Overview and
+     later map/card/unit drill-downs never hand-roll the parse. */
+  function envelopeFromRow(row) {
+    if (!row) return null;
+    if (typeof row.trace === 'string') {
+      try { return JSON.parse(row.trace); } catch (e) { return null; }
+    }
+    if (row.trace && typeof row.trace === 'object') return row.trace;
+    return null;
+  }
   function traceOf(env) { return (env && (env.trace || env.playLog)) || []; }
   function unitsOf(env) { return (env && (env.units || env.unitMetrics)) || {}; }
   function turnsOf(env) {
@@ -400,7 +482,9 @@ var WOA_REPORT = (function () {
     // WOA-033: bands-as-data + trace folds (node + browser both consume)
     BANDS: BANDS, bands: bands, outBand: outBand, quantile: quantile,
     firstContactTurn: firstContactTurn, deployInterleave: deployInterleave, settlePoint: settlePoint,
-    actionOctileLanes: actionOctileLanes, vpDiffTrack: vpDiffTrack, cardPlayTurnQuartiles: cardPlayTurnQuartiles };
+    actionOctileLanes: actionOctileLanes, vpDiffTrack: vpDiffTrack, cardPlayTurnQuartiles: cardPlayTurnQuartiles,
+    // WOA-035: small-n rule + DB-rows-as-agg fold (Overview)
+    bandN: bandN, SMALL_N: SMALL_N, smallN: smallN, foldBattles: foldBattles, envelopeFromRow: envelopeFromRow };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = WOA_REPORT;

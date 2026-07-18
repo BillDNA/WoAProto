@@ -271,10 +271,88 @@ setTimeout(function () {
           doc.querySelector('#dashPills .dpill[data-view="tables"]').click();
           ok(doc.querySelectorAll('#dashOut table').length === 2, 'back on Tables: map table + card report still render');
           ok(doc.querySelector('#dashOut th.sorted'), 'sort state survived the pill round-trip');
-          return startWatch();
+          return overviewSmoke(startWatch);
         }
         if ((dw += 100) > 60000) { ok(false, 'dashboard run never finished'); return startWatch(); }
         realSetTimeout(waitDash, 100);
+      })();
+    }
+
+    // WOA-035 (AC5): the Overview screen on a SEEDED DASH state — jsdom has no
+    // real server, so this stubs win.fetch (GET /api/battles?run=<id>) and
+    // win.canNet the way a real browser+server would answer, seeds two tiny
+    // fixture runs straight onto DASH.runs/runA/runB, and drives renderOverview
+    // through the same #dashPills click every other pane test above uses. Last
+    // use of DASH/canNet in this file (deck editor / watch / manual don't touch
+    // either), so nothing is restored afterward — `next` (startWatch) continues
+    // the suite same as before this ticket.
+    function overviewSmoke(next) {
+      console.log('== Overview screen: seeded DASH state (WOA-035) ==');
+      function envelope(map, seed, fp, winner, winType) {
+        return JSON.stringify({
+          v: '9.9-test', map: map, seed: seed, fp: fp, winner: winner, winType: winType, turns: 4,
+          trace: [
+            { p: 'red', id: 'c1', mode: 'normal', turn: 1, seen: 1, a: 'deploy', u: 'infantry', h: '0,0', ld: 'red' },
+            { p: 'blue', id: 'c2', mode: 'normal', turn: 2, seen: 1, a: 'deploy', u: 'cavalry', h: '1,0', ld: 'red' },
+            { p: 'red', id: 'c3', mode: 'normal', turn: 3, seen: 1, a: 'attack', h: '1,0', k: 1, ld: 'red' },
+            { p: 'blue', id: 'c4', mode: 'normal', turn: 4, seen: 1, a: 'swap', ld: 'blue' }
+          ],
+          units: { infantry: { dep: [1], atk: 1, abs: 0, kill: 1, die: 0 }, cavalry: { dep: [2], atk: 0, abs: 1, kill: 0, die: 1 }, artillery: { dep: [], atk: 0, abs: 0, kill: 0, die: 0 } }
+        });
+      }
+      function row(id, map, seed, winner, winType, fp, fsRed, fsBlue) {
+        return { id: id, map: map, seed: seed, firstPlayer: fp, winner: winner, winType: winType, turns: 4,
+          fsRed: fsRed, fsBlue: fsBlue, firstBlood: winner, leadChanges: 1, killTail: 0, zeroKill: 0, tiebreak: 0,
+          attacks: 1, swaps: 1, marches: 0, deploys: 2, resEndRed: 0, resEndBlue: 0,
+          trace: envelope(map, seed, fp, winner, winType) };
+      }
+      var rowsA = [
+        row(1, 'Fixture Alpha', 1, 'red', 'hq', 'red', 5, 3),
+        row(2, 'Fixture Alpha', 2, 'blue', 'attrition', 'blue', 4, 4),
+        row(3, 'Fixture Beta', 3, 'red', 'attrition', 'red', 6, 2)
+      ];
+      var rowsB = [
+        row(4, 'Fixture Alpha', 4, 'blue', 'hq', 'red', 3, 5),
+        row(5, 'Fixture Alpha', 5, 'blue', 'attrition', 'blue', 4, 6),
+        row(6, 'Fixture Beta', 6, 'blue', 'hq', 'red', 2, 7)
+      ];
+      win.canNet = true; // seed "server present" without a real server
+      var fetchCalls = [];
+      win.fetch = function (url) {
+        fetchCalls.push(url);
+        var data = /run=9001/.test(url) ? rowsA : (/run=9002/.test(url) ? rowsB : []);
+        return Promise.resolve({ ok: true, json: function () { return Promise.resolve(data); } });
+      };
+      win.DASH.runs = [
+        { id: 9001, version: '9.9-test', kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 3, label: 'fixture A' },
+        { id: 9002, version: '9.9-test', kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 3, label: 'fixture B' }
+      ];
+      win.DASH.runA = 9001; win.DASH.runB = 9002;
+      doc.querySelector('#dashPills .dpill[data-view="overview"]').click();
+      var ow = 0;
+      (function waitOverview() {
+        var el = doc.getElementById('dashPaneOverview');
+        if (el.querySelector('.ov-wrap')) {
+          ok(fetchCalls.some(function (u) { return /run=9001/.test(u); }) && fetchCalls.some(function (u) { return /run=9002/.test(u); }),
+            'renderOverview fetched both runs via GET /api/battles?run=<id> (' + fetchCalls.join(', ') + ')');
+          var txt = el.textContent;
+          ok(/Verdict:/.test(txt), 'verdict banner rendered');
+          ok(/Red%/.test(txt) && /Drag/.test(txt) && /Swings/.test(txt), 'band board rows rendered (scored metrics)');
+          ok(/First-blood/.test(txt), 'guard row (First-blood→win) rendered below the fold');
+          ok(/\(n=3\)/.test(txt), 'fleet-wide n=3 < 240 small-n greys the row with "(n=N)" (SPEC §8)');
+          ok(/Fixture Alpha/.test(txt) && /Fixture Beta/.test(txt), 'map dumbbells rendered one row per map seen in either run');
+          ok(/deploy interleave/.test(txt) && /median settle/.test(txt), 'pacing minis rendered (1e)');
+          var mapRow = el.querySelector('.ov-map-row[data-map="Fixture Alpha"]');
+          ok(!!mapRow, 'a map dumbbell row carries data-map and is clickable');
+          if (mapRow) mapRow.click();
+          ok(win.DASH.mapFocus === 'Fixture Alpha' && win.DASH.view === 'maps',
+            'clicking a map row sets DASH.mapFocus + switches to the Maps pill (AC2)');
+          var mapsTxt = doc.getElementById('dashPaneMaps').textContent;
+          ok(/Fixture Alpha/.test(mapsTxt), 'Maps stub echoes the focused map name so the click visibly works (AC2)');
+          return next();
+        }
+        if ((ow += 50) > 5000) { ok(false, 'Overview never finished its seeded render'); return next(); }
+        realSetTimeout(waitOverview, 50);
       })();
     }
 

@@ -124,6 +124,16 @@ function open(dbPath) {
     listRuns: db.prepare(
       'SELECT id, version, ts, kind, red_ai AS redAi, blue_ai AS blueAi, n, tool, notes,' +
       ' deck, mapset, seed_base AS seedBase, label, baseline FROM runs ORDER BY id DESC LIMIT ?'),
+    // WOA-035: the Overview screen's battle fetch (GET /api/battles?run=<id>)
+    // — every stored scalar column + the trace TEXT blob (parsed client-side
+    // by WOA_REPORT.envelopeFromRow), camelCase like listRuns above so the
+    // server stays a dumb pass-through.
+    listBattles: db.prepare(
+      'SELECT id, map, seed, first_player AS firstPlayer, winner, win_type AS winType, turns,' +
+      ' fs_red AS fsRed, fs_blue AS fsBlue, first_blood AS firstBlood, lead_changes AS leadChanges,' +
+      ' kill_tail AS killTail, zero_kill AS zeroKill, tiebreak, attacks, swaps, marches, deploys,' +
+      ' res_end_red AS resEndRed, res_end_blue AS resEndBlue, trace' +
+      ' FROM battles WHERE run_id = ? ORDER BY id'),
     insertBattle: db.prepare(
       'INSERT INTO battles (run_id, version, map, seed, first_player, winner, win_type, turns,' +
       ' fs_red, fs_blue, first_blood, lead_changes, kill_tail, zero_kill, tiebreak,' +
@@ -253,9 +263,17 @@ function listRuns(h, limit) {
   return h.stmts.listRuns.all(limit || 200);
 }
 
+/* List every battle row for one run, in insertion order (WOA-035: the
+   Overview screen's fetch, via GET /api/battles?run=<id>). trace comes back
+   as the raw TEXT column — callers parse it (report-model.js's
+   envelopeFromRow), the same "parse client-side" contract the spec asked for. */
+function listBattles(h, runId) {
+  return h.stmts.listBattles.all(runId);
+}
+
 function close(h) { h.db.close(); }
 
 module.exports = {
   open: open, insertRun: insertRun, insertBattle: insertBattle, setBaseline: setBaseline,
-  listRuns: listRuns, close: close, DEFAULT_DB: DEFAULT_DB
+  listRuns: listRuns, listBattles: listBattles, close: close, DEFAULT_DB: DEFAULT_DB
 };

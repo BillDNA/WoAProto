@@ -145,6 +145,24 @@ try {
   ok(runs.every(function (r) { return 'seedBase' in r && 'baseline' in r; }), 'seedBase/baseline columns present (nullable)');
   ok(db.listRuns(h, 1).length === 1, 'limit is honoured');
 
+  /* ---------- listBattles (WOA-035: the Overview screen's battle fetch) ---------- */
+  section('listBattles (WOA-035)');
+  var battlesForRun1 = db.listBattles(h, runId);
+  ok(battlesForRun1.length === 3, 'listBattles returns every battle row for the run (' + battlesForRun1.length + ')');
+  ok(battlesForRun1.every(function (r) { return r.id != null; }) && battlesForRun1[0].id < battlesForRun1[1].id,
+    'ordered by id ascending (' + battlesForRun1.map(function (r) { return r.id; }).join(',') + ')');
+  var bRow = battlesForRun1[0];
+  ['id', 'map', 'seed', 'firstPlayer', 'winner', 'winType', 'turns', 'fsRed', 'fsBlue', 'firstBlood',
+    'leadChanges', 'killTail', 'zeroKill', 'tiebreak', 'attacks', 'swaps', 'marches', 'deploys',
+    'resEndRed', 'resEndBlue', 'trace'].forEach(function (k) {
+    ok(k in bRow, 'listBattles row carries camelCase "' + k + '"');
+  });
+  ok(bRow.map === E.MAPS[0].name && bRow.firstPlayer === 'red' && bRow.winner === st.battleWinner,
+    'listBattles row matches the round-trip battle inserted above (map/firstPlayer/winner)');
+  ok(typeof bRow.trace === 'string' && JSON.parse(bRow.trace).map === E.MAPS[0].name,
+    'trace column is still a raw JSON string — envelopeFromRow parses it client-side, not db.js');
+  ok(db.listBattles(h, runId2).length === 0, 'a different run id returns its own (empty) slice, not a cross-run leak');
+
   db.close(h);
 
   /* ---------- db-query.js CLI against the temp db ---------- */

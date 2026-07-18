@@ -6,6 +6,19 @@ sprint-planning. Same ticket format as `Sprint.md` (the `ticket-block` template;
 
 ---
 
+### WOA-038 — Capture board-control at battle end so Control% can score on the dashboard
+**Area:** engine · **Status:** Todo · **Type:** sonnet · **Docs:** specs/design_handoff_metrics_dashboard, data-and-reports
+
+From WOA-035's verify (2026-07-18): the Overview band board renders Control% as `n/a (n=0)` — hex-ownership/control state at battle end isn't a stored `battles` column and can't be rebuilt from the trace envelope, so `WOA_REPORT.foldBattles` can't derive controlGames/controlWins from DB rows (handled honestly via the small-n grey path, excluded from the verdict). Fix is a capture addition (WOA-031 discipline: golden diff byte-identical): store the control/hex-lead summary the live `balanceMap` agg already computes as a battles column (or in the trace envelope). Sibling of WOA-037 (fsTimeline); consider landing both in one capture pass.
+
+**Acceptance criteria:**
+- [ ] Control/hex-lead at battle end persisted per battle (column or envelope field); foldBattles derives controlGames/controlWins from DB rows matching the live agg's numbers
+- [ ] Overview Control% row shows a real value on a fresh run (no longer n/a)
+- [ ] Suites green; golden balance diff byte-identical
+- [ ] User confirms done
+
+---
+
 ### WOA-037 — Engine captures st.fsTimeline (per-turn field scores) — feeds timeline table + vpDiffTrack
 **Area:** engine · **Status:** Todo · **Type:** sonnet · **Docs:** specs/design_handoff_metrics_dashboard, data-and-reports
 

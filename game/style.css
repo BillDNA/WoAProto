@@ -560,6 +560,34 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
 .chtip .tv{font-weight:bold; color:#fff;}
 .chtip .tl{color:rgba(232,220,192,.8);}
 
+/* WOA-035: the Overview screen (band board / map dumbbells / pacing minis,
+   design 1c/1f/1e) — #dashPaneOverview's real content overrides .dash-pane's
+   centered placeholder text-align. */
+.ov-wrap{text-align:left;}
+.ov-verdict{background:rgba(158,43,37,.07); border:1px solid #d8caa2; border-radius:6px; padding:12px 14px; margin-bottom:14px; font-size:13px;}
+.ov-verdict b{color:var(--red);}
+.ov-verdict a{color:#77582e; cursor:pointer; text-decoration:underline;}
+.ov-verdict a:hover{color:var(--ink);}
+.ov-cols{display:grid; grid-template-columns:1.15fr 1fr; gap:0;}
+.ov-col-l{border-right:1px solid #d8caa2; padding-right:18px;}
+.ov-col-r{padding-left:18px;}
+.ov-legend{display:flex; gap:16px; font-size:11.5px; color:var(--ink-soft); margin-bottom:10px; align-items:center; flex-wrap:wrap;}
+.ov-legend .dot{display:inline-block; width:10px; height:10px; border-radius:50%; vertical-align:-1px; margin-right:5px;}
+.ov-grid{display:grid; grid-template-columns:148px 1fr 92px; gap:8px 10px; align-items:center; font-size:12px;}
+.ov-grid.grey{opacity:.5;}
+.ov-lbl{text-align:right; color:var(--ink);}
+.ov-lbl b{color:var(--red);}
+.ov-val{font-family:ui-monospace,Menlo,monospace; font-size:11px; color:var(--ink-soft);}
+.ov-val.breach{color:var(--red); font-weight:bold;}
+.ov-map-row{cursor:pointer;}
+.ov-map-row .ov-lbl{transition:color .1s;}
+.ov-map-row:hover .ov-lbl{color:#77582e; text-decoration:underline;}
+.ov-mini{flex:1; border:1px solid #d8caa2; border-radius:6px; padding:8px 10px; min-width:0;}
+.ov-mini h4{font-size:11px; font-weight:normal; color:var(--ink-soft); margin:0 0 6px;}
+.ov-mini b{color:var(--ink);}
+.ov-flash{animation:ovFlash 1.1s ease;}
+@keyframes ovFlash{0%{background:rgba(158,43,37,.3);} 100%{background:transparent;}}
+
 /* V1 map-sets: the named-roster chips above the map grid */
 .mapset-bar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:6px 0 10px; }
 .mapset-bar .mschip { font-size:13px; padding:3px 10px; background:transparent; color:var(--ink);

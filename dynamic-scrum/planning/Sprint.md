@@ -21,26 +21,13 @@ temperature — with aggregates byte-identical to pre-sprint (golden diff holds 
 
 ## Tickets
 
-### WOA-035 — Overview screen: band board, map dumbbells, verdict, pacing minis (P1.5)
-**Area:** game-ui · **Status:** Todo · **Type:** sonnet · **Depends on:** WOA-033, WOA-034 · **Docs:** specs/design_handoff_metrics_dashboard
-
-The landing view (README *Screen 1*, mockup 4a; full-fidelity chart references: designs 1c/1f/1e in
-the design canvas). All numbers from woa.db via WOA-033's folds; charts in the established
-`game/ui/charts.js` idiom (inline SVG by string concat, greedy label placer, `.chtip` tooltips).
-
-**Acceptance criteria:**
-- [ ] Triage band board (design 1c): one bullet row per scored metric, nested T-band shading that re-renders with the temperature selector, run A hollow / run B filled dots, breach styling (red outline + bold label), `A → B` monospace values; small-n rule per SPEC §8 (slice-n < 40/map → greyed, `value (n=N)`, excluded from verdict)
-- [ ] Balance-score-by-map dumbbells (design 1f) on a 0–20 scale sorted by run-B, connector colored regress/improve; row click sets `DASH.mapFocus` and navigates to the Maps pill (a stub view until P2.2 builds the drill-down — next sprint)
-- [ ] Verdict banner: count of T0-tier breaches at the selected temperature + named breach links that navigate to the explaining view/filter
-- [ ] Pacing minis (design 1e): deploy-interleave histogram + settle curves (A dashed / B solid)
-- [ ] `node dev/smoke.js` green; **visual check is human/vision** — layout/palette match the design reference per README *Fidelity* (mockup numbers are synthesized; real numbers from the DB)
-- [ ] User confirms done
-
 ## In Progress
 
 _None._
 
 ## Finished
+
+- **WOA-035 — Overview screen: band board, map dumbbells, verdict, pacing minis (P1.5)** (2026-07-18) — Overview live on real data (fresh trace-carrying runs 73/74, n=270 each): 1c band board (8 scored + guard, A hollow/B filled, small-n greying incl. honest Control% n/a → WOA-038), 1f dumbbells sorted worst-first with working click→Maps-stub focus, verdict banner with breach links (breach path proven via forced-breach probe), 1e pacing minis with real numbers; /api/battles route + foldBattles agg fold added (db tests 71→97, smoke +10). Runner vision-verified all 3 screenshots (T0/T2 widening visible, click-through works). Design call flagged for Bill: progressive tier reveal (T0 draws only T0 band) vs the mockup's static triptych. cost: 361,356 tok / 37.1 min / 110 calls
 
 - **WOA-034 — Dashboard shell: view-only, run pickers, tabs (P1.4)** (2026-07-18) — Shell live: GET /api/runs (+ listRuns in dev/db.js, +5 tests), A/B header pickers with baseline-else-latest default, 5-pill nav (Tables = old dashboard verbatim, Run/Save hidden elsewhere), T0/T1/T2 selector in extended DASH, file:// graceful fallback (smoke-asserted). Runner vision-verified both screenshots (chrome matches 4a; Tables intact with live 20-battle run — which visibly plays the applied deck, WOA-036 confirmed on-screen). Old single-run Charts tab retired per spec pill nav; charts.js primitives kept dormant for 035+. Label/pin UI skipped (declared; setBaseline ready). cost: 232,206 tok / 54.5 min / 89 calls
 

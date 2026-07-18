@@ -249,6 +249,20 @@ var ROUTES = {
       json(res, 200, db.listRuns(dbHandle));
     } catch (e) { json(res, 500, { error: e.message }); }
   },
+  'GET /api/battles': function (req, res, body, u) {
+    // WOA-035: the Overview screen's fetch — every battle row for one run,
+    // scalar columns + the trace TEXT blob (parsed client-side by
+    // WOA_REPORT.envelopeFromRow). Guarded like /api/runs above — a zipped
+    // game/ without dev/, a db that's never been opened, or a missing/bad
+    // ?run= all answer a clean [] rather than 501/error.
+    if (!db) return json(res, 200, []);
+    var runId = parseInt(u.searchParams.get('run'), 10);
+    if (!runId) return json(res, 200, []);
+    try {
+      if (!dbHandle) dbHandle = db.open();
+      json(res, 200, db.listBattles(dbHandle, runId));
+    } catch (e) { json(res, 500, { error: e.message }); }
+  },
   'GET /api/poll': function (req, res, body, u) {
     var r = rooms[(u.searchParams.get('room') || '').toUpperCase()];
     if (!r) return json(res, 404, { error: 'room not found' });
