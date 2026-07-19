@@ -157,6 +157,14 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   offset unrecorded — [[Backlog]] WOA-045 records run identity going forward) and are annotated in
   their `runs.notes`.
 
+- **`D.D:hex-lenses-svg-not-clippath`** (2026-07-18, WOA-042 build, runner-licensed — **Bill may
+  overrule**) — the drill-down hex lenses render as **SVG polygons** reusing `ui/board.js`'s
+  `hexXY`/`hexPoints`/`viewBoxFor` (one hex renderer for game board and dashboard), not the spec
+  ticket's clip-path divs: the avenue-of-attack ring is a real nested `<polygon>` stroke and the
+  dead-hex hatch an SVG `<pattern>`, structurally eliminating the css-outline-on-clipped-element
+  failure the AC warned about. Fold semantics documented in `report-model.js` (best-effort
+  reconstruction: no march origin in the trace — inflates only the busy end, never the <5% dead test).
+
 ## Architecture
 
 - **`D.A:units-content-kind`** (2026-07-10, WOA-011) — unit composition & values are a content kind

@@ -17,21 +17,6 @@ scripts.
 
 ## Tickets
 
-### WOA-042 — Hex lenses on the map drill-down (P2.3)
-**Area:** dashboard · **Status:** Todo · **Depends on:** WOA-041 · **Type:** opus · **Docs:** specs/design_handoff_metrics_dashboard/SPEC.md, code-architecture
-
-The map drill-down (WOA-040) shows tempo and VP but nothing spatial — you can't see WHERE a map's
-fights happen, which hexes are dead, or which lane the winner rushed. SPEC §5 defines three per-hex
-lenses folded from the trace's `h` fields. The folds don't exist yet in `report-model.js` (P1.3
-stopped at battle-level folds) — this ticket writes them AND renders them.
-
-**Acceptance criteria:**
-- [ ] `report-model.js` gains per-hex folds from trace `h` fields per SPEC §5: occupancy (% of turns held), ownership flips per battle, kills on hex per battle — pure functions over rows (node + browser both consume); dead hex = <5% occupancy; avenue-of-attack = top-quartile flips
-- [ ] Map drill-down (`game/ui/charts.js`) renders the three hex lenses: hexes via clip-path polygon; dead hexes hatched; avenue-of-attack marked with a nested-hex red ring (NOT css outline on a clipped element — renders broken); HQ hexes labeled; hover shows per-hex values
-- [ ] Lenses follow the existing A|B|A/B toggle
-- [ ] `node game/test.js` green (extend with a hex-fold shape assertion) · `node dev/smoke.js` green · golden balance diff byte-identical
-- [ ] User confirms done *(rendered lenses are a visual check — route to human/vision verify)*
-
 ### WOA-043 — Cards tab (P2.4)
 **Area:** dashboard · **Status:** Todo · **Depends on:** WOA-042 · **Type:** sonnet · **Docs:** specs/design_handoff_metrics_dashboard/SPEC.md, code-architecture
 
@@ -69,6 +54,8 @@ sprint close.
 _None._
 
 ## Finished
+
+- **WOA-042 — Hex lenses on the map drill-down (P2.3)** (2026-07-19) — hexLenses/foldHexLenses pure folds (SPEC §5 thresholds as data) + three SVG hex lenses on the drill-down reusing board.js hex helpers (`D.D:hex-lenses-svg-not-clippath`); dead-hatch, nested-ring avenues, HQ stars, hover A->B values, A|B|A/B ghost — all runner-vision-verified from 6 saved screenshots; suites green, golden diff runner-re-verified byte-identical both modes. cost: 270,533 tok / 32.5 min / 94 calls
 
 - **WOA-041 — balance-report --parallel runs persist a runs row but ZERO battle rows — battles-to-db doctrine violation** (2026-07-19) — --parallel workers ship slimBattleState(st) per battle via their stdout envelope; parent = single woa.db writer under the run id (`D.D:parallel-battles-via-parent-writer`). Proof: runs 106 (parallel) / 107 (serial) both 24==4x6 battles, bit-identical checksums + byte-identical markdown; root cause = deliberate pre-doctrine skip; runs 92-94 annotated unpersistable in runs.notes; follow-on WOA-045 (run identity columns). cost: 99,483 tok / 8.8 min / 22 calls
 

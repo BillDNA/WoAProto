@@ -27,6 +27,9 @@
    - trace folds (WOA-033, one battle envelope in, derived value out):
        firstContactTurn · deployInterleave · settlePoint · actionOctileLanes ·
        vpDiffTrack · cardPlayTurnQuartiles
+   - per-hex lenses (WOA-042, SPEC §5): hexLenses (one battle -> per-hex
+       occupancy/flips/kills) · foldHexLenses (many battles -> per-hex averages
+       + dead/avenue classification)
    - bandN(bandRow,agg,done) / SMALL_N / smallN(n,scope)  small-n rule (SPEC §8)
    - foldBattles(rows)         DB `battles` rows (GET /api/battles) -> {agg, done}
    - envelopeFromRow(row)      a DB battle row's .trace TEXT -> parsed envelope */
@@ -548,12 +551,104 @@ var WOA_REPORT = (function () {
     return L.join('\n');
   }
 
+  /* ===== Per-hex lenses (WOA-042, SPEC §5) =====
+     Three SPATIAL reads folded from the trace's `h` stream (the raw 'q,r'
+     engine key each play acts on — recordPlay in engine/04-battle.js writes
+     the deploy target / march destination / swap hex / attack battle-hex; an
+     attack also carries `k` kills). ONE battle envelope in ->
+       { plays, turns, hexes: { 'q,r': { occ, flips, kills } } }.
+
+     Reconstruction is best-effort over WHAT THE TRACE RECORDS — hexes acted
+     on, kills, and the actor `p` — NOT a full combat replay (the trace has no
+     march ORIGIN, no attack outcome, no starting HQ positions):
+       owner{}  who last held each hex.
+       deploy(h,p) / march(h=dest,p): p takes h; a flip when h was the OTHER
+         player's. The march origin isn't in the trace (WOA-031 omits it), so a
+         vacated origin lingers as "held" — a bounded over-count that only
+         inflates the BUSY end, never the dead end the <5% test reads, and it
+         happens to surface rushable lanes (a march onto ground the enemy last
+         held reads as a kill-less flip — the SPEC §5 "high flips + low kills"
+         signature).
+       swap(h,p): a same-owner cross-type swap (rules 1.0 bans same-type) — no
+         ownership change, just a touch.
+       attack(h=battle hex,p,k): kills += k; a kill (k>0) is a violent contest
+         that hands the hex to the attacker -> flip when h wasn't already p's.
+         (k also counts an attacker's own death, so this slightly over-attributes
+         captures — acceptable for a relative heatmap; documented.)
+     Occupancy credits +1 turn to every currently-held hex after each play, so
+     occ = heldTurns / plays ∈ [0,1] = "% of turns held". Only hexes the trace
+     TOUCHED appear; HQ hexes never show unless attacked, so the RENDER layer
+     (which knows the map's HQs) exempts them from the dead-hex hatch — the fold
+     stays pure over the trace, no map/board dependency. */
+  function hexLenses(env) {
+    var tr = traceOf(env), owner = {}, held = {}, flips = {}, kills = {}, touched = {}, plays = 0;
+    tr.forEach(function (e) {
+      plays++;
+      var h = e.h, p = e.p;
+      if (h) {
+        touched[h] = true;
+        if (e.a === 'deploy' || e.a === 'march') {
+          if (owner[h] && owner[h] !== p) flips[h] = (flips[h] || 0) + 1;
+          owner[h] = p;
+        } else if (e.a === 'attack') {
+          if (e.k) {
+            kills[h] = (kills[h] || 0) + e.k;
+            if (owner[h] !== p) flips[h] = (flips[h] || 0) + 1;
+            owner[h] = p;
+          }
+        } // swap: touch only — no ownership change
+      }
+      // credit occupancy: every hex currently held gets +1 for this play/turn
+      Object.keys(owner).forEach(function (k) { held[k] = (held[k] || 0) + 1; });
+    });
+    var hexes = {};
+    Object.keys(touched).forEach(function (k) {
+      hexes[k] = { occ: plays ? (held[k] || 0) / plays : 0, flips: flips[k] || 0, kills: kills[k] || 0 };
+    });
+    return { plays: plays, turns: turnsOf(env), hexes: hexes };
+  }
+
+  /* SPEC §5 classification thresholds — the ONE place they live (dead hex =
+     <5% occupancy; avenue of attack = flips in the top quartile of the flip
+     distribution). */
+  var HEX_DEAD_OCC = 0.05, HEX_AVENUE_Q = 0.75;
+
+  /* Fold many battles' hexLenses into per-hex AVERAGES + the SPEC §5
+     classification: occ averaged across battles ("% of turns held"), flips &
+     kills as per-BATTLE rates, dead = avg occupancy < 5%, avenue-of-attack =
+     avg flips in the top quartile of the (>0) flip distribution. envs =
+     envelopes (envelopeFromRow output); charts.js folds one run's battles for
+     one map, per the A|B toggle. Returns
+       { n, avenueThresh, hexes: { 'q,r': { occ, flips, kills, dead, avenue } } }.
+     n=0 -> empty hexes (caller renders "no battles"). */
+  function foldHexLenses(envs) {
+    var n = (envs || []).length, acc = {};
+    (envs || []).forEach(function (env) {
+      var L = hexLenses(env);
+      Object.keys(L.hexes).forEach(function (k) {
+        var a = acc[k] || (acc[k] = { occ: 0, flips: 0, kills: 0 });
+        a.occ += L.hexes[k].occ; a.flips += L.hexes[k].flips; a.kills += L.hexes[k].kills;
+      });
+    });
+    var hexes = {}, flipVals = [];
+    Object.keys(acc).forEach(function (k) {
+      var occ = n ? acc[k].occ / n : 0, flips = n ? acc[k].flips / n : 0, kills = n ? acc[k].kills / n : 0;
+      hexes[k] = { occ: occ, flips: flips, kills: kills, dead: occ < HEX_DEAD_OCC, avenue: false };
+      if (flips > 0) flipVals.push(flips);
+    });
+    var thresh = flipVals.length ? quantile(flipVals.sort(function (a, b) { return a - b; }), HEX_AVENUE_Q) : Infinity;
+    Object.keys(hexes).forEach(function (k) { if (hexes[k].flips > 0 && hexes[k].flips >= thresh) hexes[k].avenue = true; });
+    return { n: n, avenueThresh: thresh, hexes: hexes };
+  }
+
   return { pct: pct, f1: f1, actionTotal: actionTotal, balanceScore: balanceScore, mapNotes: mapNotes,
     addAgg: addAgg, foldGlobal: foldGlobal, cardRows: cardRows, reportMarkdown: reportMarkdown,
     // WOA-033: bands-as-data + trace folds (node + browser both consume)
     BANDS: BANDS, bands: bands, outBand: outBand, quantile: quantile,
     firstContactTurn: firstContactTurn, deployInterleave: deployInterleave, settlePoint: settlePoint,
     actionOctileLanes: actionOctileLanes, vpDiffTrack: vpDiffTrack, cardPlayTurnQuartiles: cardPlayTurnQuartiles,
+    // WOA-042: per-hex lenses (drill-down) + SPEC §5 dead/avenue thresholds
+    hexLenses: hexLenses, foldHexLenses: foldHexLenses, HEX_DEAD_OCC: HEX_DEAD_OCC, HEX_AVENUE_Q: HEX_AVENUE_Q,
     // WOA-035: small-n rule + DB-rows-as-agg fold (Overview)
     bandN: bandN, SMALL_N: SMALL_N, smallN: smallN, foldBattles: foldBattles, envelopeFromRow: envelopeFromRow };
 })();

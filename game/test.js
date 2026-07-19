@@ -1214,9 +1214,38 @@ console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
   ok(q.B.n === 1 && near(q.B.median, 0.25) && near(q.A.median, 0.3125),
     'single-play card = its own normalized time; card A (turns 1,4) median 0.3125');
 
+  // ---- per-hex lenses (WOA-042, SPEC §5): occupancy / flips / kills folded
+  // from the trace's h-stream, on a hand-built fixture with known answers ----
+  var henv = { turns: 4, trace: [
+    { p: 'red',  turn: 1, a: 'deploy', h: '0,0' },        // red takes 0,0
+    { p: 'blue', turn: 2, a: 'deploy', h: '1,0' },        // blue takes 1,0
+    { p: 'red',  turn: 3, a: 'attack', h: '1,0', k: 1 },  // red kills at 1,0 -> flip blue->red + 1 kill
+    { p: 'red',  turn: 4, a: 'swap',   h: '0,0' }         // touch: no flip, no kill
+  ] };
+  var HL = R.hexLenses(henv);
+  // occupancy credited AFTER each play: 0,0 held turns 1-4 = 4/4 = 1.0;
+  // 1,0 held from turn 2 (deploy) through 4 = 3/4 = 0.75.
+  ok(near(HL.hexes['0,0'].occ, 1) && near(HL.hexes['1,0'].occ, 0.75), 'hexLenses occupancy = held-turns / plays (0,0 held all 4, 1,0 held 3 of 4)');
+  ok(HL.hexes['1,0'].flips === 1 && HL.hexes['1,0'].kills === 1, 'a killing attack flips the battle hex to the attacker and tallies the kill');
+  ok(HL.hexes['0,0'].flips === 0 && HL.hexes['0,0'].kills === 0, 'a same-owner swap is a touch — no flip, no kill');
+  // dead hex: a whiffed attack (no k) touches a hex but never holds it -> occ 0
+  var denv = { turns: 3, trace: [
+    { p: 'red',  turn: 1, a: 'deploy', h: '0,0' },
+    { p: 'blue', turn: 2, a: 'attack', h: '5,5' },  // k absent -> touched, never held
+    { p: 'red',  turn: 3, a: 'deploy', h: '0,0' }
+  ] };
+  ok(near(R.hexLenses(denv).hexes['5,5'].occ, 0), 'a whiffed attack (no kill) touches a hex but never holds it');
+  var HF = R.foldHexLenses([henv, henv]);
+  ok(HF.n === 2 && HF.hexes['1,0'] && near(HF.hexes['1,0'].flips, 1) && near(HF.hexes['1,0'].kills, 1),
+    'foldHexLenses averages flips/kills as per-battle rates across the run');
+  ok(HF.hexes['1,0'].avenue === true, 'foldHexLenses: top-quartile flips -> avenue-of-attack');
+  var DF = R.foldHexLenses([denv]);
+  ok(DF.hexes['5,5'].dead === true && DF.hexes['0,0'].dead === false, 'foldHexLenses: dead hex = avg occupancy < 5%');
+
   // ---- consumable from node here; browser gets the same WOA_REPORT global (dual export) ----
   ok(typeof R.bands === 'function' && typeof R.actionOctileLanes === 'function' && typeof R.BANDS === 'object',
     'folds + band table exported on the shared WOA_REPORT surface');
+  ok(typeof R.hexLenses === 'function' && typeof R.foldHexLenses === 'function', 'WOA-042 hex lenses exported on the shared surface');
 })();
 
 console.log('\n== report-model: foldBattles control% from hexesRed/hexesBlue (WOA-038) ==');
