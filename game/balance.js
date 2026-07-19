@@ -20,12 +20,13 @@
    - 1st%/2nd% far from 50   -> mover advantage on that map
    - HQ% near 0              -> nobody can crack the HQ; battles always grind to attrition
    - Turns                   -> pacing; the deck caps a battle at 32 plays
-   - Atk/Swp                 -> attacks and swaps per battle: AI behaviour health.
-                                Low Atk + high Swp = swap-dancing instead of fighting
+   - Atk%/Swp%               -> attacks / swaps as a SHARE of all actions taken
+                                (attacks+swaps+marches+deploys): AI behaviour health,
+                                deck-size-proof. Low Atk% + high Swp% = swap-dancing.
    - 0kill%                  -> battles where no unit ever died (degenerate stalemates)
-   - Drag                    -> avg trailing turns with NO kill before the game ended
-                                (0 = ended on a kill/HQ capture; ~32 = a no-kill grind).
-                                High = the AIs marched in circles before it was over.
+   - Drag                    -> avg trailing turns with NO kill before the game ended,
+                                over ATTRITION endings only (HQ endings have Drag 0 by
+                                definition). ~32 = a no-kill grind; high = circling.
    - Swings                  -> avg times the field-score lead flipped to the OTHER
                                 side per battle. High = real back-and-forth (you can
                                 feel you'll come back); 0 = one side led wire-to-wire.
@@ -131,7 +132,7 @@ function mapReport(n, diff, filter, maps, mapsetArg) {
   var header = pad('Map', 16, true) + pad('Shape', 11, true) +
     pad('Red%', 6) + pad('Blue%', 7) + pad('1st%', 6) + pad('2nd%', 6) +
     pad('HQ%', 6) + pad('Turns', 7) + pad('VPdiff', 8) +
-    pad('Atk', 6) + pad('Swp', 6) + pad('0kill%', 8) +
+    pad('Atk%', 6) + pad('Swp%', 6) + pad('0kill%', 8) +
     pad('Drag', 7) + pad('Swings', 8) + '  notes';
   console.log(header);
   console.log(new Array(header.length + 1).join('-'));
@@ -149,32 +150,41 @@ function mapReport(n, diff, filter, maps, mapsetArg) {
     var done = n - r.unfinished;
     mapRows.push({ agg: r, done: done });
     var notes = R.mapNotes(r, done);
+    // WOA-039 (rules 1.2): Atk%/Swp% are shares of all actions; Drag is over
+    // attrition endings only (HQ endings have Drag 0 by definition).
+    var act = R.actionTotal(r), att = r.attritionEndings || 0;
     console.log(
       pad(map.name.slice(0, 15), 16, true) + pad(map.shape || '?', 11, true) +
       pad(pct(r.redWins, done), 6) + pad(pct(done - r.redWins, done), 7) +
       pad(pct(r.firstWins, done), 6) + pad(pct(done - r.firstWins, done), 6) +
       pad(pct(r.hqWins, done), 6) + pad((r.turns / Math.max(1, done)).toFixed(1), 7) +
       pad((r.vpDiff / Math.max(1, done)).toFixed(1), 8) +
-      pad((r.attacks / Math.max(1, done)).toFixed(1), 6) +
-      pad((r.swaps / Math.max(1, done)).toFixed(1), 6) +
+      pad(pct(r.attacks, act), 6) +
+      pad(pct(r.swaps, act), 6) +
       pad(pct(r.zeroKill, done), 8) +
-      pad((r.killTail / Math.max(1, done)).toFixed(1), 7) +
+      pad(((r.attritionKillTail || 0) / Math.max(1, att)).toFixed(1), 7) +
       pad((r.leadChanges / Math.max(1, done)).toFixed(1), 8) + '  ' + notes.join(', ')
     );
   });
 
   var G = R.foldGlobal(mapRows);
+  // WOA-039 (rules 1.2): Behaviour is action SHARES; Reserves conditions to HQ
+  // endings (with the SPEC §8 small-n note); tie-goes-to-2nd + Drag condition to
+  // attrition endings.
+  var gAct = R.actionTotal(G), gAtt = Math.max(1, G.attritionEndings);
+  function nNote(k) { return ' (n=' + k + (k < R.SMALL_N.fleet ? ', small-n' : '') + ')'; }
+  function hqRes(sum, k) { return k ? Math.round(100 * sum / k) + '%' : '—'; }
   console.log('\nOverall: red ' + pct(G.red, G.games) + '% | first mover ' + pct(G.first, G.games) +
     '% | HQ captures ' + pct(G.hq, G.games) + '% | avg battle ' + (G.turns / Math.max(1, G.games)).toFixed(1) + ' turns');
-  console.log('Behaviour: ' + (G.attacks / Math.max(1, G.games)).toFixed(1) + ' attacks & ' +
-    (G.swaps / Math.max(1, G.games)).toFixed(1) + ' swaps per battle | zero-kill battles ' + pct(G.zeroKill, G.games) +
+  console.log('Behaviour: ' + pct(G.attacks, gAct) + '% attacks & ' +
+    pct(G.swaps, gAct) + '% swaps of all actions | zero-kill battles ' + pct(G.zeroKill, G.games) +
     '% | ' + Math.round(100 * G.depShare / Math.max(1, G.games)) + '% of units ever fielded');
-  console.log('Reserves at end: red holds ' + Math.round(100 * G.resEndRed / Math.max(1, G.games)) +
-    '% of its pieces undeployed | blue holds ' + Math.round(100 * G.resEndBlue / Math.max(1, G.games)) + '%');
-  console.log('Decisiveness: tie-goes-to-2nd decided ' + pct(G.tiebreak, G.games) +
-    '% of battles | first blood won ' + pct(G.fbWins, G.fbGames) + '% of the ' + pct(G.fbGames, G.games) +
+  console.log('Reserves at end (HQ endings only' + nNote(G.hqEndings) + '): red holds ' + hqRes(G.resEndRedHQ, G.hqEndings) +
+    ' of its pieces undeployed | blue holds ' + hqRes(G.resEndBlueHQ, G.hqEndings) + ' (a rush before commit)');
+  console.log('Decisiveness: tie-goes-to-2nd decided ' + pct(G.tiebreak, G.attritionEndings) +
+    '% of attrition endings | first blood won ' + pct(G.fbWins, G.fbGames) + '% of the ' + pct(G.fbGames, G.games) +
     '% of battles that had a kill | side holding more hexes won ' + pct(G.ctlWins, G.ctlGames) + '%');
-  console.log('Pacing: ' + (G.killTail / Math.max(1, G.games)).toFixed(1) + ' kill-less turns before game end (0=decisive, ~32=circling) | ' +
+  console.log('Pacing: ' + (G.attritionKillTail / gAtt).toFixed(1) + ' kill-less turns before end, attrition endings (0=decisive, ~32=circling) | ' +
     (G.leadChanges / Math.max(1, G.games)).toFixed(1) + ' lead swings per battle (higher = more back-and-forth)');
 
   console.log('\nCard report (' + G.games + ' battles of AI play — biases noted below):');
@@ -196,22 +206,23 @@ function mapReport(n, diff, filter, maps, mapsetArg) {
   console.log('            always-good on sight (overpowered watchlist).');
   console.log('  AvgSeen   hand-appearances before it got played. High = situational/hoarded.');
   console.log('\nBehaviour & decisiveness lines:');
-  console.log('  attacks/swaps per battle  AI play health. Low attacks + high swaps = the AIs');
-  console.log('            shuffle units instead of fighting (the round-6 stalemate bug).');
+  console.log('  attacks/swaps % of actions  AI play health, as a share of all actions taken');
+  console.log('            (deck-size-proof). Low attack% + high swap% = the AIs shuffle units');
+  console.log('            instead of fighting (the round-6 stalemate bug).');
   console.log('  zero-kill battles  nobody died all battle: degenerate, should be ~0%.');
   console.log('  units fielded  share of all reserves that ever deployed. Low = turtling at home.');
-  console.log('  reserves at end  share of a side\'s pieces still undeployed when the battle ended');
-  console.log('            (per side, unlike "units fielded" above). High = that side hoarded pieces');
-  console.log('            instead of committing them — the instrument for the "saving reserves wins"');
-  console.log('            felt-note; cross-reference against Red%/1st% to see if it correlates with winning.');
-  console.log('  tie-goes-to-2nd  attrition wins with EQUAL field scores. High = that one rule');
-  console.log('            is deciding battles, not play.');
+  console.log('  reserves at end (HQ endings only)  share of a side\'s pieces still undeployed at an');
+  console.log('            HQ capture — an HQ rush ends before a side commits its reserves, so this');
+  console.log('            reads meaningfully only on that slice (attrition endings run to deck-out).');
+  console.log('            Typically small-n (HQ endings are a minority); the (n=N) note flags it.');
+  console.log('  tie-goes-to-2nd  attrition wins with EQUAL field scores, as a share of ATTRITION');
+  console.log('            endings. High = that one rule is deciding battles, not play.');
   console.log('  first blood won  how often the first kill decided the battle. Very high = one');
   console.log('            early trade decides everything (snowbally).');
   console.log('  more hexes won  does board control track winning? Near 50% = holding ground');
   console.log('            is decorative under the current victory rules.');
-  console.log('  kill-less turns before end  how long the AIs shuffled with nobody dying before');
-  console.log('            the game ended. 0 = a decisive finish; high = marching in circles.');
+  console.log('  kill-less turns before end (attrition)  how long the AIs shuffled with nobody dying');
+  console.log('            before an attrition finish. 0 = decisive; high = marching in circles.');
   console.log('  lead swings  times the field-score lead flipped sides per battle. High = a real');
   console.log('            back-and-forth (a losing player can feel a comeback); 0 = wire-to-wire.');
   if (dbh) { console.log('\nPersisted ' + G.games + ' battles to logs/woa.db (run ' + runId + ').'); db.close(dbh); }

@@ -439,8 +439,9 @@ function chBindHits(root){
    (1e's settle curve) itself uses it. Tooltips reuse the .chtip/ch-hit
    idiom (chBindHits) already established by chartScatter etc. above. */
 
-// metrics whose val() returns a 0-100 percentage (drag/swings are raw counts)
-var OV_PERCENT_KEYS = { red: 1, first: 1, hq: 1, zeroKill: 1, tie: 1, control: 1, firstBlood: 1 };
+// metrics whose val() returns a 0-100 percentage (drag/swings are raw counts).
+// WOA-039: attackShare/swapShare are % of all actions taken.
+var OV_PERCENT_KEYS = { red: 1, first: 1, hq: 1, zeroKill: 1, tie: 1, control: 1, firstBlood: 1, attackShare: 1, swapShare: 1 };
 var OV_CACHE = { key: null, rowsA: null, rowsB: null };
 
 function ovFmt(key, v) {

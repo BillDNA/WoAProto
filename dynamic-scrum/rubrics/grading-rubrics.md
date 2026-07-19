@@ -1,5 +1,5 @@
 ---
-last-reviewed: 2026-07-16
+last-reviewed: 2026-07-18
 ---
 #onboarding #human-instructions
 # Grading rubrics — north stars + what to measure
@@ -50,6 +50,18 @@ active:false.** Every figure below re-stamped from the already-saved candidate s
 label; the prior default-deck reading trails as a `_Superseded (default deck, pre-WOA-030):_` note
 on the same item, same pattern as the pre-1.1/pre-WOA-020 rows above it.
 
+**Metric re-baseline (2026-07-18, WOA-039 — rules 1.2). Three metric DEFINITIONS changed
+(engine rules did NOT):** (1) **Atk/Swp counts → Atk%/Swp% SHARES** of all actions taken
+(attacks+swaps+marches+deploys) — deck-size-proof, so the WOA-030 16→17 card change no longer
+inflates them; the raw counts stay in `logs/woa.db`, cut from print. (2) **Tie% and Drag condition to
+ATTRITION endings only** — HQ endings have Drag 0 by definition and diluted the pooled Tie% by the HQ
+share, so both now divide by attrition-ending count, not every battle. (3) **Reserves at end conditions
+to HQ endings only** and is typically small-n (HQ endings are a minority) — it prints `(n=N)` and is
+greyed/excluded from the verdict when slice-n < 240 fleet-wide (SPEC §8). Bands re-measured on the
+**standard setup — hard-vs-hard, n=60/map=360, Core Six, deck `cavsplit17-raid-paid`, 2026-07-18**
+(`logs/reports/balance/1.2/2026-07-18-1712-hard-vs-hard-n60.md`). The pre-1.2 pooled reading trails as
+a `_Superseded (pre-WOA-039, pooled/counts):_` note per item.
+
 ## Quick reference — report line → target band
 
 Condensed lookup for reading a balance report side-by-side: every number the report prints, the
@@ -65,21 +77,21 @@ criterion wins and this table gets fixed. All bands are targets (tune me).
 | HQ%                                   | 10–40 (≤8 attrition-only, ≥55 rushable)                                   | Map §3          |
 | Turns                                 | comfortably under the play cap (2× deck size, 34 today — 17-card ADOPTED) | Game §2         |
 | VPdiff                                | no band — context only                                                    | —               |
-| Atk / Swp                             | near the dated Behaviour baseline; ±30% move = regression                 | Game §1         |
+| Atk% / Swp%                           | share of all actions; near baseline (~19% / ~16%); ±30% move = regression | Game §1         |
 | 0kill%                                | ≤5 — **hard floor**                                                       | NS2             |
-| Tie%                                  | ≤15 — **hard floor**                                                      | NS5 / Map §6    |
-| Drag                                  | ≤2.5                                                                      | Best map        |
+| Tie%                                  | ≤18 (attrition endings) — **hard floor**                                  | NS5 / Map §6    |
+| Drag                                  | ≤3.0 (attrition endings)                                                  | Best map        |
 | Swings                                | ≥2.0                                                                      | Best map        |
 | Balance                               | 0 = ideal, lower = better (ranking, not a band)                           | Best map        |
 | **Overall lines**                     |                                                                           |                 |
 | red / first mover                     | 45–55%                                                                    | NS4             |
 | HQ captures                           | 10–40%                                                                    | Map §3          |
-| Behaviour: attacks & swaps, % fielded | near dated baseline; ±30% = regression                                    | Game §1         |
-| Reserves at end (red/blue)            | near dated baseline; high = turtling                                      | Game §1         |
-| tie-goes-to-2nd decided               | ≤15% — **hard floor**                                                     | NS5             |
+| Behaviour: attack%/swap%, % fielded   | share of all actions; near baseline (~19% / ~16%); ±30% = regression      | Game §1         |
+| Reserves at end (red/blue)            | HQ endings only; small-n (n<240 greyed, shows (n=N)); near dated baseline | Game §1         |
+| tie-goes-to-2nd decided               | ≤18% of attrition endings — **hard floor**                                | NS5             |
 | first blood won                       | 55–70% (higher = snowbally)                                               | NS2             |
 | more-hexes side won                   | ≥70%                                                                      | NS2 / Map §5    |
-| Pacing: Drag / Swings                 | ≤2.5 / ≥2.0                                                               | Best map        |
+| Pacing: Drag / Swings                 | ≤3.0 (attrition) / ≥2.0                                                   | Best map        |
 | **Card table**                        |                                                                           |                 |
 | Simple%                               | <40 good, 40–60 marginal, >60 failing                                     | Card 3          |
 | Noop%                                 | ~0; >2% investigate — **hard floor ≈0**                                   | NS3 / Card 2    |
@@ -148,16 +160,20 @@ The five headline items — grade any rules / content / AI change against these 
 5. **Tie-rule not deciding too much.**
    Goal: tie-goes-to-2nd should break ties, not decide games.
    Evidence: the "tie-goes-to-2nd decided N%" Decisiveness line (an attrition win where both sides
-   have EQUAL field scores, awarded to whoever moved second). Baseline: **11% (hard-vs-hard,
-   n=60/map = 360, Core Six, 2026-07-16, deck `cavsplit17-raid-paid` — ADOPTED WOA-030,
-   2026-07-18)**; normal-vs-normal, same date/deck, n=40/map = 240: 12% — both in target.
-   Score: ≤15% — currently MET; treat as a guardrail to hold, not a lever to pull. **Hard floor**
-   (see §Temperature).
+   have EQUAL field scores, awarded to whoever moved second) — **as a share of ATTRITION endings
+   (rules 1.2, WOA-039)**, since HQ endings can't tie on field score and only diluted the pooled
+   read. Baseline: **13% of attrition endings (hard-vs-hard, n=60/map = 360, Core Six, 2026-07-18,
+   deck `cavsplit17-raid-paid`)**. (Normal-vs-normal not re-measured at 1.2.)
+   Score: ≤18% of attrition endings — currently MET; treat as a guardrail to hold, not a lever to
+   pull. **Hard floor** (see §Temperature). The floor moved 15→18 only because the denominator
+   changed (attrition-only ≈ pooled ÷ the ~0.83 attrition share); the real-world stringency is the
+   same.
    Lever: the deck's attack-card supply (`content/decks/` — deleting hoarded attack cards drove it
-   11→15→20%) + the trench tie-survival rules (`game/engine/03-rules.js`).
-   _Superseded (default deck, pre-WOA-030, Core Six, 2026-07-16): hard 9%, normal 10%. Prior 1.1 read
-   10% (n=60, 7-map pool, pre-WOA-020). The 0.x-era "~25–26%, biggest open lever" predates the 1.1
-   trench tie-survival rules (WOA-010) that brought it down._
+   up) + the trench tie-survival rules (`game/engine/03-rules.js`).
+   _Superseded (pre-WOA-039, POOLED over all battles, ≤15% floor): 11% hard (Core Six, 2026-07-16,
+   `cavsplit17-raid-paid`); default deck pre-WOA-030 hard 9% / normal 10%; prior 1.1 read 10% (n=60,
+   7-map pool, pre-WOA-020). The 0.x-era "~25–26%, biggest open lever" predates the 1.1 trench
+   tie-survival rules (WOA-010) that brought it down._
 
 > **Two different "ties" — don't conflate them.** The **attrition tiebreak** ("tie-goes-to-2nd") is
 > north star 5: an attrition win where both sides have EQUAL field scores, awarded to whoever moved
@@ -181,8 +197,9 @@ buy improvement with.** State the temperature in the analysis; it is a dial, not
 | **T2 — hot** | Any excursion allowed **except the hard floors**, to map the design space. Nothing ships from T2 without a T0/T1 re-measure. | Deliberate exploration — "what if the deck-size ceiling weren't there?" (the WOA-029 probe that led to the 17-card ADOPT below) |
 
 **Hard floors — these never relax at any temperature.** Each is a measured cascade, not a preference:
-- **Tie-goes-to-2nd ≤ 15%** — deleting hoarded attack cards drove it 11→15→20% and *produced* the
-  swap-dance stalemate.
+- **Tie-goes-to-2nd ≤ 18% of attrition endings** (rules 1.2, WOA-039 — was ≤15% pooled; the
+  denominator changed, not the stringency) — deleting hoarded attack cards drove it up and *produced*
+  the swap-dance stalemate.
 - **Zero-kill ≤ 5%** and **Noop ≈ 0%** — dead battles and dead turns are the anti-degeneracy guarantees.
 - **Printed deploy steps ≥ stock** per unit type — there is **no deploy fallback** in the house rules, so
   a stranded unit can never reach the board (measured: infantry steps 7→5 sent Drag 2.3→3.6, attacks −20%).
@@ -398,14 +415,17 @@ the *aspect* of geometry each one implies.
    _Superseded (default deck, pre-WOA-030): 93% overall (hard-vs-hard & normal, same date)._
 6. **Tie-rule share.**
    Goal: the map doesn't funnel battles into equal-field-score stand-offs.
-   Evidence: "tie-goes-to-2nd decided" line, per map via name filter. Baseline 11% overall
-   (**hard-vs-hard, n=60/map, Core Six, 2026-07-16, deck `cavsplit17-raid-paid` — ADOPTED WOA-030,
-   2026-07-18**; normal 12%, n=40/map, same date/deck).
-   Score: at or below the game-level target (≤15%, tune me); a map far above the fleet average
-   is producing symmetric grinds — look at its terrain and HQ spacing.
+   Evidence: "tie-goes-to-2nd decided" line, per map via name filter — **as a share of attrition
+   endings (rules 1.2, WOA-039)**. Baseline 13% of attrition endings overall (**hard-vs-hard,
+   n=60/map, Core Six, 2026-07-18, deck `cavsplit17-raid-paid`**). Per-map spread this run: most
+   maps 6–17%, The Narrows the outlier at 26% (its hourglass produces symmetric grinds — highest
+   Drag 3.4 + Swap% 22 too).
+   Score: at or below the game-level target (≤18% of attrition endings, tune me); a map far above
+   the fleet average is producing symmetric grinds — look at its terrain and HQ spacing.
    Lever: terrain + HQ spacing (`content/maps/`) — symmetric grinds come from too-distant HQs and
    defensible terrain on both sides.
-   _Superseded (default deck, pre-WOA-030, same setup): hard 9%; normal 10%._
+   _Superseded (pre-WOA-039, POOLED over all battles, ≤15% target): 11% hard (Core Six, 2026-07-16,
+   `cavsplit17-raid-paid`); default deck pre-WOA-030 hard 9% / normal 10%._
 
 ### "Best map" — the ideal-range score (SOT, WOA-007)
 
@@ -417,14 +437,14 @@ every axis.** All endpoints and weights are tunable targets, Bill's to adjust (d
 
 | Metric                       | Evidence (per-map aggregate) | Ideal range | Weight per unit outside                       |
 | ---------------------------- | ---------------------------- | ----------- | --------------------------------------------- |
-| Red%                         | `redWins/done`               | 45–55       | 1.0 /pt                                       |
-| 1st%                         | `firstWins/done`             | 45–55       | 1.0 /pt                                       |
-| HQ%                          | `hqWins/done`                | 10–40       | 0.5 /pt                                       |
-| 0kill%                       | `zeroKill/done`              | 0–5         | 0.6 /pt                                       |
-| Tie-decided%                 | `tiebreak/done`              | 0–15        | 0.3 /pt                                       |
-| Drag (kill-less end turns)   | `killTail/done`              | 0–2.5       | 4 /turn                                       |
-| Swings (lead changes/battle) | `leadChanges/done`           | ≥2.0        | 6 /swing short                                |
-| Control-tracks-win%          | `controlWins/controlGames`   | ≥70         | 0.5 /pt short (skipped when no control games) |
+| Red%                         | `redWins/done`                       | 45–55       | 1.0 /pt                                       |
+| 1st%                         | `firstWins/done`                     | 45–55       | 1.0 /pt                                       |
+| HQ%                          | `hqWins/done`                        | 10–40       | 0.5 /pt                                       |
+| 0kill%                       | `zeroKill/done`                      | 0–5         | 0.6 /pt                                       |
+| Tie-decided%                 | `tiebreak/attritionEndings`          | 0–18        | 0.3 /pt                                       |
+| Drag (kill-less end turns)   | `attritionKillTail/attritionEndings` | 0–3.0       | 4 /turn                                       |
+| Swings (lead changes/battle) | `leadChanges/done`                   | ≥2.0        | 6 /swing short                                |
+| Control-tracks-win%          | `controlWins/controlGames`           | ≥70         | 0.5 /pt short (skipped when no control games) |
 
 **Lever:** this table is the scoring *fold*, not a separate criterion set — each metric's lever is
 named in the North stars / Map rubric above (Red/1st/HQ/Tie → map geometry `content/maps/`; 0kill →
@@ -477,23 +497,27 @@ These are the additional regression guards:
 
 1. **Behaviour health.**
    Goal: the AIs (and by proxy the incentive structure) fight rather than shuffle.
-   Evidence: the Behaviour line — attacks & swaps per battle, % of units ever fielded; per-side
-   reserve-held-at-end (WOA-016, [[data-and-reports]]) for hoarding. Baseline (**normal, n=40/map =
-   240, Core Six, 2026-07-16, deck `cavsplit17-raid-paid` — ADOPTED WOA-030, 2026-07-18**): 7.2
-   attacks, 4.2 swaps, 90% fielded; reserves at end red 10% / blue 10%. Hard-vs-hard reading
-   (**n=60/map = 360, Core Six, same date, same deck**): 6.7 attacks, 5.8 swaps, 94% fielded;
-   reserves red 6% / blue 6%.
+   Evidence: the Behaviour line — **attack% & swap% as a SHARE of all actions taken**
+   (attacks+swaps+marches+deploys; rules 1.2, WOA-039 — deck-size-proof where the raw counts were
+   not), % of units ever fielded; per-side reserve-held-at-end (WOA-016) for hoarding, now **over HQ
+   endings only** (an HQ rush ends before a side commits reserves — the read is meaningful only on
+   that slice, and it's typically small-n). Baseline (**hard-vs-hard, n=60/map = 360, Core Six,
+   2026-07-18, deck `cavsplit17-raid-paid`**): **19% attacks, 16% swaps** of all actions, 94%
+   fielded; reserves at the HQ capture red 33% / blue 31% (n=61 HQ endings — small-n, treat as
+   directional). Normal-vs-normal not re-measured at 1.2.
    Score: readings near baseline = good; a sharp move (~±30%+) in any of them after a change is a
-   regression **even if win rates look fine** (tune me). Low Atk + high Swp is the round-6 swap-dance
-   signature.
+   regression **even if win rates look fine** (tune me). Low attack% + high swap% is the round-6
+   swap-dance signature.
    Lever: the AI anti-degeneracy weights — `noopPenalty` / `antiShuffle` / the attrition projection
    in `game/engine/05-ai.js` (don't zero them in a preset without re-measuring these lines) + the
    active deck's attack supply (`content/decks/`).
-   _Superseded (default deck, pre-WOA-030, Core Six, 2026-07-16): normal 6.8 attacks / 4.3 swaps /
-   86% fielded, reserves red 14% / blue 14%; hard 6.3 attacks / 5.4 swaps / 90% fielded, reserves red
-   10% / blue 9%. Pre-WOA-020 (7-map) 1.1 figure 6.1 attacks / 5.7 swaps / 88% fielded — **⚠ flagged
-   for Bill: that number was actually produced by a 12-map hard-vs-hard sweep despite its "normal"
-   label**. Pre-1.1 V0 signature: attacks↔swaps inverted from the ~5/~7 reading._
+   _Superseded (pre-WOA-039 — raw COUNTS/battle, reserves POOLED over all battles): hard 6.7 attacks
+   / 5.8 swaps / 94% fielded, reserves red 6% / blue 6% (Core Six, 2026-07-16, `cavsplit17-raid-paid`);
+   normal 7.2 attacks / 4.2 swaps / 90% fielded, reserves red 10% / blue 10%. Default deck pre-WOA-030:
+   normal 6.8 / 4.3 / 86% fielded; hard 6.3 / 5.4 / 90% fielded. Pre-WOA-020 (7-map) 1.1 figure 6.1
+   attacks / 5.7 swaps / 88% fielded — **⚠ flagged for Bill: that number was actually produced by a
+   12-map hard-vs-hard sweep despite its "normal" label**. Pre-1.1 V0 signature: attacks↔swaps
+   inverted from the ~5/~7 reading._
 2. **Pacing.**
    Goal: battles resolve before the deck does the resolving; the **ADOPTED 17-card deck** (WOA-030,
    2026-07-18) caps a battle at **34 plays** (16-card `default.js`, superseded, capped at 32).

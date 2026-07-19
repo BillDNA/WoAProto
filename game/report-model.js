@@ -35,6 +35,17 @@ var WOA_REPORT = (function () {
 
   function pct(a, b) { return b ? Math.round(100 * a / b) : 0; }
   function f1(x) { return (Math.round(x * 10) / 10).toFixed(1); }
+  // WOA-039 (rules 1.2): total actions taken in a battle set = attacks + swaps +
+  // marches + deploys. The denominator for Attack/Swap SHARE, which is
+  // deck-size-proof where raw Atk/Swp counts were not (WOA-030 16→17 cards
+  // inflated the counts without any behaviour change).
+  function actionTotal(a) { return (a.attacks || 0) + (a.swaps || 0) + (a.marches || 0) + (a.deploys || 0); }
+  // WOA-039 / SPEC §8: a conditioned metric prints its slice-n and flags when it
+  // is below the fleet-wide trust threshold (the report can't grey a row, so it
+  // annotates instead — the dashboard band board does the greying). HQ-sliced
+  // reserves are typically small-n (HQ endings are a minority of battles).
+  function smallNote(n) { return ' (n=' + (n || 0) + ((n || 0) < SMALL_N.fleet ? ', small-n' : '') + ')'; }
+  function hqReservePct(sum, n) { return n ? Math.round(100 * sum / n) + '%' : '—'; }
 
   /* ===== Metric bands as DATA (WOA-033, SPEC §6) =====
      The ONE band table. SOT for the prose is
@@ -42,33 +53,57 @@ var WOA_REPORT = (function () {
      table, WOA-007) + the North stars / Game-level guards; if that doc and
      this table disagree, the doc wins and this table is fixed. `balanceScore`
      folds over THIS table (no second copy of the ranges) — the eight
-     feedsScore:true rows ARE the old ideal-range list, so its output is
-     byte-for-byte unchanged (golden-diff gate).
+     feedsScore:true rows ARE the ideal-range list.
 
-     Per row: { key, label, lo, hi, weight, feedsScore, val(agg,done) }
+     WOA-039 (rules 1.2 re-baseline): this is the ticket where balanceScore's
+     output legitimately MOVES (the golden diff intentionally breaks, justified
+     by the version bump). Tie% and Drag now condition their denominator to
+     ATTRITION endings (val over attritionEndings, not `done`); their band edges
+     were re-measured 2026-07-18 (n=60/map hard-vs-hard, cavsplit17-raid-paid,
+     Core Six). Attack/Swap SHARE joined as guard bands (feedsScore:false —
+     shaded on the dashboard, not scored) replacing the cut raw Atk/Swp counts.
+     The scored set stays the same eight metrics.
+
+     Per row: { key, label, lo, hi, weight, feedsScore, val(agg,done), nFor? }
        lo / hi     band edges; null = OPEN on that side (no penalty there).
                    0 is a real closed edge, NOT open (only null/absent is open).
        weight      points per unit outside the band (feeds the score).
        feedsScore  true = summed into balanceScore; false = a shaded GUARD band
                    the dashboard renders but the score ignores.
-       val         pulls this metric's value out of a balanceMap aggregate the
-                   SAME way the old scorer did (denominators preserved exactly:
-                   pct() for %-metrics; /max(1,done), raw, for Drag & Swings —
-                   so a NaN from a malformed agg scores 0, as before). */
+       val         pulls this metric's value out of a balanceMap aggregate
+                   (pct() for %-metrics; a raw ratio for Drag & Swings — so a
+                   NaN from a malformed agg scores 0). A conditioned metric
+                   divides by its slice count, not `done`, and carries nFor.
+       nFor        the sample size backing val() — the slice denominator for
+                   conditioned metrics (control/firstBlood: their sub-population;
+                   tie/drag: attritionEndings), read by the small-n rule. */
   var BANDS = [
     { key: 'red',    label: 'Red%',    lo: 45,  hi: 55,   weight: 1,   feedsScore: true,  val: function (a, done) { return pct(a.redWins, done); } },
     { key: 'first',  label: '1st%',    lo: 45,  hi: 55,   weight: 1,   feedsScore: true,  val: function (a, done) { return pct(a.firstWins, done); } },
     { key: 'hq',     label: 'HQ%',     lo: 10,  hi: 40,   weight: 0.5, feedsScore: true,  val: function (a, done) { return pct(a.hqWins, done); } },
     { key: 'zeroKill', label: '0kill%', lo: 0, hi: 5,     weight: 0.6, feedsScore: true,  val: function (a, done) { return pct(a.zeroKill, done); } },
-    { key: 'tie',    label: 'Tie%',    lo: 0,   hi: 15,   weight: 0.3, feedsScore: true,  val: function (a, done) { return pct(a.tiebreak, done); } },
-    { key: 'drag',   label: 'Drag',    lo: 0,   hi: 2.5,  weight: 4,   feedsScore: true,  val: function (a, done) { return a.killTail / Math.max(1, done); } },
+    // WOA-039: Tie%/Drag denominator = attrition endings (a.attritionEndings),
+    // NOT every finished battle. HQ endings have Drag 0 by definition and
+    // diluted the pooled Tie%. Bands re-baselined 2026-07-18 off the sliced read.
+    { key: 'tie',    label: 'Tie%',    lo: 0,   hi: 18,   weight: 0.3, feedsScore: true,  val: function (a) { return a.attritionEndings ? pct(a.tiebreak, a.attritionEndings) : null; },
+      nFor: function (a) { return a.attritionEndings || 0; } },
+    { key: 'drag',   label: 'Drag',    lo: 0,   hi: 3.0,  weight: 4,   feedsScore: true,  val: function (a) { return a.attritionEndings ? (a.attritionKillTail || 0) / a.attritionEndings : null; },
+      nFor: function (a) { return a.attritionEndings || 0; } },
     { key: 'swings', label: 'Swings',  lo: 2.0, hi: null, weight: 6,   feedsScore: true,  val: function (a, done) { return a.leadChanges / Math.max(1, done); } },
     { key: 'control', label: 'Control%', lo: 70, hi: 100, weight: 0.5, feedsScore: true,  val: function (a) { return a.controlGames ? pct(a.controlWins, a.controlGames) : null; },
       nFor: function (a) { return a.controlGames || 0; } },
-    // Guard band — shaded on the dashboard, NOT scored (SPEC §1: First-blood→win
-    // 55–70, the snowball check). feedsScore:false ⇒ never touches balanceScore.
+    // Guard bands — shaded on the dashboard, NOT scored (feedsScore:false ⇒
+    // never touches balanceScore). First-blood→win (SPEC §1, the snowball
+    // check) + the WOA-039 Attack/Swap SHARE pair (% of all actions taken;
+    // deck-size-proof; the swap-dance detector). Share bands centered on the
+    // 2026-07-18 measured reality (n=60/map hard-vs-hard, cavsplit17-raid-paid).
     { key: 'firstBlood', label: 'First-blood→win', lo: 55, hi: 70, weight: 0, feedsScore: false, val: function (a) { return a.firstBloodGames ? pct(a.firstBloodWins, a.firstBloodGames) : null; },
-      nFor: function (a) { return a.firstBloodGames || 0; } }
+      nFor: function (a) { return a.firstBloodGames || 0; } },
+    // Shares are over EVERY battle's actions (n = done, like Red%/HQ% — no
+    // nFor), so they're never spuriously small-n; val is null only when a
+    // (degenerate) battle set took no actions at all.
+    { key: 'attackShare', label: 'Attack%', lo: 12, hi: 28, weight: 0, feedsScore: false, val: function (a) { var t = actionTotal(a); return t ? pct(a.attacks, t) : null; } },
+    { key: 'swapShare', label: 'Swap%', lo: 10, hi: 26, weight: 0, feedsScore: false, val: function (a) { var t = actionTotal(a); return t ? pct(a.swaps, t) : null; } }
   ];
   var BAND_BY_KEY = {};
   BANDS.forEach(function (b) { BAND_BY_KEY[b.key] = b; });
@@ -166,13 +201,19 @@ var WOA_REPORT = (function () {
      (n - unfinished). Returns the G object all Overall sections read, with
      the card fold under G.cards. */
   function foldGlobal(rows) {
-    var G = { red: 0, first: 0, hq: 0, games: 0, turns: 0, attacks: 0, swaps: 0, zeroKill: 0, tiebreak: 0,
+    var G = { red: 0, first: 0, hq: 0, games: 0, turns: 0, attacks: 0, swaps: 0, marches: 0, deploys: 0,
+      zeroKill: 0, tiebreak: 0, attritionEndings: 0, attritionKillTail: 0,
+      hqEndings: 0, resEndRedHQ: 0, resEndBlueHQ: 0,
       fbWins: 0, fbGames: 0, ctlWins: 0, ctlGames: 0, depShare: 0, resEndRed: 0, resEndBlue: 0,
       killTail: 0, leadChanges: 0, cards: {} };
     rows.forEach(function (x) {
       var a = x.agg;
       G.red += a.redWins; G.first += a.firstWins; G.hq += a.hqWins; G.games += x.done; G.turns += a.turns;
-      G.attacks += a.attacks; G.swaps += a.swaps; G.zeroKill += a.zeroKill; G.tiebreak += a.tiebreak;
+      G.attacks += a.attacks; G.swaps += a.swaps; G.marches += (a.marches || 0); G.deploys += (a.deploys || 0);
+      G.zeroKill += a.zeroKill; G.tiebreak += a.tiebreak;
+      // WOA-039: attrition-only slices (Tie%/Drag) and HQ-only slices (Reserves)
+      G.attritionEndings += (a.attritionEndings || 0); G.attritionKillTail += (a.attritionKillTail || 0);
+      G.hqEndings += (a.hqEndings || 0); G.resEndRedHQ += (a.reserveEndRedHQ || 0); G.resEndBlueHQ += (a.reserveEndBlueHQ || 0);
       G.fbWins += a.firstBloodWins; G.fbGames += a.firstBloodGames;
       G.ctlWins += a.controlWins; G.ctlGames += a.controlGames; G.depShare += a.deployedShare;
       G.resEndRed += (a.reserveEndRed || 0); G.resEndBlue += (a.reserveEndBlue || 0);
@@ -197,7 +238,10 @@ var WOA_REPORT = (function () {
        redWins/firstWins/hqWins/turns/vpDiff/zeroKill/tiebreak/killTail/
        leadChanges/attacks/swaps/marches/deploys/firstBloodGames/
        firstBloodWins — bit-for-bit the same source (fs_red/fs_blue ARE
-       E.fieldScore at battle end, per db.js insertBattle).
+       E.fieldScore at battle end, per db.js insertBattle). WOA-039: the
+       attrition-only slice (attritionEndings + attritionKillTail, the Tie%/Drag
+       denominator + numerator) is derived HERE from win_type + kill_tail, the
+       same slice balanceAdd computes live — no new stored column.
      controlGames/controlWins (WOA-038): board hex-ownership at battle end IS
      a stored column pair now (hexesRed/hexesBlue — dev/db.js insertBattle's
      hexesHeld(st), the same tally balanceAdd folds live). A row only feeds
@@ -216,6 +260,7 @@ var WOA_REPORT = (function () {
     var agg = { redWins: 0, firstWins: 0, hqWins: 0, turns: 0, vpDiff: 0,
       zeroKill: 0, tiebreak: 0, killTail: 0, leadChanges: 0,
       attacks: 0, swaps: 0, marches: 0, deploys: 0,
+      attritionEndings: 0, attritionKillTail: 0,
       firstBloodGames: 0, firstBloodWins: 0, controlGames: 0, controlWins: 0, cards: {} };
     (rows || []).forEach(function (r) {
       if (r.winner === 'red') agg.redWins++;
@@ -226,6 +271,9 @@ var WOA_REPORT = (function () {
       if (r.zeroKill) agg.zeroKill++;
       if (r.tiebreak) agg.tiebreak++;
       agg.killTail += r.killTail || 0;
+      // WOA-039: attrition-only slice for Tie%/Drag — the same win_type + kill_tail
+      // columns balanceAdd folds live, sliced identically so live == DB bit-for-bit.
+      if (r.winType === 'attrition') { agg.attritionEndings++; agg.attritionKillTail += r.killTail || 0; }
       agg.leadChanges += r.leadChanges || 0;
       agg.attacks += r.attacks || 0; agg.swaps += r.swaps || 0;
       agg.marches += r.marches || 0; agg.deploys += r.deploys || 0;
@@ -436,32 +484,34 @@ var WOA_REPORT = (function () {
     L.push('');
     L.push('## Maps');
     L.push('');
-    L.push('| Map | Shape | Red% | 1st% | HQ% | Turns | VPdiff | Atk | Swp | 0kill% | Tie% | Drag | Swings | ' +
+    // WOA-039: Atk%/Swp% are SHARES of all actions (deck-size-proof); Tie%/Drag
+    // are conditioned to attrition endings (a.attritionEndings), not `done`.
+    L.push('| Map | Shape | Red% | 1st% | HQ% | Turns | VPdiff | Atk% | Swp% | 0kill% | Tie% | Drag | Swings | ' +
       (scoreCol ? 'Balance | ' : '') + 'Notes |');
     L.push('|---|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|' + (scoreCol ? '--:|' : '') + '---|');
     model.rows.forEach(function (x) {
-      var a = x.agg, done = x.done;
+      var a = x.agg, done = x.done, act = actionTotal(a), att = a.attritionEndings || 0;
       L.push('| ' + x.name + ' | ' + x.shape + ' | ' + pct(a.redWins, done) + ' | ' + pct(a.firstWins, done) +
-        ' | ' + pct(a.hqWins, done) + ' | ' + f1(a.turns / done) + ' | ' + f1(a.vpDiff / done) + ' | ' + f1(a.attacks / done) +
-        ' | ' + f1(a.swaps / done) + ' | ' + pct(a.zeroKill, done) + ' | ' + pct(a.tiebreak, done) +
-        ' | ' + f1((a.killTail || 0) / done) + ' | ' + f1((a.leadChanges || 0) / done) +
+        ' | ' + pct(a.hqWins, done) + ' | ' + f1(a.turns / done) + ' | ' + f1(a.vpDiff / done) + ' | ' + pct(a.attacks, act) +
+        ' | ' + pct(a.swaps, act) + ' | ' + pct(a.zeroKill, done) + ' | ' + pct(a.tiebreak, att) +
+        ' | ' + f1((a.attritionKillTail || 0) / Math.max(1, att)) + ' | ' + f1((a.leadChanges || 0) / done) +
         (scoreCol ? ' | ' + f1(x.score) : '') + ' | ' + x.notes.join(', ') + ' |');
     });
     L.push('');
     if (style === 'report') {
-      L.push('_Balance column: weighted distance outside each metric\'s ideal range (0 = ideal, lower = better) — Red/1st 45–55, HQ 10–40, 0kill ≤5, Tie ≤15, Drag ≤2.5, Swings ≥2.0, Control ≥70. SOT: grading-rubrics §Best map._');
+      L.push('_Balance column: weighted distance outside each metric\'s ideal range (0 = ideal, lower = better) — Red/1st 45–55, HQ 10–40, 0kill ≤5, Tie ≤18, Drag ≤3.0, Swings ≥2.0, Control ≥70. Tie%/Drag over attrition endings only (rules 1.2). SOT: grading-rubrics §Best map._');
       L.push('');
       L.push('## Overall');
       L.push('');
       L.push('- red ' + pct(G.red, G.games) + '% · first mover ' + pct(G.first, G.games) + '% · HQ captures ' +
         pct(G.hq, G.games) + '% · avg battle ' + f1(G.turns / G.games) + ' turns');
-      L.push('- Behaviour: ' + f1(G.attacks / G.games) + ' attacks & ' + f1(G.swaps / G.games) + ' swaps/battle · zero-kill ' +
+      L.push('- Behaviour: ' + pct(G.attacks, actionTotal(G)) + '% attacks & ' + pct(G.swaps, actionTotal(G)) + '% swaps of all actions · zero-kill ' +
         pct(G.zeroKill, G.games) + '% · ' + Math.round(100 * G.depShare / G.games) + '% of units ever fielded');
-      L.push('- Reserves at end: red ' + Math.round(100 * G.resEndRed / G.games) + '% · blue ' +
-        Math.round(100 * G.resEndBlue / G.games) + '% of that side\'s pieces still undeployed when the battle ended (high = turtling)');
-      L.push('- Decisiveness: tie-goes-to-2nd decided ' + pct(G.tiebreak, G.games) + '% · first blood won ' +
+      L.push('- Reserves at end (HQ endings only' + smallNote(G.hqEndings) + '): red ' + hqReservePct(G.resEndRedHQ, G.hqEndings) + ' · blue ' +
+        hqReservePct(G.resEndBlueHQ, G.hqEndings) + ' of that side\'s pieces still undeployed at the HQ capture (high = a rush before commit)');
+      L.push('- Decisiveness: tie-goes-to-2nd decided ' + pct(G.tiebreak, G.attritionEndings) + '% of attrition endings · first blood won ' +
         pct(G.fbWins, G.fbGames) + '% of the ' + pct(G.fbGames, G.games) + '% of battles with a kill · more-hexes side won ' + pct(G.ctlWins, G.ctlGames) + '%');
-      L.push('- Pacing: ' + f1(G.killTail / G.games) + ' kill-less turns before end (0=decisive, ~32=circling) · ' +
+      L.push('- Pacing: ' + f1(G.attritionKillTail / Math.max(1, G.attritionEndings)) + ' kill-less turns before end, attrition endings (0=decisive, ~32=circling) · ' +
         f1(G.leadChanges / G.games) + ' lead swings/battle (higher = more back-and-forth)');
       L.push('');
       L.push('## Cards (' + G.games + ' battles)');
@@ -470,13 +520,13 @@ var WOA_REPORT = (function () {
       L.push('');
       L.push('- Victory: red ' + pct(G.red, G.games) + '% · first mover ' + pct(G.first, G.games) +
         '% · HQ captures ' + pct(G.hq, G.games) + '% · avg ' + f1(G.turns / mx) + ' turns');
-      L.push('- Aggression: ' + f1(G.attacks / mx) + ' attacks & ' + f1(G.swaps / mx) + ' swaps/battle · ' +
+      L.push('- Aggression: ' + pct(G.attacks, actionTotal(G)) + '% attacks & ' + pct(G.swaps, actionTotal(G)) + '% swaps of all actions · ' +
         Math.round(100 * G.depShare / mx) + '% of units fielded · zero-kill ' + pct(G.zeroKill, G.games) + '%');
-      L.push('- Reserves at end: red ' + Math.round(100 * G.resEndRed / mx) + '% · blue ' +
-        Math.round(100 * G.resEndBlue / mx) + '% of pieces still undeployed at battle end');
-      L.push('- Decisiveness: tie→2nd ' + pct(G.tiebreak, G.games) + '% · first blood converts ' +
+      L.push('- Reserves at end (HQ endings only' + smallNote(G.hqEndings) + '): red ' + hqReservePct(G.resEndRedHQ, G.hqEndings) + ' · blue ' +
+        hqReservePct(G.resEndBlueHQ, G.hqEndings) + ' of pieces still undeployed at the HQ capture');
+      L.push('- Decisiveness: tie→2nd ' + pct(G.tiebreak, G.attritionEndings) + '% of attrition endings · first blood converts ' +
         pct(G.fbWins, G.fbGames) + '% · board leader wins ' + pct(G.ctlWins, G.ctlGames) + '%');
-      L.push('- Pacing: ' + f1(G.killTail / mx) + ' kill-less turns before end · ' + f1(G.leadChanges / mx) + ' lead swings/battle');
+      L.push('- Pacing: ' + f1(G.attritionKillTail / Math.max(1, G.attritionEndings)) + ' kill-less turns before end (attrition) · ' + f1(G.leadChanges / mx) + ' lead swings/battle');
       L.push('');
       L.push('## Card report');
     }
@@ -498,7 +548,7 @@ var WOA_REPORT = (function () {
     return L.join('\n');
   }
 
-  return { pct: pct, f1: f1, balanceScore: balanceScore, mapNotes: mapNotes,
+  return { pct: pct, f1: f1, actionTotal: actionTotal, balanceScore: balanceScore, mapNotes: mapNotes,
     addAgg: addAgg, foldGlobal: foldGlobal, cardRows: cardRows, reportMarkdown: reportMarkdown,
     // WOA-033: bands-as-data + trace folds (node + browser both consume)
     BANDS: BANDS, bands: bands, outBand: outBand, quantile: quantile,

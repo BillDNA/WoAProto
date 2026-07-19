@@ -16,18 +16,6 @@ the spec for the next pull._
 
 ## Tickets
 
-### WOA-039 — Rules-1.2 metric re-baseline: rates not counts, win-path conditioning — atomic bump
-**Area:** metrics · **Status:** Todo · **Type:** opus · **Depends on:** WOA-037, WOA-038 (re-baseline measures on complete capture) · **Docs:** specs/design_handoff_metrics_dashboard, grading-rubrics, data-and-reports
-
-TICKETS.md P2.1, per SPEC §1's verdict column. Reshape the printed metrics: Attack/Swap counts → **share of actions taken** (attacks+swaps+marches+deploys — deck-size-proof); Tie% and Drag → conditioned to **attrition endings only**; Reserves-at-end → **HQ endings only, turn-normalized** with the SPEC §8 small-n rule (slice-n < 40/map or < 240 fleet-wide → greyed, `(n=N)`, out of the verdict). Raw Atk/Swp counts stay DB-only (cut from print). Then re-measure the Core Six baselines (hard-vs-hard, n=60/map, `cavsplit17-raid-paid` on the core7 mapset pool — the shipped-history setup) and update every pin **in one commit**: the band table in `report-model.js`, `dynamic-scrum/docs/grading-rubrics.md` band prose, the shipped-history baseline row (CLAUDE.md), and the test pins in `game/test.js`. Rules version bumps to **1.2**. The golden balance diff **intentionally breaks** here — the version bump is the justification (doctrine: "anything that legitimately changes numbers bumps the rules version instead, atomically with its test-pin updates"). New measured band edges are recorded with their setup (date, n, deck, mapset) — provenance travels with the number.
-
-**Acceptance criteria:**
-- [ ] Attack share / Swap share printed as % of actions; Tie%, Drag conditioned to attrition endings; Reserves-at-end HQ-only + turn-normalized with small-n greying; raw counts DB-only
-- [ ] Fresh Core Six baselines measured at n=60/map hard-vs-hard on `cavsplit17-raid-paid` / core7 pool; band edges in report-model.js's band table updated from those measurements, setup-stamped
-- [ ] One atomic commit updates report-model.js bands + grading-rubrics.md + shipped-history baseline row + test.js pins, with the rules version at 1.2; node game/test.js green against the new pins
-- [ ] Dashboard verdict banner and band board render correctly from the 1.2 bands (T0/T1/T2 widening unchanged in mechanism)
-- [ ] User confirms done
-
 ### WOA-040 — Map drill-down screen: tempo lanes, |VP-diff| track, per-map bands, settle curve
 **Area:** game-ui · **Status:** Todo · **Type:** sonnet · **Depends on:** WOA-037 (|VP-diff| data), WOA-039 (1.2 bands) · **Docs:** specs/design_handoff_metrics_dashboard
 
@@ -57,6 +45,8 @@ Found during WOA-030's verify (2026-07-18). `index.html` (~line 268) force-clear
 _None._
 
 ## Finished
+
+- **WOA-039 — Rules-1.2 metric re-baseline: rates not counts, win-path conditioning — atomic bump** (2026-07-19) — Rules 1.2 shipped atomically: shares replace counts (Atk% 19 / Swp% 16 of actions), Tie%/Drag attrition-sliced (13% / 2.4, bands 0-18 / 0-3.0), Reserves HQ-only small-n; fresh Core Six n=60/map=360 measured + setup-stamped (report logs/reports/balance/1.2/); rubric + CLAUDE.md supersession + 16 new test pins in one changeset; suites 1179/104/smoke/claude-plays green. TWO runner-adopted forks flagged for Bill (D.D:shares-are-guards-not-scored): shares are guards not scored despite SPEC ★; reserves stock-share not ÷turns. The Narrows breaches at T0 (Tie 26, Drag 3.4). cost: 286,898 tok / 33.2m / 90 calls
 
 - **WOA-038 — Capture board-control at battle end so Control% can score on the dashboard** (2026-07-18) — battles grew hexes_red/hexes_blue (ALTER precedent, NULL on legacy rows); insertBattle tallies via hexesHeld(st) mirroring balanceAdd; foldBattles derives controlGames/controlWins with the null-guard + tie gate — fold matched the live agg exactly (85%/85% on the same run); Overview Control% now a real n. Suites 1163/104/smoke green; golden diff byte-identical vs pre-sprint baseline. cost: 148,561 tok / 10.9m / 57 calls
 

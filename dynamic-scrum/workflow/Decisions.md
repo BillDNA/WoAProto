@@ -133,6 +133,16 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   visible "custom deck applied: <name> [reset]" badge. Chosen over delete-the-mechanism (kills the
   file:// path) and over badge-only (leaves the stray checked-in Vanguard deck as the default).
 
+- **`D.D:shares-are-guards-not-scored`** (2026-07-18, WOA-039 build, runner-adopted — **Bill may
+  overrule**) — Attack%/Swap% shares land as **guard bands** (`feedsScore:false`, bands 12–28 /
+  10–26) rather than scored metrics, despite SPEC §1's ★: the Best-map SOT lists exactly 8 scored
+  metrics, the adopted dashboard design says "8 scored rows + guards below the fold", and scoring
+  them would invent unspecified weights. The 1.2 balanceScore movement comes ONLY from Tie%/Drag's
+  attrition-endings denominator. Sibling call, same session: "Reserves turn-normalized" implemented
+  as HQ-endings-only reserve **stock-share** with `(n=N)` small-n, not a literal ÷turns (unit would
+  be uninterpretable for an unscored diagnostic); if a turns-division was intended it is a one-line
+  change in reportMarkdown + balance.js.
+
 ## Architecture
 
 - **`D.A:units-content-kind`** (2026-07-10, WOA-011) — unit composition & values are a content kind

@@ -740,10 +740,20 @@ console.log('== behaviour counters (balance-lab metrics) ==');
   E.applyStep(st, { hex: E.stepOptions(st).targets[0] });
   ok(st.stats.deploys === 1, 'deploy increments stats.deploys');
   var r = E.balanceMap(E.MAPS[0], 2, { seedBase: 5 });
-  ['attacks', 'swaps', 'marches', 'zeroKill', 'tiebreak', 'firstBloodGames', 'controlGames', 'deployedShare',
-   'reserveEndRed', 'reserveEndBlue', 'killTail', 'leadChanges']
+  // WOA-039 (rules 1.2): deploys (for Attack/Swap share), the attrition slice
+  // (attritionEndings/attritionKillTail for Tie%/Drag) and the HQ slice
+  // (hqEndings/reserveEndRedHQ/reserveEndBlueHQ for Reserves) join the agg.
+  ['attacks', 'swaps', 'marches', 'deploys', 'zeroKill', 'tiebreak', 'firstBloodGames', 'controlGames', 'deployedShare',
+   'reserveEndRed', 'reserveEndBlue', 'killTail', 'leadChanges',
+   'attritionEndings', 'attritionKillTail', 'hqEndings', 'reserveEndRedHQ', 'reserveEndBlueHQ']
     .forEach(function (k) { ok(k in r, 'balanceMap reports ' + k); });
   ok(r.killTail >= 0 && r.killTail <= r.turns, 'kill-less tail within [0, turns] (got ' + r.killTail + '/' + r.turns + ')');
+  // the attrition slice is a subset of finished battles: its count + kill-tail
+  // sum never exceed the pooled reads (attritionKillTail is pooled killTail
+  // minus the HQ-ending tails).
+  ok(r.attritionEndings >= 0 && r.attritionEndings <= (r.n - r.unfinished), 'attritionEndings within [0, done]');
+  ok(r.attritionKillTail >= 0 && r.attritionKillTail <= r.killTail, 'attritionKillTail ≤ pooled killTail (HQ tails excluded)');
+  ok(r.hqEndings + r.attritionEndings <= (r.n - r.unfinished), 'HQ + attrition endings never exceed finished battles');
   ok(r.leadChanges >= 0, 'lead changes non-negative (got ' + r.leadChanges + ')');
   // WOA-016: reserveEndRed/Blue are the per-side split of the SAME reserves-at-end
   // read deployedShare folds (both only accumulate over finished battles) — they
@@ -1105,20 +1115,46 @@ console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
   var R = require('./report-model.js');
   function near(a, b) { return Math.abs(a - b) < 1e-9; }
 
-  // ---- band table unifies with balanceScore (golden-diff-gated: outputs pinned) ----
+  // ---- band table unifies with balanceScore (WOA-039: scored set stays 8; the
+  // guard set gains Attack%/Swap% share alongside First-blood→win) ----
   ok(R.BANDS.filter(function (b) { return b.feedsScore; }).length === 8, 'BANDS has the 8 scored metrics (feedsScore:true)');
+  ok(R.BANDS.filter(function (b) { return !b.feedsScore; }).length === 3, 'BANDS has 3 guard metrics (First-blood→win + Attack%/Swap% share)');
+  ok(R.BANDS.some(function (b) { return b.key === 'attackShare'; }) && R.BANDS.some(function (b) { return b.key === 'swapShare'; }),
+    'Attack%/Swap% share bands present (WOA-039)');
   ok(R.BANDS.every(function (b) { return 'lo' in b && 'hi' in b && 'weight' in b && 'feedsScore' in b; }),
     'each band row carries {lo, hi, weight, feedsScore}');
+  // WOA-039 (rules 1.2): Tie%/Drag divide by the ATTRITION slice, not `done`.
+  // attritionEndings 80 ≠ done 100 proves the denominator switched; attritionKillTail
+  // 280 (not the pooled killTail 300) proves Drag reads the sliced kill-tail.
   var sc = { redWins: 60, firstWins: 50, hqWins: 5, zeroKill: 10, tiebreak: 20,
-    killTail: 300, leadChanges: 100, controlGames: 100, controlWins: 60, firstBloodGames: 40, firstBloodWins: 30 };
-  // Red 5 + 1st 0 + HQ 2.5 + 0kill 3 + Tie 1.5 + Drag 2 + Swings 6 + Control 5 = 25
-  ok(near(R.balanceScore(sc, 100), 25), 'balanceScore folds the band table to the hand-computed 25.0 (was ' + R.balanceScore(sc, 100) + ')');
-  // the guard band (First-blood→win, feedsScore:false) must NOT move the score
-  var scGuardBad = Object.assign({}, sc, { firstBloodWins: 0 }); // first-blood 0% — way outside 55–70
-  ok(near(R.balanceScore(scGuardBad, 100), 25), 'feedsScore:false guard band never touches balanceScore');
-  // control guard: controlGames == 0 drops the control term entirely (0kill etc unchanged)
-  ok(near(R.balanceScore(Object.assign({}, sc, { controlGames: 0, controlWins: 0 }), 100), 20),
-    'controlGames == 0 skips the control term (25 - 5 = 20)');
+    attritionEndings: 80, attritionKillTail: 280, killTail: 300,
+    leadChanges: 100, controlGames: 100, controlWins: 60, firstBloodGames: 40, firstBloodWins: 30 };
+  // Red (60→out5) 5 + 1st (50) 0 + HQ (5→out5×.5) 2.5 + 0kill (10→out5×.6) 3
+  //  + Tie (20/80=25→out7×.3) 2.1 + Drag (280/80=3.5→out.5×4) 2.0 + Swings (1→out1×6) 6
+  //  + Control (60→out10×.5) 5 = 25.6
+  ok(near(R.balanceScore(sc, 100), 25.6), 'balanceScore folds the band table to the hand-computed 25.6 (was ' + R.balanceScore(sc, 100) + ')');
+  // Tie%/Drag read the attrition slice: with the SAME pooled counts but the slice
+  // denominator == done, tie 20/100=20→out2×.3=.6 and drag 300/100=3→out0, total shifts.
+  var scPooledLike = Object.assign({}, sc, { attritionEndings: 100, attritionKillTail: 300 });
+  ok(near(R.balanceScore(scPooledLike, 100), 5 + 2.5 + 3 + 0.6 + 0 + 6 + 5),
+    'Tie%/Drag denominator is attritionEndings (slice=100 gives tie .6 + drag 0, total 22.1)');
+  // no attrition endings at all → tie/drag val() is null → they score 0 (not NaN)
+  var scNoAttr = Object.assign({}, sc, { attritionEndings: 0, attritionKillTail: 0 });
+  var tieBand = R.BANDS.filter(function (b) { return b.key === 'tie'; })[0];
+  ok(tieBand.val(scNoAttr) === null && R.bandN(tieBand, scNoAttr, 100) === 0, 'Tie% val()/nFor = null/0 when there are no attrition endings');
+  ok(near(R.balanceScore(scNoAttr, 100), 25.6 - 2.1 - 2.0), 'a set with no attrition endings drops the Tie+Drag terms (null scores 0)');
+  // the guard bands (First-blood→win, Attack%/Swap% share) must NOT move the score
+  var scGuardBad = Object.assign({}, sc, { firstBloodWins: 0, attacks: 0, swaps: 999, marches: 0, deploys: 1 }); // wild shares + first-blood 0%
+  ok(near(R.balanceScore(scGuardBad, 100), 25.6), 'feedsScore:false guard bands never touch balanceScore');
+  // control guard: controlGames == 0 drops the control term entirely
+  ok(near(R.balanceScore(Object.assign({}, sc, { controlGames: 0, controlWins: 0 }), 100), 20.6),
+    'controlGames == 0 skips the control term (25.6 - 5 = 20.6)');
+  // Attack%/Swap% share val() = pct over all four action counts
+  var shareAgg = { attacks: 30, swaps: 20, marches: 10, deploys: 40 }; // total 100 actions
+  var atkBand = R.BANDS.filter(function (b) { return b.key === 'attackShare'; })[0];
+  var swpBand = R.BANDS.filter(function (b) { return b.key === 'swapShare'; })[0];
+  ok(atkBand.val(shareAgg) === 30 && swpBand.val(shareAgg) === 20, 'Attack%/Swap% share = count / (attacks+swaps+marches+deploys)');
+  ok(atkBand.val({ attacks: 0, swaps: 0, marches: 0, deploys: 0 }) === null, 'share val() = null when no actions were taken');
 
   // ---- bands(metric, temperature): closed edges widen 20%/40%, open edges stay open ----
   ok(near(R.bands('red', 'T0').lo, 45) && near(R.bands('red', 'T0').hi, 55), 'T0 = stored edges (Red 45–55)');

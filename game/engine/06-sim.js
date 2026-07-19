@@ -32,8 +32,10 @@
   // one finished battle in; balanceMap is the synchronous convenience loop.
   function balanceNew(n) {
     var out = { n: n, redWins: 0, firstWins: 0, hqWins: 0, turns: 0, vpDiff: 0, unfinished: 0, cards: {},
-      // behaviour metrics (June 2026): catch degenerate AI play, not just outcomes
-      attacks: 0, swaps: 0, marches: 0, zeroKill: 0, tiebreak: 0,
+      // behaviour metrics (June 2026): catch degenerate AI play, not just outcomes.
+      // WOA-039 (rules 1.2): deploys joins attacks/swaps/marches so the report can
+      // print Attack/Swap SHARE (attacks / all four action counts) — deck-size-proof.
+      attacks: 0, swaps: 0, marches: 0, deploys: 0, zeroKill: 0, tiebreak: 0,
       firstBloodGames: 0, firstBloodWins: 0, controlGames: 0, controlWins: 0,
       deployedShare: 0,
       // WOA-016: per-side split of the SAME reserves-at-end read deployedShare
@@ -41,6 +43,14 @@
       // still undeployed when the battle ended. Instrument for the "hoarding
       // reserves wins" felt-note (balance-loop-v2 final report §5c.4).
       reserveEndRed: 0, reserveEndBlue: 0,
+      // WOA-039 (rules 1.2): win-path conditioning. Tie%/Drag report over
+      // attrition endings only (HQ endings pull Drag to 0 by definition and
+      // dilute Tie% by the HQ share); Reserves reports over HQ endings only.
+      // These slice counters + slice sums keep the pooled fields intact (the
+      // legacy Tables view + deployedShare reconcile still read them) while the
+      // report/dashboard read the sliced versions.
+      attritionEndings: 0, attritionKillTail: 0,
+      hqEndings: 0, reserveEndRedHQ: 0, reserveEndBlueHQ: 0,
       // Feedback Round 2 pacing metrics:
       killTail: 0,      // trailing kill-less turns (0 = ended on a kill/HQ, ~32 = no-kill grind)
       leadChanges: 0 }; // field-score lead flips per battle (higher = more back-and-forth)
@@ -62,9 +72,15 @@
     out.attacks += stats.attacks || 0;
     out.swaps += stats.swaps || 0;
     out.marches += stats.marches || 0;
+    out.deploys += stats.deploys || 0;                          // WOA-039: for Attack/Swap share
     if (st.vp.red + st.vp.blue === 0) out.zeroKill++;            // no unit ever died
     if (st.winType === 'attrition' && fsr === fsb) out.tiebreak++; // decided only by tie-goes-to-2nd
-    out.killTail += Math.max(0, st.turnNumber - (st.lastKillTurn || 0)); // trailing kill-less turns
+    var killTail = Math.max(0, st.turnNumber - (st.lastKillTurn || 0)); // trailing kill-less turns
+    out.killTail += killTail;                                   // pooled (legacy Tables view + DB parity)
+    // WOA-039: Drag/Tie% condition to attrition endings — HQ endings pull Drag
+    // to 0 by definition and dilute Tie% by the HQ share. The report/dashboard
+    // divide these slice sums by attritionEndings, not the pooled `done`.
+    if (st.winType === 'attrition') { out.attritionEndings++; out.attritionKillTail += killTail; }
     out.leadChanges += (st.leadChanges || 0);
     if (stats.firstBlood) {
       out.firstBloodGames++;
@@ -83,6 +99,14 @@
     out.deployedShare += 1 - resLeft / (2 * unitTotal);
     out.reserveEndRed += resSide.red / unitTotal;
     out.reserveEndBlue += resSide.blue / unitTotal;
+    // WOA-039: Reserves-at-end conditions to HQ endings only (an HQ rush ends
+    // before a side commits its reserves — the diagnostic reads meaningfully
+    // only there; attrition endings run to deck-out and deploy almost everything).
+    if (st.winType === 'hq') {
+      out.hqEndings++;
+      out.reserveEndRedHQ += resSide.red / unitTotal;
+      out.reserveEndBlueHQ += resSide.blue / unitTotal;
+    }
     (st.playLog || []).forEach(function (e) {
       var c = out.cards[e.id] || (out.cards[e.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 });
       c.plays++;
