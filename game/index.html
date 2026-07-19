@@ -140,7 +140,7 @@
 <div id="deckScr" class="screen">
   <div class="panel parchment">
     <h2 style="font-variant:small-caps;text-align:center;">Quartermaster's Ledger &mdash; Deck Editor</h2>
-    <p class="small" style="text-align:center;">The deck is data (<code>content/decks/*.js</code>). 16 copies per deck, exactly one <b>starting</b> card (guaranteed in the opening hand; count 1). <b>Five deck slots</b> live in this browser &mdash; pick one to edit, name it, and mark the &#9733; one you want the game to use. Tick a card off to bench it. Pick a card on the left to edit it on the right; build its steps with the dropdowns. Card art is looked up by id (<code>art/&lt;id&gt;.jpg</code>) &mdash; a new id simply renders as a clean text card.</p>
+    <p class="small" style="text-align:center;">The deck is data (<code>content/decks/*.js</code>). 16&ndash;17 copies per deck, exactly one <b>starting</b> card (guaranteed in the opening hand; count 1). <b>Five deck slots</b> live in this browser &mdash; pick one to edit, name it, and mark the &#9733; one you want the game to use. Tick a card off to bench it. Pick a card on the left to edit it on the right; build its steps with the dropdowns. Card art is looked up by id (<code>art/&lt;id&gt;.jpg</code>) &mdash; a new id simply renders as a clean text card.</p>
     <p class="small" id="deckHdr" style="text-align:center;font-weight:bold;"></p>
     <div id="dkSlots" title="Five deck slots — pick one to edit; the ★ deck is the one the game uses"></div>
     <div id="dkWrap">
@@ -157,7 +157,7 @@
       <button id="dkExport" class="ghost btn-ghost-dark">Export deck file</button>
       <button id="dkImport" class="ghost btn-ghost-dark">Import</button>
       <input type="file" id="dkImportFile" accept=".js,.json" style="display:none;">
-      <button id="dkReset" class="ghost btn-ghost-dark" title="Back to the default deck (content/decks/default.js)">Restore built-in</button>
+      <button id="dkReset" class="ghost btn-ghost-dark" title="Clear this browser's deck override and play the active deck in content/decks/">Restore built-in</button>
       <button id="dkBack" class="ghost btn-ghost-dark">Back</button>
     </div>
     <p class="small" style="text-align:center;">Changing cards is a rules change in effect &mdash; run the Balance Dashboard after, and <code>node game/test.js</code> if you can. LAN play needs the same deck on both devices (share <code>custom-deck.js</code>). CLI tools (<code>balance.js</code>, <code>test.js</code>) read the active deck in <code>content/decks/</code> &mdash; the applied deck here is browser-only.</p>
@@ -256,7 +256,7 @@
     <h3>Object</h3>
     <p>Win battles by <b>capturing the enemy headquarters</b> (attack into it; a tie counts) or by <b>attrition</b> &mdash; when a player has no cards left, the side with more <b>surviving units on the board</b> wins (1&nbsp;VP per infantry, 2 per cavalry, 3 per artillery; reserves left at home count for nothing; tie goes to whoever moved second). First to <b>3 battle victories</b> wins the campaign.</p>
     <h3>Your Turn</h3>
-    <p>Draw to a hand of 4 (your first turn includes the guaranteed Deploy Infantry card). Play exactly one card and resolve it; the played card is <b>removed from the game</b>, the rest are discarded and recycled. You have only 16 plays per battle &mdash; spend them well.</p>
+    <p>Draw to a hand of 4 (your first turn includes the guaranteed Deploy Infantry card). Play exactly one card and resolve it; the played card is <b>removed from the game</b>, the rest are discarded and recycled. You have only as many plays as your deck holds (16&ndash;17 in the standard decks) per battle &mdash; spend them well.</p>
     <h3>Units</h3>
     <table><tr><th></th><th>Attack</th><th>Defense</th><th>Support</th><th>VP</th></tr>
     <tr><td>Infantry</td><td>1</td><td>1</td><td>1</td><td>1</td></tr>
@@ -275,6 +275,13 @@
 </div></div>
 
 <div id="toast" class="parchment"></div>
+<!-- WOA-036: browser-only deck-override badge — global chrome, shown only when
+     an override (localStorage or a dropped custom-deck.js) is actually live;
+     populated + wired in ui/boot.js. -->
+<div id="deckBadge" class="parchment" title="This browser is playing a deck override, not the active-flagged deck in content/decks/.">
+  <span id="deckBadgeText"></span>
+  <button id="deckBadgeReset" class="ghost btn-ghost-dark">[reset]</button>
+</div>
 
 <script src="maps.js"></script>
 <script src="custom-deck.js"></script>
@@ -287,6 +294,10 @@
 // BEFORE the engine snapshots the card list; this browser's saved deck
 // (localStorage) wins over the shipped custom-deck.js file. WOA_DECK_SRC tells
 // the editor what it is editing.
+// custom-deck.js ships as a NO-OP (WOA_CUSTOM_DECK = null, WOA-036) — a fresh
+// checkout has no override, so this block is a no-op and the game plays the
+// active-flagged deck in content/decks/. ui/boot.js shows a badge whenever
+// WOA_APPLIED_DECK below ends up non-null (localStorage or a dropped file).
 var WOA_DECK_SRC = 'builtin';
 try {
   window.WOA_CONTENT = window.WOA_CONTENT || { maps: [], cards: [], decks: [] };

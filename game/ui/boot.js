@@ -257,6 +257,31 @@ $('dkAdd').onclick = function(){
   renderDeck();
 };
 
+// WOA-036: browser-only deck-override badge — visible in normal play chrome
+// (fixed, not buried in the editor), shown only when WOA_APPLIED_DECK is
+// actually live (index.html's override wiring, evaluated before this file
+// runs). No override = no badge. Reset reuses the same clear+reload path as
+// the editor's "Restore built-in" button below.
+function resetCustomDeck(){
+  try { localStorage.removeItem('woa-custom-deck'); } catch(e){}
+  clearSave();
+  syncDeckFile(null, function(){ location.reload(); });
+}
+if (typeof WOA_DECK_SRC !== 'undefined' && WOA_DECK_SRC !== 'builtin'){
+  var deckBadgeName = 'custom-deck.js';
+  if (WOA_DECK_SRC === 'local'){
+    deckBadgeName = 'a custom deck saved in this browser';
+    try {
+      var wd = JSON.parse(localStorage.getItem('woa-decks'));
+      var slot = wd && wd.slots && wd.slots[wd.active];
+      if (slot && slot.name) deckBadgeName = slot.name;
+    } catch(e){}
+  }
+  $('deckBadgeText').textContent = 'custom deck applied: ' + deckBadgeName;
+  $('deckBadge').style.display = 'flex';
+  $('deckBadgeReset').onclick = resetCustomDeck;
+}
+
 $('dkSave').onclick = function(){
   var probs = deckProblems(DK.cards);
   if (probs.length){ toast('Fix first: ' + probs[0], 4200); return; }
@@ -274,10 +299,8 @@ $('dkSave').onclick = function(){
   syncDeckFile(ship, function(){ setTimeout(function(){ location.reload(); }, 600); });
 };
 $('dkReset').onclick = function(){
-  if (!confirm('Restore the default deck (content/decks/default.js)?')) return;
-  try { localStorage.removeItem('woa-custom-deck'); } catch(e){}
-  clearSave();
-  syncDeckFile(null, function(){ location.reload(); });
+  if (!confirm('Clear this browser\'s deck override and play the active deck in content/decks/?')) return;
+  resetCustomDeck();
 };
 $('dkExport').onclick = function(){
   var probs = deckProblems(DK.cards);

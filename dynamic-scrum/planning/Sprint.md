@@ -16,23 +16,13 @@ the spec for the next pull._
 
 ## Tickets
 
-### WOA-036 — Browser plays a stray "applied deck" override, never the active-flagged deck
-**Area:** game-ui · **Status:** Todo · **Type:** bug · **Docs:** code-architecture
-
-Found during WOA-030's verify (2026-07-18). `index.html` (~line 268) force-clears every `content/decks/` deck's `active` flag and substitutes a browser-only "applied deck" whenever one is present — and one always is: `game/custom-deck.js` is a checked-in, non-empty 16-card leftover (commit 4ba14fa, "Vanguard") with cards distinct from both `default` and `cavsplit17-raid-paid`. Override precedence: `woa-custom-deck` localStorage → `custom-deck.js` → active flag. Consequence: interactive browser play has NEVER reflected the active flag — including the adopted 17-card deck — while every CLI/sim/test path (balance.js, test.js, dev/) bypasses the override and is correct. The mechanism itself stays (it's how zipped file:// and LAN play get a custom deck — export the file, drop it next to index.html). **Decided shape (Bill, 2026-07-18): both fixes** — (1) ship `custom-deck.js` as a no-op (empty/absent override) so the active deck shows through by default; (2) whenever an override IS active (localStorage or a dropped file), show a visible "custom deck applied: <name> [reset]" badge so it can never be silent again. Also reconcile `deck-editor.js` `deckProblems()`'s hard-coded `total !== 16` with the 17-card adopt. Independent of the other four tickets — can land anytime in the sprint.
-
-**Acceptance criteria:**
-- [ ] Checked-in `game/custom-deck.js` is a no-op; a fresh browser load (node game/server.js AND zipped file://, no localStorage) plays the active-flagged deck (`cavsplit17-raid-paid`, 17 cards visible in a dealt game)
-- [ ] An active override (localStorage or dropped custom-deck.js) shows a visible badge naming the applied deck with a working reset; no override = no badge
-- [ ] deck-editor.js's deck-size validation accepts the 17-card adopted deck (hard-coded 16 reconciled)
-- [ ] node dev/smoke.js green; node game/test.js green
-- [ ] User confirms done
-
 ## In Progress
 
 _None._
 
 ## Finished
+
+- **WOA-036 — Browser plays a stray "applied deck" override, never the active-flagged deck** (2026-07-19) — Shipped both halves of the decided shape: custom-deck.js is a commented no-op (drop-in contract preserved; server null-sync writes the same shape — no server change needed), fresh loads play cavsplit17-raid-paid (17 orders visible, runner vision-verified), global "custom deck applied: <name> [reset]" badge with working round-trip; deck-editor total check → 16-17 band (D.D:deck-total-band-16-17) with a full flip/no-flip enumeration of every hardcoded 16; smoke retargeted to invariants not numbers. Suites 1179/104/smoke green; golden diff byte-identical; file:// verified via headless Chrome. README's 3 stale 16-mentions flagged as follow-up, not crept. cost: 211,423 tok / 20.4m / 109 calls
 
 - **WOA-040 — Map drill-down screen: tempo lanes, |VP-diff| track, per-map bands, settle curve** (2026-07-19) — Map drill-down live: breadcrumb + wraparound, A|B|A/B toggle (lanes+track only, board/settle always both-runs), tempo lanes at absolute per-lane scales, |VP-diff| track with honest grey on fs-less runs, per-map band board via ovBandRowHtml scope='map', settle curve via extracted chSettleSvg; BATTLE_CACHE/dashLoadBattleRows now the one shared A/B fetch. +24 smoke assertions; suites 1179/104/smoke green; golden diff byte-identical vs 1.2 baseline; runner vision-verified 5 screenshots (real breach renders red). Escalation reproduced + minted WOA-041 (balance-report runs persist zero battles). cost: 326,711 tok / 24.1m / 104 calls
 

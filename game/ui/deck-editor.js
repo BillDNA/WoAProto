@@ -104,7 +104,11 @@ function deckProblems(cards){
     });
   });
   if (starting !== 1) probs.push('exactly ONE card must be marked starting (got ' + starting + ')');
-  if (total !== 16) probs.push('the deck must total 16 cards (got ' + total + ') — hand-edit the deck file if you really want an exotic size');
+  // WOA-036: the physical guardrail is a design band, not one exact count —
+  // every shipped content/decks/*.js deck totals 16 or 17 (the 17-card
+  // cavsplit17-raid-paid adopted 2026-07-18, WOA-030); a custom deck must
+  // land in that same band.
+  if (total < 16 || total > 17) probs.push('the deck must total 16-17 cards (got ' + total + ') — hand-edit the deck file if you really want an exotic size');
   return probs;
 }
 
@@ -248,12 +252,12 @@ function dkStatus(){
   var inCards = DK.cards.filter(function(c){ return !c.out; });
   var total = inCards.reduce(function(a, c){ return a + (+c.count >= 1 ? Math.floor(+c.count) : 0); }, 0);
   var openName = (DK.slots && DK.slots[DK.slot] && DK.slots[DK.slot].name) || ('Deck '+(DK.slot+1));
-  var applied = WOA_DECK_SRC === 'builtin' ? 'default deck (content/decks/default.js)' :
+  var applied = WOA_DECK_SRC === 'builtin' ? 'the active deck (' + dkEsc((E.ACTIVE_DECK && (E.ACTIVE_DECK.name || E.ACTIVE_DECK.id)) || '?') + ')' :
             WOA_DECK_SRC === 'local' ? 'a custom deck saved in this browser' : 'custom-deck.js';
   $('deckHdr').innerHTML = 'Editing <b>' + dkEsc(openName) + '</b>' +
     (DK.slot === DK.active ? ' &middot; this is the active deck' : ' &middot; active deck is <b>'+dkEsc((DK.slots[DK.active]&&DK.slots[DK.active].name)||('Deck '+(DK.active+1)))+'</b>') +
     ' &middot; game currently runs ' + applied;
-  $('dkListFoot').innerHTML = inCards.length + ' cards &middot; <b>' + total + '/16</b> copies';
+  $('dkListFoot').innerHTML = inCards.length + ' cards &middot; <b>' + total + '</b> copies (target 16-17)';
   var probs = deckProblems(DK.cards);
   $('dkWarn').innerHTML = probs.length ? '&#9888; ' + probs.join('<br>&#9888; ') : '';
   $('dkSave').disabled = probs.length > 0;

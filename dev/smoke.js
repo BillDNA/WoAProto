@@ -66,8 +66,12 @@ setTimeout(function () {
   console.log('== player mats ==');
   ok(doc.querySelectorAll('#matRed .slot').length === 13, 'red mat has 13 piece slots (7+2+1+3)');
   ok(doc.querySelectorAll('#matBlue .slot').length === 13, 'blue mat has 13 piece slots');
-  ok(doc.querySelectorAll('#matRed .scard').length === 16, 'red mat tracks all 16 orders');
-  ok(doc.querySelectorAll('#matBlue .scard').length === 16, 'blue mat tracks all 16 orders (enemy spend visible)');
+  // WOA-036: one .scard per card COPY in the active deck — deck-size-proof
+  // (was hardcoded 16, broke the moment the no-op fix let the 17-card active
+  // deck through instead of the checked-in Vanguard override).
+  var deckTotal = win.Engine.CARDS.reduce(function (a, c) { return a + (+c.count || 0); }, 0);
+  ok(doc.querySelectorAll('#matRed .scard').length === deckTotal, 'red mat tracks all ' + deckTotal + ' orders');
+  ok(doc.querySelectorAll('#matBlue .scard').length === deckTotal, 'blue mat tracks all ' + deckTotal + ' orders (enemy spend visible)');
   ok(doc.querySelectorAll('#matRed .slot svg').length === 13, 'reserve slots carry piece glyphs at battle start');
   ok(!!doc.getElementById('scorecard'), 'campaign score card present in top bar');
 
@@ -449,13 +453,19 @@ setTimeout(function () {
         'one list row per card (' + doc.querySelectorAll('#dkList .dkli').length + ')');
       ok(doc.querySelector('#dkDetail .dkd-name') && doc.querySelectorAll('#dkStepList .dkstep').length >= 1,
         'detail panel + GUI step builder render for the selected card');
+      // WOA-036: the active deck is now the 17-card cavsplit17-raid-paid
+      // (was the checked-in 16-card Vanguard override) — deckProblems()
+      // accepts a 16-17 band (design ceiling, not one exact count; every
+      // shipped content/decks/*.js deck lands in that band), so "clean" and
+      // the break-it thresholds below are proved against the real band, not
+      // a stale hardcoded 16.
       ok(win.deckProblems(win.Engine.CARDS).length === 0, 'built-in deck validates clean');
       ok(!doc.getElementById('dkSave').disabled, 'Save enabled on a valid deck');
-      // break it: bump the selected card's count so the total exceeds 16 -> validation refuses
+      // break it: bump the selected card's count so the total exceeds the 16-17 band -> validation refuses
       var cnt = doc.querySelector('#dkDetail .dkd-count');
       cnt.value = String(+cnt.value + 1);
       cnt.dispatchEvent(new win.Event('input', { bubbles: true }));
-      ok(/must total 16/.test(doc.getElementById('dkWarn').textContent), 'over-16 deck flagged');
+      ok(/must total 16-17/.test(doc.getElementById('dkWarn').textContent), 'over-band (>17) deck flagged');
       ok(doc.getElementById('dkSave').disabled, 'Save disabled while invalid');
       // two starting cards / bad step type are refused too
       var broken = JSON.parse(JSON.stringify(win.Engine.CARDS));
@@ -465,8 +475,8 @@ setTimeout(function () {
       badStep[0].steps = [{ type: 'heal' }];
       ok(win.deckProblems(badStep).some(function (p) { return /unknown type/.test(p); }), 'unknown step type refused');
       var benched = JSON.parse(JSON.stringify(win.Engine.CARDS));
-      benched[2].out = true; // Feedback Round 1: benched cards drop from the 16
-      ok(win.deckProblems(benched).some(function (p) { return /must total 16/.test(p); }), 'benching a card drops it from the 16');
+      benched[2].out = true; // Feedback Round 1: benched cards drop from the total (here: 17 -> 14, under the 16-17 band)
+      ok(win.deckProblems(benched).some(function (p) { return /must total 16-17/.test(p); }), 'benching a card drops it below the 16-17 band');
       // Feedback Round 2: five deck slots, exactly one active
       ok(doc.querySelectorAll('#dkSlots .dkslot[data-slot]').length === 5, 'five deck slots offered');
       ok(doc.querySelectorAll('#dkSlots .dkslot.active').length === 1, 'exactly one active deck marked');

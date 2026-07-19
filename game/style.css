@@ -336,6 +336,15 @@
     position:fixed; left:50%; top:62px; transform:translateX(-50%); z-index:40;
     padding:10px 22px; display:none; font-size:15.5px; text-align:center; max-width:90vw;
   }
+  /* WOA-036: deck-override badge — small, fixed, above every screen; JS
+     flips display to flex only when an override is actually live. */
+  #deckBadge{
+    position:fixed; left:10px; top:10px; z-index:41; display:none;
+    align-items:center; gap:8px; padding:4px 10px 4px 12px; font-size:11.5px;
+    color:var(--ink); max-width:min(360px,60vw);
+  }
+  #deckBadge span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  #deckBadge button{padding:2px 9px; font-size:11px; box-shadow:none;}
   .manual{text-align:left; font-size:14px; line-height:1.5;}
   .manual h3{font-variant:small-caps; margin:12px 0 4px; color:var(--brass-dark); border-bottom:1px solid var(--brass-dark);}
   .manual table{width:100%; border-collapse:collapse; font-size:13px;}

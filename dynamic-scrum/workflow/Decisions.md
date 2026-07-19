@@ -143,6 +143,12 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   be uninterpretable for an unscored diagnostic); if a turns-division was intended it is a one-line
   change in reportMarkdown + balance.js.
 
+- **`D.D:deck-total-band-16-17`** (2026-07-18, WOA-036 build, runner-adopted) — the Deck Editor's
+  hard `total !== 16` check becomes a **16–17 band** (every shipped `content/decks/*.js` totals
+  exactly 16 or 17; the physical guardrail is a design ceiling, not a hard 16). Editor blurbs and
+  the manual's order-count text follow the band. Per-card copy ceiling stays 16. The editor's
+  status line now names the real active deck instead of hardcoding `default`.
+
 ## Architecture
 
 - **`D.A:units-content-kind`** (2026-07-10, WOA-011) — unit composition & values are a content kind
