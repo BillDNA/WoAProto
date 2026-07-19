@@ -49,6 +49,12 @@ makes sense on *this* rig lives in this doc.
   post-change **excluding the one `Persisted N battles … (run <id>)` trailer line** — its run-id
   auto-increments every invocation (pre-existing non-determinism, confirmed WOA-037). Byte-identical
   otherwise = pass.
+- **Fixed-seed cross-run check (WOA-044 run):** same-mode `balance.js` runs before/after a
+  capture-only change replay the same seeds — their seed-derived dashboard charts must render
+  identically, differing ONLY in the new field's charts (a free UI-layer golden diff). Corollary:
+  runs 106/107 in woa.db are a parallel-vs-serial **parity pair** (byte-identical battles) — fine
+  for render checks, useless for demonstrating A≠B visuals; when citing test data in a dispatch,
+  name what it *can't* show (use a normal-vs-easy pair like 114/115 or 120/121 for divergence).
 - **Killing servers (Windows/Git-Bash):** `kill $!` after `&` kills the MSYS subshell, NOT node.exe —
   the server keeps listening. Find it with `netstat -ano | grep <port>`, kill with
   `taskkill //PID <pid> //F`, and verify the port is clear afterward (WOA-037/036 runs).
