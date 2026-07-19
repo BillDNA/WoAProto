@@ -1214,6 +1214,37 @@ console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
   ok(q.B.n === 1 && near(q.B.median, 0.25) && near(q.A.median, 0.3125),
     'single-play card = its own normalized time; card A (turns 1,4) median 0.3125');
 
+  // ---- per-card DB-rows aggregate + the Win% doctrine slice (WOA-043) ----
+  var cardEnv1 = {
+    winner: 'red', winType: 'hq', turns: 6,
+    trace: [
+      { p: 'red',  id: 'A', mode: 'normal',     turn: 1, seen: 1 },              // red wins, normal, first-sight
+      { p: 'blue', id: 'A', mode: 'normal',     turn: 2, seen: 2 },              // 2nd copy, blue loses, not first-sight
+      { p: 'red',  id: 'B', mode: 'attack',     turn: 3, seen: 1 },              // simple fallback, red wins
+      { p: 'blue', id: 'B', mode: 'normal',     turn: 4, seen: 1, noop: true },  // normal but noop
+      { p: 'red',  id: 'C', mode: 'reposition', turn: 5, seen: 3 }               // simple fallback, red wins
+    ]
+  };
+  var cardEnv2 = { winner: 'blue', winType: 'attrition', turns: 4,
+    trace: [{ p: 'blue', id: 'A', mode: 'normal', turn: 1, seen: 1 }] };
+  var CA1 = R.cardAggFromEnvelopes([cardEnv1]);
+  ok(CA1.A.plays === 2 && CA1.A.wins === 1 && CA1.A.simple === 0 && CA1.A.firstSight === 1 && CA1.A.seenSum === 3,
+    'cardAggFromEnvelopes: card A pools both copies (2 plays, 1 win, 0 simple, 1 first-sight, seenSum 3)');
+  ok(CA1.B.plays === 2 && CA1.B.wins === 1 && CA1.B.simple === 1 && CA1.B.noop === 1,
+    'cardAggFromEnvelopes: card B mixes a simple fallback (mode attack) and a noop normal play');
+  ok(CA1.C.plays === 1 && CA1.C.simple === 1 && CA1.C.firstSight === 0,
+    'cardAggFromEnvelopes: card C is a simple reposition, seen 3 -> not first-sight');
+  var CA12 = R.cardAggFromEnvelopes([cardEnv1, cardEnv2]);
+  ok(CA12.A.plays === 3 && CA12.A.wins === 2, 'cardAggFromEnvelopes pools ALL endings (attrition env counted too) -> 3 plays, 2 wins');
+  var WS1 = R.cardHqWinSlice([cardEnv1]);
+  ok(WS1.A.plays === 2 && WS1.A.wins === 1, 'cardHqWinSlice: card A both normal plays counted (HQ ending), 1 win (red)');
+  ok(WS1.B.plays === 1 && WS1.B.wins === 0, 'cardHqWinSlice: card B only its NORMAL play counts (mode attack excluded), blue play -> 0 wins');
+  ok(WS1.C === undefined, 'cardHqWinSlice: card C excluded entirely (mode reposition, no normal play this battle)');
+  var WS12 = R.cardHqWinSlice([cardEnv1, cardEnv2]);
+  ok(WS12.A.plays === 2 && WS12.A.wins === 1, 'cardHqWinSlice ignores the attrition-ending envelope entirely (unchanged from HQ-only)');
+  ok(typeof R.cardAggFromEnvelopes === 'function' && typeof R.cardHqWinSlice === 'function',
+    'WOA-043 card folds exported on the shared surface');
+
   // ---- per-hex lenses (WOA-042, SPEC §5): occupancy / flips / kills folded
   // from the trace's h-stream, on a hand-built fixture with known answers ----
   var henv = { turns: 4, trace: [

@@ -457,6 +457,62 @@ var WOA_REPORT = (function () {
     return out;
   }
 
+  /* ===== Per-card aggregates from many battle envelopes (WOA-043, Cards tab) =====
+     foldBattles's `cards` field stays {} BY DESIGN (its own comment: card_plays
+     is a separate table, out of scope for the Overview/Maps folds that ticket
+     built). The Cards tab is where a run's per-card aggregate is actually
+     needed, so this derives the SAME {plays,wins,simple,firstSight,seenSum,noop}
+     shape balanceAdd builds live (engine/06-sim.js ~line 111) directly from
+     each battle's trace envelope (already captured per SPEC §4 trace — no new
+     capture), so WOA_REPORT.cardRows can be reused UNMODIFIED for a run's DB
+     rows exactly as it already is for a live in-memory run. wins here is the
+     POOLED win rate (every ending) — kept for internal bubble-sizing/tooltip
+     use only; it must never reach print (WOA-019) or the sight-quadrant axis
+     (SPEC §2 — see cardHqWinSlice below for the axis-worthy slice). */
+  function cardAggFromEnvelopes(envs) {
+    var cards = {};
+    (envs || []).forEach(function (env) {
+      var winner = env && env.winner, tr = traceOf(env);
+      tr.forEach(function (e) {
+        var c = cards[e.id] || (cards[e.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 });
+        c.plays++;
+        if (e.p === winner) c.wins++;
+        if (e.mode !== 'normal') c.simple++;       // resolved as a basic attack/reposition
+        if ((e.seen || 1) <= 1) c.firstSight++;     // played the first time it was seen
+        if (e.noop) c.noop++;                       // resolved ZERO actions
+        c.seenSum += (e.seen || 1);
+      });
+    });
+    return cards;
+  }
+
+  /* Card Win% doctrine slice (SPEC §2): pooled card Win% stays OUT of print
+     (WOA-019) and out of the Cards-tab quadrant's axis — the number that IS
+     meaningful there is sliced to HQ-capture endings × non-simple plays (a
+     basic-attack/reposition fallback isn't really "the card winning", and a
+     battle that ended in attrition was decided by the standoff, not the last
+     card played). DB/dashboard-only; the Cards-tab sight quadrant (WOA-043) is
+     the first consumer. Returns {cardId: {plays, wins}} — pct() at the call
+     site so a 0-play card reads null rather than NaN, and callers apply the
+     small-n rule (SPEC §8) to `plays` before trusting the percentage (this
+     slice is thin by construction: HQ endings are ~17% of battles, and only
+     the non-simple plays within those count — expect small-n almost always at
+     ordinary run sizes). */
+  function cardHqWinSlice(envs) {
+    var out = {};
+    (envs || []).forEach(function (env) {
+      if (!env || env.winType !== 'hq') return;
+      var tr = traceOf(env), winner = env.winner;
+      tr.forEach(function (e) {
+        if (e.mode !== 'normal') return; // simple (basic attack/reposition) plays excluded
+        var c = out[e.id] || (out[e.id] = { plays: 0, wins: 0 });
+        c.plays++;
+        if (e.p === winner) c.wins++;
+      });
+    });
+    return out;
+  }
+
   /* The full saved-report markdown. dev/balance-report.js and the dashboard's
      Save-report button are two callers of THIS one renderer; the model
      parameterizes exactly what differs between them:
@@ -647,6 +703,8 @@ var WOA_REPORT = (function () {
     BANDS: BANDS, bands: bands, outBand: outBand, quantile: quantile,
     firstContactTurn: firstContactTurn, deployInterleave: deployInterleave, settlePoint: settlePoint,
     actionOctileLanes: actionOctileLanes, vpDiffTrack: vpDiffTrack, cardPlayTurnQuartiles: cardPlayTurnQuartiles,
+    // WOA-043: per-card DB-rows aggregate (cardRows-compatible) + the SPEC §2 Win% doctrine slice
+    cardAggFromEnvelopes: cardAggFromEnvelopes, cardHqWinSlice: cardHqWinSlice,
     // WOA-042: per-hex lenses (drill-down) + SPEC §5 dead/avenue thresholds
     hexLenses: hexLenses, foldHexLenses: foldHexLenses, HEX_DEAD_OCC: HEX_DEAD_OCC, HEX_AVENUE_Q: HEX_AVENUE_Q,
     // WOA-035: small-n rule + DB-rows-as-agg fold (Overview)

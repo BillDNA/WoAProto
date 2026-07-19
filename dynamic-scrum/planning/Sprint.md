@@ -17,22 +17,6 @@ scripts.
 
 ## Tickets
 
-### WOA-043 — Cards tab (P2.4)
-**Area:** dashboard · **Status:** Todo · **Depends on:** WOA-042 · **Type:** sonnet · **Docs:** specs/design_handoff_metrics_dashboard/SPEC.md, code-architecture
-
-Card metrics exist in the Tables view but nothing answers "which cards are dead weight and when do
-cards actually fire" visually — the pill nav's Cards pane is still a placeholder. Fills
-`#dashPaneCards` (stable mount, dashboard.js) from existing folds only — no new capture. Depends on
-WOA-042 for `charts.js` file-owner sequencing, not data.
-
-**Acceptance criteria:**
-- [ ] Sight quadrant (win% × 1st-sight%) with A/B ghost arrows, reusing the existing greedy label placer from charts.js
-- [ ] Dead-card Simple% dumbbells with Noop ⚠ marker
-- [ ] "When cards fire" quartile strips fed by the existing per-card play-turn quartile fold in `report-model.js` (fold reused as-is, not reimplemented)
-- [ ] Small-n greying per SPEC §8 applies; tab follows the run-A/B pickers
-- [ ] `node game/test.js` green · `node dev/smoke.js` green · golden balance diff byte-identical
-- [ ] User confirms done *(rendered tab is a visual check — route to human/vision verify)*
-
 ### WOA-044 — Units tab (P3.1)
 **Area:** dashboard · **Status:** Todo · **Depends on:** WOA-043 · **Type:** sonnet · **Docs:** specs/design_handoff_metrics_dashboard/SPEC.md, code-architecture
 
@@ -54,6 +38,8 @@ sprint close.
 _None._
 
 ## Finished
+
+- **WOA-043 — Cards tab (P2.4)** (2026-07-19) — Cards tab live in #dashPaneCards: sight quadrant (win% = SPEC §2 HQ x non-simple slice via new cardHqWinSlice; pooled Win% kept off-axis per WOA-019) with A-ghost->B-solid arrows + chMakePlacer labels; dead-card Simple% dumbbells with independent Noop ⚠; fire-time quartile strips reusing cardPlayTurnQuartiles as-is; fleet-240 small-n greying (DOM-verified 18/18+24/24). Runner vision-verified on 114v115 + 91v106; suites green; golden diff runner-re-verified. Known minor: chMakePlacer label collisions in the ~50% cluster (accepted, spec README). cost: 295,607 tok / 25.1 min / 99 calls
 
 - **WOA-042 — Hex lenses on the map drill-down (P2.3)** (2026-07-19) — hexLenses/foldHexLenses pure folds (SPEC §5 thresholds as data) + three SVG hex lenses on the drill-down reusing board.js hex helpers (`D.D:hex-lenses-svg-not-clippath`); dead-hatch, nested-ring avenues, HQ stars, hover A->B values, A|B|A/B ghost — all runner-vision-verified from 6 saved screenshots; suites green, golden diff runner-re-verified byte-identical both modes. cost: 270,533 tok / 32.5 min / 94 calls
 
