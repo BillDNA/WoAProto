@@ -89,8 +89,12 @@ parking-lot note). Ships in phases; **Phase 1 is the active sprint** ([[Sprint]]
   browser deck-override bug (no-op the checked-in custom-deck.js + visible override badge; shape
   decided 2026-07-18).
 
-**Deliverables (Phase 3 — next pull, from TICKETS.md):** P2.3 hex lenses, P2.4 Cards tab, P3.1
-Units tab.
+**Deliverables (Phase 3 — the active sprint, planned 2026-07-18: [[Sprint]]):**
+- **WOA-041** — balance-report battle-persistence bug, pulled first so measurement runs are drillable ·
+  **WOA-042** — P2.3 hex lenses (occupancy / flips / kills, folds + rendering) · **WOA-043** — P2.4
+  Cards tab (sight quadrant, dead-card dumbbells, fire-quartile strips) · **WOA-044** — P3.1 Units
+  tab (role map, breakthrough, lifespan, exchange). Closes the metrics-v2 spec → distill-spec at
+  sprint close.
 
 **Done when:** a balance report's every metric maps to a lever and shows in the dashboard — two saved
 runs comparable A/B at a selectable temperature, verdicts naming their levers.
