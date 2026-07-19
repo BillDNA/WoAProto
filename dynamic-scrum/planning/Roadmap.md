@@ -79,7 +79,8 @@ parking-lot note). Ships in phases; **Phase 1 is the active sprint** ([[Sprint]]
   **WOA-034** — view-only dashboard shell with run-A/B pickers · **WOA-035** — Overview screen
   (triage band board, map dumbbells, verdict banner, pacing minis).
 
-**Deliverables (Phase 2 — the active sprint, planned 2026-07-18, [[Sprint]]):**
+**Deliverables (Phase 2 — SHIPPED 2026-07-18, sprint closed 5/5:
+[[M2-metrics-v2-dashboard-phase2]]):**
 - **WOA-037** — engine captures `st.fsTimeline` (feeds the timeline table + |VP-diff| track) ·
   **WOA-038** — control-at-end capture (Control% scores for real) — both golden-diff-safe, landing
   first · **WOA-039** — the rules-1.2 metric re-baseline (rates not counts, win-path conditioning —

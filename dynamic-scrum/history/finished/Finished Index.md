@@ -5,6 +5,11 @@ below (**newest first**). Used to sanity-check whether something already shipped
 
 ## Index
 
+- **2026-07-18 — [[M2-metrics-v2-dashboard-phase2|M2 · Metrics v2 + dashboard, phase 2]]** — same-day
+  plan-and-run (5/5, zero bounces). Rules-1.2 re-baseline landed atomically (shares, win-path
+  conditioning, fresh Core Six); |VP-diff| + Control% real from DB; map drill-down ships; browser
+  finally plays the adopted deck (no-op custom-deck.js + override badge). Found WOA-041
+  (balance-report persists zero battles). Phase 3 (hex lenses, Cards, Units) next.
 - **2026-07-18 — [[M2-metrics-v2-dashboard-phase1|M2 · Metrics v2 + dashboard, phase 1]]** — planned
   and ran fully autonomously same-day (6/6 closed, zero bounces, golden diff held throughout). The
   17-card adopt executed; every battle now leaves a SPEC §4 trace with run identity in woa.db; bands

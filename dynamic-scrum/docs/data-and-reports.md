@@ -19,9 +19,13 @@ delete freely). Three funnels, one writer (`dev/db.js`):
 | Live play in the browser | `Engine.hooks.onBattleEnd` → `POST /api/recordbattle` (server proxy, **fail-open** — a zipped `game/` without `dev/` answers 501 and play continues) |
 | LLM battles (`dev/claude-plays.js`) | direct `dev/db.js` insert |
 
-Schema: `runs` / `battles` / `card_plays` / per-turn `timeline` (from `st.fsTimeline` — a field no
-engine code populates yet, so the table is empty until WOA-037). Query read-only with
-`node dev/db-query.js "<sql>"` (no SQL = schema + row counts).
+Schema: `runs` / `battles` / `card_plays` / per-turn `timeline` (from `st.fsTimeline`, populated by
+the engine per completed turn; `GET /api/battles` joins it back as a sibling `fs` field per row and
+`envelopeFromRow` folds it into the envelope — WOA-037). `battles` also carries
+`hexes_red`/`hexes_blue` (hex-ownership at battle end, WOA-038 — NULL on pre-038 rows, excluded from
+Control% rather than read as ties). Query read-only with `node dev/db-query.js "<sql>"` (no SQL =
+schema + row counts). **Known gap (WOA-041, Bugs):** `dev/balance-report.js` runs currently persist a
+`runs` row but ZERO battle rows — the funnel table above overstates it until fixed.
 
 **Run identity + trace (metrics-v2 Phase 1, WOA-031/032, 2026-07-18).** `runs` carries SPEC §7
 identity — `deck` (always `Engine.ACTIVE_DECK.id`, which also covers the browser's `__applied`
@@ -92,7 +96,13 @@ skills below) — moving any requires a same-commit sweep of `.claude/skills/` +
    pacing minis, all folded from saved battle rows (`WOA_REPORT.foldBattles`, same aggregation as the
    CLI — `game/report-model.js` is the ONE report model). Tables is the old run-loop dashboard,
    unchanged; the pre-P1 single-run Charts tab is retired (its chart primitives live on in
-   `ui/charts.js` for the P2 tabs). Maps/Cards/Units are stubs until P2/P3.
+   `ui/charts.js` for the P2 tabs). **Maps is the real drill-down since Phase 2 (WOA-040)**: breadcrumb
+   switcher, A|B|A/B ghost toggle (lanes + |VP-diff| only; band board + settle always both-runs),
+   absolute-scale tempo lanes, per-map band board (`ovBandRowHtml` scope='map', 40-battle threshold),
+   settle curve; `BATTLE_CACHE`/`dashLoadBattleRows` is the one shared A/B row fetch. Cards/Units are
+   stubs until P2.4/P3.1. **Metric definitions are rules-1.2 since WOA-039**: Atk%/Swp% shares of all
+   actions (raw counts DB-only), Tie%/Drag over attrition endings, Reserves HQ-endings-only — bands +
+   baselines in [[grading-rubrics]] and the CLAUDE.md shipped-history row, all setup-stamped.
 4. Skills wrap the loop: `generate-reports` (1+2, fire-and-forget), `review-reports` (grade against
    [[grading-rubrics]]), `run-tournament` (roster-wide meta read).
 

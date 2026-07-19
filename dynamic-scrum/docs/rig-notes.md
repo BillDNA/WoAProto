@@ -31,11 +31,30 @@ makes sense on *this* rig lives in this doc.
 
 ## The rig
 
-- **Tooling inventory:** _stub — MCPs, bridges, CLIs a session can drive here (e.g. a Unity/Blender/browser MCP)._
-- **Driving it:** _stub — how an agent puts the app/editor into a given state._
-- **Capturing pixels:** _stub — the working screenshot/render recipe, and what it does NOT capture._
-- **Tests:** _stub — suite invocations, which layers each covers, known flake smells._
-- **Staging:** _stub — rig-specific commit-staging rules (paired sidecar/metadata files, generated artifacts)._
+- **Tooling inventory:** Playwright + chrome-devtools MCPs (drive + screenshot the served app);
+  headless Chrome/Edge CLI as fallback. Playwright's `browser_navigate` refuses `file://` URLs —
+  use `chrome.exe --headless --screenshot` for file-protocol proofs (M2-P2 run, WOA-036).
+- **Driving it:** `PORT=<n> node game/server.js` on a scratch port; deep link
+  `index.html?screen=dash&charts` opens the dashboard (falls back to the two most-recent runs — to
+  pick specific runs, drive the real `#dashRunA/#dashRunB` selects and dispatch a `change` event;
+  setting `DASH.runA/runB` alone doesn't re-render). `?autostart=ai` starts an AI battle.
+- **Capturing pixels:** `msedge/chrome --headless --disable-gpu --screenshot=<png>
+  --window-size=1400x1000 --virtual-time-budget=15000 <url>` — omit the virtual-time budget and an
+  async-populated page captures falsely blank. Classic `--headless`, never `--headless=new`.
+- **Tests:** `node game/test.js` (engine + report-model pins) · `node dev/smoke.js` (jsdom UI,
+  inlines the script chain the way file:// resolves it — doubles as the file:// load check) ·
+  `node dev/db.test.js` · `node dev/claude-plays.test.js` · `node dev/llm-session.test.js`. No known
+  flakes (M2-P2: all suites deterministic across repeated runs).
+- **Golden balance diff:** capture `node game/balance.js 24 normal` AND `24 easy` pre-change; diff
+  post-change **excluding the one `Persisted N battles … (run <id>)` trailer line** — its run-id
+  auto-increments every invocation (pre-existing non-determinism, confirmed WOA-037). Byte-identical
+  otherwise = pass.
+- **Killing servers (Windows/Git-Bash):** `kill $!` after `&` kills the MSYS subshell, NOT node.exe —
+  the server keeps listening. Find it with `netstat -ano | grep <port>`, kill with
+  `taskkill //PID <pid> //F`, and verify the port is clear afterward (WOA-037/036 runs).
+- **Staging:** no sidecar rules; stage explicit paths. `logs/reports/**` markdown IS committed
+  (the human record); `logs/woa.db*` and screenshot scratch dirs
+  (`planning/sprint-runs/*-screenshots/`) are not.
 
 ---
 
