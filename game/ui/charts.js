@@ -44,6 +44,11 @@ var CHART = {
   runADot: '#e8dcc0',                    // run-A hollow-dot fill (parchment)
   improveDot: '#77582e'                  // run-B dot fill when a map/metric improved (design 1f)
 };
+// WOA-040 (design 3a tempo lanes + README "Design Tokens" — deploy/attack/
+// swap/march): the four lane colours are the SAME hexes already named above
+// (seq[0]/divRed[1]/divBlue[1]/divMid), just given their tempo-lane reading —
+// no new colour is introduced, so a future repalette of one still drags both.
+CHART.lane = { deploy: CHART.seq[0], attack: CHART.divRed[1], swap: CHART.divBlue[1], march: CHART.divMid };
 
 function chEsc(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -75,6 +80,27 @@ function chSwatch(color){ return '<span class="sw" style="background:'+color+';"
 function chTipAttrs(name, rows, markIds){
   return ' data-name="'+chEsc(name)+'" data-tip="'+chEsc(JSON.stringify(rows))+'"'+
     (markIds ? ' data-mark="'+markIds+'"' : '');
+}
+
+/* CDF polyline points for a pre-SORTED array over a fixed [0,100] domain (the
+   settle-curve idiom, design 1e): 11 points at t=0,10,...,100, y = share of
+   the array <= t. Shared by the Overview fleet-wide mini (ovPacingMinis) and
+   the WOA-040 per-map settle curve — ONE implementation, two callers. */
+function chCdf(sorted, w, h){
+  var pts = [];
+  for (var t = 0; t <= 100; t += 10){
+    var c = 0;
+    for (var j = 0; j < sorted.length; j++){ if (sorted[j] <= t) c++; }
+    pts.push((t / 100 * w).toFixed(1) + ',' + (h - (sorted.length ? c / sorted.length : 0) * h).toFixed(1));
+  }
+  return pts.join(' ');
+}
+function chSettleSvg(settleA, settleB, w, h){
+  w = w || 200; h = h || 64;
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" style="display:block;width:100%;height:auto;">' +
+    chLine(0, h, w, h, CHART.axis, 1) +
+    '<polyline points="' + chCdf(settleA, w, h) + '" fill="none" stroke="' + CHART.inkSoft + '" stroke-width="1.5" stroke-dasharray="4 2"/>' +
+    '<polyline points="' + chCdf(settleB, w, h) + '" fill="none" stroke="#77582e" stroke-width="2"/></svg>';
 }
 
 /* Greedy direct-label placement: candidates around the mark, first that fits
@@ -430,19 +456,24 @@ function chBindHits(root){
 /* =================== the Overview screen (WOA-035, design 4a/1c/1f/1e) ===
    THE QUESTION: what regressed, run A -> run B? Reads BOTH runs' battle rows
    from GET /api/battles?run=<id> (fetched once per A/B pair and cached —
-   OV_CACHE — so switching temperature or pill nav doesn't refetch), folds
-   them through WOA_REPORT.foldBattles (report-model.js — the ONE DB-rows ->
-   agg fold), then draws: a verdict banner, the triage band board (1c), the
-   per-map balance-score dumbbells (1f), and two fleet-wide pacing minis
-   (1e). Plain divs by string concat, matching the design canvas's OWN
-   technique for 1c/1f/4a (not SVG) — inline SVG only where the reference
-   (1e's settle curve) itself uses it. Tooltips reuse the .chtip/ch-hit
-   idiom (chBindHits) already established by chartScatter etc. above. */
+   BATTLE_CACHE, shared with the WOA-040 Maps drill-down below so switching
+   pills never refetches), folds them through WOA_REPORT.foldBattles
+   (report-model.js — the ONE DB-rows -> agg fold), then draws: a verdict
+   banner, the triage band board (1c), the per-map balance-score dumbbells
+   (1f), and two fleet-wide pacing minis (1e). Plain divs by string concat,
+   matching the design canvas's OWN technique for 1c/1f/4a (not SVG) — inline
+   SVG only where the reference (1e's settle curve) itself uses it. Tooltips
+   reuse the .chtip/ch-hit idiom (chBindHits) already established by
+   chartScatter etc. above. */
 
 // metrics whose val() returns a 0-100 percentage (drag/swings are raw counts).
 // WOA-039: attackShare/swapShare are % of all actions taken.
 var OV_PERCENT_KEYS = { red: 1, first: 1, hq: 1, zeroKill: 1, tie: 1, control: 1, firstBlood: 1, attackShare: 1, swapShare: 1 };
-var OV_CACHE = { key: null, rowsA: null, rowsB: null };
+// WOA-035/WOA-040: every A/B-comparing pane reads the SAME two runs' battle
+// rows (every map, unfiltered — GET /api/battles?run=<id> has no map param),
+// so ONE cache/fetch serves the Overview AND the Maps drill-down; keyed
+// "runA|runB", see dashLoadBattleRows below.
+var BATTLE_CACHE = { key: null, rowsA: null, rowsB: null };
 
 function ovFmt(key, v) {
   if (v == null) return 'n/a';
@@ -500,12 +531,15 @@ function ovDot(domain, v, isA, breached) {
    screen as you retemper (AC6), while the dot x-position (ovTrackDomain,
    fixed to T2) never jumps. Breach = run B outside the SELECTED tier's
    band, small-n excepted (SPEC §8, fleet-wide n<240 -> greyed, "(n=N)"). */
-function ovBandRowHtml(row, aggA, aggB, temperature) {
+// scope ('fleet' default | 'map', WOA-040): which SMALL_N threshold n is
+// compared against — the Overview's fleet-wide board never passes it (240),
+// the per-map board (WOA-040) passes 'map' (40, SPEC §8).
+function ovBandRowHtml(row, aggA, aggB, temperature, scope) {
   var valA = row.val(aggA.agg, aggA.done);
   var valB = row.val(aggB.agg, aggB.done);
   var domain = ovTrackDomain(row, valA, valB);
   var n = Math.min(WOA_REPORT.bandN(row, aggA.agg, aggA.done), WOA_REPORT.bandN(row, aggB.agg, aggB.done));
-  var small = WOA_REPORT.smallN(n, 'fleet');
+  var small = WOA_REPORT.smallN(n, scope || 'fleet');
   var selBand = WOA_REPORT.bands(row.key, temperature);
   var breached = !small && valB != null &&
     ((selBand.lo != null && valB < selBand.lo) || (selBand.hi != null && valB > selBand.hi));
@@ -652,21 +686,10 @@ function ovPacingMinis(rowsA, rowsB) {
     '%</b></h4>' + bars + '<p class="small" style="margin:6px 0 0;">share of each battle&rsquo;s deploys landing before vs after first contact &mdash; A ' +
     interA.length + ' battles (hollow), B ' + interB.length + ' (solid)</p></div>';
 
-  // ---- settle curve: CDF of settlePoint, A dashed / B solid ----
-  function cdf(sorted, w, h) {
-    var pts = [];
-    for (var t = 0; t <= 100; t += 10) {
-      var c = 0;
-      for (var j = 0; j < sorted.length; j++) { if (sorted[j] <= t) c++; }
-      pts.push((t / 100 * w).toFixed(1) + ',' + (h - (sorted.length ? c / sorted.length : 0) * h).toFixed(1));
-    }
-    return pts.join(' ');
-  }
+  // ---- settle curve: CDF of settlePoint, A dashed / B solid (WOA-040: the
+  // svg-building moved to the shared chSettleSvg — same numbers, one impl) ----
   var W = 200, H = 64;
-  var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="display:block;width:100%;height:auto;">' +
-    chLine(0, H, W, H, CHART.axis, 1) +
-    '<polyline points="' + cdf(settleA, W, H) + '" fill="none" stroke="' + CHART.inkSoft + '" stroke-width="1.5" stroke-dasharray="4 2"/>' +
-    '<polyline points="' + cdf(settleB, W, H) + '" fill="none" stroke="#77582e" stroke-width="2"/></svg>';
+  var svg = chSettleSvg(settleA, settleB, W, H);
   var settleMini = '<div class="ov-mini"><h4>median settle <b>' + Math.round(WOA_REPORT.quantile(settleA, 0.5)) + '%→' +
     Math.round(WOA_REPORT.quantile(settleB, 0.5)) + '%</b></h4>' + svg +
     '<p class="small" style="margin:6px 0 0;">% of battles whose field-score lead has stopped flipping, by % of battle length &mdash; A dashed, B solid</p></div>';
@@ -720,22 +743,290 @@ function ovRenderBody(el, rowsA, rowsB) {
   chBindHits(el);
 }
 
-/* Overview entry point (dashboard.js's renderDashPane calls this for the
-   'overview' view once the shell's own file:///no-runs/no-A-B guards pass).
-   Caches the two runs' battle rows keyed by "runA|runB" so a temperature or
-   pill-nav re-render never refetches; a race where DASH.runA/runB changed
-   mid-flight is guarded by re-checking the key once the fetch resolves. */
-function renderOverview(el) {
+/* Shared A/B battle-row fetch (WOA-035 Overview + WOA-040 Maps drill-down —
+   both compare the SAME two runs' full battle sets, so one cache/fetch
+   serves either pane; switching pills, retempering, or flipping the A|B|A/B
+   toggle never refetches). Cache hit -> onReady(rowsA, rowsB) called
+   synchronously and dashLoadBattleRows returns true (caller skips its own
+   loading-state paint). Cache miss -> fetches both runs, returns false (the
+   caller paints its own "Loading..." — panes want different wording), then
+   calls onReady once both resolve; a race where DASH.runA/runB changed
+   mid-flight is guarded by re-checking the key. onReady(null, null) on a
+   fetch failure — no server, or a network hiccup. */
+function dashLoadBattleRows(onReady) {
   var key = DASH.runA + '|' + DASH.runB;
-  if (OV_CACHE.key === key) { ovRenderBody(el, OV_CACHE.rowsA, OV_CACHE.rowsB); return; }
-  el.innerHTML = '<p class="small">Loading battle rows for run A &amp; B&hellip;</p>';
+  if (BATTLE_CACHE.key === key) { onReady(BATTLE_CACHE.rowsA, BATTLE_CACHE.rowsB); return true; }
   Promise.all([
     fetch('/api/battles?run=' + DASH.runA).then(function (r) { return r.ok ? r.json() : []; }),
     fetch('/api/battles?run=' + DASH.runB).then(function (r) { return r.ok ? r.json() : []; })
   ]).then(function (res) {
-    OV_CACHE = { key: key, rowsA: res[0] || [], rowsB: res[1] || [] };
-    if (DASH.runA + '|' + DASH.runB === key) ovRenderBody(el, OV_CACHE.rowsA, OV_CACHE.rowsB);
-  }).catch(function () {
-    el.innerHTML = '<p class="small">Could not load battle rows for the selected runs &mdash; is <code>node game/server.js</code> running?</p>';
+    BATTLE_CACHE = { key: key, rowsA: res[0] || [], rowsB: res[1] || [] };
+    if (DASH.runA + '|' + DASH.runB === key) onReady(BATTLE_CACHE.rowsA, BATTLE_CACHE.rowsB);
+  }).catch(function () { onReady(null, null); });
+  return false;
+}
+
+/* Overview entry point (dashboard.js's renderDashPane calls this for the
+   'overview' view once the shell's own file:///no-runs/no-A-B guards pass). */
+function renderOverview(el) {
+  var loaded = dashLoadBattleRows(function (rowsA, rowsB) {
+    if (rowsA == null) { el.innerHTML = '<p class="small">Could not load battle rows for the selected runs &mdash; is <code>node game/server.js</code> running?</p>'; return; }
+    ovRenderBody(el, rowsA, rowsB);
   });
+  if (!loaded) el.innerHTML = '<p class="small">Loading battle rows for run A &amp; B&hellip;</p>';
+}
+
+/* =================== the Map drill-down screen (WOA-040, design 4b) ===
+   THE QUESTION: on THIS map, what changed run A -> run B, and when in the
+   battle did it happen? Breadcrumb map switcher under the Maps pill; an
+   A|B|A/B segmented toggle (default B — A/B renders B solid with run A as a
+   ghost overlay) drives the tempo lanes (design 3a) and the |VP-diff| track
+   above them; the band board (1c, reusing ovBandRowHtml with the 'map'
+   small-n scope, SPEC §8) and the settle curve (1e, chSettleSvg) always show
+   BOTH runs regardless of the toggle — same as the Overview's board/minis,
+   which never toggle either. Reads the SAME battle rows the Overview does
+   (dashLoadBattleRows/BATTLE_CACHE above), filtered to one map client-side —
+   GET /api/battles has no map param, so filtering here is the one place it
+   happens (no new endpoint, no re-derived fold: WOA_REPORT folds per-battle
+   envelopes, this file only combines many battles' folds into one chart). */
+
+/* Per-battle envelopes for ONE map's rows of one run — the shared input every
+   lane/track/settle-curve computation below folds over. */
+function mdEnvelopes(rows, mapName) {
+  return rows.filter(function (r) { return r.map === mapName; })
+    .map(WOA_REPORT.envelopeFromRow).filter(function (e) { return !!e; });
+}
+
+/* Tempo-lane average (design 3a): actionOctileLanes(env) already returns one
+   {deploy,attack,swap,march} row per octile in [0,1] for a SINGLE battle
+   (report-model.js, WOA-033) — this only averages that per-octile value
+   ACROSS battles, per lane. null when there are no envelopes (nothing to
+   average) so callers can render "no battles" instead of a flat zero lane. */
+var MD_LANES = ['deploy', 'attack', 'swap', 'march'];
+function mdLaneAvg(envs) {
+  if (!envs.length) return null;
+  var sums = {};
+  MD_LANES.forEach(function (a) { sums[a] = [0, 0, 0, 0, 0, 0, 0, 0]; });
+  envs.forEach(function (env) {
+    WOA_REPORT.actionOctileLanes(env).forEach(function (row, oi) {
+      MD_LANES.forEach(function (a) { sums[a][oi] += row[a]; });
+    });
+  });
+  var out = {};
+  MD_LANES.forEach(function (a) { out[a] = sums[a].map(function (v) { return v / envs.length; }); });
+  return out;
+}
+
+/* |VP-diff| track (SPEC §1 VPdiff / design 3a): vpDiffTrack(env) is a
+   per-TURN array (length = that battle's turn count, so battles of different
+   length can't be averaged index-for-index). Resamples each battle's track
+   onto STEPS+1 evenly-spaced points over normalized battle time (linear
+   interpolation between the two nearest turns, the same "normalize to battle
+   length %" idiom settlePoint/deployInterleave already use), then averages
+   those points across battles. Envelopes with no fs (vpDiffTrack -> null,
+   WOA-037: a run that predates the fs capture) are skipped, not zeroed — n
+   vs total tells the caller how many of this map's battles actually carry
+   fs so it can grey/note honestly instead of drawing a fabricated flat line.
+   null only when NOT ONE envelope has fs (the "predates the fs capture" path
+   the ticket calls out); a partial n < total still draws, with a note. */
+function mdVpDiffAvg(envs, steps) {
+  steps = steps || 8;
+  var tracks = envs.map(function (env) { var vd = WOA_REPORT.vpDiffTrack(env); return vd && vd.track; }).filter(function (t) { return !!t && t.length; });
+  if (!tracks.length) return null;
+  var points = [];
+  for (var s = 0; s <= steps; s++) {
+    var frac = s / steps, sum = 0;
+    tracks.forEach(function (tr) {
+      var pos = frac * (tr.length - 1), lo = Math.floor(pos), hi = Math.min(tr.length - 1, lo + 1), f = pos - lo;
+      sum += tr[lo] + (tr[hi] - tr[lo]) * f;
+    });
+    points.push(sum / tracks.length);
+  }
+  return { points: points, n: tracks.length, total: envs.length };
+}
+
+/* One tempo lane row: 8 octile columns, each BAR_H tall max, scaled to
+   laneMax — its OWN lane's peak across the octiles being drawn (NEVER a
+   share of the octile's action total; that 100%-stacked reading was
+   explicitly rejected, design turn 3 vs 2b/1d). ghostVals present (A/B mode)
+   draws run A as a hollow dashed-outline bar UNDER run B's solid fill, both
+   read off the SAME laneMax so the overlay is a real height comparison. */
+function mdLaneBars(vals, ghostVals, laneMax, color, barH) {
+  var cols = '';
+  for (var i = 0; i < 8; i++) {
+    var sh = laneMax > 0 ? Math.max(vals[i] > 0 ? 1 : 0, Math.round(vals[i] / laneMax * barH)) : 0;
+    cols += '<div style="flex:1;position:relative;height:' + barH + 'px;">' +
+      '<div style="position:absolute;left:0;right:0;bottom:0;height:' + sh + 'px;background:' + color + ';"></div>';
+    if (ghostVals) {
+      var gh = laneMax > 0 ? Math.round(ghostVals[i] / laneMax * barH) : 0;
+      cols += '<div style="position:absolute;left:0;right:0;bottom:0;height:' + gh + 'px;border:1.5px dashed ' + CHART.ink + ';box-sizing:border-box;"></div>';
+    }
+    cols += '</div>';
+  }
+  return cols;
+}
+
+/* The |VP-diff| sparkline that sits above the lanes (design 3a). Greys
+   honestly with a note instead of drawing anything when vd is null (every
+   battle for this map/run predates the fs capture, WOA-037) — never a
+   fabricated flat line. solidLabel names which run is drawing solid (A or
+   B) for the "predates" note. */
+function mdVpDiffTrackHtml(vd, ghostVd, solidLabel) {
+  var LABEL_W = 56, W = 400, H = 30;
+  if (!vd) {
+    return '<div style="display:flex;gap:8px;opacity:.55;"><div style="flex:none;width:' + LABEL_W + 'px;"></div>' +
+      '<p class="small" style="margin:0;flex:1;">|VP-diff| track unavailable for run ' + solidLabel +
+      ' on this map &mdash; this run predates the fs capture (WOA-037).</p></div>';
+  }
+  var maxV = Math.max.apply(null, vd.points.concat(ghostVd ? ghostVd.points : []).concat([0.0001]));
+  function poly(pts) {
+    return pts.map(function (v, i) { return (i / (pts.length - 1) * W).toFixed(1) + ',' + (H - Math.max(0, v) / maxV * H).toFixed(1); }).join(' ');
+  }
+  var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="display:block;width:100%;height:' + H + 'px;">' + chLine(0, H, W, H, CHART.axis, 1);
+  if (ghostVd) svg += '<polyline points="' + poly(ghostVd.points) + '" fill="none" stroke="' + CHART.ink + '" stroke-width="1.5" stroke-dasharray="4 2"/>';
+  svg += '<polyline points="' + poly(vd.points) + '" fill="none" stroke="' + CHART.ink + '" stroke-width="2"/></svg>';
+  var note = vd.n < vd.total ? ' (n=' + vd.n + '/' + vd.total + ' battles carry fs data)' : '';
+  return '<div style="display:flex;gap:8px;align-items:flex-end;">' +
+    '<div style="flex:none;width:' + LABEL_W + 'px;text-align:right;font-size:9.5px;font-style:italic;color:' + CHART.muted + ';padding-bottom:2px;">avg<br>|VP diff|' + note + '</div>' +
+    '<div style="flex:1;">' + svg + '</div></div>';
+}
+
+/* Tempo lanes + |VP-diff| track, together (design 3a — the track sits above
+   the lanes it shares an x-axis with). abMode: 'A' shows run A solid; 'B'
+   (default) shows run B solid; 'AB' shows run B solid with run A as a ghost
+   overlay (both toggle branches read the SAME abMode the ticket specifies —
+   there is no separate "which run is primary" state). */
+function mdTempoSection(mapName, envA, envB, abMode) {
+  var solidEnv = abMode === 'A' ? envA : envB, solidLabel = abMode === 'A' ? 'A' : 'B';
+  var ghostEnv = abMode === 'AB' ? envA : null;
+  var laneSolid = mdLaneAvg(solidEnv), laneGhost = ghostEnv ? mdLaneAvg(ghostEnv) : null;
+  var vdSolid = mdVpDiffAvg(solidEnv), vdGhost = ghostEnv ? mdVpDiffAvg(ghostEnv) : null;
+
+  var h = '<div style="font-size:13px;font-weight:bold;margin-bottom:2px;">Tempo lanes ' +
+    '<span class="small" style="font-style:italic;">(design 3a &mdash; each lane its OWN scale, never a 100%-stacked share)</span></div>';
+  if (!laneSolid) {
+    return h + '<p class="small">No battles on ' + chEsc(mapName) + ' for run ' + solidLabel + ' yet.</p>';
+  }
+  var BAR_H = 46, LABEL_W = 56;
+  h += mdVpDiffTrackHtml(vdSolid, vdGhost, solidLabel);
+  h += '<div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">';
+  MD_LANES.forEach(function (a) {
+    var vals = laneSolid[a], gvals = laneGhost ? laneGhost[a] : null;
+    var laneMax = Math.max.apply(null, vals.concat(gvals || []).concat([0.0001]));
+    h += '<div style="display:flex;gap:8px;align-items:flex-end;" data-lane="' + a + '" data-lanemax="' + laneMax.toFixed(2) + '">' +
+      '<div style="flex:none;width:' + LABEL_W + 'px;text-align:right;font-size:10.5px;color:' + CHART.inkSoft + ';padding-bottom:2px;">' +
+      '<b style="color:' + CHART.ink + ';">' + a + '</b><br><span style="font-size:9.5px;font-style:italic;">max ' + laneMax.toFixed(2) + '/turn</span></div>' +
+      '<div style="flex:1;display:flex;gap:2px;align-items:flex-end;height:' + BAR_H + 'px;border-bottom:1.5px solid ' + CHART.axis + ';">' +
+      mdLaneBars(vals, gvals, laneMax, CHART.lane[a], BAR_H) + '</div></div>';
+  });
+  h += '</div><div style="display:flex;justify-content:space-between;font-size:10px;color:' + CHART.muted + ';margin-top:3px;font-style:italic;">' +
+    '<span style="margin-left:' + LABEL_W + 'px;">turn 1</span><span>battle end</span></div>';
+  var ghostNote = ghostEnv ? ' &middot; B solid, A ghost outline' : '';
+  h += '<p class="small" style="margin-top:6px;">n = ' + solidEnv.length + ' battle(s) on run ' + solidLabel + ghostNote + '.</p>';
+  return h;
+}
+
+/* This-map band board (design 1c filtered to one map): the EXACT Overview
+   row renderer (ovBandRowHtml), just fed this map's own {agg,done} and the
+   'map' small-n scope (SPEC §8: n<40/map greys, not the fleet's n<240) —
+   always both runs, no A|B|A/B toggle (matches the Overview board, which
+   never toggles either). */
+function mdBandBoard(aggA, aggB, temperature) {
+  var scoredRows = WOA_REPORT.BANDS.filter(function (b) { return b.feedsScore; });
+  var guardRows = WOA_REPORT.BANDS.filter(function (b) { return !b.feedsScore; });
+  var h = '<div style="font-size:13px;font-weight:bold;margin:16px 0 2px;">This map vs its bands ' +
+    '<span class="small" style="font-style:italic;">(1c filtered &mdash; A n=' + aggA.done + ', B n=' + aggB.done + ')</span></div>';
+  h += '<div class="ov-grid">' + scoredRows.map(function (row) { return ovBandRowHtml(row, aggA, aggB, temperature, 'map'); }).join('') + '</div>';
+  h += '<div style="font-size:11px;font-weight:bold;margin:14px 0 6px;color:' + CHART.muted + ';">Guards <span class="small" style="font-style:italic;">(shaded, not scored)</span></div>';
+  h += '<div class="ov-grid">' + guardRows.map(function (row) { return ovBandRowHtml(row, aggA, aggB, temperature, 'map'); }).join('') + '</div>';
+  return h;
+}
+
+/* Settle curve, this map (design 1e filtered — chSettleSvg, the SAME svg
+   builder the Overview's fleet-wide mini uses). Always both runs, A dashed /
+   B solid — no A|B|A/B toggle, same as the Overview mini. */
+function mdSettleCurve(envA, envB) {
+  var settleA = envA.map(WOA_REPORT.settlePoint).sort(function (a, b) { return a - b; });
+  var settleB = envB.map(WOA_REPORT.settlePoint).sort(function (a, b) { return a - b; });
+  var med = (settleA.length ? Math.round(WOA_REPORT.quantile(settleA, 0.5)) + '%' : '—') + '&rarr;' +
+    (settleB.length ? Math.round(WOA_REPORT.quantile(settleB, 0.5)) + '%' : '—');
+  return '<div class="ov-mini" style="max-width:320px;"><h4>settle curve, this map <b>' + med + '</b></h4>' +
+    chSettleSvg(settleA, settleB, 240, 72) +
+    '<p class="small" style="margin:6px 0 0;">% of battle length after which the lead never flips again &mdash; A dashed n=' +
+    envA.length + ', B solid n=' + envB.length + '</p></div>';
+}
+
+/* Breadcrumb map switcher (design 4b: "‹ Frontier · The Narrows · The Void
+   ›") + the A|B|A/B toggle + this map's balance score A->B. mapList is every
+   map seen in EITHER run's rows (union, alpha order — a stable, deterministic
+   ordering; the mockup's order is cosmetic, not semantic). The ‹/› arrows
+   step to the previous/next map (wrapping) — a second way to reach the same
+   DASH.mapFocus assignment the crumbs themselves do. */
+function mdHeaderHtml(mapList, idx, scoreA, scoreB, regressed) {
+  var crumbs = mapList.map(function (m) {
+    return '<span class="mapd-crumb' + (m === mapList[idx] ? ' cur' : '') + '" data-map="' + chEsc(m) + '">' + chEsc(m) + '</span>';
+  }).join('<span> &middot; </span>');
+  var ab = ['A', 'B', 'AB'].map(function (v) {
+    return '<span data-ab="' + v + '"' + (DASH.abMode === v ? ' class="sel"' : '') + '>' + (v === 'AB' ? 'A/B' : v) + '</span>';
+  }).join('');
+  var scoreTxt = (scoreA == null ? '—' : WOA_REPORT.f1(scoreA)) + ' &rarr; ' + (scoreB == null ? '—' : WOA_REPORT.f1(scoreB)) + (regressed ? ' &#10007;' : '');
+  return '<div class="mapd-head">' +
+    '<span class="mapd-crumbs" style="flex:1 1 auto;"><span class="mapd-arrow" data-step="-1">&lsaquo;</span> ' +
+    crumbs + ' <span class="mapd-arrow" data-step="1">&rsaquo;</span></span>' +
+    '<span class="ab-toggle">' + ab + '</span>' +
+    '<span class="mapd-score' + (regressed ? ' breach' : '') + '">balance ' + scoreTxt + '</span>' +
+  '</div>';
+}
+
+/* Assembles the full Map drill-down pane from two runs' already-fetched
+   battle rows (the SAME rowsA/rowsB shape ovRenderBody consumes), filtered
+   to DASH.mapFocus. DASH.mapFocus falls back to the first map (alpha) when
+   unset or stale (e.g. it named a map only the PRIOR A/B pair had). */
+function mdRenderBody(el, rowsA, rowsB) {
+  var names = {};
+  rowsA.forEach(function (r) { names[r.map] = 1; });
+  rowsB.forEach(function (r) { names[r.map] = 1; });
+  var mapList = Object.keys(names).sort();
+  if (!mapList.length) { el.innerHTML = '<p class="small">No per-map battle rows for either run yet.</p>'; return; }
+  if (!DASH.mapFocus || mapList.indexOf(DASH.mapFocus) < 0) DASH.mapFocus = mapList[0];
+  var idx = mapList.indexOf(DASH.mapFocus), mapName = DASH.mapFocus;
+
+  var mapRowsA = rowsA.filter(function (r) { return r.map === mapName; });
+  var mapRowsB = rowsB.filter(function (r) { return r.map === mapName; });
+  var aggA = WOA_REPORT.foldBattles(mapRowsA), aggB = WOA_REPORT.foldBattles(mapRowsB);
+  var scoreA = mapRowsA.length ? WOA_REPORT.balanceScore(aggA.agg, aggA.done) : null;
+  var scoreB = mapRowsB.length ? WOA_REPORT.balanceScore(aggB.agg, aggB.done) : null;
+  var regressed = scoreA != null && scoreB != null && scoreB > scoreA;
+  var envA = mdEnvelopes(rowsA, mapName), envB = mdEnvelopes(rowsB, mapName);
+
+  var h = '<div class="mapd-wrap">' + mdHeaderHtml(mapList, idx, scoreA, scoreB, regressed) + '<div class="mapd-grid">';
+  h += '<div class="mapd-col-l">' + mdTempoSection(mapName, envA, envB, DASH.abMode) + mdBandBoard(aggA, aggB, DASH.temperature) + '</div>';
+  h += '<div class="mapd-col-r">' + mdSettleCurve(envA, envB) + '</div>';
+  h += '</div></div>';
+  el.innerHTML = h;
+
+  el.querySelectorAll('.mapd-crumb').forEach(function (c) {
+    c.addEventListener('click', function () { DASH.mapFocus = c.getAttribute('data-map'); renderDash(); });
+  });
+  el.querySelectorAll('.mapd-arrow').forEach(function (a) {
+    a.addEventListener('click', function () {
+      var step = +a.getAttribute('data-step'), i = (idx + step + mapList.length) % mapList.length;
+      DASH.mapFocus = mapList[i]; renderDash();
+    });
+  });
+  el.querySelectorAll('.ab-toggle [data-ab]').forEach(function (b) {
+    b.addEventListener('click', function () { DASH.abMode = b.getAttribute('data-ab'); renderDash(); });
+  });
+  chBindHits(el);
+}
+
+/* Map drill-down entry point (dashboard.js's renderDashPane calls this for
+   the 'maps' view once the shell's own file:///no-runs/no-A-B guards pass —
+   the SAME guard Overview uses). */
+function renderMapDrill(el) {
+  var loaded = dashLoadBattleRows(function (rowsA, rowsB) {
+    if (rowsA == null) { el.innerHTML = '<p class="small">Could not load battle rows for the selected runs &mdash; is <code>node game/server.js</code> running?</p>'; return; }
+    mdRenderBody(el, rowsA, rowsB);
+  });
+  if (!loaded) el.innerHTML = '<p class="small">Loading battle rows for run A &amp; B&hellip;</p>';
 }

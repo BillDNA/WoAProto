@@ -16,18 +16,6 @@ the spec for the next pull._
 
 ## Tickets
 
-### WOA-040 — Map drill-down screen: tempo lanes, |VP-diff| track, per-map bands, settle curve
-**Area:** game-ui · **Status:** Todo · **Type:** sonnet · **Depends on:** WOA-037 (|VP-diff| data), WOA-039 (1.2 bands) · **Docs:** specs/design_handoff_metrics_dashboard
-
-TICKETS.md P2.2 (`game/ui/charts.js`). The screen WOA-035's map dumbbells already click into: breadcrumb map switcher; A|B|A/B toggle (default B; A/B renders B solid with A as ghost overlay); tempo lanes per design 3a — **absolute per-lane scales, never 100%-stacked**; |VP-diff| track from `WOA_REPORT.vpDiffTrack` (greys honestly when a run predates WOA-037's capture); per-map band board reusing the Overview row renderer; settle curve. Small-n greying per SPEC §8 throughout. View-only, same dashboard discipline as WOA-034/035.
-
-**Acceptance criteria:**
-- [ ] Clicking an Overview map dumbbell opens that map's drill-down; breadcrumb switches maps without losing run selection
-- [ ] A|B|A/B toggle works (default B, ghost overlay for A/B); tempo lanes use absolute per-lane scales; |VP-diff| track renders from timeline data and greys with a note on pre-WOA-037 runs
-- [ ] Per-map band board + settle curve render at the selected temperature; small-n slices greyed per SPEC §8
-- [ ] node dev/smoke.js green; node game/test.js green; frozen paths untouched
-- [ ] User confirms done
-
 ### WOA-036 — Browser plays a stray "applied deck" override, never the active-flagged deck
 **Area:** game-ui · **Status:** Todo · **Type:** bug · **Docs:** code-architecture
 
@@ -45,6 +33,8 @@ Found during WOA-030's verify (2026-07-18). `index.html` (~line 268) force-clear
 _None._
 
 ## Finished
+
+- **WOA-040 — Map drill-down screen: tempo lanes, |VP-diff| track, per-map bands, settle curve** (2026-07-19) — Map drill-down live: breadcrumb + wraparound, A|B|A/B toggle (lanes+track only, board/settle always both-runs), tempo lanes at absolute per-lane scales, |VP-diff| track with honest grey on fs-less runs, per-map band board via ovBandRowHtml scope='map', settle curve via extracted chSettleSvg; BATTLE_CACHE/dashLoadBattleRows now the one shared A/B fetch. +24 smoke assertions; suites 1179/104/smoke green; golden diff byte-identical vs 1.2 baseline; runner vision-verified 5 screenshots (real breach renders red). Escalation reproduced + minted WOA-041 (balance-report runs persist zero battles). cost: 326,711 tok / 24.1m / 104 calls
 
 - **WOA-039 — Rules-1.2 metric re-baseline: rates not counts, win-path conditioning — atomic bump** (2026-07-19) — Rules 1.2 shipped atomically: shares replace counts (Atk% 19 / Swp% 16 of actions), Tie%/Drag attrition-sliced (13% / 2.4, bands 0-18 / 0-3.0), Reserves HQ-only small-n; fresh Core Six n=60/map=360 measured + setup-stamped (report logs/reports/balance/1.2/); rubric + CLAUDE.md supersession + 16 new test pins in one changeset; suites 1179/104/smoke/claude-plays green. TWO runner-adopted forks flagged for Bill (D.D:shares-are-guards-not-scored): shares are guards not scored despite SPEC ★; reserves stock-share not ÷turns. The Narrows breaches at T0 (Tie 26, Drag 3.4). cost: 286,898 tok / 33.2m / 90 calls
 

@@ -316,6 +316,12 @@ setTimeout(function () {
         row(5, 'Fixture Alpha', 5, 'blue', 'attrition', 'blue', 4, 6),
         row(6, 'Fixture Beta', 6, 'blue', 'hq', 'red', 2, 7)
       ];
+      // WOA-040: run B's Fixture Alpha rows carry a per-turn fs timeline
+      // (GET /api/battles' sibling `fs`, WOA-037) — run A's rows do NOT, so
+      // toggling the Maps drill-down to run A exercises the "this run
+      // predates the fs capture" honest-grey path on the |VP-diff| track.
+      rowsB[0].fs = [[1, 0], [1, 1], [2, 1], [2, 2]];
+      rowsB[1].fs = [[1, 0], [1, 1], [2, 1], [2, 2]];
       win.canNet = true; // seed "server present" without a real server
       var fetchCalls = [];
       win.fetch = function (url) {
@@ -347,13 +353,91 @@ setTimeout(function () {
           if (mapRow) mapRow.click();
           ok(win.DASH.mapFocus === 'Fixture Alpha' && win.DASH.view === 'maps',
             'clicking a map row sets DASH.mapFocus + switches to the Maps pill (AC2)');
-          var mapsTxt = doc.getElementById('dashPaneMaps').textContent;
-          ok(/Fixture Alpha/.test(mapsTxt), 'Maps stub echoes the focused map name so the click visibly works (AC2)');
-          return next();
+          return mapDrillSmoke(next);
         }
         if ((ow += 50) > 5000) { ok(false, 'Overview never finished its seeded render'); return next(); }
         realSetTimeout(waitOverview, 50);
       })();
+    }
+
+    // WOA-040: the Map drill-down screen (breadcrumb, A|B|A/B toggle, tempo
+    // lanes + |VP-diff| track, per-map band board, settle curve) reusing the
+    // SAME seeded fixture overviewSmoke just built (BATTLE_CACHE is already
+    // warm from the Overview fetch above — dashLoadBattleRows hits the cache,
+    // so every render below is synchronous, no fetch/wait needed). Runs
+    // straight off the mapRow click's DASH.view='maps' switch.
+    function mapDrillSmoke(next) {
+      console.log('== Map drill-down screen: seeded DASH state (WOA-040) ==');
+      var el = doc.getElementById('dashPaneMaps');
+      ok(!!el.querySelector('.mapd-wrap'), 'the real drill-down rendered (not the old P2.2 stub)');
+
+      console.log('-- breadcrumb map switcher --');
+      var crumbs = el.querySelectorAll('.mapd-crumb');
+      ok(crumbs.length === 2, 'one breadcrumb crumb per map seen in either run (' + crumbs.length + ')');
+      var cur = el.querySelector('.mapd-crumb.cur');
+      ok(!!cur && cur.textContent === 'Fixture Alpha', 'the focused map is marked current in the breadcrumb');
+      el.querySelector('.mapd-arrow[data-step="1"]').click();
+      ok(win.DASH.mapFocus === 'Fixture Beta', '› arrow steps to the next map (' + win.DASH.mapFocus + ')');
+      el.querySelector('.mapd-arrow[data-step="1"]').click();
+      ok(win.DASH.mapFocus === 'Fixture Alpha', '› wraps back around (2 maps, 2 steps) to the first (' + win.DASH.mapFocus + ')');
+      el.querySelector('.mapd-crumb[data-map="Fixture Beta"]').click();
+      ok(win.DASH.mapFocus === 'Fixture Beta' && el.querySelector('.mapd-crumb.cur').textContent === 'Fixture Beta',
+        'clicking a crumb directly focuses that map');
+      el.querySelector('.mapd-crumb[data-map="Fixture Alpha"]').click(); // back to the fixture with 2 battles/run
+      el = doc.getElementById('dashPaneMaps'); // el.innerHTML was replaced by the click's re-render
+
+      console.log('-- A|B|A/B toggle (default B) --');
+      var sel = el.querySelector('.ab-toggle span.sel');
+      ok(!!sel && sel.textContent === 'B' && win.DASH.abMode === 'B', 'toggle defaults to B');
+
+      console.log('-- tempo lanes: absolute per-lane scale, never 100%-stacked (design 3a) --');
+      var laneRows = {};
+      el.querySelectorAll('[data-lane]').forEach(function (r) { laneRows[r.getAttribute('data-lane')] = r; });
+      ok(Object.keys(laneRows).length === 4, 'four lanes rendered: deploy/attack/swap/march');
+      // Fixture Alpha's fixed trace (1 deploy/attack/swap each, spread across
+      // octiles, no march at all) -> deploy/attack/swap each peak at 1/turn,
+      // march peaks at 0. A shared-scale ("100%-stacked") bug would drag
+      // march's printed max up to match the other lanes' 1.00 instead of its
+      // own true (zero) peak — this is the forbidden pattern's fingerprint.
+      ['deploy', 'attack', 'swap'].forEach(function (a) {
+        ok(laneRows[a].getAttribute('data-lanemax') === '1.00', a + ' lane scales to its OWN max (1.00/turn)');
+      });
+      ok(laneRows.march.getAttribute('data-lanemax') === '0.00',
+        'march lane (never played this fixture) keeps its OWN 0.00 max, not borrowed from the other lanes (proves per-lane scale, not a shared 100% total)');
+      ok(/max \d+\.\d\d\/turn/.test(el.textContent), 'each lane prints its own "max N.NN/turn" scale label');
+
+      console.log('-- |VP-diff| track: honest grey on a run that predates fs capture (WOA-037) --');
+      ok(!/unavailable/.test(el.textContent), 'run B (default) carries fs -> track renders, no "unavailable" note');
+      ok(el.querySelectorAll('.mapd-col-l svg polyline').length >= 1, '|VP-diff| track drew a polyline for run B');
+      el.querySelector('.ab-toggle [data-ab="A"]').click();
+      ok(win.DASH.abMode === 'A', 'clicking A switches the toggle');
+      el = doc.getElementById('dashPaneMaps');
+      ok(/predates the fs capture/.test(el.textContent),
+        'run A (no fs on its rows) greys the |VP-diff| track with the honest "predates the fs capture" note instead of a fabricated line');
+
+      console.log('-- A/B mode: B solid, A ghost overlay --');
+      el.querySelector('.ab-toggle [data-ab="AB"]').click();
+      ok(win.DASH.abMode === 'AB', 'clicking A/B switches the toggle');
+      el = doc.getElementById('dashPaneMaps');
+      ok(!/predates the fs capture/.test(el.textContent), 'A/B mode draws run B (which has fs) solid — the grey note is gone again');
+      ok(el.querySelectorAll('[data-lane] [style*="dashed"]').length > 0, 'A/B mode overlays run A as a dashed ghost bar in the lanes');
+      ok(/B solid, A ghost outline/.test(el.textContent), 'caption names the overlay convention');
+
+      console.log('-- per-map band board (reuses the Overview row renderer, map small-n scope) --');
+      ok(/This map vs its bands/.test(el.textContent), 'band board section rendered');
+      ok(/Red%/.test(el.textContent) && /Drag/.test(el.textContent) && /Swings/.test(el.textContent), 'scored band rows rendered');
+      ok(/First-blood/.test(el.textContent), 'guard row rendered below the fold');
+      ok(/\(n=2\)/.test(el.textContent), 'map-scope n=2 < 40 (SPEC §8 map threshold) greys the row with "(n=N)" — not the fleet 240 threshold');
+
+      console.log('-- settle curve, this map --');
+      ok(/settle curve, this map/.test(el.textContent), 'settle curve section rendered');
+      ok(el.querySelectorAll('.mapd-col-r svg polyline').length >= 2, 'settle curve drew both A and B polylines');
+
+      console.log('-- balance score header --');
+      ok(/balance/.test(el.textContent) && el.textContent.indexOf('→') >= 0, 'this map\'s balance score A → B is shown in the header');
+
+      el.querySelector('.ab-toggle [data-ab="B"]').click(); // leave the toggle back at its default for anything downstream
+      next();
     }
 
     function startWatch() {

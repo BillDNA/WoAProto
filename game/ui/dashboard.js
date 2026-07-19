@@ -106,18 +106,19 @@ function renderDashChrome(){
 }
 
 var DASH_PANE_LABEL = { overview:'Overview', maps:'Maps', cards:'Cards', units:'Units' };
-// Placeholder mounts for the four new pill views — WOA-035 fills Overview
-// (later tickets: Maps drill-down P2.2, Cards, Units). Stable mount points:
+// Placeholder mounts for the four new pill views — WOA-035 filled Overview,
+// WOA-040 filled Maps (later tickets: Cards, Units). Stable mount points:
 // #dashPaneOverview / #dashPaneMaps / #dashPaneCards / #dashPaneUnits.
 function renderDashPane(view){
   var el = $('dashPane' + view.charAt(0).toUpperCase() + view.slice(1));
   if (!el) return;
-  // WOA-035: Overview gets the real thing (charts.js, reads both runs' DB
-  // battle rows) once the server + at least one run + both A/B pickers are
-  // set — every other guard below stays byte-identical to WOA-034 so file://
-  // and no-runs keep showing the same fallback note the shell already tested.
-  if (view === 'overview' && canNet && DASH.runs.length && DASH.runA != null && DASH.runB != null){
-    renderOverview(el);
+  // WOA-035/WOA-040: Overview/Maps get the real thing (charts.js, reads both
+  // runs' DB battle rows) once the server + at least one run + both A/B
+  // pickers are set — every other guard below stays byte-identical to
+  // WOA-034 so file:// and no-runs keep showing the same fallback note the
+  // shell already tested.
+  if ((view === 'overview' || view === 'maps') && canNet && DASH.runs.length && DASH.runA != null && DASH.runB != null){
+    (view === 'overview' ? renderOverview : renderMapDrill)(el);
     return;
   }
   var h = '<p class="small" style="font-variant:small-caps; letter-spacing:.05em; font-size:15px;">' + DASH_PANE_LABEL[view] + '</p>';
@@ -127,15 +128,10 @@ function renderDashPane(view){
       '. Start <code>node game/server.js</code> for run history.</p>';
   } else if (!DASH.runs.length){
     h += '<p class="small">No saved runs yet in <code>logs/woa.db</code> — run a report on the Tables tab, or play a battle, then come back.</p>';
-  } else if (view === 'overview'){
+  } else if (view === 'overview' || view === 'maps'){
     h += '<p class="small">Pick run A and run B above to compare.</p>';
-  } else if (view === 'maps' && DASH.mapFocus){
-    // WOA-035 AC2: the Overview dumbbells' row click sets DASH.mapFocus and
-    // switches here — echo it so the click visibly worked, until P2.2 builds
-    // the real drill-down (tempo lanes, hex lenses, this-map band board).
-    h += '<p class="small">Focused on <b>' + chEsc(DASH.mapFocus) + '</b> — the full drill-down (tempo lanes, hex lenses, this map\'s band board) lands in P2.2. <a onclick="DASH.mapFocus=null; renderDash();" style="cursor:pointer;">clear focus</a></p>';
   } else {
-    h += '<p class="small">Run A → B comparison lands here in WOA-035 (Overview) and later tickets (Maps / Cards / Units).</p>';
+    h += '<p class="small">Run A → B comparison lands here in WOA-035 (Overview), WOA-040 (Maps) and later tickets (Cards / Units).</p>';
   }
   el.innerHTML = h;
 }
