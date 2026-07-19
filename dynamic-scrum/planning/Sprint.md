@@ -17,18 +17,8 @@ scripts.
 
 ## Tickets
 
-### WOA-041 — balance-report --parallel runs persist a runs row but ZERO battle rows — battles-to-db doctrine violation
-**Area:** dev-tools · **Status:** Todo · **Type:** bug · **Docs:** data-and-reports
-
-Found during WOA-040's verify (2026-07-18, runner-reproduced): every `dev/balance-report.js` run in woa.db (runs 92/93/94, incl. the WOA-039 rules-1.2 n=60 measurement, run 92) has a runs-table row but ZERO persisted battles — `SELECT COUNT(*) FROM battles WHERE run_id IN (92,93,94)` = 0 — while every `balance.js` run persists all its battles (e.g. runs 88/89/95/96: 144 each). Likely the `--parallel` process-per-map workers never wire their battles to the parent run id (or never call insertBattle at all). Violates `D.A:battles-to-db` ("every battle from every source lands as a per-battle row") and means measurement runs — the most important runs — are invisible to the dashboard's A/B pickers. The WOA-039 baseline itself is safe (the committed markdown report is the record) but its battles can't be drilled into. Pulled first this sprint so the Phase-3 drill-downs (WOA-042/043/044) can see measurement runs.
-
-**Acceptance criteria:**
-- [ ] balance-report (both --parallel and serial) persists every battle row under its run id; a fresh small run shows battles == n*maps in woa.db
-- [ ] Root cause noted (worker wiring vs never-persisted); existing empty runs 92-94 either backfilled or noted as unpersistable
-- [ ] User confirms done
-
 ### WOA-042 — Hex lenses on the map drill-down (P2.3)
-**Area:** dashboard · **Status:** Todo · **Depends on:** WOA-041 · **Type:** sonnet · **Docs:** specs/design_handoff_metrics_dashboard/SPEC.md, code-architecture
+**Area:** dashboard · **Status:** Todo · **Depends on:** WOA-041 · **Type:** opus · **Docs:** specs/design_handoff_metrics_dashboard/SPEC.md, code-architecture
 
 The map drill-down (WOA-040) shows tempo and VP but nothing spatial — you can't see WHERE a map's
 fights happen, which hexes are dead, or which lane the winner rushed. SPEC §5 defines three per-hex
@@ -79,6 +69,8 @@ sprint close.
 _None._
 
 ## Finished
+
+- **WOA-041 — balance-report --parallel runs persist a runs row but ZERO battle rows — battles-to-db doctrine violation** (2026-07-19) — --parallel workers ship slimBattleState(st) per battle via their stdout envelope; parent = single woa.db writer under the run id (`D.D:parallel-battles-via-parent-writer`). Proof: runs 106 (parallel) / 107 (serial) both 24==4x6 battles, bit-identical checksums + byte-identical markdown; root cause = deliberate pre-doctrine skip; runs 92-94 annotated unpersistable in runs.notes; follow-on WOA-045 (run identity columns). cost: 99,483 tok / 8.8 min / 22 calls
 
 _None._
 

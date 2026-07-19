@@ -107,6 +107,24 @@ function hexesHeld(st) {
   return { red: hr, blue: hb };
 }
 
+/* WOA-041: the st fields insertBattle actually reads, picked into a plain
+   JSON-safe object. balance-report's --parallel workers run the engine in
+   child processes; each worker ships its finished battles over stdout to the
+   PARENT — the single woa.db writer (no cross-process SQLite contention) —
+   as slimBattleState(st), not the whole engine state (board/deck/journal
+   would bloat the pipe for nothing). Kept HERE, next to insertBattle, so the
+   field list and its reader can never drift apart: a new insertBattle read
+   means extending this list in the same diff. A slimmed state survives the
+   JSON round-trip into an identical battles row (pinned by db.test.js). */
+var BATTLE_ST_FIELDS = ['phase', 'version', 'battleWinner', 'winType', 'mapName',
+  'turnNumber', 'seed', 'stats', 'vp', 'playLog', 'unitMetrics', 'leadChanges',
+  'lastKillTurn', 'reserves', 'units', 'fsTimeline'];
+function slimBattleState(st) {
+  var s = {};
+  BATTLE_ST_FIELDS.forEach(function (k) { if (st && st[k] !== undefined) s[k] = st[k]; });
+  return s;
+}
+
 /* Open (creating if needed) the DB, ensure the schema, switch on WAL, and
    prepare every statement once. Returns the handle the other calls take. */
 function open(dbPath) {
@@ -295,5 +313,6 @@ function close(h) { h.db.close(); }
 
 module.exports = {
   open: open, insertRun: insertRun, insertBattle: insertBattle, setBaseline: setBaseline,
-  listRuns: listRuns, listBattles: listBattles, close: close, DEFAULT_DB: DEFAULT_DB
+  listRuns: listRuns, listBattles: listBattles, close: close, DEFAULT_DB: DEFAULT_DB,
+  slimBattleState: slimBattleState // WOA-041: the --parallel worker->parent battle envelope
 };

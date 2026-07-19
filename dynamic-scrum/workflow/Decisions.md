@@ -148,6 +148,14 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   exactly 16 or 17; the physical guardrail is a design ceiling, not a hard 16). Editor blurbs and
   the manual's order-count text follow the band. Per-card copy ceiling stays 16. The editor's
   status line now names the real active deck instead of hardcoding `default`.
+- **`D.D:parallel-battles-via-parent-writer`** (2026-07-18, WOA-041 build, runner-adopted) —
+  `balance-report --parallel` workers ship each finished battle back through their one stdout JSON
+  envelope (`{agg, battles:[{g, st}]}`, `st` slimmed by `dev/db.js`'s `slimBattleState` — the exact
+  fields `insertBattle` reads, colocated so list and reader can't drift); the **parent stays the
+  single woa.db writer**, inserting under its run id on the serial path's seed/fp schedule. Workers
+  never open woa.db — zero cross-process SQLite contention. Runs 92–94 remain unpersistable (seed
+  offset unrecorded — [[Backlog]] WOA-045 records run identity going forward) and are annotated in
+  their `runs.notes`.
 
 ## Architecture
 

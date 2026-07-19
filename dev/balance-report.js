@@ -26,8 +26,10 @@
      --parallel [k]  simulate maps in k parallel worker processes (default:
                cores-1). The engine's board state is process-global, so
                parallelism is process-per-map — each worker require()s its own
-               engine. NOTE: per-battle DB rows are skipped in parallel mode
-               (the report + accumulator are identical either way).
+               engine. Workers ship every finished battle back to the parent,
+               which writes ALL per-battle DB rows itself under the one run id
+               (single woa.db writer — WOA-041; report, accumulator AND DB rows
+               are identical to a serial run on the same seeds).
 
    It also ranks maps by a balance-quality score and prints `BEST_MAP: <name>`
    (closest to fair + most back-and-forth) so generate-reports knows which map
@@ -168,18 +170,25 @@ async function run() {
   if (flags.parallel) {
     // process-per-map: the engine's current-board state is module-global, so
     // in-process interleaving is unsafe — each worker require()s a fresh engine.
-    if (dbm) { try { dbm.close(dbh); } catch (e) {} dbm = null; console.error('(per-battle DB rows skipped in --parallel)'); }
     var cp = require('child_process');
-    // each worker require()s a fresh engine, so --deck / --units must preload there too
-    var WORKER = 'var deckId=process.argv[7]||"",unitsId=process.argv[8]||"";' +
-      'if(deckId||unitsId){var fs=require("fs"),path=require("path");' +
+    // each worker require()s a fresh engine, so --deck / --units must preload
+    // there too. WOA-041: the worker also collects every finished battle via
+    // balanceMap's onGame — slimmed by db.js's slimBattleState to exactly what
+    // insertBattle reads — and ships them in the one JSON envelope; the PARENT
+    // stays the single woa.db writer (no cross-process SQLite contention).
+    var WORKER = 'var path=require("path");var deckId=process.argv[7]||"",unitsId=process.argv[8]||"";' +
+      'if(deckId||unitsId){var fs=require("fs");' +
       'global.WOA_CONTENT={maps:[],cards:[],decks:[],mapsets:[],units:[]};' +
       '["decks","maps","mapsets","units"].forEach(function(kind){var dir=path.join(path.dirname(process.argv[1]),"content",kind);' +
       'try{fs.readdirSync(dir).filter(function(f){return /\\.js$/.test(f)}).sort().forEach(function(f){require(path.join(dir,f))})}catch(e){}});' +
       'if(deckId)global.WOA_CONTENT.decks.forEach(function(d){d.active=(d.id===deckId)});' +
       'if(unitsId)global.WOA_CONTENT.units.forEach(function(u){u.active=(u.id===unitsId)});}' +
       'var E=require(process.argv[1]);var m=E.MAPS.filter(function(x){return x.name===process.argv[2]})[0];' +
-      'process.stdout.write(JSON.stringify(E.balanceMap(m,+process.argv[3],{diffRed:process.argv[4],diffBlue:process.argv[5],seedBase:+process.argv[6]})));';
+      'var slim=null;try{slim=require(path.join(path.dirname(process.argv[1]),"..","dev","db.js")).slimBattleState}catch(e){}' +
+      'var battles=[];' +
+      'var agg=E.balanceMap(m,+process.argv[3],{diffRed:process.argv[4],diffBlue:process.argv[5],seedBase:+process.argv[6],' +
+      'onGame:slim&&function(g,nn,st){battles.push({g:g,st:slim(st)})}});' +
+      'process.stdout.write(JSON.stringify({agg:agg,battles:battles}));';
     var enginePath = path.join(__dirname, '..', 'game', 'engine.js');
     await new Promise(function (resolve, reject) {
       var pending = maps.length, launched = 0;
@@ -189,8 +198,15 @@ async function run() {
         cp.execFile(process.execPath, ['-e', WORKER, enginePath, map.name, String(n), dr, db, String(seedBaseFor(mi)), DECK, UNITSET],
           { maxBuffer: 64e6 }, function (err, stdout) {
             if (err) return reject(err);
-            try { thisRun[map.name] = { shape: shapeOf(map), agg: JSON.parse(stdout) }; }
+            var out;
+            try { out = JSON.parse(stdout); thisRun[map.name] = { shape: shapeOf(map), agg: out.agg }; }
             catch (e) { return reject(e); }
+            // WOA-041: persist the worker's battles under this run id, on the
+            // same seed/fp schedule the serial path uses (g is 1-based).
+            if (dbm) (out.battles || []).forEach(function (b) {
+              try { dbm.insertBattle(dbh, runId, b.st, E.balanceFP(b.g - 1), { seed: E.balanceSeed(seedBaseFor(mi), b.g - 1), version: ver }); }
+              catch (e2) { /* a bad row never kills the report */ }
+            });
             if (!flags.quiet) process.stderr.write('.');
             if (--pending === 0) return resolve();
             launchNext();
@@ -209,8 +225,8 @@ async function run() {
       thisRun[map.name] = { shape: shapeOf(map), agg: r };
       if (!flags.quiet) process.stderr.write('.');
     });
-    if (dbm) try { dbm.close(dbh); } catch (e) {}
   }
+  if (dbm) try { dbm.close(dbh); } catch (e) {}
   if (!flags.quiet) process.stderr.write('\n');
 
   // ---- accumulation (persistent per-version data) ----

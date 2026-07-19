@@ -263,6 +263,27 @@ try {
   ok(legacyRows.length === 1 && legacyRows[0].hexesBlue == null,
     'a pre-WOA-038 row (hexes columns never written) round-trips as NULL, not 0');
 
+  /* ---------- slimBattleState (WOA-041: the --parallel worker contract) ---------- */
+  // balance-report's --parallel workers ship slimBattleState(st) through a
+  // JSON pipe to the parent, which calls insertBattle on the other side. Pin
+  // that exact trip: the slim state must land a battles row identical to the
+  // full state's (same seed/fp), plus the same card_plays and timeline rows.
+  section('slimBattleState (WOA-041)');
+  var slimSt = JSON.parse(JSON.stringify(db.slimBattleState(st2))); // the worker->parent stdout trip
+  var battleIdSlim = db.insertBattle(h2, runIdA, slimSt, 'red', { seed: 4242 });
+  var fullRow = h2.db.prepare('SELECT * FROM battles WHERE id = ?').get(battleIdA);
+  var slimRow = h2.db.prepare('SELECT * FROM battles WHERE id = ?').get(battleIdSlim);
+  var driftCols = Object.keys(fullRow).filter(function (k) {
+    return k !== 'id' && String(fullRow[k]) !== String(slimRow[k]);
+  });
+  ok(driftCols.length === 0,
+    'a JSON-round-tripped slim state lands an identical battles row (drift: ' + (driftCols.join(',') || 'none') + ')');
+  var cpSlim = h2.db.prepare('SELECT COUNT(*) c FROM card_plays WHERE battle_id = ?').get(battleIdSlim).c;
+  ok(cpSlim === st2.playLog.length, 'slim state lands one card_plays row per playLog entry (' + cpSlim + ')');
+  var tlFull = h2.db.prepare('SELECT COUNT(*) c FROM timeline WHERE battle_id = ?').get(battleIdA).c;
+  var tlSlim = h2.db.prepare('SELECT COUNT(*) c FROM timeline WHERE battle_id = ?').get(battleIdSlim).c;
+  ok(tlSlim === tlFull && tlSlim > 0, 'slim state lands the same timeline rows (' + tlSlim + ')');
+
   /* ---------- baseline uniqueness (WOA-032, SPEC §7) ---------- */
   section('baseline uniqueness (WOA-032)');
   var vBase = '9.9-baseline-test';

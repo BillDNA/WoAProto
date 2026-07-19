@@ -6,6 +6,17 @@ sprint-planning. Same ticket format as `Sprint.md` (the `ticket-block` template;
 
 ---
 
+### WOA-045 — balance-report insertRun should record deck/mapset/seed_base/label (columns exist since WOA-032)
+**Area:** dev-tools · **Status:** Todo · **Type:** sonnet · **Docs:** data-and-reports
+
+From WOA-041's build (2026-07-18): balance-report's insertRun call passes only version/kind/AIs/n/tool — the runs columns deck, mapset, seed_base, label (added in WOA-032, SPEC §7) stay NULL. Recording seedBaseFor(0) + the accumulator's priorRuns offset would make every future run exactly reproducible (and backfillable if this bug class recurs), and deck/mapset would sharpen the dashboard A/B picker's run identity. Runs 92-94 were declared unpersistable precisely because this wasn't recorded.
+
+**Acceptance criteria:**
+- [ ] balance-report's insertRun records deck, mapset (when derivable), seed_base (seedBaseFor(0) incl. the priorRuns offset), and a label; a fresh run's runs row shows them non-NULL via dev/db-query.js
+- [ ] User confirms done
+
+---
+
 <!-- WOA-037 + WOA-038 pulled into Sprint M2 · Metrics v2 + dashboard, phase 2 (2026-07-18). -->
 <!-- WOA-030 pulled into Sprint M2 · Metrics v2 + dashboard, phase 1 (2026-07-18). -->
 <!-- WOA-025 pulled into Sprint M1.1 (2026-07-16). -->
