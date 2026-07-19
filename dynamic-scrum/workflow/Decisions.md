@@ -165,6 +165,14 @@ structure, tooling, technical approach. Each entry is headed by a stable kebab s
   failure the AC warned about. Fold semantics documented in `report-model.js` (best-effort
   reconstruction: no march origin in the trace — inflates only the busy end, never the <5% dead test).
 
+- **`D.D:unit-lifespan-diet-capture`** (2026-07-18, WOA-044 build, runner-specced) — the units block
+  gains a per-type **`dieT` death-turn list** (symmetric to `dep[]`, pushed where `die++` tallies in
+  `engine/03-rules.js`; capture-only, golden-diff-proven, WOA-031 precedent; `ensureUnitMetrics`
+  self-heals old saves). **Lifespan semantics**: per-battle per-type FIFO pairing of `dep[]`×`dieT[]`
+  (k-th death → k-th deploy; the trace has no per-unit identity), survivors **right-censored** at
+  battle end (not excluded — exclusion would understate exactly the steady-support units). Legacy
+  rows without `dieT` grey the lifespan bars with a "predates capture" note (vpDiffTrack precedent).
+
 ## Architecture
 
 - **`D.A:units-content-kind`** (2026-07-10, WOA-011) — unit composition & values are a content kind

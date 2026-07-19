@@ -768,11 +768,11 @@ console.log('== metrics-v2 trace capture (WOA-031: per-play trace + units fold, 
 (function () {
   var VALID_A = { deploy: 1, attack: 1, swap: 1, march: 1 };
   var seeds = [4242, 5150, 8181, 9091, 1212];
-  var totalAtkEntries = 0, totalDeployEntries = 0, totalKillSum = 0, totalDieSum = 0, totalLd = 0, totalPlays = 0;
+  var totalAtkEntries = 0, totalDeployEntries = 0, totalKillSum = 0, totalDieSum = 0, totalDieTSum = 0, totalLd = 0, totalPlays = 0;
   seeds.forEach(function (seed) {
     var st = E.simBattle(E.MAPS[seed % E.MAPS.length], seed, 'red', 'hard', 'hard');
     ok(st.phase === 'battle-over', 'seed ' + seed + ': battle finishes (' + st.turnNumber + ' turns)');
-    var killSum = 0, dieSum = 0;
+    var killSum = 0, dieSum = 0, dieTSum = 0;
     st.playLog.forEach(function (e) {
       totalPlays++;
       ok(!e.a || VALID_A[e.a], 'trace entry a is deploy|attack|swap|march or absent (got ' + e.a + ')');
@@ -791,10 +791,17 @@ console.log('== metrics-v2 trace capture (WOA-031: per-play trace + units fold, 
         'seed ' + seed + ': unitMetrics.' + t + ' has {dep,atk,abs,kill,die} (' + JSON.stringify(u) + ')');
       dieSum += u.die;
       u.dep.forEach(function (turn) { ok(turn >= 1 && turn <= st.turnNumber, t + ' dep turn within battle range'); });
+      // WOA-044: dieT is a death-TURN list, symmetric to dep and equal-length to die.
+      ok(Array.isArray(u.dieT) && u.dieT.length === u.die,
+        'seed ' + seed + ': unitMetrics.' + t + '.dieT is an array with one entry per death (' + (u.dieT || []).length + ' == ' + u.die + ')');
+      u.dieT.forEach(function (turn) { ok(turn >= 1 && turn <= st.turnNumber, t + ' dieT turn within battle range'); });
+      dieTSum += u.dieT.length;
     });
-    totalKillSum += killSum; totalDieSum += dieSum;
+    totalKillSum += killSum; totalDieSum += dieSum; totalDieTSum += dieTSum;
     ok(killSum === dieSum, 'seed ' + seed + ': sum of k across attack entries == sum of units[*].die (' +
       killSum + ' == ' + dieSum + ')');
+    ok(dieTSum === dieSum, 'seed ' + seed + ': sum of units[*].dieT.length == sum of units[*].die (' +
+      dieTSum + ' == ' + dieSum + ')');
     var totalAtkByType = 0;
     Object.keys(E.UNITS).forEach(function (t) { totalAtkByType += st.unitMetrics[t].atk; });
     ok(totalAtkByType === st.stats.attacks, 'seed ' + seed + ': sum of unitMetrics[*].atk == stats.attacks (' +
@@ -805,6 +812,7 @@ console.log('== metrics-v2 trace capture (WOA-031: per-play trace + units fold, 
   ok(totalLd > 0, 'some plays record ld (leader after turn) once a lead is established (' + totalLd + '/' + totalPlays + ')');
   ok(totalKillSum === totalDieSum, 'fleet-wide: sum of k across attack entries == total kills == sum of units[*].die (' +
     totalKillSum + ' == ' + totalDieSum + ')');
+  ok(totalDieTSum === totalDieSum && totalDieTSum > 0, 'fleet-wide: dieT capture produced ' + totalDieTSum + ' death-turn entries, matching total deaths');
 })();
 
 console.log('== trench orientations are never fully off-board (Feedback Round 2) ==');
@@ -1244,6 +1252,45 @@ console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
   ok(WS12.A.plays === 2 && WS12.A.wins === 1, 'cardHqWinSlice ignores the attrition-ending envelope entirely (unchanged from HQ-only)');
   ok(typeof R.cardAggFromEnvelopes === 'function' && typeof R.cardHqWinSlice === 'function',
     'WOA-043 card folds exported on the shared surface');
+
+  // ---- per-unit-type fold (WOA-044, SPEC §3): unitsAggFromEnvelopes on a
+  // hand-built two-battle fixture with known answers, incl. the dep[]/dieT[]
+  // lifespan pairing (real deaths + a right-censored survivor per battle) ----
+  var unitEnv1 = { turns: 10, units: {
+    infantry: { dep: [1, 3], atk: 4, abs: 2, kill: 3, die: 1, dieT: [5] },   // pair (1,5)->4; dep 3 survives -> 10-3=7
+    cavalry:  { dep: [2],    atk: 1, abs: 3, kill: 0, die: 1, dieT: [6] }    // pair (2,6)->4
+  } };
+  var unitEnv2 = { turns: 8, units: {
+    infantry:  { dep: [1, 2, 4], atk: 2, abs: 1, kill: 1, die: 2, dieT: [3, 7] }, // pairs (1,3)->2,(2,7)->5; dep 4 survives -> 8-4=4
+    artillery: { dep: [1],       atk: 0, abs: 2, kill: 0, die: 0, dieT: [] }      // no death; dep 1 survives -> 8-1=7
+  } };
+  var UA = R.unitsAggFromEnvelopes([unitEnv1, unitEnv2]);
+  ok(UA.hasUnits === true && UA.hasDieT === true, 'unitsAggFromEnvelopes: fixture has units + dieT capture');
+  var uInf = UA.types.infantry;
+  ok(uInf.n === 2, 'infantry battlesFielded = 2 (fielded in both battles), got ' + uInf.n);
+  ok(uInf.atk === 6 && uInf.abs === 3 && uInf.kill === 4 && uInf.die === 3,
+    'infantry atk/abs/kill/die sum across battles (6/3/4/3), got ' + uInf.atk + '/' + uInf.abs + '/' + uInf.kill + '/' + uInf.die);
+  ok(near(uInf.depMedian, 0.25), 'infantry depMedian: pooled normalized dep turns [.1,.125,.25,.3,.5] -> median .25, got ' + uInf.depMedian);
+  ok(near(uInf.roleY, 100 * 6 / 9), 'infantry roleY = 100*atk/(atk+abs) = ' + (100 * 6 / 9).toFixed(2) + ', got ' + uInf.roleY);
+  ok(near(uInf.breakthrough, 1.5), 'infantry breakthrough = abs/battlesFielded = 3/2 = 1.5, got ' + uInf.breakthrough);
+  ok(near(uInf.exchange, 4 / 3), 'infantry exchange = kill/die = 4/3, got ' + uInf.exchange);
+  // lifespans pooled: battle1 [4 (real), 7 (censored)] + battle2 [2,5 (real), 4 (censored)] -> sorted [2,4,4,5,7] -> median 4
+  ok(uInf.lifespanN === 5 && near(uInf.lifespan, 4), 'infantry lifespan: 5 paired observations, median 4, got n=' + uInf.lifespanN + ' median=' + uInf.lifespan);
+  var uCav = UA.types.cavalry;
+  ok(uCav.n === 1 && near(uCav.breakthrough, 3) && uCav.exchange === 0,
+    'cavalry: fielded 1 battle, breakthrough 3/1=3, exchange 0/1=0, got n=' + uCav.n + ' breakthrough=' + uCav.breakthrough + ' exchange=' + uCav.exchange);
+  ok(uCav.lifespanN === 1 && near(uCav.lifespan, 4), 'cavalry lifespan: single real death (2,6) -> 4, got ' + uCav.lifespan);
+  var uArt = UA.types.artillery;
+  ok(uArt.exchange === null, 'artillery exchange = null when die = 0 (not a fabricated 0), got ' + uArt.exchange);
+  ok(uArt.lifespanN === 1 && near(uArt.lifespan, 7), 'artillery lifespan: one censored survivor (dep 1, turns 8) -> 7, got ' + uArt.lifespan);
+
+  // legacy row (predates WOA-044): units block with NO dieT key on any type
+  var legacyUnitEnv = { turns: 5, units: { infantry: { dep: [1], atk: 1, abs: 0, kill: 0, die: 0 } } };
+  var UAlegacy = R.unitsAggFromEnvelopes([legacyUnitEnv]);
+  ok(UAlegacy.hasUnits === true && UAlegacy.hasDieT === false, 'a units block with no dieT array on any type reads hasDieT = false (legacy, "predates capture")');
+  ok(UAlegacy.types.infantry.lifespan === null && UAlegacy.types.infantry.lifespanN === 0,
+    'legacy row: lifespan stays null (not a fabricated 0) when dieT was never captured');
+  ok(typeof R.unitsAggFromEnvelopes === 'function', 'WOA-044 unit fold exported on the shared surface');
 
   // ---- per-hex lenses (WOA-042, SPEC §5): occupancy / flips / kills folded
   // from the trace's h-stream, on a hand-built fixture with known answers ----

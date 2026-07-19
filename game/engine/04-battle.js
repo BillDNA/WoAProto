@@ -94,13 +94,25 @@
   // type keys (infantry/cavalry/artillery), not the spec doc's shorthand.
   // Named unitMetrics (not "units") because st.units already means the
   // hexKey->{type,owner} board map.
+  // WOA-044: dieT is a death-TURN list, symmetric to dep[] — pushed wherever
+  // die++ is tallied (engine/03-rules.js killDefender/killAttacker). Capture
+  // only: no existing field renamed or removed, so golden-diff aggregates are
+  // untouched (WOA-031/037/038 precedent). report-model.js's
+  // unitsAggFromEnvelopes pairs dep[]/dieT[] per battle to derive lifespan.
   function initUnitMetrics() {
     var u = {};
-    Object.keys(I.UNITS).forEach(function (t) { u[t] = { dep: [], atk: 0, abs: 0, kill: 0, die: 0 }; });
+    Object.keys(I.UNITS).forEach(function (t) { u[t] = { dep: [], atk: 0, abs: 0, kill: 0, die: 0, dieT: [] }; });
     return u;
   }
   function ensureUnitMetrics(st) { // self-heal pre-metrics saves/sims
-    if (!st.unitMetrics) st.unitMetrics = initUnitMetrics();
+    if (!st.unitMetrics) { st.unitMetrics = initUnitMetrics(); return st.unitMetrics; }
+    // WOA-044: a save resumed from just before dieT existed has per-type
+    // {dep,atk,abs,kill,die} but no dieT array — heal it in place so
+    // killDefender/killAttacker's dieT.push never hits undefined.
+    Object.keys(I.UNITS).forEach(function (t) {
+      var u = st.unitMetrics[t];
+      if (u && !Array.isArray(u.dieT)) u.dieT = [];
+    });
     return st.unitMetrics;
   }
   function log(st, msg) { st.log.push({ turn: st.turnNumber, player: st.current, msg: msg }); }

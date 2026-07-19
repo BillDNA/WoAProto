@@ -241,7 +241,7 @@
     function killDefender() {
       if (du) {
         delete st.units[atk.to]; st.vp[p] += I.UNITS[du.type].vp; if (!st.stats.firstBlood) st.stats.firstBlood = p;
-        um[du.type].die++; um[au.type].kill++;
+        um[du.type].die++; um[du.type].dieT.push(st.turnNumber); um[au.type].kill++;
         I.recordKill(st, 1);
       }
       if (dHQ) { st.hqAlive[dHQ] = false; }
@@ -251,7 +251,7 @@
       delete st.units[atk.from];
       st.vp[e] += I.UNITS[au.type].vp;
       if (!st.stats.firstBlood) st.stats.firstBlood = e;
-      um[au.type].die++;
+      um[au.type].die++; um[au.type].dieT.push(st.turnNumber);
       if (du) um[du.type].kill++;
       I.recordKill(st, 1);
       st.lastKillTurn = st.turnNumber;

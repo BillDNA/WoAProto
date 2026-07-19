@@ -106,19 +106,19 @@ function renderDashChrome(){
 }
 
 var DASH_PANE_LABEL = { overview:'Overview', maps:'Maps', cards:'Cards', units:'Units' };
-// Placeholder mounts for the four new pill views — WOA-035 filled Overview,
-// WOA-040 filled Maps (later tickets: Cards, Units). Stable mount points:
+// Stable mount points for the four pill views — all four filled now
+// (WOA-035 Overview, WOA-040 Maps, WOA-043 Cards, WOA-044 Units):
 // #dashPaneOverview / #dashPaneMaps / #dashPaneCards / #dashPaneUnits.
 function renderDashPane(view){
   var el = $('dashPane' + view.charAt(0).toUpperCase() + view.slice(1));
   if (!el) return;
-  // WOA-035/WOA-040/WOA-043: Overview/Maps/Cards get the real thing (charts.js,
+  // WOA-035/WOA-040/WOA-043/WOA-044: every pill gets the real thing (charts.js,
   // reads both runs' DB battle rows) once the server + at least one run + both
   // A/B pickers are set — every other guard below stays byte-identical to
   // WOA-034 so file:// and no-runs keep showing the same fallback note the
   // shell already tested.
-  if ((view === 'overview' || view === 'maps' || view === 'cards') && canNet && DASH.runs.length && DASH.runA != null && DASH.runB != null){
-    var PANE_RENDER = { overview: renderOverview, maps: renderMapDrill, cards: renderCards };
+  if ((view === 'overview' || view === 'maps' || view === 'cards' || view === 'units') && canNet && DASH.runs.length && DASH.runA != null && DASH.runB != null){
+    var PANE_RENDER = { overview: renderOverview, maps: renderMapDrill, cards: renderCards, units: renderUnits };
     PANE_RENDER[view](el);
     return;
   }
@@ -129,10 +129,8 @@ function renderDashPane(view){
       '. Start <code>node game/server.js</code> for run history.</p>';
   } else if (!DASH.runs.length){
     h += '<p class="small">No saved runs yet in <code>logs/woa.db</code> — run a report on the Tables tab, or play a battle, then come back.</p>';
-  } else if (view === 'overview' || view === 'maps' || view === 'cards'){
-    h += '<p class="small">Pick run A and run B above to compare.</p>';
   } else {
-    h += '<p class="small">Run A → B comparison lands here in WOA-044 (Units).</p>';
+    h += '<p class="small">Pick run A and run B above to compare.</p>';
   }
   el.innerHTML = h;
 }

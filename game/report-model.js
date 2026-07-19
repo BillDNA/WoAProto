@@ -30,6 +30,8 @@
    - per-hex lenses (WOA-042, SPEC §5): hexLenses (one battle -> per-hex
        occupancy/flips/kills) · foldHexLenses (many battles -> per-hex averages
        + dead/avenue classification)
+   - unitsAggFromEnvelopes(envs)  many envelopes -> per-unit-type {n, depMedian,
+       roleY, breakthrough, exchange, lifespan, lifespanN} (WOA-044, SPEC §3)
    - bandN(bandRow,agg,done) / SMALL_N / smallN(n,scope)  small-n rule (SPEC §8)
    - foldBattles(rows)         DB `battles` rows (GET /api/battles) -> {agg, done}
    - envelopeFromRow(row)      a DB battle row's .trace TEXT -> parsed envelope */
@@ -315,8 +317,12 @@ var WOA_REPORT = (function () {
      produce:
        { v, map, seed, fp, winner, winType, turns,
          trace: [ {p,id,mode,turn,seen, a?,h?,k?,ld?,u?,noop?} ... ],  // st.playLog
-         units: { infantry:{dep:[..],atk,abs,kill,die}, cavalry:{..}, artillery:{..} }, // st.unitMetrics
+         units: { infantry:{dep:[..],atk,abs,kill,die,dieT:[..]}, cavalry:{..}, artillery:{..} }, // st.unitMetrics
          fs?:  [ [redFieldScore, blueFieldScore] ... ]  // per turn; only vpDiffTrack needs it }
+     dieT (WOA-044) is a death-TURN list, symmetric to dep — absent entirely on
+     rows recorded before this ticket (LEGACY: every type's units[t] has no
+     dieT array at all, not an empty one; unitsAggFromEnvelopes' hasDieT flag
+     distinguishes "no deaths this run" from "this run predates dieT capture").
      No DB, no DOM, nothing mutated. WOA-034/035 fold these across many rows.
      Absent fields are omitted in the trace (WOA-031), so every reader guards.
 
@@ -513,6 +519,77 @@ var WOA_REPORT = (function () {
     return out;
   }
 
+  /* ===== Per-unit-type aggregates from many battle envelopes (WOA-044, Units
+     tab) ===== SPEC §3: per unit type, per battle FIELDED — median deploy
+     turn (normalized to battle length, matching the deployInterleave/
+     settlePoint/cardPlayTurnQuartiles idiom already in this file rather than
+     raw turn numbers, which aren't comparable across battles of different
+     length); attacks made vs absorbed (as one balance reading, roleY); the
+     breakthrough number (absorbed/battle fielded); exchange (kills/deaths);
+     median lifespan. One fold, every Units-tab chart reads it (unitsOf,
+     turnsOf already exist above for hexLenses/vpDiffTrack).
+
+     Lifespan pairing (documented per the ticket's explicit ask): dep[] and
+     dieT[] are both already chronological BY CONSTRUCTION (each push happens
+     at the moment its event resolves, and turn numbers only increase within
+     one battle), so this pairs them index-wise per type PER BATTLE (never
+     pooled across battles first — a battle's own turn count is what a
+     survivor's censor point needs): the k-th death (by turn) is attributed to
+     the k-th deploy (by turn) — a per-type FIFO approximation, since the
+     trace carries no persistent per-unit identity. Deploys left unmatched
+     (dep.length > dieT.length that battle) survived to battle end: their
+     lifespan is RIGHT-CENSORED at that battle's own turn count
+     (turns - depTurn), not excluded — excluding survivors would silently
+     drop every unit that held the line all game (exactly the "steady
+     support" units the chart most wants to show), understating lifespan for
+     the units least deserving it.
+
+     Small-n (SPEC §8, per the ticket): a type's OWN n is battlesFielded (the
+     Units block is per-battle unconditioned — richer than the Cards HQ-slice
+     by construction), used for EVERY chart on this tab, not a chart-specific
+     slice count; callers grey per-mark with WOA_REPORT.smallN(n,'fleet').
+
+     Legacy rows (hasDieT false — no type in ANY envelope carries a dieT
+     array) can't derive lifespan at all; the Lifespan chart greys itself
+     fleet-wide with a "predates capture" note instead of drawing a
+     fabricated zero, the same convention vpDiffTrack established pre-WOA-037. */
+  function unitsAggFromEnvelopes(envs) {
+    var out = {}, sawUnits = false, sawDieT = false;
+    (envs || []).forEach(function (env) {
+      var u = unitsOf(env), turns = turnsOf(env) || 1;
+      Object.keys(u).forEach(function (t) {
+        sawUnits = true;
+        var ut = u[t] || {};
+        var o = out[t] || (out[t] = { atk: 0, abs: 0, kill: 0, die: 0, battlesFielded: 0, depNorm: [], lifespans: [] });
+        var dep = (ut.dep || []).slice().sort(function (a, b) { return a - b; });
+        if (dep.length) { o.battlesFielded++; dep.forEach(function (tn) { o.depNorm.push(tn / turns); }); }
+        o.atk += ut.atk || 0; o.abs += ut.abs || 0; o.kill += ut.kill || 0; o.die += ut.die || 0;
+        if (Array.isArray(ut.dieT)) {
+          sawDieT = true;
+          var dieT = ut.dieT.slice().sort(function (a, b) { return a - b; });
+          var n = Math.min(dep.length, dieT.length);
+          for (var i = 0; i < n; i++) o.lifespans.push(dieT[i] - dep[i]);
+          for (var j = n; j < dep.length; j++) o.lifespans.push(Math.max(0, turns - dep[j])); // censored survivor
+        }
+      });
+    });
+    var types = {};
+    Object.keys(out).forEach(function (t) {
+      var o = out[t];
+      var dep = o.depNorm.slice().sort(function (a, b) { return a - b; });
+      var life = o.lifespans.slice().sort(function (a, b) { return a - b; });
+      types[t] = {
+        n: o.battlesFielded, atk: o.atk, abs: o.abs, kill: o.kill, die: o.die,
+        depMedian: dep.length ? quantile(dep, 0.5) : null,
+        roleY: (o.atk + o.abs) ? 100 * o.atk / (o.atk + o.abs) : null,
+        breakthrough: o.battlesFielded ? o.abs / o.battlesFielded : null,
+        exchange: o.die ? o.kill / o.die : null,
+        lifespan: life.length ? quantile(life, 0.5) : null, lifespanN: life.length
+      };
+    });
+    return { types: types, hasUnits: sawUnits, hasDieT: sawDieT };
+  }
+
   /* The full saved-report markdown. dev/balance-report.js and the dashboard's
      Save-report button are two callers of THIS one renderer; the model
      parameterizes exactly what differs between them:
@@ -705,6 +782,8 @@ var WOA_REPORT = (function () {
     actionOctileLanes: actionOctileLanes, vpDiffTrack: vpDiffTrack, cardPlayTurnQuartiles: cardPlayTurnQuartiles,
     // WOA-043: per-card DB-rows aggregate (cardRows-compatible) + the SPEC §2 Win% doctrine slice
     cardAggFromEnvelopes: cardAggFromEnvelopes, cardHqWinSlice: cardHqWinSlice,
+    // WOA-044: per-unit-type aggregate (role map / breakthrough / lifespan / exchange, SPEC §3)
+    unitsAggFromEnvelopes: unitsAggFromEnvelopes,
     // WOA-042: per-hex lenses (drill-down) + SPEC §5 dead/avenue thresholds
     hexLenses: hexLenses, foldHexLenses: foldHexLenses, HEX_DEAD_OCC: HEX_DEAD_OCC, HEX_AVENUE_Q: HEX_AVENUE_Q,
     // WOA-035: small-n rule + DB-rows-as-agg fold (Overview)

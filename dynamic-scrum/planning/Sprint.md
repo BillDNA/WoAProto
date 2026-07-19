@@ -17,27 +17,13 @@ scripts.
 
 ## Tickets
 
-### WOA-044 — Units tab (P3.1)
-**Area:** dashboard · **Status:** Todo · **Depends on:** WOA-043 · **Type:** sonnet · **Docs:** specs/design_handoff_metrics_dashboard/SPEC.md, code-architecture
-
-The last placeholder pane. Unit-role questions (is cavalry a rusher or a trader? does artillery
-absorb or dish?) have per-unit capture since P1.1 (`units:{dep,atk,abs,kill,die}` in every trace
-envelope, incl. `abs`) but no view. Fills `#dashPaneUnits` (stable mount, dashboard.js). Depends on
-WOA-043 for `charts.js` file-owner sequencing. Closes the spec's last slice — distill-spec fires at
-sprint close.
-
-**Acceptance criteria:**
-- [ ] Role map per SPEC §3 (axes: deploy timing × made-vs-absorbed), one point per unit type, A/B ghost arrows
-- [ ] Breakthrough gauge, median-lifespan bars (turns alive after deploy), and exchange dots — all folded from the trace `units` block in `report-model.js` as pure functions (node + browser both consume)
-- [ ] Small-n greying per SPEC §8 applies; tab follows the run-A/B pickers
-- [ ] `node game/test.js` green (extend with a unit-fold shape assertion) · `node dev/smoke.js` green · golden balance diff byte-identical
-- [ ] User confirms done *(rendered tab is a visual check — route to human/vision verify)*
-
 ## In Progress
 
 _None._
 
 ## Finished
+
+- **WOA-044 — Units tab (P3.1)** (2026-07-19) — Units tab live in #dashPaneUnits: role map (deploy timing x made-vs-absorbed, one identity colour per unit, A-ghost->B-solid), breakthrough dumbbells, lifespan bars (new dieT capture — `D.D:unit-lifespan-diet-capture`; FIFO pairing + right-censoring; legacy runs grey honestly), exchange dots; fleet-240 small-n with (n=N) everywhere. Engine capture extension golden-diff-proven byte-identical (runner re-verified); suites green (+~30 test assertions); code-architecture fold-list de-enumerated (fold-in). Spec's last slice — distill-spec due at sprint close. cost: 313,192 tok / 26.7 min / 116 calls
 
 - **WOA-043 — Cards tab (P2.4)** (2026-07-19) — Cards tab live in #dashPaneCards: sight quadrant (win% = SPEC §2 HQ x non-simple slice via new cardHqWinSlice; pooled Win% kept off-axis per WOA-019) with A-ghost->B-solid arrows + chMakePlacer labels; dead-card Simple% dumbbells with independent Noop ⚠; fire-time quartile strips reusing cardPlayTurnQuartiles as-is; fleet-240 small-n greying (DOM-verified 18/18+24/24). Runner vision-verified on 114v115 + 91v106; suites green; golden diff runner-re-verified. Known minor: chMakePlacer label collisions in the ~50% cluster (accepted, spec README). cost: 295,607 tok / 25.1 min / 99 calls
 
