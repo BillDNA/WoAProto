@@ -1,0 +1,44 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Run game server",
+      "program": "${workspaceFolder}/game/server.js",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Launch Chrome against game server",
+      "url": "http://localhost:8420",
+      "webRoot": "${workspaceFolder}/game",
+      "preLaunchTask": "Start game server"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Run engine tests",
+      "program": "${workspaceFolder}/game/test.js",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Run UI smoke test",
+      "program": "${workspaceFolder}/dev/smoke.js",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Server + Chrome (full stack debug)",
+      "configurations": ["Run game server", "Launch Chrome against game server"],
+      "stopAll": true
+    }
+  ]
+}

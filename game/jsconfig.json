@@ -1,0 +1,14 @@
+{
+  // Editor-only: gives tsserver one program spanning game/'s classic scripts so
+  // go-to-definition / find-all-references / reference CodeLens can follow the
+  // shared-globals pattern (window.WOA_E / window.Engine) across files. No
+  // runtime effect — not a build step, nothing here is compiled or bundled.
+  "compilerOptions": {
+    "target": "es2017",
+    "allowJs": true,
+    "checkJs": false,
+    "module": "commonjs",
+    "moduleResolution": "node"
+  },
+  "exclude": ["**/node_modules"]
+}

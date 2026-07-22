@@ -1,0 +1,17 @@
+{
+  "editor.tabSize": 2,
+  "javascript.referencesCodeLens.enabled": true,
+  "javascript.referencesCodeLens.showOnAllFunctions": true,
+  "files.exclude": {
+    "**/.DS_Store": true
+  },
+  "search.exclude": {
+    "dev/node_modules": true,
+    "logs/woa.db*": true,
+    "logs/debug": true
+  },
+  "files.watcherExclude": {
+    "dev/node_modules/**": true,
+    "logs/woa.db*": true
+  }
+}
