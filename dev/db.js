@@ -36,10 +36,11 @@
    column (report-model.js folds), not re-captured as new skirmishes columns.
 
    WOA-038 (Control% on the dashboard): `skirmishes` grew `hexes_red`/`hexes_blue`
-   INTEGER columns -- hex-ownership tally at skirmish end (hexesHeld(st) below),
-   bit-for-bit the same count balanceAdd folds live (game/engine/06-sim.js:73-74).
-   NULL on rows written before this ticket (report-model.js's foldSkirmishes
-   treats a NULL pair as "no control data", never a fabricated 0/0 tie). */
+   INTEGER columns -- hex-ownership tally at skirmish end, now sourced from the
+   engine's single-source E.skirmishFacts (architecture review 01) so the DB
+   path and balanceAdd cannot drift. NULL on rows written before this ticket
+   (report-model.js's foldSkirmishes treats a NULL pair as "no control data",
+   never a fabricated 0/0 tie). */
 'use strict';
 
 var fs = require('fs');
@@ -108,24 +109,6 @@ function migrateBattleNames(db) {
     ['idx_battles_version_map', 'idx_battles_run', 'idx_card_plays_battle', 'idx_timeline_battle']
       .forEach(function (i) { db.exec('DROP INDEX IF EXISTS ' + i + ';'); });
   }
-}
-
-// Sum of a side's reserves at skirmish end, across every unit type in the
-// active content (excludes the trench reserve — same convention as the
-// engine's deployedShare, which this metric is a per-side split of).
-function reservesLeft(st, side) {
-  var n = 0, r = st && st.reserves && st.reserves[side];
-  if (r) Object.keys(E.UNITS).forEach(function (t) { n += r[t] || 0; });
-  return n;
-}
-
-// WOA-038: hexes held per side at skirmish end — the SAME count balanceAdd
-// (game/engine/06-sim.js:73-74) folds live, kept here so the DB path
-// reproduces it exactly: for (var h in st.units) owner red/blue tally.
-function hexesHeld(st) {
-  var hr = 0, hb = 0;
-  for (var h in (st && st.units) || {}) (st.units[h].owner === 'red' ? hr++ : hb++);
-  return { red: hr, blue: hb };
 }
 
 /* WOA-041: the st fields insertSkirmish actually reads, picked into a plain
@@ -273,10 +256,11 @@ function insertSkirmish(h, runId, st, firstPlayer, extra) {
     var row = h.stmts.getRunVersion.get(runId);
     version = row ? row.version : null;
   }
-  var winner = st.skirmishWinner || null;
-  var stats = st.stats || {};
-  var fsr = E.fieldScore(st, 'red'), fsb = E.fieldScore(st, 'blue'); // VP of surviving units, same as balanceAdd
-  var vp = st.vp || { red: 0, blue: 0 };
+  // Architecture review 01: the per-Skirmish scalar facts are derived ONCE, by
+  // the engine, and written straight to columns here — no more hand-mirrored
+  // "bit-for-bit the same as balanceAdd" derivations in this file.
+  var f = E.skirmishFacts(st, firstPlayer);
+  var winner = f.winner;
   var seed = extra.seed !== undefined ? extra.seed : nz(st.seed);
   // WOA-032 (SPEC §4): the trace envelope — st.playLog + st.unitMetrics
   // verbatim as the engine wrote them (WOA-031), not renamed to the spec
@@ -284,22 +268,21 @@ function insertSkirmish(h, runId, st, firstPlayer, extra) {
   // ~1.3 KB/skirmish (SPEC §4 cost estimate) — accepted.
   var trace = JSON.stringify({
     v: version, map: nz(st.mapName), seed: seed, fp: nz(firstPlayer),
-    winner: winner, winType: nz(st.winType), turns: nz(st.turnNumber),
+    winner: winner, winType: nz(f.winType), turns: nz(f.turns),
     trace: st.playLog || [], units: st.unitMetrics || {}
   });
-  var hexes = hexesHeld(st); // WOA-038: hex-ownership tally at skirmish end (mirrors balanceAdd)
   return txn(h, function () {
     var res = h.stmts.insertSkirmish.run(
       runId, version, nz(st.mapName), seed,
-      nz(firstPlayer), winner, nz(st.winType), nz(st.turnNumber),
-      fsr, fsb, nz(stats.firstBlood),
-      st.leadChanges || 0,
-      Math.max(0, (st.turnNumber || 0) - (st.lastKillTurn || 0)),      // trailing kill-less turns
-      (vp.red + vp.blue === 0) ? 1 : 0,                                // no unit ever died
-      (st.winType === 'attrition' && fsr === fsb) ? 1 : 0,             // decided only by tie-goes-to-2nd
-      stats.attacks || 0, stats.swaps || 0, stats.marches || 0, stats.deploys || 0,
-      reservesLeft(st, 'red'), reservesLeft(st, 'blue'),  // WOA-016: pieces left in reserve at skirmish end
-      trace, hexes.red, hexes.blue);
+      nz(firstPlayer), winner, nz(f.winType), nz(f.turns),
+      f.fsRed, f.fsBlue, nz(f.firstBlood),
+      f.leadChanges,
+      f.killTail,                                         // trailing kill-less turns
+      f.zeroKill,                                         // no unit ever died
+      f.tiebreak,                                         // decided only by tie-goes-to-2nd
+      f.attacks, f.swaps, f.marches, f.deploys,
+      f.resEndRed, f.resEndBlue,                          // WOA-016: pieces left in reserve at skirmish end
+      trace, f.hexesRed, f.hexesBlue);
     var skirmishId = Number(res.lastInsertRowid);
     (st.playLog || []).forEach(function (e) {
       h.stmts.insertCardPlay.run(skirmishId, e.p, e.id, nz(e.mode), nz(e.turn),

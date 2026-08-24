@@ -120,3 +120,11 @@ Lead changes within a Skirmish — the "back-and-forth" signal.
 
 **No-op**:
 A played Card that resolved zero actions — a dead turn.
+
+**Skirmish fact**:
+The flat record of everything the balance layer reads off one finished Skirmish
+— winner, win type, field scores, kill-tail, tiebreak, hexes held, reserves
+left, action counts. Derived in exactly one place (the engine's `skirmishFacts`),
+whether from a live end-state or a persisted row, so the live fold and the
+stored-data fold can never disagree.
+_Avoid_: battle fact, per-battle row (a row is the persisted form of the fact).
