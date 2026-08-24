@@ -8,7 +8,7 @@ Version history:
   border spares the defender on a combat tie; the attacker still dies unless it carries a survive-a-tie
   order (then the attack whiffs — nobody falls); a tie can't capture a trenched HQ border. Untrenched
   ties unchanged.
-- **1.0 — V1.** No rules-text changes from 0.3. The AI search was overhauled (ranked shortlist instead of a random branching cap, orientation-aware trench evaluation), which shifts balance numbers enough that old baselines don't compare — hence the bump. Per-battle data collection (logs/woa.db) begins here.
+- **1.0 — V1.** No rules-text changes from 0.3. The AI search was overhauled (ranked shortlist instead of a random branching cap, orientation-aware trench evaluation), which shifts balance numbers enough that old baselines don't compare — hence the bump. Per-skirmish data collection (logs/woa.db) begins here.
 - **0.3** — river revision: a river no longer blocks support — support crosses freely — but control no longer extends across a river, so you cannot deploy across one. River-deploy bug fixed.
 - **0.2** — versioning begins (V0 feedback round 2): no-skip rule, same-type-swap ban arrives in round 3.
 
@@ -23,8 +23,8 @@ Version history:
 # Game setup
 
 	Each player gets a full deck of (16) cards, 7 infantry units, 2 cavalry units, 1 artillery units, 1 Headquarters, and 3 length 2 trenches. Shuffle and place the map cards off to the side of the board.  Select a player to go first by the manner of your choosing.    
-War of Attrition is fought across various battlefields, each represented by a unique "Map Card." These cards define the layout of terrain and the starting positions for each battle. Draw the top card from the Map Deck. This card dictates the current battlefield for the battle. Set up the game board to match the hex grid and terrain features shown on the drawn Map Card.  Each player places their Headquarters unit on their designated "Red HQ" or "Blue HQ" hex as shown on the Map Card.  
-	Once a victor of the battle is determined, they take the map card signifying a victory, draw the next map and the loser goes first in the next battle.  The 1st player to collect 3 victories wins the game.
+War of Attrition is fought across various skirmishfields, each represented by a unique "Map Card." These cards define the layout of terrain and the starting positions for each skirmish. Draw the top card from the Map Deck. This card dictates the current skirmishfield for the skirmish. Set up the game board to match the hex grid and terrain features shown on the drawn Map Card.  Each player places their Headquarters unit on their designated "Red HQ" or "Blue HQ" hex as shown on the Map Card.  
+	Once a victor of the skirmish is determined, they take the map card signifying a victory, draw the next map and the loser goes first in the next skirmish.  The 1st player to collect 3 victories wins the game.
 
 # Turn Order
 
@@ -41,7 +41,7 @@ War of Attrition is fought across various battlefields, each represented by a un
 
 # Resolving Combat
 
-	When an attack is ordered, the outcome is determined by comparing the attacker’s power to the defender’s power.  For calculation purposes the Battle hex is the hex with the defending unit.  
+	When an attack is ordered, the outcome is determined by comparing the attacker’s power to the defender’s power.  For calculation purposes the Skirmish hex is the hex with the defending unit.  
  
 
 * Attacker’s power is greater;  The defender is removed, and the attacker moves into the hex.  
@@ -51,17 +51,17 @@ War of Attrition is fought across various battlefields, each represented by a un
 Calculating Attacker’s Power
 
 * Start with the attacking unit’s attack value.  
-* Add support from any allied units adjacent to the battle hex — **except** support whose border into the battle hex is covered by a **trench** (that support does not arrive; a river does **not** block support).  
-* If your **Headquarters** is adjacent to the battle hex, add \+1 (the HQ’s support — denied by a trench on that border, like any support).  
-* If the attacker’s hex has a forest along the edge bordering the battle hex, add \+1.  
+* Add support from any allied units adjacent to the skirmish hex — **except** support whose border into the skirmish hex is covered by a **trench** (that support does not arrive; a river does **not** block support).  
+* If your **Headquarters** is adjacent to the skirmish hex, add \+1 (the HQ’s support — denied by a trench on that border, like any support).  
+* If the attacker’s hex has a forest along the edge bordering the skirmish hex, add \+1.  
 * Apply any card modifiers, if applicable.
 
 Calculating Defender’s  Power
 
 * Start with the defending unit’s defense value.  
-* Add support from any allied units adjacent to the battle hex — the defender’s support is **never** blocked (neither trenches nor rivers stop it).  
-* If the defending **Headquarters** is adjacent to the battle hex, add \+1.  
-* If a mountain is present in the battle hex along the edge from which the attack is coming, add \+1
+* Add support from any allied units adjacent to the skirmish hex — the defender’s support is **never** blocked (neither trenches nor rivers stop it).  
+* If the defending **Headquarters** is adjacent to the skirmish hex, add \+1.  
+* If a mountain is present in the skirmish hex along the edge from which the attack is coming, add \+1
 
 Trenches and rivers *(trenches revised July 2026 — previously \+1 defense; rivers revised 0.3 — previously blocked support)*
 
@@ -70,7 +70,7 @@ Trenches and rivers *(trenches revised July 2026 — previously \+1 defense; riv
 
 # Victory Conditions
 
-## Battle Victory Conditions
+## Skirmish Victory Conditions
 
 * Headquarters capture  
   * Successfully attack into the opponent's headquarters.  A tie where both units get removed counts.  
@@ -102,7 +102,7 @@ Trenches and rivers *(trenches revised July 2026 — previously \+1 defense; riv
   * Select a unit on the board to attack an adjacent tile; tile must have a unit or headquarters in it for it to count as an attack.  
 * In sequence   
   * The action is taken one after the other so control and adjacencies get recalculated in between actions.   
-* Battle Hex  
+* Skirmish Hex  
   * The hex contains the defending unit when resolving combat.
 
 ## Card Actions 

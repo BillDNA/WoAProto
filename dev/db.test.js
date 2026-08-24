@@ -31,17 +31,17 @@ try {
   var tables = h.db.prepare(
     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
   ).all().map(function (r) { return r.name; });
-  ok(tables.join(',') === 'battles,card_plays,runs,timeline',
+  ok(tables.join(',') === 'card_plays,runs,skirmishes,timeline',
     'all four tables exist after re-open (got: ' + tables.join(',') + ')');
   var idx = h.db.prepare("SELECT COUNT(*) c FROM sqlite_master WHERE type='index' AND name LIKE 'idx_%'").get().c;
   ok(idx === 4, 'all four indexes exist (got ' + idx + ')');
   var mode = h.db.prepare('PRAGMA journal_mode').get();
   ok(String(mode[Object.keys(mode)[0]]).toLowerCase() === 'wal', 'journal_mode is WAL');
 
-  /* ---------- insertRun / insertBattle round-trip with a REAL battle ---------- */
-  section('round-trip (real simBattle state)');
-  var st = E.simBattle(E.MAPS[0], 1234, 'red', 'normal', 'normal');
-  ok(st.phase === 'battle-over', 'simBattle(MAPS[0], 1234) finished (phase ' + st.phase + ')');
+  /* ---------- insertRun / insertSkirmish round-trip with a REAL skirmish ---------- */
+  section('round-trip (real simSkirmish state)');
+  var st = E.simSkirmish(E.MAPS[0], 1234, 'red', 'normal', 'normal');
+  ok(st.phase === 'skirmish-over', 'simSkirmish(MAPS[0], 1234) finished (phase ' + st.phase + ')');
 
   var runId = db.insertRun(h, {
     version: E.VERSION, kind: 'balance', redAi: 'normal', blueAi: 'normal',
@@ -53,13 +53,13 @@ try {
     'runs row round-trips (kind/red_ai/n)');
   ok(typeof runRow.ts === 'string' && runRow.ts.indexOf('T') > 0, 'ts defaulted to an ISO string (' + runRow.ts + ')');
 
-  var battleId = db.insertBattle(h, runId, st, 'red', { seed: 1234 });
-  var b = h.db.prepare('SELECT * FROM battles WHERE id = ?').get(battleId);
-  ok(b.run_id === runId && b.version === E.VERSION, 'battle carries run_id + version');
+  var skirmishId = db.insertSkirmish(h, runId, st, 'red', { seed: 1234 });
+  var b = h.db.prepare('SELECT * FROM skirmishes WHERE id = ?').get(skirmishId);
+  ok(b.run_id === runId && b.version === E.VERSION, 'skirmish carries run_id + version');
   ok(b.map === E.MAPS[0].name, 'map name matches (' + b.map + ')');
-  ok(b.seed === 1234, 'extra.seed stored as the battle seed');
+  ok(b.seed === 1234, 'extra.seed stored as the skirmish seed');
   ok(b.first_player === 'red', 'first_player stored');
-  ok(b.winner === st.battleWinner, 'winner matches st.battleWinner (' + b.winner + ')');
+  ok(b.winner === st.skirmishWinner, 'winner matches st.skirmishWinner (' + b.winner + ')');
   ok(b.win_type === st.winType, 'win_type matches (' + b.win_type + ')');
   ok(b.turns === st.turnNumber, 'turns matches st.turnNumber (' + b.turns + ')');
   ok(b.fs_red === E.fieldScore(st, 'red') && b.fs_blue === E.fieldScore(st, 'blue'),
@@ -79,8 +79,8 @@ try {
     var n = 0; Object.keys(E.UNITS).forEach(function (t) { n += sideReserves[t] || 0; }); return n;
   }
   ok(b.res_end_red === reservesLeft(st.reserves.red) && b.res_end_blue === reservesLeft(st.reserves.blue),
-    'res_end_red/res_end_blue = pieces left in st.reserves at battle end (' + b.res_end_red + '/' + b.res_end_blue + ')');
-  // WOA-038: hexes_red/hexes_blue = hex-ownership tally at battle end, computed
+    'res_end_red/res_end_blue = pieces left in st.reserves at skirmish end (' + b.res_end_red + '/' + b.res_end_blue + ')');
+  // WOA-038: hexes_red/hexes_blue = hex-ownership tally at skirmish end, computed
   // independently here from st.units (the SAME read balanceAdd does live) to
   // prove db.js's hexesHeld() reads the same source of truth.
   function hexTally(units) {
@@ -94,35 +94,35 @@ try {
 
   /* ---------- card_plays ---------- */
   section('card_plays');
-  var plays = h.db.prepare('SELECT * FROM card_plays WHERE battle_id = ? ORDER BY id').all(battleId);
+  var plays = h.db.prepare('SELECT * FROM card_plays WHERE skirmish_id = ? ORDER BY id').all(skirmishId);
   ok(plays.length === st.playLog.length,
     'one card_plays row per playLog entry (' + plays.length + ' = ' + st.playLog.length + ')');
   var allMatch = plays.every(function (r, i) {
     var e = st.playLog[i];
     return r.side === e.p && r.card_id === e.id && r.mode === e.mode &&
       r.turn === e.turn && r.seen === e.seen && r.noop === (e.noop ? 1 : 0) &&
-      r.won === (e.p === st.battleWinner ? 1 : 0);
+      r.won === (e.p === st.skirmishWinner ? 1 : 0);
   });
   ok(allMatch, 'every row matches its playLog entry (side/card/mode/turn/seen/noop/won)');
-  var wonRows = h.db.prepare('SELECT COUNT(*) c FROM card_plays WHERE battle_id = ? AND won = 1').get(battleId).c;
-  var wonExpected = st.playLog.filter(function (e) { return e.p === st.battleWinner; }).length;
+  var wonRows = h.db.prepare('SELECT COUNT(*) c FROM card_plays WHERE skirmish_id = ? AND won = 1').get(skirmishId).c;
+  var wonExpected = st.playLog.filter(function (e) { return e.p === st.skirmishWinner; }).length;
   ok(wonRows === wonExpected, 'won=1 count equals winner-side plays (' + wonRows + ')');
 
-  /* ---------- timeline: real battles carry one; absence is tolerated ---------- */
+  /* ---------- timeline: real skirmishes carry one; absence is tolerated ---------- */
   section('timeline');
-  // simBattle states carry fsTimeline since the V1 seams commit — a real battle
+  // simSkirmish states carry fsTimeline since the V1 seams commit — a real skirmish
   // should have produced per-turn rows above.
-  var tl0 = h.db.prepare('SELECT COUNT(*) c FROM timeline WHERE battle_id = ?').get(battleId).c;
+  var tl0 = h.db.prepare('SELECT COUNT(*) c FROM timeline WHERE skirmish_id = ?').get(skirmishId).c;
   ok(tl0 === (st.fsTimeline ? st.fsTimeline.length : 0) && tl0 > 0,
-    'a real battle lands its per-turn timeline (' + tl0 + ' rows)');
+    'a real skirmish lands its per-turn timeline (' + tl0 + ' rows)');
   var noTl = JSON.parse(JSON.stringify(st)); noTl.match = st.match; delete noTl.fsTimeline;
-  var battleId0 = db.insertBattle(h, runId, noTl, 'red', { seed: 1234 });
-  var tlAbsent = h.db.prepare('SELECT COUNT(*) c FROM timeline WHERE battle_id = ?').get(battleId0).c;
+  var skirmishId0 = db.insertSkirmish(h, runId, noTl, 'red', { seed: 1234 });
+  var tlAbsent = h.db.prepare('SELECT COUNT(*) c FROM timeline WHERE skirmish_id = ?').get(skirmishId0).c;
   ok(tlAbsent === 0, 'a state without fsTimeline (pre-V1 save) -> zero rows, tolerated silently');
 
   st.fsTimeline = [[2, 2], [4, 2], [4, 5]]; // synthetic, to pin the column mapping
-  var battleId2 = db.insertBattle(h, runId, st, 'blue', { seed: 1234 });
-  var tl = h.db.prepare('SELECT turn, fs_red, fs_blue FROM timeline WHERE battle_id = ? ORDER BY turn').all(battleId2);
+  var skirmishId2 = db.insertSkirmish(h, runId, st, 'blue', { seed: 1234 });
+  var tl = h.db.prepare('SELECT turn, fs_red, fs_blue FROM timeline WHERE skirmish_id = ? ORDER BY turn').all(skirmishId2);
   ok(tl.length === 3, 'synthetic 3-entry fsTimeline -> 3 rows (got ' + tl.length + ')');
   ok(tl[0].turn === 1 && tl[2].turn === 3, 'timeline turns are 1-based (index 0 = turn 1)');
   ok(tl[1].fs_red === 4 && tl[1].fs_blue === 2 && tl[2].fs_blue === 5, 'fs values land in the right columns');
@@ -131,18 +131,18 @@ try {
   /* ---------- unfinished states are rejected (transaction leaves no debris) ---------- */
   section('guards');
   var threw = false;
-  try { db.insertBattle(h, runId, { phase: 'choose-card' }, 'red'); } catch (e) { threw = true; }
-  ok(threw, 'insertBattle throws on a non-finished state');
+  try { db.insertSkirmish(h, runId, { phase: 'choose-card' }, 'red'); } catch (e) { threw = true; }
+  ok(threw, 'insertSkirmish throws on a non-finished state');
   var threwKind = false;
   try { db.insertRun(h, { version: E.VERSION, kind: 'nonsense' }); } catch (e) { threwKind = true; }
   ok(threwKind, 'insertRun rejects an unknown kind');
-  ok(h.db.prepare('SELECT COUNT(*) c FROM battles').get().c === 3, 'failed inserts left no battles rows');
+  ok(h.db.prepare('SELECT COUNT(*) c FROM skirmishes').get().c === 3, 'failed inserts left no skirmishes rows');
 
   /* ---------- a GROUP BY through the same handle ---------- */
   section('GROUP BY via the handle');
-  var g = h.db.prepare('SELECT map, COUNT(*) n, AVG(turns) avg_turns FROM battles GROUP BY map').all();
+  var g = h.db.prepare('SELECT map, COUNT(*) n, AVG(turns) avg_turns FROM skirmishes GROUP BY map').all();
   ok(g.length === 1 && g[0].map === E.MAPS[0].name, 'one map group (' + (g[0] && g[0].map) + ')');
-  ok(g[0].n === 3, 'all three battles counted (n=' + g[0].n + ')');
+  ok(g[0].n === 3, 'all three skirmishes counted (n=' + g[0].n + ')');
   ok(g[0].avg_turns === st.turnNumber, 'AVG(turns) is sane (' + g[0].avg_turns + ')');
 
   /* ---------- listRuns (WOA-034: the dashboard header's run-A/B pickers) ---------- */
@@ -156,25 +156,25 @@ try {
   ok(runs.every(function (r) { return 'seedBase' in r && 'baseline' in r; }), 'seedBase/baseline columns present (nullable)');
   ok(db.listRuns(h, 1).length === 1, 'limit is honoured');
 
-  /* ---------- listBattles (WOA-035: the Overview screen's battle fetch) ---------- */
-  section('listBattles (WOA-035)');
-  var battlesForRun1 = db.listBattles(h, runId);
-  ok(battlesForRun1.length === 3, 'listBattles returns every battle row for the run (' + battlesForRun1.length + ')');
-  ok(battlesForRun1.every(function (r) { return r.id != null; }) && battlesForRun1[0].id < battlesForRun1[1].id,
-    'ordered by id ascending (' + battlesForRun1.map(function (r) { return r.id; }).join(',') + ')');
-  var bRow = battlesForRun1[0];
+  /* ---------- listSkirmishes (WOA-035: the Overview screen's skirmish fetch) ---------- */
+  section('listSkirmishes (WOA-035)');
+  var skirmishesForRun1 = db.listSkirmishes(h, runId);
+  ok(skirmishesForRun1.length === 3, 'listSkirmishes returns every skirmish row for the run (' + skirmishesForRun1.length + ')');
+  ok(skirmishesForRun1.every(function (r) { return r.id != null; }) && skirmishesForRun1[0].id < skirmishesForRun1[1].id,
+    'ordered by id ascending (' + skirmishesForRun1.map(function (r) { return r.id; }).join(',') + ')');
+  var bRow = skirmishesForRun1[0];
   ['id', 'map', 'seed', 'firstPlayer', 'winner', 'winType', 'turns', 'fsRed', 'fsBlue', 'firstBlood',
     'leadChanges', 'killTail', 'zeroKill', 'tiebreak', 'attacks', 'swaps', 'marches', 'deploys',
     'resEndRed', 'resEndBlue', 'trace', 'hexesRed', 'hexesBlue'].forEach(function (k) {
-    ok(k in bRow, 'listBattles row carries camelCase "' + k + '"');
+    ok(k in bRow, 'listSkirmishes row carries camelCase "' + k + '"');
   });
   ok(bRow.hexesRed === hexesExpected.red && bRow.hexesBlue === hexesExpected.blue,
-    'listBattles hexesRed/hexesBlue round-trip the same tally (' + bRow.hexesRed + '/' + bRow.hexesBlue + ')');
-  ok(bRow.map === E.MAPS[0].name && bRow.firstPlayer === 'red' && bRow.winner === st.battleWinner,
-    'listBattles row matches the round-trip battle inserted above (map/firstPlayer/winner)');
+    'listSkirmishes hexesRed/hexesBlue round-trip the same tally (' + bRow.hexesRed + '/' + bRow.hexesBlue + ')');
+  ok(bRow.map === E.MAPS[0].name && bRow.firstPlayer === 'red' && bRow.winner === st.skirmishWinner,
+    'listSkirmishes row matches the round-trip skirmish inserted above (map/firstPlayer/winner)');
   ok(typeof bRow.trace === 'string' && JSON.parse(bRow.trace).map === E.MAPS[0].name,
     'trace column is still a raw JSON string — envelopeFromRow parses it client-side, not db.js');
-  ok(db.listBattles(h, runId2).length === 0, 'a different run id returns its own (empty) slice, not a cross-run leak');
+  ok(db.listSkirmishes(h, runId2).length === 0, 'a different run id returns its own (empty) slice, not a cross-run leak');
 
   db.close(h);
 
@@ -182,20 +182,20 @@ try {
   section('db-query.js CLI');
   var cli = path.join(__dirname, 'db-query.js');
   var out = cp.execFileSync(process.execPath,
-    [cli, '--db', dbFile, 'SELECT map, COUNT(*) n, AVG(turns) avg_turns FROM battles GROUP BY map'],
+    [cli, '--db', dbFile, 'SELECT map, COUNT(*) n, AVG(turns) avg_turns FROM skirmishes GROUP BY map'],
     { encoding: 'utf8' });
   ok(out.indexOf('map') >= 0 && out.indexOf('avg_turns') >= 0, 'CLI prints the column header');
   ok(out.indexOf(E.MAPS[0].name) >= 0, 'CLI prints the map row (' + E.MAPS[0].name + ')');
   ok(/\(1 row\)/.test(out), 'CLI prints the row count');
 
   var schemaOut = cp.execFileSync(process.execPath, [cli, '--db', dbFile], { encoding: 'utf8' });
-  ok(schemaOut.indexOf('CREATE TABLE') >= 0 && schemaOut.indexOf('battles') >= 0,
+  ok(schemaOut.indexOf('CREATE TABLE') >= 0 && schemaOut.indexOf('skirmishes') >= 0,
     'no-arg CLI prints the schema');
-  ok(/-- 3 rows/.test(schemaOut), 'no-arg CLI prints per-table row counts (battles: 3)');
+  ok(/-- 3 rows/.test(schemaOut), 'no-arg CLI prints per-table row counts (skirmishes: 3)');
 
   var wrote = true;
   try {
-    cp.execFileSync(process.execPath, [cli, '--db', dbFile, "DELETE FROM battles"],
+    cp.execFileSync(process.execPath, [cli, '--db', dbFile, "DELETE FROM skirmishes"],
       { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   } catch (e) { wrote = false; }
   ok(!wrote, 'CLI connection is read-only (DELETE rejected)');
@@ -216,12 +216,12 @@ try {
     'runs row carries deck/mapset/seed_base/label (SPEC §7)');
   ok(rowA.baseline === 0, 'baseline defaults to 0 when not requested');
 
-  var st2 = E.simBattle(E.MAPS[0], 4242, 'red', 'normal', 'normal');
-  var battleIdA = db.insertBattle(h2, runIdA, st2, 'red', { seed: 4242 });
-  var bA = h2.db.prepare('SELECT run_id, trace FROM battles WHERE id = ?').get(battleIdA);
-  ok(bA.run_id === runIdA, 'battle row references its run id (run_id column)');
+  var st2 = E.simSkirmish(E.MAPS[0], 4242, 'red', 'normal', 'normal');
+  var skirmishIdA = db.insertSkirmish(h2, runIdA, st2, 'red', { seed: 4242 });
+  var bA = h2.db.prepare('SELECT run_id, trace FROM skirmishes WHERE id = ?').get(skirmishIdA);
+  ok(bA.run_id === runIdA, 'skirmish row references its run id (run_id column)');
   var trace = JSON.parse(bA.trace);
-  ok(trace && typeof trace === 'object', 'battles.trace is valid JSON');
+  ok(trace && typeof trace === 'object', 'skirmishes.trace is valid JSON');
   ['v', 'map', 'seed', 'fp', 'winner', 'winType', 'turns', 'trace', 'units'].forEach(function (k) {
     ok(k in trace, 'trace envelope has "' + k + '" (SPEC §4 shape)');
   });
@@ -241,47 +241,47 @@ try {
     '2,0': { type: 'cavalry', owner: 'red' },
     '-1,0': { type: 'infantry', owner: 'blue' }
   };
-  var battleIdHex = db.insertBattle(h2, runIdA, stHex, 'red', { seed: 9001 });
-  var bHex = h2.db.prepare('SELECT hexes_red, hexes_blue FROM battles WHERE id = ?').get(battleIdHex);
+  var skirmishIdHex = db.insertSkirmish(h2, runIdA, stHex, 'red', { seed: 9001 });
+  var bHex = h2.db.prepare('SELECT hexes_red, hexes_blue FROM skirmishes WHERE id = ?').get(skirmishIdHex);
   ok(bHex.hexes_red === 3 && bHex.hexes_blue === 1,
     'hexes_red/hexes_blue = 3/1 for a hand-built 4-unit board (' + bHex.hexes_red + '/' + bHex.hexes_blue + ')');
 
   var stEmpty = JSON.parse(JSON.stringify(st2)); stEmpty.match = st2.match; stEmpty.units = {};
-  var battleIdEmpty = db.insertBattle(h2, runIdA, stEmpty, 'red', { seed: 9002 });
-  var bEmpty = h2.db.prepare('SELECT hexes_red, hexes_blue FROM battles WHERE id = ?').get(battleIdEmpty);
+  var skirmishIdEmpty = db.insertSkirmish(h2, runIdA, stEmpty, 'red', { seed: 9002 });
+  var bEmpty = h2.db.prepare('SELECT hexes_red, hexes_blue FROM skirmishes WHERE id = ?').get(skirmishIdEmpty);
   ok(bEmpty.hexes_red === 0 && bEmpty.hexes_blue === 0,
     'an empty board tallies 0/0 — a REAL tie, still stored as numbers, not NULL');
 
   // Legacy rows (written before this ticket) never had hexes_red/hexes_blue
   // populated — simulate one with a direct INSERT that omits the columns
-  // entirely, and confirm listBattles surfaces NULL rather than 0
-  // (foldBattles' "a missing pair is not a fabricated 0/0 tie" contract).
+  // entirely, and confirm listSkirmishes surfaces NULL rather than 0
+  // (foldSkirmishes' "a missing pair is not a fabricated 0/0 tie" contract).
   h2.db.prepare(
-    'INSERT INTO battles (run_id, version, map, winner, first_player, turns) VALUES (?,?,?,?,?,?)'
+    'INSERT INTO skirmishes (run_id, version, map, winner, first_player, turns) VALUES (?,?,?,?,?,?)'
   ).run(runIdA, '9.9-test', E.MAPS[0].name, 'red', 'red', 10);
-  var legacyRows = db.listBattles(h2, runIdA).filter(function (r) { return r.hexesRed == null; });
+  var legacyRows = db.listSkirmishes(h2, runIdA).filter(function (r) { return r.hexesRed == null; });
   ok(legacyRows.length === 1 && legacyRows[0].hexesBlue == null,
     'a pre-WOA-038 row (hexes columns never written) round-trips as NULL, not 0');
 
-  /* ---------- slimBattleState (WOA-041: the --parallel worker contract) ---------- */
-  // balance-report's --parallel workers ship slimBattleState(st) through a
-  // JSON pipe to the parent, which calls insertBattle on the other side. Pin
-  // that exact trip: the slim state must land a battles row identical to the
+  /* ---------- slimSkirmishState (WOA-041: the --parallel worker contract) ---------- */
+  // balance-report's --parallel workers ship slimSkirmishState(st) through a
+  // JSON pipe to the parent, which calls insertSkirmish on the other side. Pin
+  // that exact trip: the slim state must land a skirmishes row identical to the
   // full state's (same seed/fp), plus the same card_plays and timeline rows.
-  section('slimBattleState (WOA-041)');
-  var slimSt = JSON.parse(JSON.stringify(db.slimBattleState(st2))); // the worker->parent stdout trip
-  var battleIdSlim = db.insertBattle(h2, runIdA, slimSt, 'red', { seed: 4242 });
-  var fullRow = h2.db.prepare('SELECT * FROM battles WHERE id = ?').get(battleIdA);
-  var slimRow = h2.db.prepare('SELECT * FROM battles WHERE id = ?').get(battleIdSlim);
+  section('slimSkirmishState (WOA-041)');
+  var slimSt = JSON.parse(JSON.stringify(db.slimSkirmishState(st2))); // the worker->parent stdout trip
+  var skirmishIdSlim = db.insertSkirmish(h2, runIdA, slimSt, 'red', { seed: 4242 });
+  var fullRow = h2.db.prepare('SELECT * FROM skirmishes WHERE id = ?').get(skirmishIdA);
+  var slimRow = h2.db.prepare('SELECT * FROM skirmishes WHERE id = ?').get(skirmishIdSlim);
   var driftCols = Object.keys(fullRow).filter(function (k) {
     return k !== 'id' && String(fullRow[k]) !== String(slimRow[k]);
   });
   ok(driftCols.length === 0,
-    'a JSON-round-tripped slim state lands an identical battles row (drift: ' + (driftCols.join(',') || 'none') + ')');
-  var cpSlim = h2.db.prepare('SELECT COUNT(*) c FROM card_plays WHERE battle_id = ?').get(battleIdSlim).c;
+    'a JSON-round-tripped slim state lands an identical skirmishes row (drift: ' + (driftCols.join(',') || 'none') + ')');
+  var cpSlim = h2.db.prepare('SELECT COUNT(*) c FROM card_plays WHERE skirmish_id = ?').get(skirmishIdSlim).c;
   ok(cpSlim === st2.playLog.length, 'slim state lands one card_plays row per playLog entry (' + cpSlim + ')');
-  var tlFull = h2.db.prepare('SELECT COUNT(*) c FROM timeline WHERE battle_id = ?').get(battleIdA).c;
-  var tlSlim = h2.db.prepare('SELECT COUNT(*) c FROM timeline WHERE battle_id = ?').get(battleIdSlim).c;
+  var tlFull = h2.db.prepare('SELECT COUNT(*) c FROM timeline WHERE skirmish_id = ?').get(skirmishIdA).c;
+  var tlSlim = h2.db.prepare('SELECT COUNT(*) c FROM timeline WHERE skirmish_id = ?').get(skirmishIdSlim).c;
   ok(tlSlim === tlFull && tlSlim > 0, 'slim state lands the same timeline rows (' + tlSlim + ')');
 
   /* ---------- baseline uniqueness (WOA-032, SPEC §7) ---------- */

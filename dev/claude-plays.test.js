@@ -23,10 +23,10 @@ console.log('== honest-info sentinel ==');
 // red-side prompt, hidden information leaked.
 const SENTINEL = { id: 'zz_hidden_sentinel', name: 'ZZHIDDENSENTINEL', text: 'you should never see this', steps: [{ type: 'attack' }], count: 1 };
 
-// Build the battle FIRST (so the ordinary decks can't deal the sentinel to
+// Build the skirmish FIRST (so the ordinary decks can't deal the sentinel to
 // red), then register the card and plant it in blue's HIDDEN zones only.
 const match = E.newMatch({ maps: [E.MAPS[0]], seed: 424242, firstPlayer: 'red' });
-const st = E.newBattle(match);
+const st = E.newSkirmish(match);
 E.CARDS.push(SENTINEL);
 E.CARD_BY_ID[SENTINEL.id] = SENTINEL;
 st.hands.blue.push(SENTINEL.id);
@@ -35,7 +35,7 @@ st.decks.blue.push(SENTINEL.id);
 function leaks(text) { return text.indexOf('zz_hidden_sentinel') >= 0 || text.indexOf('ZZHIDDENSENTINEL') >= 0; }
 
 const surfaces = [];
-surfaces.push(['stateView with hand', cp.stateView(st, 'red', true, { targetWins: 3, wins: match.wins, battlesPlayed: 0 })]);
+surfaces.push(['stateView with hand', cp.stateView(st, 'red', true, { targetWins: 3, wins: match.wins, skirmishesPlayed: 0 })]);
 surfaces.push(['stateView without hand', cp.stateView(st, 'red', false, null)]);
 surfaces.push(['card options', cp.cardOptions(st, 'red').map(function (o) { return o.desc; }).join('\n')]);
 E.playCard(st, st.hands.red[0], 'normal'); // into a step
@@ -67,7 +67,7 @@ ok(/DIFFERENT types/.test(cp.RULES), 'RULES teach the same-type swap ban');
 
 console.log('== ranked option diet ==');
 const m2 = E.newMatch({ maps: [E.MAPS[0]], seed: 77, firstPlayer: 'red' });
-const st2 = E.newBattle(m2);
+const st2 = E.newSkirmish(m2);
 E.playCard(st2, st2.hands.red[0], 'normal');
 if (st2.phase === 'step') {
   const all = E.enumerateChoices(st2);

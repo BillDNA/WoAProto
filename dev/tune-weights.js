@@ -16,7 +16,7 @@
      --keys a,b,c   weights to sweep (default: advance,enemyDist,trenchHome,
                     trenchFacing,fsDiff,unitReserve,myThreatKill,threatTie)
      --maps f1,f2   name filters for the map subset (default: 6 spread maps)
-     --n <k>        battles per map per candidate (default 16)
+     --n <k>        skirmishes per map per candidate (default 16)
      --ai <preset>  base personality both sides play (default normal — fast;
                     use hard for the real thing, ~8x slower)
      --scales s,... multipliers per key (default 0.5,0.75,1.5,2)
@@ -91,7 +91,7 @@ function guardrails(m, base) {
   var flags = [];
   if (m.atk < base.atk * 0.7) flags.push('attacks collapsed (' + m.atk.toFixed(1) + ' vs ' + base.atk.toFixed(1) + ')');
   if (m.swp > base.swp * 1.5) flags.push('swap-dancing up (' + m.swp.toFixed(1) + ' vs ' + base.swp.toFixed(1) + ')');
-  if (m.zk > Math.max(5, base.zk * 2)) flags.push('zero-kill battles up (' + m.zk.toFixed(0) + '%)');
+  if (m.zk > Math.max(5, base.zk * 2)) flags.push('zero-kill skirmishes up (' + m.zk.toFixed(0) + '%)');
   return flags;
 }
 

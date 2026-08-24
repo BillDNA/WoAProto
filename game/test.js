@@ -9,9 +9,9 @@ function ok(cond, msg) {
 // A bare classic-board map so rules tests are deterministic regardless of the
 // built-in roster. HQs in opposite corners, no terrain.
 var TESTMAP = { name: 'Test Range', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2], pieces: [] };
-function testBattle(seed) {
+function testSkirmish(seed) {
   var m = E.newMatch({ seed: seed, firstPlayer: 'red', maps: [TESTMAP] });
-  return E.newBattle(m);
+  return E.newSkirmish(m);
 }
 
 // Card-behaviour fixtures (WOA-030): pin a card's DEF from the full content
@@ -82,14 +82,14 @@ console.log('== custom board shapes (explicit hex sets, V0 map-roster-and-shapes
   // a hole in a row leaves a GAP in the labels: hexes keep their columns
   var holed = E.buildShape('holed', { hexes: [[0, 0], [2, 0]] });
   ok(holed.rowQFrom[0] === 0, 'row starts at its leftmost hex');
-  // label check needs the shape current: run it through a map + newBattle
+  // label check needs the shape current: run it through a map + newSkirmish
   var IRR = { name: 'Irregular', id: 'irr1', redHQ: [0, -1], blueHQ: [0, 1],
     shapeDef: { hexes: [[0, -1], [1, -1], [-1, 0], [0, 0], [1, 0], [-1, 1], [0, 1]] }, pieces: [] };
   ok(E.validateMaps([IRR]).length === 0, 'irregular map validates: ' + E.validateMaps([IRR]).join('; '));
   var m = E.newMatch({ seed: 5, firstPlayer: 'red', maps: [IRR] });
-  var st = E.newBattle(m);
+  var st = E.newSkirmish(m);
   ok(st.boardShape === '@irr1', 'inline shapeDef registered under @<map id> (got ' + st.boardShape + ')');
-  ok(E.hexes().length === 7, 'battle runs on the 7-hex board');
+  ok(E.hexes().length === 7, 'skirmish runs on the 7-hex board');
   ok(E.hexLabel('-1,0') === 'B1' && E.hexLabel('0,0') === 'B2', 'labels count from the leftmost hex');
   // point-symmetry from a hex set (this outline is symmetric about 0,0 -> Mirror works)
   ok(E.SHAPES['@irr1'].centre !== null, 'symmetric hex set gets a rot180 centre');
@@ -97,7 +97,7 @@ console.log('== custom board shapes (explicit hex sets, V0 map-roster-and-shapes
   var HOLED = { name: 'Holed', id: 'hole1', redHQ: [0, -1], blueHQ: [0, 1],
     shapeDef: { hexes: [[0, -1], [1, -1], [-1, 0], [0, 0], [2, 0], [-1, 1], [0, 1]] }, pieces: [] };
   var m2 = E.newMatch({ seed: 6, firstPlayer: 'red', maps: [HOLED] });
-  E.newBattle(m2);
+  E.newSkirmish(m2);
   ok(E.hexLabel('2,0') === 'B4', 'a hole leaves a gap in the numbering (2,0 stays B4, got ' + E.hexLabel('2,0') + ')');
   ok(E.neighbor('0,0', 0) === null, 'the missing hex is truly off-board');
   E.setBoard('@irr1');
@@ -110,9 +110,9 @@ console.log('== custom board shapes (explicit hex sets, V0 map-roster-and-shapes
     shapeDef: { hexes: big }, pieces: [] };
   ok(E.validateMaps([BIGMAP]).some(function (p) { return p.indexOf('24-hex ceiling') >= 0; }),
     '25-hex edited shape rejected by validateMaps');
-  // an edited shape can play a full AI battle
-  var sim = E.simBattle(IRR, 99, 'red', 'normal', 'normal');
-  ok(sim.phase === 'battle-over', 'AI battle completes on an irregular board (winner ' + sim.battleWinner + ')');
+  // an edited shape can play a full AI skirmish
+  var sim = E.simSkirmish(IRR, 99, 'red', 'normal', 'normal');
+  ok(sim.phase === 'skirmish-over', 'AI skirmish completes on an irregular board (winner ' + sim.skirmishWinner + ')');
 })();
 
 console.log('== terrain pieces live inside ONE hex (the yellow-line bug) ==');
@@ -147,7 +147,7 @@ ok(builtinMaps.length === 10, '10 shipped (non-custom) maps in the content roste
 
 console.log('== trench/terrain edge exclusivity ==');
 (function () {
-  var st = testBattle(55);
+  var st = testSkirmish(55);
   st.units['0,0'] = { type: 'infantry', owner: 'red' };
   ok(E.trenchOrientations(st, '0,0').length === 6, 'all 6 orientations on a clean hex');
   st.terrainEdges[E.sideKey('0,0', 1)] = 'F'; // this hex's own dir-1 side
@@ -168,7 +168,7 @@ console.log('== multiple trenches per hex (DoubleTrenchNotAllowed report) ==');
 (function () {
   // Bill's repro: infantry on D3 (classic '-1,1'), already entrenched on its
   // west/southwest edges; a second trench along the C3/C4 edges must be legal.
-  var st = testBattle(60);
+  var st = testSkirmish(60);
   st.units['-1,1'] = { type: 'infantry', owner: 'red' };
   st.trenches['-1,1'] = [{ dirs: [3, 4], owner: 'red' }];
   ok(E.trenchTargets(st, 'red').indexOf('-1,1') >= 0, 'a hex with a trench can be entrenched again');
@@ -190,7 +190,7 @@ console.log('== multiple trenches per hex (DoubleTrenchNotAllowed report) ==');
   var r3 = E.computeAttack(st, { from: '0,0', to: '-1,1' });
   ok(r3.attackerPower === 2, 'support across an untrenched border still counts (got ' + r3.attackerPower + ')');
   // overlap stays illegal
-  var st2 = testBattle(61);
+  var st2 = testSkirmish(61);
   st2.units['0,0'] = { type: 'infantry', owner: 'red' };
   st2.trenches['0,0'] = [{ dirs: [1, 2], owner: 'red' }];
   var thrown = false;
@@ -207,7 +207,7 @@ console.log('== HexClarificationDiagram A/B/C table ==');
   // Mountain in B on edges B|A and B|C.
   var A = '0,0', B = '-1,1', C = '0,1';
   function fresh() {
-    var st = testBattle(77);
+    var st = testSkirmish(77);
     st.terrainEdges[E.sideKey(A, 4)] = 'F'; // A -> B
     st.terrainEdges[E.sideKey(A, 5)] = 'F'; // A -> C
     st.terrainEdges[E.sideKey(B, 1)] = 'M'; // B -> A
@@ -242,7 +242,7 @@ console.log('== noOpener cards never in the opening hand (e.g. Airdrop) ==');
   var bad = 0;
   for (var seed = 200; seed < 240; seed++) {
     var m = E.newMatch({ seed: seed, firstPlayer: 'red' });
-    var st = E.newBattle(m);
+    var st = E.newSkirmish(m);
     noOpenerIds.forEach(function (id) {
       if (st.hands.red.indexOf(id) >= 0) bad++;
       if (st.decks.red.indexOf(id) < 0) bad++;                  // returned to the deck
@@ -255,7 +255,7 @@ console.log('== noOpener cards never in the opening hand (e.g. Airdrop) ==');
 
 console.log('== house rule: play any card as basic attack/reposition ==');
 (function () {
-  var st = testBattle(21);
+  var st = testSkirmish(21);
   st.units['0,0'] = { type: 'infantry', owner: 'red' };
   st.units['0,1'] = { type: 'cavalry', owner: 'blue' };
   var cid = st.hands.red.filter(function (c) { return c !== 'attack_plus1'; })[0];
@@ -265,13 +265,13 @@ console.log('== house rule: play any card as basic attack/reposition ==');
   E.applyStep(st, { from: '0,0', to: '0,1' });
   ok(st.removed.red.indexOf(cid) >= 0, 'card still removed from game');
   // reposition mode
-  var st2 = testBattle(22);
+  var st2 = testSkirmish(22);
   st2.units['0,0'] = { type: 'infantry', owner: 'red' };
   var cid2 = st2.hands.red[0];
   E.playCard(st2, cid2, 'reposition');
   ok(E.stepOptions(st2).type === 'reposition', 'card resolves as plain reposition step');
   // Feedback Round 1: reposition is refused while a basic attack is possible
-  var st3 = testBattle(23);
+  var st3 = testSkirmish(23);
   st3.units['0,0'] = { type: 'infantry', owner: 'red' };
   st3.units['0,1'] = { type: 'infantry', owner: 'blue' }; // a basic attack IS available
   var cid3 = st3.hands.red[0];
@@ -284,7 +284,7 @@ console.log('== house rule: play any card as basic attack/reposition ==');
 console.log('== Feedback Round 2: at least one step of a card must be played ==');
 (function () {
   // Red inf at 0,0 can only strike blue inf at 0,1 (both far from either HQ).
-  var st = testBattle(31);
+  var st = testSkirmish(31);
   st.units = { '0,0': { type: 'infantry', owner: 'red' }, '0,1': { type: 'infantry', owner: 'blue' } };
   st.hands.red = ['mass_assault']; // two attack steps
   E.playCard(st, 'mass_assault');
@@ -298,7 +298,7 @@ console.log('== Feedback Round 2: at least one step of a card must be played =='
   ok(st.phase !== 'step', 'once an action is played the card resolves');
 
   // Once one action is done, remaining steps ARE skippable.
-  var st2 = testBattle(32);
+  var st2 = testSkirmish(32);
   st2.units = { '0,0': { type: 'infantry', owner: 'red' } }; // lone unit, room to march, no enemies
   st2.hands.red = ['forced_march']; // three reposition steps
   E.playCard(st2, 'forced_march');
@@ -306,7 +306,7 @@ console.log('== Feedback Round 2: at least one step of a card must be played =='
   ok(st2.phase !== 'step' || !E.mustPlayStep(st2), 'after acting, later steps are skippable');
 
   // A card that genuinely cannot act anywhere still spends the turn (no-op).
-  var st3 = testBattle(33);
+  var st3 = testSkirmish(33);
   st3.units = {}; // no units -> no barrage targets, no attacks
   st3.hands.red = ['naval_barrage']; // [barrage, attack]
   E.playCard(st3, 'naval_barrage');
@@ -320,18 +320,18 @@ console.log('== map pool ==');
   var one = [E.MAPS[0]];
   var m = E.newMatch({ seed: 33, maps: one });
   ok(m.maps.length === 1 && m.mapOrder.length === 1, 'match carries its own 1-map pool');
-  var st = E.newBattle(m);
-  ok(st.mapName === E.MAPS[0].name, 'battle 1 uses the pooled map');
-  m.battleIndex = 3; m.lastLoser = "red";
-  var st2 = E.newBattle(m);
-  ok(st2.mapName === E.MAPS[0].name, 'pool cycles when battles outnumber maps');
+  var st = E.newSkirmish(m);
+  ok(st.mapName === E.MAPS[0].name, 'skirmish 1 uses the pooled map');
+  m.skirmishIndex = 3; m.lastLoser = "red";
+  var st2 = E.newSkirmish(m);
+  ok(st2.mapName === E.MAPS[0].name, 'pool cycles when skirmishes outnumber maps');
 })();
 
 console.log('== deck composition (data-driven from maps.js) ==');
 (function () {
   var total = E.CARDS.reduce(function (a, c) { return a + c.count; }, 0);
-  var st = testBattle(99);
-  ok(E.cardsRemaining(st, 'red') === total, 'battle starts with every card in deck+hand (' + total + ' per maps.js)');
+  var st = testSkirmish(99);
+  ok(E.cardsRemaining(st, 'red') === total, 'skirmish starts with every card in deck+hand (' + total + ' per maps.js)');
   ok(E.CARDS.some(function (c) { return c.starting; }), 'a starting card is defined');
   ok(Object.keys(E.PIECE_TOTALS).length >= 2 && E.PIECE_TOTALS.trench >= 0, 'piece totals derive from maps.js: ' + JSON.stringify(E.PIECE_TOTALS));
 })();
@@ -373,16 +373,16 @@ console.log('== deploy step budget vs stock (WOA-017: no deploy fallback, oversu
 
 console.log('== combat math ==');
 (function () {
-  var st = testBattle(42);
+  var st = testSkirmish(42);
   st.units['0,0'] = { type: 'infantry', owner: 'red' };
   st.units['0,1'] = { type: 'infantry', owner: 'blue' };
   var res = E.computeAttack(st, { from: '0,0', to: '0,1' });
   ok(res.attackerPower === 1 && res.defenderPower === 1 && res.outcome === 'tie', 'inf vs inf bare = 1v1 tie (got ' + res.attackerPower + 'v' + res.defenderPower + ')');
-  // attacker support: red artillery adjacent to battle hex
+  // attacker support: red artillery adjacent to skirmish hex
   st.units['-1,1'] = { type: 'artillery', owner: 'red' };
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
   ok(res.attackerPower === 3 && res.outcome === 'attacker', 'artillery support +2 (got ' + res.attackerPower + ')');
-  // defender support: blue infantry adjacent to battle hex
+  // defender support: blue infantry adjacent to skirmish hex
   st.units['1,1'] = { type: 'infantry', owner: 'blue' };
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
   ok(res.defenderPower === 2, 'defender inf support +1 (got ' + res.defenderPower + ')');
@@ -412,10 +412,10 @@ console.log('== combat math ==');
   // card mod
   res = E.computeAttack(st, { from: '0,0', to: '0,1', mod: 1 });
   ok(res.attackerPower === 4, 'card +1 mod applied');
-  // HQ support: blue HQ adjacent to battle hex
+  // HQ support: blue HQ adjacent to skirmish hex
   st.hq.blue = '1,0';
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  ok(res.defenderPower === 4, 'HQ gives +1 support to adjacent battle hex (got ' + res.defenderPower + ')');
+  ok(res.defenderPower === 4, 'HQ gives +1 support to adjacent skirmish hex (got ' + res.defenderPower + ')');
   // attack the HQ itself
   st.units['2,0'] = { type: 'cavalry', owner: 'red' };
   var hqAtk = E.computeAttack(st, { from: '2,0', to: '1,0' });
@@ -426,7 +426,7 @@ console.log('== V0 terrain-crossing rules: trench support denial + rivers ==');
 (function () {
   // Trench on the SUPPORTER's hex blocks just the same (ownership of the
   // border piece is irrelevant): red attacks 0,1 from 0,0; red support at 1,1.
-  var st = testBattle(130);
+  var st = testSkirmish(130);
   st.units['0,0'] = { type: 'infantry', owner: 'red' };
   st.units['1,1'] = { type: 'infantry', owner: 'red' };
   st.units['0,1'] = { type: 'infantry', owner: 'blue' };
@@ -451,7 +451,7 @@ console.log('== V0 terrain-crossing rules: trench support denial + rivers ==');
   // river on the C2|C3 border. B3's attack on C3 STILL gets C2's support across
   // the water; the river's job is now deploy-control (see the deploy section).
   var B3 = '0,-1', C2 = '-2,0', C3 = '-1,0';
-  var st2 = testBattle(131);
+  var st2 = testSkirmish(131);
   st2.units[B3] = { type: 'infantry', owner: 'red' };
   st2.units[C2] = { type: 'infantry', owner: 'red' };
   st2.units[C3] = { type: 'infantry', owner: 'blue' };
@@ -463,7 +463,7 @@ console.log('== V0 terrain-crossing rules: trench support denial + rivers ==');
   // side; now neither blocks):
   var D3 = '-1,1';
   st2.units[D3] = { type: 'infantry', owner: 'blue' };
-  st2.terrainEdges[E.sideKey(C3, 5)] = 'R'; // river owned by the BATTLE hex side toward D3
+  st2.terrainEdges[E.sideKey(C3, 5)] = 'R'; // river owned by the SKIRMISH hex side toward D3
   var rD = E.computeAttack(st2, { from: B3, to: C3 });
   ok(rD.defenderPower === 2, "D3's defender support crosses the river (got " + rD.defenderPower + ')');
 
@@ -482,7 +482,7 @@ console.log('== V0 terrain-crossing rules: trench support denial + rivers ==');
     pieces: [{ t: 'R', edges: [[0, 0, 1]] }] };
   ok(E.validateMaps([single]).length === 1, 'a single-side river has no physical counterpart (R1 removed)');
   var m3 = E.newMatch({ seed: 99, firstPlayer: 'red', maps: [riverMap] });
-  var st3 = E.newBattle(m3);
+  var st3 = E.newSkirmish(m3);
   var bt = E.listBarrageTargets(st3, 'red');
   ok(bt.forestPieces.length === 0, 'rivers are not barrage targets (they act like mountains)');
   // rivers occupy the border: no trench may share it
@@ -493,7 +493,7 @@ console.log('== V0 terrain-crossing rules: trench support denial + rivers ==');
 
 console.log('== through-HQ movement & attacks ==');
 (function () {
-  var st = testBattle(7);
+  var st = testSkirmish(7);
   st.hq.red = '0,0';
   st.units['-1,0'] = { type: 'infantry', owner: 'red' };
   st.units['1,0'] = { type: 'infantry', owner: 'blue' };
@@ -507,9 +507,9 @@ console.log('== through-HQ movement & attacks ==');
 
 console.log('== deploy / control rules ==');
 (function () {
-  var st = testBattle(9);
+  var st = testSkirmish(9);
   var t = E.deployTargets(st, 'red', false);
-  ok(t.length === 3, 'deploy targets adjacent to corner HQ only at battle start (got ' + t.length + ')');
+  ok(t.length === 3, 'deploy targets adjacent to corner HQ only at skirmish start (got ' + t.length + ')');
   ok(t.indexOf('-3,2') < 0, 'cannot deploy onto enemy HQ');
   // Feedback Round 4 bug: a river on the border to a would-be deploy hex must
   // stop control from extending across it (D2 was wrongly deployable). Put a
@@ -520,14 +520,14 @@ console.log('== deploy / control rules ==');
   ok(t2.indexOf(target) < 0, 'cannot deploy across a river (control does not extend over water)');
   ok(t2.length === 2, 'river removes exactly the one across-water target (got ' + t2.length + ')');
   // reading the far hex's side of the same border blocks it just as well:
-  var st4 = testBattle(9), target4 = E.deployTargets(st4, 'red', false)[0];
+  var st4 = testSkirmish(9), target4 = E.deployTargets(st4, 'red', false)[0];
   st4.terrainEdges[E.sideKey(target4, E.dirBetween(target4, st4.hq.red))] = 'R';
   ok(E.deployTargets(st4, 'red', false).indexOf(target4) < 0, 'river read from the target hex side also blocks deploy');
 })();
 
 console.log('== turn flow / first hand ==');
 (function () {
-  var st = testBattle(11);
+  var st = testSkirmish(11);
   ok(st.hands.red.length === 4, 'first hand has 4 cards');
   ok(st.hands.red.indexOf('deploy_inf_start') >= 0, 'starting card guaranteed in first hand');
   E.playCard(st, 'deploy_inf_start');
@@ -540,7 +540,7 @@ console.log('== turn flow / first hand ==');
 
 console.log('== play metrics (seen / playLog for the card report) ==');
 (function () {
-  var st = testBattle(101);
+  var st = testSkirmish(101);
   ok(Object.keys(st.seen.red).length >= 3, 'opening hand counted as seen (' + Object.keys(st.seen.red).length + ' distinct cards)');
   E.playCard(st, 'deploy_inf_start', 'normal');
   var e = st.playLog[st.playLog.length - 1];
@@ -552,17 +552,17 @@ console.log('== play metrics (seen / playLog for the card report) ==');
     'balanceMap aggregates simple/firstSight/seenSum per card');
 })();
 
-console.log('== Field Marshal AI & battle sim ==');
+console.log('== Field Marshal AI & skirmish sim ==');
 (function () {
   var t0 = Date.now();
-  var st = E.simBattle(E.MAPS[0], 4242, 'red', 'hard', 'normal');
-  ok(st.phase === 'battle-over', 'hard-vs-normal battle finishes (winner ' + st.battleWinner + ', ' + st.turnNumber + ' turns)');
-  console.log('  (hard-AI battle took ' + ((Date.now() - t0) / 1000).toFixed(1) + 's)');
+  var st = E.simSkirmish(E.MAPS[0], 4242, 'red', 'hard', 'normal');
+  ok(st.phase === 'skirmish-over', 'hard-vs-normal skirmish finishes (winner ' + st.skirmishWinner + ', ' + st.turnNumber + ' turns)');
+  console.log('  (hard-AI skirmish took ' + ((Date.now() - t0) / 1000).toFixed(1) + 's)');
   var r = E.balanceMap(E.MAPS[4], 4, { seedBase: 11 });
   ok(r.redWins <= 4 && r.turns > 0 && r.unfinished === 0, 'balanceMap aggregates: ' + JSON.stringify({ red: r.redWins, first: r.firstWins, hq: r.hqWins }));
-  var a = E.simBattle(E.MAPS[2], 777, 'red', 'normal', 'normal');
-  var b = E.simBattle(E.MAPS[2], 777, 'red', 'normal', 'normal');
-  ok(a.battleWinner === b.battleWinner && a.turnNumber === b.turnNumber, 'simulation is deterministic per seed');
+  var a = E.simSkirmish(E.MAPS[2], 777, 'red', 'normal', 'normal');
+  var b = E.simSkirmish(E.MAPS[2], 777, 'red', 'normal', 'normal');
+  ok(a.skirmishWinner === b.skirmishWinner && a.turnNumber === b.turnNumber, 'simulation is deterministic per seed');
 })();
 
 console.log('== noAdvance attacks (Ordered Withdraw holds its ground) ==');
@@ -571,7 +571,7 @@ console.log('== noAdvance attacks (Ordered Withdraw holds its ground) ==');
   ok(card.steps[0].tieSpare === true && card.steps[0].noAdvance === true,
     'Ordered Withdraw carries tieSpare + noAdvance');
   // outright victory: cavalry (atk 3) vs lone infantry (def 1) — defender dies, attacker stays put
-  var st = testBattle(70);
+  var st = testSkirmish(70);
   st.units['0,0'] = { type: 'cavalry', owner: 'red' };
   st.units['1,0'] = { type: 'infantry', owner: 'blue' };
   st.hands.red = ['ordered_withdraw'];
@@ -581,7 +581,7 @@ console.log('== noAdvance attacks (Ordered Withdraw holds its ground) ==');
   ok(st.units['0,0'] && st.units['0,0'].type === 'cavalry', 'attacker did NOT take the hex');
   ok(st.vp.red === 1, 'VP scored for the kill');
   // tie: infantry vs infantry (1 vs 1) — defender dies, attacker survives in place
-  var st2 = testBattle(71);
+  var st2 = testSkirmish(71);
   st2.units['0,0'] = { type: 'infantry', owner: 'red' };
   st2.units['1,0'] = { type: 'infantry', owner: 'blue' };
   st2.hands.red = ['ordered_withdraw'];
@@ -589,12 +589,12 @@ console.log('== noAdvance attacks (Ordered Withdraw holds its ground) ==');
   E.applyStep(st2, { from: '0,0', to: '1,0' });
   ok(!st2.units['1,0'] && st2.units['0,0'], 'tie: defender destroyed, attacker survives in place');
   // HQ still falls to a noAdvance attack (capture does not require entering)
-  var st3 = testBattle(72);
+  var st3 = testSkirmish(72);
   st3.units['-2,2'] = { type: 'cavalry', owner: 'red' }; // adjacent to blue HQ at -3,2
   st3.hands.red = ['ordered_withdraw'];
   E.playCard(st3, 'ordered_withdraw');
   E.applyStep(st3, { from: '-2,2', to: '-3,2' });
-  ok(st3.phase === 'battle-over' && st3.battleWinner === 'red' && st3.winType === 'hq',
+  ok(st3.phase === 'skirmish-over' && st3.skirmishWinner === 'red' && st3.winType === 'hq',
     'noAdvance attack still captures the HQ');
 })();
 
@@ -606,7 +606,7 @@ console.log('== rules 1.1 (S1): a trench lets the defender survive a combat tie 
   function coverDir(defHex, fromHex) { var d = E.dirBetween(defHex, fromHex); return [d, (d + 1) % 6]; }
 
   // (a) tie vs a trenched defender: defender HOLDS, attacker is destroyed.
-  var st = testBattle(201);
+  var st = testSkirmish(201);
   st.units['0,0'] = { type: 'infantry', owner: 'red' };
   st.units['1,0'] = { type: 'infantry', owner: 'blue' };
   st.trenches['1,0'] = [{ dirs: coverDir('1,0', '0,0'), owner: 'blue' }];
@@ -619,7 +619,7 @@ console.log('== rules 1.1 (S1): a trench lets the defender survive a combat tie 
 
   // (b) tieSpare attacker (Ordered Withdraw) vs a trenched defender = a WHIFF:
   //     the card spares the attacker, the trench spares the defender — nobody dies.
-  var st2 = testBattle(202);
+  var st2 = testSkirmish(202);
   st2.units['0,0'] = { type: 'infantry', owner: 'red' };
   st2.units['1,0'] = { type: 'infantry', owner: 'blue' };
   st2.trenches['1,0'] = [{ dirs: coverDir('1,0', '0,0'), owner: 'blue' }];
@@ -629,7 +629,7 @@ console.log('== rules 1.1 (S1): a trench lets the defender survive a combat tie 
   ok(st2.units['1,0'] && st2.units['0,0'], 'tieSpare tie vs trenched defender: nobody dies (whiff, A1)');
 
   // (e) REGRESSION — a plain tie on an UNtrenched border still kills both units.
-  var st3 = testBattle(203);
+  var st3 = testSkirmish(203);
   st3.units['0,0'] = { type: 'infantry', owner: 'red' };
   st3.units['1,0'] = { type: 'infantry', owner: 'blue' };
   st3.hands.red = ['mass_assault'];
@@ -639,7 +639,7 @@ console.log('== rules 1.1 (S1): a trench lets the defender survive a combat tie 
 
   // (c) tie vs a trenched HQ border: the HQ is NOT captured (trench your HQ and a
   //     tie can't take it). Power-0 attacker (infantry 1 with a -1 card) vs HQ def 0.
-  var st4 = testBattle(204);
+  var st4 = testSkirmish(204);
   st4.units['-2,2'] = { type: 'infantry', owner: 'red' }; // adjacent to blue HQ at -3,2
   st4.trenches['-3,2'] = [{ dirs: coverDir('-3,2', '-2,2'), owner: 'blue' }];
   ok(E.computeAttack(st4, { from: '-2,2', to: '-3,2', mod: -1 }).outcome === 'tie', 'setup: infantry(-1) vs HQ is a 0v0 tie');
@@ -647,17 +647,17 @@ console.log('== rules 1.1 (S1): a trench lets the defender survive a combat tie 
   E.playCard(st4, 'careful_maneuvers');
   if (E.currentStep(st4).type === 'reposition') E.applyStep(st4, { skip: true });
   E.applyStep(st4, { from: '-2,2', to: '-3,2' });
-  ok(st4.hqAlive.blue && st4.phase !== 'battle-over', 'tie at a trenched HQ does NOT capture it');
+  ok(st4.hqAlive.blue && st4.phase !== 'skirmish-over', 'tie at a trenched HQ does NOT capture it');
   ok(!st4.units['-2,2'], 'the attacker still dies on that tie (no tieSpare)');
 
   // (d) REGRESSION — a tie at an UNtrenched HQ still captures it exactly as before.
-  var st5 = testBattle(205);
+  var st5 = testSkirmish(205);
   st5.units['-2,2'] = { type: 'infantry', owner: 'red' };
   st5.hands.red = ['careful_maneuvers'];
   E.playCard(st5, 'careful_maneuvers');
   if (E.currentStep(st5).type === 'reposition') E.applyStep(st5, { skip: true });
   E.applyStep(st5, { from: '-2,2', to: '-3,2' });
-  ok(st5.phase === 'battle-over' && st5.battleWinner === 'red' && st5.winType === 'hq',
+  ok(st5.phase === 'skirmish-over' && st5.skirmishWinner === 'red' && st5.winType === 'hq',
     'tie at an untrenched HQ still captures it (unchanged)');
 })();
 
@@ -667,7 +667,7 @@ console.log('== Barrage targets ANY trench or forest (Feedback Round 5 ruling) =
   var BARMAP = { name: 'Barrage Range', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2],
     pieces: [{ t: 'F', edges: [[-2, 2, 0], [-2, 2, 1]] }] };
   var m = E.newMatch({ seed: 31, firstPlayer: 'red', maps: [BARMAP] });
-  var st = E.newBattle(m);
+  var st = E.newSkirmish(m);
   st.trenches['-3,1'] = [{ dirs: [0, 1], owner: 'blue' }];
   var b = E.listBarrageTargets(st, 'red');
   ok(b.forestPieces.length === 1, 'forest far outside red lines is targetable (got ' + b.forestPieces.length + ')');
@@ -680,14 +680,14 @@ console.log('== Barrage targets ANY trench or forest (Feedback Round 5 ruling) =
 
 console.log('== no-op plays are logged and marked (skipped-turn report) ==');
 (function () {
-  var st = testBattle(77);
+  var st = testSkirmish(77);
   st.hands.red = ['attack_plus1']; // no units on the board: the attack cannot resolve
   E.playCard(st, 'attack_plus1');
   ok(st.current === 'blue', 'impossible card ends the turn immediately');
   var e = st.playLog[st.playLog.length - 1];
   ok(e.id === 'attack_plus1' && e.noop === true, 'playLog entry marked noop: ' + JSON.stringify(e));
   ok(st.log.some(function (l) { return l.msg.indexOf('no opening') >= 0; }), 'journal says the order was spent to no effect');
-  var st2 = testBattle(78);
+  var st2 = testSkirmish(78);
   E.playCard(st2, 'deploy_inf_start');
   E.applyStep(st2, { hex: E.stepOptions(st2).targets ? E.stepOptions(st2).targets[0] : null });
   ok(!st2.playLog[st2.playLog.length - 1].noop, 'a play that acted is NOT marked noop');
@@ -704,38 +704,38 @@ console.log('== attrition victory (surviving units on the board, June 2026) ==')
     st.firstTurnDone.blue = true; // or drawHand would gift the starting card
   }
   // Kills don't score: blue killed 5 VP worth, but red has more ON the board.
-  var st = testBattle(111);
+  var st = testSkirmish(111);
   st.units['2,-1'] = { type: 'artillery', owner: 'red' };  // red fields 3 VP
   st.units['-3,1'] = { type: 'infantry', owner: 'blue' };  // blue fields 1 VP
   st.vp.blue = 5;
   drainBlue(st);
   st.hands.red = ['attack_plus1']; // no legal attack: resolves to nothing, ends the turn
   E.playCard(st, 'attack_plus1');
-  ok(st.phase === 'battle-over' && st.battleWinner === 'red' && st.winType === 'attrition',
+  ok(st.phase === 'skirmish-over' && st.skirmishWinner === 'red' && st.winType === 'attrition',
     'attrition counts surviving units, not kills (red wins 3-1 despite 0-5 in kills)');
   ok(st.log.some(function (l) { return l.msg.indexOf('3 VP vs 1 VP of surviving units') >= 0; }),
     'journal reports the surviving-unit scores');
   ok(E.fieldScore(st, 'red') === 3 && E.fieldScore(st, 'blue') === 1, 'fieldScore reads the board');
 
   // Undeployed reserves count for nothing: blue's full reserve loses to one fielded infantry.
-  var st2 = testBattle(112);
+  var st2 = testSkirmish(112);
   st2.units['2,-1'] = { type: 'infantry', owner: 'red' };
   drainBlue(st2);
   st2.hands.red = ['attack_plus1'];
   E.playCard(st2, 'attack_plus1');
-  ok(st2.battleWinner === 'red', 'undeployed reserves count for nothing');
+  ok(st2.skirmishWinner === 'red', 'undeployed reserves count for nothing');
 
   // Bare-board tie still goes to the second player.
-  var st3 = testBattle(113);
+  var st3 = testSkirmish(113);
   drainBlue(st3);
   st3.hands.red = ['attack_plus1'];
   E.playCard(st3, 'attack_plus1');
-  ok(st3.battleWinner === st3.second && st3.battleWinner === 'blue', '0-0 tie goes to the second player');
+  ok(st3.skirmishWinner === st3.second && st3.skirmishWinner === 'blue', '0-0 tie goes to the second player');
 })();
 
 console.log('== behaviour counters (balance-lab metrics) ==');
 (function () {
-  var st = testBattle(120);
+  var st = testSkirmish(120);
   E.playCard(st, 'deploy_inf_start');
   E.applyStep(st, { hex: E.stepOptions(st).targets[0] });
   ok(st.stats.deploys === 1, 'deploy increments stats.deploys');
@@ -748,15 +748,15 @@ console.log('== behaviour counters (balance-lab metrics) ==');
    'attritionEndings', 'attritionKillTail', 'hqEndings', 'reserveEndRedHQ', 'reserveEndBlueHQ']
     .forEach(function (k) { ok(k in r, 'balanceMap reports ' + k); });
   ok(r.killTail >= 0 && r.killTail <= r.turns, 'kill-less tail within [0, turns] (got ' + r.killTail + '/' + r.turns + ')');
-  // the attrition slice is a subset of finished battles: its count + kill-tail
+  // the attrition slice is a subset of finished skirmishes: its count + kill-tail
   // sum never exceed the pooled reads (attritionKillTail is pooled killTail
   // minus the HQ-ending tails).
   ok(r.attritionEndings >= 0 && r.attritionEndings <= (r.n - r.unfinished), 'attritionEndings within [0, done]');
   ok(r.attritionKillTail >= 0 && r.attritionKillTail <= r.killTail, 'attritionKillTail ≤ pooled killTail (HQ tails excluded)');
-  ok(r.hqEndings + r.attritionEndings <= (r.n - r.unfinished), 'HQ + attrition endings never exceed finished battles');
+  ok(r.hqEndings + r.attritionEndings <= (r.n - r.unfinished), 'HQ + attrition endings never exceed finished skirmishes');
   ok(r.leadChanges >= 0, 'lead changes non-negative (got ' + r.leadChanges + ')');
   // WOA-016: reserveEndRed/Blue are the per-side split of the SAME reserves-at-end
-  // read deployedShare folds (both only accumulate over finished battles) — they
+  // read deployedShare folds (both only accumulate over finished skirmishes) — they
   // must reconcile: deployedShare = done - 0.5*(reserveEndRed + reserveEndBlue).
   var done = r.n - r.unfinished;
   ok(r.reserveEndRed >= 0 && r.reserveEndBlue >= 0, 'reserveEndRed/Blue are non-negative');
@@ -770,8 +770,8 @@ console.log('== metrics-v2 trace capture (WOA-031: per-play trace + units fold, 
   var seeds = [4242, 5150, 8181, 9091, 1212];
   var totalAtkEntries = 0, totalDeployEntries = 0, totalKillSum = 0, totalDieSum = 0, totalDieTSum = 0, totalLd = 0, totalPlays = 0;
   seeds.forEach(function (seed) {
-    var st = E.simBattle(E.MAPS[seed % E.MAPS.length], seed, 'red', 'hard', 'hard');
-    ok(st.phase === 'battle-over', 'seed ' + seed + ': battle finishes (' + st.turnNumber + ' turns)');
+    var st = E.simSkirmish(E.MAPS[seed % E.MAPS.length], seed, 'red', 'hard', 'hard');
+    ok(st.phase === 'skirmish-over', 'seed ' + seed + ': skirmish finishes (' + st.turnNumber + ' turns)');
     var killSum = 0, dieSum = 0, dieTSum = 0;
     st.playLog.forEach(function (e) {
       totalPlays++;
@@ -790,11 +790,11 @@ console.log('== metrics-v2 trace capture (WOA-031: per-play trace + units fold, 
         typeof u.kill === 'number' && typeof u.die === 'number',
         'seed ' + seed + ': unitMetrics.' + t + ' has {dep,atk,abs,kill,die} (' + JSON.stringify(u) + ')');
       dieSum += u.die;
-      u.dep.forEach(function (turn) { ok(turn >= 1 && turn <= st.turnNumber, t + ' dep turn within battle range'); });
+      u.dep.forEach(function (turn) { ok(turn >= 1 && turn <= st.turnNumber, t + ' dep turn within skirmish range'); });
       // WOA-044: dieT is a death-TURN list, symmetric to dep and equal-length to die.
       ok(Array.isArray(u.dieT) && u.dieT.length === u.die,
         'seed ' + seed + ': unitMetrics.' + t + '.dieT is an array with one entry per death (' + (u.dieT || []).length + ' == ' + u.die + ')');
-      u.dieT.forEach(function (turn) { ok(turn >= 1 && turn <= st.turnNumber, t + ' dieT turn within battle range'); });
+      u.dieT.forEach(function (turn) { ok(turn >= 1 && turn <= st.turnNumber, t + ' dieT turn within skirmish range'); });
       dieTSum += u.dieT.length;
     });
     totalKillSum += killSum; totalDieSum += dieSum; totalDieTSum += dieTSum;
@@ -817,7 +817,7 @@ console.log('== metrics-v2 trace capture (WOA-031: per-play trace + units fold, 
 
 console.log('== trench orientations are never fully off-board (Feedback Round 2) ==');
 (function () {
-  var st = testBattle(77);
+  var st = testSkirmish(77);
   var offBoard = 0, total = 0;
   E.hexes().forEach(function (h) {
     E.trenchOrientations(st, h).forEach(function (pr) {
@@ -838,14 +838,14 @@ console.log('== AI personalities are data (V0 ai-variety) ==');
   var custom = E.aiConfig({ noise: 0, breadth: 2, weights: { advance: 9 } });
   ok(custom.w.advance === 9 && custom.w.attrWin === 500, 'config weights overlay the defaults');
   // a raw config object plans a legal turn
-  var st = testBattle(140);
+  var st = testSkirmish(140);
   var plan = E.aiPlanTurn(st, { noise: 0, breadth: 2, replySamples: 1, replyWeight: 0.5, weights: { advance: 9 } });
   ok(plan && st.hands.red.indexOf(plan.cardId) >= 0, 'raw config object produces a plan from the real hand');
-  // personality battles run to completion and stay deterministic
-  var a = E.simBattle(E.MAPS[4], 4242, 'red', 'brawler', 'turtle');
-  var b = E.simBattle(E.MAPS[4], 4242, 'red', 'brawler', 'turtle');
-  ok(a.phase === 'battle-over', 'brawler-vs-turtle battle finishes (winner ' + a.battleWinner + ', ' + a.turnNumber + ' turns)');
-  ok(a.battleWinner === b.battleWinner && a.turnNumber === b.turnNumber, 'personality battles are deterministic per seed');
+  // personality skirmishes run to completion and stay deterministic
+  var a = E.simSkirmish(E.MAPS[4], 4242, 'red', 'brawler', 'turtle');
+  var b = E.simSkirmish(E.MAPS[4], 4242, 'red', 'brawler', 'turtle');
+  ok(a.phase === 'skirmish-over', 'brawler-vs-turtle skirmish finishes (winner ' + a.skirmishWinner + ', ' + a.turnNumber + ' turns)');
+  ok(a.skirmishWinner === b.skirmishWinner && a.turnNumber === b.turnNumber, 'personality skirmishes are deterministic per seed');
   // guardrail: a config that zeroes the anti-degeneracy terms is still legal
   // (Bill may experiment) but the defaults must not lose them
   ok(E.AI_WEIGHTS.noopPenalty === 80 && E.AI_WEIGHTS.antiShuffle === 10, 'anti-degeneracy weights present in defaults');
@@ -856,7 +856,7 @@ console.log('== AI dead-turn regression (round 6: hard AI must not skip turn 1) 
   ['normal', 'hard'].forEach(function (diff) {
     var noops = 0;
     for (var seed = 1; seed <= 6; seed++) {
-      var st = testBattle(seed * 17);
+      var st = testSkirmish(seed * 17);
       var plan = E.aiPlanTurn(st, diff);
       E.playCard(st, plan.cardId, plan.mode || 'normal');
       var g = 0;
@@ -873,18 +873,18 @@ console.log('== AI dead-turn regression (round 6: hard AI must not skip turn 1) 
 
 console.log('== concession ==');
 (function () {
-  var st = testBattle(88);
+  var st = testSkirmish(88);
   E.concede(st, 'red');
-  ok(st.phase === 'battle-over' && st.battleWinner === 'blue' && st.winType === 'concession',
-    'conceding hands the battle to the enemy');
+  ok(st.phase === 'skirmish-over' && st.skirmishWinner === 'blue' && st.winType === 'concession',
+    'conceding hands the skirmish to the enemy');
   ok(st.match.wins.blue === 1 && st.match.lastLoser === 'red', 'match bookkeeping matches a normal loss');
   ok(st.log.some(function (l) { return l.msg.indexOf('concedes the field') >= 0; }), 'concession reaches the journal');
 })();
 
 console.log('== concede advisory (foregone-conclusion heuristic) ==');
 (function () {
-  var st = testBattle(99);
-  ok(E.concedeAdvised(st, 'red') === null, 'fresh battle: no advisory (Airdrop HQ snipe still possible)');
+  var st = testSkirmish(99);
+  ok(E.concedeAdvised(st, 'red') === null, 'fresh skirmish: no advisory (Airdrop HQ snipe still possible)');
   // hopeless for red: 1 turn left, blue has 5 VP of units on the field vs red's
   // none (need 6 incl. the tie that goes to blue), best-case swing is 3/turn,
   // airdrop already spent, nothing within marching range of the blue HQ
@@ -905,11 +905,11 @@ var seeds = [1, 2, 3, 4, 5, 6, 7, 8];
 var hqWins = 0, attrWins = 0, maxTurns = 0;
 seeds.forEach(function (seed) {
   var match = E.newMatch({ seed: seed });
-  var battles = 0;
-  while (!match.winner && battles < 12) {
-    var st = E.newBattle(match);
+  var skirmishes = 0;
+  while (!match.winner && skirmishes < 12) {
+    var st = E.newSkirmish(match);
     var guard = 0;
-    while (st.phase !== 'battle-over' && guard++ < 400) {
+    while (st.phase !== 'skirmish-over' && guard++ < 400) {
       var plan = E.aiPlanTurn(st, 'normal');
       if (!plan) { console.log('  no plan! hand=' + JSON.stringify(st.hands[st.current])); break; }
       E.playCard(st, plan.cardId, plan.mode || 'normal');
@@ -922,25 +922,25 @@ seeds.forEach(function (seed) {
         catch (e) { E.applyStep(st, { skip: true }); }
       }
     }
-    if (st.phase !== 'battle-over') { console.log('  FAIL battle did not finish (seed ' + seed + ')'); fails++; break; }
+    if (st.phase !== 'skirmish-over') { console.log('  FAIL skirmish did not finish (seed ' + seed + ')'); fails++; break; }
     if (st.winType === 'hq') hqWins++; else attrWins++;
     maxTurns = Math.max(maxTurns, st.turnNumber);
-    battles++;
+    skirmishes++;
   }
-  ok(match.winner === 'red' || match.winner === 'blue', 'seed ' + seed + ': match finished, winner=' + match.winner + ' (' + match.wins.red + '-' + match.wins.blue + ', ' + battles + ' battles)');
+  ok(match.winner === 'red' || match.winner === 'blue', 'seed ' + seed + ': match finished, winner=' + match.winner + ' (' + match.wins.red + '-' + match.wins.blue + ', ' + skirmishes + ' skirmishes)');
 });
-console.log('  battle endings: ' + hqWins + ' HQ captures, ' + attrWins + ' attrition; longest battle ' + maxTurns + ' turns');
+console.log('  skirmish endings: ' + hqWins + ' HQ captures, ' + attrWins + ' attrition; longest skirmish ' + maxTurns + ' turns');
 
 console.log('== fsTimeline: one [fsRed,fsBlue] pair per completed turn (WOA-037) ==');
 (function () {
-  // A REAL (non-sim) battle, played the same way the AI-vs-AI loop above
+  // A REAL (non-sim) skirmish, played the same way the AI-vs-AI loop above
   // does — st here is never cloneForSim'd (that's the AI search's hot-loop
   // clone, engine/05-ai.js), so st.fsTimeline is the live capture engine/
-  // 04-battle.js pushes to every completed turn (endTurn), not the stripped
+  // 04-skirmish.js pushes to every completed turn (endTurn), not the stripped
   // copy a search clone carries.
-  var st = E.newBattle(E.newMatch({ seed: 42 }));
+  var st = E.newSkirmish(E.newMatch({ seed: 42 }));
   var guard = 0;
-  while (st.phase !== 'battle-over' && guard++ < 400) {
+  while (st.phase !== 'skirmish-over' && guard++ < 400) {
     var plan = E.aiPlanTurn(st, 'normal');
     if (!plan) break;
     E.playCard(st, plan.cardId, plan.mode || 'normal');
@@ -953,7 +953,7 @@ console.log('== fsTimeline: one [fsRed,fsBlue] pair per completed turn (WOA-037)
       catch (e) { E.applyStep(st, { skip: true }); }
     }
   }
-  ok(st.phase === 'battle-over', 'fsTimeline fixture battle finished (seed 42)');
+  ok(st.phase === 'skirmish-over', 'fsTimeline fixture skirmish finished (seed 42)');
   ok(Array.isArray(st.fsTimeline) && st.fsTimeline.length === st.turnNumber - 1,
     'fsTimeline has one [fsRed,fsBlue] pair per completed turn (' + st.fsTimeline.length +
     ' entries == turnNumber-1 = ' + (st.turnNumber - 1) + ')');
@@ -967,7 +967,7 @@ console.log('== fsTimeline: one [fsRed,fsBlue] pair per completed turn (WOA-037)
   var cmap = E.MAPS.filter(function (m) { return m.shape === 'classic'; })[0];
   ok(!!cmap, 'a classic-shape map exists for the fixture');
   var match = E.newMatch({ seed: 99, maps: [cmap], firstPlayer: 'red' });
-  var st = E.newBattle(match);
+  var st = E.newSkirmish(match);
   // Orientation term: same trench hex, enemy approaching from the east — the
   // east-facing trench must evaluate higher than the west-facing one.
   st.units = { '0,0': { type: 'infantry', owner: 'red' }, '2,0': { type: 'infantry', owner: 'blue' } };
@@ -982,7 +982,7 @@ console.log('== fsTimeline: one [fsRed,fsBlue] pair per completed turn (WOA-037)
 
   // rankChoices: honest top-K of N for the LLM harness
   var m2 = E.newMatch({ seed: 7, maps: [cmap], firstPlayer: 'red' });
-  var st2 = E.newBattle(m2);
+  var st2 = E.newSkirmish(m2);
   E.playCard(st2, st2.hands.red[0], 'normal'); // starting card -> a step
   var all = E.enumerateChoices(st2);
   var r = E.rankChoices(st2, { k: 4 });
@@ -998,7 +998,7 @@ console.log('== fsTimeline: one [fsRed,fsBlue] pair per completed turn (WOA-037)
   ok(big.shown.length === all.length, 'k >= N shows the whole list (' + big.shown.length + ')');
 
   // Round-3 ruling enforced in 1.0: same-type swaps are a hidden skip — illegal.
-  var st3 = E.newBattle(E.newMatch({ seed: 5, maps: [cmap], firstPlayer: 'red' }));
+  var st3 = E.newSkirmish(E.newMatch({ seed: 5, maps: [cmap], firstPlayer: 'red' }));
   st3.units = {
     '0,0': { type: 'infantry', owner: 'red' }, '1,0': { type: 'infantry', owner: 'red' },
     '0,1': { type: 'cavalry', owner: 'red' }
@@ -1207,9 +1207,9 @@ console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
     '|VP-diff| track = |red-blue| per turn (peak 3, final 0)');
   ok(R.vpDiffTrack({ turns: 3, trace: [] }) === null, 'vpDiffTrack = null when env.fs is absent (caller greys it)');
 
-  // ---- envelopeFromRow attaches the DB-sibling fs (WOA-037: GET /api/battles
+  // ---- envelopeFromRow attaches the DB-sibling fs (WOA-037: GET /api/skirmishes
   // joins the timeline table onto the row; row.fs sits beside row.trace, not
-  // inside the trace blob, since dev/db.js's insertBattle never put it there) ----
+  // inside the trace blob, since dev/db.js's insertSkirmish never put it there) ----
   var dbRow = { trace: JSON.stringify({ turns: 3, trace: [] }), fs: [[1, 0], [2, 0], [2, 1]] };
   var envFromRow = R.envelopeFromRow(dbRow);
   ok(R.vpDiffTrack(envFromRow) !== null, 'envelopeFromRow folds row.fs into the parsed envelope, so vpDiffTrack sees it');
@@ -1247,15 +1247,15 @@ console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
   var WS1 = R.cardHqWinSlice([cardEnv1]);
   ok(WS1.A.plays === 2 && WS1.A.wins === 1, 'cardHqWinSlice: card A both normal plays counted (HQ ending), 1 win (red)');
   ok(WS1.B.plays === 1 && WS1.B.wins === 0, 'cardHqWinSlice: card B only its NORMAL play counts (mode attack excluded), blue play -> 0 wins');
-  ok(WS1.C === undefined, 'cardHqWinSlice: card C excluded entirely (mode reposition, no normal play this battle)');
+  ok(WS1.C === undefined, 'cardHqWinSlice: card C excluded entirely (mode reposition, no normal play this skirmish)');
   var WS12 = R.cardHqWinSlice([cardEnv1, cardEnv2]);
   ok(WS12.A.plays === 2 && WS12.A.wins === 1, 'cardHqWinSlice ignores the attrition-ending envelope entirely (unchanged from HQ-only)');
   ok(typeof R.cardAggFromEnvelopes === 'function' && typeof R.cardHqWinSlice === 'function',
     'WOA-043 card folds exported on the shared surface');
 
   // ---- per-unit-type fold (WOA-044, SPEC §3): unitsAggFromEnvelopes on a
-  // hand-built two-battle fixture with known answers, incl. the dep[]/dieT[]
-  // lifespan pairing (real deaths + a right-censored survivor per battle) ----
+  // hand-built two-skirmish fixture with known answers, incl. the dep[]/dieT[]
+  // lifespan pairing (real deaths + a right-censored survivor per skirmish) ----
   var unitEnv1 = { turns: 10, units: {
     infantry: { dep: [1, 3], atk: 4, abs: 2, kill: 3, die: 1, dieT: [5] },   // pair (1,5)->4; dep 3 survives -> 10-3=7
     cavalry:  { dep: [2],    atk: 1, abs: 3, kill: 0, die: 1, dieT: [6] }    // pair (2,6)->4
@@ -1267,18 +1267,18 @@ console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
   var UA = R.unitsAggFromEnvelopes([unitEnv1, unitEnv2]);
   ok(UA.hasUnits === true && UA.hasDieT === true, 'unitsAggFromEnvelopes: fixture has units + dieT capture');
   var uInf = UA.types.infantry;
-  ok(uInf.n === 2, 'infantry battlesFielded = 2 (fielded in both battles), got ' + uInf.n);
+  ok(uInf.n === 2, 'infantry skirmishesFielded = 2 (fielded in both skirmishes), got ' + uInf.n);
   ok(uInf.atk === 6 && uInf.abs === 3 && uInf.kill === 4 && uInf.die === 3,
-    'infantry atk/abs/kill/die sum across battles (6/3/4/3), got ' + uInf.atk + '/' + uInf.abs + '/' + uInf.kill + '/' + uInf.die);
+    'infantry atk/abs/kill/die sum across skirmishes (6/3/4/3), got ' + uInf.atk + '/' + uInf.abs + '/' + uInf.kill + '/' + uInf.die);
   ok(near(uInf.depMedian, 0.25), 'infantry depMedian: pooled normalized dep turns [.1,.125,.25,.3,.5] -> median .25, got ' + uInf.depMedian);
   ok(near(uInf.roleY, 100 * 6 / 9), 'infantry roleY = 100*atk/(atk+abs) = ' + (100 * 6 / 9).toFixed(2) + ', got ' + uInf.roleY);
-  ok(near(uInf.breakthrough, 1.5), 'infantry breakthrough = abs/battlesFielded = 3/2 = 1.5, got ' + uInf.breakthrough);
+  ok(near(uInf.breakthrough, 1.5), 'infantry breakthrough = abs/skirmishesFielded = 3/2 = 1.5, got ' + uInf.breakthrough);
   ok(near(uInf.exchange, 4 / 3), 'infantry exchange = kill/die = 4/3, got ' + uInf.exchange);
-  // lifespans pooled: battle1 [4 (real), 7 (censored)] + battle2 [2,5 (real), 4 (censored)] -> sorted [2,4,4,5,7] -> median 4
+  // lifespans pooled: skirmish1 [4 (real), 7 (censored)] + skirmish2 [2,5 (real), 4 (censored)] -> sorted [2,4,4,5,7] -> median 4
   ok(uInf.lifespanN === 5 && near(uInf.lifespan, 4), 'infantry lifespan: 5 paired observations, median 4, got n=' + uInf.lifespanN + ' median=' + uInf.lifespan);
   var uCav = UA.types.cavalry;
   ok(uCav.n === 1 && near(uCav.breakthrough, 3) && uCav.exchange === 0,
-    'cavalry: fielded 1 battle, breakthrough 3/1=3, exchange 0/1=0, got n=' + uCav.n + ' breakthrough=' + uCav.breakthrough + ' exchange=' + uCav.exchange);
+    'cavalry: fielded 1 skirmish, breakthrough 3/1=3, exchange 0/1=0, got n=' + uCav.n + ' breakthrough=' + uCav.breakthrough + ' exchange=' + uCav.exchange);
   ok(uCav.lifespanN === 1 && near(uCav.lifespan, 4), 'cavalry lifespan: single real death (2,6) -> 4, got ' + uCav.lifespan);
   var uArt = UA.types.artillery;
   ok(uArt.exchange === null, 'artillery exchange = null when die = 0 (not a fabricated 0), got ' + uArt.exchange);
@@ -1304,7 +1304,7 @@ console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
   // occupancy credited AFTER each play: 0,0 held turns 1-4 = 4/4 = 1.0;
   // 1,0 held from turn 2 (deploy) through 4 = 3/4 = 0.75.
   ok(near(HL.hexes['0,0'].occ, 1) && near(HL.hexes['1,0'].occ, 0.75), 'hexLenses occupancy = held-turns / plays (0,0 held all 4, 1,0 held 3 of 4)');
-  ok(HL.hexes['1,0'].flips === 1 && HL.hexes['1,0'].kills === 1, 'a killing attack flips the battle hex to the attacker and tallies the kill');
+  ok(HL.hexes['1,0'].flips === 1 && HL.hexes['1,0'].kills === 1, 'a killing attack flips the skirmish hex to the attacker and tallies the kill');
   ok(HL.hexes['0,0'].flips === 0 && HL.hexes['0,0'].kills === 0, 'a same-owner swap is a touch — no flip, no kill');
   // dead hex: a whiffed attack (no k) touches a hex but never holds it -> occ 0
   var denv = { turns: 3, trace: [
@@ -1315,7 +1315,7 @@ console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
   ok(near(R.hexLenses(denv).hexes['5,5'].occ, 0), 'a whiffed attack (no kill) touches a hex but never holds it');
   var HF = R.foldHexLenses([henv, henv]);
   ok(HF.n === 2 && HF.hexes['1,0'] && near(HF.hexes['1,0'].flips, 1) && near(HF.hexes['1,0'].kills, 1),
-    'foldHexLenses averages flips/kills as per-battle rates across the run');
+    'foldHexLenses averages flips/kills as per-skirmish rates across the run');
   ok(HF.hexes['1,0'].avenue === true, 'foldHexLenses: top-quartile flips -> avenue-of-attack');
   var DF = R.foldHexLenses([denv]);
   ok(DF.hexes['5,5'].dead === true && DF.hexes['0,0'].dead === false, 'foldHexLenses: dead hex = avg occupancy < 5%');
@@ -1326,10 +1326,10 @@ console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
   ok(typeof R.hexLenses === 'function' && typeof R.foldHexLenses === 'function', 'WOA-042 hex lenses exported on the shared surface');
 })();
 
-console.log('\n== report-model: foldBattles control% from hexesRed/hexesBlue (WOA-038) ==');
+console.log('\n== report-model: foldSkirmishes control% from hexesRed/hexesBlue (WOA-038) ==');
 (function () {
   var R = require('./report-model.js');
-  // A mixed row set: real control battles (some ties), plus legacy rows that
+  // A mixed row set: real control skirmishes (some ties), plus legacy rows that
   // predate WOA-038 (hexesRed/hexesBlue never written -> NULL, one row with
   // only ONE side null to prove the guard needs BOTH, not either).
   var rows = [
@@ -1340,13 +1340,13 @@ console.log('\n== report-model: foldBattles control% from hexesRed/hexesBlue (WO
     { winner: 'red',  hexesRed: null, hexesBlue: null }, // legacy row (pre-WOA-038) -> excluded, not 0/0
     { winner: 'blue', hexesRed: 4,    hexesBlue: null }  // malformed/partial -> excluded (needs BOTH non-null)
   ];
-  var f = R.foldBattles(rows);
+  var f = R.foldSkirmishes(rows);
   ok(f.done === 6, 'done = rows.length regardless of control data (6)');
   ok(f.agg.controlGames === 3, 'controlGames counts only rows with both hexes non-null and unequal (3, got ' + f.agg.controlGames + ')');
   ok(f.agg.controlWins === 2, 'controlWins counts winner-held-more-hexes among those (2, got ' + f.agg.controlWins + ')');
 
   // The Overview band board reads this straight through BANDS' control row —
-  // pct(2,3) = 67%, n=3 (bandN), not the "n=0" placeholder foldBattles used
+  // pct(2,3) = 67%, n=3 (bandN), not the "n=0" placeholder foldSkirmishes used
   // to be stuck at before hexesRed/hexesBlue existed as stored columns.
   var controlBand = R.BANDS.filter(function (b) { return b.key === 'control'; })[0];
   ok(controlBand.val(f.agg, f.done) === 67, 'control band val() = 67% off the folded agg (got ' + controlBand.val(f.agg, f.done) + ')');
@@ -1354,7 +1354,7 @@ console.log('\n== report-model: foldBattles control% from hexesRed/hexesBlue (WO
 
   // All-legacy rows (no run has ever recorded control data) still render the
   // ordinary small-n path, not a fabricated 0/0 tie.
-  var legacyOnly = R.foldBattles([{ winner: 'red' }, { winner: 'blue', hexesRed: null, hexesBlue: null }]);
+  var legacyOnly = R.foldSkirmishes([{ winner: 'red' }, { winner: 'blue', hexesRed: null, hexesBlue: null }]);
   ok(legacyOnly.agg.controlGames === 0, 'an all-legacy row set folds to controlGames = 0');
   ok(controlBand.val(legacyOnly.agg, legacyOnly.done) === null, 'control band val() = null (not 0) when no row carries control data');
 })();

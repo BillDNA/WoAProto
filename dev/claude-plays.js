@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 /* dev/claude-plays.js — an LLM plays War of Attrition (V1 rewrite).
-   Plays a single battle or a first-to-N MATCH, printing every decision live
-   with timestamps + a scoreboard; appends JSON-lines records as battles
+   Plays a single skirmish or a first-to-N MATCH, printing every decision live
+   with timestamps + a scoreboard; appends JSON-lines records as skirmishes
    finish (crash-safe); writes one readable .md transcript per run.
 
    Usage: node dev/claude-plays.js [options]
      --map <filter>     map name filter, case-insensitive — pins ONE map. Default:
-                        MATCH mode draws each battle's map from the roster/mapset
-                        pool (engine-shuffled by seed); single battle = first map
+                        MATCH mode draws each skirmish's map from the roster/mapset
+                        pool (engine-shuffled by seed); single skirmish = first map
      --red <spec>       easy|normal|hard (or any maps.js "ai" row) = heuristic AI;
      --blue <spec>      anything else (haiku|sonnet|opus|model id) = LLM.
                         Defaults: --red haiku --blue normal
-     --match [w]        MATCH mode: first to w battle wins (default 3 when the
-                        flag is present; omit the flag for a single battle)
+     --match [w]        MATCH mode: first to w skirmish wins (default 3 when the
+                        flag is present; omit the flag for a single skirmish)
      --effort <level>   low|medium|high|xhigh|max for the LLM calls (shared;
      --red-effort/--blue-effort override per side)
      --seed <n>         match seed (default 1234)
@@ -25,10 +25,10 @@
                         steps are never truncated). --full-options disables it.
      --cold             one claude -p process per decision (the V0 transport)
                         instead of one persistent session per side per match
-     --max-turns <n>    per-battle turn cap (default 60)
+     --max-turns <n>    per-skirmish turn cap (default 60)
      --mock             deterministic fake transport (offline loop test)
-     --out <file>       JSONL master log (default logs/reports/battle/claude-plays-log.jsonl)
-     --typical-n <n>    baseline battles for the typicality footer (default 40;
+     --out <file>       JSONL master log (default logs/reports/skirmish/claude-plays-log.jsonl)
+     --typical-n <n>    baseline skirmishes for the typicality footer (default 40;
                         0 skips; results cached per map+version+n)
 
    TRANSPORT (V1): each LLM side gets ONE persistent claude session for the
@@ -124,7 +124,7 @@ const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
 const llm = require(path.join(__dirname, 'llm-client.js'));
 const { LlmSession } = require(path.join(__dirname, 'llm-session.js'));
 
-const LOG_DIR = path.join(__dirname, '..', 'logs', 'reports', 'battle');
+const LOG_DIR = path.join(__dirname, '..', 'logs', 'reports', 'skirmish');
 const TRANSCRIPT_DIR = path.join(LOG_DIR, E.VERSION);
 const TYP_CACHE = path.join(LOG_DIR, '.typicality-cache.json');
 if (!ARGS.out) ARGS.out = path.join(LOG_DIR, 'claude-plays-log.jsonl');
@@ -147,7 +147,7 @@ const RULES = [
   '',
   'TURNS: each turn you draw a hand of order cards, play exactly ONE (its steps resolve in',
   'order), and discard the rest (discards reshuffle back into your deck later; the PLAYED card',
-  'is removed from the game forever). Every turn burns one card, so the battle is a countdown.',
+  'is removed from the game forever). Every turn burns one card, so the skirmish is a countdown.',
   'House rule: any card may instead resolve as one basic Attack, or — ONLY when you have no',
   'legal attack anywhere — one basic Reposition. Individual card steps may be skipped unless',
   'that would waste the whole card while an action is possible.',
@@ -167,7 +167,7 @@ const RULES = [
   '  the defending HQ is adjacent + 1 if defending across a mountain side.',
   '  Higher power wins and the loser is destroyed (winner advances into the hex);',
   '  a TIE destroys BOTH units. The HQ itself has defense 0 (support still counts); winning',
-  '  OR tying an attack on the HQ captures it and wins the battle instantly.',
+  '  OR tying an attack on the HQ captures it and wins the skirmish instantly.',
   '- Units adjacent to any HQ may move, swap, or attack THROUGH it to hexes on its far side.',
   '- Barrage: removes any one trench or forest piece anywhere on the board (never a river).',
   '',
@@ -179,13 +179,13 @@ const RULES = [
   'VICTORY: capture the enemy HQ, or — when a player cannot draw a hand (deck spent) — the',
   'side with more VP of SURVIVING UNITS ON THE BOARD wins (infantry 1 / cavalry 2 /',
   'artillery 3). Reserves never deployed count for nothing. An attrition TIE goes to whoever',
-  'moved SECOND in that battle.'
+  'moved SECOND in that skirmish.'
 ].join('\n');
 
 function sysPrompt(side, matchWins) {
   return 'You are a competitive player of the board game War of Attrition, playing the ' +
     side.toUpperCase() + ' side' +
-    (matchWins ? ' in a first-to-' + matchWins + '-wins match (you will play several battles against the same opponent; learn from earlier games)' : '') +
+    (matchWins ? ' in a first-to-' + matchWins + '-wins match (you will play several skirmishes against the same opponent; learn from earlier games)' : '') +
     '. Decide quickly and decisively; always answer in exactly the requested format.\n\n' + RULES;
 }
 
@@ -227,14 +227,14 @@ function rowsStr(st) {
 function stateView(st, p, withHand, match) {
   const en = E.other(p);
   const L = [];
-  L.push('=== BATTLE STATE (turn ' + st.turnNumber + ') ===');
+  L.push('=== SKIRMISH STATE (turn ' + st.turnNumber + ') ===');
   if (match && match.targetWins) {
     L.push('Match score (first to ' + match.targetWins + '): Red ' + match.wins.red + ' — Blue ' + match.wins.blue +
-      '. This is battle ' + (match.battlesPlayed + 1) + '.');
+      '. This is skirmish ' + (match.skirmishesPlayed + 1) + '.');
   }
   L.push('Map "' + st.mapName + '". Board rows top-to-bottom: ' + rowsStr(st) + '.');
   L.push('You are ' + p.toUpperCase() + ' and it is your turn. ' + cap(st.second) +
-    ' moved second this battle and wins attrition ties.');
+    ' moved second this skirmish and wins attrition ties.');
   L.push('Field score (VP of surviving units on board): Red ' + E.fieldScore(st, 'red') +
     ', Blue ' + E.fieldScore(st, 'blue') + '.');
   L.push('Cards left (deck+discard+hand; one burns per turn): Red ' + E.cardsRemaining(st, 'red') +
@@ -423,7 +423,7 @@ function typicalityBaseline(map, n) {
   return base;
 }
 function typicalitySection(map, st, n) {
-  if (n <= 0 || st.phase !== 'battle-over') return [];
+  if (n <= 0 || st.phase !== 'skirmish-over') return [];
   const base = typicalityBaseline(map, n);
   const done = Math.max(1, n - base.unfinished);
   const pct = function (x) { return Math.round(100 * x / done); };
@@ -452,20 +452,20 @@ function typicalitySection(map, st, n) {
     ? 'A fairly **typical** game for this map.'
     : 'An **atypical** game — ' + flags.join('; ') + '.';
   return ['', '## Typicality vs the map baseline', '',
-    '_Baseline: ' + n + ' hard-AI self-play battles on "' + map.name + '" (rules ' + E.VERSION +
+    '_Baseline: ' + n + ' hard-AI self-play skirmishes on "' + map.name + '" (rules ' + E.VERSION +
     '), folded through the same aggregation as the Balance Dashboard (cached)._', '',
     '| Metric | This game | Baseline | Read |', '|---|--:|--:|---|',
-    '| Ending | ' + cap(st.battleWinner) + ' by ' + st.winType + ' | ' + hqPct + '% HQ / ' + (100 - hqPct) + '% attrition | ' + endRead + ' |',
+    '| Ending | ' + cap(st.skirmishWinner) + ' by ' + st.winType + ' | ' + hqPct + '% HQ / ' + (100 - hqPct) + '% attrition | ' + endRead + ' |',
     '| Length | T' + st.turnNumber + ' | ~' + avgTurns.toFixed(0) + ' avg | ' + lenRead + ' |',
-    '| Winner side | ' + cap(st.battleWinner) + ' | red ' + redPct + '% | map leans ' + (redPct >= 50 ? 'red' : 'blue') + ' ' + Math.max(redPct, 100 - redPct) + '% |',
+    '| Winner side | ' + cap(st.skirmishWinner) + ' | red ' + redPct + '% | map leans ' + (redPct >= 50 ? 'red' : 'blue') + ' ' + Math.max(redPct, 100 - redPct) + '% |',
     '| Kills (units lost) | ' + kills + ' | ' + zeroPct + '% zero-kill | ' + killRead + ' |',
     '| Attacks resolved | ' + gAtk + ' | ~' + avgAtk.toFixed(1) + ' avg | ' + cmp(gAtk, avgAtk) + ' |',
     '| Final VP gap | ' + gVP + ' | ~' + avgVP.toFixed(1) + ' avg | ' + cmp(gVP, avgVP) + ' |',
     '', verdict];
 }
 
-/* ---------- one battle ---------- */
-async function playBattle(st, args, transports, matchInfo, usage) {
+/* ---------- one skirmish ---------- */
+async function playSkirmish(st, args, transports, matchInfo, usage) {
   const decisions = [];
   let fallbacks = 0;
   let logIdx = 0;
@@ -571,12 +571,12 @@ async function playBattle(st, args, transports, matchInfo, usage) {
         (why2 ? ' — "' + why2 + '"' : '') + (fb2 ? '  (fallback)' : ''));
       record(turn, 'step-' + so.type, side, descs[idx], why2, fb2);
       flushLog();
-      if (st.phase === 'battle-over') break;
+      if (st.phase === 'skirmish-over') break;
     }
     scoreboard();
   }
 
-  while (st.phase !== 'battle-over' && st.turnNumber <= args.maxTurns) {
+  while (st.phase !== 'skirmish-over' && st.turnNumber <= args.maxTurns) {
     const side = st.current;
     const spec = side === 'red' ? args.red : args.blue;
     if (HEURISTIC[spec]) { if (!heuristicTurn(side, spec)) break; }
@@ -611,29 +611,29 @@ async function main() {
     : maps[0];
   if (!map) { console.error('no map matches "' + args.map + '"'); process.exit(1); }
 
-  const target = args.matchWins; // 0 = single battle
-  // MATCH mode draws each battle's map from the whole pool (the engine's
-  // seed-shuffled mapOrder); --map or single-battle mode pins one map.
+  const target = args.matchWins; // 0 = single skirmish
+  // MATCH mode draws each skirmish's map from the whole pool (the engine's
+  // seed-shuffled mapOrder); --map or single-skirmish mode pins one map.
   const pool = (target && !args.map) ? maps : [map];
   const poolName = pool.length > 1
     ? (args.mapset || 'active') + ' set (' + pool.length + ' maps)'
     : '"' + map.name + '"';
   say('claude-plays: ' + poolName + ' seed ' + args.seed +
-    (target ? ' — MATCH, first to ' + target : ' — single battle') +
+    (target ? ' — MATCH, first to ' + target : ' — single skirmish') +
     ' — red=' + args.red + (args.redEffort ? '(' + args.redEffort + ')' : '') +
     ' vs blue=' + args.blue + (args.blueEffort ? '(' + args.blueEffort + ')' : '') +
     (args.deck ? ' — deck "' + args.deck + '"' : '') +
     (args.mock ? '  [MOCK]' : args.cold ? '  [cold transport]' : '  [persistent sessions]'));
 
   const match = E.newMatch({ maps: pool, seed: args.seed, firstPlayer: 'red' });
-  const matchInfo = { targetWins: target, wins: match.wins, battlesPlayed: 0 };
+  const matchInfo = { targetWins: target, wins: match.wins, skirmishesPlayed: 0 };
   const transports = {
     red: makeSideTransport(args, 'red', target),
     blue: makeSideTransport(args, 'blue', target)
   };
   const usage = { inputTokens: 0, outputTokens: 0 };
 
-  // per-battle DB rows (guarded — the transcript never depends on it).
+  // per-skirmish DB rows (guarded — the transcript never depends on it).
   // Mock runs are loop tests, not data — they stay out of the DB.
   let dbm = null, dbh = null, runId = null;
   if (!args.mock) try {
@@ -643,56 +643,56 @@ async function main() {
       n: target ? target * 2 - 1 : 1, tool: 'claude-plays' });
   } catch (e) { dbm = null; }
 
-  const battles = []; // {index, winner, winType, turns, decisions, fallbacks, notes:{red,blue}}
+  const skirmishes = []; // {index, winner, winType, turns, decisions, fallbacks, notes:{red,blue}}
   const ts0 = new Date().toISOString();
   try { fs.mkdirSync(TRANSCRIPT_DIR, { recursive: true }); } catch (e) {}
 
   while (true) {
-    const st = E.newBattle(match);
-    const firstPlayer = st.current; // battle 1 = match.firstPlayer; later = last loser
-    matchInfo.battlesPlayed = battles.length;
-    say('— battle ' + (battles.length + 1) + ' on "' + st.mapName + '"' + (target ? ' (match R ' + match.wins.red + '-' + match.wins.blue + ' B)' : '') + ' —');
-    const played = await playBattle(st, args, transports, matchInfo, usage);
-    const finished = st.phase === 'battle-over';
+    const st = E.newSkirmish(match);
+    const firstPlayer = st.current; // skirmish 1 = match.firstPlayer; later = last loser
+    matchInfo.skirmishesPlayed = skirmishes.length;
+    say('— skirmish ' + (skirmishes.length + 1) + ' on "' + st.mapName + '"' + (target ? ' (match R ' + match.wins.red + '-' + match.wins.blue + ' B)' : '') + ' —');
+    const played = await playSkirmish(st, args, transports, matchInfo, usage);
+    const finished = st.phase === 'skirmish-over';
     say(finished
-      ? '== ' + cap(st.battleWinner) + ' wins battle ' + (battles.length + 1) + ' by ' + st.winType + ' after ' + st.turnNumber + ' turns ==' +
+      ? '== ' + cap(st.skirmishWinner) + ' wins skirmish ' + (skirmishes.length + 1) + ' by ' + st.winType + ' after ' + st.turnNumber + ' turns ==' +
         (target ? '  (match R ' + match.wins.red + '-' + match.wins.blue + ' B)' : '')
-      : '== battle unfinished at the --max-turns cap (' + args.maxTurns + ') ==');
+      : '== skirmish unfinished at the --max-turns cap (' + args.maxTurns + ') ==');
 
-    // short per-battle notes from each LLM player (Bill: per-battle AND per-match)
+    // short per-skirmish notes from each LLM player (Bill: per-skirmish AND per-match)
     const notes = {};
     for (const side of ['red', 'blue']) {
       const n = await feltNotes(args, transports, side,
-        'Battle ' + (battles.length + 1) + ' just ended: ' + (finished ? cap(st.battleWinner) + ' won by ' + st.winType : 'unfinished') +
-        ' after ' + st.turnNumber + ' turns. In ONE or TWO sentences: how did that battle feel from your side?', usage);
+        'Skirmish ' + (skirmishes.length + 1) + ' just ended: ' + (finished ? cap(st.skirmishWinner) + ' won by ' + st.winType : 'unfinished') +
+        ' after ' + st.turnNumber + ' turns. In ONE or TWO sentences: how did that skirmish feel from your side?', usage);
       if (n) { notes[side] = n; say(side + ' notes: ' + n); }
     }
 
     const rec = {
       ts: new Date().toISOString(), version: E.VERSION, map: st.mapName, seed: args.seed,
       transport: args.mock ? 'mock' : args.cold ? 'cold' : 'session',
-      matchId: target ? ts0 : null, battleIndex: battles.length + 1,
+      matchId: target ? ts0 : null, skirmishIndex: skirmishes.length + 1,
       red: args.red, blue: args.blue,
       redEffort: args.redEffort || null, blueEffort: args.blueEffort || null,
-      winner: finished ? st.battleWinner : null,
+      winner: finished ? st.skirmishWinner : null,
       winType: finished ? st.winType : 'unfinished',
       turns: st.turnNumber, fallbacks: played.fallbacks,
       decisions: played.decisions, notes: notes, usage: null // usage reported on the match row
     };
     try { fs.mkdirSync(LOG_DIR, { recursive: true }); } catch (e) {}
-    fs.appendFileSync(args.out, JSON.stringify(rec) + '\n'); // crash-safe: one row per finished battle
+    fs.appendFileSync(args.out, JSON.stringify(rec) + '\n'); // crash-safe: one row per finished skirmish
     if (dbm && finished) {
-      try { dbm.insertBattle(dbh, runId, st, firstPlayer, { seed: args.seed, version: E.VERSION }); }
+      try { dbm.insertSkirmish(dbh, runId, st, firstPlayer, { seed: args.seed, version: E.VERSION }); }
       catch (e) { /* never fatal */ }
     }
-    battles.push({ index: battles.length + 1, winner: finished ? st.battleWinner : null,
+    skirmishes.push({ index: skirmishes.length + 1, winner: finished ? st.skirmishWinner : null,
       winType: finished ? st.winType : 'unfinished', turns: st.turnNumber,
       decisions: played.decisions, fallbacks: played.fallbacks, notes: notes, st: st });
 
-    if (!target) break;                              // single battle mode
+    if (!target) break;                              // single skirmish mode
     if (match.wins.red >= target || match.wins.blue >= target) break;
-    if (!finished) { say('battle unfinished — ending the match early'); break; }
-    if (battles.length >= target * 2 - 1) break;     // safety: best-of series exhausted
+    if (!finished) { say('skirmish unfinished — ending the match early'); break; }
+    if (skirmishes.length >= target * 2 - 1) break;     // safety: best-of series exhausted
   }
 
   const matchWinner = !target ? null :
@@ -703,21 +703,21 @@ async function main() {
 
   // match-level felt-notes (the point of first-to-3: how did the SET feel?)
   const matchNotes = {};
-  if (target && battles.length > 1) {
+  if (target && skirmishes.length > 1) {
     for (const side of ['red', 'blue']) {
       const n = await feltNotes(args, transports, side,
         'The match is over: ' + (matchWinner ? cap(matchWinner) + ' won ' + match.wins.red + '-' + match.wins.blue : 'ended early') +
-        ' across ' + battles.length + ' battles. Give short notes (under 150 words) on how the MATCH felt as a set: ' +
-        'did early luck decide it or could you adapt between battles, what felt strong or weak across games, ' +
+        ' across ' + skirmishes.length + ' skirmishes. Give short notes (under 150 words) on how the MATCH felt as a set: ' +
+        'did early luck decide it or could you adapt between skirmishes, what felt strong or weak across games, ' +
         'and ONE suggested change to the game.', usage);
       if (n) { matchNotes[side] = n; console.log('\n-- ' + side + ' match felt-notes --\n' + n); }
     }
   } else if (!target) {
     for (const side of ['red', 'blue']) {
-      const st = battles[0].st;
+      const st = skirmishes[0].st;
       const journal = st.log.map(function (e) { return 'T' + e.turn + ' ' + e.msg; }).join('\n');
       const n = await feltNotes(args, transports, side,
-        'You just played a full battle of War of Attrition as ' + side.toUpperCase() +
+        'You just played a full skirmish of War of Attrition as ' + side.toUpperCase() +
         '. The final campaign journal:\n\n' + journal +
         '\n\nGive short notes (under 150 words) on how the game FELT to play: what felt strong, ' +
         'what felt weak, what felt luck-driven, and ONE suggested change to the game.', usage);
@@ -733,7 +733,7 @@ async function main() {
   const fstamp = ts0.replace(/[:.]/g, '-');
   const tPath = path.join(TRANSCRIPT_DIR, fstamp + '-' + slug + '-' + args.red + '-v-' + args.blue + (target ? '-match' : '') + '.md');
   const md = [];
-  md.push('# War of Attrition — ' + (target ? 'first-to-' + target + ' match' : 'battle') + ' on ' + poolName + ' (seed ' + args.seed + ')');
+  md.push('# War of Attrition — ' + (target ? 'first-to-' + target + ' match' : 'skirmish') + ' on ' + poolName + ' (seed ' + args.seed + ')');
   md.push('');
   md.push('- rules version: **' + E.VERSION + '** · transport: ' + (args.mock ? 'mock' : args.cold ? 'cold per-call' : 'persistent session per side'));
   md.push('- red: **' + args.red + '**' + (args.redEffort ? ' (effort: ' + args.redEffort + ')' : '') +
@@ -742,24 +742,24 @@ async function main() {
   md.push('- ' + ts0);
   if (target) {
     md.push('- Result: ' + (matchWinner ? '**' + cap(matchWinner) + '** wins the match **' + match.wins.red + '-' + match.wins.blue + '**' : 'no match winner') +
-      ' over ' + battles.length + ' battles');
-    const g1 = battles[0].winner;
+      ' over ' + skirmishes.length + ' skirmishes');
+    const g1 = skirmishes[0].winner;
     if (matchWinner && g1) {
       md.push('- Rush-luck check: the game-1 winner (' + g1 + ') ' + (g1 === matchWinner ? 'ALSO won the match — first-to-' + target + ' did not change the outcome this time' : 'did NOT win the match — the series smoothed over the early result') + '.');
     }
   } else {
-    const b = battles[0];
+    const b = skirmishes[0];
     md.push('- Result: ' + (b.winner ? '**' + cap(b.winner) + '** wins by ' + b.winType + ' after ' + b.turns + ' turns' : 'unfinished'));
   }
-  const totalDecisions = battles.reduce(function (s, b) { return s + b.decisions.length; }, 0);
-  const totalFallbacks = battles.reduce(function (s, b) { return s + b.fallbacks; }, 0);
+  const totalDecisions = skirmishes.reduce(function (s, b) { return s + b.decisions.length; }, 0);
+  const totalFallbacks = skirmishes.reduce(function (s, b) { return s + b.fallbacks; }, 0);
   md.push('- Fallbacks (LLM reply unusable → engine chose): ' + totalFallbacks + ' of ' + totalDecisions + ' decisions');
   const tstats = { red: transports.red.stats(), blue: transports.blue.stats() };
   md.push('- Transport: red ' + tstats.red.sessionCalls + ' session / ' + tstats.red.coldCalls + ' cold calls · blue ' +
     tstats.blue.sessionCalls + ' session / ' + tstats.blue.coldCalls + ' cold · tokens in/out ' + usage.inputTokens + '/' + usage.outputTokens);
-  battles.forEach(function (b) {
+  skirmishes.forEach(function (b) {
     md.push('');
-    md.push('## Battle ' + b.index + ' — "' + b.st.mapName + '" — ' + (b.winner ? cap(b.winner) + ' by ' + b.winType : 'unfinished') + ' (T' + b.turns + ')');
+    md.push('## Skirmish ' + b.index + ' — "' + b.st.mapName + '" — ' + (b.winner ? cap(b.winner) + ' by ' + b.winType : 'unfinished') + ' (T' + b.turns + ')');
     md.push('');
     md.push('### Decisions');
     b.decisions.forEach(function (d) {
@@ -768,7 +768,7 @@ async function main() {
     });
     if (Object.keys(b.notes).length) {
       md.push('');
-      md.push('### Battle notes');
+      md.push('### Skirmish notes');
       Object.keys(b.notes).forEach(function (side) { md.push('- **' + side + '**: ' + b.notes[side]); });
     }
     md.push('');
@@ -785,16 +785,16 @@ async function main() {
       md.push(matchNotes[side]);
     });
   }
-  const lastFinished = battles.filter(function (b) { return b.winner; }).slice(-1)[0];
+  const lastFinished = skirmishes.filter(function (b) { return b.winner; }).slice(-1)[0];
   if (lastFinished && args.typicalN > 0) {
-    say('gauging typicality (' + args.typicalN + ' hard-AI baseline battles, cached per map+version)…');
+    say('gauging typicality (' + args.typicalN + ' hard-AI baseline skirmishes, cached per map+version)…');
     try {
       const lastMap = pool.find(function (m) { return m.name === lastFinished.st.mapName; }) || map;
       md.push.apply(md, typicalitySection(lastMap, lastFinished.st, args.typicalN));
     }
     catch (e) { md.push('', '_(typicality baseline failed: ' + e.message + ')_'); }
   }
-  md.push('', '#reports #battle #v' + E.VERSION.replace(/\./g, '-')); // tag footer: kind + rules version
+  md.push('', '#reports #skirmish #v' + E.VERSION.replace(/\./g, '-')); // tag footer: kind + rules version
   fs.writeFileSync(tPath, md.join('\n') + '\n');
 
   // match summary row in the master JSONL
@@ -803,10 +803,10 @@ async function main() {
       ts: new Date().toISOString(), version: E.VERSION, type: 'match',
       transport: args.mock ? 'mock' : args.cold ? 'cold' : 'session',
       matchId: ts0, map: pool.length > 1 ? poolName : map.name,
-      maps: battles.map(function (b) { return b.st.mapName; }), seed: args.seed, red: args.red, blue: args.blue,
+      maps: skirmishes.map(function (b) { return b.st.mapName; }), seed: args.seed, red: args.red, blue: args.blue,
       target: target, wins: { red: match.wins.red, blue: match.wins.blue },
-      winner: matchWinner, battles: battles.length,
-      game1Winner: battles[0].winner, seriesFlipped: !!(matchWinner && battles[0].winner && matchWinner !== battles[0].winner),
+      winner: matchWinner, skirmishes: skirmishes.length,
+      game1Winner: skirmishes[0].winner, seriesFlipped: !!(matchWinner && skirmishes[0].winner && matchWinner !== skirmishes[0].winner),
       fallbacks: totalFallbacks, decisions: totalDecisions, usage: usage
     }) + '\n');
   }

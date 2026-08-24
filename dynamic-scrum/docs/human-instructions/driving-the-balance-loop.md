@@ -14,9 +14,9 @@ Run everything **from the repo root**.
 
 ```
 node game/server.js          # 1. start the game (leave running)
-# ...play or watch a battle in the browser...
+# ...play or watch a skirmish in the browser...
 node dev/balance-report.js   # 2. bulk-sim the roster, save a report
-node dev/db-query.js         # 3. poke the per-battle database
+node dev/db-query.js         # 3. poke the per-skirmish database
 ```
 
 Change a card/map/weight → rerun 2 → compare the reports. That's the whole iteration loop.
@@ -33,21 +33,21 @@ Expected:
   WAR OF ATTRITION — server running   (rules 1.1)
   ---------------------------------
   On this computer:  http://localhost:8420
-  Battle persistence: ON -> logs/woa.db
+  Skirmish persistence: ON -> logs/woa.db
 ```
 
 Leave it running (Ctrl+C stops it). The server is the standard dev path — it's the only way
-saves persist: map/deck/map-set edits write real files, and every finished browser battle
+saves persist: map/deck/map-set edits write real files, and every finished browser skirmish
 lands in the database. If it says the port is taken, a server is already running in another
 window — use that one, don't start a second.
 
-## 2. Play or watch a battle
+## 2. Play or watch a skirmish
 
-Open **http://localhost:8420** — pick *Battle the AI* (play) or *Watch* (AI vs AI) from the
+Open **http://localhost:8420** — pick *Skirmish the AI* (play) or *Watch* (AI vs AI) from the
 menu. To skip the menu entirely, **http://localhost:8420/index.html?autostart=ai** drops you
-straight into a battle.
+straight into a skirmish.
 
-When the battle ends you'll have your first row in `logs/woa.db` (the console window logs
+When the skirmish ends you'll have your first row in `logs/woa.db` (the console window logs
 nothing — persistence is silent; step 4 proves it landed).
 
 ## 3. Generate a report set
@@ -59,11 +59,11 @@ node dev/balance-report.js
 ```
 
 Simulates the active map-set (currently `core7`, 7 maps) and **saves** a markdown
-report. Defaults: 60 battles per map, hard vs hard. Expected tail:
+report. Defaults: 60 skirmishes per map, hard vs hard. Expected tail:
 
 ```
 SAVED: logs\reports\balance\1.1/2026-07-07-1100-hard-vs-hard-n6-r2.md
-ACCUMULATED: logs\reports\balance\1.1/accumulated.json (360 battles across 2 runs)
+ACCUMULATED: logs\reports\balance\1.1/accumulated.json (360 skirmishes across 2 runs)
 BEST_MAP: The Ford
 ```
 
@@ -72,8 +72,8 @@ rules version. The flags that matter:
 
 | Flag / arg | What it does |
 |---|---|
-| `[n] [aiRed] [aiBlue]` | e.g. `node dev/balance-report.js 20 normal` — 20 battles/map, normal vs normal |
-| `--parallel` | process-per-map workers, ~3.3× faster (skips per-battle DB rows — the report is identical) |
+| `[n] [aiRed] [aiBlue]` | e.g. `node dev/balance-report.js 20 normal` — 20 skirmishes/map, normal vs normal |
+| `--parallel` | process-per-map workers, ~3.3× faster (skips per-skirmish DB rows — the report is identical) |
 | `--once` | report this run only, don't touch the accumulator (quick experiments) |
 | `--fresh` | reset the accumulator to just this run (after a deliberate data reset) |
 | `--mapset <id>` | a specific map-set (`all` = every map on disk) |
@@ -92,7 +92,7 @@ pits any two AI personalities (the stronger one's win rate = skill premium).
 
 ### LLM playtests: `dev/claude-plays.js`
 
-The felt-notes tool — an LLM plays real battles and tells you how the game felt. Costs real
+The felt-notes tool — an LLM plays real skirmishes and tells you how the game felt. Costs real
 tokens; full flags and gotchas live in [[claude-plays-human-instructions]]. Verify the
 plumbing free with:
 
@@ -100,20 +100,20 @@ plumbing free with:
 node dev/claude-plays.js --mock --map cockpit
 ```
 
-Expected: a full battle in seconds ("mock: always the first option"), transcript written to
-`logs/reports/battle/1.1/`.
+Expected: a full skirmish in seconds ("mock: always the first option"), transcript written to
+`logs/reports/skirmish/1.1/`.
 
 ## 4. Where everything lands
 
 | Path | What | Committed? |
 |---|---|---|
 | `logs/reports/balance/1.1/` | saved balance reports + `accumulated.json` | yes — the human record |
-| `logs/reports/battle/1.1/` | claude-plays transcripts (+ JSONL master log one level up) | yes |
+| `logs/reports/skirmish/1.1/` | claude-plays transcripts (+ JSONL master log one level up) | yes |
 | `logs/reports/analysis/1.1/` | graded reviews, one-off analyses | yes |
-| `logs/woa.db` | one row per battle, every source (browser, CLI, LLM) | **no — gitignored, delete freely** |
+| `logs/woa.db` | one row per skirmish, every source (browser, CLI, LLM) | **no — gitignored, delete freely** |
 
 `1.1` is the rules version (`Engine.VERSION`) — it bumps when rules change, so data stays
-apples-to-apples per era. The DB is a regenerable index over the same battles the reports
+apples-to-apples per era. The DB is a regenerable index over the same skirmishes the reports
 summarize; deleting it loses nothing you can't re-sim.
 
 ## 5. Query the database
@@ -122,17 +122,17 @@ summarize; deleting it loses nothing you can't re-sim.
 node dev/db-query.js
 ```
 
-No arguments = the schema plus row counts (`runs`, `battles`, `card_plays`, per-turn
+No arguments = the schema plus row counts (`runs`, `skirmishes`, `card_plays`, per-turn
 `timeline`). With SQL (read-only, quote it):
 
 ```
-node dev/db-query.js "select map, count(*) battles, sum(winner='red') red_wins, sum(win_type='hq') hq from battles group by map order by battles desc limit 5"
+node dev/db-query.js "select map, count(*) skirmishes, sum(winner='red') red_wins, sum(win_type='hq') hq from skirmishes group by map order by skirmishes desc limit 5"
 ```
 
 Expected:
 
 ```
-map          battles  red_wins  hq
+map          skirmishes  red_wins  hq
 -----------  -------  --------  --
 Twin Gates         6         3   0
 The Void           6         3   2
@@ -141,16 +141,16 @@ The Void           6         3   2
 ```
 
 On a fresh clone there's no DB yet — you'll see `No DB at ...logs\woa.db — nothing has been
-recorded yet`. Any battle (browser or a non-`--parallel` balance-report run) creates it.
+recorded yet`. Any skirmish (browser or a non-`--parallel` balance-report run) creates it.
 
 ## 6. What each dev/ script is for
 
 | Script | One line |
 |---|---|
 | `balance-report.js` | bulk-sim the roster → saved report + accumulator + DB rows (step 3) |
-| `claude-plays.js` | LLM plays battles/matches → transcripts + felt-notes ([[claude-plays-human-instructions]]) |
+| `claude-plays.js` | LLM plays skirmishes/matches → transcripts + felt-notes ([[claude-plays-human-instructions]]) |
 | `db-query.js` | read-only SQL console over `logs/woa.db` (step 5) |
-| `db.js` | the one DB writer every battle source funnels through (not run directly) |
+| `db.js` | the one DB writer every skirmish source funnels through (not run directly) |
 | `tune-weights.js` | offline AI-weight sweeper — **suggestions only**, never edits engine files |
 | `gen-docs.js` | regenerates the AI-weights/personalities/content tables in the docs — run after touching `AI_WEIGHTS` or `content/` |
 | `smoke.js` | jsdom UI harness — run after UI changes (`npm i --prefix dev jsdom` once, first time) |
@@ -168,7 +168,7 @@ node dev/smoke.js    # browser UI smoke — green after UI changes
 
 | Skill                        | What you get                                                                                 |
 | ---------------------------- | -------------------------------------------------------------------------------------------- |
-| `generate-reports`           | a fresh standard set: 60-battle hard-vs-hard report + a first-to-3 LLM match on the best map |
+| `generate-reports`           | a fresh standard set: 60-skirmish hard-vs-hard report + a first-to-3 LLM match on the best map |
 | `review-reports`             | the reports graded against the rubrics → analysis saved to `logs/reports/analysis/`          |
 | `run-tournament`             | roster-wide meta read → graded balance suggestions                                           |
 | `create-card` / `create-map` | a proposed card / map, rubric-graded, in the exact data shape                                |

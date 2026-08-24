@@ -55,7 +55,7 @@ on the same item, same pattern as the pre-1.1/pre-WOA-020 rows above it.
 (attacks+swaps+marches+deploys) — deck-size-proof, so the WOA-030 16→17 card change no longer
 inflates them; the raw counts stay in `logs/woa.db`, cut from print. (2) **Tie% and Drag condition to
 ATTRITION endings only** — HQ endings have Drag 0 by definition and diluted the pooled Tie% by the HQ
-share, so both now divide by attrition-ending count, not every battle. (3) **Reserves at end conditions
+share, so both now divide by attrition-ending count, not every skirmish. (3) **Reserves at end conditions
 to HQ endings only** and is typically small-n (HQ endings are a minority) — it prints `(n=N)` and is
 greyed/excluded from the verdict when slice-n < 240 fleet-wide (SPEC §8). Bands re-measured on the
 **standard setup — hard-vs-hard, n=60/map=360, Core Six, deck `cavsplit17-raid-paid`, 2026-07-18**
@@ -106,7 +106,7 @@ The five headline items — grade any rules / content / AI change against these 
 1. **Skill over luck.**
    Goal: a stronger player wins more; the game rewards decisions over draws.
    Evidence: `balance.js matchup` skill premium (the stronger AI's win rate against a weaker one).
-   Baseline (**AI tiers, n=96/map = 576 battles/pairing, Core Six, 2026-07-18, deck
+   Baseline (**AI tiers, n=96/map = 576 skirmishes/pairing, Core Six, 2026-07-18, deck
    `cavsplit17-raid-paid` — ADOPTED WOA-030**, `game/balance.js matchup 96 <a> <b>`): normal>easy
    69%, hard>easy 76%, hard>normal 56% (thin — within noise at n=96), sanity (self vs self) 46%
    (thin — within noise at n=96).
@@ -146,7 +146,7 @@ The five headline items — grade any rules / content / AI change against these 
    steps are where the noop tail appears) + the `noopPenalty` weight & `mustPlayStep` rule
    (`game/engine/05-ai.js`, `03-rules.js`).
 4. **Balanced start.**
-   Goal: neither seat nor colour wins the battle before it starts.
+   Goal: neither seat nor colour wins the skirmish before it starts.
    Evidence: the overall "first mover" line + per-map Red%/1st% columns. Baseline (**hard-vs-hard,
    n=60/map = 360, Core Six, 2026-07-16, deck `cavsplit17-raid-paid` — ADOPTED WOA-030,
    2026-07-18**): first mover 47% overall (red 49%). Normal-vs-normal, same date/deck, **n=40/map =
@@ -170,7 +170,7 @@ The five headline items — grade any rules / content / AI change against these 
    same.
    Lever: the deck's attack-card supply (`content/decks/` — deleting hoarded attack cards drove it
    up) + the trench tie-survival rules (`game/engine/03-rules.js`).
-   _Superseded (pre-WOA-039, POOLED over all battles, ≤15% floor): 11% hard (Core Six, 2026-07-16,
+   _Superseded (pre-WOA-039, POOLED over all skirmishes, ≤15% floor): 11% hard (Core Six, 2026-07-16,
    `cavsplit17-raid-paid`); default deck pre-WOA-030 hard 9% / normal 10%; prior 1.1 read 10% (n=60,
    7-map pool, pre-WOA-020). The 0.x-era "~25–26%, biggest open lever" predates the 1.1 trench
    tie-survival rules (WOA-010) that brought it down._
@@ -200,7 +200,7 @@ buy improvement with.** State the temperature in the analysis; it is a dial, not
 - **Tie-goes-to-2nd ≤ 18% of attrition endings** (rules 1.2, WOA-039 — was ≤15% pooled; the
   denominator changed, not the stringency) — deleting hoarded attack cards drove it up and *produced*
   the swap-dance stalemate.
-- **Zero-kill ≤ 5%** and **Noop ≈ 0%** — dead battles and dead turns are the anti-degeneracy guarantees.
+- **Zero-kill ≤ 5%** and **Noop ≈ 0%** — dead skirmishes and dead turns are the anti-degeneracy guarantees.
 - **Printed deploy steps ≥ stock** per unit type — there is **no deploy fallback** in the house rules, so
   a stranded unit can never reach the board (measured: infantry steps 7→5 sent Drag 2.3→3.6, attacks −20%).
 
@@ -255,8 +255,8 @@ physical-limitations, atomically with the ship; a guardrail is never moved silen
 The `starting: true` flag (the card guaranteed into the opening hand) is a **live balance lever, not a
 neutral default** — treat it as a deliberate tuning knob. Measured (loop v2, the `cavsplit17-tempo`
 slot, **hard, n≈per-slot, 2026-07-15**): making Conscription the guaranteed opener moved **first-mover
-42 → 40%**, **HQ captures 17 → 10%**, and **battle length +1.8 turns** — one flag, three metrics. How
-to read it: a stronger / more committal opener pushes first-mover% **down** and lengthens battles (it
+42 → 40%**, **HQ captures 17 → 10%**, and **skirmish length +1.8 turns** — one flag, three metrics. How
+to read it: a stronger / more committal opener pushes first-mover% **down** and lengthens skirmishes (it
 hands the first mover a play the second mover answers); a cheaper / defensive opener does the reverse.
 So when **first-mover% or HQ%** drifts, check whether the `starting` card is the cause *before*
 reaching for the temperature dial or other levers — and when tuning first-mover balance deliberately,
@@ -292,7 +292,7 @@ Evidence source for all numbers: the **card report** at the bottom of `node game
 the Balance Dashboard (`game/report-model.js` — same columns plus **Noop%**, which IS printed there
 but NOT in the `balance.js` terminal table). **Win%** is no longer printed anywhere (dropped July
 2026, WOA-019 — at n=700 every card read 49-52% against the ±8 rubric threshold, so it wasn't
-earning its column); it's still computed in `cardRows()` and recorded per-battle in `logs/woa.db` if
+earning its column); it's still computed in `cardRows()` and recorded per-skirmish in `logs/woa.db` if
 a specific card's Win% is ever needed.
 
 1. **Adds a decision.**
@@ -349,7 +349,7 @@ a specific card's Win% is ever needed.
    Goal: sanity check for correlation with winning.
    Evidence: Win% (share of plays that were by the eventual winner) — **dropped from the printed
    card report** (WOA-019, July 2026): at n=700 every card read 49-52% against the ±8 threshold
-   below, so it wasn't earning its column. Still computed in `cardRows()` and recorded per-battle in
+   below, so it wasn't earning its column. Still computed in `cardRows()` and recorded per-skirmish in
    `logs/woa.db` — query it there if one card's Win% is specifically in question.
    Score: only deviations beyond ~±8 at n≥60 mean anything (tune me); never grade a card on
    Win% alone.
@@ -414,7 +414,7 @@ the *aspect* of geometry each one implies.
    50) is its geometry (`content/maps/`), e.g. chokepoints that make holding hexes decisive.
    _Superseded (default deck, pre-WOA-030): 93% overall (hard-vs-hard & normal, same date)._
 6. **Tie-rule share.**
-   Goal: the map doesn't funnel battles into equal-field-score stand-offs.
+   Goal: the map doesn't funnel skirmishes into equal-field-score stand-offs.
    Evidence: "tie-goes-to-2nd decided" line, per map via name filter — **as a share of attrition
    endings (rules 1.2, WOA-039)**. Baseline 13% of attrition endings overall (**hard-vs-hard,
    n=60/map, Core Six, 2026-07-18, deck `cavsplit17-raid-paid`**). Per-map spread this run: most
@@ -424,7 +424,7 @@ the *aspect* of geometry each one implies.
    the fleet average is producing symmetric grinds — look at its terrain and HQ spacing.
    Lever: terrain + HQ spacing (`content/maps/`) — symmetric grinds come from too-distant HQs and
    defensible terrain on both sides.
-   _Superseded (pre-WOA-039, POOLED over all battles, ≤15% target): 11% hard (Core Six, 2026-07-16,
+   _Superseded (pre-WOA-039, POOLED over all skirmishes, ≤15% target): 11% hard (Core Six, 2026-07-16,
    `cavsplit17-raid-paid`); default deck pre-WOA-030 hard 9% / normal 10%._
 
 ### "Best map" — the ideal-range score (SOT, WOA-007)
@@ -443,7 +443,7 @@ every axis.** All endpoints and weights are tunable targets, Bill's to adjust (d
 | 0kill%                       | `zeroKill/done`                      | 0–5         | 0.6 /pt                                       |
 | Tie-decided%                 | `tiebreak/attritionEndings`          | 0–18        | 0.3 /pt                                       |
 | Drag (kill-less end turns)   | `attritionKillTail/attritionEndings` | 0–3.0       | 4 /turn                                       |
-| Swings (lead changes/battle) | `leadChanges/done`                   | ≥2.0        | 6 /swing short                                |
+| Swings (lead changes/skirmish) | `leadChanges/done`                   | ≥2.0        | 6 /swing short                                |
 | Control-tracks-win%          | `controlWins/controlGames`           | ≥70         | 0.5 /pt short (skipped when no control games) |
 
 **Lever:** this table is the scoring *fold*, not a separate criterion set — each metric's lever is
@@ -472,9 +472,9 @@ table and judgment more than the others.
    Lever: the unit's atk/def/sup/vp stats (`content/units/` active variant, else the maps.js
    `"units"` block).
 2. **Field-score contribution.**
-   Goal: the 1/2/3 vp ladder tracks real battlefield value, since surviving-unit field score IS
+   Goal: the 1/2/3 vp ladder tracks real skirmishfield value, since surviving-unit field score IS
    the attrition victory condition — a unit priced above its worth is a liability to deploy.
-   Evidence: indirect — the VPdiff column (avg field-score gap at battle end) and the "% of units
+   Evidence: indirect — the VPdiff column (avg field-score gap at skirmish end) and the "% of units
    ever fielded" Behaviour line move when pricing is off; the direct per-unit read is (metric TBD —
    today: judgment).
    Score: good = every unit type still gets fielded (fielded share stays near its Behaviour-line
@@ -511,7 +511,7 @@ These are the additional regression guards:
    Lever: the AI anti-degeneracy weights — `noopPenalty` / `antiShuffle` / the attrition projection
    in `game/engine/05-ai.js` (don't zero them in a preset without re-measuring these lines) + the
    active deck's attack supply (`content/decks/`).
-   _Superseded (pre-WOA-039 — raw COUNTS/battle, reserves POOLED over all battles): hard 6.7 attacks
+   _Superseded (pre-WOA-039 — raw COUNTS/skirmish, reserves POOLED over all skirmishes): hard 6.7 attacks
    / 5.8 swaps / 94% fielded, reserves red 6% / blue 6% (Core Six, 2026-07-16, `cavsplit17-raid-paid`);
    normal 7.2 attacks / 4.2 swaps / 90% fielded, reserves red 10% / blue 10%. Default deck pre-WOA-030:
    normal 6.8 / 4.3 / 86% fielded; hard 6.3 / 5.4 / 90% fielded. Pre-WOA-020 (7-map) 1.1 figure 6.1
@@ -519,15 +519,15 @@ These are the additional regression guards:
    12-map hard-vs-hard sweep despite its "normal" label**. Pre-1.1 V0 signature: attacks↔swaps
    inverted from the ~5/~7 reading._
 2. **Pacing.**
-   Goal: battles resolve before the deck does the resolving; the **ADOPTED 17-card deck** (WOA-030,
-   2026-07-18) caps a battle at **34 plays** (16-card `default.js`, superseded, capped at 32).
+   Goal: skirmishes resolve before the deck does the resolving; the **ADOPTED 17-card deck** (WOA-030,
+   2026-07-18) caps a skirmish at **34 plays** (16-card `default.js`, superseded, capped at 32).
    Evidence: Turns column, read with HQ%. Baseline (**hard-vs-hard, n=60/map = 360, Core Six,
    2026-07-16, deck `cavsplit17-raid-paid`**): avg 31.9 turns. Normal-vs-normal, same date/deck,
    n=40/map = 240: avg 30.2 turns.
-   Score: good = comfortably under the 34-play cap with a live HQ threat; failing = battles
+   Score: good = comfortably under the 34-play cap with a live HQ threat; failing = skirmishes
    routinely run to deck-out on maps that also read attrition-only (tune me).
    Lever: deck size (`content/decks/`) sets the cap; per-map HQ threat (`content/maps/`) sets
-   whether battles end before it.
+   whether skirmishes end before it.
 3. **Deck as attrition clock.**
    Goal: total card count (sum of `count` in the active deck — `content/decks/cavsplit17-raid-paid.js`,
    17 cards as of WOA-030, 2026-07-18; `default.js` superseded at 16) keeps the attrition endgame
@@ -548,7 +548,7 @@ node game/test.js                 # legality first — always green before measu
 node game/balance.js 60           # full report: per-map rows, Behaviour/Decisiveness, card report
 node game/balance.js 60 hard      # same with the Field Marshal (behaviour differs; grade like-for-like)
 node game/balance.js 40 narrows   # one map's numbers — the overall lines become that map's lines
-node game/balance.js matchup 96   # skill premium (the luck-o-meter), 96 battles per pairing
+node game/balance.js matchup 96   # skill premium (the luck-o-meter), 96 skirmishes per pairing
 node dev/balance-report.js 60 hard hard --parallel --once   # saved, apples-to-apples standard sweep
 ```
 

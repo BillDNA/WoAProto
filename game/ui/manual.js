@@ -50,14 +50,14 @@ function mpDef(id, redHQ, blueHQ, pieces){
     shapeDef: { label: 'Manual diagram', hexes: MP_HEXES },
     redHQ: redHQ, blueHQ: blueHQ, pieces: pieces || [] };
 }
-// A REAL battle state (deck, HQs, turn flow all live), then the fixture's
+// A REAL skirmish state (deck, HQs, turn flow all live), then the fixture's
 // pieces are placed directly. units: { 'q,r': ['infantry','red'], ... }.
-// NOTE: E.newBattle switches the engine's global board to this map's shape —
+// NOTE: E.newSkirmish switches the engine's global board to this map's shape —
 // renderManual() saves and restores the live shape around every render.
 function mpState(def, units, trenches){
   var match = E.newMatch({ maps: [def], seed: 7, firstPlayer: 'red' });
-  var st = E.newBattle(match);
-  st.__sim = true; // a diagram, not a real battle — never fire onBattleEnd hooks
+  var st = E.newSkirmish(match);
+  st.__sim = true; // a diagram, not a real skirmish — never fire onSkirmishEnd hooks
   st.units = {};
   Object.keys(units).forEach(function(h){ st.units[h] = { type: units[h][0], owner: units[h][1] }; });
   st.trenches = trenches || {};
@@ -87,7 +87,7 @@ function mpAftermath(pre, post, atk){
     defenderFell: !!(def && (!now || advanced)),
     hqFell: !!(defHQ && !post.hqAlive[defHQ]),
     hqSide: defHQ,
-    winner: post.battleWinner || null
+    winner: post.skirmishWinner || null
   };
 }
 // support given by the piece on hex h (engine data, used for running tallies)
@@ -384,7 +384,7 @@ var MANUAL_EXAMPLES = [
     { cap: function(d){ return 'Scene two — a tie <b>on a headquarters</b>. The HQ defends at '+(d.resB.defenderPower - d.dsupB.total)+', its adjacent Infantry lends +'+d.dsupB.total+': <b>'+d.resB.attackerPower+' vs '+d.resB.defenderPower+'</b>. Even again.'; },
       frame: function(d){ return { st:d.stB, atk:d.atkB, strike:{from:d.atkB.from,to:d.atkB.to,color:'var(--red)'}, pill:{at:d.atkB.to, text:d.resB.attackerPower+' vs '+d.resB.defenderPower, tone:d.resB.outcome},
         rings: d.dsupB.hexes.map(function(h){ return {hex:h, cls:'steel'}; }) }; } },
-    { cap: function(d){ return mpAftermathWords(d.amB)+' A tie on a headquarters still <b>captures it</b>'+(d.amB.winner ? ' — <b>'+mpSideName(d.amB.winner)+' wins the battle</b> on the spot. One Infantry for the war is a fine trade.' : '.'); },
+    { cap: function(d){ return mpAftermathWords(d.amB)+' A tie on a headquarters still <b>captures it</b>'+(d.amB.winner ? ' — <b>'+mpSideName(d.amB.winner)+' wins the skirmish</b> on the spot. One Infantry for the war is a fine trade.' : '.'); },
       frame: function(d){ return { st:d.postB, atk:d.atkB, strike:{from:d.atkB.from,to:d.atkB.to,color:'var(--red)'}, pill:{at:d.atkB.to, text:d.resB.attackerPower+' vs '+d.resB.defenderPower, tone:d.resB.outcome},
         hqGhost: d.amB.hqFell ? {hex:d.atkB.to, side:d.amB.hqSide} : null,
         ghosts: d.amB.attackerFell ? [{hex:d.atkB.from, unit:d.stB.units[d.atkB.from]}] : [] }; } },
@@ -450,7 +450,7 @@ var MANUAL = { ex: 0, beat: 0, state: null, atk: null, built: false };
 
 function renderManual(){
   // fixture building flips the engine's global board to the mini map — save
-  // and ALWAYS restore the live shape so an in-progress battle is untouched
+  // and ALWAYS restore the live shape so an in-progress skirmish is untouched
   var prev = E.currentShape();
   try {
     var ex = MANUAL_EXAMPLES[MANUAL.ex] || MANUAL_EXAMPLES[0];

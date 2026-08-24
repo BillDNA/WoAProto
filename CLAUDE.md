@@ -51,8 +51,8 @@ Start in [[code-architecture]] (`dynamic-scrum/docs/`) — it is the orientation
 * **`game/` stays plain classic scripts + shared globals** in a hand-ordered script-tag chain — no ES modules, no bundler, no build step. Zipping `game/` + double-clicking index.html keeps working; the local server (`node game/server.js`) is the **standard dev path** and the only path with writes/persistence. `game/` stays zero-dependency; `dev/` may carry deps
 * **tests are the contract**: `node game/test.js` green on every commit (extend with every rules change), `node dev/smoke.js` green after UI changes. Refactors prove themselves with a **golden balance diff** (same seeds → byte-identical aggregates); anything that legitimately changes numbers bumps the rules version instead, atomically with its test-pin updates
 * **one implementation per fact**: the seed schedule, the balance fold, report scoring/rendering (`game/report-model.js`), the content-kind list (`content/kinds.js`) each live in exactly one file — if adding a metric/column/kind isn't a one-file diff, fix the seam first
-* **every battle from every source lands as a per-battle row** in `logs/woa.db` (via `Engine.hooks.onBattleEnd` / `balanceMap` onGame / the server proxy); markdown reports stay the human-readable committed artifact
-* **paths that skills and docs pin are frozen API**: `game/engine.js`, `game/balance.js`, `game/test.js`, `dev/balance-report.js`, `dev/claude-plays.js`, `logs/reports/{balance,battle,analysis}/<version>/`, and balance-report's `SAVED:`/`BEST_MAP:` stdout lines — moving any requires a same-commit sweep of `.claude/skills/` + `dynamic-scrum/docs/`
+* **every skirmish from every source lands as a per-skirmish row** in `logs/woa.db` (via `Engine.hooks.onSkirmishEnd` / `balanceMap` onGame / the server proxy); markdown reports stay the human-readable committed artifact
+* **paths that skills and docs pin are frozen API**: `game/engine.js`, `game/balance.js`, `game/test.js`, `dev/balance-report.js`, `dev/claude-plays.js`, `logs/reports/{balance,skirmish,analysis}/<version>/`, and balance-report's `SAVED:`/`BEST_MAP:` stdout lines — moving any requires a same-commit sweep of `.claude/skills/` + `dynamic-scrum/docs/`
 
 ## Shipped history
 
@@ -65,10 +65,10 @@ rules unchanged; measured 2026-07-18, hard-vs-hard, n=60/map=360, `core7`'s 6-ma
 endings)**, Swings 3.5, reserves-at-end HQ-only red 33% / blue 31% (n=61, small-n) —
 `logs/reports/balance/1.2/2026-07-18-1712-hard-vs-hard-n60.md`; sharp moves in these = regression
 even if win rates look fine). **Note the 1.2 metric redefinition**: Atk/Swp are now % of actions
-(not counts/battle), Tie%/Drag condition to attrition endings (not pooled), Reserves to HQ endings —
+(not counts/skirmish), Tie%/Drag condition to attrition endings (not pooled), Reserves to HQ endings —
 so a 1.1 count/pooled figure and a 1.2 share/sliced figure are NOT comparable. The prior **rules-1.1
 / Core Six / `cavsplit17-raid-paid`** row (measured 2026-07-16, hard-vs-hard, n=60/map: first mover
-47%, Red 49%, tie 11% pooled, **6.7 attacks / 5.8 swaps** counts/battle, zero-kill 2%, Drag 2.0
+47%, Red 49%, tie 11% pooled, **6.7 attacks / 5.8 swaps** counts/skirmish, zero-kill 2%, Drag 2.0
 pooled, Swings 3.5) is **superseded by the metric redefinition**. The rules-1.1 / Core Six row on the
 superseded **`default` 16-card deck** (first mover 45%, Red 51%, tie 9%, 6.3/5.4 atk/swp counts,
 zero-kill 1%, Drag 2.1, Swings 2.7) is superseded further back; the row before that (first mover 48%,

@@ -6,11 +6,11 @@ last-reviewed: 2026-07-10
 # Claude Plays — human instructions
 
 `dev/claude-plays.js` puts a real LLM in the general's chair: it plays complete
-battles — or a whole first-to-N **match** — against the heuristic AI (or another
+skirmishes — or a whole first-to-N **match** — against the heuristic AI (or another
 LLM) using your Claude Code subscription. V1 rewired the transport: each LLM
 side gets **one persistent claude session for the whole match**, so the rules
 are paid for once and ride the prompt cache; every later turn only sends the
-fresh battle state.
+fresh skirmish state.
 
 ## What it's for
 
@@ -18,7 +18,7 @@ Heuristic AI (`easy`/`normal`/`hard` in `balance.js`) is fast and good for bulk
 balance stats, but it never tells you *why* a card or map felt bad. Claude Plays
 trades speed for judgment: it plays like a person reading the rules for the
 first time, explains each pick in one sentence, and gives free-text "how did
-that feel" notes — per battle AND per match. Match mode also answers Bill's
+that feel" notes — per skirmish AND per match. Match mode also answers Bill's
 Round-5 question directly: when a rush draw decides game 1, does first-to-3
 smooth it out? The match summary records whether the game-1 winner also took
 the match (`seriesFlipped` in the log).
@@ -31,9 +31,9 @@ node dev/claude-plays.js [options]
 
 | Flag | What it does |
 |---|---|
-| `--map <filter>` | pin the map by name substring. Omit it and each battle draws from the (mapset-filtered) roster via the match seed's shuffled map order (WOA-008) |
+| `--map <filter>` | pin the map by name substring. Omit it and each skirmish draws from the (mapset-filtered) roster via the match seed's shuffled map order (WOA-008) |
 | `--red / --blue <spec>` | `easy`/`normal`/`hard`/any maps.js `ai` row = heuristic AI; anything else (`haiku`, `sonnet`, `opus`, full model id) = LLM. Defaults: red haiku, blue normal |
-| `--match [w]` | **match mode**: first to `w` battle wins (bare `--match` = 3). Omit for a single battle |
+| `--match [w]` | **match mode**: first to `w` skirmish wins (bare `--match` = 3). Omit for a single skirmish |
 | `--effort <lvl>` | `low`\|`medium`\|`high`\|`xhigh`\|`max` for the LLM; `--red-effort`/`--blue-effort` per side |
 | `--seed <n>` | match seed (default 1234) — same seed = same deals |
 | `--deck <id>` | play a specific `content/decks/<id>.js` instead of the active deck |
@@ -41,20 +41,20 @@ node dev/claude-plays.js [options]
 | `--k <n>` | show the LLM the `n` most promising step options of the full legal list, picked by the engine's own eval (default 15). Attack steps are never truncated, skip is always listed, and the prompt says how many legal moves the list was cut from. `--full-options` restores the V0 everything-list |
 | `--cold` | V0 transport: one `claude -p` process per decision (no session) |
 | `--mock` | offline fake transport — full loop test, no spawns, stays out of the DB |
-| `--max-turns <n>` | per-battle safety cap (default 60) |
-| `--typical-n <n>` | baseline battles for the typicality footer (default 40; cached per map+version+n, so repeat runs don't recompute) |
+| `--max-turns <n>` | per-skirmish safety cap (default 60) |
+| `--typical-n <n>` | baseline skirmishes for the typicality footer (default 40; cached per map+version+n, so repeat runs don't recompute) |
 | `--out <file>` | redirect the JSONL master log |
 
 Typical runs:
 
 ```
-# quick single battle, cheap model
+# quick single skirmish, cheap model
 node dev/claude-plays.js --map cockpit --red haiku --red-effort low --blue normal
 
 # the generate-reports shape: a detached first-to-3 haiku mirror match
 nohup node dev/claude-plays.js --map "Saber Ridge" --match 3 \
   --red haiku --blue haiku --red-effort low --blue-effort low --seed 1234 \
-  > logs/reports/battle/run-$(date +%Y%m%d-%H%M%S).log 2>&1 &
+  > logs/reports/skirmish/run-$(date +%Y%m%d-%H%M%S).log 2>&1 &
 ```
 
 Console output carries a wall-clock timestamp on every line (so you can tell
@@ -65,7 +65,7 @@ cards left, match score.
 
 - **Persistent session per side** (`dev/llm-session.js`): the rules go into the
   system prompt once; turn 2 onward reads them from the prompt cache. The model
-  also remembers its own match — "last battle I over-extended" is real memory,
+  also remembers its own match — "last skirmish I over-extended" is real memory,
   which is exactly what the match felt-notes are probing.
 - **Fail-open, always**: a dead session (timeout, error, context overflow)
   flips that side to the V0 cold per-call transport (`dev/llm-client.js`) and
@@ -84,19 +84,19 @@ surface. The `--k` option list prunes *dominated* moves using the engine's own
 eval, never strategic ones, and is presented in board order (not strength
 order) so the model still has to think for itself.
 
-## The logs: `logs/reports/battle/`
+## The logs: `logs/reports/skirmish/`
 
 - `claude-plays-log.jsonl` — append-only master log. One row per finished
-  battle (written the moment it ends — crash-safe), plus a `type: "match"`
+  skirmish (written the moment it ends — crash-safe), plus a `type: "match"`
   summary row per match (`wins`, `winner`, `game1Winner`, `seriesFlipped`,
   token usage). Rows carry `version`, `transport` (`session`/`cold`/`mock`),
-  and `matchId` to group a match's battles.
+  and `matchId` to group a match's skirmishes.
 - `<version>/<stamp>-<map>-<red>-v-<blue>[-match].md` — the readable
-  transcript: per-battle decisions + campaign journal + short battle notes,
+  transcript: per-skirmish decisions + campaign journal + short skirmish notes,
   the match summary with the rush-luck line, match felt-notes, and the
   **Typicality vs the map baseline** footer (baseline cached per
   map+version+n in `.typicality-cache.json`).
-- Finished battles also land as per-battle rows in `logs/woa.db` (kind `llm`)
+- Finished skirmishes also land as per-skirmish rows in `logs/woa.db` (kind `llm`)
   when `dev/db.js` is present — query with `node dev/db-query.js`.
 
 ## Fail-open behaviour
@@ -115,7 +115,7 @@ failure shows in the record):
 
 - The claude CLI must be logged in; every LLM decision costs real tokens.
   haiku + `--effort low` is the cheap workhorse.
-- Session context grows over a 5-battle match. If a session ever overflows or
+- Session context grows over a 5-skirmish match. If a session ever overflows or
   stalls, the fail-open path degrades that side to cold calls — visible in the
   transcript's transport line, not a crash.
 - `--mock` is the offline pipeline test (always picks option 0) — use it after

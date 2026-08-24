@@ -1,6 +1,6 @@
 ---
 name: review-reports
-description: Review War of Attrition playtest reports — battle transcripts (logs/reports/battle) and balance reports (logs/reports/balance) — against the grading rubrics, and save a graded analysis to logs/reports/analysis. Use when asked to "review the reports", "analyze the reports", "review-reports", "what do the logs/reports say", or after generate-reports runs.
+description: Review War of Attrition playtest reports — skirmish transcripts (logs/reports/skirmish) and balance reports (logs/reports/balance) — against the grading rubrics, and save a graded analysis to logs/reports/analysis. Use when asked to "review the reports", "analyze the reports", "review-reports", "what do the logs/reports say", or after generate-reports runs.
 ---
 
 # review-reports
@@ -8,12 +8,12 @@ description: Review War of Attrition playtest reports — battle transcripts (lo
 Read the playtest reports, grade them against the rubrics, and write ONE graded
 analysis to `logs/reports/analysis/`. Covers both report types:
 
-- **battle** reports — `logs/reports/battle/<version>/*.md` (per-run LLM/AI
-  transcripts from `dev/claude-plays.js` — single battles or first-to-N matches:
-  result(s), decisions, journal, per-battle felt-notes, and the **Typicality vs
+- **skirmish** reports — `logs/reports/skirmish/<version>/*.md` (per-run LLM/AI
+  transcripts from `dev/claude-plays.js` — single skirmishes or first-to-N matches:
+  result(s), decisions, journal, per-skirmish felt-notes, and the **Typicality vs
   the map baseline** footer) plus the machine record
-  `logs/reports/battle/claude-plays-log.jsonl` (one JSON row per finished battle:
-  `ts, version, map, seed, transport, matchId, battleIndex, red, blue,
+  `logs/reports/skirmish/claude-plays-log.jsonl` (one JSON row per finished skirmish:
+  `ts, version, map, seed, transport, matchId, skirmishIndex, red, blue,
   redEffort, blueEffort, winner, winType, turns, fallbacks, decisions[], notes`;
   token `usage` is reported on the match row).
 - **balance** reports — `logs/reports/balance/<version>/*.md` (whole-roster
@@ -21,7 +21,7 @@ analysis to `logs/reports/analysis/`. Covers both report types:
   Red%/1st%/HQ%/Turns/VPdiff/Atk/Swp/0kill%/Tie%/Drag/Swings/Balance + card
   table — Simple%/1stSight%/AvgSeen/Plays; Win% was dropped from this table,
   see rubric Card criterion 6). `accumulated.json` beside them is the
-  per-version fold of every battle to date; the same battles also land as
+  per-version fold of every skirmish to date; the same skirmishes also land as
   rows in `logs/woa.db` (`node dev/db-query.js` for ad-hoc SQL).
 
 **Suggestions only — never edit maps.js, cards, the rules, or code. Bill decides.**
@@ -48,7 +48,7 @@ analysis to `logs/reports/analysis/`. Covers both report types:
 
 ## Scope (settle first, ask only if genuinely unclear)
 
-- Which version? (default: newest.) Battle reports, balance reports, or both
+- Which version? (default: newest.) Skirmish reports, balance reports, or both
   (default: both, if present)?
 - If the user names specific files, analyze only those.
 - **Which temperature (rubric §Temperature)?** Grading the shipped `default`
@@ -64,11 +64,11 @@ analysis to `logs/reports/analysis/`. Covers both report types:
 ## The analysis (this shape) → save to `logs/reports/analysis/`
 
 Filename: `<YYYY-MM-DD>-<version>-analysis.md`. Open with a one-line scope
-(version, how many battle reports across which maps, how many balance reports, n)
+(version, how many skirmish reports across which maps, how many balance reports, n)
 **followed by a `Temperature: TX — <one-line why>` line** (per the Scope step
 above — every analysis states its tier up front, never leaves it implied).
 End the file with the tag footer `#reports #analysis #v<version with dots as dashes>`
-(e.g. `#reports #analysis #v1-0`) — the balance/battle reports auto-tag themselves
+(e.g. `#reports #analysis #v1-0`) — the balance/skirmish reports auto-tag themselves
 the same way; the tags are how the right era's reports are found fast.
 
 1. **North-star scoreboard** (from the balance reports) — each of the rubric's
@@ -87,7 +87,7 @@ the same way; the tags are how the right era's reports are found fast.
    GOOD** (the lead changed hands to the end) — don't flag it as broken; flag
    maps that *drag* (high Drag, low Swings) or that a side/mover runs away
    with. Same Lever-carry-through rule as § 1.
-3. **Battle read** (from the transcripts) — win split, HQ vs attrition, the
+3. **Skirmish read** (from the transcripts) — win split, HQ vs attrition, the
    **fallback rate** (fallbacks ÷ decisions; high = the LLM was confused or the
    move list was unclear — flag it, it poisons everything else), and each game's
    **Typicality** verdict (was it representative or an outlier for its map?).
@@ -119,7 +119,7 @@ Then tell Bill the saved path and give a 3-line verbal summary.
 - **Every Lever travels with its metric.** Any metric graded watch/✗ in § 1–2
   carries the rubric's Lever line (knob + file) into the analysis — that's
   what makes the finding actionable instead of just a number.
-- Honest sample sizes: a felt-note from one battle is an anecdote; two LLMs
+- Honest sample sizes: a felt-note from one skirmish is an anecdote; two LLMs
   agreeing across runs is a signal. State n and the noise band by every claim
   (rubric "How to run the numbers" — sniff test at n=24, trust at n≥40/map or
   n≥96/matchup). Win% hugs 50 in attrition games — flag only big deviations,

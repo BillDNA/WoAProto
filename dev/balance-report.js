@@ -6,11 +6,11 @@
 
    PERSISTENT DATA (Round 4): by default each run FOLDS into a per-version
    accumulator (logs/reports/balance/<version>/accumulated.json) so more runs =
-   more data, and the saved report reflects every battle to date on this rules
+   more data, and the saved report reflects every skirmish to date on this rules
    version. The accumulator persists until the version bumps or you reset it.
 
    Usage: node dev/balance-report.js [n] [diffRed] [diffBlue] [name-filter...]
-     n         battles per map THIS run (default 60)
+     n         skirmishes per map THIS run (default 60)
      diffRed   AI for red  (default hard) — easy|normal|hard or a maps.js "ai" row
      diffBlue  AI for blue (default = diffRed)
      filter    only maps whose name contains this (custom maps included)
@@ -26,8 +26,8 @@
      --parallel [k]  simulate maps in k parallel worker processes (default:
                cores-1). The engine's board state is process-global, so
                parallelism is process-per-map — each worker require()s its own
-               engine. Workers ship every finished battle back to the parent,
-               which writes ALL per-battle DB rows itself under the one run id
+               engine. Workers ship every finished skirmish back to the parent,
+               which writes ALL per-skirmish DB rows itself under the one run id
                (single woa.db writer — WOA-041; report, accumulator AND DB rows
                are identical to a serial run on the same seeds).
 
@@ -131,7 +131,7 @@ async function run() {
 
   // Read the accumulator BEFORE simulating: the per-map seed base is offset by
   // how many runs are already folded in, so accumulating genuinely adds NEW
-  // battles (the old fixed seeds replayed byte-identical battles and just
+  // skirmishes (the old fixed seeds replayed byte-identical skirmishes and just
   // doubled every count). --fresh/--once use offset 0 = the original schedule.
   var prior = (flags.once || flags.fresh) ? null : readAcc(ver);
   if (prior && prior.diff && prior.diff !== diffLabel) {
@@ -151,7 +151,7 @@ async function run() {
   }
   var priorRuns = (prior && prior.runs) || 0;
 
-  // V1: every battle also lands as a per-battle row in logs/woa.db (guarded —
+  // V1: every skirmish also lands as a per-skirmish row in logs/woa.db (guarded —
   // the markdown report works fine without it).
   var dbm = null, dbh = null, runId = null;
   try {
@@ -160,7 +160,7 @@ async function run() {
     runId = dbm.insertRun(dbh, { version: ver, kind: 'balance', redAi: dr, blueAi: db, n: n, tool: 'balance-report' });
   } catch (e) { dbm = null; console.error('(db off: ' + e.message + ')'); }
 
-  if (!flags.quiet) process.stderr.write('Simulating ' + n + ' battles/map, ' + diffLabel + ', ' + maps.length + ' maps' +
+  if (!flags.quiet) process.stderr.write('Simulating ' + n + ' skirmishes/map, ' + diffLabel + ', ' + maps.length + ' maps' +
     (flags.parallel ? ' (' + flags.parallel + ' workers)' : '') + ' ');
   var thisRun = {}; // name -> {shape, agg}
   function shapeOf(map) { return map.shape && map.shape.charAt(0) === '@' ? 'custom' : (map.shape || '?'); }
@@ -172,9 +172,9 @@ async function run() {
     // in-process interleaving is unsafe — each worker require()s a fresh engine.
     var cp = require('child_process');
     // each worker require()s a fresh engine, so --deck / --units must preload
-    // there too. WOA-041: the worker also collects every finished battle via
-    // balanceMap's onGame — slimmed by db.js's slimBattleState to exactly what
-    // insertBattle reads — and ships them in the one JSON envelope; the PARENT
+    // there too. WOA-041: the worker also collects every finished skirmish via
+    // balanceMap's onGame — slimmed by db.js's slimSkirmishState to exactly what
+    // insertSkirmish reads — and ships them in the one JSON envelope; the PARENT
     // stays the single woa.db writer (no cross-process SQLite contention).
     var WORKER = 'var path=require("path");var deckId=process.argv[7]||"",unitsId=process.argv[8]||"";' +
       'if(deckId||unitsId){var fs=require("fs");' +
@@ -184,11 +184,11 @@ async function run() {
       'if(deckId)global.WOA_CONTENT.decks.forEach(function(d){d.active=(d.id===deckId)});' +
       'if(unitsId)global.WOA_CONTENT.units.forEach(function(u){u.active=(u.id===unitsId)});}' +
       'var E=require(process.argv[1]);var m=E.MAPS.filter(function(x){return x.name===process.argv[2]})[0];' +
-      'var slim=null;try{slim=require(path.join(path.dirname(process.argv[1]),"..","dev","db.js")).slimBattleState}catch(e){}' +
-      'var battles=[];' +
+      'var slim=null;try{slim=require(path.join(path.dirname(process.argv[1]),"..","dev","db.js")).slimSkirmishState}catch(e){}' +
+      'var skirmishes=[];' +
       'var agg=E.balanceMap(m,+process.argv[3],{diffRed:process.argv[4],diffBlue:process.argv[5],seedBase:+process.argv[6],' +
-      'onGame:slim&&function(g,nn,st){battles.push({g:g,st:slim(st)})}});' +
-      'process.stdout.write(JSON.stringify({agg:agg,battles:battles}));';
+      'onGame:slim&&function(g,nn,st){skirmishes.push({g:g,st:slim(st)})}});' +
+      'process.stdout.write(JSON.stringify({agg:agg,skirmishes:skirmishes}));';
     var enginePath = path.join(__dirname, '..', 'game', 'engine.js');
     await new Promise(function (resolve, reject) {
       var pending = maps.length, launched = 0;
@@ -201,10 +201,10 @@ async function run() {
             var out;
             try { out = JSON.parse(stdout); thisRun[map.name] = { shape: shapeOf(map), agg: out.agg }; }
             catch (e) { return reject(e); }
-            // WOA-041: persist the worker's battles under this run id, on the
+            // WOA-041: persist the worker's skirmishes under this run id, on the
             // same seed/fp schedule the serial path uses (g is 1-based).
-            if (dbm) (out.battles || []).forEach(function (b) {
-              try { dbm.insertBattle(dbh, runId, b.st, E.balanceFP(b.g - 1), { seed: E.balanceSeed(seedBaseFor(mi), b.g - 1), version: ver }); }
+            if (dbm) (out.skirmishes || []).forEach(function (b) {
+              try { dbm.insertSkirmish(dbh, runId, b.st, E.balanceFP(b.g - 1), { seed: E.balanceSeed(seedBaseFor(mi), b.g - 1), version: ver }); }
               catch (e2) { /* a bad row never kills the report */ }
             });
             if (!flags.quiet) process.stderr.write('.');
@@ -219,7 +219,7 @@ async function run() {
       var seedBase = seedBaseFor(mi);
       var r = E.balanceMap(map, n, { diffRed: dr, diffBlue: db, seedBase: seedBase,
         onGame: dbm && function (g1, nn, st) {
-          try { dbm.insertBattle(dbh, runId, st, E.balanceFP(g1 - 1), { seed: E.balanceSeed(seedBase, g1 - 1), version: ver }); }
+          try { dbm.insertSkirmish(dbh, runId, st, E.balanceFP(g1 - 1), { seed: E.balanceSeed(seedBase, g1 - 1), version: ver }); }
           catch (e) { /* a bad row never kills the report */ }
         } });
       thisRun[map.name] = { shape: shapeOf(map), agg: r };
@@ -255,7 +255,7 @@ async function run() {
 
   var ranked = rows.slice().sort(function (a, b) { return a.score - b.score; });
   var best = (ranked[0] || rows[0]).name;
-  var totalBattles = rows.reduce(function (s, x) { return s + x.done; }, 0);
+  var totalSkirmishes = rows.reduce(function (s, x) { return s + x.done; }, 0);
 
   var G = R.foldGlobal(rows);
 
@@ -263,12 +263,12 @@ async function run() {
     x.notes = R.mapNotes(x.agg, x.done);
     if (x.name === best) x.notes.unshift('**best balance**');
   });
-  var noise = Math.round(100 / Math.sqrt(Math.max(1, Math.round(totalBattles / rows.length))));
+  var noise = Math.round(100 / Math.sqrt(Math.max(1, Math.round(totalSkirmishes / rows.length))));
   var md = R.reportMarkdown({
     style: 'report',
     title: diffLabel + ' AI',
     version: ver,
-    metaTail: totalBattles + ' battles' +
+    metaTail: totalSkirmishes + ' skirmishes' +
       (accumulated ? ' accumulated across ' + runs + ' run(s) (this run added ' + (n) + '/map)' : ' (this run only, not accumulated)') +
       (DECK ? ' · deck ' + DECK : '') + (UNITSET ? ' · units ' + UNITSET : '') + (flags.mapset ? ' · mapset ' + flags.mapset : '') +
       ' · ±' + noise + ' pts/map · dev/balance-report.js',
@@ -286,11 +286,11 @@ async function run() {
   fs.writeFileSync(path.join(dir, fname), md);
   if (accumulated) {
     acc.updatedAt = d.toISOString();
-    acc.totalBattles = totalBattles;
+    acc.totalSkirmishes = totalSkirmishes;
     fs.writeFileSync(accFilePath(ver), JSON.stringify(acc, null, 1));
   }
   console.log('SAVED: ' + rel + '/' + fname);
-  if (accumulated) console.log('ACCUMULATED: ' + rel + '/accumulated.json (' + totalBattles + ' battles across ' + runs + ' runs)');
+  if (accumulated) console.log('ACCUMULATED: ' + rel + '/accumulated.json (' + totalSkirmishes + ' skirmishes across ' + runs + ' runs)');
   console.log('BEST_MAP: ' + best);
 }
 run().catch(function (e) { console.error(e); process.exit(1); });

@@ -37,7 +37,7 @@ makes sense on *this* rig lives in this doc.
 - **Driving it:** `PORT=<n> node game/server.js` on a scratch port; deep link
   `index.html?screen=dash&charts` opens the dashboard (falls back to the two most-recent runs — to
   pick specific runs, drive the real `#dashRunA/#dashRunB` selects and dispatch a `change` event;
-  setting `DASH.runA/runB` alone doesn't re-render). `?autostart=ai` starts an AI battle.
+  setting `DASH.runA/runB` alone doesn't re-render). `?autostart=ai` starts an AI skirmish.
 - **Capturing pixels:** `msedge/chrome --headless --disable-gpu --screenshot=<png>
   --window-size=1400x1000 --virtual-time-budget=15000 <url>` — omit the virtual-time budget and an
   async-populated page captures falsely blank. Classic `--headless`, never `--headless=new`.
@@ -46,13 +46,13 @@ makes sense on *this* rig lives in this doc.
   `node dev/db.test.js` · `node dev/claude-plays.test.js` · `node dev/llm-session.test.js`. No known
   flakes (M2-P2: all suites deterministic across repeated runs).
 - **Golden balance diff:** capture `node game/balance.js 24 normal` AND `24 easy` pre-change; diff
-  post-change **excluding the one `Persisted N battles … (run <id>)` trailer line** — its run-id
+  post-change **excluding the one `Persisted N skirmishes … (run <id>)` trailer line** — its run-id
   auto-increments every invocation (pre-existing non-determinism, confirmed WOA-037). Byte-identical
   otherwise = pass.
 - **Fixed-seed cross-run check (WOA-044 run):** same-mode `balance.js` runs before/after a
   capture-only change replay the same seeds — their seed-derived dashboard charts must render
   identically, differing ONLY in the new field's charts (a free UI-layer golden diff). Corollary:
-  runs 106/107 in woa.db are a parallel-vs-serial **parity pair** (byte-identical battles) — fine
+  runs 106/107 in woa.db are a parallel-vs-serial **parity pair** (byte-identical skirmishes) — fine
   for render checks, useless for demonstrating A≠B visuals; when citing test data in a dispatch,
   name what it *can't* show (use a normal-vs-easy pair like 114/115 or 120/121 for divergence).
 - **Killing servers (Windows/Git-Bash):** `kill $!` after `&` kills the MSYS subshell, NOT node.exe —

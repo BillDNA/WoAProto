@@ -19,16 +19,16 @@ dynamic-scrum/planning/specs/original-specs/prototype pictures/*
 !dynamic-scrum/planning/specs/original-specs/prototype pictures/HexClarificationDiagram.png
 
 # Playtest reports live under logs/reports/ (Feedback Round 4). The balance +
-# battle .md reports ARE the corpus the report skills read, so they're tracked;
+# skirmish .md reports ARE the corpus the report skills read, so they're tracked;
 # only the append-only master log, live scratch log, and debug-state dumps are
 # noise — ignored.
-logs/reports/battle/claude-plays-log.jsonl
-logs/reports/battle/run-live.log
+logs/reports/skirmish/claude-plays-log.jsonl
+logs/reports/skirmish/run-live.log
 logs/debug/*
 !logs/debug/.gitkeep
 dev/claude-plays-log.jsonl
 
-# V1 battle database — a regenerable index over the committed reports (Bill's
+# V1 skirmish database — a regenerable index over the committed reports (Bill's
 # ruling: gitignore for now). WAL mode adds -wal/-shm siblings.
 logs/woa.db
 logs/woa.db-wal
