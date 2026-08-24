@@ -41,9 +41,9 @@ findings meant to feed `create-card`/`create-map`).
    LLM side gets one persistent session, so matches are token-cheap per battle).
    The LLM is a non-heuristic reference point on the skill curve, and its
    felt-notes are playtest signal — quote them.
-3. **Grade** every headline number against `dynamic-scrum/rubrics/grading-rubrics.md`
-   (north stars + per-artifact rubrics: goal / evidence + data origin / score
-   meaning). Quote the target band next to each reading.
+3. **Grade** every headline number against `docs/balance/` (north stars + bands)
+   and `docs/rubrics/` (per-artifact taste rubrics: goal / evidence + data
+   origin / score meaning). Quote the target band next to each reading.
 4. **Report** (markdown, for Bill):
    - North-star scoreboard: each metric, current value, target band, verdict.
    - Per-map flags: SIDE-BIASED / mover-strong / attrition-only / STALEMATES rows,
@@ -63,8 +63,9 @@ findings meant to feed `create-card`/`create-map`).
 - The card report's Simple% carries the CARD_KEEP burn bias (the AI burns its
   least precious card) — say so when citing it.
 - If Behaviour numbers moved sharply vs the dated baseline in
-  dynamic-scrum/rubrics/grading-rubrics.md "Game-level rubric" §1 (the single
-  numbers home — every figure there carries its AI tier / n / mapset / date;
+  docs/balance-baselines.md (the single numbers home — read against the
+  Behaviour-health guard in docs/balance/README.md §Game-level guards) — every
+  figure there carries its AI tier / n / mapset / date;
   don't restate numbers here, they go stale), treat it as an AI regression
   signal even when win rates look fine. Grade like-for-like: match the
   baseline's labeled setup (AI tier + mapset) before comparing.
