@@ -47,7 +47,7 @@ text-only renders clean.
    candidate; the 2-checker delta wasn't significant).
 3. State the swap: which copies leave the 16 to make room, and why.
 4. Tell Bill how to test: import via Deck Editor (or hand-edit
-   `content/decks/default.js`), then
+   `game/content/decks/default.js`), then
    `node game/test.js` + a Balance Dashboard run; watch the new card's Simple% /
    1stSight% columns.
 5. **Offer art (only if Bill approves the card first).** If the `dig-mcp` MCP

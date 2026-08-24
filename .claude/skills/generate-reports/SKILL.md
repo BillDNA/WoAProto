@@ -110,7 +110,7 @@ measured evidence, all filed for Bill (he decides):
 3. **AI levers to add or drop** — weights/personalities to introduce or cut (grounded in
    `ai-heuristic-model.md`), now that AI weights are a tunable (WOA-012).
 
-Then Bill reviews and a sprint is built from the picks.
+Then Bill reviews the picks and decides what to act on.
 
 ## Notes
 
