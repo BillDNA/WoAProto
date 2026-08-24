@@ -21,8 +21,8 @@ plus topic tags (`#game-rules`, `#code-architecture`, `#ai`, `#game-logs`, `#his
 | [[glossary]]                     | Project lexicon                                                |
 | [[version-control-policy]]       | Git protocol — short pointer to root `CLAUDE.md`'s canonical policy |
 
-History lives in `dynamic-scrum/history/`: [[shipped-history]] (June-rounds / V0 / V1 terse log, parsed
-out of root `CLAUDE.md`) and [[V0-summary]] (the full V0 arc). Templates `_orientation-doc.md` /
+History: the shipped pre-board eras (June-rounds / V0 / V1) are archived in **git history**; the live
+baselines-to-protect live in the single SoT **`docs/balance-baselines.md`**. Templates `_orientation-doc.md` /
 `ticket-block.md` are DS-scaffolded and current — author new primers / tickets from them.
 
 ## Reference (used by skills + Bill alike)
@@ -50,8 +50,7 @@ create-card / create-map / run-tournament / review-reports grade against). Futur
 
 Specs live in `dynamic-scrum/planning/specs/` (the DS spec home; the old repo-root `specs/` dir is
 gone). **All implemented V0 + V1 spec files are fully decomposed and deleted** — the behaviour and
-rationale live in the docs below; git history is the archive. [[V0-summary]] is preserved in
-`dynamic-scrum/history/`.
+rationale live in the docs below; git history is the archive.
 
 | Retired spec                       | Where it lives as docs now                                |
 | ---------------------------------- | --------------------------------------------------------- |
@@ -62,7 +61,7 @@ rationale live in the docs below; git history is the archive. [[V0-summary]] is 
 | `v1-content-curation`              | [[code-architecture]] §content/map-sets                   |
 | `graphs-spec`                      | [[data-and-reports]] §loop (Charts tab)                   |
 | `v1-field-manual-animations`       | [[manual-animations-authoring]]                           |
-| V0 specs (ten + 5 rounds)          | [[shipped-history]] §V0 + [[V0-summary]] → [[code-architecture]] / [[War Of Attrition rule book]] / [[grading-rubrics]] |
+| V0 specs (ten + 5 rounds)          | git history (archived) → [[code-architecture]] / [[War Of Attrition rule book]] / [[grading-rubrics]] |
 | `original-specs/`                  | Physical-prototype record under `dynamic-scrum/planning/specs/original-specs/` (art sources, `HexClarificationDiagram.png` — still normative for directional terrain, gitignore-whitelisted) — the one thing kept in the specs dir |
 
 **`style-guide.md` — N/A as a separate doc**: the aesthetic doctrine (steampunk Napoleonic field

@@ -1,10 +1,10 @@
 # WarOfAttrition
 
 **Local docs (retained content — not an active workflow):** the project's orientation docs, rubrics,
-specs, and history live under `dynamic-scrum/` — `code-architecture.md`, `Docs Index`, the grading
-rubrics, and `shipped-history`, read by the local game skills (`create-card`, `create-map`,
+and specs live under `dynamic-scrum/` — `code-architecture.md`, `Docs Index`, and the grading
+rubrics, read by the local game skills (`create-card`, `create-map`,
 `run-tournament`, `review-reports`, `generate-reports`). Kept as reference material — the DynamicScrum
-session workflow is not run in this project.
+session workflow is not run in this project. The measured balance baselines live in `docs/balance-baselines.md`.
 
 ---
 
@@ -14,7 +14,7 @@ session workflow is not run in this project.
 
 we are taking a board game prototype and turning it into a playable prototype in the web browser, the goal of this project is to have something that allows me to playtest and rapidly iterate on balance in the game.
 
-Start in [[code-architecture]] (`dynamic-scrum/docs/`) — it is the orientation file for this project and stays current; [[Docs Index]] maps every other doc. `game/README.md` is the player-facing manual. [[workflow]] has the build/test conventions. The shipped pre-board eras (June rounds / V0 / V1) live in [[shipped-history]].
+Start in [[code-architecture]] (`dynamic-scrum/docs/`) — it is the orientation file for this project and stays current; [[Docs Index]] maps every other doc. `game/README.md` is the player-facing manual. [[workflow]] has the build/test conventions. The shipped pre-board eras (June rounds / V0 / V1) are archived in git history.
 
 ## Standing goals (revised for V1 — reasoning in the retired `v1-architecture` spec, git history)
 
@@ -28,30 +28,11 @@ Start in [[code-architecture]] (`dynamic-scrum/docs/`) — it is the orientation
 
 ## Shipped history
 
-The June-2026 feedback rounds, V0, and V1 all shipped pre-board; the terse log lives in
-[[shipped-history]] (`dynamic-scrum/history/`), including the **baselines to protect** — now the
-**rules-1.2 / Core Six / `cavsplit17-raid-paid`** figures (metric re-baseline **WOA-039**, engine
-rules unchanged; measured 2026-07-18, hard-vs-hard, n=60/map=360, `core7`'s 6-map pool: first mover
-47%, Red 49%, HQ 17%, **tie-goes-to-2nd 13% of attrition endings**, **Attack share 19% / Swap share
-16%** of all actions, zero-kill 2%, first-blood→win 66%, control 93%, **Drag 2.4 (attrition
-endings)**, Swings 3.5, reserves-at-end HQ-only red 33% / blue 31% (n=61, small-n) —
-`logs/reports/balance/1.2/2026-07-18-1712-hard-vs-hard-n60.md`; sharp moves in these = regression
-even if win rates look fine). **Note the 1.2 metric redefinition**: Atk/Swp are now % of actions
-(not counts/battle), Tie%/Drag condition to attrition endings (not pooled), Reserves to HQ endings —
-so a 1.1 count/pooled figure and a 1.2 share/sliced figure are NOT comparable. The prior **rules-1.1
-/ Core Six / `cavsplit17-raid-paid`** row (measured 2026-07-16, hard-vs-hard, n=60/map: first mover
-47%, Red 49%, tie 11% pooled, **6.7 attacks / 5.8 swaps** counts/battle, zero-kill 2%, Drag 2.0
-pooled, Swings 3.5) is **superseded by the metric redefinition**. The rules-1.1 / Core Six row on the
-superseded **`default` 16-card deck** (first mover 45%, Red 51%, tie 9%, 6.3/5.4 atk/swp counts,
-zero-kill 1%, Drag 2.1, Swings 2.7) is superseded further back; the row before that (first mover 48%,
-Red 50%, tie 10%, 6.1/5.7 atk/swp, Drag 2.3, Swings 2.8) was on the pre-WOA-020 7-to-12-map pool; the
-old V0 row (~46 / ~52 / ~26%, 4.9 attacks / 6.5 swaps counts) is superseded further back still —
-attacks and swaps inverted between eras, so grading fresh runs against any of them flags a healthy
-deck as broken. Skill premium is now verified under 1.1 / Core Six / `cavsplit17-raid-paid` (`matchup 96`,
-n=96/map=576/pairing, 2026-07-18): normal>easy 69%, hard>easy 76%, hard>normal 56% (thin, within
-noise), sanity 46% (thin, within noise) (**superseded, default 16-card deck, 2026-07-16**:
-normal>easy 69%, hard>easy 73%, hard>normal 56% — thin, within noise — sanity 50%). Post-adopt work
-is tracked on the board.
+The **baselines to protect** — the live rules-1.2 measured anchors (first-mover %, tie-goes-to-2nd,
+Drag, Swings, skill premium, and the load-bearing 1.2 metric-redefinition warning) — live in the
+single source of truth **`docs/balance-baselines.md`**. Superseded lineage (rules-1.1 / V0 / the
+pre-WOA-020 pool / the `default`-deck rows) is dropped; git is the archive. Balance is math (that
+note); rubrics are the subjective-fun judgment layer that cite it.
 
 **For Bill to decide** (filed, not acted on): the Steam leverage draft ([[steam-roadmap]]).
 *(The weight-tuner suggestions are closed — WOA-012 verified and **rejected** the sweep under 1.1;

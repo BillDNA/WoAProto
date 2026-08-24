@@ -59,8 +59,7 @@ makes sense on *this* rig lives in this doc.
   the server keeps listening. Find it with `netstat -ano | grep <port>`, kill with
   `taskkill //PID <pid> //F`, and verify the port is clear afterward (WOA-037/036 runs).
 - **Staging:** no sidecar rules; stage explicit paths. `logs/reports/**` markdown IS committed
-  (the human record); `logs/woa.db*` and screenshot scratch dirs
-  (`planning/sprint-runs/*-screenshots/`) are not.
+  (the human record); `logs/woa.db*` and screenshot scratch dirs are not.
 
 ---
 

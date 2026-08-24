@@ -102,7 +102,7 @@ skills below) — moving any requires a same-commit sweep of `.claude/skills/` +
    settle curve; `BATTLE_CACHE`/`dashLoadBattleRows` is the one shared A/B row fetch. Cards/Units are
    stubs until P2.4/P3.1. **Metric definitions are rules-1.2 since WOA-039**: Atk%/Swp% shares of all
    actions (raw counts DB-only), Tie%/Drag over attrition endings, Reserves HQ-endings-only — bands +
-   baselines in [[grading-rubrics]] and the CLAUDE.md shipped-history row, all setup-stamped.
+   baselines in [[grading-rubrics]] and the single SoT `docs/balance-baselines.md`, all setup-stamped.
 4. Skills wrap the loop: `generate-reports` (1+2, fire-and-forget), `review-reports` (grade against
    [[grading-rubrics]]), `run-tournament` (roster-wide meta read).
 

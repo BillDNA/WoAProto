@@ -50,17 +50,13 @@ active:false.** Every figure below re-stamped from the already-saved candidate s
 label; the prior default-deck reading trails as a `_Superseded (default deck, pre-WOA-030):_` note
 on the same item, same pattern as the pre-1.1/pre-WOA-020 rows above it.
 
-**Metric re-baseline (2026-07-18, WOA-039 — rules 1.2). Three metric DEFINITIONS changed
-(engine rules did NOT):** (1) **Atk/Swp counts → Atk%/Swp% SHARES** of all actions taken
-(attacks+swaps+marches+deploys) — deck-size-proof, so the WOA-030 16→17 card change no longer
-inflates them; the raw counts stay in `logs/woa.db`, cut from print. (2) **Tie% and Drag condition to
-ATTRITION endings only** — HQ endings have Drag 0 by definition and diluted the pooled Tie% by the HQ
-share, so both now divide by attrition-ending count, not every battle. (3) **Reserves at end conditions
-to HQ endings only** and is typically small-n (HQ endings are a minority) — it prints `(n=N)` and is
-greyed/excluded from the verdict when slice-n < 240 fleet-wide (SPEC §8). Bands re-measured on the
-**standard setup — hard-vs-hard, n=60/map=360, Core Six, deck `cavsplit17-raid-paid`, 2026-07-18**
-(`logs/reports/balance/1.2/2026-07-18-1712-hard-vs-hard-n60.md`). The pre-1.2 pooled reading trails as
-a `_Superseded (pre-WOA-039, pooled/counts):_` note per item.
+**Metric re-baseline (WOA-039 — rules 1.2).** Three metric *definitions* changed (engine rules did
+not): Atk/Swp counts → **% shares** of all actions; Tie% and Drag condition to **attrition** endings
+only; Reserves-at-end conditions to **HQ** endings (small-n, greyed when slice-n < 240 fleet-wide,
+SPEC §8). The full explanation, provenance, and the measured anchor figures are the single source of
+truth in [`docs/balance-baselines.md`](../../docs/balance-baselines.md) — cited here, never re-copied.
+The pre-1.2 pooled reading trails each item as a `_Superseded (pre-WOA-039, pooled/counts):_` note.
+The threshold **bands below stay here** — they're rubric policy, not measured figures.
 
 ## Quick reference — report line → target band
 
