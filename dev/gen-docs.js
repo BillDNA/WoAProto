@@ -12,7 +12,7 @@
 
      <!-- GEN:content -->        the current content roster (maps with shape +
                                  custom flag, decks, map-sets with the active
-                                 marker) in dynamic-scrum/docs/code-architecture.md.
+                                 marker) in docs/code-architecture.md.
 
    Usage: node dev/gen-docs.js
    - Idempotent: running it twice produces no diff.
@@ -123,7 +123,7 @@ function genContent() {
 var BLOCKS = [
   { file: 'docs/ai/ai-heuristic-model.md', name: 'weights', gen: genWeights },
   { file: 'docs/ai/ai-heuristic-model.md', name: 'personalities', gen: genPersonalities },
-  { file: 'dynamic-scrum/docs/code-architecture.md', name: 'content', gen: genContent }
+  { file: 'docs/code-architecture.md', name: 'content', gen: genContent }
 ];
 
 function replaceBlock(src, name, body, file) {

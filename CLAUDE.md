@@ -14,7 +14,7 @@ session workflow is not run in this project. The measured balance baselines live
 
 we are taking a board game prototype and turning it into a playable prototype in the web browser, the goal of this project is to have something that allows me to playtest and rapidly iterate on balance in the game.
 
-Start in [[code-architecture]] (`dynamic-scrum/docs/`) — it is the orientation file for this project and stays current; [[Docs Index]] maps every other doc. `game/README.md` is the player-facing manual. [[workflow]] has the build/test conventions. The shipped pre-board eras (June rounds / V0 / V1) are archived in git history.
+Start in [[code-architecture]] (`docs/`) — it is the orientation file for this project and stays current; [[Docs Index]] maps every other doc. `game/README.md` is the player-facing manual. [[workflow]] has the build/test conventions. The shipped pre-board eras (June rounds / V0 / V1) are archived in git history.
 
 ## Standing goals (revised for V1 — reasoning in the retired `v1-architecture` spec, git history)
 
