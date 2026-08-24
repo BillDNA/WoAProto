@@ -5,7 +5,7 @@
    multipliers of the current value (both AIs get the candidate weights),
    measure fitness over a map subset, keep the best, repeat. Fitness is the
    mean of report-model's ideal-range balance score (0 = ideal, lower =
-   better; SOT: grading-rubrics §Best map) plus guardrail checks against
+   better; SOT: docs/balance/best-map-score.md) plus guardrail checks against
    the anti-degeneracy bands.
 
    SUGGESTIONS ONLY — this tool never writes engine files. Bill decides.

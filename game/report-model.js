@@ -54,8 +54,8 @@ var WOA_REPORT = (function () {
 
   /* ===== Metric bands as DATA (WOA-033, SPEC §6) =====
      The ONE band table. SOT for the prose is
-     dynamic-scrum/rubrics/grading-rubrics.md §"Best map" (the ideal-range
-     table, WOA-007) + the North stars / Game-level guards; if that doc and
+     docs/balance/best-map-score.md (the ideal-range table, WOA-007) +
+     docs/balance/README.md (the North stars / Game-level guards); if that doc and
      this table disagree, the doc wins and this table is fixed. `balanceScore`
      folds over THIS table (no second copy of the ranges) — the eight
      feedsScore:true rows ARE the ideal-range list.
@@ -157,7 +157,7 @@ var WOA_REPORT = (function () {
   }
 
   /* Balance-quality score (LOWER = better, 0 = ideal) — the "best map"
-     ideal-range rubric (SOT: grading-rubrics §"Best map", WOA-007). Sums the
+     ideal-range rubric (SOT: docs/balance/best-map-score.md, WOA-007). Sums the
      feedsScore rows of the ONE band table above; attrition-only maps (HQ% < 10)
      are penalised (Round-4 ruling reversed 2026-07-10, swing reward gone with
      it). T0 bands only — the score is temperature-independent by design. */
@@ -635,7 +635,7 @@ var WOA_REPORT = (function () {
     });
     L.push('');
     if (style === 'report') {
-      L.push('_Balance column: weighted distance outside each metric\'s ideal range (0 = ideal, lower = better) — Red/1st 45–55, HQ 10–40, 0kill ≤5, Tie ≤18, Drag ≤3.0, Swings ≥2.0, Control ≥70. Tie%/Drag over attrition endings only (rules 1.2). SOT: grading-rubrics §Best map._');
+      L.push('_Balance column: weighted distance outside each metric\'s ideal range (0 = ideal, lower = better) — Red/1st 45–55, HQ 10–40, 0kill ≤5, Tie ≤18, Drag ≤3.0, Swings ≥2.0, Control ≥70. Tie%/Drag over attrition endings only (rules 1.2). SOT: docs/balance/best-map-score.md._');
       L.push('');
       L.push('## Overall');
       L.push('');

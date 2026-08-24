@@ -28,18 +28,21 @@ analysis to `logs/reports/analysis/`. Covers both report types:
 
 ## Read first
 
-- `dynamic-scrum/rubrics/grading-rubrics.md` — THE grading SOT. Ground every
-  reading and suggestion in one of its sections: **North stars** (the 5
-  headline items), **§Temperature** (T0/T1/T2 + hard floors — read before
-  writing a verdict), **Card rubric**, **Map rubric** (+ **"Best map"** —
-  the `balanceScore` SOT), **Unit rubric**, **Game-level rubric** (Behaviour
-  health / Pacing / Deck as attrition clock). Every criterion there is
-  Goal/Evidence/Score/Lever — carry that same shape into the analysis (below).
+- `docs/balance/` (runnable math) + `docs/rubrics/` (taste rubrics) — THE grading
+  SOT, split by kind. Ground every reading and suggestion in one of their
+  sections: **North stars** (the 5 headline items, `docs/balance/README.md`),
+  **§Temperature** (T0/T1/T2 + hard floors — read before writing a verdict,
+  `docs/balance/README.md`), **card rubric** (`docs/rubrics/card-rubric.md`),
+  **map rubric** (`docs/rubrics/map-rubric.md`) + **"Best map"** (the
+  `balanceScore` SOT, `docs/balance/best-map-score.md`), **unit rubric**
+  (`docs/rubrics/unit-rubric.md`), **Game-level guards** (Behaviour health /
+  Pacing / Deck as attrition clock, `docs/balance/README.md`). Every criterion
+  there is Goal/Evidence/Score/Lever — carry that same shape into the analysis (below).
   Every number is dated + setup-labeled (AI tier, n, mapset, date) there —
   **quote the rubric's band, never restate its baseline figures here**; this
   skill file goes stale the moment a restated number does, and the rubric is
   the one place they're allowed to live.
-- `dynamic-scrum/docs/human-instructions/ai-heuristic-model.md` — so any AI-behaviour
+- `docs/ai/ai-heuristic-model.md` — so any AI-behaviour
   suggestion names the exact weight to turn.
 - The reports themselves. Default to the **current rules version** (the highest
   `<version>` folder / the `Engine.VERSION` stamped in report headers). Don't mix
@@ -133,9 +136,10 @@ Then tell Bill the saved path and give a 3-line verbal summary.
   read the rubric's ⚠ box before grading a card an auto-play or a dead hoard
   off those two columns alone.
 - If Behaviour numbers moved sharply vs the dated baseline in
-  `dynamic-scrum/rubrics/grading-rubrics.md` "Game-level rubric" §1 (the
-  single numbers home — every figure there carries its AI tier / n / mapset /
-  date; don't restate numbers here, they go stale), treat it as an AI
+  `docs/balance-baselines.md` (the single numbers home — every figure there
+  carries its AI tier / n / mapset / date; don't restate numbers here, they go
+  stale), read against the Behaviour-health guard in `docs/balance/README.md`
+  §Game-level guards, treat it as an AI
   regression signal even when win rates look fine — after confirming the
   setups actually match (see "Match setup" above).
 - One page of analysis is plenty. If there's nothing worth suggesting, say so

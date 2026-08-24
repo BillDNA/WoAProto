@@ -14,7 +14,7 @@ proven across the July 2026 4-iteration run): one isolated balance sweep + **one
 seeded LLM match. Loop v2 (B.5.1.2) runs **one feels-match per iteration**, not three —
 the extra two seeds didn't earn their wall-clock. Every command pins its seeds, so the
 same recipe against two content slots is an apples-to-apples diff — the comparison rules
-live in `dynamic-scrum/docs/human-instructions/standard-runs-runbook.md` (keep the two in
+live in `docs/human-instructions/standard-runs-runbook.md` (keep the two in
 sync).
 
 ## Steps

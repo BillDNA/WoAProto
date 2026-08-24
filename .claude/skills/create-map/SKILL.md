@@ -19,8 +19,8 @@ writes a `game/content/maps/` file).**
   after the V1 trim). Note the match pool is the ACTIVE map-set
   (`game/content/mapsets/`), so a new map must also be added to a set — or
   measured directly with a name filter / `--mapset all`.
-- `dynamic-scrum/rubrics/grading-rubrics.md` — the map rubric.
-- Balance evidence: dynamic-scrum/docs/code-architecture.md "Known balance
+- `docs/rubrics/map-rubric.md` — the map rubric.
+- Balance evidence: docs/code-architecture.md "Known balance
   signals" (0.x-era baseline) + a fresh `node game/balance.js 40 <filter>` for
   any map you're comparing against.
 
