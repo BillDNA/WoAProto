@@ -1,11 +1,11 @@
 /* War of Attrition — ui part: the Balance Dashboard's CHARTS view (V1
    graphs-spec views #1 map-fairness scatter, #3 card quadrant, #4
-   battle-length histogram). Every chart answers the QUESTION in its title —
+   skirmish-length histogram). Every chart answers the QUESTION in its title —
    no charts for charts' sake (Bill, graphs-spec Q6).
 
    Inline SVG by string concat like the rest of the ui — zero dependencies,
    file:// safe. Draws ONLY the current run's in-memory data (DASH); all
-   derivations reuse WOA_REPORT (one implementation per fact). Per-battle
+   derivations reuse WOA_REPORT (one implementation per fact). Per-skirmish
    turns/winTypes come from DASH.detail, collected by the dashRun loop in
    ui/boot.js.
 
@@ -198,7 +198,7 @@ function chartScatter(rows, meta){
       '" fill="transparent"'+chTipAttrs(r.name, [
         ['red win %', r.red + '%'], ['first-mover win %', r.first + '%'],
         ['HQ-capture endings', r.hq + '%'], ['balance score (lower = better)', WOA_REPORT.f1(r.score)],
-        ['battles', r.done]
+        ['skirmishes', r.done]
       ], id)+'/>';
   });
   s += marks + chrome + labels + hits + '</svg>';
@@ -257,7 +257,7 @@ function chartQuadrant(crows, meta){
   return s;
 }
 
-/* =================== chart 3: battle-length histogram ===================
+/* =================== chart 3: skirmish-length histogram ===================
    THE QUESTION: does this map end games decisively or grind to deck-out?
    Turns-to-finish binned by 2, stacked by winType; the deck-out line marks
    where "nobody ever died" lives. One map at a time — the <select> is the knob. */
@@ -282,7 +282,7 @@ function chartHistogram(det, mapName){
   function hy(count){ return T + ph - count / yTop * ph; }
   function hx(turn){ return L + turn / xMax * pw; }
 
-  var s = '<svg id="chHist" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Battle length histogram">';
+  var s = '<svg id="chHist" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Skirmish length histogram">';
   s += '<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="'+CHART.surface+'" rx="6"/>';
   for (var yv = yStep; yv <= yTop; yv += yStep){
     s += chLine(L, hy(yv), L + pw, hy(yv), CHART.grid, 1);
@@ -290,7 +290,7 @@ function chartHistogram(det, mapName){
   }
   s += chLine(L, T + ph, L + pw, T + ph, CHART.axis, 1.2); // baseline
   for (var xt = 0; xt <= maxTurn; xt += 4) s += chText(hx(xt), T + ph + 14, String(xt), { fs: 10.5, anchor: 'middle' });
-  s += chText(L + pw / 2, H - 6, 'battle length (turns)', { fs: 12, anchor: 'middle' });
+  s += chText(L + pw / 2, H - 6, 'skirmish length (turns)', { fs: 12, anchor: 'middle' });
   // deck-out threshold — dashed IS the threshold idiom (never used on the grid)
   s += chLine(hx(maxTurn), T + 8, hx(maxTurn), T + ph, CHART.inkSoft, 1, '4 3');
   s += chText(hx(maxTurn), T + 2 + 4, 'deck-out ('+maxTurn+')', { fs: 10.5, fill: CHART.muted, italic: true, anchor: 'middle' });
@@ -323,7 +323,7 @@ function chartHistogram(det, mapName){
     var lo = i * 2 + 1, hi = (i + 1) * 2;
     hits += '<rect class="ch-hit" x="'+(cx - slot / 2).toFixed(1)+'" y="'+T+'" width="'+slot.toFixed(1)+'" height="'+ph+
       '" fill="transparent"'+chTipAttrs('turns '+lo+'–'+hi, [
-        ['battles', total], ['won by HQ capture', b.hq], ['won by attrition', b.attr]
+        ['skirmishes', total], ['won by HQ capture', b.hq], ['won by attrition', b.attr]
       ], ids.join(','))+'/>';
   });
   s += marks + hits + '</svg>';
@@ -359,22 +359,22 @@ function renderCharts(el){
 
   // --- 1. map fairness scatter ---
   h += '<div class="chcard"><h3>Which maps are broken, and how?</h3>' +
-    '<p class="small">n = '+n+' battles/map · '+rows.length+' map(s) · '+chEsc(aiLabel)+' · rules v'+E.VERSION+'. Fair maps sit on the cross; drift up/down = side bias, left/right = turn-order bias. Maps outside the 38–62 band are named.</p>' +
+    '<p class="small">n = '+n+' skirmishes/map · '+rows.length+' map(s) · '+chEsc(aiLabel)+' · rules v'+E.VERSION+'. Fair maps sit on the cross; drift up/down = side bias, left/right = turn-order bias. Maps outside the 38–62 band are named.</p>' +
     '<div class="chkey"><span>fill = balance score:</span><span>'+
       CHART.seq.map(function(c){ return chSwatch(c); }).join('')+' good → poor</span>' +
-    '<span>'+chSwatch('transparent')+'dot area = share of battles ending in HQ capture (big = rushable)</span></div>' +
+    '<span>'+chSwatch('transparent')+'dot area = share of skirmishes ending in HQ capture (big = rushable)</span></div>' +
     chartScatter(rows, DASH.meta) + '</div>';
 
   // --- 2. card quadrant ---
   h += '<div class="chcard"><h3>Which cards are on the overpowered watchlist?</h3>' +
-    '<p class="small">n = '+G.games+' battles of AI play · '+crows.length+' cards'+(omitted ? ' ('+omitted+' never played, omitted)' : '')+'. Up-left = grabbed and played immediately; bubble area = times played.</p>' +
+    '<p class="small">n = '+G.games+' skirmishes of AI play · '+crows.length+' cards'+(omitted ? ' ('+omitted+' never played, omitted)' : '')+'. Up-left = grabbed and played immediately; bubble area = times played.</p>' +
     '<div class="chkey"><span>fill = win % when played:</span>' +
     '<span>'+chSwatch(CHART.divBlue[2])+'under 50%</span>' +
     '<span>'+chSwatch(CHART.divMid)+'≈ 50%</span>' +
     '<span>'+chSwatch(CHART.divRed[2])+'over 50%</span></div>' +
     chartQuadrant(crows, DASH.meta) + '</div>';
 
-  // --- 3. battle-length histogram (per map — the knob) ---
+  // --- 3. skirmish-length histogram (per map — the knob) ---
   var det = (DASH.detail || {})[histMap];
   h += '<div class="chcard"><div class="chhead"><h3>Does this map end games decisively or grind to deck-out?</h3>' +
     '<label class="small">Map <select id="chHistMap">' +
@@ -382,11 +382,11 @@ function renderCharts(el){
       return '<option value="'+chEsc(r.name)+'"'+(r.name === histMap ? ' selected' : '')+'>'+chEsc(r.name)+(r.name === best.name ? ' (best balance)' : '')+'</option>';
     }).join('') + '</select></label></div>';
   if (det && det.turns.length){
-    h += '<p class="small">n = '+det.turns.length+' battles on '+chEsc(histMap)+'. Bars near the deck-out line are games where nobody could land a kill.</p>' +
+    h += '<p class="small">n = '+det.turns.length+' skirmishes on '+chEsc(histMap)+'. Bars near the deck-out line are games where nobody could land a kill.</p>' +
       '<div class="chkey"><span>'+chSwatch(CHART.hq)+'won by HQ capture</span><span>'+chSwatch(CHART.attr)+'won by attrition</span></div>' +
       chartHistogram(det, histMap);
   } else {
-    h += '<p class="small" style="padding:22px 0; text-align:center;">Run a new report to collect per-battle detail &mdash; this run predates it.</p>';
+    h += '<p class="small" style="padding:22px 0; text-align:center;">Run a new report to collect per-skirmish detail &mdash; this run predates it.</p>';
   }
   h += '</div>';
 
@@ -454,10 +454,10 @@ function chBindHits(root){
 }
 
 /* =================== the Overview screen (WOA-035, design 4a/1c/1f/1e) ===
-   THE QUESTION: what regressed, run A -> run B? Reads BOTH runs' battle rows
-   from GET /api/battles?run=<id> (fetched once per A/B pair and cached —
-   BATTLE_CACHE, shared with the WOA-040 Maps drill-down below so switching
-   pills never refetches), folds them through WOA_REPORT.foldBattles
+   THE QUESTION: what regressed, run A -> run B? Reads BOTH runs' skirmish rows
+   from GET /api/skirmishes?run=<id> (fetched once per A/B pair and cached —
+   SKIRMISH_CACHE, shared with the WOA-040 Maps drill-down below so switching
+   pills never refetches), folds them through WOA_REPORT.foldSkirmishes
    (report-model.js — the ONE DB-rows -> agg fold), then draws: a verdict
    banner, the triage band board (1c), the per-map balance-score dumbbells
    (1f), and two fleet-wide pacing minis (1e). Plain divs by string concat,
@@ -469,11 +469,11 @@ function chBindHits(root){
 // metrics whose val() returns a 0-100 percentage (drag/swings are raw counts).
 // WOA-039: attackShare/swapShare are % of all actions taken.
 var OV_PERCENT_KEYS = { red: 1, first: 1, hq: 1, zeroKill: 1, tie: 1, control: 1, firstBlood: 1, attackShare: 1, swapShare: 1 };
-// WOA-035/WOA-040: every A/B-comparing pane reads the SAME two runs' battle
-// rows (every map, unfiltered — GET /api/battles?run=<id> has no map param),
+// WOA-035/WOA-040: every A/B-comparing pane reads the SAME two runs' skirmish
+// rows (every map, unfiltered — GET /api/skirmishes?run=<id> has no map param),
 // so ONE cache/fetch serves the Overview AND the Maps drill-down; keyed
-// "runA|runB", see dashLoadBattleRows below.
-var BATTLE_CACHE = { key: null, rowsA: null, rowsB: null };
+// "runA|runB", see dashLoadSkirmishRows below.
+var SKIRMISH_CACHE = { key: null, rowsA: null, rowsB: null };
 
 function ovFmt(key, v) {
   if (v == null) return 'n/a';
@@ -592,8 +592,8 @@ function ovVerdictBanner(scoredRows, aggA, aggB, temperature) {
 }
 
 /* Balance-score-by-map dumbbells (design 1f): one row per map seen in
-   EITHER run's battle rows, balanceScore(agg,done) folded per map via the
-   SAME WOA_REPORT.foldBattles/balanceScore this file's Overview totals use.
+   EITHER run's skirmish rows, balanceScore(agg,done) folded per map via the
+   SAME WOA_REPORT.foldSkirmishes/balanceScore this file's Overview totals use.
    0-20 display scale (clamped; the real score always prints regardless).
    Sorted worst-first on B (the eye lands on the regression). Row click sets
    DASH.mapFocus + switches to the Maps pill (its P2.2 stub echoes it). */
@@ -605,8 +605,8 @@ function ovMapDumbbells(rowsA, rowsB) {
   Object.keys(byMapA).forEach(function (m) { names[m] = 1; });
   Object.keys(byMapB).forEach(function (m) { names[m] = 1; });
   var rows = Object.keys(names).map(function (m) {
-    var gA = byMapA[m] ? WOA_REPORT.foldBattles(byMapA[m]) : null;
-    var gB = byMapB[m] ? WOA_REPORT.foldBattles(byMapB[m]) : null;
+    var gA = byMapA[m] ? WOA_REPORT.foldSkirmishes(byMapA[m]) : null;
+    var gB = byMapB[m] ? WOA_REPORT.foldSkirmishes(byMapB[m]) : null;
     return {
       map: m, doneA: gA ? gA.done : 0, doneB: gB ? gB.done : 0,
       scoreA: gA ? WOA_REPORT.balanceScore(gA.agg, gA.done) : null,
@@ -621,7 +621,7 @@ function ovMapDumbbells(rowsA, rowsB) {
 
   var h = '<div style="font-size:13px;font-weight:bold;margin-bottom:8px;">Balance score by map, A&rarr;B ' +
     '<span class="small" style="font-style:italic;">(0&ndash;20 scale, sorted worst-first on B)</span></div>';
-  if (!rows.length) return h + '<p class="small">No per-map battle rows for either run yet.</p>';
+  if (!rows.length) return h + '<p class="small">No per-map skirmish rows for either run yet.</p>';
   h += '<div class="ov-grid" style="grid-template-columns:92px 1fr 92px;">';
   rows.forEach(function (r) {
     var posA = r.scoreA == null ? null : Math.max(0, Math.min(100, r.scoreA / 20 * 100));
@@ -654,7 +654,7 @@ function ovMapDumbbells(rowsA, rowsB) {
 
 /* Pacing minis (design 1e, simplified per the mockup 4a fidelity note):
    deploy interleave and settle point, both WOA_REPORT folds mapped over
-   every battle's trace envelope (WOA_REPORT.envelopeFromRow), run A vs B. */
+   every skirmish's trace envelope (WOA_REPORT.envelopeFromRow), run A vs B. */
 function ovPacingMinis(rowsA, rowsB) {
   var envA = rowsA.map(WOA_REPORT.envelopeFromRow).filter(function (e) { return !!e; });
   var envB = rowsB.map(WOA_REPORT.envelopeFromRow).filter(function (e) { return !!e; });
@@ -683,8 +683,8 @@ function ovPacingMinis(rowsA, rowsB) {
   }
   bars += '</div><div style="display:flex;justify-content:space-between;font-size:10px;color:#75643f;margin-top:3px;font-style:italic;"><span>all up-front</span><span>all after contact</span></div>';
   var interMini = '<div class="ov-mini"><h4>deploy interleave <b>' + Math.round(avg(interA) * 100) + '%→' + Math.round(avg(interB) * 100) +
-    '%</b></h4>' + bars + '<p class="small" style="margin:6px 0 0;">share of each battle&rsquo;s deploys landing before vs after first contact &mdash; A ' +
-    interA.length + ' battles (hollow), B ' + interB.length + ' (solid)</p></div>';
+    '%</b></h4>' + bars + '<p class="small" style="margin:6px 0 0;">share of each skirmish&rsquo;s deploys landing before vs after first contact &mdash; A ' +
+    interA.length + ' skirmishes (hollow), B ' + interB.length + ' (solid)</p></div>';
 
   // ---- settle curve: CDF of settlePoint, A dashed / B solid (WOA-040: the
   // svg-building moved to the shared chSettleSvg — same numbers, one impl) ----
@@ -692,16 +692,16 @@ function ovPacingMinis(rowsA, rowsB) {
   var svg = chSettleSvg(settleA, settleB, W, H);
   var settleMini = '<div class="ov-mini"><h4>median settle <b>' + Math.round(WOA_REPORT.quantile(settleA, 0.5)) + '%→' +
     Math.round(WOA_REPORT.quantile(settleB, 0.5)) + '%</b></h4>' + svg +
-    '<p class="small" style="margin:6px 0 0;">% of battles whose field-score lead has stopped flipping, by % of battle length &mdash; A dashed, B solid</p></div>';
+    '<p class="small" style="margin:6px 0 0;">% of skirmishes whose field-score lead has stopped flipping, by % of skirmish length &mdash; A dashed, B solid</p></div>';
 
   return '<div style="font-size:13px;font-weight:bold;margin:16px 0 8px;">Pacing, fleet-wide <span class="small" style="font-style:italic;">(1e minis)</span></div>' +
     '<div style="display:flex;gap:14px;flex-wrap:wrap;">' + interMini + settleMini + '</div>';
 }
 
-/* Assembles the full Overview pane from two runs' already-fetched battle
-   rows (rowsA/rowsB — GET /api/battles?run=<id> arrays) and wires clicks. */
+/* Assembles the full Overview pane from two runs' already-fetched skirmish
+   rows (rowsA/rowsB — GET /api/skirmishes?run=<id> arrays) and wires clicks. */
 function ovRenderBody(el, rowsA, rowsB) {
-  var aggA = WOA_REPORT.foldBattles(rowsA), aggB = WOA_REPORT.foldBattles(rowsB);
+  var aggA = WOA_REPORT.foldSkirmishes(rowsA), aggB = WOA_REPORT.foldSkirmishes(rowsB);
   var scoredRows = WOA_REPORT.BANDS.filter(function (b) { return b.feedsScore; });
   var guardRows = WOA_REPORT.BANDS.filter(function (b) { return !b.feedsScore; });
   var temp = DASH.temperature;
@@ -743,25 +743,25 @@ function ovRenderBody(el, rowsA, rowsB) {
   chBindHits(el);
 }
 
-/* Shared A/B battle-row fetch (WOA-035 Overview + WOA-040 Maps drill-down —
-   both compare the SAME two runs' full battle sets, so one cache/fetch
+/* Shared A/B skirmish-row fetch (WOA-035 Overview + WOA-040 Maps drill-down —
+   both compare the SAME two runs' full skirmish sets, so one cache/fetch
    serves either pane; switching pills, retempering, or flipping the A|B|A/B
    toggle never refetches). Cache hit -> onReady(rowsA, rowsB) called
-   synchronously and dashLoadBattleRows returns true (caller skips its own
+   synchronously and dashLoadSkirmishRows returns true (caller skips its own
    loading-state paint). Cache miss -> fetches both runs, returns false (the
    caller paints its own "Loading..." — panes want different wording), then
    calls onReady once both resolve; a race where DASH.runA/runB changed
    mid-flight is guarded by re-checking the key. onReady(null, null) on a
    fetch failure — no server, or a network hiccup. */
-function dashLoadBattleRows(onReady) {
+function dashLoadSkirmishRows(onReady) {
   var key = DASH.runA + '|' + DASH.runB;
-  if (BATTLE_CACHE.key === key) { onReady(BATTLE_CACHE.rowsA, BATTLE_CACHE.rowsB); return true; }
+  if (SKIRMISH_CACHE.key === key) { onReady(SKIRMISH_CACHE.rowsA, SKIRMISH_CACHE.rowsB); return true; }
   Promise.all([
-    fetch('/api/battles?run=' + DASH.runA).then(function (r) { return r.ok ? r.json() : []; }),
-    fetch('/api/battles?run=' + DASH.runB).then(function (r) { return r.ok ? r.json() : []; })
+    fetch('/api/skirmishes?run=' + DASH.runA).then(function (r) { return r.ok ? r.json() : []; }),
+    fetch('/api/skirmishes?run=' + DASH.runB).then(function (r) { return r.ok ? r.json() : []; })
   ]).then(function (res) {
-    BATTLE_CACHE = { key: key, rowsA: res[0] || [], rowsB: res[1] || [] };
-    if (DASH.runA + '|' + DASH.runB === key) onReady(BATTLE_CACHE.rowsA, BATTLE_CACHE.rowsB);
+    SKIRMISH_CACHE = { key: key, rowsA: res[0] || [], rowsB: res[1] || [] };
+    if (DASH.runA + '|' + DASH.runB === key) onReady(SKIRMISH_CACHE.rowsA, SKIRMISH_CACHE.rowsB);
   }).catch(function () { onReady(null, null); });
   return false;
 }
@@ -769,28 +769,28 @@ function dashLoadBattleRows(onReady) {
 /* Overview entry point (dashboard.js's renderDashPane calls this for the
    'overview' view once the shell's own file:///no-runs/no-A-B guards pass). */
 function renderOverview(el) {
-  var loaded = dashLoadBattleRows(function (rowsA, rowsB) {
-    if (rowsA == null) { el.innerHTML = '<p class="small">Could not load battle rows for the selected runs &mdash; is <code>node game/server.js</code> running?</p>'; return; }
+  var loaded = dashLoadSkirmishRows(function (rowsA, rowsB) {
+    if (rowsA == null) { el.innerHTML = '<p class="small">Could not load skirmish rows for the selected runs &mdash; is <code>node game/server.js</code> running?</p>'; return; }
     ovRenderBody(el, rowsA, rowsB);
   });
-  if (!loaded) el.innerHTML = '<p class="small">Loading battle rows for run A &amp; B&hellip;</p>';
+  if (!loaded) el.innerHTML = '<p class="small">Loading skirmish rows for run A &amp; B&hellip;</p>';
 }
 
 /* =================== the Map drill-down screen (WOA-040, design 4b) ===
    THE QUESTION: on THIS map, what changed run A -> run B, and when in the
-   battle did it happen? Breadcrumb map switcher under the Maps pill; an
+   skirmish did it happen? Breadcrumb map switcher under the Maps pill; an
    A|B|A/B segmented toggle (default B — A/B renders B solid with run A as a
    ghost overlay) drives the tempo lanes (design 3a) and the |VP-diff| track
    above them; the band board (1c, reusing ovBandRowHtml with the 'map'
    small-n scope, SPEC §8) and the settle curve (1e, chSettleSvg) always show
    BOTH runs regardless of the toggle — same as the Overview's board/minis,
-   which never toggle either. Reads the SAME battle rows the Overview does
-   (dashLoadBattleRows/BATTLE_CACHE above), filtered to one map client-side —
-   GET /api/battles has no map param, so filtering here is the one place it
-   happens (no new endpoint, no re-derived fold: WOA_REPORT folds per-battle
-   envelopes, this file only combines many battles' folds into one chart). */
+   which never toggle either. Reads the SAME skirmish rows the Overview does
+   (dashLoadSkirmishRows/SKIRMISH_CACHE above), filtered to one map client-side —
+   GET /api/skirmishes has no map param, so filtering here is the one place it
+   happens (no new endpoint, no re-derived fold: WOA_REPORT folds per-skirmish
+   envelopes, this file only combines many skirmishes' folds into one chart). */
 
-/* Per-battle envelopes for ONE map's rows of one run — the shared input every
+/* Per-skirmish envelopes for ONE map's rows of one run — the shared input every
    lane/track/settle-curve computation below folds over. */
 function mdEnvelopes(rows, mapName) {
   return rows.filter(function (r) { return r.map === mapName; })
@@ -798,10 +798,10 @@ function mdEnvelopes(rows, mapName) {
 }
 
 /* Tempo-lane average (design 3a): actionOctileLanes(env) already returns one
-   {deploy,attack,swap,march} row per octile in [0,1] for a SINGLE battle
+   {deploy,attack,swap,march} row per octile in [0,1] for a SINGLE skirmish
    (report-model.js, WOA-033) — this only averages that per-octile value
-   ACROSS battles, per lane. null when there are no envelopes (nothing to
-   average) so callers can render "no battles" instead of a flat zero lane. */
+   ACROSS skirmishes, per lane. null when there are no envelopes (nothing to
+   average) so callers can render "no skirmishes" instead of a flat zero lane. */
 var MD_LANES = ['deploy', 'attack', 'swap', 'march'];
 function mdLaneAvg(envs) {
   if (!envs.length) return null;
@@ -818,14 +818,14 @@ function mdLaneAvg(envs) {
 }
 
 /* |VP-diff| track (SPEC §1 VPdiff / design 3a): vpDiffTrack(env) is a
-   per-TURN array (length = that battle's turn count, so battles of different
-   length can't be averaged index-for-index). Resamples each battle's track
-   onto STEPS+1 evenly-spaced points over normalized battle time (linear
-   interpolation between the two nearest turns, the same "normalize to battle
+   per-TURN array (length = that skirmish's turn count, so skirmishes of different
+   length can't be averaged index-for-index). Resamples each skirmish's track
+   onto STEPS+1 evenly-spaced points over normalized skirmish time (linear
+   interpolation between the two nearest turns, the same "normalize to skirmish
    length %" idiom settlePoint/deployInterleave already use), then averages
-   those points across battles. Envelopes with no fs (vpDiffTrack -> null,
+   those points across skirmishes. Envelopes with no fs (vpDiffTrack -> null,
    WOA-037: a run that predates the fs capture) are skipped, not zeroed — n
-   vs total tells the caller how many of this map's battles actually carry
+   vs total tells the caller how many of this map's skirmishes actually carry
    fs so it can grey/note honestly instead of drawing a fabricated flat line.
    null only when NOT ONE envelope has fs (the "predates the fs capture" path
    the ticket calls out); a partial n < total still draws, with a note. */
@@ -868,7 +868,7 @@ function mdLaneBars(vals, ghostVals, laneMax, color, barH) {
 
 /* The |VP-diff| sparkline that sits above the lanes (design 3a). Greys
    honestly with a note instead of drawing anything when vd is null (every
-   battle for this map/run predates the fs capture, WOA-037) — never a
+   skirmish for this map/run predates the fs capture, WOA-037) — never a
    fabricated flat line. solidLabel names which run is drawing solid (A or
    B) for the "predates" note. */
 function mdVpDiffTrackHtml(vd, ghostVd, solidLabel) {
@@ -885,7 +885,7 @@ function mdVpDiffTrackHtml(vd, ghostVd, solidLabel) {
   var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="display:block;width:100%;height:' + H + 'px;">' + chLine(0, H, W, H, CHART.axis, 1);
   if (ghostVd) svg += '<polyline points="' + poly(ghostVd.points) + '" fill="none" stroke="' + CHART.ink + '" stroke-width="1.5" stroke-dasharray="4 2"/>';
   svg += '<polyline points="' + poly(vd.points) + '" fill="none" stroke="' + CHART.ink + '" stroke-width="2"/></svg>';
-  var note = vd.n < vd.total ? ' (n=' + vd.n + '/' + vd.total + ' battles carry fs data)' : '';
+  var note = vd.n < vd.total ? ' (n=' + vd.n + '/' + vd.total + ' skirmishes carry fs data)' : '';
   return '<div style="display:flex;gap:8px;align-items:flex-end;">' +
     '<div style="flex:none;width:' + LABEL_W + 'px;text-align:right;font-size:9.5px;font-style:italic;color:' + CHART.muted + ';padding-bottom:2px;">avg<br>|VP diff|' + note + '</div>' +
     '<div style="flex:1;">' + svg + '</div></div>';
@@ -905,7 +905,7 @@ function mdTempoSection(mapName, envA, envB, abMode) {
   var h = '<div style="font-size:13px;font-weight:bold;margin-bottom:2px;">Tempo lanes ' +
     '<span class="small" style="font-style:italic;">(design 3a &mdash; each lane its OWN scale, never a 100%-stacked share)</span></div>';
   if (!laneSolid) {
-    return h + '<p class="small">No battles on ' + chEsc(mapName) + ' for run ' + solidLabel + ' yet.</p>';
+    return h + '<p class="small">No skirmishes on ' + chEsc(mapName) + ' for run ' + solidLabel + ' yet.</p>';
   }
   var BAR_H = 46, LABEL_W = 56;
   h += mdVpDiffTrackHtml(vdSolid, vdGhost, solidLabel);
@@ -920,9 +920,9 @@ function mdTempoSection(mapName, envA, envB, abMode) {
       mdLaneBars(vals, gvals, laneMax, CHART.lane[a], BAR_H) + '</div></div>';
   });
   h += '</div><div style="display:flex;justify-content:space-between;font-size:10px;color:' + CHART.muted + ';margin-top:3px;font-style:italic;">' +
-    '<span style="margin-left:' + LABEL_W + 'px;">turn 1</span><span>battle end</span></div>';
+    '<span style="margin-left:' + LABEL_W + 'px;">turn 1</span><span>skirmish end</span></div>';
   var ghostNote = ghostEnv ? ' &middot; B solid, A ghost outline' : '';
-  h += '<p class="small" style="margin-top:6px;">n = ' + solidEnv.length + ' battle(s) on run ' + solidLabel + ghostNote + '.</p>';
+  h += '<p class="small" style="margin-top:6px;">n = ' + solidEnv.length + ' skirmish(s) on run ' + solidLabel + ghostNote + '.</p>';
   return h;
 }
 
@@ -952,7 +952,7 @@ function mdSettleCurve(envA, envB) {
     (settleB.length ? Math.round(WOA_REPORT.quantile(settleB, 0.5)) + '%' : '—');
   return '<div class="ov-mini" style="max-width:320px;"><h4>settle curve, this map <b>' + med + '</b></h4>' +
     chSettleSvg(settleA, settleB, 240, 72) +
-    '<p class="small" style="margin:6px 0 0;">% of battle length after which the lead never flips again &mdash; A dashed n=' +
+    '<p class="small" style="margin:6px 0 0;">% of skirmish length after which the lead never flips again &mdash; A dashed n=' +
     envA.length + ', B solid n=' + envB.length + '</p></div>';
 }
 
@@ -994,8 +994,8 @@ function mdHeaderHtml(mapList, idx, scoreA, scoreB, regressed) {
    (HQ hexes, outline, labels) the fold deliberately doesn't know. */
 var MD_HEX_LENSES = [
   { key: 'occ',   title: 'occupancy',      sub: '% of turns held', fmt: function (v) { return Math.round(v * 100) + '%'; } },
-  { key: 'flips', title: 'ownership flips', sub: 'flips / battle',  fmt: function (v) { return WOA_REPORT.f1(v); } },
-  { key: 'kills', title: 'kills',           sub: 'kills / battle',  fmt: function (v) { return WOA_REPORT.f1(v); } }
+  { key: 'flips', title: 'ownership flips', sub: 'flips / skirmish',  fmt: function (v) { return WOA_REPORT.f1(v); } },
+  { key: 'kills', title: 'kills',           sub: 'kills / skirmish',  fmt: function (v) { return WOA_REPORT.f1(v); } }
 ];
 var MDHEX_R = 40; // hex draw radius; board.js hexXY spacing is S=44 -> ~4px gutters
 
@@ -1041,7 +1041,7 @@ function mdLensFill(v, max) {
    toggle's spatial payload). */
 function mdHexLensSection(mapName, envA, envB, abMode) {
   var head = '<div style="font-size:13px;font-weight:bold;margin:18px 0 2px;">Hex lenses ' +
-    '<span class="small" style="font-style:italic;">(SPEC §5 &mdash; where the battle actually happens on this map)</span></div>';
+    '<span class="small" style="font-style:italic;">(SPEC §5 &mdash; where the skirmish actually happens on this map)</span></div>';
   var map = mdMapDef(mapName);
   if (!map) return head + '<p class="small">No board outline on disk for &ldquo;' + chEsc(mapName) + '&rdquo; &mdash; it may have been deleted since this run.</p>';
   var shape = mdShapeOf(map);
@@ -1053,7 +1053,7 @@ function mdHexLensSection(mapName, envA, envB, abMode) {
   var solid = abMode === 'A' ? foldA : foldB;
   var ghost = abMode === 'AB' ? foldA : null;
   var solidLabel = abMode === 'A' ? 'A' : 'B';
-  if (!solid.n) return head + '<p class="small">No battles on ' + chEsc(mapName) + ' for run ' + solidLabel + ' yet.</p>';
+  if (!solid.n) return head + '<p class="small">No skirmishes on ' + chEsc(mapName) + ' for run ' + solidLabel + ' yet.</p>';
 
   var vb = viewBoxFor(hexList);
   // dead-hex hatch: one <pattern>, defined once, referenced by url() doc-wide
@@ -1121,13 +1121,13 @@ function mdHexLensSection(mapName, envA, envB, abMode) {
 
   var ghostNote = ghost ? ' &middot; B fill, A dashed-ghost (inner-hex size = A on the shared scale)' : '';
   return head +
-    '<p class="small" style="margin:2px 0 8px;">Run ' + solidLabel + ' solid, n = ' + solid.n + ' battle(s) on ' + chEsc(mapName) + ghostNote +
-    '. Occupancy = % of turns a hex was held; flips &amp; kills are per-battle rates. Hover a hex for A&rarr;B values.</p>' +
+    '<p class="small" style="margin:2px 0 8px;">Run ' + solidLabel + ' solid, n = ' + solid.n + ' skirmish(s) on ' + chEsc(mapName) + ghostNote +
+    '. Occupancy = % of turns a hex was held; flips &amp; kills are per-skirmish rates. Hover a hex for A&rarr;B values.</p>' +
     defs + '<div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;">' + boards + '</div>' + key;
 }
 
 /* Assembles the full Map drill-down pane from two runs' already-fetched
-   battle rows (the SAME rowsA/rowsB shape ovRenderBody consumes), filtered
+   skirmish rows (the SAME rowsA/rowsB shape ovRenderBody consumes), filtered
    to DASH.mapFocus. DASH.mapFocus falls back to the first map (alpha) when
    unset or stale (e.g. it named a map only the PRIOR A/B pair had). */
 function mdRenderBody(el, rowsA, rowsB) {
@@ -1135,13 +1135,13 @@ function mdRenderBody(el, rowsA, rowsB) {
   rowsA.forEach(function (r) { names[r.map] = 1; });
   rowsB.forEach(function (r) { names[r.map] = 1; });
   var mapList = Object.keys(names).sort();
-  if (!mapList.length) { el.innerHTML = '<p class="small">No per-map battle rows for either run yet.</p>'; return; }
+  if (!mapList.length) { el.innerHTML = '<p class="small">No per-map skirmish rows for either run yet.</p>'; return; }
   if (!DASH.mapFocus || mapList.indexOf(DASH.mapFocus) < 0) DASH.mapFocus = mapList[0];
   var idx = mapList.indexOf(DASH.mapFocus), mapName = DASH.mapFocus;
 
   var mapRowsA = rowsA.filter(function (r) { return r.map === mapName; });
   var mapRowsB = rowsB.filter(function (r) { return r.map === mapName; });
-  var aggA = WOA_REPORT.foldBattles(mapRowsA), aggB = WOA_REPORT.foldBattles(mapRowsB);
+  var aggA = WOA_REPORT.foldSkirmishes(mapRowsA), aggB = WOA_REPORT.foldSkirmishes(mapRowsB);
   var scoreA = mapRowsA.length ? WOA_REPORT.balanceScore(aggA.agg, aggA.done) : null;
   var scoreB = mapRowsB.length ? WOA_REPORT.balanceScore(aggB.agg, aggB.done) : null;
   var regressed = scoreA != null && scoreB != null && scoreB > scoreA;
@@ -1174,18 +1174,18 @@ function mdRenderBody(el, rowsA, rowsB) {
    the 'maps' view once the shell's own file:///no-runs/no-A-B guards pass —
    the SAME guard Overview uses). */
 function renderMapDrill(el) {
-  var loaded = dashLoadBattleRows(function (rowsA, rowsB) {
-    if (rowsA == null) { el.innerHTML = '<p class="small">Could not load battle rows for the selected runs &mdash; is <code>node game/server.js</code> running?</p>'; return; }
+  var loaded = dashLoadSkirmishRows(function (rowsA, rowsB) {
+    if (rowsA == null) { el.innerHTML = '<p class="small">Could not load skirmish rows for the selected runs &mdash; is <code>node game/server.js</code> running?</p>'; return; }
     mdRenderBody(el, rowsA, rowsB);
   });
-  if (!loaded) el.innerHTML = '<p class="small">Loading battle rows for run A &amp; B&hellip;</p>';
+  if (!loaded) el.innerHTML = '<p class="small">Loading skirmish rows for run A &amp; B&hellip;</p>';
 }
 
 /* =================== the Cards tab (WOA-043, design 5a) ===================
    THE QUESTION: which cards are dead weight, and when do cards actually fire?
    Three .chcard sections (the SAME one-question-per-card idiom renderCharts
-   established up top) fed by the SAME two runs' battle rows as Overview/Maps
-   (dashLoadBattleRows/BATTLE_CACHE), folded per-card via the WOA-043
+   established up top) fed by the SAME two runs' skirmish rows as Overview/Maps
+   (dashLoadSkirmishRows/SKIRMISH_CACHE), folded per-card via the WOA-043
    report-model.js additions (cardAggFromEnvelopes/cardHqWinSlice) so
    WOA_REPORT.cardRows — the ONE card-row derivation — is reused unmodified
    for a run's DB rows exactly as it already is for a live in-memory run
@@ -1370,14 +1370,14 @@ function crdSimpleDumbbells(rows) {
 /* Per-card FLEET-wide "when cards fire" quartile — REUSES report-model.js's
    cardPlayTurnQuartiles as-is (per the ticket: "reuse, do not reimplement"):
    that fold already answers "at what normalized time did this card fire, in
-   ONE battle" (its own quartile handles a battle where a card has multiple
-   copies in the deck, so n>1 within a single battle is real). This pools each
-   battle's MEDIAN across the whole run's envelopes and re-quantiles that
-   pooled array with the SAME exported WOA_REPORT.quantile() the per-battle
+   ONE skirmish" (its own quartile handles a skirmish where a card has multiple
+   copies in the deck, so n>1 within a single skirmish is real). This pools each
+   skirmish's MEDIAN across the whole run's envelopes and re-quantiles that
+   pooled array with the SAME exported WOA_REPORT.quantile() the per-skirmish
    fold itself calls — no new quantile math is written here, just the one
-   that already exists applied a second time, one level up (per-battle ->
+   that already exists applied a second time, one level up (per-skirmish ->
    fleet). n (for small-n greying) is each strip's OWN plays count, read from
-   crdRunCards at the call site — a battle-count here would undercount a
+   crdRunCards at the call site — a skirmish-count here would undercount a
    multi-copy card. */
 function crdFleetFireTimes(envs) {
   var byCard = {};
@@ -1393,7 +1393,7 @@ function crdFleetFireTimes(envs) {
   return out;
 }
 // sequential brass->ink fill by normalized-time fraction (0=early turn 1,
-// 1=battle end) — the SAME CHART.seq ramp mdLensFill uses for magnitude, here
+// 1=skirmish end) — the SAME CHART.seq ramp mdLensFill uses for magnitude, here
 // indexed by a [0,1] fraction instead of a value/max ratio.
 function crdFireFill(frac) {
   return CHART.seq[Math.max(0, Math.min(CHART.seq.length - 1, Math.floor(frac * CHART.seq.length)))];
@@ -1401,7 +1401,7 @@ function crdFireFill(frac) {
 
 /* =================== Cards §3: when cards fire ===================
    One row per card: two stacked mini tracks (A above, B below) over
-   normalized battle time [0%,100%] — a bar spans the middle-50% (q1..q3),
+   normalized skirmish time [0%,100%] — a bar spans the middle-50% (q1..q3),
    fill by median (brass ramp = early→late), a 2px ink tick marks the median
    exactly, matching design 5a's "quartile bar + 3px ink median tick" idiom.
    Sorted earliest-median-first on B (a natural reading of "sorted by B" for
@@ -1414,13 +1414,13 @@ function crdFireStrips(rows, fireA, fireB) {
     return xm - ym;
   });
   var h = '<div style="font-size:13px;font-weight:bold;margin-bottom:2px;">When cards fire, A vs B ' +
-    '<span class="small" style="font-style:italic;">(middle-50% of play turns + median tick, over normalized battle time — report-model.js cardPlayTurnQuartiles)</span></div>';
+    '<span class="small" style="font-style:italic;">(middle-50% of play turns + median tick, over normalized skirmish time — report-model.js cardPlayTurnQuartiles)</span></div>';
   if (!live.length) return h + '<p class="small">No card plays for either run yet.</p>';
   h += '<div class="ov-legend">' +
     '<span>' + crdSw('background:' + CHART.seq[1] + ';') + 'middle 50% of play turns (fill = median, brass ramp early→late)</span>' +
     '<span>' + crdSw('background:' + CHART.ink + ';width:2px;border-radius:0;') + 'median tick</span></div>';
   h += '<div style="display:flex;justify-content:space-between;font-size:9.5px;color:' + CHART.muted + ';margin:2px 0 3px;padding-left:150px;font-style:italic;">' +
-    '<span>turn 1</span><span>battle end</span></div>';
+    '<span>turn 1</span><span>skirmish end</span></div>';
   h += '<div class="ov-grid" style="grid-template-columns:148px 1fr 76px;row-gap:8px;">';
   live.forEach(function (r) {
     var qa = fireA[r.id] || null, qb = fireB[r.id] || null;
@@ -1451,7 +1451,7 @@ function crdFireStrips(rows, fireA, fireB) {
   return h;
 }
 
-/* Assembles the full Cards pane from two runs' already-fetched battle rows
+/* Assembles the full Cards pane from two runs' already-fetched skirmish rows
    (the SAME rowsA/rowsB shape ovRenderBody/mdRenderBody consume). */
 function crdRenderBody(el, rowsA, rowsB) {
   var A = crdRunCards(rowsA), B = crdRunCards(rowsB);
@@ -1483,16 +1483,16 @@ function crdRenderBody(el, rowsA, rowsB) {
    'cards' view once the shell's own file:///no-runs/no-A-B guards pass — the
    SAME guard Overview/Maps use). */
 function renderCards(el) {
-  var loaded = dashLoadBattleRows(function (rowsA, rowsB) {
-    if (rowsA == null) { el.innerHTML = '<p class="small">Could not load battle rows for the selected runs &mdash; is <code>node game/server.js</code> running?</p>'; return; }
+  var loaded = dashLoadSkirmishRows(function (rowsA, rowsB) {
+    if (rowsA == null) { el.innerHTML = '<p class="small">Could not load skirmish rows for the selected runs &mdash; is <code>node game/server.js</code> running?</p>'; return; }
     crdRenderBody(el, rowsA, rowsB);
   });
-  if (!loaded) el.innerHTML = '<p class="small">Loading battle rows for run A &amp; B&hellip;</p>';
+  if (!loaded) el.innerHTML = '<p class="small">Loading skirmish rows for run A &amp; B&hellip;</p>';
 }
 
 /* =================== the Units tab (WOA-044, design 5b) ===================
-   THE QUESTION: is each unit doing its job? SAME two runs' battle rows as
-   Overview/Maps/Cards (dashLoadBattleRows/BATTLE_CACHE), folded per-unit-type
+   THE QUESTION: is each unit doing its job? SAME two runs' skirmish rows as
+   Overview/Maps/Cards (dashLoadSkirmishRows/SKIRMISH_CACHE), folded per-unit-type
    via report-model.js's unitsAggFromEnvelopes (WOA-044) — one fold, four
    panels: role map (2c), breakthrough gauge, lifespan bars, exchange. A
    ghost -> B solid throughout, the SAME idiom the Cards tab established
@@ -1513,7 +1513,7 @@ function renderCards(el) {
    picks (cavalry hot/divRed, infantry cool/divBlue, artillery brass/improve).
 
    Small-n (SPEC §8): ONE n per unit type per run governs every mark on every
-   panel — battlesFielded (a type's OWN n is "per-battle unconditioned", per
+   panel — skirmishesFielded (a type's OWN n is "per-skirmish unconditioned", per
    the ticket) — not a different slice-n per chart. WOA_REPORT.smallN(n,
    'fleet') greys the mark + appends "(n=N)" to its tooltip, same as Cards. */
 
@@ -1521,7 +1521,7 @@ var UNIT_COLOR = { cavalry: CHART.divRed[1], infantry: CHART.divBlue[1], artille
 function unColor(t, i) { return UNIT_COLOR[t] || CHART.seq[i % CHART.seq.length]; }
 
 // Per-run per-type fold (mirrors crdRunCards's shape for Cards): parse this
-// run's battle rows into envelopes once, hand them to the ONE report-model
+// run's skirmish rows into envelopes once, hand them to the ONE report-model
 // fold. Returns { types:{typeKey:{n,depMedian,roleY,breakthrough,exchange,
 // lifespan,lifespanN}}, hasUnits, hasDieT } — WOA_REPORT.unitsAggFromEnvelopes
 // verbatim (nothing to derive here, unlike Cards' cardRows wrapping).
@@ -1531,7 +1531,7 @@ function unRunTypes(rows) {
 }
 
 // Fixed [0, niceMax] domain for a linear (non-percentage) track — breakthrough
-// (attacks/battle) and exchange (kill/death ratio) are open-ended small
+// (attacks/skirmish) and exchange (kill/death ratio) are open-ended small
 // numbers, not 0-100%, so this is ovTrackDomain's band-driven sizing
 // simplified to "whatever the real A/B values need, +15% headroom".
 function unLinearDomain(vals) {
@@ -1592,12 +1592,12 @@ function unLifespanRow(name, color, domain, va, vb, na, nb) {
 }
 
 /* =================== Units §1: role map ===================
-   x = median deploy timing, normalized to battle length (0-100%) — the SAME
+   x = median deploy timing, normalized to skirmish length (0-100%) — the SAME
    normalization idiom deployInterleave/settlePoint/cardPlayTurnQuartiles
    already use in report-model.js, so a unit's x position is comparable
-   across battles of different length (raw turn numbers wouldn't be). y =
+   across skirmishes of different length (raw turn numbers wouldn't be). y =
    attacks made vs absorbed balance (roleY = 100*atk/(atk+abs); top = "leading
-   the charge", bottom = "supporting role"). Dot size = battles fielded (max
+   the charge", bottom = "supporting role"). Dot size = skirmishes fielded (max
    of A/B, same sqrt-area scale chartCardSightQuadrant uses). A = hollow ring,
    DASHED (the design's own "ghost" idiom for this chart specifically — 2c/5b
    both draw the ghost as a dashed ring, unlike Cards' plain hollow ring) with
@@ -1661,7 +1661,7 @@ function chartUnitsRoleMap(rows) {
       '" fill="transparent"' + chTipAttrs(r.name, [
         ['deploy timing A → B', (p.a ? Math.round(r.a.depMedian * 100) + '%' : '—') + ' → ' + (p.b ? Math.round(r.b.depMedian * 100) + '%' : '—')],
         ['made vs absorbed A → B', (p.a ? Math.round(r.a.roleY) + '%' : '—') + ' → ' + (p.b ? Math.round(r.b.roleY) + '%' : '—')],
-        ['battles fielded A → B', (r.a ? r.a.n : 0) + ' → ' + (r.b ? r.b.n : 0)]
+        ['skirmishes fielded A → B', (r.a ? r.a.n : 0) + ' → ' + (r.b ? r.b.n : 0)]
       ], markIds.join(',')) + '/>';
   });
   s += marks + chrome + labels + hits + '</svg>';
@@ -1671,9 +1671,9 @@ function chartUnitsRoleMap(rows) {
 /* =================== Units §2/3/4: breakthrough / lifespan / exchange === */
 function unBreakthroughSection(rows) {
   var h = '<div style="font-size:13px;font-weight:bold;margin-bottom:2px;">Breakthrough point ' +
-    '<span class="small" style="font-style:italic;">(attacks absorbed / battle fielded, A&rarr;B — who gets attacked)</span></div>';
+    '<span class="small" style="font-style:italic;">(attacks absorbed / skirmish fielded, A&rarr;B — who gets attacked)</span></div>';
   var live = rows.filter(function (r) { return (r.a && r.a.breakthrough != null) || (r.b && r.b.breakthrough != null); });
-  if (!live.length) return h + '<p class="small">No battles fielding a unit for either run yet.</p>';
+  if (!live.length) return h + '<p class="small">No skirmishes fielding a unit for either run yet.</p>';
   var vals = [];
   live.forEach(function (r) { if (r.a) vals.push(r.a.breakthrough); if (r.b) vals.push(r.b.breakthrough); });
   var domain = unLinearDomain(vals);
@@ -1721,7 +1721,7 @@ function unExchangeSection(rows) {
   return h;
 }
 
-/* Assembles the full Units pane from two runs' already-fetched battle rows
+/* Assembles the full Units pane from two runs' already-fetched skirmish rows
    (the SAME rowsA/rowsB shape ovRenderBody/crdRenderBody consume). */
 function unRenderBody(el, rowsA, rowsB) {
   var A = unRunTypes(rowsA), B = unRunTypes(rowsB);
@@ -1733,8 +1733,8 @@ function unRenderBody(el, rowsA, rowsB) {
 
   var h = '<div class="un-wrap"><div class="un-grid">';
   h += '<div class="chcard"><h3>Role map</h3>' +
-    '<p class="small">x = median deploy timing (normalized battle time) &middot; y = attacks made vs absorbed ' +
-    '(top = initiates, bottom = soaks). Dot size = battles fielded; A hollow dashed ghost &rarr; B solid, one colour per unit.</p>' +
+    '<p class="small">x = median deploy timing (normalized skirmish time) &middot; y = attacks made vs absorbed ' +
+    '(top = initiates, bottom = soaks). Dot size = skirmishes fielded; A hollow dashed ghost &rarr; B solid, one colour per unit.</p>' +
     (rows.length ? chartUnitsRoleMap(rows) : '<p class="small">No unit deploys recorded for either run yet.</p>') +
     '</div>';
   h += '<div class="chcard">' + unBreakthroughSection(rows) + unLifespanSection(rows, hasDieT) + unExchangeSection(rows) + '</div>';
@@ -1747,9 +1747,9 @@ function unRenderBody(el, rowsA, rowsB) {
    'units' view once the shell's own file:///no-runs/no-A-B guards pass — the
    SAME guard Overview/Maps/Cards use). */
 function renderUnits(el) {
-  var loaded = dashLoadBattleRows(function (rowsA, rowsB) {
-    if (rowsA == null) { el.innerHTML = '<p class="small">Could not load battle rows for the selected runs &mdash; is <code>node game/server.js</code> running?</p>'; return; }
+  var loaded = dashLoadSkirmishRows(function (rowsA, rowsB) {
+    if (rowsA == null) { el.innerHTML = '<p class="small">Could not load skirmish rows for the selected runs &mdash; is <code>node game/server.js</code> running?</p>'; return; }
     unRenderBody(el, rowsA, rowsB);
   });
-  if (!loaded) el.innerHTML = '<p class="small">Loading battle rows for run A &amp; B&hellip;</p>';
+  if (!loaded) el.innerHTML = '<p class="small">Loading skirmish rows for run A &amp; B&hellip;</p>';
 }

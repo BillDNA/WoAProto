@@ -108,7 +108,7 @@
   // Physical-board guardrail (WOA-011): a side always fields exactly 10 pieces
   // (default 7 inf / 2 cav / 1 art). Values are free data; the TOTAL count is
   // the invariant — enforce it at load so a bad units variant fails loud
-  // instead of quietly skewing every battle. (Default sums to 10, so this never
+  // instead of quietly skewing every skirmish. (Default sums to 10, so this never
   // fires for the shipped config — the golden balance diff is unaffected.)
   var UNIT_COUNT = Object.keys(UNITS).reduce(function (s, t) { return s + (UNITS[t].count || 0); }, 0);
   if (UNIT_COUNT !== 10)

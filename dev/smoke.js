@@ -1,5 +1,5 @@
 /* Headless UI smoke test: boots index.html in jsdom, plays a full AI-vs-AI
-   battle through the real DOM, pokes the maps screen and the editor.
+   skirmish through the real DOM, pokes the maps screen and the editor.
    Run from the repo root:  node dev/smoke.js  */
 var fs = require('fs');
 var path = require('path');
@@ -55,7 +55,7 @@ setTimeout(function () {
   ok(doc.querySelectorAll('#edShape option').length === Object.keys(win.Engine.SHAPES).length + 1,
     'editor shape dropdown = maps.js shapes + the Custom entry');
 
-  console.log('== AI battle through the DOM ==');
+  console.log('== AI skirmish through the DOM ==');
   doc.getElementById('btnAI').click();
   ok(doc.getElementById('game').classList.contains('active'), 'game screen shown');
   ok(doc.querySelectorAll('#board polygon.hex').length >= 19, 'board hexes rendered');
@@ -72,14 +72,14 @@ setTimeout(function () {
   var deckTotal = win.Engine.CARDS.reduce(function (a, c) { return a + (+c.count || 0); }, 0);
   ok(doc.querySelectorAll('#matRed .scard').length === deckTotal, 'red mat tracks all ' + deckTotal + ' orders');
   ok(doc.querySelectorAll('#matBlue .scard').length === deckTotal, 'blue mat tracks all ' + deckTotal + ' orders (enemy spend visible)');
-  ok(doc.querySelectorAll('#matRed .slot svg').length === 13, 'reserve slots carry piece glyphs at battle start');
+  ok(doc.querySelectorAll('#matRed .slot svg').length === 13, 'reserve slots carry piece glyphs at skirmish start');
   ok(!!doc.getElementById('scorecard'), 'campaign score card present in top bar');
 
-  // play like a (random but legal) human until the battle ends or 80 turns pass
+  // play like a (random but legal) human until the skirmish ends or 80 turns pass
   var steps = 0;
   function tick() {
     var APP = win.APP, E = win.Engine;
-    if (!APP.st || APP.st.phase === 'battle-over' || steps++ > 4000) return done();
+    if (!APP.st || APP.st.phase === 'skirmish-over' || steps++ > 4000) return done();
     if (APP.ui.busy) return realSetTimeout(tick, 8); // AI is animating
     if (APP.st.current !== APP.mySide) return realSetTimeout(tick, 8);
     try {
@@ -108,15 +108,15 @@ setTimeout(function () {
         }
         win.afterChange();
       }
-    } catch (e) { console.log('  FAIL - exception mid-battle: ' + e.message); fails++; return done(); }
+    } catch (e) { console.log('  FAIL - exception mid-skirmish: ' + e.message); fails++; return done(); }
     realSetTimeout(tick, 2);
   }
   function done() {
     var st = win.APP.st;
-    ok(st && (st.phase === 'battle-over' || st.turnNumber > 3), 'battle progressed (phase=' + (st && st.phase) + ', turn=' + (st && st.turnNumber) + ')');
+    ok(st && (st.phase === 'skirmish-over' || st.turnNumber > 3), 'skirmish progressed (phase=' + (st && st.phase) + ', turn=' + (st && st.turnNumber) + ')');
     var logTxt = doc.getElementById('log').textContent;
     ok(/at [A-G][0-9]/.test(logTxt), 'journal uses grid references (sample: "' + (logTxt.match(/[A-Z][a-z]+ deploys [^.]+\./) || ['?'])[0] + '")');
-    ok(doc.querySelectorAll('#log .entry.hdr').length >= 1, 'journal battle header styled');
+    ok(doc.querySelectorAll('#log .entry.hdr').length >= 1, 'journal skirmish header styled');
     ok(doc.querySelectorAll('#log .tn').length >= 3, 'journal entries carry turn markers');
     var spentRed = doc.querySelectorAll('#matRed .scard.gone').length;
     var spentBlue = doc.querySelectorAll('#matBlue .scard.gone').length;
@@ -229,7 +229,7 @@ setTimeout(function () {
         'back on Tables: run controls + output reappear');
 
       doc.getElementById('dashN').value = '20';
-      doc.getElementById('dashMap').value = win.Engine.MAPS[4].name; // The Cockpit (fast battles)
+      doc.getElementById('dashMap').value = win.Engine.MAPS[4].name; // The Cockpit (fast skirmishes)
       doc.getElementById('dashRun').click();
       var dw = 0;
       (function waitDash() {
@@ -252,13 +252,13 @@ setTimeout(function () {
           ok(doc.getElementById('dashSave') && /## Maps/.test(rpt) && /## Card report/.test(rpt) && /Drag \| Swings/.test(rpt),
             'Save report button + markdown report (maps, card report, pacing cols)');
 
-          // per-battle detail still collected for ui/charts.js's primitives, which
+          // per-skirmish detail still collected for ui/charts.js's primitives, which
           // WOA-035+ reuses (spec README: Cards tab "evolves the existing charts.js
           // card quadrant") — not wired to a pill yet, so check the data survives.
           var detKey = win.DASH.results[0].map.name;
           ok(win.DASH.detail[detKey] && win.DASH.detail[detKey].turns.length === 20 &&
              win.DASH.detail[detKey].winTypes.length === 20,
-            'dashRun collected per-battle turns + winTypes (' + (win.DASH.detail[detKey] || { turns: [] }).turns.length + ' battles)');
+            'dashRun collected per-skirmish turns + winTypes (' + (win.DASH.detail[detKey] || { turns: [] }).turns.length + ' skirmishes)');
 
           console.log('== view-only panes: pill switch keeps the last run in memory (WOA-034, AC4) ==');
           doc.querySelector('#dashPills .dpill[data-view="maps"]').click();
@@ -283,7 +283,7 @@ setTimeout(function () {
     }
 
     // WOA-035 (AC5): the Overview screen on a SEEDED DASH state — jsdom has no
-    // real server, so this stubs win.fetch (GET /api/battles?run=<id>) and
+    // real server, so this stubs win.fetch (GET /api/skirmishes?run=<id>) and
     // win.canNet the way a real browser+server would answer, seeds two tiny
     // fixture runs straight onto DASH.runs/runA/runB, and drives renderOverview
     // through the same #dashPills click every other pane test above uses. Last
@@ -321,7 +321,7 @@ setTimeout(function () {
         row(6, 'Fixture Beta', 6, 'blue', 'hq', 'red', 2, 7)
       ];
       // WOA-040: run B's Fixture Alpha rows carry a per-turn fs timeline
-      // (GET /api/battles' sibling `fs`, WOA-037) — run A's rows do NOT, so
+      // (GET /api/skirmishes' sibling `fs`, WOA-037) — run A's rows do NOT, so
       // toggling the Maps drill-down to run A exercises the "this run
       // predates the fs capture" honest-grey path on the |VP-diff| track.
       rowsB[0].fs = [[1, 0], [1, 1], [2, 1], [2, 2]];
@@ -344,7 +344,7 @@ setTimeout(function () {
         var el = doc.getElementById('dashPaneOverview');
         if (el.querySelector('.ov-wrap')) {
           ok(fetchCalls.some(function (u) { return /run=9001/.test(u); }) && fetchCalls.some(function (u) { return /run=9002/.test(u); }),
-            'renderOverview fetched both runs via GET /api/battles?run=<id> (' + fetchCalls.join(', ') + ')');
+            'renderOverview fetched both runs via GET /api/skirmishes?run=<id> (' + fetchCalls.join(', ') + ')');
           var txt = el.textContent;
           ok(/Verdict:/.test(txt), 'verdict banner rendered');
           ok(/Red%/.test(txt) && /Drag/.test(txt) && /Swings/.test(txt), 'band board rows rendered (scored metrics)');
@@ -366,8 +366,8 @@ setTimeout(function () {
 
     // WOA-040: the Map drill-down screen (breadcrumb, A|B|A/B toggle, tempo
     // lanes + |VP-diff| track, per-map band board, settle curve) reusing the
-    // SAME seeded fixture overviewSmoke just built (BATTLE_CACHE is already
-    // warm from the Overview fetch above — dashLoadBattleRows hits the cache,
+    // SAME seeded fixture overviewSmoke just built (SKIRMISH_CACHE is already
+    // warm from the Overview fetch above — dashLoadSkirmishRows hits the cache,
     // so every render below is synchronous, no fetch/wait needed). Runs
     // straight off the mapRow click's DASH.view='maps' switch.
     function mapDrillSmoke(next) {
@@ -387,7 +387,7 @@ setTimeout(function () {
       el.querySelector('.mapd-crumb[data-map="Fixture Beta"]').click();
       ok(win.DASH.mapFocus === 'Fixture Beta' && el.querySelector('.mapd-crumb.cur').textContent === 'Fixture Beta',
         'clicking a crumb directly focuses that map');
-      el.querySelector('.mapd-crumb[data-map="Fixture Alpha"]').click(); // back to the fixture with 2 battles/run
+      el.querySelector('.mapd-crumb[data-map="Fixture Alpha"]').click(); // back to the fixture with 2 skirmishes/run
       el = doc.getElementById('dashPaneMaps'); // el.innerHTML was replaced by the click's re-render
 
       console.log('-- A|B|A/B toggle (default B) --');
@@ -492,7 +492,7 @@ setTimeout(function () {
       var w0 = 0;
       (function waitWatch() {
         var st = win.APP.st;
-        if (st && (st.turnNumber >= 3 || st.phase === 'battle-over')) {
+        if (st && (st.turnNumber >= 3 || st.phase === 'skirmish-over')) {
           ok(true, 'both generals played without input (turn ' + st.turnNumber + ')');
           return manualPlayer();
         }

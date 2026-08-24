@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-/* dev/db-query.js — tiny READ-ONLY console for the battle DB (dev/db.js).
+/* dev/db-query.js — tiny READ-ONLY console for the skirmish DB (dev/db.js).
 
    Usage:
-     node dev/db-query.js "SELECT map, COUNT(*) n, AVG(turns) FROM battles GROUP BY map"
+     node dev/db-query.js "SELECT map, COUNT(*) n, AVG(turns) FROM skirmishes GROUP BY map"
      node dev/db-query.js --db /some/other.db "SELECT ..."
      node dev/db-query.js            # no SQL: prints the schema + row counts
 

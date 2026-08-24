@@ -53,7 +53,7 @@
     for (var d = 0; d < 6; d++) {
       var d2 = (d + 1) % 6;
       if (!edgeFreeForTrench(st, h, d) || !edgeFreeForTrench(st, h, d2)) continue;
-      // A trench only denies support across a border that a battle can happen on.
+      // A trench only denies support across a border that a skirmish can happen on.
       // If BOTH edges face off-board there's no such border — it does nothing, so
       // don't offer it (Feedback Round 2: AI dug a useless trench facing off-board).
       if (!I.neighbor(h, d) && !I.neighbor(h, d2)) continue;
@@ -141,7 +141,7 @@
 
   /* ---------- combat ---------- */
   // Support crossing rules (Feedback Round 3 river revision, July 2026):
-  //  - a TRENCH on the border between supporter and battle hex blocks ATTACKER
+  //  - a TRENCH on the border between supporter and skirmish hex blocks ATTACKER
   //    support only. Ownership is irrelevant (Bill: lose a trench and the enemy
   //    uses it just fine). Trenches grant no +1 defense — that's for mountains.
   //  - a RIVER no longer blocks support at all: support crosses it freely for
@@ -150,9 +150,9 @@
   //    armies already on the field still support across it. Bill's Round-3 goal:
   //    make situational repositioning stronger and cut infantry-for-infantry
   //    swaps. Attacks/moves/Airdrop cross freely; a river is not barrageable.
-  function borderBlocked(st, fromHex, battleHex, attacking) {
-    var dOut = I.dirBetween(fromHex, battleHex), dIn = I.dirBetween(battleHex, fromHex);
-    if (attacking && (trenchCovers(st, fromHex, dOut) || trenchCovers(st, battleHex, dIn))) return 'trench';
+  function borderBlocked(st, fromHex, skirmishHex, attacking) {
+    var dOut = I.dirBetween(fromHex, skirmishHex), dIn = I.dirBetween(skirmishHex, fromHex);
+    if (attacking && (trenchCovers(st, fromHex, dOut) || trenchCovers(st, skirmishHex, dIn))) return 'trench';
     return null;
   }
   // A river on the border between two adjacent hexes stops deploy-control from
@@ -162,16 +162,16 @@
     var dOut = I.dirBetween(a, b), dIn = I.dirBetween(b, a);
     return st.terrainEdges[I.sideKey(a, dOut)] === 'R' || st.terrainEdges[I.sideKey(b, dIn)] === 'R';
   }
-  function supportFor(st, p, battleHex, excludeHex, attacking) {
+  function supportFor(st, p, skirmishHex, excludeHex, attacking) {
     var total = 0, parts = [], hexes = [];
-    I.neighbors(battleHex).forEach(function (n) {
+    I.neighbors(skirmishHex).forEach(function (n) {
       if (n === excludeHex) return;
       var giver = null, amount = 0;
       var u = unitAt(st, n);
       if (u && u.owner === p && I.UNITS[u.type].sup > 0) { giver = I.UNITS[u.type].name; amount = I.UNITS[u.type].sup; }
       else if (isHQ(st, n) === p) { giver = 'HQ'; amount = 1; }
       if (!giver) return;
-      var block = borderBlocked(st, n, battleHex, attacking);
+      var block = borderBlocked(st, n, skirmishHex, attacking);
       if (block) { parts.push(giver + ' support blocked by ' + block); return; }
       total += amount;
       parts.push(giver + ' +' + amount);
@@ -295,7 +295,7 @@
     // attacked HQ border is trenched (rules 1.1, S1 — trench your HQ and a tie
     // can't take it). An untrenched-HQ tie still captures exactly as before.
     if (dHQ && (res.outcome === 'attacker' || (res.outcome === 'tie' && !borderTrenched))) {
-      I.finishBattle(st, p, 'hq');
+      I.finishSkirmish(st, p, 'hq');
     }
     return res;
   }

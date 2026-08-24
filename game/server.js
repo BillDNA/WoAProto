@@ -3,9 +3,9 @@
    Then open the printed address on both devices (same wifi).
 
    Also the browser's write proxy: content saves (maps/decks), report/debug
-   saves, and — V1 — per-battle persistence into logs/woa.db via dev/db.js.
+   saves, and — V1 — per-skirmish persistence into logs/woa.db via dev/db.js.
    The db require is guarded: a zipped game/ without dev/ still serves and
-   plays; /api/recordbattle just answers 501. */
+   plays; /api/recordskirmish just answers 501. */
 'use strict';
 var http = require('http');
 var fs = require('fs');
@@ -52,19 +52,19 @@ function regenContentManifest() {
 // (or a git pull) otherwise leave the browser on a stale roster.
 try { regenContentManifest(); } catch (e) { console.log('  (manifest regen failed: ' + e.message + ')'); }
 
-// --- V1 battle persistence (guarded: dev/ may be absent from a zip) ---------
+// --- V1 skirmish persistence (guarded: dev/ may be absent from a zip) ---------
 var db = null, dbHandle = null, dbRuns = {}; // runKey -> runId (per server boot)
 try { db = require(path.join(ROOT, '..', 'dev', 'db.js')); } catch (e) { /* persistence off */ }
-function recordBattle(body) {
+function recordSkirmish(body) {
   if (!db) return { status: 501, out: { error: 'persistence unavailable (dev/db.js not present)' } };
-  if (!body || !body.state || body.state.phase !== 'battle-over' || !body.run)
+  if (!body || !body.state || body.state.phase !== 'skirmish-over' || !body.run)
     return { status: 400, out: { error: 'need a finished state + run info' } };
   if (!dbHandle) dbHandle = db.open();
   var runKey = String(body.runKey || (body.run.kind + '|' + (body.run.version || '?') + '|' + (body.run.redAi || '?') + '|' + (body.run.blueAi || '?')));
   if (!dbRuns[runKey]) dbRuns[runKey] = db.insertRun(dbHandle, body.run);
-  var battleId = db.insertBattle(dbHandle, dbRuns[runKey], body.state, body.firstPlayer || 'red',
+  var skirmishId = db.insertSkirmish(dbHandle, dbRuns[runKey], body.state, body.firstPlayer || 'red',
     { seed: body.seed, version: body.run.version });
-  return { status: 200, out: { ok: true, runId: dbRuns[runKey], battleId: battleId } };
+  return { status: 200, out: { ok: true, runId: dbRuns[runKey], skirmishId: skirmishId } };
 }
 
 var VERSION = (function () { // engine's rules version, for LAN mismatch warnings
@@ -227,19 +227,19 @@ var ROUTES = {
       json(res, 200, { ok: true, files: Object.keys(keep) });
     } catch (e) { json(res, 500, { error: e.message }); }
   },
-  'POST /api/recordbattle': function (req, res, body) {
-    // V1: one finished battle -> a per-battle row in logs/woa.db.
+  'POST /api/recordskirmish': function (req, res, body) {
+    // V1: one finished skirmish -> a per-skirmish row in logs/woa.db.
     // body = { run:{version,kind,redAi,blueAi,n,tool,notes,deck,mapset,seedBase,label,baseline},
     //   runKey?, state, firstPlayer, seed } — run is forwarded to db.insertRun as-is
     // (WOA-032, SPEC §7: run identity); the caller (the dashboard Run loop) stamps
     // deck/mapset/seedBase, never this proxy — the server stays a dumb pass-through.
     try {
-      var r = recordBattle(body);
+      var r = recordSkirmish(body);
       json(res, r.status, r.out);
     } catch (e) { json(res, 500, { error: e.message }); }
   },
   'GET /api/runs': function (req, res) {
-    // WOA-034: the dashboard header's run-A/B pickers. Guarded like recordBattle
+    // WOA-034: the dashboard header's run-A/B pickers. Guarded like recordSkirmish
     // above — a zipped game/ without dev/ (or a db that's never been opened)
     // answers a clean [] rather than 501/error; the dashboard's fetch().catch
     // falls back the same way under file:// where this is never even called.
@@ -249,8 +249,8 @@ var ROUTES = {
       json(res, 200, db.listRuns(dbHandle));
     } catch (e) { json(res, 500, { error: e.message }); }
   },
-  'GET /api/battles': function (req, res, body, u) {
-    // WOA-035: the Overview screen's fetch — every battle row for one run,
+  'GET /api/skirmishes': function (req, res, body, u) {
+    // WOA-035: the Overview screen's fetch — every skirmish row for one run,
     // scalar columns + the trace TEXT blob (parsed client-side by
     // WOA_REPORT.envelopeFromRow). Guarded like /api/runs above — a zipped
     // game/ without dev/, a db that's never been opened, or a missing/bad
@@ -260,26 +260,26 @@ var ROUTES = {
     if (!runId) return json(res, 200, []);
     try {
       if (!dbHandle) dbHandle = db.open();
-      var rows = db.listBattles(dbHandle, runId);
-      // WOA-037: attach each battle's per-turn field-score timeline as a
+      var rows = db.listSkirmishes(dbHandle, runId);
+      // WOA-037: attach each skirmish's per-turn field-score timeline as a
       // sibling `fs: [[fsRed,fsBlue], ...]` (turn-ordered) — env.fs for
       // WOA_REPORT.vpDiffTrack/envelopeFromRow. ONE grouped query over the
-      // `timeline` table for this run's battle ids (never N+1 per battle).
+      // `timeline` table for this run's skirmish ids (never N+1 per skirmish).
       // dev/db.js owns the write path (insertTimeline, tested by db.test.js)
       // and stays untouched — this read is dashboard-only, so it lives here.
-      // Fails open: a timeline-read hiccup still returns the scalar battle
+      // Fails open: a timeline-read hiccup still returns the scalar skirmish
       // rows, just without fs (same shape as before this ticket).
       var ids = rows.map(function (r) { return r.id; });
       if (ids.length) {
         try {
           var qs = ids.map(function () { return '?'; }).join(',');
           var stmt = dbHandle.db.prepare(
-            'SELECT battle_id, turn, fs_red, fs_blue FROM timeline WHERE battle_id IN (' + qs + ') ORDER BY battle_id, turn');
-          var byBattle = {};
+            'SELECT skirmish_id, turn, fs_red, fs_blue FROM timeline WHERE skirmish_id IN (' + qs + ') ORDER BY skirmish_id, turn');
+          var bySkirmish = {};
           stmt.all.apply(stmt, ids).forEach(function (t) {
-            (byBattle[t.battle_id] || (byBattle[t.battle_id] = [])).push([t.fs_red, t.fs_blue]);
+            (bySkirmish[t.skirmish_id] || (bySkirmish[t.skirmish_id] = [])).push([t.fs_red, t.fs_blue]);
           });
-          rows.forEach(function (r) { if (byBattle[r.id]) r.fs = byBattle[r.id]; });
+          rows.forEach(function (r) { if (bySkirmish[r.id]) r.fs = bySkirmish[r.id]; });
         } catch (e2) { /* fail open: rows above are still valid without fs */ }
       }
       json(res, 200, rows);
@@ -338,7 +338,7 @@ http.createServer(function (req, res) {
       }
     });
   });
-  console.log('  Battle persistence: ' + (db ? 'ON -> logs/woa.db' : 'off (dev/db.js not found — fine for a zipped copy)'));
+  console.log('  Skirmish persistence: ' + (db ? 'ON -> logs/woa.db' : 'off (dev/db.js not found — fine for a zipped copy)'));
   console.log('');
   console.log('  One player clicks "Host a Room", the other enters the 4-letter code.');
   console.log('  Press Ctrl+C to stop.');

@@ -15,7 +15,7 @@
     currentShape: I.currentShape, rot180: I.rot180, buildTerrain: I.buildTerrain, pieceProblem: I.pieceProblem, hexLabel: I.hexLabel,
     key: I.key, parseKey: I.parseKey, inBoard: I.inBoard, neighbor: I.neighbor, neighbors: I.neighbors,
     dist: I.dist, dirBetween: I.dirBetween, edgeKey: I.edgeKey, edgeFrom: I.edgeFrom, sideKey: I.sideKey, other: I.other,
-    newMatch: I.newMatch, newBattle: I.newBattle,
+    newMatch: I.newMatch, newSkirmish: I.newSkirmish,
     unitAt: I.unitAt, isHQ: I.isHQ, isEmpty: I.isEmpty, controlledHexes: I.controlledHexes,
     deployTargets: I.deployTargets, riverBetween: I.riverBetween, trenchTargets: I.trenchTargets, trenchOrientations: I.trenchOrientations,
     listAttacks: I.listAttacks, listRepositions: I.listRepositions, listBarrageTargets: I.listBarrageTargets,
@@ -26,7 +26,7 @@
     aiPlanTurn: I.aiPlanTurn, rankChoices: I.rankChoices, clone: I.clone, cloneForSim: I.cloneForSim, evalState: I.evalState, validateMaps: I.validateMaps,
     AI_PRESETS: I.AI_PRESETS, AI_WEIGHTS: I.AI_WEIGHTS, aiConfig: I.aiConfig, CARD_KEEP: I.CARD_KEEP,
     hooks: I.HOOKS,
-    simBattle: I.simBattle, balanceMap: I.balanceMap,
+    simSkirmish: I.simSkirmish, balanceMap: I.balanceMap,
     balanceNew: I.balanceNew, balanceAdd: I.balanceAdd, balanceSeed: I.balanceSeed, balanceFP: I.balanceFP
   };
   global.Engine = Engine;

@@ -36,9 +36,9 @@ findings meant to feed `create-card`/`create-map`).
      full roster, identical numbers.)
    - `node game/balance.js matchup 16` — skill premium (stronger AI's win rate).
    - Pit personalities when relevant: `node game/balance.js matchup 16 brawler turtle`.
-2. **LLM battles** (only if asked): `node dev/claude-plays.js --red haiku --blue normal
+2. **LLM skirmishes** (only if asked): `node dev/claude-plays.js --red haiku --blue normal
    --map <name>` per interesting map (add `--match 3` for a first-to-3 match; each
-   LLM side gets one persistent session, so matches are token-cheap per battle).
+   LLM side gets one persistent session, so matches are token-cheap per skirmish).
    The LLM is a non-heuristic reference point on the skill curve, and its
    felt-notes are playtest signal — quote them.
 3. **Grade** every headline number against `docs/balance/` (north stars + bands)
@@ -50,7 +50,7 @@ findings meant to feed `create-card`/`create-map`).
      with the numbers.
    - Pacing (Feedback Round 2): the Drag column (trailing kill-less turns before
      the game ends — high = the AIs march in circles) and Swings (field-score
-     lead flips per battle — high = real back-and-forth). Flag maps that drag.
+     lead flips per skirmish — high = real back-and-forth). Flag maps that drag.
    - Card watchlist: high Simple%, high 1stSight% + low AvgSeen.
    - Concrete suggestions, each tied to the evidence ("Thornfield reads 73/28 red
      at n=40 — consider moving the red-side forest one hex south"), phrased as

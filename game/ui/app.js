@@ -16,7 +16,7 @@ var APP = {
   mode: null,            // 'ai' | 'hotseat' | 'net'
   mySide: 'red',         // for ai/net
   diff: 'normal',
-  st: null,              // battle state (includes .match)
+  st: null,              // skirmish state (includes .match)
   net: { room: null, seq: 0, poller: null },
   ui: { sel: null, stage: null, busy: false, handoffPending: false },
   snap: null
