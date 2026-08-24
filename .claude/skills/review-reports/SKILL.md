@@ -42,7 +42,7 @@ analysis to `logs/reports/analysis/`. Covers both report types:
   **quote the rubric's band, never restate its baseline figures here**; this
   skill file goes stale the moment a restated number does, and the rubric is
   the one place they're allowed to live.
-- `dynamic-scrum/docs/human-instructions/ai-heuristic-model.md` — so any AI-behaviour
+- `docs/ai/ai-heuristic-model.md` — so any AI-behaviour
   suggestion names the exact weight to turn.
 - The reports themselves. Default to the **current rules version** (the highest
   `<version>` folder / the `Engine.VERSION` stamped in report headers). Don't mix
