@@ -27,7 +27,8 @@
     AI_PRESETS: I.AI_PRESETS, AI_WEIGHTS: I.AI_WEIGHTS, aiConfig: I.aiConfig, CARD_KEEP: I.CARD_KEEP,
     hooks: I.HOOKS,
     simSkirmish: I.simSkirmish, balanceMap: I.balanceMap,
-    balanceNew: I.balanceNew, balanceAdd: I.balanceAdd, balanceSeed: I.balanceSeed, balanceFP: I.balanceFP
+    balanceNew: I.balanceNew, balanceAdd: I.balanceAdd, balanceSeed: I.balanceSeed, balanceFP: I.balanceFP,
+    skirmishFacts: I.skirmishFacts, factsFromRow: I.factsFromRow, foldFacts: I.foldFacts
   };
   global.Engine = Engine;
 })(typeof window !== 'undefined' ? window : globalThis);

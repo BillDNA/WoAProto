@@ -10,8 +10,11 @@
 
    Exposed as the browser global WOA_REPORT (classic script, loaded by
    index.html after the engine parts) AND as module.exports for node — the
-   same dual-export pattern as maps.js. No dependencies: every function takes
-   plain data (E.balanceMap aggregates, E.CARDS) as arguments.
+   same dual-export pattern as maps.js. Nearly dependency-free: every function
+   takes plain data (E.balanceMap aggregates, E.CARDS) as arguments — the ONE
+   exception is foldSkirmishes, which delegates the per-Skirmish fold to the
+   engine's single-source factsFromRow/foldFacts (architecture review 01) rather
+   than keep a second copy of the derivation.
 
    - pct(a, b)                 rounded percentage (0 when b is 0)
    - f1(x)                     one-decimal string, round-half-up
@@ -37,6 +40,14 @@
    - envelopeFromRow(row)      a DB skirmish row's .trace TEXT -> parsed envelope */
 
 var WOA_REPORT = (function () {
+
+  // Architecture review 01: foldSkirmishes is the ONE function here that is
+  // genuinely downstream of the engine — it delegates the per-Skirmish fold to
+  // the engine's single-source factsFromRow/foldFacts instead of re-deriving it.
+  // Resolve the engine the same dual way maps.js does (window.Engine in the
+  // browser, require in node). Everything else stays pure/plain-data.
+  var ENG = (typeof window !== 'undefined' && window.Engine) ? window.Engine
+    : (typeof require === 'function' ? require('./engine.js') : null);
 
   function pct(a, b) { return b ? Math.round(100 * a / b) : 0; }
   function f1(x) { return (Math.round(x * 10) / 10).toFixed(1); }
@@ -267,32 +278,10 @@ var WOA_REPORT = (function () {
       attacks: 0, swaps: 0, marches: 0, deploys: 0,
       attritionEndings: 0, attritionKillTail: 0,
       firstBloodGames: 0, firstBloodWins: 0, controlGames: 0, controlWins: 0, cards: {} };
-    (rows || []).forEach(function (r) {
-      if (r.winner === 'red') agg.redWins++;
-      if (r.winner && r.winner === r.firstPlayer) agg.firstWins++;
-      if (r.winType === 'hq') agg.hqWins++;
-      agg.turns += r.turns || 0;
-      agg.vpDiff += Math.abs((r.fsRed || 0) - (r.fsBlue || 0));
-      if (r.zeroKill) agg.zeroKill++;
-      if (r.tiebreak) agg.tiebreak++;
-      agg.killTail += r.killTail || 0;
-      // WOA-039: attrition-only slice for Tie%/Drag — the same win_type + kill_tail
-      // columns balanceAdd folds live, sliced identically so live == DB bit-for-bit.
-      if (r.winType === 'attrition') { agg.attritionEndings++; agg.attritionKillTail += r.killTail || 0; }
-      agg.leadChanges += r.leadChanges || 0;
-      agg.attacks += r.attacks || 0; agg.swaps += r.swaps || 0;
-      agg.marches += r.marches || 0; agg.deploys += r.deploys || 0;
-      if (r.firstBlood) {
-        agg.firstBloodGames++;
-        if (r.firstBlood === r.winner) agg.firstBloodWins++;
-      }
-      // WOA-038: hexesRed/hexesBlue are NULL on legacy rows — guard both,
-      // don't coerce to 0 (a missing pair must never read as a 0/0 tie).
-      if (r.hexesRed != null && r.hexesBlue != null && r.hexesRed !== r.hexesBlue) {
-        agg.controlGames++;
-        if ((r.winner === 'red') === (r.hexesRed > r.hexesBlue)) agg.controlWins++;
-      }
-    });
+    // Delegate every row to the engine's single-source fold — factsFromRow maps
+    // the stored columns onto the fact record foldFacts accumulates, the SAME
+    // record + fold balanceAdd uses live. `cards` stays {} (out of scope here).
+    (rows || []).forEach(function (r) { ENG.foldFacts(agg, ENG.factsFromRow(r)); });
     return { agg: agg, done: (rows || []).length };
   }
 
