@@ -113,5 +113,4 @@ and a personality duel (`matchup 16 brawler turtle`).
 
 ## Related
 
-[[Docs Index]] · [[driving-the-balance-loop]] (the tools themselves) · [[data-and-reports]] ·
-[[claude-plays-human-instructions]]
+[[workflow]] (the balance tools) · [[code-architecture]]

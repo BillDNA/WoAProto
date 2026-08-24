@@ -7,7 +7,7 @@ last-reviewed: 2026-07-18 (WOA-044)
 You are working on a digital version of Bill's physical board game **War of Attrition**.
 Read this first; it will save you from re-deriving (or breaking) decisions that are already settled.
 *(This is the filled-out `code-architecture` doc — it absorbed the pre-adopt `code-overview.md` verbatim
-when `design-docs/` dissolved into `dynamic-scrum/docs/`, 2026-07-07.)*
+when `design-docs/` dissolved into the docs vault, 2026-07-07.)*
 
 ## Source of truth
 
@@ -116,7 +116,7 @@ Determinism is the free regression net: the same seed schedule → **byte-identi
 - Maps (Feedback Round 4 Pass 2, map-sets V1): the roster IS `E.MAPS` (content files). Saving a map in the editor updates `E.MAPS` in place (`rosterReplace`) AND POSTs `/api/savemap`; deleting POSTs `/api/deletemap` + `rosterRemove`. **The match pool is the ACTIVE map-set** (`E.mapPool()` / `E.MAPSETS`, edited in the maps screen's Map-Sets panel — up to 5 named sets, one active — saved as `content/mapsets/*.js` via `/api/savemapsets`). Export downloads the whole roster as `maps-bundle.json`; Import writes each map back through `/api/savemap`. Editing/deleting/set-saving needs the local server (file writes); double-clicked file:// can play and edit sets for the session but not persist them.
 - The editor paints terrain per SIDE (click inside a hex near its border); its shape dropdown builds itself from `E.SHAPES`; Mirror applies the shape's rot180; saving groups same-type corner-sharing sides of one hex into pieces.
 - `index.html?autostart=ai` deep-links straight into a battle (screenshots, quick testing).
-- Art pipeline: `game/art/<card-id>.jpg|png` looked up by card id (`artImg` with onerror fallback chain, `ART_STATE` cache; no art = clean text-only card). title.png / table.jpg / board.jpg dress menu, body, and board via CSS with graceful absence. Raw AI renders are heavy: run `dev/optimize-art.ps1` (trims alpha margins, resizes, jpgs; originals swept to gitignored `dynamic-scrum/planning/specs/original-specs/art-originals/`).
+- Art pipeline: `game/art/<card-id>.jpg|png` looked up by card id (`artImg` with onerror fallback chain, `ART_STATE` cache; no art = clean text-only card). title.png / table.jpg / board.jpg dress menu, body, and board via CSS with graceful absence. Raw AI renders are heavy: run `dev/optimize-art.ps1` (trims alpha margins, resizes, jpgs; originals swept to gitignored `dev/art-originals/`).
 - Editor terrain grouping splits long same-hex runs into physical 2s/3s (`splitRun`; a full ring = 3+3 — Bill's TwoSetsOfThree report). validateMaps stays strict about stock sizes.
 - Game layout (**V0 layout pass, July 2026 — "2A + topbar scoreboard"**, supersedes the Round-5 arrangement; V0 spec retired to git history): `#main` is three full-height columns — `.sidecol#leftcol` holds **BOTH mats** (opponent top, YOUR mat bottom next to the hand; hotseat/watch = red top/blue bottom; ordered via flex `order` in renderTop, `.mat-divider` seam between), `#centercol` (boardwrap + promptbar + hand), `.sidecol#rightcol` is the **Campaign Journal only** — full height, bound-book chrome (sticky `.jhead` brass plate, spine/ruled-margin/page-edge as `.jbody` backgrounds). Rule of hierarchy: board + hand are primary and never yield; rails are reference and degrade first; surplus width goes to the board (`#rightcol` capped at `clamp(300px,26vw,420px)`).
 - **Board is bounded by its hex geometry**: renderBoard sets `--board-ar` from the SVG viewBox; `#board{height:100%; width:auto; aspect-ratio:var(--board-ar)}` so tall/diamond maps no longer stretch full-width parchment. Don't reintroduce `width:100%`.
@@ -140,7 +140,7 @@ exactly the bent-ruler failure mode. Rather than re-date a fourth copy, this is 
   on the current **Core Six** pool (`core7`). `CLAUDE.md`'s "Shipped history" carries the terse
   protect-the-baselines summary for a quick session-start read.
 - **Tools** that produce these numbers (`dev/balance-report.js`, `game/balance.js matchup`, the
-  Balance Dashboard, `dev/claude-plays.js`) are covered in [[data-and-reports]].
+  Balance Dashboard, `dev/claude-plays.js`) are covered in [[workflow]].
 
 If a future pass needs per-map side-bias / mover-bias examples again, re-measure them fresh against
 Core Six rather than trusting anything that was here before — every prior bullet in this section was
@@ -148,4 +148,4 @@ measured on a map pool that no longer exists.
 
 ## Related
 
-[[Docs Index]] · [[workflow]] · [[War Of Attrition rule book]] · [[ai-heuristic-model]] · [[data-and-reports]] · [[card-cheatsheet]] · [[grading-rubrics]]
+[[workflow]] · [[War Of Attrition rule book]] · [[ai-heuristic-model]] · [[card-cheatsheet]] · [[balance-baselines]]

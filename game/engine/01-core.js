@@ -7,7 +7,7 @@
   var I = global.WOA_E = global.WOA_E || {};
 
   // apples (drives report/version folders and the persistent-data reset boundary).
-  // Must track the rule book header (dynamic-scrum/docs/War Of Attrition rule book.md).
+  // Must track the rule book header (docs/War Of Attrition rule book.md).
   // 1.2 (WOA-039): metric re-baseline — Atk/Swp become % of actions, Tie%/Drag
   // condition to attrition endings, Reserves condition to HQ endings. Engine
   // RULES are unchanged; the bump exists so the golden balance diff (printed

@@ -15,9 +15,9 @@ hook. This doc is the game-side build workflow only.)*
 - **Refactors ride the golden-diff oracle** (decision record: the retired `v1-architecture` spec, git history): capture `node game/balance.js 24 normal` AND `24 easy` output before moving code; every refactor commit must reproduce both byte-identically, on top of test.js + smoke.js green. A change that legitimately moves the numbers is a rules/AI-strength change, not a refactor — bump `RULES_VERSION` in `game/engine/01-core.js` atomically with the rule-book header and the test-pin updates.
 - `logs/woa.db` (+ `-wal`/`-shm`) is **regenerable and gitignored** — delete it freely; the committed markdown under `logs/reports/` stays the human record. Query it read-only with `node dev/db-query.js` (no SQL = schema + row counts).
 - Headless screenshots: `chrome --headless --screenshot=... "file:///...index.html?autostart=ai"` works (use classic `--headless`, not `--headless=new`).
-- Git: repo root is the project; remote `https://github.com/BillDNA/WoAProto.git`; GitHub Pages serves `main` (root `index.html` redirects into `game/`). PSD/XCS art sources and prototype photos are gitignored on purpose (public repo) — `dynamic-scrum/planning/specs/original-specs/prototype pictures/HexClarificationDiagram.png` is the whitelisted exception.
+- Git: repo root is the project; remote `https://github.com/BillDNA/WoAProto.git`; GitHub Pages serves `main` (root `index.html` redirects into `game/`). PSD/XCS art sources and raw art originals are gitignored on purpose (public repo, `dev/art-originals/`); the terrain-defining `docs/HexClarificationDiagram.png` is tracked.
 - Don't add build steps, frameworks, or dependencies to `game/`. Everything is intentionally plain files Bill can zip and share. (`dev/` may hold dev-only deps like jsdom.)
-- Aesthetic: steampunk Napoleonic field journal (see `../planning/specs/original-specs/Player Card Art direction drafts.md`, prompts in `../planning/specs/original-specs/art-prompts.md`) — parchment, brass, earthy tones; no modern UI chrome.
+- Aesthetic: steampunk Napoleonic field journal (art-direction drafts + prompts archived in git history) — parchment, brass, earthy tones; no modern UI chrome.
 
 ## Tools available to you
 ### The Dynamic Image Generation MCP
@@ -38,4 +38,4 @@ Rules:
 
 ## Related
 
-[[Docs Index]] · [[code-architecture]] · [[data-and-reports]]
+[[code-architecture]] · [[card-cheatsheet]]

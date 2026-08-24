@@ -4,7 +4,7 @@
 
 The boundary: **balance is math** — the numbers below are the empirical anchor a fresh
 run is graded against, so a sharp move in any of them signals a regression even when win
-rates look fine. **Rubrics are the "is this subjectively fun" layer** (`dynamic-scrum/rubrics/grading-rubrics.md`)
+rates look fine. **Rubrics are the "is this subjectively fun" layer** (`docs/rubrics/`)
 — they hold the *judgment* and cite this note for their anchors. Numbers here; taste there.
 
 Only the **live rules-1.2** fact set lives here. Superseded lineage (rules-1.1, V0, the

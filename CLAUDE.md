@@ -1,10 +1,10 @@
 # WarOfAttrition
 
-**Local docs (retained content — not an active workflow):** the project's orientation docs, rubrics,
-and specs live under `dynamic-scrum/` — `code-architecture.md`, `Docs Index`, and the grading
-rubrics, read by the local game skills (`create-card`, `create-map`,
-`run-tournament`, `review-reports`, `generate-reports`). Kept as reference material — the DynamicScrum
-session workflow is not run in this project. The measured balance baselines live in `docs/balance-baselines.md`.
+**Local docs:** the project's orientation docs, rubrics, and reference material live under `docs/` —
+`code-architecture.md`, `workflow.md`, the `rubrics/` + `balance/` sets, `card-cheatsheet.md`, and the
+rule book — read by the local game skills (`create-card`, `create-map`, `run-tournament`,
+`review-reports`, `generate-reports`). `CONTEXT.md` is the domain glossary; measured balance baselines
+live in `docs/balance-baselines.md`.
 
 ---
 
@@ -14,7 +14,7 @@ session workflow is not run in this project. The measured balance baselines live
 
 we are taking a board game prototype and turning it into a playable prototype in the web browser, the goal of this project is to have something that allows me to playtest and rapidly iterate on balance in the game.
 
-Start in [[code-architecture]] (`docs/`) — it is the orientation file for this project and stays current; [[Docs Index]] maps every other doc. `game/README.md` is the player-facing manual. [[workflow]] has the build/test conventions. The shipped pre-board eras (June rounds / V0 / V1) are archived in git history.
+Start in [[code-architecture]] (`docs/`) — it is the orientation file for this project and stays current; `CONTEXT.md` is the domain glossary. `game/README.md` is the player-facing manual. [[workflow]] has the build/test conventions. The shipped pre-board eras (June rounds / V0 / V1) are archived in git history.
 
 ## Standing goals (revised for V1 — reasoning in the retired `v1-architecture` spec, git history)
 
@@ -24,7 +24,7 @@ Start in [[code-architecture]] (`docs/`) — it is the orientation file for this
 * **tests are the contract**: `node game/test.js` green on every commit (extend with every rules change), `node dev/smoke.js` green after UI changes. Refactors prove themselves with a **golden balance diff** (same seeds → byte-identical aggregates); anything that legitimately changes numbers bumps the rules version instead, atomically with its test-pin updates
 * **one implementation per fact**: the seed schedule, the balance fold, report scoring/rendering (`game/report-model.js`), the content-kind list (`content/kinds.js`) each live in exactly one file — if adding a metric/column/kind isn't a one-file diff, fix the seam first
 * **every battle from every source lands as a per-battle row** in `logs/woa.db` (via `Engine.hooks.onBattleEnd` / `balanceMap` onGame / the server proxy); markdown reports stay the human-readable committed artifact
-* **paths that skills and docs pin are frozen API**: `game/engine.js`, `game/balance.js`, `game/test.js`, `dev/balance-report.js`, `dev/claude-plays.js`, `logs/reports/{balance,battle,analysis}/<version>/`, and balance-report's `SAVED:`/`BEST_MAP:` stdout lines — moving any requires a same-commit sweep of `.claude/skills/` + `dynamic-scrum/docs/`
+* **paths that skills and docs pin are frozen API**: `game/engine.js`, `game/balance.js`, `game/test.js`, `dev/balance-report.js`, `dev/claude-plays.js`, `logs/reports/{balance,battle,analysis}/<version>/`, and balance-report's `SAVED:`/`BEST_MAP:` stdout lines — moving any requires a same-commit sweep of `.claude/skills/` + `docs/`
 
 ## Shipped history
 
@@ -34,7 +34,7 @@ single source of truth **`docs/balance-baselines.md`**. Superseded lineage (rule
 pre-WOA-020 pool / the `default`-deck rows) is dropped; git is the archive. Balance is math (that
 note); rubrics are the subjective-fun judgment layer that cite it.
 
-**For Bill to decide** (filed, not acted on): the Steam leverage draft ([[steam-roadmap]]).
+**For Bill to decide** (filed, not acted on): the Steam leverage draft (issue #27, `idea`).
 *(The weight-tuner suggestions are closed — WOA-012 verified and **rejected** the sweep under 1.1;
 tuned lost the matchup gate to hard, 44% of 192. Defaults stand.)*
 

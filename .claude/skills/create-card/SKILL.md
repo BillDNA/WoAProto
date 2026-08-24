@@ -13,7 +13,7 @@ or custom-deck.js.**
 
 - `game/content/decks/default.js` — the active deck's card list (and
   `game/maps.js` `"units"` for legal deploy targets).
-- `dynamic-scrum/docs/card-cheatsheet.md` — the FULL step vocabulary. It is small on
+- `docs/card-cheatsheet.md` — the FULL step vocabulary. It is small on
   purpose: `deploy(unit, anywhere)`, `trench`, `attack(mod, tieSpare, noAdvance)`,
   `reposition`, `barrage`. **A card needing a step type that doesn't exist is an
   engine change — flag it as such, don't pretend the JSON works.**

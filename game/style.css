@@ -536,8 +536,8 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
 
 /* WOA-034: dashboard shell chrome — dark header (run A/B pickers), pill nav
    (Overview|Maps|Cards|Units|Tables) + temperature selector. Design tokens
-   from dynamic-scrum/planning/specs/design_handoff_metrics_dashboard/README.md
-   ("Design Tokens" / Screen 1). Tables' own controls live in #dashRunControls
+   from the metric-dashboard v2 handoff spec ("Design Tokens" / Screen 1;
+   archived in git history). Tables' own controls live in #dashRunControls
    (hidden outside the Tables pill — the charts context is view-only). */
 #dashHead{background:#2c2517; color:var(--parch); border-radius:8px; padding:9px 16px; margin:0 0 10px; display:flex; flex-wrap:wrap; align-items:center; column-gap:16px; row-gap:4px;}
 #dashHead .dash-head-title{font-variant:small-caps; font-size:16px; letter-spacing:.03em; white-space:nowrap;}
