@@ -7,7 +7,7 @@ description: Run an AI (and optionally LLM) tournament over the War of Attrition
 
 Run the sims, read the spread against the rubrics, hand Bill a graded report.
 **Suggestions only — never edit maps.js, cards, or rules yourself**
-(dynamic-scrum/docs/code-architecture.md: findings go to Bill, he decides rule
+(docs/code-architecture.md: findings go to Bill, he decides rule
 changes).
 
 **Stays in its lane:** this skill both *measures* (the sweep) and *grades*

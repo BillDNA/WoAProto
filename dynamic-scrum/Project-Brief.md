@@ -4,7 +4,7 @@
 > rapidly iterate on balance — now on a deliberate trajectory to a **Steam roguelite deck-builder**.
 
 The high-level kickoff doc. Detail lives in companion docs — the [[Roadmap]], the process doc, and the
-project's own orientation vault (`dynamic-scrum/docs/code-architecture.md`, `specs/`).
+project's own orientation vault (`docs/code-architecture.md`, `specs/`).
 
 ---
 
