@@ -1,8 +1,8 @@
 /* War of Attrition — balance lab.
-   Runs AI-vs-AI battles and reports what the numbers say.
+   Runs AI-vs-AI skirmishes and reports what the numbers say.
 
-     node balance.js                     24 battles per map, normal AI, all maps
-     node balance.js 60                  60 battles per map
+     node balance.js                     24 skirmishes per map, normal AI, all maps
+     node balance.js 60                  60 skirmishes per map
      node balance.js 60 hard             ...with the Field Marshal AI
      node balance.js 40 narrows          only maps whose name matches "narrows"
                                          (all content/maps/*.js are included)
@@ -18,17 +18,17 @@
    Reading the map report:
    - Red%/Blue% far from 50  -> the map itself favours a side (positions/terrain)
    - 1st%/2nd% far from 50   -> mover advantage on that map
-   - HQ% near 0              -> nobody can crack the HQ; battles always grind to attrition
-   - Turns                   -> pacing; the deck caps a battle at 32 plays
+   - HQ% near 0              -> nobody can crack the HQ; skirmishes always grind to attrition
+   - Turns                   -> pacing; the deck caps a skirmish at 32 plays
    - Atk%/Swp%               -> attacks / swaps as a SHARE of all actions taken
                                 (attacks+swaps+marches+deploys): AI behaviour health,
                                 deck-size-proof. Low Atk% + high Swp% = swap-dancing.
-   - 0kill%                  -> battles where no unit ever died (degenerate stalemates)
+   - 0kill%                  -> skirmishes where no unit ever died (degenerate stalemates)
    - Drag                    -> avg trailing turns with NO kill before the game ended,
                                 over ATTRITION endings only (HQ endings have Drag 0 by
                                 definition). ~32 = a no-kill grind; high = circling.
    - Swings                  -> avg times the field-score lead flipped to the OTHER
-                                side per battle. High = real back-and-forth (you can
+                                side per skirmish. High = real back-and-forth (you can
                                 feel you'll come back); 0 = one side led wire-to-wire.
    - Card report             -> Simple%/1stSight%/AvgSeen per card (per-card Win% was
                                 dropped from print, WOA-019: dead at n=700, still in logs/woa.db)
@@ -42,7 +42,7 @@ var E = require('./engine.js');
 var R = require('./report-model.js');
 var fs = require('fs');
 var path = require('path');
-// V1/WOA-032 battle persistence — guarded exactly like game/server.js's own
+// V1/WOA-032 skirmish persistence — guarded exactly like game/server.js's own
 // require: a zipped game/ without dev/ still runs and prints, just doesn't
 // persist. dev/ may carry deps (node:sqlite); game/ itself stays dependency-free.
 var db = null;
@@ -77,7 +77,7 @@ function matchup(n, a, b, maps) {
     ['hard', 'easy'],
     ['normal', 'normal'] // sanity baseline, should be ~50
   ];
-  console.log('Skill-vs-luck report: ' + n + ' battles per map per pairing, ' + maps.length + ' maps.');
+  console.log('Skill-vs-luck report: ' + n + ' skirmishes per map per pairing, ' + maps.length + ' maps.');
   console.log('Each pairing also swaps sides so colour bias cancels out.\n');
   var results = [];
   pairs.forEach(function (pr) {
@@ -96,7 +96,7 @@ function matchup(n, a, b, maps) {
     console.log('  ' + pad(strong + ' vs ' + weak, 18, true) + ' stronger AI wins ' + p + '% of ' + games);
   });
   console.log('\nHow to read it: a clearly better player winning only ~50-55% means the');
-  console.log('card draw decides most battles (luck-heavy). 55-65% = luck and skill both');
+  console.log('card draw decides most skirmishes (luck-heavy). 55-65% = luck and skill both');
   console.log('matter. 65%+ = skill dominates. The normal-vs-normal line is the ~50% sanity check.');
 }
 
@@ -112,7 +112,7 @@ function mapReport(n, diff, filter, maps, mapsetArg) {
   var probs = E.validateMaps(maps);
   if (probs.length) { console.log('Fix these first:\n  ' + probs.join('\n  ')); return; }
 
-  // V1/WOA-032: one runs row per invocation (SPEC §7), battles reference it.
+  // V1/WOA-032: one runs row per invocation (SPEC §7), skirmishes reference it.
   // Best-effort — a persistence hiccup must never break the report itself.
   var dbh = null, runId = null;
   if (db) {
@@ -127,7 +127,7 @@ function mapReport(n, diff, filter, maps, mapsetArg) {
     } catch (e) { dbh = null; runId = null; }
   }
 
-  console.log('Simulating ' + n + ' battles per map (' + maps.length + ' maps, ' + diff + ' AI)...' +
+  console.log('Simulating ' + n + ' skirmishes per map (' + maps.length + ' maps, ' + diff + ' AI)...' +
     (dbh ? '  [persisting to logs/woa.db]' : '') + '\n');
   var header = pad('Map', 16, true) + pad('Shape', 11, true) +
     pad('Red%', 6) + pad('Blue%', 7) + pad('1st%', 6) + pad('2nd%', 6) +
@@ -144,7 +144,7 @@ function mapReport(n, diff, filter, maps, mapsetArg) {
     var r = E.balanceMap(map, n, { diffRed: diff, diffBlue: diff, seedBase: seedBase,
       onGame: dbh && function (g1, nn, st) {
         try {
-          db.insertBattle(dbh, runId, st, E.balanceFP(g1 - 1), { seed: E.balanceSeed(seedBase, g1 - 1), version: E.VERSION });
+          db.insertSkirmish(dbh, runId, st, E.balanceFP(g1 - 1), { seed: E.balanceSeed(seedBase, g1 - 1), version: E.VERSION });
         } catch (e) { /* persistence is best-effort */ }
       } });
     var done = n - r.unfinished;
@@ -175,22 +175,22 @@ function mapReport(n, diff, filter, maps, mapsetArg) {
   function nNote(k) { return ' (n=' + k + (k < R.SMALL_N.fleet ? ', small-n' : '') + ')'; }
   function hqRes(sum, k) { return k ? Math.round(100 * sum / k) + '%' : '—'; }
   console.log('\nOverall: red ' + pct(G.red, G.games) + '% | first mover ' + pct(G.first, G.games) +
-    '% | HQ captures ' + pct(G.hq, G.games) + '% | avg battle ' + (G.turns / Math.max(1, G.games)).toFixed(1) + ' turns');
+    '% | HQ captures ' + pct(G.hq, G.games) + '% | avg skirmish ' + (G.turns / Math.max(1, G.games)).toFixed(1) + ' turns');
   console.log('Behaviour: ' + pct(G.attacks, gAct) + '% attacks & ' +
-    pct(G.swaps, gAct) + '% swaps of all actions | zero-kill battles ' + pct(G.zeroKill, G.games) +
+    pct(G.swaps, gAct) + '% swaps of all actions | zero-kill skirmishes ' + pct(G.zeroKill, G.games) +
     '% | ' + Math.round(100 * G.depShare / Math.max(1, G.games)) + '% of units ever fielded');
   console.log('Reserves at end (HQ endings only' + nNote(G.hqEndings) + '): red holds ' + hqRes(G.resEndRedHQ, G.hqEndings) +
     ' of its pieces undeployed | blue holds ' + hqRes(G.resEndBlueHQ, G.hqEndings) + ' (a rush before commit)');
   console.log('Decisiveness: tie-goes-to-2nd decided ' + pct(G.tiebreak, G.attritionEndings) +
     '% of attrition endings | first blood won ' + pct(G.fbWins, G.fbGames) + '% of the ' + pct(G.fbGames, G.games) +
-    '% of battles that had a kill | side holding more hexes won ' + pct(G.ctlWins, G.ctlGames) + '%');
+    '% of skirmishes that had a kill | side holding more hexes won ' + pct(G.ctlWins, G.ctlGames) + '%');
   console.log('Pacing: ' + (G.attritionKillTail / gAtt).toFixed(1) + ' kill-less turns before end, attrition endings (0=decisive, ~32=circling) | ' +
-    (G.leadChanges / Math.max(1, G.games)).toFixed(1) + ' lead swings per battle (higher = more back-and-forth)');
+    (G.leadChanges / Math.max(1, G.games)).toFixed(1) + ' lead swings per skirmish (higher = more back-and-forth)');
 
-  console.log('\nCard report (' + G.games + ' battles of AI play — biases noted below):');
+  console.log('\nCard report (' + G.games + ' skirmishes of AI play — biases noted below):');
   // Win% dropped from print July 2026 (WOA-019): dead at n=700, all cards read
   // 49-52 against the +/-8 rubric threshold — still computed in cardRows()
-  // and recorded per-battle in logs/woa.db, just not shown here.
+  // and recorded per-skirmish in logs/woa.db, just not shown here.
   var ch = pad('Card', 20, true) + pad('Simple%', 9) + pad('1stSight%', 11) + pad('AvgSeen', 9) + pad('plays', 8);
   console.log(ch);
   console.log(new Array(ch.length + 1).join('-'));
@@ -209,23 +209,23 @@ function mapReport(n, diff, filter, maps, mapsetArg) {
   console.log('  attacks/swaps % of actions  AI play health, as a share of all actions taken');
   console.log('            (deck-size-proof). Low attack% + high swap% = the AIs shuffle units');
   console.log('            instead of fighting (the round-6 stalemate bug).');
-  console.log('  zero-kill battles  nobody died all battle: degenerate, should be ~0%.');
+  console.log('  zero-kill skirmishes  nobody died all skirmish: degenerate, should be ~0%.');
   console.log('  units fielded  share of all reserves that ever deployed. Low = turtling at home.');
   console.log('  reserves at end (HQ endings only)  share of a side\'s pieces still undeployed at an');
   console.log('            HQ capture — an HQ rush ends before a side commits its reserves, so this');
   console.log('            reads meaningfully only on that slice (attrition endings run to deck-out).');
   console.log('            Typically small-n (HQ endings are a minority); the (n=N) note flags it.');
   console.log('  tie-goes-to-2nd  attrition wins with EQUAL field scores, as a share of ATTRITION');
-  console.log('            endings. High = that one rule is deciding battles, not play.');
-  console.log('  first blood won  how often the first kill decided the battle. Very high = one');
+  console.log('            endings. High = that one rule is deciding skirmishes, not play.');
+  console.log('  first blood won  how often the first kill decided the skirmish. Very high = one');
   console.log('            early trade decides everything (snowbally).');
   console.log('  more hexes won  does board control track winning? Near 50% = holding ground');
   console.log('            is decorative under the current victory rules.');
   console.log('  kill-less turns before end (attrition)  how long the AIs shuffled with nobody dying');
   console.log('            before an attrition finish. 0 = decisive; high = marching in circles.');
-  console.log('  lead swings  times the field-score lead flipped sides per battle. High = a real');
+  console.log('  lead swings  times the field-score lead flipped sides per skirmish. High = a real');
   console.log('            back-and-forth (a losing player can feel a comeback); 0 = wire-to-wire.');
-  if (dbh) { console.log('\nPersisted ' + G.games + ' battles to logs/woa.db (run ' + runId + ').'); db.close(dbh); }
+  if (dbh) { console.log('\nPersisted ' + G.games + ' skirmishes to logs/woa.db (run ' + runId + ').'); db.close(dbh); }
 }
 
 /* ---------------- args ---------------- */

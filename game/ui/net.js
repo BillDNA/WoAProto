@@ -12,7 +12,7 @@ function pushState(){
   APP.net.seq++;
   var seq = APP.net.seq;
   api('push', { room: APP.net.room, seq: seq, state: APP.st }).then(function(d){
-    if (d.conflict){ APP.net.seq = d.seq; APP.st = d.state; renderAll(); if(APP.st.phase==='battle-over') showBattleOver(); }
+    if (d.conflict){ APP.net.seq = d.seq; APP.st = d.state; renderAll(); if(APP.st.phase==='skirmish-over') showSkirmishOver(); }
   }).catch(function(){ APP.net.seq = seq-1; toast('Connection hiccup — retrying on next move.', 2500); });
 }
 function startPolling(){
@@ -26,14 +26,14 @@ function startPolling(){
         APP.net.seq = d.seq; APP.st = d.state;
         APP.ui = { sel:null, stage:null, busy:false };
         renderAll();
-        if (APP.st.phase==='battle-over') showBattleOver();
+        if (APP.st.phase==='skirmish-over') showSkirmishOver();
       }).catch(function(){});
   }, 1000);
 }
 
 /* =================== whose input is live? =================== */
 function inputLive(){
-  if (!APP.st || APP.st.phase === 'battle-over' || APP.ui.busy) return false;
+  if (!APP.st || APP.st.phase === 'skirmish-over' || APP.ui.busy) return false;
   if (APP.mode === 'watch') return false; // spectating
   if (APP.mode === 'ai') return APP.st.current === APP.mySide;
   if (APP.mode === 'net') return APP.st.current === APP.mySide;

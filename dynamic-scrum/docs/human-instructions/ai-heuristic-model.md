@@ -54,7 +54,7 @@ Every turn the AI does a small greedy search:
    normal and hard.
 5. **Play the highest-scoring candidate.**
 
-A full hard battle simulates in about a second, so it's fine both live and in
+A full hard skirmish simulates in about a second, so it's fine both live and in
 the Balance Dashboard / `balance.js` runs. Keep new personalities in that
 ballpark.
 

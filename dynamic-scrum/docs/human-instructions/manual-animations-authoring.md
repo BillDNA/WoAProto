@@ -18,7 +18,7 @@ lives in **`game/ui/manual.js`**; read that file alongside this doc.
 | Styles (rings, pill, tabs, reduced-motion) | `game/style.css`, "Field Manual diagram player" block |
 | All wiring (buttons, ← → keys, `?screen=manual` deep link) | `game/ui/boot.js` — functions live in manual.js, wiring statements ONLY in boot.js |
 
-Visual vocabulary = the live battle FX (`ui/fx.js` / `ui/board.js`): **gold
+Visual vocabulary = the live skirmish FX (`ui/fx.js` / `ui/board.js`): **gold
 ring** = attacker support that counted, **steel ring** = defender support,
 **grey dashed ring** = support denied, strike arrow, `A vs D` pill. Reuse it;
 don't invent new glyphs for the same concepts.
@@ -28,7 +28,7 @@ don't invent new glyphs for the same concepts.
 Every number, ring and outcome shown must be **read from the engine at render
 time**, so a rules change flows into the manual automatically:
 
-- tallies + rings → `E.supportFor(st, side, battleHex, excludeHex, attacking)`
+- tallies + rings → `E.supportFor(st, side, skirmishHex, excludeHex, attacking)`
   (`.total`, `.hexes`, `.parts`) and `E.computeAttack(st, atk)`
   (`.attackerPower/.defenderPower/.outcome`);
 - aftermath frames → resolve a **fresh** fixture through the real path with
@@ -54,13 +54,13 @@ var st  = mpState(def, { '0,0':['infantry','blue'], '-1,0':['infantry','red'] },
 
 - `mpDef` builds a tiny inline map on the shared 9-hex outline `MP_HEXES`
   (labels A1–A3 / B1–B3 / C1–C3). `mpState` runs the REAL
-  `E.newMatch({maps:[def], seed:7, firstPlayer:'red'})` + `E.newBattle`, then
+  `E.newMatch({maps:[def], seed:7, firstPlayer:'red'})` + `E.newSkirmish`, then
   overwrites `st.units` / `st.trenches` with the fixture's pieces and sets
-  `st.__sim = true` (never fire real-battle hooks).
+  `st.__sim = true` (never fire real-skirmish hooks).
 - Terrain goes in the **map def** (`pieces`) so `buildTerrain` validates it;
   trenches go straight into the state. Every terrain side needs its neighbor
   hex ON the outline (`buildTerrain` throws "side off board" otherwise).
-- `newBattle` needs both HQs on the board, and an HQ adjacent to the battle
+- `newSkirmish` needs both HQs on the board, and an HQ adjacent to the skirmish
   hex adds +1 support — **place HQs at distance ≥ 2 from the target unless
   the example wants them counted** (only one dist-2 corner per side exists on
   `MP_HEXES`: `[2,-1]` and `[1,1]`).
@@ -68,9 +68,9 @@ var st  = mpState(def, { '0,0':['infantry','blue'], '-1,0':['infantry','red'] },
 
 ### The board-shape trap (important)
 
-The engine has ONE global board; `newBattle` switches it to the fixture's
+The engine has ONE global board; `newSkirmish` switches it to the fixture's
 shape. `renderManual()` saves the live shape and restores it in a `finally`,
-so an in-progress battle is never corrupted — **keep all fixture building and
+so an in-progress skirmish is never corrupted — **keep all fixture building and
 engine reads inside `scene()`**, and within a scene **build a state, read its
 numbers immediately, then build the next** (reads use whatever board is
 current). If you ever author a different outline than `MP_HEXES`, call

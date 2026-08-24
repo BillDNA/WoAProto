@@ -21,7 +21,7 @@ node game/balance.js   # shows what your change did to win rates + the card repo
 |------------|--------|--------------|
 | `id`       | string | Unique handle. Used for art lookup (`game/art/<id>.jpg` or `.png`), the AI's burn priorities, and the play metrics. Two ids are special — see below. |
 | `name`     | string | Shown on the card banner, in the journal ("Red plays …"), and the glossary. |
-| `count`    | number | Copies in the deck. **The sum of all counts is the deck size = your total plays per battle** (the physical game is 16). Changing it moves the attrition clock. |
+| `count`    | number | Copies in the deck. **The sum of all counts is the deck size = your total plays per skirmish** (the physical game is 16). Changing it moves the attrition clock. |
 | `text`     | string | Card body and glossary entry. Cosmetic only — the engine never reads it, so keep it honest when you change `steps`. |
 | `starting` | bool   | `true` on exactly ONE card: it is guaranteed in each player's opening hand (drawn as 1 + 3 random). |
 | `steps`    | array  | The printed action, resolved in order. Each entry is `{ "type": ..., ...options }` — see below. |
@@ -135,4 +135,4 @@ barrage:    —
             { "type": "attack", "mod": -1, "noAdvance": true }] }
 ```
 
-Remember to take its `count` out of another card (or accept a 17-play battle).
+Remember to take its `count` out of another card (or accept a 17-play skirmish).

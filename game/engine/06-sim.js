@@ -1,4 +1,4 @@
-/* War of Attrition — engine part 06: battle simulation + balance aggregation + map validation.
+/* War of Attrition — engine part 06: skirmish simulation + balance aggregation + map validation.
    Classic script (browser + node). Engine parts share the internal namespace
    g.WOA_E (alias I) — cross-part calls go through I.* at the CALL SITE (never
    captured at load time), so only filename-sorted load order matters. */
@@ -6,12 +6,12 @@
   'use strict';
   var I = global.WOA_E = global.WOA_E || {};
 
-  /* ---------- battle simulation (shared by balance.js and the in-game lab) ---------- */
-  function simBattle(map, seed, firstPlayer, diffRed, diffBlue) {
+  /* ---------- skirmish simulation (shared by balance.js and the in-game lab) ---------- */
+  function simSkirmish(map, seed, firstPlayer, diffRed, diffBlue) {
     var match = I.newMatch({ seed: seed | 0, maps: [map], firstPlayer: firstPlayer || 'red' });
-    var st = I.newBattle(match);
+    var st = I.newSkirmish(match);
     var guard = 0;
-    while (st.phase !== 'battle-over' && guard++ < 400) {
+    while (st.phase !== 'skirmish-over' && guard++ < 400) {
       var diff = st.current === 'red' ? (diffRed || 'normal') : (diffBlue || diffRed || 'normal');
       var plan = I.aiPlanTurn(st, diff);
       if (!plan) break;
@@ -27,9 +27,9 @@
   }
 
   // Balance aggregation is split so the CLI (balance.js) and the in-browser
-  // dashboard fold battles through the SAME code — if they ever disagree on a
+  // dashboard fold skirmishes through the SAME code — if they ever disagree on a
   // number, that's a bug. balanceNew makes an empty aggregate; balanceAdd folds
-  // one finished battle in; balanceMap is the synchronous convenience loop.
+  // one finished skirmish in; balanceMap is the synchronous convenience loop.
   function balanceNew(n) {
     var out = { n: n, redWins: 0, firstWins: 0, hqWins: 0, turns: 0, vpDiff: 0, unfinished: 0, cards: {},
       // behaviour metrics (June 2026): catch degenerate AI play, not just outcomes.
@@ -39,8 +39,8 @@
       firstBloodGames: 0, firstBloodWins: 0, controlGames: 0, controlWins: 0,
       deployedShare: 0,
       // WOA-016: per-side split of the SAME reserves-at-end read deployedShare
-      // uses above — share (0..1 per battle, summed) of THAT side's pieces
-      // still undeployed when the battle ended. Instrument for the "hoarding
+      // uses above — share (0..1 per skirmish, summed) of THAT side's pieces
+      // still undeployed when the skirmish ended. Instrument for the "hoarding
       // reserves wins" felt-note (balance-loop-v2 final report §5c.4).
       reserveEndRed: 0, reserveEndBlue: 0,
       // WOA-039 (rules 1.2): win-path conditioning. Tie%/Drag report over
@@ -53,15 +53,15 @@
       hqEndings: 0, reserveEndRedHQ: 0, reserveEndBlueHQ: 0,
       // Feedback Round 2 pacing metrics:
       killTail: 0,      // trailing kill-less turns (0 = ended on a kill/HQ, ~32 = no-kill grind)
-      leadChanges: 0 }; // field-score lead flips per battle (higher = more back-and-forth)
+      leadChanges: 0 }; // field-score lead flips per skirmish (higher = more back-and-forth)
     I.CARDS.forEach(function (c) { out.cards[c.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 }; });
     return out;
   }
   function balanceAdd(out, st, fp) {
-    if (st.phase !== 'battle-over') { out.unfinished++; return out; }
+    if (st.phase !== 'skirmish-over') { out.unfinished++; return out; }
     var unitTotal = 0;
     Object.keys(I.UNITS).forEach(function (t) { unitTotal += I.UNITS[t].count || 0; });
-    var w = st.battleWinner;
+    var w = st.skirmishWinner;
     if (w === 'red') out.redWins++;
     if (w === fp) out.firstWins++;
     if (st.winType === 'hq') out.hqWins++;
@@ -118,20 +118,20 @@
     });
     return out;
   }
-  // the seed/first-player schedule for battle g of a balance run — one place,
-  // so the CLI and the dashboard replay the identical battles
+  // the seed/first-player schedule for skirmish g of a balance run — one place,
+  // so the CLI and the dashboard replay the identical skirmishes
   function balanceSeed(seedBase, g) { return (seedBase || 7919) + g * 104729 + 13; }
   function balanceFP(g) { return g % 2 === 0 ? 'red' : 'blue'; }
 
-  // n AI-vs-AI battles on one map (alternating first player); aggregated stats.
+  // n AI-vs-AI skirmishes on one map (alternating first player); aggregated stats.
   function balanceMap(map, n, opts) {
     opts = opts || {};
     var out = balanceNew(n);
     for (var g = 0; g < n; g++) {
       var fp = balanceFP(g);
-      var st = simBattle(map, balanceSeed(opts.seedBase, g), fp, opts.diffRed, opts.diffBlue);
+      var st = simSkirmish(map, balanceSeed(opts.seedBase, g), fp, opts.diffRed, opts.diffBlue);
       balanceAdd(out, st, fp);
-      if (st.phase === 'battle-over' && opts.onGame) opts.onGame(g + 1, n, st);
+      if (st.phase === 'skirmish-over' && opts.onGame) opts.onGame(g + 1, n, st);
     }
     return out;
   }
@@ -169,7 +169,7 @@
   }
 
   /* shared-namespace exports */
-  I.simBattle = simBattle;
+  I.simSkirmish = simSkirmish;
   I.balanceNew = balanceNew;
   I.balanceAdd = balanceAdd;
   I.balanceSeed = balanceSeed;

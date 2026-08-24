@@ -25,7 +25,7 @@ the full explanation: each term's real depth lives in [[code-architecture]] or t
 | Map-set | A named roster of maps (`content/mapsets/`); the ACTIVE one is the match pool for every play mode and CLI tool. |
 | `RULES_VERSION` / `Engine.VERSION` | The rules-era stamp (currently 1.1) that partitions `logs/reports/` and `logs/woa.db` so playtest data stays apples-to-apples. |
 | Behaviour / Decisiveness lines | The balance-report summary rows: attacks/swaps/fielded% (Behaviour) and tie-goes-to-2nd/first-blood/board-control (Decisiveness). |
-| Drag / Swings | Pacing metrics: Drag = trailing kill-less turns before game end (high = circling); Swings = field-score lead changes per battle (high = back-and-forth). |
+| Drag / Swings | Pacing metrics: Drag = trailing kill-less turns before game end (high = circling); Swings = field-score lead changes per skirmish (high = back-and-forth). |
 
 ## Related
 

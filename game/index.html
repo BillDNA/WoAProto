@@ -51,7 +51,7 @@
 <!-- ============ GAME ============ -->
 <div id="game" class="screen">
   <div id="topbar">
-    <span class="title" id="battleTitle">War of Attrition</span>
+    <span class="title" id="skirmishTitle">War of Attrition</span>
     <div id="scorecard" title="Solid = VP on the board now; hatched = the ceiling if every reserve deploys; the cream seam is the projected front">
       <span class="pips" id="pipsRed"></span>
       <div class="tug" id="tug"></div>
@@ -60,7 +60,7 @@
     <div class="topright">
       <span id="roomchip" style="display:none; padding:3px 10px; border:1px dashed var(--brass); border-radius:5px; font-size:13px; letter-spacing:2px;"></span>
       <span id="turnbadge">RED</span>
-      <button class="ghost" id="btnConcede" style="padding:3px 10px;font-size:13px;" title="Give up this battle; the campaign moves on">Concede</button>
+      <button class="ghost" id="btnConcede" style="padding:3px 10px;font-size:13px;" title="Give up this skirmish; the campaign moves on">Concede</button>
       <button class="ghost" id="btnDebug" style="padding:3px 10px;font-size:13px;" title="Save this exact game state to logs/debug/ for a bug report (downloads a copy if the server isn't running)">Debug</button>
       <button class="ghost" id="btnCards" style="padding:3px 10px;font-size:13px;">Cards</button>
       <button class="ghost" id="btnManual2" style="padding:3px 10px;font-size:13px;">Manual</button>
@@ -199,11 +199,11 @@
 
     <div id="dashTablesIntro">
       <h2 style="font-variant:small-caps;text-align:center;">Balance Dashboard &mdash; Tables</h2>
-      <p class="small" style="text-align:center;">The full <code>balance.js</code> report, in the browser: AI-vs-AI battles across the roster, every metric laid out. Same aggregation as the terminal — the numbers can't disagree.</p>
+      <p class="small" style="text-align:center;">The full <code>balance.js</code> report, in the browser: AI-vs-AI skirmishes across the roster, every metric laid out. Same aggregation as the terminal — the numbers can't disagree.</p>
     </div>
     <div id="dashRunControls">
       <div class="opt-row" style="align-items:center;">
-        <label class="small">Battles/map <select id="dashN"><option>20</option><option selected>40</option><option>60</option><option>100</option></select></label>
+        <label class="small">Skirmishes/map <select id="dashN"><option>20</option><option selected>40</option><option>60</option><option>100</option></select></label>
         <label class="small">Red AI <select id="dashRed"><option value="easy">Green Recruit</option><option value="normal" selected>Old Veteran</option><option value="hard">Field Marshal</option></select></label>
         <label class="small">Blue AI <select id="dashBlue"><option value="easy">Green Recruit</option><option value="normal" selected>Old Veteran</option><option value="hard">Field Marshal</option></select></label>
         <label class="small">Maps <select id="dashMap"><option value="all">All in play</option></select></label>
@@ -221,7 +221,7 @@
 <!-- overlays -->
 <div class="overlay" id="playOvr"><div class="panel parchment" id="playPanel"></div></div>
 <div class="overlay" id="confirmOvr"><div class="panel parchment" id="confirmPanel"></div></div>
-<div class="overlay" id="battleOvr"><div class="panel parchment" id="battlePanel"></div></div>
+<div class="overlay" id="skirmishOvr"><div class="panel parchment" id="skirmishPanel"></div></div>
 <div class="overlay" id="handoffOvr"><div class="panel parchment" id="handoffPanel"></div></div>
 <div class="overlay" id="cardsOvr"><div class="panel parchment">
   <h2>Card Glossary</h2>
@@ -254,9 +254,9 @@
   </div>
   <div class="manual">
     <h3>Object</h3>
-    <p>Win battles by <b>capturing the enemy headquarters</b> (attack into it; a tie counts) or by <b>attrition</b> &mdash; when a player has no cards left, the side with more <b>surviving units on the board</b> wins (1&nbsp;VP per infantry, 2 per cavalry, 3 per artillery; reserves left at home count for nothing; tie goes to whoever moved second). First to <b>3 battle victories</b> wins the campaign.</p>
+    <p>Win skirmishes by <b>capturing the enemy headquarters</b> (attack into it; a tie counts) or by <b>attrition</b> &mdash; when a player has no cards left, the side with more <b>surviving units on the board</b> wins (1&nbsp;VP per infantry, 2 per cavalry, 3 per artillery; reserves left at home count for nothing; tie goes to whoever moved second). First to <b>3 skirmish victories</b> wins the campaign.</p>
     <h3>Your Turn</h3>
-    <p>Draw to a hand of 4 (your first turn includes the guaranteed Deploy Infantry card). Play exactly one card and resolve it; the played card is <b>removed from the game</b>, the rest are discarded and recycled. You have only as many plays as your deck holds (16&ndash;17 in the standard decks) per battle &mdash; spend them well.</p>
+    <p>Draw to a hand of 4 (your first turn includes the guaranteed Deploy Infantry card). Play exactly one card and resolve it; the played card is <b>removed from the game</b>, the rest are discarded and recycled. You have only as many plays as your deck holds (16&ndash;17 in the standard decks) per skirmish &mdash; spend them well.</p>
     <h3>Units</h3>
     <table><tr><th></th><th>Attack</th><th>Defense</th><th>Support</th><th>VP</th></tr>
     <tr><td>Infantry</td><td>1</td><td>1</td><td>1</td><td>1</td></tr>
@@ -315,7 +315,7 @@ try {
 <script src="engine/01-core.js"></script>
 <script src="engine/02-board.js"></script>
 <script src="engine/03-rules.js"></script>
-<script src="engine/04-battle.js"></script>
+<script src="engine/04-skirmish.js"></script>
 <script src="engine/05-ai.js"></script>
 <script src="engine/06-sim.js"></script>
 <script src="engine/07-export.js"></script>
@@ -323,7 +323,7 @@ try {
 <script src="ui/app.js"></script>
 <script src="ui/board.js"></script>
 <script src="ui/fx.js"></script>
-<script src="ui/battle.js"></script>
+<script src="ui/skirmish.js"></script>
 <script src="ui/net.js"></script>
 <script src="ui/maps-screen.js"></script>
 <script src="ui/map-editor.js"></script>

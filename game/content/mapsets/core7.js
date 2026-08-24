@@ -3,7 +3,7 @@
    pool everywhere via --mapset). Picked by WOA-007's balanceScore ideal-range
    ranking (game/report-model.js, SOT: grading-rubrics.md "Best map") over the
    fresh 1.1 hard-vs-hard n60 read (logs/reports/balance/1.1/2026-07-10-1823-
-   hard-vs-hard-n60.md, 720 battles) — top 7 of `tournament`'s 12 by score,
+   hard-vs-hard-n60.md, 720 skirmishes) — top 7 of `tournament`'s 12 by score,
    sanity-checked against the 1.0 final report's per-map read. Roster files for
    every map (kept or cut) stay on disk under content/maps/.
 

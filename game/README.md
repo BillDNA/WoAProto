@@ -9,7 +9,7 @@ The game is published from this repo: **https://billdna.github.io/WoAProto/** �
 
 ## Play vs the AI (no setup)
 
-Double-click **index.html**. Pick your side and the enemy general's skill, then **March Against the AI**. Tip: `index.html?autostart=ai` jumps straight into a battle.
+Double-click **index.html**. Pick your side and the enemy general's skill, then **March Against the AI**. Tip: `index.html?autostart=ai` jumps straight into a skirmish.
 
 Three generals to fight:
 
@@ -45,7 +45,7 @@ The map roster lives in `game/content/maps/` — one file per map — and is bro
 
 The old 37-hex Grand and 29-hex Wide boards are gone: they played slow and empty (both armies fully deployed only ever control 22 hexes) and can't be laser-cut at a sane hex size. Adding a board back is one JSON entry in `maps.js` — shapes must be point-symmetric so Mirror and fair HQ placement work; the tests check this.
 
-**Maps & Map Editor** on the main menu lists every battlefield with a preview. **Play** starts a quick AI campaign on just that map; **Balance** opens the Balance Dashboard scoped to it (the same full report as the CLI, run in the browser). **New Map** opens the editor: pick a board, paint terrain (click just inside a hex's border to cycle forest → mountain → river → empty on that hex's side), place both HQs, and **Mirror** to copy everything point-symmetrically — its **Balance** button runs the dashboard on the map as drawn, before you even save. Terrain pieces behave like the physical ones — each piece lives inside one hex and wraps its corners; the editor and engine both enforce it.
+**Maps & Map Editor** on the main menu lists every skirmishfield with a preview. **Play** starts a quick AI campaign on just that map; **Balance** opens the Balance Dashboard scoped to it (the same full report as the CLI, run in the browser). **New Map** opens the editor: pick a board, paint terrain (click just inside a hex's border to cycle forest → mountain → river → empty on that hex's side), place both HQs, and **Mirror** to copy everything point-symmetrically — its **Balance** button runs the dashboard on the map as drawn, before you even save. Terrain pieces behave like the physical ones — each piece lives inside one hex and wraps its corners; the editor and engine both enforce it.
 
 **Map-sets** decide which maps are actually in the draw pile. The maps screen holds up to five named sets (like the deck editor's deck slots) — say a rivers-only training set next to the full tournament roster — with exactly one set **active**: campaigns draw from the active set, and so do the balance tools. Tick maps in and out of the set you're viewing, and sets are saved as files (`content/mapsets/*.js`) when the local server runs, so both LAN players and every command-line tool see the same pool.
 
@@ -55,13 +55,13 @@ Maps you make or edit are saved as **files in `game/content/maps/`** (one file p
 
 ## The balance lab
 
-`node balance.js` runs AI-vs-AI battles on every map in the active map-set (`--mapset <id>` picks another set, `--mapset all` runs every map on disk) and prints a report: win rate by side, by first/second mover, HQ-capture vs attrition share, battle length, AI behaviour health (attacks & swaps per battle, zero-kill stalemates, share of units fielded), decisiveness (tiebreak share, first-blood conversion, board control vs winning), and how often each card sat in the winner's spent pile.
+`node balance.js` runs AI-vs-AI skirmishes on every map in the active map-set (`--mapset <id>` picks another set, `--mapset all` runs every map on disk) and prints a report: win rate by side, by first/second mover, HQ-capture vs attrition share, skirmish length, AI behaviour health (attacks & swaps per skirmish, zero-kill stalemates, share of units fielded), decisiveness (tiebreak share, first-blood conversion, board control vs winning), and how often each card sat in the winner's spent pile.
 
 - `node balance.js 60` — bigger samples; `node balance.js 60 hard` — with the Field Marshal
 - `node balance.js 40 narrows` — only maps whose name matches "narrows"
-- `node balance.js matchup` — **the luck-o-meter**: better AIs fight worse ones, and the stronger side's win rate is the skill premium. If a clearly better player only wins ~55%, the card draw decides most battles; 65%+ means skill decides. The normal-vs-normal line is a ~50% sanity check.
+- `node balance.js matchup` — **the luck-o-meter**: better AIs fight worse ones, and the stronger side's win rate is the skill premium. If a clearly better player only wins ~55%, the card draw decides most skirmishes; 65%+ means skill decides. The normal-vs-normal line is a ~50% sanity check.
 
-The same report lives in the browser as the **Balance Dashboard** (main menu): pick battles-per-map, the AI for each side, and a map or the whole pool — every table is click-to-sort. The **Balance** buttons on the maps screen and in the editor open it too (the editor's runs the map as drawn). After any battle, **Rematch this map** restarts on the same battlefield — tweak, rematch, compare. That's the loop this prototype exists for.
+The same report lives in the browser as the **Balance Dashboard** (main menu): pick skirmishes-per-map, the AI for each side, and a map or the whole pool — every table is click-to-sort. The **Balance** buttons on the maps screen and in the editor open it too (the editor's runs the map as drawn). After any skirmish, **Rematch this map** restarts on the same skirmishfield — tweak, rematch, compare. That's the loop this prototype exists for.
 
 ## Art
 
@@ -69,13 +69,13 @@ Card illustrations, the title plaque, the table felt, and the board parchment li
 
 ## What's implemented
 
-Everything in the rule book: the full 16-card deck, infantry/cavalry/artillery, HQs, trenches with chosen facings, directional forest/mountain terrain, combat with support + terrain + card modifiers (a confirm dialog shows the full power calculation before every attack), HQ-capture and attrition victories, and the campaign — loser moves first next battle, first to 3 battles wins.
+Everything in the rule book: the full 16-card deck, infantry/cavalry/artillery, HQs, trenches with chosen facings, directional forest/mountain terrain, combat with support + terrain + card modifiers (a confirm dialog shows the full power calculation before every attack), HQ-capture and attrition victories, and the campaign — loser moves first next skirmish, first to 3 skirmishes wins.
 
 Reading the table at a glance:
 
 - **Player mats** mirror the physical ones: one slot per piece — solid icon = in reserve, dashed empty slot = out on the field, ✕ = destroyed. Below them, all 16 orders as chips that gray out as each side spends them — you always know exactly what the enemy has burned and what might still be coming.
 - **Grid references**: every hex wears a faint label (A1…E4) and the campaign journal speaks them — "Red deploys Infantry at D2."
-- The **campaign score card** sits centred in the top bar; the **journal** (lower right) marks battles, turns, and victories.
+- The **campaign score card** sits centred in the top bar; the **journal** (lower right) marks skirmishes, turns, and victories.
 - Small animations: hands deal in, deployments pop, marches glide, attacks ring and fallen units fade, the board shakes when an HQ falls.
 
 The in-game **Field Manual** has a rules summary plus **animated worked examples** — step through Support, Ties, and Trench vs River on a mini board, with the same rings, arrows, and A-vs-D pills the live board uses (every number is computed by the real rules engine). **Cards** opens a glossary showing exactly which copies each side has spent (✖ spent / ○ remaining). Local games auto-save; use **Resume Campaign** on the menu.
@@ -94,12 +94,12 @@ A **river** (drawn in blue, in the same 2- and 3-side pieces as forest and mount
 - **No stacking**: a hex side with terrain can't also hold a trench; to place one, pick the hex then click the brass corner knob of the orientation you want (hovering a knob previews its two edges).
 - **Reading a fight**: hover any of your units to see the attack math against every hex it could hit (green = you win, brass = tie, red = you lose — the same numbers the confirm dialog shows). When an attack lands, an arrow shows where it came from (bending through an HQ on a through-HQ strike) and rings mark every unit whose support actually counted — gold for the attacker's, steel for the defender's.
 - **Airdrop nerf**: Airdrop never appears in your opening hand (it returns to the deck for later turns).
-- **Concession**: at the start of your turn you may concede the battle (button in the top bar); the enemy takes the battle and the campaign moves on. When the maths say the battle is decided (the field-score gap is bigger than the best plausible swing — about 3 VP a turn — in the turns you have left, and no unit can reach the enemy HQ in time), the game quietly suggests it — and the AI concedes on its own rather than playing out a foregone conclusion.
+- **Concession**: at the start of your turn you may concede the skirmish (button in the top bar); the enemy takes the skirmish and the campaign moves on. When the maths say the skirmish is decided (the field-score gap is bigger than the best plausible swing — about 3 VP a turn — in the turns you have left, and no unit can reach the enemy HQ in time), the game quietly suggests it — and the AI concedes on its own rather than playing out a foregone conclusion.
 
 ## Rulings made where the rule book was silent
 
 - **Controlled hex** = a hex occupied by your unit or HQ (per Bill).
-- **Trenches** cover 2 chosen edges and are **support denial *plus* tie-survival** (support denial: V0 July 2026; tie-survival: rules 1.1): an attacker's support may not cross a trenched border to reach the battle hex. They add **no** flat defense (mountains do that), never block the attack itself, never hinder the defender's support, and a unit in a trenched hex still supports out across its free borders. Ownership is irrelevant — lose the hex and the enemy uses your trench just fine. (Previously: +1 defense across covered edges.)
+- **Trenches** cover 2 chosen edges and are **support denial *plus* tie-survival** (support denial: V0 July 2026; tie-survival: rules 1.1): an attacker's support may not cross a trenched border to reach the skirmish hex. They add **no** flat defense (mountains do that), never block the attack itself, never hinder the defender's support, and a unit in a trenched hex still supports out across its free borders. Ownership is irrelevant — lose the hex and the enemy uses your trench just fine. (Previously: +1 defense across covered edges.)
 - **Trench tie-survival** (rules 1.1): if the **attacked border of the defending hex is trenched**, the defender is **not** destroyed on a combat tie — an even assault bounces off the dug-in line. The attacker still dies on that tie *unless* it carries a survive-a-tie order (Ordered Withdraw / Over the Top), in which case the whole attack **whiffs** and neither side falls. A tie against a **trenched HQ border** likewise **can't capture** it — dig in your HQ and a tie can no longer take it; a tie at an *untrenched* HQ still captures exactly as before. (You have to *win* a trench, not just tie it flat.)
 - **Rivers** no longer block support — support crosses freely for both players. Instead a river **denies deploy-control extension**: a hex reachable only across a river is not a legal deploy target (see Terrain above). (0.3 river revision, Feedback Round 3/4, July 2026; previously rivers blocked support.)
 - **A hex may hold several trenches** as long as their covered edges don't overlap each other or that hex's own terrain sides (per Bill's DoubleTrenchNotAllowed report).
@@ -107,7 +107,7 @@ A **river** (drawn in blue, in the same 2- and 3-side pieces as forest and mount
 - The attacking unit's own support value is not added to its attack.
 - Moving/attacking "through a headquarters": a unit adjacent to any HQ may move to, swap with, or attack a hex on the far side of that HQ. Terrain on the crossing edge applies.
 - **Same-type swaps are not legal** (Round-3 ruling, enforced in 1.0): swapping two identical units changes nothing on the board — it's a hidden skipped turn — so only units of different types may swap.
-- Attrition VP counts your **surviving units on the board** (1/2/3 for infantry/cavalry/artillery); reserves never deployed count for nothing, and neither do kills as such — destroying a unit matters because it leaves the enemy less on the field. Tie goes to whoever moved second in the battle. (June 2026 revision; the rule book is updated. Previously kills were what scored, which let a one-kill turtle beat a side that dominated the board.)
+- Attrition VP counts your **surviving units on the board** (1/2/3 for infantry/cavalry/artillery); reserves never deployed count for nothing, and neither do kills as such — destroying a unit matters because it leaves the enemy less on the field. Tie goes to whoever moved second in the skirmish. (June 2026 revision; the rule book is updated. Previously kills were what scored, which let a one-kill turtle beat a side that dominated the board.)
 - Ordered Withdraw: the attacker survives a tie, and never advances into the target hex — even on a clear win it holds its ground (June 2026 change). A successful attack on the HQ still captures it; entering isn't required. Against a **trenched** defender the tie is a whiff — the card spares the attacker, the trench spares the defender, and nobody falls (rules 1.1).
 - Naval Barrage may remove **any** trench or whole forest piece on the board (June 2026 ruling — the old "in or adjacent to your controlled hexes" zone is gone); the barrage is optional, the attack can still be ordered.
 - Any card step can be skipped if you can't or don't want to complete it ("up to three" marches, etc.).
@@ -116,7 +116,7 @@ A **river** (drawn in blue, in the same 2- and 3-side pieces as forest and mount
 ## Files
 
 - `index.html` + `style.css` + `ui/` — the game's screens and chrome (menu, board, mats, editors, Balance Dashboard, Field Manual); index.html is just the markup and the ordered script list
-- `engine.js` + `engine/` — the rules engine, loaded as seven ordered parts: all rules, the six AI personalities (the easy/normal/hard presets plus the `maps.js` data rows), and the battle simulator (shared by tests and every balance report)
+- `engine.js` + `engine/` — the rules engine, loaded as seven ordered parts: all rules, the six AI personalities (the easy/normal/hard presets plus the `maps.js` data rows), and the skirmish simulator (shared by tests and every balance report)
 - `report-model.js` — the one copy of the balance-report scoring/format, shared by the CLI and the Balance Dashboard
 - `maps.js` — **core tunable data, hand-editable JSON**: board shapes, units, terrain stock, AI personalities
 - `content/` — **the map library, card decks, and map-sets, one file each** (`content/maps/*.js`, `content/decks/*.js`, `content/mapsets/*.js`): delete a map/deck by deleting its file. The map editor carves the **board outline itself** (Board hexes tool, add/remove under the 24-hex ceiling) and deletes maps for real (floor of 5); saving/deleting needs the local server.

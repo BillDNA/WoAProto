@@ -12,20 +12,20 @@
     st.match = null;
     var c = JSON.parse(JSON.stringify(st));
     st.match = m;
-    c.match = { wins: { red: m.wins.red, blue: m.wins.blue }, battleIndex: m.battleIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
+    c.match = { wins: { red: m.wins.red, blue: m.wins.blue }, skirmishIndex: m.skirmishIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
     return c;
   }
   // The AI's hot-loop clone: identical to clone() except it drops what the
   // search never reads — the journal prose (st.log grows every turn and was
-  // dominating clone cost late-battle), all playLog entries but the LAST
+  // dominating clone cost late-skirmish), all playLog entries but the LAST
   // (noopPenalty reads exactly that one), and fsTimeline. __sim marks the
-  // state so I.finishBattle never fires persistence hooks for search clones.
+  // state so I.finishSkirmish never fires persistence hooks for search clones.
   function cloneForSim(st) {
     var m = st.match, lg = st.log, pl = st.playLog, tl = st.fsTimeline;
     st.match = null; st.log = []; st.playLog = (pl && pl.length) ? [pl[pl.length - 1]] : []; st.fsTimeline = undefined;
     var c = JSON.parse(JSON.stringify(st));
     st.match = m; st.log = lg; st.playLog = pl; st.fsTimeline = tl;
-    c.match = { wins: { red: m.wins.red, blue: m.wins.blue }, battleIndex: m.battleIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
+    c.match = { wins: { red: m.wins.red, blue: m.wins.blue }, skirmishIndex: m.skirmishIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
     c.__sim = true;
     return c;
   }
@@ -122,7 +122,7 @@
   function evalState(st, me, w) {
     w = w || AI_WEIGHTS;
     var en = I.other(me);
-    if (st.phase === 'battle-over') return st.battleWinner === me ? 1e6 : -1e6;
+    if (st.phase === 'skirmish-over') return st.skirmishWinner === me ? 1e6 : -1e6;
     var s = 0;
     // Attrition projection: who wins if the decks ran out right now? Ramps up as
     // they empty, so the side losing the standstill (incl. ties — second player
@@ -209,7 +209,7 @@
     if (o.type === 'attack') {
       var res = I.computeAttack(st, { from: c.from, to: c.to, via: c.via || null,
         mod: o.mod || 0, tieSpare: !!o.tieSpare, noAdvance: !!o.noAdvance });
-      if (res.defenderIsHQ && res.outcome !== 'defender') return 1e4; // battle won
+      if (res.defenderIsHQ && res.outcome !== 'defender') return 1e4; // skirmish won
       var tgt = res.defenderUnit ? unitValue(res.defenderUnit, w) : 0;
       var mine = unitValue(st.units[c.from].type, w);
       if (res.outcome === 'attacker') return 100 + tgt * 10;
@@ -283,7 +283,7 @@
   // them play their best reply, and average over a few sampled hands.
   function sampledReplyScore(endSt, me, s, samples, w) {
     w = w || AI_WEIGHTS;
-    if (endSt.phase === 'battle-over') return evalState(endSt, me, w);
+    if (endSt.phase === 'skirmish-over') return evalState(endSt, me, w);
     var opp = endSt.current;
     var total = 0;
     for (var k = 0; k < samples; k++) {

@@ -11,7 +11,7 @@ not luck. Every recipe was run and verified 2026-07-07 (rules 1.0). Run from the
 
 ## The two comparison rules
 
-1. **Same recipe vs same recipe.** Never compare a 12-battle run against a 60-battle one, or a
+1. **Same recipe vs same recipe.** Never compare a 12-skirmish run against a 60-skirmish one, or a
    `--once` run against the accumulator — different seeds/pools, the diff means nothing.
 2. **Same rules version only.** A rules change bumps `Engine.VERSION` and starts a fresh report
    folder; numbers across versions aren't comparable (that's the point of the bump).
@@ -35,14 +35,14 @@ confirm anything surprising with Recipe 2).
 node dev/balance-report.js 60 hard hard --parallel --once
 ```
 
-*Measures:* the full picture at proper sample size — every map in the active set, 60 battles each,
+*Measures:* the full picture at proper sample size — every map in the active set, 60 skirmishes each,
 hard vs hard, saved as a markdown report (`SAVED:` line prints the path). `--once` keeps it **out of
 the accumulator**, which is what makes two sweeps directly comparable (both use the original seed
 schedule; accumulator runs deliberately shift seeds per run).
 *Cost:* ~2–4 min.
 
 *Watch (protect-the-baselines list):* first-mover %, Red %, tie-goes-to-2nd %, attacks/swaps per
-battle, zero-kill %. The 0.x-era anchors (first mover ~46, Red ~52, tie ~26, ~4.9 atk / ~6.5 swaps)
+skirmish, zero-kill %. The 0.x-era anchors (first mover ~46, Red ~52, tie ~26, ~4.9 atk / ~6.5 swaps)
 predate the 1.0 search overhaul — your first clean 1.0 sweep is the new anchor; a sharp move in any
 of these = regression even if win rates look fine.
 
@@ -54,8 +54,8 @@ node dev/claude-plays.js --map "<BEST_MAP>" --match 3 --red haiku --blue haiku -
 ```
 
 *Measures:* how the change *feels* — a first-to-3 LLM mirror match on the sweep's most interesting
-map, with per-battle and per-match felt-notes, the rush-luck check, and a Typicality footer.
-Transcript lands in `logs/reports/battle/1.0/…-match.md`. Fixed `--seed 1234` = same deals every
+map, with per-skirmish and per-match felt-notes, the rush-luck check, and a Typicality footer.
+Transcript lands in `logs/reports/skirmish/1.0/…-match.md`. Fixed `--seed 1234` = same deals every
 time. (The `generate-reports` skill fires Recipe 4's single seed-1001 match instead; this
 pinned-map match remains the right tool for probing ONE map.)
 *Cost:* tens of minutes wall-clock, real tokens (haiku + low effort is the cheap shape).
@@ -71,7 +71,7 @@ node dev/claude-plays.js --match 3 --red haiku --blue haiku --effort low --seed 
 ```
 
 *Measures:* the full iteration read for a content slot — the n=100 sweep (±10/map) plus **one**
-first-to-3 haiku-low match whose battles draw maps from the set (felt-notes, HQ-vs-attrition
+first-to-3 haiku-low match whose skirmishes draw maps from the set (felt-notes, HQ-vs-attrition
 meta, fallback health). Loop v2 (B.5.1.2) runs **one feels-match per iteration**, not three; the
 FIXED seed 1001 is the apples-to-apples anchor: the same recipe against two deck/mapset slots
 isolates the content change. Launch the match detached (this is what the `generate-reports` skill
@@ -99,7 +99,7 @@ Live demo from 2026-07-07 — Recipe 1 on The Ford, `attack_plus1` step `mod` 1 
 | before (mod 1) | 58 | 75 | 25 | 26.0 | 7.5 | 3.3 | 10.4 |
 | after (mod 2) | 58 | 58 | 42 | 23.7 | 7.8 | 2.3 | 5.6 |
 
-Read: at +2 the AI stops hoarding the card (AvgSeen 10.4 → 5.6), battles end by HQ capture far more
+Read: at +2 the AI stops hoarding the card (AvgSeen 10.4 → 5.6), skirmishes end by HQ capture far more
 (25% → 42%) and faster. The revert rerun reproduced the *before* row digit-for-digit — that's the
 determinism the whole runbook leans on. (The tweak was reverted; `mod` is 1 on disk.)
 

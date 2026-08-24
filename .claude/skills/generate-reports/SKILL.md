@@ -1,6 +1,6 @@
 ---
 name: generate-reports
-description: Generate a fresh War of Attrition report set — a 100-battle hard-vs-hard balance sweep plus one fire-and-forget first-to-3 LLM match (fixed seed 1001, maps drawn from the mapset pool; seeds 2002/3003 are optional extras) against any deck + map-set. Saves everything the standard way under logs/reports. Use when asked to "generate reports", "make a fresh report set", "generate-reports", or to refresh the data before a review.
+description: Generate a fresh War of Attrition report set — a 100-skirmish hard-vs-hard balance sweep plus one fire-and-forget first-to-3 LLM match (fixed seed 1001, maps drawn from the mapset pool; seeds 2002/3003 are optional extras) against any deck + map-set. Saves everything the standard way under logs/reports. Use when asked to "generate reports", "make a fresh report set", "generate-reports", or to refresh the data before a review.
 ---
 
 # generate-reports
@@ -19,7 +19,7 @@ sync).
 
 ## Steps
 
-1. **Balance sweep** — 100 battles/map, hard vs hard, isolated from the accumulator:
+1. **Balance sweep** — 100 skirmishes/map, hard vs hard, isolated from the accumulator:
 
    ```
    node dev/balance-report.js 100 hard hard --once --parallel [--deck <id>] [--mapset <id>]
@@ -27,7 +27,7 @@ sync).
 
    `--once` = the original seed schedule, so two sweeps with the same flags are
    directly comparable (accumulator runs deliberately shift seeds). `--parallel` =
-   ~cores× faster; drop it only if you also want per-battle DB rows (serial writes
+   ~cores× faster; drop it only if you also want per-skirmish DB rows (serial writes
    them, parallel skips them). `--deck` / `--mapset` select content slots
    (`game/content/{decks,mapsets}/<id>.js`); the report meta line + filename carry
    the ids. Capture the `SAVED:` path. `BEST_MAP:` still prints — informational
@@ -41,7 +41,7 @@ sync).
 
 3. **One fire-and-forget LLM match** — first-to-3, haiku low both sides,
    **fixed seed 1001** (never change it — it is the apples-to-apples anchor across
-   content iterations). Match mode draws each battle's map from the mapset pool
+   content iterations). Match mode draws each skirmish's map from the mapset pool
    (engine-shuffled by the seed):
 
    ```
@@ -49,12 +49,12 @@ sync).
    ```
 
    Launch it as a detached background process, then **return immediately** — no
-   waiting, no polling. The match appends crash-safe per-battle rows to
+   waiting, no polling. The match appends crash-safe per-skirmish rows to
    `claude-plays-log.jsonl` (+ a match-summary row listing the maps played) and
    writes one transcript to
-   `logs/reports/battle/<version>/<stamp>-set-<mapset>-haiku-v-haiku-match.md`
-   with per-battle map names, felt-notes, the rush-luck check, and a Typicality
-   footer for the last battle's map.
+   `logs/reports/skirmish/<version>/<stamp>-set-<mapset>-haiku-v-haiku-match.md`
+   with per-skirmish map names, felt-notes, the rush-luck check, and a Typicality
+   footer for the last skirmish's map.
 
    *Optional extras (not the default):* for a deeper felt-read on a slot, repeat
    with `--seed 2002` and `--seed 3003` (the v1 three-match set). Only add them when
@@ -62,7 +62,7 @@ sync).
    match (B.5.1.2).
 
 4. **Report back** — the balance report path, plus "1 match running in the
-   background — the transcript will land at `logs/reports/battle/<version>/…-match.md`."
+   background — the transcript will land at `logs/reports/skirmish/<version>/…-match.md`."
    Offer to run **review-reports** for the graded analysis once it finishes.
 
 ## The v2 loop (order of operations)

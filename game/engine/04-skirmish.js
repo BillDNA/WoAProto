@@ -1,4 +1,4 @@
-/* War of Attrition — engine part 04: match/battle lifecycle + card-step turn flow + hooks.
+/* War of Attrition — engine part 04: match/skirmish lifecycle + card-step turn flow + hooks.
    Classic script (browser + node). Engine parts share the internal namespace
    g.WOA_E (alias I) — cross-part calls go through I.* at the CALL SITE (never
    captured at load time), so only filename-sorted load order matters. */
@@ -19,7 +19,7 @@
       seed: s.seed,
       maps: maps,           // full map definitions travel with the match (LAN-safe)
       mapOrder: order,
-      battleIndex: 0,
+      skirmishIndex: 0,
       wins: { red: 0, blue: 0 },
       firstPlayer: opts.firstPlayer || (I.rnd(s) < 0.5 ? 'red' : 'blue'),
       winner: null
@@ -37,9 +37,9 @@
     return deck;
   }
 
-  function newBattle(match) {
+  function newSkirmish(match) {
     var maps = match.maps || I.MAPS;
-    var mapIdx = match.mapOrder[match.battleIndex % match.mapOrder.length];
+    var mapIdx = match.mapOrder[match.skirmishIndex % match.mapOrder.length];
     var map = maps[mapIdx];
     var shapeName = I.ensureMapShape(map);
     I.setBoard(shapeName);
@@ -65,11 +65,11 @@
       lastSwap: { red: null, blue: null }, // p's most recent swap pair (AI anti-I.shuffle)
       stats: { attacks: 0, swaps: 0, marches: 0, deploys: 0, firstBlood: null }, // behaviour counters for the balance lab
       firstTurnDone: { red: false, blue: false },
-      current: match.battleIndex === 0 ? match.firstPlayer : match.lastLoser,
+      current: match.skirmishIndex === 0 ? match.firstPlayer : match.lastLoser,
       second: null,
-      phase: 'choose-card', // choose-card | step | battle-over
+      phase: 'choose-card', // choose-card | step | skirmish-over
       pending: null,
-      battleWinner: null,
+      skirmishWinner: null,
       winType: null,
       log: [],
       turnNumber: 1,
@@ -81,7 +81,7 @@
     st.second = I.other(st.current);
     st.decks.red = buildDeck(st, 'red');
     st.decks.blue = buildDeck(st, 'blue');
-    log(st, 'Battle ' + (match.battleIndex + 1) + ' — "' + map.name + '". ' + I.cap(st.current) + ' moves first.');
+    log(st, 'Skirmish ' + (match.skirmishIndex + 1) + ' — "' + map.name + '". ' + I.cap(st.current) + ' moves first.');
     drawHand(st, st.current);
     return st;
   }
@@ -90,7 +90,7 @@
     Object.keys(I.UNITS).forEach(function (t) { r[t] = I.UNITS[t].count || 0; });
     return r;
   }
-  // WOA-031 (SPEC §4): per-battle, per-unit-type fold — keyed by I.UNITS' own
+  // WOA-031 (SPEC §4): per-skirmish, per-unit-type fold — keyed by I.UNITS' own
   // type keys (infantry/cavalry/artillery), not the spec doc's shorthand.
   // Named unitMetrics (not "units") because st.units already means the
   // hexKey->{type,owner} board map.
@@ -98,7 +98,7 @@
   // die++ is tallied (engine/03-rules.js killDefender/killAttacker). Capture
   // only: no existing field renamed or removed, so golden-diff aggregates are
   // untouched (WOA-031/037/038 precedent). report-model.js's
-  // unitsAggFromEnvelopes pairs dep[]/dieT[] per battle to derive lifespan.
+  // unitsAggFromEnvelopes pairs dep[]/dieT[] per skirmish to derive lifespan.
   function initUnitMetrics() {
     var u = {};
     Object.keys(I.UNITS).forEach(function (t) { u[t] = { dep: [], atk: 0, abs: 0, kill: 0, die: 0, dieT: [] }; });
@@ -171,42 +171,42 @@
     if (fr > fb) winner = 'red';
     else if (fb > fr) winner = 'blue';
     else winner = st.second; // tie: player who went 2nd wins
-    finishBattle(st, winner, 'attrition');
+    finishSkirmish(st, winner, 'attrition');
   }
 
-  // V1 seam: every REAL finished battle (never an AI-search clone — those carry
+  // V1 seam: every REAL finished skirmish (never an AI-search clone — those carry
   // __sim) flows through here, so persistence subscribes once and covers every
-  // source: human play, watch mode, the lab, LLM battles. Hook errors never
+  // source: human play, watch mode, the lab, LLM skirmishes. Hook errors never
   // break the game.
-  var HOOKS = { onBattleEnd: [] };
-  function finishBattle(st, winner, how) {
-    st.phase = 'battle-over';
-    st.battleWinner = winner;
+  var HOOKS = { onSkirmishEnd: [] };
+  function finishSkirmish(st, winner, how) {
+    st.phase = 'skirmish-over';
+    st.skirmishWinner = winner;
     st.winType = how;
     st.pending = null;
     var m = st.match;
     m.wins[winner]++;
     m.lastLoser = I.other(winner);
-    m.battleIndex++;
+    m.skirmishIndex++;
     m.seed = st.seed;
     if (m.wins[winner] >= 3) { m.winner = winner; }
-    log(st, I.cap(winner) + ' wins the battle by ' + (how === 'hq' ? 'capturing the headquarters!' :
+    log(st, I.cap(winner) + ' wins the skirmish by ' + (how === 'hq' ? 'capturing the headquarters!' :
       how === 'concession' ? 'concession.' :
       'attrition (' + fieldScore(st, 'red') + ' VP vs ' + fieldScore(st, 'blue') + ' VP of surviving units).'));
-    if (!st.__sim) HOOKS.onBattleEnd.forEach(function (fn) {
-      try { fn(st); } catch (e) { if (typeof console !== 'undefined') console.error('onBattleEnd hook failed: ' + e.message); }
+    if (!st.__sim) HOOKS.onSkirmishEnd.forEach(function (fn) {
+      try { fn(st); } catch (e) { if (typeof console !== 'undefined') console.error('onSkirmishEnd hook failed: ' + e.message); }
     });
   }
 
-  // A player throws in the towel; the battle (not the match) goes to the enemy.
+  // A player throws in the towel; the skirmish (not the match) goes to the enemy.
   function concede(st, p) {
-    if (st.phase === 'battle-over') throw new Error('battle already over');
+    if (st.phase === 'skirmish-over') throw new Error('skirmish already over');
     log(st, I.cap(p) + ' concedes the field.');
-    finishBattle(st, I.other(p), 'concession');
+    finishSkirmish(st, I.other(p), 'concession');
     return st;
   }
 
-  // Is the battle a foregone conclusion for p? ADVISORY ONLY — never enforced.
+  // Is the skirmish a foregone conclusion for p? ADVISORY ONLY — never enforced.
   // Truthy ({need, gain, turnsLeft}) when BOTH paths to victory look closed:
   //  - attrition (surviving-units scoring): the field-score gap is bigger than
   //    the most p could plausibly swing it in the turns left. One turn can swing
@@ -419,7 +419,7 @@
       });
       if (!legal) throw new Error('invalid attack');
       I.resolveAttack(st, { from: choice.from, to: choice.to, via: choice.via || null, mod: step.mod || 0, tieSpare: !!step.tieSpare, noAdvance: !!step.noAdvance });
-      if (st.phase === 'battle-over') return st;
+      if (st.phase === 'skirmish-over') return st;
     } else if (step.type === 'reposition') {
       var r = I.listRepositions(st, p);
       if (choice.swap) {
@@ -490,20 +490,20 @@
     st.current = I.other(p);
     st.turnNumber++;
     st.phase = 'choose-card';
-    drawHand(st, st.current); // may end battle by attrition
+    drawHand(st, st.current); // may end skirmish by attrition
   }
 
   /* shared-namespace exports */
   I.newMatch = newMatch;
   I.buildDeck = buildDeck;
-  I.newBattle = newBattle;
+  I.newSkirmish = newSkirmish;
   I.copyReserves = copyReserves;
   I.log = log;
   I.cardsRemaining = cardsRemaining;
   I.drawHand = drawHand;
   I.fieldScore = fieldScore;
   I.endByAttrition = endByAttrition;
-  I.finishBattle = finishBattle;
+  I.finishSkirmish = finishSkirmish;
   I.HOOKS = HOOKS;
   I.concede = concede;
   I.concedeAdvised = concedeAdvised;
