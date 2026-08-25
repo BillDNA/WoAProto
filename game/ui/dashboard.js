@@ -21,7 +21,7 @@
 // WOA-034 (spec README "State Management"): runA/runB/mapFocus/abMode/
 // temperature/runs extend this SAME global — the header run-A/B pickers,
 // pill nav and temperature selector read/write these fields; runs is the
-// GET /api/runs listing (empty + a fallback note under file://, AC4).
+// GET /api/runs listing (empty + a fallback note when there are no runs, AC4).
 var DASH = { running:false, cancel:false, results:[], sort:{key:null, dir:1}, cardSort:{key:'sightPct', dir:-1}, meta:null, adhoc:null,
   view:'tables', detail:{}, chartMap:null,
   runA:null, runB:null, mapFocus:null, abMode:'B', temperature:'T0', runs:[] };
@@ -44,9 +44,7 @@ function openDash(){
 }
 
 /* ---- WOA-034: run-A/B pickers (GET /api/runs; view-only, server-mediated) ---
-   Under file:// (no server, canNet false) this never fetches — the picker
-   shows "(no server)" and the panes note the in-memory-run-only fallback
-   (AC4). A defaults to the CURRENT rules version's baseline row; no baseline
+   A defaults to the CURRENT rules version's baseline row; no baseline
    yet in the real db falls back to the most recent run (runs sorted id DESC
    by GET /api/runs) — never an error. */
 function dashRunLabel(r){
@@ -60,7 +58,7 @@ function dashFillRunSelect(sel, val, loading){
   var o = document.createElement('option');
   if (loading){ o.value=''; o.textContent='Loading…'; sel.appendChild(o); sel.disabled = true; return; }
   if (!DASH.runs.length){
-    o.value = ''; o.textContent = canNet ? 'No runs yet' : '(no server)';
+    o.value = ''; o.textContent = 'No runs yet';
     sel.appendChild(o); sel.disabled = true; return;
   }
   sel.disabled = false;
@@ -84,7 +82,6 @@ function dashPickDefaultRuns(){
   }
 }
 function dashLoadRuns(){
-  if (!canNet){ DASH.runs = []; renderDash(); return; } // file:// — never fetch, never console-spam
   dashFillRunSelect($('dashRunA'), DASH.runA, true);
   dashFillRunSelect($('dashRunB'), DASH.runB, true);
   fetch('/api/runs').then(function(r){ return r.ok ? r.json() : []; }).then(function(runs){
@@ -112,22 +109,16 @@ var DASH_PANE_LABEL = { overview:'Overview', maps:'Maps', cards:'Cards', units:'
 function renderDashPane(view){
   var el = $('dashPane' + view.charAt(0).toUpperCase() + view.slice(1));
   if (!el) return;
-  // WOA-035/WOA-040/WOA-043/WOA-044: every pill gets the real thing (charts.js,
-  // reads both runs' DB skirmish rows) once the server + at least one run + both
-  // A/B pickers are set — every other guard below stays byte-identical to
-  // WOA-034 so file:// and no-runs keep showing the same fallback note the
-  // shell already tested.
-  if ((view === 'overview' || view === 'maps' || view === 'cards' || view === 'units') && canNet && DASH.runs.length && DASH.runA != null && DASH.runB != null){
+  // WOA-035/WOA-040/WOA-043/WOA-044: every pill gets the real thing (the
+  // pane-*.js render modules, reading both runs' DB skirmish rows) once at least one run + both A/B pickers
+  // are set — otherwise the no-runs / pick-runs fallback note below.
+  if ((view === 'overview' || view === 'maps' || view === 'cards' || view === 'units') && DASH.runs.length && DASH.runA != null && DASH.runB != null){
     var PANE_RENDER = { overview: renderOverview, maps: renderMapDrill, cards: renderCards, units: renderUnits };
     PANE_RENDER[view](el);
     return;
   }
   var h = '<p class="small" style="font-variant:small-caps; letter-spacing:.05em; font-size:15px;">' + DASH_PANE_LABEL[view] + '</p>';
-  if (!canNet){
-    h += '<p class="small">No server on this page (file://) — showing the current in-memory run only' +
-      (DASH.results.length ? ' (' + DASH.results.length + ' map row(s) from the last Tables run)' : '') +
-      '. Start <code>node game/server.js</code> for run history.</p>';
-  } else if (!DASH.runs.length){
+  if (!DASH.runs.length){
     h += '<p class="small">No saved runs yet in <code>logs/woa.db</code> — run a report on the Tables tab, or play a skirmish, then come back.</p>';
   } else {
     h += '<p class="small">Pick run A and run B above to compare.</p>';

@@ -1,6 +1,6 @@
 /* War of Attrition — ui part: networking (LAN rooms) + whose-input-is-live.
    Classic script, no wrapper — top-level names attach to window (see
-   ui/app.js header). api()/canNet live in ui/app.js; the Host/Join button
+   ui/app.js header). api() lives in ui/app.js; the Host/Join button
    wiring lives in ui/boot.js. Extracted verbatim from index.html's inline
    app script. */
 'use strict';
