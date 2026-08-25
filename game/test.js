@@ -890,20 +890,7 @@ seeds.forEach(function (seed) {
   var skirmishes = 0;
   while (!match.winner && skirmishes < 12) {
     var st = E.newSkirmish(match);
-    var guard = 0;
-    while (st.phase !== 'skirmish-over' && guard++ < 400) {
-      var plan = E.aiPlanTurn(st, 'normal');
-      if (!plan) { console.log('  no plan! hand=' + JSON.stringify(st.hands[st.current])); break; }
-      E.playCard(st, plan.cardId, plan.mode || 'normal');
-      var g2 = 0;
-      while (st.phase === 'step' && g2++ < 12) {
-        var opts = E.stepOptions(st);
-        var c = plan.choices.shift();
-        if (!c) c = { skip: true };
-        try { E.applyStep(st, c); }
-        catch (e) { E.applyStep(st, { skip: true }); }
-      }
-    }
+    E.playToEnd(st, { decide: function (s) { return E.aiPlanTurn(s, 'normal'); } });
     if (st.phase !== 'skirmish-over') { console.log('  FAIL skirmish did not finish (seed ' + seed + ')'); fails++; break; }
     if (st.winType === 'hq') hqWins++; else attrWins++;
     maxTurns = Math.max(maxTurns, st.turnNumber);
@@ -921,20 +908,7 @@ console.log('== fsTimeline: one [fsRed,fsBlue] pair per completed turn ==');
   // 04-skirmish.js pushes to every completed turn (endTurn), not the stripped
   // copy a search clone carries.
   var st = E.newSkirmish(E.newMatch({ seed: 42 }));
-  var guard = 0;
-  while (st.phase !== 'skirmish-over' && guard++ < 400) {
-    var plan = E.aiPlanTurn(st, 'normal');
-    if (!plan) break;
-    E.playCard(st, plan.cardId, plan.mode || 'normal');
-    var g2 = 0;
-    while (st.phase === 'step' && g2++ < 12) {
-      E.stepOptions(st);
-      var c = plan.choices.shift();
-      if (!c) c = { skip: true };
-      try { E.applyStep(st, c); }
-      catch (e) { E.applyStep(st, { skip: true }); }
-    }
-  }
+  E.playToEnd(st, { decide: function (s) { return E.aiPlanTurn(s, 'normal'); } });
   ok(st.phase === 'skirmish-over', 'fsTimeline fixture skirmish finished (seed 42)');
   ok(Array.isArray(st.fsTimeline) && st.fsTimeline.length === st.turnNumber - 1,
     'fsTimeline has one [fsRed,fsBlue] pair per completed turn (' + st.fsTimeline.length +

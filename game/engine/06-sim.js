@@ -6,14 +6,16 @@
   'use strict';
   var I = global.WOA_E = global.WOA_E || {};
 
-  /* ---------- skirmish simulation (shared by balance.js and the in-game lab) ---------- */
-  function simSkirmish(map, seed, firstPlayer, diffRed, diffBlue) {
-    var match = I.newMatch({ seed: seed | 0, maps: [map], firstPlayer: firstPlayer || 'red' });
-    var st = I.newSkirmish(match);
+  /* The one skirmish drive-loop: decide a turn, play the card, drain the step
+     queue. `decide` is the only thing that varies (which AI/plan drives the turn)
+     — one implementation per fact. The 400-turn / 12-step caps are load-bearing
+     infinite-loop guards. Not used by claude-plays.js (its LLM decides per step,
+     so there's no whole-plan drain) or smoke.js (which drives the real DOM). */
+  function playToEnd(st, opts) {
+    opts = opts || {};
     var guard = 0;
     while (st.phase !== 'skirmish-over' && guard++ < 400) {
-      var diff = st.current === 'red' ? (diffRed || 'normal') : (diffBlue || diffRed || 'normal');
-      var plan = I.aiPlanTurn(st, diff);
+      var plan = opts.decide(st);
       if (!plan) break;
       I.playCard(st, plan.cardId, plan.mode || 'normal');
       var g2 = 0;
@@ -24,6 +26,16 @@
       }
     }
     return st;
+  }
+
+  /* ---------- skirmish simulation (shared by balance.js and the in-game lab) ---------- */
+  function simSkirmish(map, seed, firstPlayer, diffRed, diffBlue) {
+    var match = I.newMatch({ seed: seed | 0, maps: [map], firstPlayer: firstPlayer || 'red' });
+    var st = I.newSkirmish(match);
+    return playToEnd(st, { decide: function (s) {
+      var diff = s.current === 'red' ? (diffRed || 'normal') : (diffBlue || diffRed || 'normal');
+      return I.aiPlanTurn(s, diff);
+    } });
   }
 
   // Balance aggregation is split so the CLI (balance.js) and the in-browser
@@ -211,6 +223,7 @@
   }
 
   /* shared-namespace exports */
+  I.playToEnd = playToEnd;
   I.simSkirmish = simSkirmish;
   I.skirmishFacts = skirmishFacts;
   I.factsFromRow = factsFromRow;
