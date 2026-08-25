@@ -508,6 +508,48 @@ var WOA_REPORT = (function () {
     return out;
   }
 
+  /* One run's per-card view (WOA-043 Cards pane): parse this run's DB rows into
+     envelopes once, then combine the two per-card folds above into ONE row per
+     card, keyed by id. cardRows is reused UNMODIFIED (its pooled Win% is dropped
+     here — the axis-worthy number is the SPEC §2 slice); winHq is null when the
+     card was never played in a non-simple HQ-capture ending this run (excluded
+     from the quadrant, not drawn as a fabricated 0). envs is exposed alongside —
+     the fire-time strips fold the raw envelopes, not the per-card agg. Takes the
+     card list as a param (same as cardRows) so it stays engine-global-free. */
+  function cardRunView(rows, cards) {
+    var envs = (rows || []).map(envelopeFromRow).filter(function (e) { return !!e; });
+    var agg = cardAggFromEnvelopes(envs);
+    var slice = cardHqWinSlice(envs);
+    var byId = {};
+    cardRows(agg, cards).forEach(function (r) {
+      var s = slice[r.id];
+      byId[r.id] = { id: r.id, name: r.name, plays: r.plays, sight: r.sight, simple: r.simple,
+        noop: r.noop, seenNum: r.seenNum,
+        winHq: (s && s.plays) ? pct(s.wins, s.plays) : null, winHqN: s ? s.plays : 0 };
+    });
+    return { byId: byId, envs: envs };
+  }
+
+  /* Fleet-wide "when cards fire" quartiles (WOA-043 Cards pane): cardPlayTurnQuartiles
+     already answers "at what normalized time did this card fire in ONE skirmish";
+     this pools each skirmish's MEDIAN across a run's envelopes and re-quantiles
+     that pooled array with the SAME quantile() the per-skirmish fold uses — no new
+     quantile math, just the existing one applied one level up (per-skirmish ->
+     fleet). Returns {cardId: {q1, median, q3}}. */
+  function cardFleetFireTimes(envs) {
+    var byCard = {};
+    (envs || []).forEach(function (env) {
+      var q = cardPlayTurnQuartiles(env);
+      Object.keys(q).forEach(function (id) { (byCard[id] || (byCard[id] = [])).push(q[id].median); });
+    });
+    var out = {};
+    Object.keys(byCard).forEach(function (id) {
+      var arr = byCard[id].sort(function (a, b) { return a - b; });
+      out[id] = { q1: quantile(arr, 0.25), median: quantile(arr, 0.5), q3: quantile(arr, 0.75) };
+    });
+    return out;
+  }
+
   /* ===== Per-unit-type aggregates from many skirmish envelopes (WOA-044, Units
      tab) ===== SPEC §3: per unit type, per skirmish FIELDED — median deploy
      turn (normalized to skirmish length, matching the deployInterleave/
@@ -863,6 +905,8 @@ var WOA_REPORT = (function () {
     mapScoreDumbbells: mapScoreDumbbells,
     // WOA-043: per-card DB-rows aggregate (cardRows-compatible) + the SPEC §2 Win% doctrine slice
     cardAggFromEnvelopes: cardAggFromEnvelopes, cardHqWinSlice: cardHqWinSlice,
+    // Cards pane: per-run per-card view + fleet-wide fire-time quartiles (many skirmishes)
+    cardRunView: cardRunView, cardFleetFireTimes: cardFleetFireTimes,
     // WOA-044: per-unit-type aggregate (role map / breakthrough / lifespan / exchange, SPEC §3)
     unitsAggFromEnvelopes: unitsAggFromEnvelopes, unitsAggFromRows: unitsAggFromRows,
     // WOA-042: per-hex lenses (drill-down) + SPEC §5 dead/avenue thresholds

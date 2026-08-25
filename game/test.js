@@ -1552,6 +1552,85 @@ console.log('\n== chart-model: buildOverviewModel (Overview display model) ==');
   ok(m.pacing.interleave.nbins === 6 && m.pacing.interleave.nA === 0, 'pacing carries the 6-bin interleave histogram (nA=0 here, rows have no trace)');
 })();
 
+console.log('\n== report-model: Cards-pane folds (cardRunView / cardFleetFireTimes) ==');
+(function () {
+  var R = require('./report-model.js');
+  function near(a, b) { return Math.abs(a - b) < 1e-9; }
+  var CARDS = [{ id: 'raid', name: 'Raid' }, { id: 'hold', name: 'Hold' }];
+
+  // Two run-A skirmish rows: an HQ-ending win for red, and an attrition win for
+  // blue. raid played 3× total (twice in A1, once in A2), hold 2× (one of them a
+  // 'simple' resolution). Hand-computed slices below are independent of the impl.
+  function row(env) { return { trace: JSON.stringify(env) }; }
+  var rowsA = [
+    row({ winner: 'red', winType: 'hq', turns: 4, trace: [
+      { id: 'raid', p: 'red', turn: 1, mode: 'normal', seen: 1 },
+      { id: 'raid', p: 'blue', turn: 3, mode: 'normal', seen: 2 },
+      { id: 'hold', p: 'red', turn: 2, mode: 'simple', seen: 1 }
+    ] }),
+    row({ winner: 'blue', winType: 'attrition', turns: 2, trace: [
+      { id: 'raid', p: 'blue', turn: 1, mode: 'normal', seen: 1 },
+      { id: 'hold', p: 'blue', turn: 2, mode: 'normal', seen: 1 }
+    ] })
+  ];
+
+  // ---- cardRunView: parses rows -> envs, folds cardRows + the SPEC §2 slice ----
+  var A = R.cardRunView(rowsA, CARDS);
+  ok(A.envs.length === 2, 'cardRunView parses both rows into envelopes');
+  ok(A.byId.raid.plays === 3 && A.byId.raid.sight === 67, 'raid: 3 plays, 1st-sight % pooled (2/3 = 67)');
+  // winHq is the HQ-capture × non-simple slice: only A1 (winType hq) counts; raid
+  // fired twice there (red win + blue loss), hold's play was 'simple' -> excluded.
+  ok(A.byId.raid.winHq === 50 && A.byId.raid.winHqN === 2, 'raid winHq = 50% over n=2 (HQ × non-simple slice)');
+  ok(A.byId.hold.winHq === null && A.byId.hold.winHqN === 0, 'hold winHq = null (never played non-simple in an HQ ending)');
+
+  // malformed / empty rows drop cleanly (envelopeFromRow returns null)
+  ok(R.cardRunView([{ trace: 'not json' }], CARDS).envs.length === 0, 'cardRunView drops an unparseable row');
+
+  // ---- cardFleetFireTimes: pools each skirmish's per-card MEDIAN, re-quantiles ----
+  var fireA = R.cardFleetFireTimes(A.envs);
+  // raid medians: A1 [.25,.75]->.5, A2 [.5]->.5  => pooled [.5,.5] flat
+  ok(near(fireA.raid.q1, 0.5) && near(fireA.raid.median, 0.5) && near(fireA.raid.q3, 0.5), 'raid fleet fire-times flat at 0.5 (both skirmish medians = 0.5)');
+  // hold medians: A1 [.5]->.5, A2 [1]->1 => pooled [.5,1]: q1 .625 / med .75 / q3 .875
+  ok(near(fireA.hold.q1, 0.625) && near(fireA.hold.median, 0.75) && near(fireA.hold.q3, 0.875), 'hold fleet fire-times = hand-computed quartiles of [0.5, 1.0]');
+})();
+
+console.log('\n== chart-model: buildCardsModel (Cards pane display model) ==');
+(function () {
+  var C = require('./ui/chart-model.js');
+  var CARDS = [{ id: 'raid', name: 'Raid' }, { id: 'hold', name: 'Hold' }];
+  function row(env) { return { trace: JSON.stringify(env) }; }
+  var rowsA = [
+    row({ winner: 'red', winType: 'hq', turns: 4, trace: [
+      { id: 'raid', p: 'red', turn: 1, mode: 'normal', seen: 1 },
+      { id: 'raid', p: 'blue', turn: 3, mode: 'normal', seen: 2 },
+      { id: 'hold', p: 'red', turn: 2, mode: 'simple', seen: 1 }
+    ] }),
+    row({ winner: 'blue', winType: 'attrition', turns: 2, trace: [
+      { id: 'raid', p: 'blue', turn: 1, mode: 'normal', seen: 1 },
+      { id: 'hold', p: 'blue', turn: 2, mode: 'normal', seen: 1 }
+    ] })
+  ];
+  var rowsB = [row({ winner: 'blue', winType: 'hq', turns: 2, trace: [
+    { id: 'raid', p: 'blue', turn: 1, mode: 'normal', seen: 1 }
+  ] })];
+
+  var m = C.buildCardsModel(rowsA, rowsB, CARDS);
+  // rows: both cards have plays (raid A=3/B=1, hold A=2/B=0) so both survive
+  ok(m.rows.length === 2 && m.rows[0].id === 'raid' && m.rows[1].id === 'hold', 'rows = both played cards, in card-list order');
+  ok(m.rows[0].a.plays === 3 && m.rows[0].b.plays === 1, 'raid carries per-run a/b views (A=3, B=1)');
+  ok(m.rows[1].b.plays === 0, 'hold\'s run-B view is a zero-play row (cardRows emits every card)');
+  // quadrant coverage: only raid is in the SPEC §2 slice for either run -> 1 eligible, 1 omitted
+  ok(m.quadEligible === 1 && m.omitted === 1, 'quadEligible=1 / omitted=1 (only raid ever in the HQ × non-simple slice)');
+  // maxPlays drives bubble radius: max over max(a,b) per card = raid's 3
+  ok(m.maxPlays === 3, 'maxPlays = 3 (raid, the most-played card across runs)');
+  // fire-time strips input is wired per run
+  ok(m.fireA.raid && m.fireB.raid && m.fireA.hold && !m.fireB.hold, 'fireA/fireB carry each run\'s fleet fire-times (hold absent from B)');
+
+  // cards with no plays in either run drop out entirely
+  var empty = C.buildCardsModel([], [], CARDS);
+  ok(empty.rows.length === 0 && empty.maxPlays === 1 && empty.quadEligible === 0, 'no rows -> empty model (maxPlays floor 1, nothing eligible)');
+})();
+
 console.log('\n== report-model: unitsAggFromRows (Units pane per-run fold) ==');
 (function () {
   var R = require('./report-model.js');

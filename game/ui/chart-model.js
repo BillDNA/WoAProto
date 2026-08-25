@@ -169,6 +169,29 @@ var CHART_MODEL = (function () {
     };
   }
 
+  /* Assemble the Cards pane's pure display model from two runs' skirmish rows
+     (the SAME rowsA/rowsB shape the panes fetch). `cards` is the engine card
+     list (E.CARDS) — passed in so this stays engine-global-free. Returns the
+     merged per-card rows (each with a/b sub-views + name), the SPEC §2 Win%
+     slice folded into those rows, the fire-time strips input (fireA/fireB), and
+     the quadrant's plays->radius scaling input (maxPlays). Only cards with
+     plays in A and/or B are kept; quadEligible/omitted count the SPEC §2 slice's
+     coverage for the caption. */
+  function buildCardsModel(rowsA, rowsB, cards) {
+    var A = R.cardRunView(rowsA, cards), B = R.cardRunView(rowsB, cards);
+    var rows = Object.keys(cards.reduce(function (m, c) { m[c.id] = 1; return m; }, {})).map(function (id) {
+      return { id: id, name: (A.byId[id] || B.byId[id]).name, a: A.byId[id] || null, b: B.byId[id] || null };
+    }).filter(function (r) { return (r.a && r.a.plays) || (r.b && r.b.plays); });
+    var quadEligible = rows.filter(function (r) { return (r.a && r.a.winHq != null) || (r.b && r.b.winHq != null); }).length;
+    var omitted = rows.length - quadEligible;
+    var maxPlays = 1;
+    rows.forEach(function (r) { var p = Math.max(r.a ? r.a.plays : 0, r.b ? r.b.plays : 0); if (p > maxPlays) maxPlays = p; });
+    return {
+      rows: rows, quadEligible: quadEligible, omitted: omitted, maxPlays: maxPlays,
+      fireA: R.cardFleetFireTimes(A.envs), fireB: R.cardFleetFireTimes(B.envs)
+    };
+  }
+
   /* ===== Units pane ===== */
 
   // Fixed [0, niceMax] domain for a linear (non-percentage) track — breakthrough
@@ -200,6 +223,7 @@ var CHART_MODEL = (function () {
 
   return { buildMapDrillModel: buildMapDrillModel,
     buildOverviewModel: buildOverviewModel, ovFmt: ovFmt, ovTrackDomain: ovTrackDomain, ovPos: ovPos, OV_PERCENT_KEYS: OV_PERCENT_KEYS,
+    buildCardsModel: buildCardsModel,
     buildUnitsModel: buildUnitsModel, unLinearDomain: unLinearDomain, unPos: unPos };
 })();
 
