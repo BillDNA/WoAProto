@@ -140,7 +140,9 @@ exactly the bent-ruler failure mode. Rather than re-date a fourth copy, this is 
   on the current **Core Six** pool (`core7`). `CLAUDE.md`'s "Shipped history" carries the terse
   protect-the-baselines summary for a quick session-start read.
 - **Tools** that produce these numbers (`dev/balance-report.js`, `game/balance.js matchup`, the
-  Balance Dashboard, `dev/claude-plays.js`) are covered in [[workflow]].
+  Balance Dashboard, `dev/claude-plays.js`) are covered in [[workflow]]. The shared fold logic they
+  all call — trace envelope schema, metric bands, reporting doctrine, reconstruction caveats — is
+  documented in **[[report-model]]**.
 
 If a future pass needs per-map side-bias / mover-bias examples again, re-measure them fresh against
 Core Six rather than trusting anything that was here before — every prior bullet in this section was
@@ -148,4 +150,4 @@ measured on a map pool that no longer exists.
 
 ## Related
 
-[[workflow]] · [[War Of Attrition rule book]] · [[ai-heuristic-model]] · [[card-cheatsheet]] · [[balance-baselines]]
+[[workflow]] · [[War Of Attrition rule book]] · [[ai-heuristic-model]] · [[card-cheatsheet]] · [[balance-baselines]] · [[report-model]] · [[code-style]]

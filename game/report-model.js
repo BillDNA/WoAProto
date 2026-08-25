@@ -1,16 +1,8 @@
-/* War of Attrition — report model: the ONE copy of the balance-report logic
-   every reporting surface shares.
-
-   One implementation per fact: the scoring formula, the per-map note thresholds
-   (62/38/8/55/20), the global fold, the card-table rows and the saved-report
-   markdown once lived in four places and drifted. They live HERE now; consumers
-   keep only their own presentation (terminal padding, HTML tables, headers).
-
-   Exposed as the browser global WOA_REPORT (classic script) AND module.exports
-   for node — the dual-export pattern maps.js uses. Nearly dependency-free: every
-   function takes plain data (E.balanceMap aggregates, E.CARDS) as arguments. The
-   ONE exception is foldSkirmishes, which delegates the per-skirmish fold to the
-   engine's single-source factsFromRow/foldFacts rather than keep a second copy.
+/* War of Attrition — report model: the ONE copy of the balance-report logic every
+   reporting surface shares (CLI, dashboard, saved markdown). Pure plain-data folds
+   over E.balanceMap aggregates + trace envelopes; dual-exported (WOA_REPORT global
+   + module.exports) like maps.js. Subsystem reference — envelope schema, band
+   semantics, reporting doctrine, reconstruction caveats: docs/report-model.md.
 
    - pct(a, b)                 rounded percentage (0 when b is 0)
    - f1(x)                     one-decimal string, round-half-up
@@ -35,54 +27,30 @@
 
 var WOA_REPORT = (function () {
 
-  // foldSkirmishes is the one function here genuinely downstream of the engine —
-  // it delegates the per-skirmish fold to the engine's single-source
-  // factsFromRow/foldFacts instead of re-deriving it. Resolve the engine the same
-  // dual way maps.js does (window.Engine in the browser, require in node);
-  // everything else stays pure/plain-data.
+  // foldSkirmishes is the only fold downstream of the engine (delegates to its
+  // single-source factsFromRow/foldFacts). Resolve the engine dual like maps.js.
   var ENG = (typeof window !== 'undefined' && window.Engine) ? window.Engine
     : (typeof require === 'function' ? require('./engine.js') : null);
 
   function pct(a, b) { return b ? Math.round(100 * a / b) : 0; }
   function f1(x) { return (Math.round(x * 10) / 10).toFixed(1); }
-  // Total actions in a skirmish set = attacks + swaps + marches + deploys. The
-  // denominator for Attack/Swap SHARE — deck-size-proof, where raw Atk/Swp counts
-  // weren't (adding a card inflated the counts without any behaviour change).
+  // Total actions = attacks + swaps + marches + deploys; the Attack/Swap SHARE denominator.
   function actionTotal(a) { return (a.attacks || 0) + (a.swaps || 0) + (a.marches || 0) + (a.deploys || 0); }
-  // A conditioned metric prints its slice-n and flags when below the fleet-wide
-  // trust threshold (the report can't grey a row, so it annotates — the dashboard
-  // band board does the greying). HQ-sliced reserves are typically small-n (HQ
-  // endings are a minority of skirmishes).
+  // Prints a conditioned metric's slice-n, flagging small-n (see docs/report-model.md).
   function smallNote(n) { return ' (n=' + (n || 0) + ((n || 0) < SMALL_N.fleet ? ', small-n' : '') + ')'; }
   function hqReservePct(sum, n) { return n ? Math.round(100 * sum / n) + '%' : '—'; }
 
-  /* ===== Metric bands as DATA =====
-     The ONE band table. SOT for the prose is docs/balance/best-map-score.md (the
-     ideal-range table) + docs/balance/README.md (the North stars / game-level
-     guards); if that doc and this table disagree, the doc wins and this table is
-     fixed. `balanceScore` folds over THIS table (no second copy of the ranges) —
-     the eight feedsScore:true rows ARE the ideal-range list.
-
-     Per row: { key, label, lo, hi, weight, feedsScore, val(agg,done), nFor? }
-       lo / hi     band edges; null = OPEN on that side (no penalty there).
-                   0 is a real closed edge, NOT open (only null/absent is open).
-       weight      points per unit outside the band (feeds the score).
-       feedsScore  true = summed into balanceScore; false = a shaded GUARD band
-                   the dashboard renders but the score ignores.
-       val         pulls this metric's value out of a balanceMap aggregate
-                   (pct() for %-metrics; a raw ratio for Drag & Swings — so a
-                   NaN from a malformed agg scores 0). A conditioned metric
-                   divides by its slice count, not `done`, and carries nFor.
-       nFor        the sample size backing val() — the slice denominator for
-                   conditioned metrics (control/firstBlood: their sub-population;
-                   tie/drag: attritionEndings), read by the small-n rule. */
+  /* The ONE band table, as data — balanceScore folds the eight feedsScore:true rows
+     (no second copy of the ranges). Row shape {key,label,lo,hi,weight,feedsScore,
+     val,nFor?} and every edge/denominator rationale: docs/report-model.md#metric-bands.
+     SOT for the ranges is docs/balance/best-map-score.md — if it and this table
+     disagree, the doc wins and this table is fixed. */
   var BANDS = [
     { key: 'red',    label: 'Red%',    lo: 45,  hi: 55,   weight: 1,   feedsScore: true,  val: function (a, done) { return pct(a.redWins, done); } },
     { key: 'first',  label: '1st%',    lo: 45,  hi: 55,   weight: 1,   feedsScore: true,  val: function (a, done) { return pct(a.firstWins, done); } },
     { key: 'hq',     label: 'HQ%',     lo: 10,  hi: 40,   weight: 0.5, feedsScore: true,  val: function (a, done) { return pct(a.hqWins, done); } },
     { key: 'zeroKill', label: '0kill%', lo: 0, hi: 5,     weight: 0.6, feedsScore: true,  val: function (a, done) { return pct(a.zeroKill, done); } },
-    // Tie%/Drag denominator = attrition endings (a.attritionEndings), NOT every
-    // finished skirmish: HQ endings have Drag 0 by definition and diluted pooled Tie%.
+    // conditioned: denominator is attritionEndings, not done
     { key: 'tie',    label: 'Tie%',    lo: 0,   hi: 18,   weight: 0.3, feedsScore: true,  val: function (a) { return a.attritionEndings ? pct(a.tiebreak, a.attritionEndings) : null; },
       nFor: function (a) { return a.attritionEndings || 0; } },
     { key: 'drag',   label: 'Drag',    lo: 0,   hi: 3.0,  weight: 4,   feedsScore: true,  val: function (a) { return a.attritionEndings ? (a.attritionKillTail || 0) / a.attritionEndings : null; },
@@ -90,25 +58,18 @@ var WOA_REPORT = (function () {
     { key: 'swings', label: 'Swings',  lo: 2.0, hi: null, weight: 6,   feedsScore: true,  val: function (a, done) { return a.leadChanges / Math.max(1, done); } },
     { key: 'control', label: 'Control%', lo: 70, hi: 100, weight: 0.5, feedsScore: true,  val: function (a) { return a.controlGames ? pct(a.controlWins, a.controlGames) : null; },
       nFor: function (a) { return a.controlGames || 0; } },
-    // Guard bands — shaded on the dashboard, NOT scored (feedsScore:false ⇒ never
-    // touches balanceScore). First-blood→win (the snowball check) + the Attack/Swap
-    // SHARE pair (% of all actions taken; deck-size-proof; the swap-dance detector).
+    // guard bands: shaded, NOT scored (feedsScore:false). first-blood→win + Atk/Swp share
     { key: 'firstBlood', label: 'First-blood→win', lo: 55, hi: 70, weight: 0, feedsScore: false, val: function (a) { return a.firstBloodGames ? pct(a.firstBloodWins, a.firstBloodGames) : null; },
       nFor: function (a) { return a.firstBloodGames || 0; } },
-    // Shares are over EVERY skirmish's actions (n = done, like Red%/HQ% — no
-    // nFor), so they're never spuriously small-n; val is null only when a
-    // (degenerate) skirmish set took no actions at all.
+    // shares over all actions (n = done, no nFor); null only if no actions were taken
     { key: 'attackShare', label: 'Attack%', lo: 12, hi: 28, weight: 0, feedsScore: false, val: function (a) { var t = actionTotal(a); return t ? pct(a.attacks, t) : null; } },
     { key: 'swapShare', label: 'Swap%', lo: 10, hi: 26, weight: 0, feedsScore: false, val: function (a) { var t = actionTotal(a); return t ? pct(a.swaps, t) : null; } }
   ];
   var BAND_BY_KEY = {};
   BANDS.forEach(function (b) { BAND_BY_KEY[b.key] = b; });
 
-  /* Sample size backing a band row's val() — most rows are denominated over every
-     finished skirmish (`done`); control/firstBlood are conditioned on a
-     sub-population (skirmishes with a hex lead / a kill) and carry their own
-     nFor(agg,done). Callers compare this against SMALL_N.map/.fleet instead of
-     re-deriving each metric's denominator by hand. */
+  /* Slice-n backing a band row's val(): `done`, or the row's own nFor for a
+     conditioned metric. Callers compare against SMALL_N. */
   function bandN(bandRow, agg, done) {
     var b = (typeof bandRow === 'string') ? BAND_BY_KEY[bandRow] : bandRow;
     if (!b) return done;
@@ -129,13 +90,9 @@ var WOA_REPORT = (function () {
     return 0;
   }
 
-  /* Effective band for a metric at a temperature. T1/T2 widen each
-     CLOSED edge outward by 20%/40% of band width; OPEN (null) edges stay open.
-     Band width = hi - lo when both edges are finite; for a half-open band
-     (exactly one finite edge — only Swings among the scored eight) there is no
-     finite hi-lo, so the closed edge widens by the same fraction of |edge|
-     (Swings lo 2.0 → 1.6 at T1, 1.2 at T2 — a proportional relaxation). T0
-     returns the stored edges unchanged. `metric` is a key string or a band row. */
+  /* Effective band at a temperature: widen each CLOSED edge outward by 20% (T1) /
+     40% (T2) of band width; OPEN edges stay open; a half-open band (Swings) widens
+     by that fraction of |edge|. T0 = stored edges. See docs/report-model.md#metric-bands. */
   function bands(metric, temperature) {
     var b = (typeof metric === 'string') ? BAND_BY_KEY[metric] : metric;
     if (!b) return null;
@@ -222,34 +179,18 @@ var WOA_REPORT = (function () {
     return G;
   }
 
-  /* ===== DB skirmish rows -> agg (Overview) =====
-     Fold an array of `skirmishes` table rows (GET /api/skirmishes?run=<id> —
-     camelCase scalar columns, one row per finished skirmish; insertSkirmish only
-     stores skirmish-over states, so `done` is rows.length, no unfinished count to
-     subtract) into the SAME aggregate shape balanceAdd builds server-side,
-     restricted to fields every stored column can rebuild exactly. fs_red/fs_blue
-     ARE E.fieldScore at skirmish end (db.js insertSkirmish), so the read is
-     bit-for-bit the live source. The attrition slice (attritionEndings +
-     attritionKillTail, the Tie%/Drag denominator + numerator) is derived here from
-     win_type + kill_tail, the same slice balanceAdd computes live — no new column.
-
-     controlGames/controlWins: a row feeds controlGames only when both
-     hex-ownership columns (hexesRed/hexesBlue, insertSkirmish's hexesHeld(st)) are
-     non-null AND unequal (a real hex tie contributes to done but not controlGames);
-     controlWins increments when the winner also held more hexes. Rows carrying
-     NULL/NULL ("no control data", never a fabricated 0/0 tie) fall out of both
-     counters, so control.val()/bandN() see a smaller-but-real n instead of 0. cards
-     stays {} — card_plays is a separate table, out of scope here. Returns { agg,
-     done }, the shape foldGlobal/balanceScore/BANDS consume. */
+  /* DB `skirmishes` rows (GET /api/skirmishes) -> the { agg, done } shape
+     foldGlobal/balanceScore/BANDS consume. Delegates each row to the engine's
+     single-source fold (below); done is rows.length (only skirmish-over states are
+     stored). Column mapping + control NULL/NULL handling: docs/report-model.md. */
   function foldSkirmishes(rows) {
     var agg = { redWins: 0, firstWins: 0, hqWins: 0, turns: 0, vpDiff: 0,
       zeroKill: 0, tiebreak: 0, killTail: 0, leadChanges: 0,
       attacks: 0, swaps: 0, marches: 0, deploys: 0,
       attritionEndings: 0, attritionKillTail: 0,
       firstBloodGames: 0, firstBloodWins: 0, controlGames: 0, controlWins: 0, cards: {} };
-    // Delegate every row to the engine's single-source fold — factsFromRow maps
-    // the stored columns onto the fact record foldFacts accumulates, the SAME
-    // record + fold balanceAdd uses live. `cards` stays {} (out of scope here).
+    // factsFromRow maps stored columns onto the fact record foldFacts accumulates —
+    // the same record + fold balanceAdd uses live. `cards` stays {} (separate table).
     (rows || []).forEach(function (r) { ENG.foldFacts(agg, ENG.factsFromRow(r)); });
     return { agg: agg, done: (rows || []).length };
   }
@@ -270,31 +211,13 @@ var WOA_REPORT = (function () {
   }
 
   /* ===== Trace folds =====
-     Pure functions over ONE skirmish's trace ENVELOPE — the row shape both a DB
-     trace row (JSON.parse) and a live skirmish state (trivial wrapper) produce:
-       { v, map, seed, fp, winner, winType, turns,
-         trace: [ {p,id,mode,turn,seen, a?,h?,k?,ld?,u?,noop?} ... ],  // st.playLog
-         units: { infantry:{dep:[..],atk,abs,kill,die,dieT:[..]}, cavalry:{..}, artillery:{..} }, // st.unitMetrics
-         fs?:  [ [redFieldScore, blueFieldScore] ... ]  // per turn; only vpDiffTrack needs it }
-     dieT is a death-TURN list, symmetric to dep — absent ENTIRELY on legacy rows
-     (every type's units[t] has no dieT array at all, not an empty one;
-     unitsAggFromEnvelopes' hasDieT flag distinguishes "no deaths this run" from
-     "this run predates dieT capture"). No DB, no DOM, nothing mutated. Absent
-     fields are omitted in the trace, so every reader guards.
-
-     Fidelity: mixed deploy+attack plays are tagged a:'attack' (attack is sticky),
-     so deploy TIMING is read from units.*.dep (exact per-type deploy turns), never
-     by scanning the a-stream for 'deploy'. First contact is the first a:'attack'. */
-  /* A DB skirmish row's `trace` column is the envelope JSON as TEXT; a live skirmish
-     state is handed to the same folds already wrapped as an envelope object.
-     envelopeFromRow accepts either — a string .trace gets JSON.parse'd (defensively:
-     malformed/absent returns null rather than throwing), an already-parsed object
-     passes through. One place, so every drill-down never hand-rolls the parse.
-     The trace blob never carries `fs` (insertSkirmish doesn't store it there) — GET
-     /api/skirmishes attaches it as a sibling row.fs (the per-turn [fsRed,fsBlue]
-     timeline, one grouped query over the `timeline` table). So once parsed, fold
-     row.fs in — the one place every envelope consumer (vpDiffTrack) gets it, whether
-     or not env.fs already arrived pre-attached (a live skirmish wrapper). */
+     Pure functions over ONE skirmish's trace ENVELOPE (the shape both a DB trace row
+     and a live skirmish state produce). Envelope schema, the dieT legacy rule, and
+     the deploy-timing fidelity note: docs/report-model.md#trace-envelope. No DB, no
+     DOM, nothing mutated; absent fields are omitted, so every reader guards. */
+  /* envelopeFromRow: accept a DB row (string .trace -> JSON.parse, malformed returns
+     null) or an already-parsed envelope, and fold in the sibling row.fs (the timeline
+     the trace blob doesn't carry). One place, so no drill-down hand-rolls the parse. */
   function envelopeFromRow(row) {
     if (!row) return null;
     var env = null;
@@ -412,15 +335,10 @@ var WOA_REPORT = (function () {
     return out;
   }
 
-  /* ===== Per-card aggregates from many skirmish envelopes (Cards tab) =====
-     foldSkirmishes's `cards` stays {} by design (card_plays is a separate table);
-     the Cards tab is where a run's per-card aggregate is actually needed. Derives
-     the SAME {plays,wins,simple,firstSight,seenSum,noop} shape balanceAdd builds
-     live, directly from each skirmish's trace envelope (no new capture), so cardRows
-     is reused UNMODIFIED for a run's DB rows exactly as for a live run. `wins` here
-     is the POOLED win rate (every ending) — internal bubble-sizing/tooltip use only;
-     it must never reach print or the sight-quadrant axis (see cardHqWinSlice for the
-     axis-worthy slice). */
+  /* Per-card {plays,wins,simple,firstSight,seenSum,noop} from a run's envelopes —
+     the SAME shape balanceAdd builds live, so cardRows is reused UNMODIFIED for DB
+     rows. `wins` is the POOLED rate (internal bubble-sizing only; never printed —
+     docs/report-model.md#reporting-doctrine). */
   function cardAggFromEnvelopes(envs) {
     var cards = {};
     (envs || []).forEach(function (env) {
@@ -438,15 +356,11 @@ var WOA_REPORT = (function () {
     return cards;
   }
 
-  /* Card Win% doctrine slice: pooled card Win% stays OUT of print and off the
-     Cards-tab quadrant axis — the meaningful number there is sliced to HQ-capture
-     endings × non-simple plays (a basic-attack/reposition fallback isn't the card
-     "winning", and an attrition skirmish was decided by the standoff, not the last
-     card played). Returns {cardId: {plays, wins}} — pct() at the call site so a
-     0-play card reads null rather than NaN, and callers apply the small-n rule to
-     `plays` before trusting the percentage (this slice is thin by construction: HQ
-     endings are ~17% of skirmishes, only non-simple plays within those count —
-     expect small-n at ordinary run sizes). */
+  /* The axis-worthy card Win%: sliced to HQ-capture endings × non-simple plays only
+     (pooled Win% stays off print and off the quadrant axis — see the doctrine in
+     docs/report-model.md#reporting-doctrine). Returns {cardId:{plays,wins}}; pct() at
+     the call site (0-play reads null), and callers apply the small-n rule to `plays`
+     — this slice is thin by construction. */
   function cardHqWinSlice(envs) {
     var out = {};
     (envs || []).forEach(function (env) {
@@ -503,29 +417,11 @@ var WOA_REPORT = (function () {
     return out;
   }
 
-  /* ===== Per-unit-type aggregates from many skirmish envelopes (Units tab) =====
-     Per unit type, per skirmish FIELDED: median deploy turn (normalized to skirmish
-     length, like the deployInterleave/settlePoint idiom — raw turn numbers aren't
-     comparable across skirmishes of different length); attacks made vs absorbed
-     (roleY); breakthrough (absorbed/skirmish fielded); exchange (kills/deaths);
-     median lifespan. One fold, every Units-tab chart reads it.
-
-     Lifespan pairing: dep[] and dieT[] are both chronological by construction (each
-     push happens as its event resolves, turn numbers only increase within a
-     skirmish), so this pairs them index-wise per type PER SKIRMISH (never pooled
-     across skirmishes first — a survivor's censor point needs that skirmish's own
-     turn count): the k-th death is attributed to the k-th deploy, a per-type FIFO
-     approximation, since the trace carries no persistent per-unit identity. Deploys
-     left unmatched (dep.length > dieT.length) survived to skirmish end; their
-     lifespan is RIGHT-CENSORED at that skirmish's turn count (turns - depTurn), not
-     excluded — dropping survivors would silently understate the "steady support"
-     units that held the line all game, exactly the ones the chart wants to show.
-
-     Small-n: a type's own n is skirmishesFielded (per-skirmish, unconditioned), used
-     for EVERY chart on this tab; callers grey per-mark with smallN(n,'fleet').
-     Legacy rows (hasDieT false — no type in any envelope carries a dieT array) can't
-     derive lifespan; the Lifespan chart greys itself fleet-wide with a "predates
-     capture" note instead of a fabricated zero. */
+  /* Per unit type, per skirmish FIELDED: normalized median deploy turn, roleY
+     (attacks vs absorbed), breakthrough (absorbed/fielded), exchange (kills/deaths),
+     median lifespan. One fold, every Units-tab chart reads it. Lifespan is a per-type
+     FIFO pairing of dep[]->dieT[] with survivors right-censored, and the small-n /
+     legacy-greying rules: docs/report-model.md#unit-lifespan-pairing-is-fifo. */
   function unitsAggFromEnvelopes(envs) {
     var out = {}, sawUnits = false, sawDieT = false;
     (envs || []).forEach(function (env) {
@@ -649,10 +545,7 @@ var WOA_REPORT = (function () {
       L.push('## Card report');
     }
     L.push('');
-    // Noop% is printed: new multi-step cards are where dead turns reappear, and the
-    // rubric's dead-card check needs the number. Win% is deliberately NOT printed —
-    // dead at n=700 (all cards read 49-52 against the ±8 rubric threshold) — but
-    // still computed in cardRows() and recorded in logs/woa.db, just not shown here.
+    // Noop% printed (dead-turn check); Win% deliberately omitted — docs/report-model.md#reporting-doctrine.
     L.push('| Card | Simple% | Noop% | 1stSight% | AvgSeen | ' + (style === 'report' ? 'Plays' : 'plays') + ' |');
     L.push('|---|--:|--:|--:|--:|--:|');
     cardRows(G.cards, model.cards).forEach(function (r) {
@@ -666,33 +559,13 @@ var WOA_REPORT = (function () {
   }
 
   /* ===== Per-hex lenses =====
-     Three SPATIAL reads folded from the trace's `h` stream (the raw 'q,r'
-     engine key each play acts on — recordPlay in engine/04-skirmish.js writes
-     the deploy target / march destination / swap hex / attack skirmish-hex; an
-     attack also carries `k` kills). ONE skirmish envelope in ->
-       { plays, turns, hexes: { 'q,r': { occ, flips, kills } } }.
-
-     Reconstruction is best-effort over WHAT THE TRACE RECORDS — hexes acted
-     on, kills, and the actor `p` — NOT a full combat replay (the trace has no
-     march ORIGIN, no attack outcome, no starting HQ positions):
-       owner{}  who last held each hex.
-       deploy(h,p) / march(h=dest,p): p takes h; a flip when h was the OTHER
-         player's. The march origin isn't in the trace, so a vacated origin lingers
-         as "held" — a bounded over-count that only inflates the BUSY end, never the
-         dead end the <5% test reads, and it happens to surface rushable lanes (a
-         march onto ground the enemy last held reads as a kill-less flip — the "high
-         flips + low kills" signature).
-       swap(h,p): a same-owner cross-type swap (rules 1.0 bans same-type) — no
-         ownership change, just a touch.
-       attack(h=skirmish hex,p,k): kills += k; a kill (k>0) is a violent contest
-         that hands the hex to the attacker -> flip when h wasn't already p's.
-         (k also counts an attacker's own death, so this slightly over-attributes
-         captures — acceptable for a relative heatmap; documented.)
-     Occupancy credits +1 turn to every currently-held hex after each play, so
-     occ = heldTurns / plays ∈ [0,1] = "% of turns held". Only hexes the trace
-     TOUCHED appear; HQ hexes never show unless attacked, so the RENDER layer
-     (which knows the map's HQs) exempts them from the dead-hex hatch — the fold
-     stays pure over the trace, no map/board dependency. */
+     Three spatial reads from the trace's `h` stream (the 'q,r' hex each play acts on)
+     -> { plays, turns, hexes: { 'q,r': { occ, flips, kills } } }. deploy/march take
+     the hex (flip if it was the other player's); attack with k>0 flips + adds kills;
+     swap is a touch only. occ = held-turns / plays; only touched hexes appear.
+     Best-effort reconstruction — the trace has no march origin/outcome/HQ positions;
+     the bounded approximations (lingering origins, own-death in k, HQ exemption) are
+     in docs/report-model.md#spatial-reconstruction-hexlenses-is-best-effort. */
   function hexLenses(env) {
     var tr = traceOf(env), owner = {}, held = {}, flips = {}, kills = {}, touched = {}, plays = 0;
     tr.forEach(function (e) {

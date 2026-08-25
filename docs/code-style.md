@@ -4,9 +4,17 @@
 
 ## The one rule
 
-**A comment explains why the code is the shape it is. Git explains when and who.**
+**A comment explains why the code is the shape it is. Git explains when and who. A doc explains the parts too big for a line.**
 
 If a line would still be true after every ticket is closed and forgotten, keep it. If it only makes sense to someone who lived through the ticket, cut it — that history is in `git log` and the issue tracker, where it belongs.
+
+## Comments are not a second copy of the code
+
+If a comment block is longer than the code it sits over, you have written the same fact twice — once in code, once in prose — and the two will drift. Cut until the comment is shorter than the code, or the code and its comment are telling a reader different things.
+
+**A schema, a data contract, a table of metric definitions, a "why the numbers are approximate" note — these are reference material, not comments.** They belong in a doc under `docs/` that [[code-architecture]] points to (progressive disclosure: the orientation doc names the subsystem, the subsystem doc holds the detail). The code then carries a one-line summary and a pointer: `// trace envelope shape: see docs/report-model.md`. One home per fact — the same rule the code itself follows.
+
+Before keeping a long "why" block inline, ask: *does a reader need this at THIS line, or would they find it faster from a doc?* Locality wins for a caveat that only makes sense next to the three lines it guards; a doc wins for anything a second file would also want to read.
 
 ## Keep
 
