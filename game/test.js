@@ -339,6 +339,14 @@ console.log('== army-points (WOA #54: computed from steps, weight table pinned) 
   ok(E.cardPoints(E.CARD_BY_ID['raiding_party']) === 6.5, 'Raiding Party = 6.5 pts (deploy inf 3 + attack tieSpare/noAdvance 3.5)');
   ok(E.deckPoints(E.ACTIVE_DECK) === 67.5, 'active deck "' + E.ACTIVE_DECK.id + '" totals 67.5 army-points');
   ok(E.cardPoints({ steps: [] }) === 0 && E.deckPoints({ cards: [] }) === 0, 'empty card / empty deck = 0');
+  // WOA #56 deck-value cap gate: every shipped deck sits under the budget (the
+  // gate lets the deck editor call two asymmetric decks "matched"), and a deck
+  // pushed over it is rejected — the same reject-on-validate as an oversized deck.
+  var allDecks = (typeof global !== 'undefined' && global.WOA_CONTENT && global.WOA_CONTENT.decks) || [];
+  ok(allDecks.length > 0 && allDecks.every(function (d) { return E.deckPoints(d) <= E.DECK_POINTS_CAP; }),
+    'all ' + allDecks.length + ' shipped decks are within the army-points cap (' + E.DECK_POINTS_CAP + ')');
+  var overBudget = { cards: E.ACTIVE_DECK.cards.concat([{ id: 'gild', name: 'Gild', count: 1, steps: [{ type: 'deploy', unit: 'artillery' }, { type: 'attack', mod: 3 }] }]) };
+  ok(E.deckPoints(overBudget) > E.DECK_POINTS_CAP, 'a deck pushed over the cap is over budget (gate rejects it)');
 })();
 
 console.log('== deploy step budget vs stock (no deploy fallback, oversubscription = broken content) ==');

@@ -9,7 +9,7 @@
     VERSION: I.RULES_VERSION,
     DIRS: I.DIRS, UNITS: I.UNITS, CARDS: I.CARDS, CARD_BY_ID: I.CARD_BY_ID, MAPS: I.MAPS,
     MAPSETS: I.MAPSETS, activeMapset: I.activeMapset, mapPool: I.mapPool, ACTIVE_DECK: I.ACTIVE_DECK,
-    cardPoints: I.cardPoints, deckPoints: I.deckPoints,
+    cardPoints: I.cardPoints, deckPoints: I.deckPoints, DECK_POINTS_CAP: I.DECK_POINTS_CAP,
     PIECE_TOTALS: I.PIECE_TOTALS, TERRAIN_STOCK: I.TERRAIN_STOCK,
     SHAPES: I.SHAPES, DEFAULT_SHAPE: I.DEFAULT_SHAPE, boardHexes: I.boardHexes, setBoard: I.setBoard, hexes: I.hexes,
     buildShape: I.buildShape, ensureMapShape: I.ensureMapShape,
