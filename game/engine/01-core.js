@@ -152,7 +152,7 @@
     return p;
   }
   function cardPoints(card) {
-    var steps = (card && card.steps) || [];
+    var steps = (card && Array.isArray(card.steps)) ? card.steps : [];
     if (!steps.length) return 0;
     var sum = steps.reduce(function (s, st) { return s + stepPoints(st); }, 0);
     return sum * Math.pow(steps.length, POINTS.combo - 1);

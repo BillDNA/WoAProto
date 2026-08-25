@@ -339,6 +339,7 @@ console.log('== army-points (WOA #54: computed from steps, weight table pinned) 
   ok(E.cardPoints(E.CARD_BY_ID['raiding_party']) === 6.5, 'Raiding Party = 6.5 pts (deploy inf 3 + attack tieSpare/noAdvance 3.5)');
   ok(E.deckPoints(E.ACTIVE_DECK) === 67.5, 'active deck "' + E.ACTIVE_DECK.id + '" totals 67.5 army-points');
   ok(E.cardPoints({ steps: [] }) === 0 && E.deckPoints({ cards: [] }) === 0, 'empty card / empty deck = 0');
+  ok(E.cardPoints({ steps: 'oops' }) === 0, 'malformed (non-array) steps score 0, not a throw — deckProblems can still report the friendly error');
   // WOA #56 deck-value cap gate: every shipped deck sits under the budget (the
   // gate lets the deck editor call two asymmetric decks "matched"), and a deck
   // pushed over it is rejected — the same reject-on-validate as an oversized deck.
