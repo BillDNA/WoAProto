@@ -25,7 +25,7 @@ var html = read('index.html');
 // inline EVERY <script src> so jsdom needs no loader — the manifest tag expands
 // to the content files (same document.write effect), everything else reads
 // straight from disk. Any tag left un-replaced is a loud failure, not a silent
-// no-op (the old exact-string replaces broke invisibly when a tag changed).
+// no-op, so a changed tag can't quietly drop a script.
 html = html.replace(/<script src="([^"]+)"><\/script>/g, function (tag, src) {
   if (src === 'content/manifest.js') return '<script>' + readContent() + '</script>';
   return '<script>' + read(src) + '</script>';
@@ -75,9 +75,8 @@ setTimeout(function () {
   console.log('== player mats ==');
   ok(doc.querySelectorAll('#matRed .slot').length === 13, 'red mat has 13 piece slots (7+2+1+3)');
   ok(doc.querySelectorAll('#matBlue .slot').length === 13, 'blue mat has 13 piece slots');
-  // WOA-036: one .scard per card COPY in the active deck — deck-size-proof
-  // (was hardcoded 16, broke the moment the no-op fix let the 17-card active
-  // deck through instead of the checked-in Vanguard override).
+  // one .scard per card COPY in the active deck — derive the total from the
+  // deck so this stays correct at any deck size, not a hardcoded count.
   var deckTotal = win.Engine.CARDS.reduce(function (a, c) { return a + (+c.count || 0); }, 0);
   ok(doc.querySelectorAll('#matRed .scard').length === deckTotal, 'red mat tracks all ' + deckTotal + ' orders');
   ok(doc.querySelectorAll('#matBlue .scard').length === deckTotal, 'blue mat tracks all ' + deckTotal + ' orders (enemy spend visible)');
@@ -109,8 +108,8 @@ setTimeout(function () {
         }
         try { E.applyStep(APP.st, c); }
         catch (stepErr) {
-          // must-play-step (eb01d8e) forbids skipping this step — take the first
-          // real legal choice instead of the skip the picker fell back to.
+          // this step forbids skipping — take the first real legal choice
+          // instead of the skip the picker fell back to.
           var choices = E.enumerateChoices(APP.st), alt = null;
           for (var ci = 0; ci < choices.length; ci++) { if (!choices[ci].skip) { alt = choices[ci]; break; } }
           E.applyStep(APP.st, alt || { skip: true });
@@ -180,10 +179,10 @@ setTimeout(function () {
     var ringMap = { name: 'Ring Test', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2], pieces: ringPieces };
     ok(win.Engine.validateMaps([ringMap]).length === 0, 'two sets of three validate cleanly');
 
-    console.log('== editor Balance -> dashboard, map as drawn (restructure step 9) ==');
-    // The old in-game balance lab is gone; the editor's Balance button routes the
-    // UNSAVED carved map (still open in the editor above) through openDashDef into
-    // the one dashboard pipeline as a transient '(as drawn)' option.
+    console.log('== editor Balance -> dashboard, map as drawn ==');
+    // the editor's Balance button routes the UNSAVED carved map (still open in
+    // the editor above) through openDashDef into the one dashboard pipeline as a
+    // transient '(as drawn)' option.
     doc.getElementById('dashN').value = '20'; // openDashDef runs with whatever n is picked — keep it fast
     doc.getElementById('edBalance').click();  // openDashDef(edBuildDef())
     ok(doc.getElementById('dashScr').classList.contains('active'), 'editor Balance opens the Balance Dashboard');
@@ -211,15 +210,14 @@ setTimeout(function () {
       ok(doc.getElementById('dashScr').classList.contains('active'), 'dashboard opens from the menu');
       ok(doc.querySelectorAll('#dashMap option').length >= win.Engine.MAPS.length, 'map picker lists the pool');
 
-      console.log('== dashboard shell: header pickers + pill nav + temperature (WOA-034) ==');
+      console.log('== dashboard shell: header pickers + pill nav + temperature ==');
       ok(doc.getElementById('dashHead') && doc.getElementById('dashRunA') && doc.getElementById('dashRunB'),
         'dark header + run A/B pickers present');
-      // dashLoadRuns' GET /api/runs is async now (was a synchronous file://
-      // short-circuit) — let the empty-runs fetch settle before reading the
-      // picker's fallback text.
+      // dashLoadRuns' GET /api/runs is async — let the empty-runs fetch settle
+      // before reading the picker's fallback text.
       realSetTimeout(function () {
         ok(doc.getElementById('dashRunA').disabled && doc.getElementById('dashRunA').options[0].textContent === 'No runs yet',
-          'no saved runs — run pickers show the "No runs yet" fallback (AC4)');
+          'no saved runs — run pickers show the "No runs yet" fallback');
       }, 0);
       ok(doc.querySelectorAll('#dashPills .dpill').length === 5, 'five pills: Overview | Maps | Cards | Units | Tables');
       ok(doc.querySelector('#dashPills .dpill[data-view="tables"]').classList.contains('sel'), 'Tables is the selected pill');
@@ -227,10 +225,10 @@ setTimeout(function () {
       doc.querySelector('#dashPills .dpill[data-view="overview"]').click();
       ok(win.DASH.view === 'overview', 'clicking Overview switches DASH.view');
       ok(doc.getElementById('dashRunControls').style.display === 'none' && doc.getElementById('dashOut').style.display === 'none',
-        'Run/Save + the Tables output hide outside Tables (AC2: charts context is view-only)');
+        'Run/Save + the Tables output hide outside Tables (charts context is view-only)');
       ok(doc.getElementById('dashPaneOverview').style.display !== 'none' &&
          /no saved runs yet/i.test(doc.getElementById('dashPaneOverview').textContent),
-        'Overview pane: "no saved runs yet" fallback note when the db is empty (AC4)');
+        'Overview pane: "no saved runs yet" fallback note when the db is empty');
       ok(doc.getElementById('dashPaneMaps').style.display === 'none' && doc.getElementById('dashPaneUnits').style.display === 'none',
         'the other three panes stay hidden while Overview is active');
       doc.getElementById('dashTemp').value = 'T2';
@@ -260,20 +258,19 @@ setTimeout(function () {
           var th = doc.querySelector('#dashOut th[data-key="red"]');
           th.dispatchEvent(new win.Event('click', { bubbles: true }));
           ok(doc.querySelector('#dashOut th.sorted'), 'clicking a header sorts');
-          // Feedback Round 2: save-report builder produces a full markdown report
+          // save-report builder produces a full markdown report
           var rpt = win.dashReportMarkdown();
           ok(doc.getElementById('dashSave') && /## Maps/.test(rpt) && /## Card report/.test(rpt) && /Drag \| Swings/.test(rpt),
             'Save report button + markdown report (maps, card report, pacing cols)');
 
-          // per-skirmish detail still collected for ui/charts.js's primitives, which
-          // WOA-035+ reuses (spec README: Cards tab "evolves the existing charts.js
-          // card quadrant") — not wired to a pill yet, so check the data survives.
+          // per-skirmish detail still collected for ui/charts.js's primitives (the
+          // Cards tab reuses them) — not wired to a pill yet, so check the data survives.
           var detKey = win.DASH.results[0].map.name;
           ok(win.DASH.detail[detKey] && win.DASH.detail[detKey].turns.length === 20 &&
              win.DASH.detail[detKey].winTypes.length === 20,
             'dashRun collected per-skirmish turns + winTypes (' + (win.DASH.detail[detKey] || { turns: [] }).turns.length + ' skirmishes)');
 
-          console.log('== view-only panes: pill switch keeps the last run in memory (WOA-034, AC4) ==');
+          console.log('== view-only panes: pill switch keeps the last run in memory ==');
           doc.querySelector('#dashPills .dpill[data-view="maps"]').click();
           ok(win.DASH.view === 'maps', 'Maps pill selected');
           ok(doc.getElementById('dashRunControls').style.display === 'none' && doc.getElementById('dashOut').style.display === 'none',
@@ -295,16 +292,13 @@ setTimeout(function () {
       })();
     }
 
-    // WOA-035 (AC5): the Overview screen on a SEEDED DASH state — jsdom has no
-    // real server, so this overrides win.fetch with a seeded stub (GET
-    // /api/skirmishes?run=<id>) answering the way a real browser+server would,
-    // seeds two tiny fixture runs straight onto DASH.runs/runA/runB, and drives
-    // renderOverview through the same #dashPills click every other pane test
-    // above uses. Last use of DASH in this file (deck editor / watch / manual
-    // don't touch it), so nothing is restored afterward — `next` (startWatch)
-    // continues the suite same as before this ticket.
+    // the Overview screen on a SEEDED DASH state — jsdom has no real server, so this
+    // overrides win.fetch (GET /api/skirmishes?run=<id>) to answer the way a real
+    // browser+server would, seeds two tiny fixture runs straight onto
+    // DASH.runs/runA/runB, and drives renderOverview through the same #dashPills click
+    // every other pane test uses. Last use of DASH in this file, so nothing is restored.
     function overviewSmoke(next) {
-      console.log('== Overview screen: seeded DASH state (WOA-035) ==');
+      console.log('== Overview screen: seeded DASH state ==');
       function envelope(map, seed, fp, winner, winType) {
         return JSON.stringify({
           v: '9.9-test', map: map, seed: seed, fp: fp, winner: winner, winType: winType, turns: 4,
@@ -333,9 +327,8 @@ setTimeout(function () {
         row(5, 'Fixture Alpha', 5, 'blue', 'attrition', 'blue', 4, 6),
         row(6, 'Fixture Beta', 6, 'blue', 'hq', 'red', 2, 7)
       ];
-      // WOA-040: run B's Fixture Alpha rows carry a per-turn fs timeline
-      // (GET /api/skirmishes' sibling `fs`, WOA-037) — run A's rows do NOT, so
-      // toggling the Maps drill-down to run A exercises the "this run
+      // run B's Fixture Alpha rows carry a per-turn fs timeline — run A's rows do
+      // NOT, so toggling the Maps drill-down to run A exercises the "this run
       // predates the fs capture" honest-grey path on the |VP-diff| track.
       rowsB[0].fs = [[1, 0], [1, 1], [2, 1], [2, 2]];
       rowsB[1].fs = [[1, 0], [1, 1], [2, 1], [2, 2]];
@@ -361,7 +354,7 @@ setTimeout(function () {
           ok(/Verdict:/.test(txt), 'verdict banner rendered');
           ok(/Red%/.test(txt) && /Drag/.test(txt) && /Swings/.test(txt), 'band board rows rendered (scored metrics)');
           ok(/First-blood/.test(txt), 'guard row (First-blood→win) rendered below the fold');
-          ok(/\(n=3\)/.test(txt), 'fleet-wide n=3 < 240 small-n greys the row with "(n=N)" (SPEC §8)');
+          ok(/\(n=3\)/.test(txt), 'fleet-wide n=3 < 240 small-n greys the row with "(n=N)"');
           ok(/Fixture Alpha/.test(txt) && /Fixture Beta/.test(txt), 'map dumbbells rendered one row per map seen in either run');
           ok(/deploy interleave/.test(txt) && /median settle/.test(txt), 'pacing minis rendered (1e)');
           var mapRow = el.querySelector('.ov-map-row[data-map="Fixture Alpha"]');
@@ -376,16 +369,16 @@ setTimeout(function () {
       })();
     }
 
-    // WOA-040: the Map drill-down screen (breadcrumb, A|B|A/B toggle, tempo
-    // lanes + |VP-diff| track, per-map band board, settle curve) reusing the
-    // SAME seeded fixture overviewSmoke just built (SKIRMISH_CACHE is already
-    // warm from the Overview fetch above — dashLoadSkirmishRows hits the cache,
-    // so every render below is synchronous, no fetch/wait needed). Runs
-    // straight off the mapRow click's DASH.view='maps' switch.
+    // the Map drill-down screen (breadcrumb, A|B|A/B toggle, tempo lanes +
+    // |VP-diff| track, per-map band board, settle curve) reusing the SAME seeded
+    // fixture overviewSmoke just built (SKIRMISH_CACHE is already warm from the
+    // Overview fetch above — dashLoadSkirmishRows hits the cache, so every render
+    // below is synchronous, no fetch/wait needed). Runs straight off the mapRow
+    // click's DASH.view='maps' switch.
     function mapDrillSmoke(next) {
-      console.log('== Map drill-down screen: seeded DASH state (WOA-040) ==');
+      console.log('== Map drill-down screen: seeded DASH state ==');
       var el = doc.getElementById('dashPaneMaps');
-      ok(!!el.querySelector('.mapd-wrap'), 'the real drill-down rendered (not the old P2.2 stub)');
+      ok(!!el.querySelector('.mapd-wrap'), 'the real drill-down rendered');
 
       console.log('-- breadcrumb map switcher --');
       var crumbs = el.querySelectorAll('.mapd-crumb');
@@ -406,7 +399,7 @@ setTimeout(function () {
       var sel = el.querySelector('.ab-toggle span.sel');
       ok(!!sel && sel.textContent === 'B' && win.DASH.abMode === 'B', 'toggle defaults to B');
 
-      console.log('-- tempo lanes: absolute per-lane scale, never 100%-stacked (design 3a) --');
+      console.log('-- tempo lanes: absolute per-lane scale, never 100%-stacked --');
       var laneRows = {};
       el.querySelectorAll('[data-lane]').forEach(function (r) { laneRows[r.getAttribute('data-lane')] = r; });
       ok(Object.keys(laneRows).length === 4, 'four lanes rendered: deploy/attack/swap/march');
@@ -422,7 +415,7 @@ setTimeout(function () {
         'march lane (never played this fixture) keeps its OWN 0.00 max, not borrowed from the other lanes (proves per-lane scale, not a shared 100% total)');
       ok(/max \d+\.\d\d\/turn/.test(el.textContent), 'each lane prints its own "max N.NN/turn" scale label');
 
-      console.log('-- |VP-diff| track: honest grey on a run that predates fs capture (WOA-037) --');
+      console.log('-- |VP-diff| track: honest grey on a run that predates fs capture --');
       ok(!/unavailable/.test(el.textContent), 'run B (default) carries fs -> track renders, no "unavailable" note');
       ok(el.querySelectorAll('.mapd-col-l svg polyline').length >= 1, '|VP-diff| track drew a polyline for run B');
       el.querySelector('.ab-toggle [data-ab="A"]').click();
@@ -443,7 +436,7 @@ setTimeout(function () {
       ok(/This map vs its bands/.test(el.textContent), 'band board section rendered');
       ok(/Red%/.test(el.textContent) && /Drag/.test(el.textContent) && /Swings/.test(el.textContent), 'scored band rows rendered');
       ok(/First-blood/.test(el.textContent), 'guard row rendered below the fold');
-      ok(/\(n=2\)/.test(el.textContent), 'map-scope n=2 < 40 (SPEC §8 map threshold) greys the row with "(n=N)" — not the fleet 240 threshold');
+      ok(/\(n=2\)/.test(el.textContent), 'map-scope n=2 < 40 (map threshold) greys the row with "(n=N)" — not the fleet 240 threshold');
 
       console.log('-- settle curve, this map --');
       ok(/settle curve, this map/.test(el.textContent), 'settle curve section rendered');
@@ -465,12 +458,10 @@ setTimeout(function () {
         'one list row per card (' + doc.querySelectorAll('#dkList .dkli').length + ')');
       ok(doc.querySelector('#dkDetail .dkd-name') && doc.querySelectorAll('#dkStepList .dkstep').length >= 1,
         'detail panel + GUI step builder render for the selected card');
-      // WOA-036: the active deck is now the 17-card cavsplit17-raid-paid
-      // (was the checked-in 16-card Vanguard override) — deckProblems()
-      // accepts a 16-17 band (design ceiling, not one exact count; every
-      // shipped content/decks/*.js deck lands in that band), so "clean" and
-      // the break-it thresholds below are proved against the real band, not
-      // a stale hardcoded 16.
+      // deckProblems() accepts a 16-17 band (design ceiling, not one exact count;
+      // every shipped content/decks/*.js deck lands in that band), so "clean" and
+      // the break-it thresholds below are proved against the real band, not a
+      // hardcoded count.
       ok(win.deckProblems(win.Engine.CARDS).length === 0, 'built-in deck validates clean');
       ok(!doc.getElementById('dkSave').disabled, 'Save enabled on a valid deck');
       // break it: bump the selected card's count so the total exceeds the 16-17 band -> validation refuses
@@ -487,9 +478,9 @@ setTimeout(function () {
       badStep[0].steps = [{ type: 'heal' }];
       ok(win.deckProblems(badStep).some(function (p) { return /unknown type/.test(p); }), 'unknown step type refused');
       var benched = JSON.parse(JSON.stringify(win.Engine.CARDS));
-      benched[2].out = true; // Feedback Round 1: benched cards drop from the total (here: 17 -> 14, under the 16-17 band)
+      benched[2].out = true; // benched cards drop from the total (here 17 -> 14, under the 16-17 band)
       ok(win.deckProblems(benched).some(function (p) { return /must total 16-17/.test(p); }), 'benching a card drops it below the 16-17 band');
-      // Feedback Round 2: five deck slots, exactly one active
+      // five deck slots, exactly one active
       ok(doc.querySelectorAll('#dkSlots .dkslot[data-slot]').length === 5, 'five deck slots offered');
       ok(doc.querySelectorAll('#dkSlots .dkslot.active').length === 1, 'exactly one active deck marked');
       doc.querySelector('#dkSlots .dkslot[data-slot="2"]').click();
