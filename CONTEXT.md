@@ -128,3 +128,35 @@ left, action counts. Derived in exactly one place (the engine's `skirmishFacts`)
 whether from a live end-state or a persisted row, so the live fold and the
 stored-data fold can never disagree.
 _Avoid_: battle fact, per-battle row (a row is the persisted form of the fact).
+
+## Content iteration & army-points
+
+*(The vocabulary for growing content without losing balance — concepts, not the weights they currently sit at.)*
+
+**Army-points**:
+A Card's *capability cost*, and a Deck's total value as the sum over its Cards. A descriptive yardstick Decks are built under — not a prediction of win-rate; measured balance always overrules it (ADR-0002). Computed additively from a Card's steps via a single weight table, never stored per Card, so a Card that does more counts for more.
+_Avoid_: Cost (a step has a cost; the Card's total is its army-points), Power level.
+
+**Points cap**:
+The shared army-points budget every Deck is built under. Two Decks at the same cap are "matched" in capability, which is what lets a Skirmish be asymmetric yet fair.
+
+**Tolerance temperature**:
+How far a *measured* metric may sit outside its band before a result is accepted — the existing band-widening dial (strict / explore / hot). A verdict on outputs.
+_Avoid_: bare "temperature" (say which one; the two are different concepts).
+
+**Exploration temperature**:
+How large a *step* content iteration takes through design space — the willingness to try a structurally different but budget-legal candidate to escape a local optimum. An input to the search, realized chiefly *through* the points cap. Distinct from Tolerance temperature.
+
+**Mispricing residual**:
+The gap between a Card's *measured* win-contribution and its *army-points* cost. A large gap flags an over- or under-priced Card — the anti-slop signal. Advisory only, because of the Timing blind spot.
+
+**Timing blind spot**:
+The balance scorer's known inability to value a Card whose worth is in *when* it is held or played (e.g. a saved attack buff). Such a Card can read as weak or mispriced without being either. Same class of gap as the AI eval not seeing reserve-hoarding.
+
+**AI personality**:
+A named heuristic weight-set that gives the bot a *character* — a playstyle that is fun to beat and fun to lose to — rather than maximal strength. A personality is one row of data. Distinct from a Commander trait.
+_Avoid_: Difficulty (a personality is a style, not a strength tier), Bot.
+
+**Commander trait**:
+A run-layer ability that *bends the rules* for a side (a guaranteed opening Card, altered stocks, a rules exception). Belongs to the Campaign layer, not yet in code. Distinct from an AI personality — a rule-bender, not a playstyle — though a Commander's theme may guide the personality of the AI that pilots it.
+_Avoid_: Perk, buff.
