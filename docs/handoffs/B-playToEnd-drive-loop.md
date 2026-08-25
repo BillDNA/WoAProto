@@ -51,18 +51,24 @@ Three real adapters (AI personality, LLM, fixed fixture) → the seam is **real,
 hypothetical** (the "two adapters = a real seam" test). The interface is the test
 surface: `decide` is exactly the injection point tests already want.
 
-## CRITICAL open question — resolve BEFORE writing code
+## CRITICAL finding — the canonical loop already exists (a 6th copy)
 
-**Does `E.balanceMap` already contain the canonical drive loop?** It runs thousands
-of skirmishes and almost certainly has its own internal version in
-`game/engine/06-sim.js`. If so, this is **not** a new function — it's *extract the
-loop `balanceMap` already uses and export it*, then point the 5 sites at it. That's
-the real one-implementation-per-fact win; writing a 6th loop called `playToEnd`
-next to `balanceMap`'s private one would make the problem worse.
+`E.balanceMap` has its **own private drive loop** at `game/engine/06-sim.js:14-23`:
+```
+while (st.phase !== 'skirmish-over' && guard++ < 400) {
+  var plan = I.aiPlanTurn(st, diff);
+  ...
+  while (st.phase === 'step' && g2++ < 12) { I.applyStep(st, c); ... }
+}
+```
+called from `balanceMap` (`06-sim.js:169`). So the real count is **6 copies**, and
+this is **not** a new function — it is *extract THIS loop, generalize its `decide`
+(hard-coded `aiPlanTurn` here), export it, and point balanceMap + the 5 outer sites
+at it*. Do NOT write a fresh `playToEnd` beside the private one — that makes it 7.
 
-First action: read `game/engine/06-sim.js`, find `balanceMap`'s per-skirmish loop,
-and decide whether `playToEnd` is the extracted core `balanceMap` then calls, or a
-sibling. Prefer extraction.
+The generalization is small: the only thing `06-sim.js:16` fixes is `decide =
+aiPlanTurn(st, diff)`; the LLM and fixture sites need that injectable. Keep the
+`guard < 400` / `g2 < 12` caps — they are load-bearing infinite-loop guards.
 
 ## Constraints (hard)
 
