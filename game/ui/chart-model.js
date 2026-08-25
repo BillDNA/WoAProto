@@ -9,6 +9,9 @@ var CHART_MODEL = (function () {
   // Resolve the report model the dual way report-model.js resolves the engine.
   var R = (typeof window !== 'undefined' && window.WOA_REPORT) ? window.WOA_REPORT
     : (typeof require !== 'undefined' ? require('../report-model.js') : null);
+  // The engine (for its UNITS table — the Units pane's type list + names).
+  var ENG = (typeof window !== 'undefined' && window.Engine) ? window.Engine
+    : (typeof require !== 'undefined' ? require('../engine.js') : null);
 
   /* Assemble the Map drill-down's pure display model from two runs' skirmish
      rows (the SAME rowsA/rowsB shape the panes fetch). focusMap is the caller's
@@ -166,8 +169,38 @@ var CHART_MODEL = (function () {
     };
   }
 
-  return { buildMapDrillModel: buildMapDrillModel, buildOverviewModel: buildOverviewModel,
-    ovFmt: ovFmt, ovTrackDomain: ovTrackDomain, ovPos: ovPos, OV_PERCENT_KEYS: OV_PERCENT_KEYS };
+  /* ===== Units pane ===== */
+
+  // Fixed [0, niceMax] domain for a linear (non-percentage) track — breakthrough
+  // (attacks/skirmish) and exchange (kill/death ratio) are open-ended small
+  // numbers, not 0-100%, so this is "whatever the real A/B values need, +15%
+  // headroom". Positioning math, so it lives here beside the model builder.
+  function unLinearDomain(vals) {
+    var hi = 1;
+    vals.forEach(function (v) { if (v != null && v > hi) hi = v; });
+    return { lo: 0, hi: hi * 1.15 };
+  }
+  function unPos(domain, v) { return v == null ? null : Math.max(0, Math.min(100, (v - domain.lo) / (domain.hi - domain.lo) * 100)); }
+
+  /* Assemble the Units pane's per-type rows from two runs' skirmish rows (the
+     SAME rowsA/rowsB shape the panes fetch). One row per unit type that either
+     run actually fielded, in ENG.UNITS order, carrying each run's per-type fold
+     (n/depMedian/roleY/breakthrough/exchange/lifespan). idx is the type's index
+     in the full ENG.UNITS list, so the renderer can theme it (colour is a
+     palette concern, kept in charts.js). hasDieT is the fleet-wide lifespan
+     gate. Pure — no document, no CHART. */
+  function buildUnitsModel(rowsA, rowsB) {
+    var A = R.unitsAggFromRows(rowsA), B = R.unitsAggFromRows(rowsB);
+    var typeKeys = Object.keys(ENG.UNITS);
+    var rows = typeKeys.map(function (t, i) {
+      return { type: t, idx: i, name: ENG.UNITS[t].name, a: A.types[t] || null, b: B.types[t] || null };
+    }).filter(function (r) { return (r.a && r.a.n) || (r.b && r.b.n); });
+    return { rows: rows, hasDieT: !!(A.hasDieT || B.hasDieT) };
+  }
+
+  return { buildMapDrillModel: buildMapDrillModel,
+    buildOverviewModel: buildOverviewModel, ovFmt: ovFmt, ovTrackDomain: ovTrackDomain, ovPos: ovPos, OV_PERCENT_KEYS: OV_PERCENT_KEYS,
+    buildUnitsModel: buildUnitsModel, unLinearDomain: unLinearDomain, unPos: unPos };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = CHART_MODEL;
