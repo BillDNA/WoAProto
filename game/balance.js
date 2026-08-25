@@ -198,12 +198,14 @@ function mapReport(n, diff, filter, maps, mapsetArg, decks) {
   console.log('\nCard report (' + G.games + ' skirmishes of AI play — biases noted below):');
   // Win% deliberately not printed (still computed in cardRows() + logged) —
   // docs/report-model.md#reporting-doctrine.
-  var ch = pad('Card', 20, true) + pad('Simple%', 9) + pad('1stSight%', 11) + pad('AvgSeen', 9) + pad('plays', 8);
+  var ch = pad('Card', 20, true) + pad('Simple%', 9) + pad('1stSight%', 11) + pad('AvgSeen', 9) + pad('plays', 8) +
+    pad('Pts', 7) + pad('Resid', 8);
   console.log(ch);
   console.log(new Array(ch.length + 1).join('-'));
-  R.cardRows(G.cards, E.CARDS).forEach(function (r) {
+  R.cardRows(G.cards, E.CARDS, E.cardPoints).forEach(function (r) {
+    var resid = r.resid == null ? '-' : (r.resid > 0 ? '+' : '') + r.resid.toFixed(1) + (r.mispriced ? ' !' : '');
     console.log(pad(r.name, 20, true) + pad(r.simple + '%', 9) +
-      pad(r.sight + '%', 11) + pad(r.seen, 9) + pad(r.plays, 8));
+      pad(r.sight + '%', 11) + pad(r.seen, 9) + pad(r.plays, 8) + pad(r.points.toFixed(1), 7) + pad(resid, 8));
   });
   console.log('\nHow to read it:');
   console.log('  Simple%   resolved as a basic attack/reposition instead of the printed action.');
@@ -212,6 +214,11 @@ function mapReport(n, diff, filter, maps, mapsetArg, decks) {
   console.log('  1stSight% played the first time it ever appeared in hand. High + low AvgSeen =');
   console.log('            always-good on sight (overpowered watchlist).');
   console.log('  AvgSeen   hand-appearances before it got played. High = situational/hoarded.');
+  console.log('  Pts       army-points cost (ADR-0002). Resid = share of decisive wins − share of the');
+  console.log('            points budget, in points (+ out-wins its cost, − costs more). "!" = a SOFT');
+  console.log('            mispricing flag (|Resid| ≥ ' + R.MISPRICE_RESID_PTS.toFixed(1) + '), never a gate. Confounds: a held-value card can read');
+  console.log('            − without being weak, and Resid is exposure-weighted (draw-frequency creeps in).');
+  console.log('            Thin HQ slice — cards under ' + R.MISPRICE_MIN_HQPLAYS + ' such plays show \'-\'; read at scale.');
   console.log('\nBehaviour & decisiveness lines:');
   console.log('  attacks/swaps % of actions  AI play health, as a share of all actions taken');
   console.log('            (deck-size-proof). Low attack% + high swap% = the AIs shuffle units');

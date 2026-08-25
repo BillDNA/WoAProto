@@ -173,7 +173,7 @@ function dashReportMarkdown(){
     metaTail: '±'+noise+' points at this n · from the in-browser Balance Dashboard',
     rows: rows,
     G: WOA_REPORT.foldGlobal(DASH.results.map(function(r){ return { agg: r.out, done: n - r.out.unfinished }; })),
-    cards: E.CARDS
+    cards: E.CARDS, cardPoints: E.cardPoints
   });
 }
 

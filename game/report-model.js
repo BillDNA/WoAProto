@@ -136,9 +136,9 @@ var WOA_REPORT = (function () {
       if (k === 'cards') {
         dst.cards = dst.cards || {};
         Object.keys(src.cards).forEach(function (cid) {
-          var a = dst.cards[cid] || (dst.cards[cid] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 });
+          var a = dst.cards[cid] || (dst.cards[cid] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0, hqPlays: 0, hqWins: 0 });
           var c = src.cards[cid];
-          ['plays', 'wins', 'simple', 'firstSight', 'seenSum', 'noop'].forEach(function (f) { a[f] = (a[f] || 0) + (c[f] || 0); });
+          ['plays', 'wins', 'simple', 'firstSight', 'seenSum', 'noop', 'hqPlays', 'hqWins'].forEach(function (f) { a[f] = (a[f] || 0) + (c[f] || 0); });
         });
       } else if (typeof src[k] === 'number') {
         dst[k] = (dst[k] || 0) + src[k];
@@ -170,10 +170,11 @@ var WOA_REPORT = (function () {
       G.resEndRed += (a.reserveEndRed || 0); G.resEndBlue += (a.reserveEndBlue || 0);
       G.killTail += (a.killTail || 0); G.leadChanges += (a.leadChanges || 0);
       Object.keys(a.cards || {}).forEach(function (cid) {
-        var c = G.cards[cid] || (G.cards[cid] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 });
+        var c = G.cards[cid] || (G.cards[cid] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0, hqPlays: 0, hqWins: 0 });
         var s = a.cards[cid];
         c.plays += s.plays; c.wins += s.wins; c.simple += s.simple;
         c.firstSight += s.firstSight; c.seenSum += s.seenSum; c.noop += (s.noop || 0);
+        c.hqPlays += (s.hqPlays || 0); c.hqWins += (s.hqWins || 0);
       });
     });
     return G;
@@ -195,19 +196,62 @@ var WOA_REPORT = (function () {
     return { agg: agg, done: (rows || []).length };
   }
 
+  /* WOA #57 — Mispricing residual soft-flag tunables (see cardRows below). ADVISORY
+     only, never a hard gate (ADR-0002). ONE place to tune; docs/balance,
+     card-rubric, and review-reports cite these.
+       RESID_PTS   — |residual| in army-points that trips the ⚠ flag. Absolute is
+                     fine because deck size is a fixed guardrail (~16 cards / ~68 pts);
+                     re-tune if that budget moves a lot.
+       MIN_HQPLAYS — a Card needs at least this many HQ × printed plays before its
+                     residual is trusted (and shown). Below it the HQ slice is too
+                     thin — a couple of lucky wins would swamp the share (the slice
+                     is ~17% of skirmishes; small-n by construction). */
+  var MISPRICE_RESID_PTS = 2.0;
+  var MISPRICE_MIN_HQPLAYS = 10;
+
   /* Derived card-table rows (one per card in `cards`, i.e. E.CARDS), sorted
      by 1stSight% descending. win/simple/sight are rounded percentages of
      plays; seen is the display string ('-' when never played) and seenNum the
-     same value as a number for sortable UIs. */
-  function cardRows(cardAgg, cards) {
-    return cards.map(function (c) {
-      var a = cardAgg[c.id] || { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 };
+     same value as a number for sortable UIs.
+
+     WOA #57 mispricing residual: when `cardPoints` (E.cardPoints) is passed, each
+     row also carries `points` (army-points cost, ADR-0002) and `resid` — the card's
+     share of the deck's DECISIVE WINS minus its share of the points BUDGET, scaled
+     back to points (so the subtraction is in points; no win-rate is fitted to points
+     — descriptive, not predictive, ADR-0002):
+       priceShare_i = points_i / Σ points   (over played cards)
+       winShare_i   = hqWins_i / Σ hqWins    (HQ × printed-play win contribution)
+       resid_i      = (winShare_i − priceShare_i) · Σ points
+     resid > 0 = the Card out-wins its price share (under-priced); resid < 0 = it
+     costs more of the budget than it delivers. Two confounds keep this ADVISORY, not
+     a verdict: (a) winShare is EXPOSURE-WEIGHTED — a Card drawn/played more often
+     accrues more decisive wins, so a resid gap can be a draw-frequency artifact, not
+     price; (b) the timing blind spot — a held-value Card (a saved attack buff) wins
+     off-slice and can read negative without being weak. `resid` is null when points
+     weren't supplied, the Card was never played, Σ hqWins = 0, or the Card's own HQ
+     exposure is below MISPRICE_MIN_HQPLAYS (too thin to trust); `mispriced` marks a
+     trusted |resid| ≥ MISPRICE_RESID_PTS. */
+  function cardRows(cardAgg, cards, cardPoints) {
+    var rows = cards.map(function (c) {
+      var a = cardAgg[c.id] || { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0, hqPlays: 0, hqWins: 0 };
       return { id: c.id, name: c.name, plays: a.plays,
         win: pct(a.wins, a.plays), simple: pct(a.simple, a.plays), sight: pct(a.firstSight, a.plays),
         noop: pct(a.noop || 0, a.plays),
         seen: a.plays ? (a.seenSum / a.plays).toFixed(2) : '-',
-        seenNum: a.plays ? +(a.seenSum / a.plays).toFixed(2) : 0 };
-    }).sort(function (a, b) { return b.sight - a.sight; });
+        seenNum: a.plays ? +(a.seenSum / a.plays).toFixed(2) : 0,
+        points: cardPoints ? cardPoints(c) : null, hqPlays: a.hqPlays || 0, hqWins: a.hqWins || 0,
+        resid: null, mispriced: false };
+    });
+    if (cardPoints) {
+      var sumPts = rows.reduce(function (s, r) { return s + (r.plays ? r.points : 0); }, 0);
+      var sumHqWins = rows.reduce(function (s, r) { return s + r.hqWins; }, 0);
+      if (sumPts > 0 && sumHqWins > 0) rows.forEach(function (r) {
+        if (!r.plays || r.hqPlays < MISPRICE_MIN_HQPLAYS) return;   // never played / too-thin slice -> no residual
+        r.resid = +(((r.hqWins / sumHqWins) - (r.points / sumPts)) * sumPts).toFixed(1);
+        r.mispriced = Math.abs(r.resid) >= MISPRICE_RESID_PTS;
+      });
+    }
+    return rows.sort(function (a, b) { return b.sight - a.sight; });
   }
 
   /* ===== Trace folds =====
@@ -546,12 +590,28 @@ var WOA_REPORT = (function () {
     }
     L.push('');
     // Noop% printed (dead-turn check); Win% deliberately omitted — docs/report-model.md#reporting-doctrine.
-    L.push('| Card | Simple% | Noop% | 1stSight% | AvgSeen | ' + (style === 'report' ? 'Plays' : 'plays') + ' |');
-    L.push('|---|--:|--:|--:|--:|--:|');
-    cardRows(G.cards, model.cards).forEach(function (r) {
-      L.push('| ' + r.name + ' | ' + r.simple + ' | ' + r.noop + ' | ' + r.sight + ' | ' + r.seen + ' | ' + r.plays + ' |');
+    // WOA #57: Pts (army-points cost) + Resid (mispricing residual) print when cardPoints is supplied.
+    var withPts = !!model.cardPoints, flagged = false;
+    L.push('| Card | Simple% | Noop% | 1stSight% | AvgSeen | ' + (style === 'report' ? 'Plays' : 'plays') +
+      (withPts ? ' | Pts | Resid' : '') + ' |');
+    L.push('|---|--:|--:|--:|--:|--:|' + (withPts ? '--:|--:|' : ''));
+    cardRows(G.cards, model.cards, model.cardPoints).forEach(function (r) {
+      var tail = '';
+      if (withPts) {
+        var resid = r.resid == null ? '-' : (r.resid > 0 ? '+' : '') + f1(r.resid) + (r.mispriced ? ' ⚠' : '');
+        if (r.mispriced) flagged = true;
+        tail = ' | ' + f1(r.points) + ' | ' + resid;
+      }
+      L.push('| ' + r.name + ' | ' + r.simple + ' | ' + r.noop + ' | ' + r.sight + ' | ' + r.seen + ' | ' + r.plays + tail + ' |');
     });
     L.push('');
+    if (withPts) {
+      L.push('_Pts: army-points cost (ADR-0002). Resid: the Card\'s share of decisive wins − its share of the points budget, in points (+ out-wins its cost, − costs more than it delivers). ⚠ = |Resid| ≥ ' +
+        f1(MISPRICE_RESID_PTS) + ' — a **soft** mispricing flag, never a gate. Two confounds: a held-value Card (a saved attack buff) wins off-slice and can read − without being weak, and Resid is exposure-weighted so a draw-frequency gap can masquerade as price. Signal is the thin HQ-capture × printed-play slice (Cards under ' +
+        MISPRICE_MIN_HQPLAYS + ' such plays show \'-\'); read at scale.' +
+        (flagged ? '' : ' None flagged this run.') + '_');
+      L.push('');
+    }
     // Obsidian-style tag footer so reports are findable by kind + rules version
     L.push('#reports #balance #v' + String(model.version).replace(/\./g, '-'));
     L.push('');
@@ -707,6 +767,7 @@ var WOA_REPORT = (function () {
 
   return { pct: pct, f1: f1, actionTotal: actionTotal, balanceScore: balanceScore, mapNotes: mapNotes,
     addAgg: addAgg, foldGlobal: foldGlobal, cardRows: cardRows, reportMarkdown: reportMarkdown,
+    MISPRICE_RESID_PTS: MISPRICE_RESID_PTS, MISPRICE_MIN_HQPLAYS: MISPRICE_MIN_HQPLAYS,
     // bands-as-data + trace folds (node + browser both consume)
     BANDS: BANDS, bands: bands, outBand: outBand, quantile: quantile,
     firstContactTurn: firstContactTurn, deployInterleave: deployInterleave, settlePoint: settlePoint,

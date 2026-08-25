@@ -350,6 +350,38 @@ console.log('== army-points (WOA #54: computed from steps, weight table pinned) 
   ok(E.deckPoints(overBudget) > E.DECK_POINTS_CAP, 'a deck pushed over the cap is over budget (gate rejects it)');
 })();
 
+console.log('== mispricing residual (WOA #57: cardRows points + residual, soft flag) ==');
+(function () {
+  var R = require('./report-model.js');
+  var cards = [{ id: 'x', name: 'X' }, { id: 'y', name: 'Y' }, { id: 'z', name: 'Z' }, { id: 'w', name: 'W' }];
+  var pts = { x: 4, y: 6, z: 2, w: 3 };
+  var pointsOf = function (c) { return pts[c.id]; };
+  // hand-computed: sumPts over PLAYED cards = 4+6+3 = 13 (z unplayed, excluded);
+  // sumHqWins = 8+2+0 = 10. residX = (8/10 - 4/13)*13 = +10.4-4 = +6.4; residY = (2/10 - 6/13)*13 = 2.6-6 = -3.4.
+  // w has hqPlays 3 < MIN_HQPLAYS(10) -> too thin, no residual despite plays+points.
+  var agg = {
+    x: { plays: 5, wins: 3, simple: 0, firstSight: 0, seenSum: 5, noop: 0, hqPlays: 12, hqWins: 8 },
+    y: { plays: 5, wins: 2, simple: 0, firstSight: 0, seenSum: 5, noop: 0, hqPlays: 12, hqWins: 2 },
+    z: { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0, hqPlays: 0, hqWins: 0 },
+    w: { plays: 5, wins: 1, simple: 0, firstSight: 0, seenSum: 5, noop: 0, hqPlays: 3, hqWins: 0 }
+  };
+  var byId = {};
+  R.cardRows(agg, cards, pointsOf).forEach(function (r) { byId[r.id] = r; });
+  ok(byId.x.points === 4 && byId.y.points === 6, 'points column = cardPoints(card)');
+  ok(byId.x.resid === 6.4 && byId.y.resid === -3.4, 'residual = (winShare − priceShare)·ΣpricePlayed, hand-checked (+6.4 / -3.4)');
+  ok(byId.x.mispriced && byId.y.mispriced, '|resid| ≥ threshold flags both as mispriced');
+  ok(byId.z.resid === null && byId.z.mispriced === false, 'unplayed card gets no residual (null, unflagged)');
+  ok(byId.w.resid === null && byId.w.mispriced === false, 'thin HQ exposure (hqPlays < MISPRICE_MIN_HQPLAYS) -> no residual');
+  // no HQ-slice wins to share out -> residual null (advisory, never a fabricated 0)
+  var noHq = { x: { plays: 5, hqWins: 0 }, y: { plays: 5, hqWins: 0 } };
+  var flatById = {};
+  R.cardRows(noHq, cards, pointsOf).forEach(function (r) { flatById[r.id] = r; });
+  ok(flatById.x.resid === null && flatById.y.resid === null, 'Σ hqWins = 0 -> residual null for all');
+  // no cardPoints supplied -> back-compat: points/resid absent, never flagged
+  var plain = R.cardRows(agg, cards)[0];
+  ok(plain.points === null && plain.resid === null && plain.mispriced === false, 'cardPoints omitted -> points/resid null (unchanged table)');
+})();
+
 console.log('== deploy step budget vs stock (no deploy fallback, oversubscription = broken content) ==');
 (function () {
   // Printed deploy steps per unit type, weighted by each card's deck count. A

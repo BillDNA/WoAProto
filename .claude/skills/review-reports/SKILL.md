@@ -19,7 +19,9 @@ analysis to `logs/reports/analysis/`. Covers both report types:
 - **balance** reports — `logs/reports/balance/<version>/*.md` (whole-roster
   metric tables from the Balance Dashboard or `dev/balance-report.js`: per-map
   Red%/1st%/HQ%/Turns/VPdiff/Atk/Swp/0kill%/Tie%/Drag/Swings/Balance + card
-  table — Simple%/1stSight%/AvgSeen/Plays; Win% was dropped from this table,
+  table — Simple%/1stSight%/AvgSeen/Plays plus **Pts/Resid** (army-points cost
+  and the WOA #57 mispricing residual — a `⚠` marks a **soft** mispricing flag,
+  see card rubric axis 5); Win% was dropped from this table,
   see rubric Card criterion 6). `accumulated.json` beside them is the
   per-version fold of every skirmish to date; the same skirmishes also land as
   rows in `logs/woa.db` (`node dev/db-query.js` for ad-hoc SQL).
@@ -104,7 +106,12 @@ the same way; the tags are how the right era's reports are found fast.
    Recommend measuring with `node dev/balance-report.js` before/after, at the
    same Temperature the suggestion is meant to clear.
 6. **Watch-list** — what the reports hint at but can't confirm at this n (say the
-   n and the rubric's sample-size-honesty band). Not a suggestion yet.
+   n and the rubric's sample-size-honesty band). Not a suggestion yet. **Any card
+   carrying a `⚠` in the balance report's Resid column belongs here as a soft
+   mispricing flag** (card rubric axis 5) — name the card, its Resid, and the
+   timing blind-spot caveat (a held-value card can read negative without being
+   weak). Never promote it to a hard verdict; measured balance overrules the
+   price (ADR-0002).
 
 Then tell Bill the saved path and give a 3-line verbal summary.
 
