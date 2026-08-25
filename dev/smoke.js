@@ -41,9 +41,18 @@ function ok(cond, msg) {
   else { console.log('  FAIL - ' + msg); fails++; }
 }
 
-var dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true, url: 'file:///game/index.html' });
+// Serve the page from an http origin — the local server (node game/server.js)
+// is the only supported run path (ADR-0001), so the UI is always server-backed.
+var dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true, url: 'http://localhost/game/index.html' });
 var win = dom.window, doc = win.document;
 win.confirm = function () { return true; };
+// jsdom ships no fetch; stand in a fail-open no-op server so the always-on
+// /api paths (skirmish recording, run listing, saves) resolve without a real
+// backend — GET /api/runs returns no runs. overviewSmoke overrides this with a
+// seeded-runs stub for its own fixtures.
+win.fetch = function () {
+  return Promise.resolve({ ok: true, json: function () { return Promise.resolve([]); } });
+};
 
 // jsdom has no rAF-based timers issue but uses real setTimeout — speed the AI up
 var realSetTimeout = win.setTimeout;
@@ -205,8 +214,13 @@ setTimeout(function () {
       console.log('== dashboard shell: header pickers + pill nav + temperature (WOA-034) ==');
       ok(doc.getElementById('dashHead') && doc.getElementById('dashRunA') && doc.getElementById('dashRunB'),
         'dark header + run A/B pickers present');
-      ok(doc.getElementById('dashRunA').disabled && doc.getElementById('dashRunA').options[0].textContent === '(no server)',
-        'file:// — run pickers show the no-server fallback (dashLoadRuns never calls fetch, AC4)');
+      // dashLoadRuns' GET /api/runs is async now (was a synchronous file://
+      // short-circuit) — let the empty-runs fetch settle before reading the
+      // picker's fallback text.
+      realSetTimeout(function () {
+        ok(doc.getElementById('dashRunA').disabled && doc.getElementById('dashRunA').options[0].textContent === 'No runs yet',
+          'no saved runs — run pickers show the "No runs yet" fallback (AC4)');
+      }, 0);
       ok(doc.querySelectorAll('#dashPills .dpill').length === 5, 'five pills: Overview | Maps | Cards | Units | Tables');
       ok(doc.querySelector('#dashPills .dpill[data-view="tables"]').classList.contains('sel'), 'Tables is the selected pill');
       ok(doc.getElementById('dashRunControls').style.display !== 'none', 'Run/Save controls visible on Tables');
@@ -215,9 +229,8 @@ setTimeout(function () {
       ok(doc.getElementById('dashRunControls').style.display === 'none' && doc.getElementById('dashOut').style.display === 'none',
         'Run/Save + the Tables output hide outside Tables (AC2: charts context is view-only)');
       ok(doc.getElementById('dashPaneOverview').style.display !== 'none' &&
-         /no server/i.test(doc.getElementById('dashPaneOverview').textContent) &&
-         /map row/.test(doc.getElementById('dashPaneOverview').textContent),
-        'Overview pane: file:// "no server, in-memory run only" fallback note (AC4)');
+         /no saved runs yet/i.test(doc.getElementById('dashPaneOverview').textContent),
+        'Overview pane: "no saved runs yet" fallback note when the db is empty (AC4)');
       ok(doc.getElementById('dashPaneMaps').style.display === 'none' && doc.getElementById('dashPaneUnits').style.display === 'none',
         'the other three panes stay hidden while Overview is active');
       doc.getElementById('dashTemp').value = 'T2';
@@ -266,8 +279,8 @@ setTimeout(function () {
           ok(doc.getElementById('dashRunControls').style.display === 'none' && doc.getElementById('dashOut').style.display === 'none',
             'Run/Save + the Tables table hide on the Maps pane');
           var mapsTxt = doc.getElementById('dashPaneMaps').textContent;
-          ok(/no server/i.test(mapsTxt) && /1 map row/.test(mapsTxt),
-            'Maps pane: file:// fallback note references the 1 in-memory map row from the run just finished');
+          ok(/no saved runs yet/i.test(mapsTxt),
+            'Maps pane: "no saved runs yet" fallback note while the db is empty');
           doc.querySelector('#dashPills .dpill[data-view="cards"]').click();
           ok(win.DASH.view === 'cards' && doc.getElementById('dashPaneCards').style.display !== 'none' &&
              doc.getElementById('dashPaneMaps').style.display === 'none',
@@ -283,13 +296,13 @@ setTimeout(function () {
     }
 
     // WOA-035 (AC5): the Overview screen on a SEEDED DASH state — jsdom has no
-    // real server, so this stubs win.fetch (GET /api/skirmishes?run=<id>) and
-    // win.canNet the way a real browser+server would answer, seeds two tiny
-    // fixture runs straight onto DASH.runs/runA/runB, and drives renderOverview
-    // through the same #dashPills click every other pane test above uses. Last
-    // use of DASH/canNet in this file (deck editor / watch / manual don't touch
-    // either), so nothing is restored afterward — `next` (startWatch) continues
-    // the suite same as before this ticket.
+    // real server, so this overrides win.fetch with a seeded stub (GET
+    // /api/skirmishes?run=<id>) answering the way a real browser+server would,
+    // seeds two tiny fixture runs straight onto DASH.runs/runA/runB, and drives
+    // renderOverview through the same #dashPills click every other pane test
+    // above uses. Last use of DASH in this file (deck editor / watch / manual
+    // don't touch it), so nothing is restored afterward — `next` (startWatch)
+    // continues the suite same as before this ticket.
     function overviewSmoke(next) {
       console.log('== Overview screen: seeded DASH state (WOA-035) ==');
       function envelope(map, seed, fp, winner, winType) {
@@ -326,7 +339,6 @@ setTimeout(function () {
       // predates the fs capture" honest-grey path on the |VP-diff| track.
       rowsB[0].fs = [[1, 0], [1, 1], [2, 1], [2, 2]];
       rowsB[1].fs = [[1, 0], [1, 1], [2, 1], [2, 2]];
-      win.canNet = true; // seed "server present" without a real server
       var fetchCalls = [];
       win.fetch = function (url) {
         fetchCalls.push(url);

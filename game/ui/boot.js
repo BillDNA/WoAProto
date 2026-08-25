@@ -123,11 +123,9 @@ $('btnDebug').onclick = function(){
   var d = new Date(), p2 = function(x){ return (x<10?'0':'')+x; };
   var stamp = d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'-'+p2(d.getHours())+p2(d.getMinutes())+p2(d.getSeconds());
   var fname = stamp+'-'+slug+'-T'+st.turnNumber+'-'+st.phase+'.json';
-  if (canNet){
-    api('savedebug', { filename: fname, content: json })
-      .then(function(r){ toast('Debug snapshot saved &rarr; '+(r.path || 'logs/debug/'+fname), 4200); })
-      .catch(function(){ downloadDebug(fname, json); });
-  } else downloadDebug(fname, json);
+  api('savedebug', { filename: fname, content: json })
+    .then(function(r){ toast('Debug snapshot saved &rarr; '+(r.path || 'logs/debug/'+fname), 4200); })
+    .catch(function(){ downloadDebug(fname, json); });
 };
 
 $('fabJournal').onclick = function(){
@@ -165,11 +163,6 @@ $('btnResume').onclick = function(){
   }catch(e){ clearSave(); checkResume(); }
 };
 checkResume();
-
-if (!canNet){
-  $('btnHost').disabled = true; $('btnJoin').disabled = true;
-  $('netHint').textContent = 'Two-device play needs the server: double-click run-server.bat, then open the address it prints on both devices.';
-}
 
 $('btnHost').onclick = function(){
   var pool = getMapPool();
@@ -237,11 +230,11 @@ $('importFile').onchange = function(){
         m.id = m.id || slugifyMap(m.name);
         if (m.shapeDef) m.shape = '@' + m.id;
         rosterReplace(m);
-        if (canNet) saveMapFile(m);
+        saveMapFile(m).catch(function(){ toast('Could not save "'+m.name+'" as a file.', 3500); });
         saved++;
       });
       renderMapsScr();
-      toast('Imported ' + saved + ' map(s)' + (canNet ? ' &mdash; saved to content/maps/.' : ' for this session; run the server to save them as files.'), 4200);
+      toast('Imported ' + saved + ' map(s) &mdash; saved to content/maps/.', 4200);
     } catch(e){ toast('Could not read that file: ' + e.message, 3500); }
     $('importFile').value = '';
   };
@@ -336,13 +329,12 @@ $('dkImportFile').onchange = function(){
 };
 
 // V1 persistence: every REAL finished skirmish in this browser becomes a row in
-// logs/woa.db via POST /api/recordskirmish (fail-open: file:// or a server
-// without dev/ simply skips it). One subscription covers every source —
+// logs/woa.db via POST /api/recordskirmish (fail-open: a server without dev/
+// simply skips it). One subscription covers every source —
 // finishSkirmish fires the hook for human play, hotseat, watch, the LAN peer
 // that dealt the final blow (exactly one of the two), and each dashboard
 // simulation skirmish. Search clones never fire it (__sim).
 E.hooks.onSkirmishEnd.push(function (st) {
-  if (!canNet) return;
   var dash = (typeof DASH !== 'undefined') && DASH.running;
   var kind = dash ? 'balance' : APP.mode === 'watch' ? 'watch' : 'human';
   function aiOf(side){
@@ -451,11 +443,9 @@ $('dashSave').onclick = function(){
   var d = new Date(), p2 = function(x){ return (x<10?'0':'')+x; };
   var stamp = d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+'-'+p2(d.getHours())+p2(d.getMinutes());
   var fname = stamp+'-'+DASH.meta.dr+'-vs-'+DASH.meta.db+'-n'+DASH.meta.n+'.md';
-  if (canNet){
-    api('savereport', { filename: fname, content: md, version: E.VERSION })
-      .then(function(r){ toast('Saved &rarr; '+(r.path || 'logs/reports/balance/'+E.VERSION+'/'+fname), 4200); })
-      .catch(function(){ dashDownloadReport(fname, md); });
-  } else dashDownloadReport(fname, md);
+  api('savereport', { filename: fname, content: md, version: E.VERSION })
+    .then(function(r){ toast('Saved &rarr; '+(r.path || 'logs/reports/balance/'+E.VERSION+'/'+fname), 4200); })
+    .catch(function(){ dashDownloadReport(fname, md); });
 };
 
 document.querySelectorAll('.edtools .tool').forEach(function(b){
@@ -508,10 +498,8 @@ $('edBack').onclick = function(){ renderMapsScr(); show('mapsScr'); };
 $('edSave').onclick = function(){
   var def = edBuildDef();
   if (!def) return;
-  edSaveDef(def).then(function(r){
-    toast(r && r.offline
-      ? 'Map "'+def.name+'" is loaded for this session. Run <code>node game/server.js</code> to save it as a file.'
-      : 'Map "'+def.name+'" saved to content/maps/.', 3200);
+  edSaveDef(def).then(function(){
+    toast('Map "'+def.name+'" saved to content/maps/.', 3200);
   }).catch(function(){ toast('Could not save the map file.', 3500); });
   renderMapsScr(); show('mapsScr');
 };
