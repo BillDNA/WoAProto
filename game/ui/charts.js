@@ -466,53 +466,22 @@ function chBindHits(root){
    reuse the .chtip/ch-hit idiom (chBindHits) already established by
    chartScatter etc. above. */
 
-// metrics whose val() returns a 0-100 percentage (drag/swings are raw counts).
-// WOA-039: attackShare/swapShare are % of all actions taken.
-var OV_PERCENT_KEYS = { red: 1, first: 1, hq: 1, zeroKill: 1, tie: 1, control: 1, firstBlood: 1, attackShare: 1, swapShare: 1 };
-// The shared A/B skirmish-row fetch + cache (dashLoadSkirmishRows / SKIRMISH_CACHE)
-// lives in ui/net.js with the rest of the /api access.
+// The pure shaping for this pane — ovFmt, ovTrackDomain, ovPos, OV_PERCENT_KEYS,
+// and buildOverviewModel — lives in ui/chart-model.js (CHART_MODEL); this file
+// only draws. The shared A/B skirmish-row fetch + cache (dashLoadSkirmishRows /
+// SKIRMISH_CACHE) lives in ui/net.js with the rest of the /api access.
 
-function ovFmt(key, v) {
-  if (v == null) return 'n/a';
-  return OV_PERCENT_KEYS[key] ? Math.round(v) + '%' : WOA_REPORT.f1(v);
-}
-
-/* Fixed display domain for a band row's track — sized off the WIDEST (T2)
-   band plus 25% padding, extended further if a real A/B value falls outside
-   it, so the dots are never clipped. Domain stays the SAME across a
-   temperature-selector re-render (only which tiers get DRAWN changes, see
-   ovBandRowHtml) so a dot's x position never jumps when you retemper. */
-function ovTrackDomain(row, valA, valB) {
-  var b2 = WOA_REPORT.bands(row.key, 'T2');
-  var vals = [];
-  if (valA != null) vals.push(valA);
-  if (valB != null) vals.push(valB);
-  var lo = b2.lo, hi = b2.hi;
-  if (lo == null) lo = vals.length ? Math.min.apply(null, vals) : (hi != null ? hi - 1 : 0);
-  if (hi == null) hi = vals.length ? Math.max.apply(null, vals) : lo + 1;
-  vals.forEach(function (v) { if (v < lo) lo = v; if (v > hi) hi = v; });
-  if (hi <= lo) hi = lo + 1;
-  var pad = (hi - lo) * 0.25;
-  var dLo = lo - pad, dHi = hi + pad;
-  if (OV_PERCENT_KEYS[row.key]) { dLo = Math.max(0, dLo); dHi = Math.min(100, dHi); if (dHi <= dLo) dHi = dLo + 1; }
-  else dLo = Math.max(0, dLo);
-  return { lo: dLo, hi: dHi };
-}
-function ovPos(domain, v) {
-  if (v == null) return null;
-  return Math.max(0, Math.min(100, (v - domain.lo) / (domain.hi - domain.lo) * 100));
-}
 function ovBandRect(domain, band, color) {
   if (!band) return '';
-  var left = band.lo == null ? 0 : ovPos(domain, band.lo);
-  var right = band.hi == null ? 100 : ovPos(domain, band.hi);
+  var left = band.lo == null ? 0 : CHART_MODEL.ovPos(domain, band.lo);
+  var right = band.hi == null ? 100 : CHART_MODEL.ovPos(domain, band.hi);
   if (right < left) { var t = left; left = right; right = t; }
   return '<div style="position:absolute;top:5px;bottom:5px;left:' + left.toFixed(1) + '%;width:' +
     (right - left).toFixed(1) + '%;background:' + color + ';border-radius:2px;"></div>';
 }
 function ovDot(domain, v, isA, breached) {
   if (v == null) return '';
-  var pos = ovPos(domain, v);
+  var pos = CHART_MODEL.ovPos(domain, v);
   if (isA) return '<div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid ' +
     CHART.ink + ';background:' + CHART.runADot + ';left:calc(' + pos.toFixed(1) + '% - 6px);"></div>';
   return '<div style="position:absolute;top:5px;width:12px;height:12px;border-radius:50%;background:' +
@@ -534,7 +503,7 @@ function ovDot(domain, v, isA, breached) {
 function ovBandRowHtml(row, aggA, aggB, temperature, scope) {
   var valA = row.val(aggA.agg, aggA.done);
   var valB = row.val(aggB.agg, aggB.done);
-  var domain = ovTrackDomain(row, valA, valB);
+  var domain = CHART_MODEL.ovTrackDomain(row, valA, valB);
   var n = Math.min(WOA_REPORT.bandN(row, aggA.agg, aggA.done), WOA_REPORT.bandN(row, aggB.agg, aggB.done));
   var small = WOA_REPORT.smallN(n, scope || 'fleet');
   var selBand = WOA_REPORT.bands(row.key, temperature);
@@ -547,13 +516,13 @@ function ovBandRowHtml(row, aggA, aggB, temperature, scope) {
     inner += ovBandRect(domain, WOA_REPORT.bands(row.key, t), t === 'T2' ? CHART.bandT2 : (t === 'T1' ? CHART.bandT1 : CHART.bandT0));
   });
   inner += ovDot(domain, valA, true, false) + ovDot(domain, valB, false, breached);
-  var tip = [['run A', ovFmt(row.key, valA)], ['run B', ovFmt(row.key, valB)],
+  var tip = [['run A', CHART_MODEL.ovFmt(row.key, valA)], ['run B', CHART_MODEL.ovFmt(row.key, valB)],
     ['band at ' + temperature, (selBand.lo == null ? 'open' : selBand.lo) + '–' + (selBand.hi == null ? 'open' : selBand.hi)],
     ['n (min of A/B)', n]];
   var hit = '<div class="ch-hit" style="position:absolute;inset:0;cursor:help;"' + chTipAttrs(row.label, tip) + '></div>';
   var trackStyle = 'position:relative;height:22px;' + (small ? 'opacity:.5;' : '') +
     (breached ? 'outline:1.5px solid ' + CHART.breach + ';outline-offset:2px;border-radius:3px;' : '');
-  var valText = ovFmt(row.key, valA) + ' → ' + ovFmt(row.key, valB) + (small ? ' (n=' + n + ')' : '') + (breached ? ' ✗' : '');
+  var valText = CHART_MODEL.ovFmt(row.key, valA) + ' → ' + CHART_MODEL.ovFmt(row.key, valB) + (small ? ' (n=' + n + ')' : '') + (breached ? ' ✗' : '');
   var op = small ? 'opacity:.5;' : '';
   var rk = ' data-rowkey="' + row.key + '"';
   var label = chEsc(row.label);
@@ -562,21 +531,12 @@ function ovBandRowHtml(row, aggA, aggB, temperature, scope) {
     '<div' + rk + ' class="ov-val' + (breached ? ' breach' : '') + '" style="' + op + '">' + valText + '</div>';
 }
 
-/* Verdict banner: named links for every SCORED band row breached at the
-   selected temperature (small-n rows excluded, SPEC §8). Cheapest honest
-   click target (P1; P2.2's map drill-down will give this a real home):
-   scroll the matching band-board row into view and flash it. */
-function ovVerdictBanner(scoredRows, aggA, aggB, temperature) {
-  var breaches = [];
-  scoredRows.forEach(function (row) {
-    var valB = row.val(aggB.agg, aggB.done);
-    if (valB == null) return;
-    var n = Math.min(WOA_REPORT.bandN(row, aggA.agg, aggA.done), WOA_REPORT.bandN(row, aggB.agg, aggB.done));
-    if (WOA_REPORT.smallN(n, 'fleet')) return;
-    var sel = WOA_REPORT.bands(row.key, temperature);
-    if ((sel.lo != null && valB < sel.lo) || (sel.hi != null && valB > sel.hi))
-      breaches.push({ key: row.key, label: row.label, val: ovFmt(row.key, valB) });
-  });
+/* Verdict banner: named links for every SCORED band row run B breaches at the
+   selected temperature (small-n rows excluded, SPEC §8 — the breach set is
+   computed in buildOverviewModel; this only draws it). Cheapest honest click
+   target: scroll the matching band-board row into view and flash it. */
+function ovVerdictBanner(verdict) {
+  var breaches = verdict.breaches, temperature = verdict.temperature;
   var h = '<div class="ov-verdict">';
   if (!breaches.length) {
     h += '<b>Verdict: no breaches at ' + temperature + '.</b> Run B holds every scored band at this temperature.';
@@ -588,34 +548,12 @@ function ovVerdictBanner(scoredRows, aggA, aggB, temperature) {
   return h + '</div>';
 }
 
-/* Balance-score-by-map dumbbells (design 1f): one row per map seen in
-   EITHER run's skirmish rows, balanceScore(agg,done) folded per map via the
-   SAME WOA_REPORT.foldSkirmishes/balanceScore this file's Overview totals use.
-   0-20 display scale (clamped; the real score always prints regardless).
-   Sorted worst-first on B (the eye lands on the regression). Row click sets
-   DASH.mapFocus + switches to the Maps pill (its P2.2 stub echoes it). */
-function ovMapDumbbells(rowsA, rowsB) {
-  var byMapA = {}, byMapB = {};
-  rowsA.forEach(function (r) { (byMapA[r.map] || (byMapA[r.map] = [])).push(r); });
-  rowsB.forEach(function (r) { (byMapB[r.map] || (byMapB[r.map] = [])).push(r); });
-  var names = {};
-  Object.keys(byMapA).forEach(function (m) { names[m] = 1; });
-  Object.keys(byMapB).forEach(function (m) { names[m] = 1; });
-  var rows = Object.keys(names).map(function (m) {
-    var gA = byMapA[m] ? WOA_REPORT.foldSkirmishes(byMapA[m]) : null;
-    var gB = byMapB[m] ? WOA_REPORT.foldSkirmishes(byMapB[m]) : null;
-    return {
-      map: m, doneA: gA ? gA.done : 0, doneB: gB ? gB.done : 0,
-      scoreA: gA ? WOA_REPORT.balanceScore(gA.agg, gA.done) : null,
-      scoreB: gB ? WOA_REPORT.balanceScore(gB.agg, gB.done) : null
-    };
-  });
-  rows.sort(function (a, b) {
-    var av = a.scoreB != null ? a.scoreB : (a.scoreA != null ? a.scoreA : -1);
-    var bv = b.scoreB != null ? b.scoreB : (b.scoreA != null ? b.scoreA : -1);
-    return bv - av;
-  });
-
+/* Balance-score-by-map dumbbells (design 1f): one row per map, 0-20 display
+   scale (clamped; the real score always prints regardless), sorted worst-first
+   on B (the eye lands on the regression). The rows are the folded
+   WOA_REPORT.mapScoreDumbbells output (via buildOverviewModel); this only
+   draws. Row click sets DASH.mapFocus + switches to the Maps pill. */
+function ovMapDumbbells(rows) {
   var h = '<div style="font-size:13px;font-weight:bold;margin-bottom:8px;">Balance score by map, A&rarr;B ' +
     '<span class="small" style="font-style:italic;">(0&ndash;20 scale, sorted worst-first on B)</span></div>';
   if (!rows.length) return h + '<p class="small">No per-map skirmish rows for either run yet.</p>';
@@ -649,46 +587,33 @@ function ovMapDumbbells(rowsA, rowsB) {
   return h;
 }
 
-/* Pacing minis (design 1e, simplified per the mockup 4a fidelity note):
-   deploy interleave and settle point, both WOA_REPORT folds mapped over
-   every skirmish's trace envelope (WOA_REPORT.envelopeFromRow), run A vs B. */
-function ovPacingMinis(rowsA, rowsB) {
-  var envA = rowsA.map(WOA_REPORT.envelopeFromRow).filter(function (e) { return !!e; });
-  var envB = rowsB.map(WOA_REPORT.envelopeFromRow).filter(function (e) { return !!e; });
-  var interA = envA.map(WOA_REPORT.deployInterleave), interB = envB.map(WOA_REPORT.deployInterleave);
-  var settleA = envA.map(WOA_REPORT.settlePoint).sort(function (a, b) { return a - b; });
-  var settleB = envB.map(WOA_REPORT.settlePoint).sort(function (a, b) { return a - b; });
-  function avg(arr) { return arr.length ? arr.reduce(function (s, v) { return s + v; }, 0) / arr.length : 0; }
+/* Pacing minis (design 1e, simplified per the mockup 4a fidelity note): deploy
+   interleave (6-bin histogram) and settle point (CDF). The folds live in
+   buildOverviewModel (CHART_MODEL.ovPacing); this only draws pacing's numbers,
+   run A hollow/dashed vs B solid. */
+function ovPacingMinis(pacing) {
+  var iv = pacing.interleave, st = pacing.settle;
+  var NBINS = iv.nbins, nA = iv.nA, nB = iv.nB, maxShare = iv.maxShare;
 
   // ---- deploy interleave: 6-bin histogram over [0,1], A hollow / B solid ----
-  var NBINS = 6, hA = [], hB = [];
-  for (var i = 0; i < NBINS; i++) { hA.push(0); hB.push(0); }
-  interA.forEach(function (v) { hA[Math.min(NBINS - 1, Math.max(0, Math.floor(v * NBINS)))]++; });
-  interB.forEach(function (v) { hB[Math.min(NBINS - 1, Math.max(0, Math.floor(v * NBINS)))]++; });
-  var maxShare = 0.0001;
-  for (i = 0; i < NBINS; i++) {
-    var sa = interA.length ? hA[i] / interA.length : 0, sb = interB.length ? hB[i] / interB.length : 0;
-    if (sa > maxShare) maxShare = sa; if (sb > maxShare) maxShare = sb;
-  }
   var bars = '<div style="display:flex;gap:6px;align-items:flex-end;height:52px;border-bottom:1.5px solid #b9a878;padding:0 2px;">';
-  for (i = 0; i < NBINS; i++) {
-    var sa2 = interA.length ? hA[i] / interA.length : 0, sb2 = interB.length ? hB[i] / interB.length : 0;
-    var haH = Math.max(1, Math.round(sa2 / maxShare * 46)), hbH = Math.max(1, Math.round(sb2 / maxShare * 46));
+  for (var i = 0; i < NBINS; i++) {
+    var haH = Math.max(1, Math.round(iv.shareA[i] / maxShare * 46)), hbH = Math.max(1, Math.round(iv.shareB[i] / maxShare * 46));
     bars += '<div style="flex:1;display:flex;gap:2px;align-items:flex-end;height:100%;">' +
-      '<div style="flex:1;height:' + (interA.length ? haH : 0) + 'px;border:1.5px solid ' + CHART.inkSoft + ';box-sizing:border-box;"></div>' +
-      '<div style="flex:1;height:' + (interB.length ? hbH : 0) + 'px;background:#77582e;"></div></div>';
+      '<div style="flex:1;height:' + (nA ? haH : 0) + 'px;border:1.5px solid ' + CHART.inkSoft + ';box-sizing:border-box;"></div>' +
+      '<div style="flex:1;height:' + (nB ? hbH : 0) + 'px;background:#77582e;"></div></div>';
   }
   bars += '</div><div style="display:flex;justify-content:space-between;font-size:10px;color:#75643f;margin-top:3px;font-style:italic;"><span>all up-front</span><span>all after contact</span></div>';
-  var interMini = '<div class="ov-mini"><h4>deploy interleave <b>' + Math.round(avg(interA) * 100) + '%→' + Math.round(avg(interB) * 100) +
+  var interMini = '<div class="ov-mini"><h4>deploy interleave <b>' + Math.round(iv.avgA * 100) + '%→' + Math.round(iv.avgB * 100) +
     '%</b></h4>' + bars + '<p class="small" style="margin:6px 0 0;">share of each skirmish&rsquo;s deploys landing before vs after first contact &mdash; A ' +
-    interA.length + ' skirmishes (hollow), B ' + interB.length + ' (solid)</p></div>';
+    nA + ' skirmishes (hollow), B ' + nB + ' (solid)</p></div>';
 
   // ---- settle curve: CDF of settlePoint, A dashed / B solid (WOA-040: the
   // svg-building moved to the shared chSettleSvg — same numbers, one impl) ----
   var W = 200, H = 64;
-  var svg = chSettleSvg(settleA, settleB, W, H);
-  var settleMini = '<div class="ov-mini"><h4>median settle <b>' + Math.round(WOA_REPORT.quantile(settleA, 0.5)) + '%→' +
-    Math.round(WOA_REPORT.quantile(settleB, 0.5)) + '%</b></h4>' + svg +
+  var svg = chSettleSvg(st.settleA, st.settleB, W, H);
+  var settleMini = '<div class="ov-mini"><h4>median settle <b>' + Math.round(st.medianA) + '%→' +
+    Math.round(st.medianB) + '%</b></h4>' + svg +
     '<p class="small" style="margin:6px 0 0;">% of skirmishes whose field-score lead has stopped flipping, by % of skirmish length &mdash; A dashed, B solid</p></div>';
 
   return '<div style="font-size:13px;font-weight:bold;margin:16px 0 8px;">Pacing, fleet-wide <span class="small" style="font-style:italic;">(1e minis)</span></div>' +
@@ -698,12 +623,12 @@ function ovPacingMinis(rowsA, rowsB) {
 /* Assembles the full Overview pane from two runs' already-fetched skirmish
    rows (rowsA/rowsB — GET /api/skirmishes?run=<id> arrays) and wires clicks. */
 function ovRenderBody(el, rowsA, rowsB) {
-  var aggA = WOA_REPORT.foldSkirmishes(rowsA), aggB = WOA_REPORT.foldSkirmishes(rowsB);
-  var scoredRows = WOA_REPORT.BANDS.filter(function (b) { return b.feedsScore; });
-  var guardRows = WOA_REPORT.BANDS.filter(function (b) { return !b.feedsScore; });
+  // All the pane's data-shaping is one pure call; this function only draws.
   var temp = DASH.temperature;
+  var model = CHART_MODEL.buildOverviewModel(rowsA, rowsB, temp);
+  var aggA = model.aggA, aggB = model.aggB, scoredRows = model.scoredRows, guardRows = model.guardRows;
 
-  var h = '<div class="ov-wrap">' + ovVerdictBanner(scoredRows, aggA, aggB, temp) + '<div class="ov-cols">';
+  var h = '<div class="ov-wrap">' + ovVerdictBanner(model.verdict) + '<div class="ov-cols">';
   h += '<div class="ov-col-l">' +
     '<div style="font-size:13px;font-weight:bold;margin-bottom:2px;">Scored metrics vs band ' +
     '<span class="small" style="font-style:italic;">(all maps folded &mdash; A n=' + aggA.done + ', B n=' + aggB.done + ')</span></div>' +
@@ -717,7 +642,7 @@ function ovRenderBody(el, rowsA, rowsB) {
     '<div style="font-size:11px;font-weight:bold;margin:14px 0 6px;color:#75643f;">Guards <span class="small" style="font-style:italic;">(shaded, not scored)</span></div>' +
     '<div class="ov-grid">' + guardRows.map(function (row) { return ovBandRowHtml(row, aggA, aggB, temp); }).join('') + '</div>' +
   '</div>';
-  h += '<div class="ov-col-r">' + ovMapDumbbells(rowsA, rowsB) + ovPacingMinis(rowsA, rowsB) + '</div>';
+  h += '<div class="ov-col-r">' + ovMapDumbbells(model.dumbbells) + ovPacingMinis(model.pacing) + '</div>';
   h += '</div></div>';
   el.innerHTML = h;
 

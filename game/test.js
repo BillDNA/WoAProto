@@ -1469,6 +1469,89 @@ console.log('\n== chart-model: buildMapDrillModel (Maps pane display model) ==')
   ok(mab.tempo.ghostEnv === mab.envA && mab.hex.ghost === mab.hex.foldA, "abMode 'AB': run A is the ghost overlay");
 })();
 
+console.log('\n== report-model: mapScoreDumbbells (Overview per-map balance fold) ==');
+(function () {
+  var R = require('./report-model.js');
+  function wins(n, redFrac, map) { var a = []; for (var i = 0; i < n; i++) a.push({ map: map, winner: i < redFrac * n ? 'red' : 'blue' }); return a; }
+  // A: two maps; B: only Frontier (heavily red-skewed -> worse balance score).
+  var rowsA = wins(10, 0.5, 'Frontier').concat(wins(6, 0.5, 'The Void'));
+  var rowsB = wins(10, 0.9, 'Frontier');
+
+  ok(R.mapScoreDumbbells([], []).length === 0, 'mapScoreDumbbells = [] when neither run has rows');
+  var rows = R.mapScoreDumbbells(rowsA, rowsB);
+  ok(rows.length === 2, 'one dumbbell per map in the union (Frontier, The Void)');
+
+  // scores + done match an INDEPENDENT recompute via the public foldSkirmishes/balanceScore.
+  var frontier = rows.filter(function (r) { return r.map === 'Frontier'; })[0];
+  var gAf = R.foldSkirmishes(rowsA.filter(function (r) { return r.map === 'Frontier'; }));
+  var gBf = R.foldSkirmishes(rowsB);
+  ok(frontier.doneA === 10 && frontier.doneB === 10, 'Frontier done counts are per-run skirmish totals (A=10, B=10)');
+  ok(frontier.scoreA === R.balanceScore(gAf.agg, gAf.done) && frontier.scoreB === R.balanceScore(gBf.agg, gBf.done),
+    'Frontier scoreA/scoreB equal the independent foldSkirmishes+balanceScore recompute');
+
+  // The Void was played by A only -> scoreB null, doneB 0.
+  var theVoid = rows.filter(function (r) { return r.map === 'The Void'; })[0];
+  ok(theVoid.scoreB === null && theVoid.doneB === 0 && theVoid.scoreA != null, 'a map only run A played scores B null / done 0, A real');
+
+  // sorted worst-first on B: Frontier (B skewed 90% red, high score) ahead of The Void (no B score -> sinks).
+  ok(rows[0].map === 'Frontier', 'sorted worst-first on B: the B-regressed map leads');
+})();
+
+console.log('\n== chart-model: ovFmt / ovTrackDomain / ovPos (Overview presentation math) ==');
+(function () {
+  var C = require('./ui/chart-model.js');
+  function near(a, b) { return Math.abs(a - b) < 1e-9; }
+  // ovFmt: percent keys round to N%, non-percent keys go through f1, null -> n/a.
+  ok(C.ovFmt('red', 49.6) === '50%', 'ovFmt rounds a percent key to a whole %');
+  ok(C.ovFmt('drag', 2.34) === '2.3', 'ovFmt sends a non-percent key (drag) through f1');
+  ok(C.ovFmt('red', null) === 'n/a', 'ovFmt = n/a for a null value');
+
+  // ovPos: linear map lo..hi -> 0..100, clamped, null passthrough.
+  ok(C.ovPos({ lo: 36.5, hi: 63.5 }, 50) === 50, 'ovPos maps the domain midpoint to 50%');
+  ok(C.ovPos({ lo: 0, hi: 10 }, 20) === 100, 'ovPos clamps above-domain to 100%');
+  ok(C.ovPos({ lo: 0, hi: 10 }, -5) === 0, 'ovPos clamps below-domain to 0%');
+  ok(C.ovPos({ lo: 0, hi: 1 }, null) === null, 'ovPos passes null through');
+
+  // ovTrackDomain (percent key 'red', T2 band 41..59): in-band values leave the
+  // band-driven domain 41-4.5 .. 59+4.5 (25% pad); an out-of-band value extends it.
+  var redRow = require('./report-model.js').BANDS.filter(function (b) { return b.key === 'red'; })[0];
+  var d = C.ovTrackDomain(redRow, 50, 52);
+  ok(near(d.lo, 36.5) && near(d.hi, 63.5), 'ovTrackDomain brackets the T2 band with 25% padding when A/B sit inside it');
+  var dOut = C.ovTrackDomain(redRow, 50, 70);
+  ok(dOut.hi >= 70 && dOut.hi <= 100, 'ovTrackDomain stretches to include an out-of-band value (still clamped to 100 for a %)');
+})();
+
+console.log('\n== chart-model: buildOverviewModel (Overview display model) ==');
+(function () {
+  var C = require('./ui/chart-model.js');
+  var R = require('./report-model.js');
+  function wins(n, redFrac, map) { var a = []; for (var i = 0; i < n; i++) a.push({ map: map, winner: i < redFrac * n ? 'red' : 'blue' }); return a; }
+  // fleet SMALL_N is 240, so use 300 rows/run to clear the small-n gate and let breaches count.
+  var rowsA = wins(300, 0.5, 'Frontier');
+  var rowsB = wins(300, 0.9, 'Frontier');
+  var m = C.buildOverviewModel(rowsA, rowsB, 'T2');
+
+  // aggregates + band partition match the public fold / BANDS split.
+  var gA = R.foldSkirmishes(rowsA), gB = R.foldSkirmishes(rowsB);
+  ok(m.aggA.done === gA.done && m.aggB.done === gB.done, 'aggA/aggB are the public foldSkirmishes of each run');
+  ok(m.scoredRows.length === R.BANDS.filter(function (b) { return b.feedsScore; }).length &&
+    m.guardRows.length === R.BANDS.filter(function (b) { return !b.feedsScore; }).length, 'scoredRows/guardRows partition BANDS by feedsScore');
+
+  // verdict: run B skewed 90% red breaches Red% high (>59 at T2). Small-n excluded — n=300 clears it.
+  var keys = m.verdict.breaches.map(function (b) { return b.key; });
+  ok(keys.indexOf('red') >= 0, 'verdict flags the Red% breach when run B is red-skewed past the T2 band');
+  ok(m.verdict.breaches.filter(function (b) { return b.key === 'red'; })[0].val === '90%', 'the breach carries the ovFmt-formatted run-B value (90%)');
+  ok(m.verdict.temperature === 'T2', 'verdict echoes the selected temperature');
+
+  // a small-n run raises no breaches (the fleet gate, SPEC §8).
+  var small = C.buildOverviewModel(wins(10, 0.5, 'Frontier'), wins(10, 0.9, 'Frontier'), 'T2');
+  ok(small.verdict.breaches.length === 0, 'small-n (< 240) run B raises no breaches');
+
+  // dumbbells + pacing are the wired-in folds.
+  ok(m.dumbbells.length === 1 && m.dumbbells[0].map === 'Frontier', 'dumbbells = the mapScoreDumbbells fold');
+  ok(m.pacing.interleave.nbins === 6 && m.pacing.interleave.nA === 0, 'pacing carries the 6-bin interleave histogram (nA=0 here, rows have no trace)');
+})();
+
 console.log('\n== report-model: Cards-pane folds (cardRunView / cardFleetFireTimes) ==');
 (function () {
   var R = require('./report-model.js');
