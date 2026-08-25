@@ -3,7 +3,7 @@
 **Local docs:** the project's orientation docs, rubrics, and reference material live under `docs/` —
 `code-architecture.md`, `workflow.md`, the `rubrics/` + `balance/` sets, `card-cheatsheet.md`, and the
 rule book — read by the local game skills (`create-card`, `create-map`, `run-tournament`,
-`review-reports`, `generate-reports`). `CONTEXT.md` is the domain glossary; measured balance baselines
+`review-reports`, `generate-reports`, `balance-loop`). `CONTEXT.md` is the domain glossary; measured balance baselines
 live in `docs/balance-baselines.md`.
 
 ---
