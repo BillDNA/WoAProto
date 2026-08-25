@@ -151,22 +151,32 @@ async function run() {
   }
   var priorRuns = (prior && prior.runs) || 0;
 
+  // per-run stride (~21.5M) dwarfs the in-run seed span (g*104729, n<=204),
+  // so accumulated runs can never replay a prior run's seeds
+  function seedBaseFor(mi) { return (mi + 1) * 7919 + priorRuns * 7919 * 2711; }
+
+  // WOA-045: record the run's content + seed identity so it's reproducible and
+  // the A/B picker can tell runs apart. seedBaseFor(0) includes the priorRuns offset.
+  var runDeck = DECK || (E.ACTIVE_DECK && E.ACTIVE_DECK.id) || '';
+  var runMapset = (flags.mapset && flags.mapset !== 'all') ? flags.mapset : '';
+
   // V1: every skirmish also lands as a per-skirmish row in logs/woa.db (guarded —
   // the markdown report works fine without it).
   var dbm = null, dbh = null, runId = null;
   try {
     dbm = require(path.join(__dirname, 'db.js'));
     dbh = dbm.open();
-    runId = dbm.insertRun(dbh, { version: ver, kind: 'balance', redAi: dr, blueAi: db, n: n, tool: 'balance-report' });
+    runId = dbm.insertRun(dbh, {
+      version: ver, kind: 'balance', redAi: dr, blueAi: db, n: n, tool: 'balance-report',
+      deck: runDeck, mapset: runMapset, seedBase: seedBaseFor(0),
+      label: 'balance ' + diffLabel + ' · ' + (runDeck || 'active') + ' · n' + n
+    });
   } catch (e) { dbm = null; console.error('(db off: ' + e.message + ')'); }
 
   if (!flags.quiet) process.stderr.write('Simulating ' + n + ' skirmishes/map, ' + diffLabel + ', ' + maps.length + ' maps' +
     (flags.parallel ? ' (' + flags.parallel + ' workers)' : '') + ' ');
   var thisRun = {}; // name -> {shape, agg}
   function shapeOf(map) { return map.shape && map.shape.charAt(0) === '@' ? 'custom' : (map.shape || '?'); }
-  // per-run stride (~21.5M) dwarfs the in-run seed span (g*104729, n<=204),
-  // so accumulated runs can never replay a prior run's seeds
-  function seedBaseFor(mi) { return (mi + 1) * 7919 + priorRuns * 7919 * 2711; }
   if (flags.parallel) {
     // process-per-map: the engine's current-board state is module-global, so
     // in-process interleaving is unsafe — each worker require()s a fresh engine.
