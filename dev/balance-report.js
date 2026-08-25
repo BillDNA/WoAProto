@@ -158,7 +158,14 @@ async function run() {
   // WOA-045: record the run's content + seed identity so it's reproducible and
   // the A/B picker can tell runs apart. seedBaseFor(0) includes the priorRuns offset.
   var runDeck = DECK || (E.ACTIVE_DECK && E.ACTIVE_DECK.id) || '';
-  var runMapset = (flags.mapset && flags.mapset !== 'all') ? flags.mapset : '';
+  // Always resolve the actual roster: --mapset <id> / 'all' verbatim, else the
+  // active mapset id — so an all-maps run and an active-pool run never collide as ''.
+  var actMset = E.activeMapset && E.activeMapset();
+  var runMapset = flags.mapset || (actMset && (actMset.id || actMset.name)) || '';
+  // a map-name filter narrows the roster — fold it into the label so a filtered
+  // run isn't recorded as identical to the full one.
+  var runLabel = 'balance ' + diffLabel + ' · ' + (runDeck || 'active') + ' · ' + runMapset +
+    (filter ? ' /' + filter : '') + ' · n' + n;
 
   // V1: every skirmish also lands as a per-skirmish row in logs/woa.db (guarded —
   // the markdown report works fine without it).
@@ -168,8 +175,7 @@ async function run() {
     dbh = dbm.open();
     runId = dbm.insertRun(dbh, {
       version: ver, kind: 'balance', redAi: dr, blueAi: db, n: n, tool: 'balance-report',
-      deck: runDeck, mapset: runMapset, seedBase: seedBaseFor(0),
-      label: 'balance ' + diffLabel + ' · ' + (runDeck || 'active') + ' · n' + n
+      deck: runDeck, mapset: runMapset, seedBase: seedBaseFor(0), label: runLabel
     });
   } catch (e) { dbm = null; console.error('(db off: ' + e.message + ')'); }
 
