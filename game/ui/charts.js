@@ -1112,27 +1112,10 @@ function crdSw(css) {
   return '<span style="display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:4px;box-sizing:border-box;' + css + '"></span>';
 }
 
-/* Per-run per-card view, one fold per run (rowsA/rowsB) feeding all three
-   sections below — the SAME "fold once, read many charts" shape
-   ovRenderBody/mdRenderBody already use elsewhere in this file. envs is
-   exposed too (the fire-time strips need the raw envelopes, not the folded
-   agg). winHq/winHqN are the SPEC §2 doctrine slice (report-model.js
-   cardHqWinSlice) — winHq is null when the card was never played in a
-   non-simple HQ-ending context THIS run (excluded from the quadrant, not
-   drawn as a fabricated 0). */
-function crdRunCards(rows) {
-  var envs = rows.map(WOA_REPORT.envelopeFromRow).filter(function (e) { return !!e; });
-  var agg = WOA_REPORT.cardAggFromEnvelopes(envs);
-  var slice = WOA_REPORT.cardHqWinSlice(envs);
-  var byId = {};
-  WOA_REPORT.cardRows(agg, E.CARDS).forEach(function (r) {
-    var s = slice[r.id];
-    byId[r.id] = { id: r.id, name: r.name, plays: r.plays, sight: r.sight, simple: r.simple,
-      noop: r.noop, seenNum: r.seenNum,
-      winHq: (s && s.plays) ? WOA_REPORT.pct(s.wins, s.plays) : null, winHqN: s ? s.plays : 0 };
-  });
-  return { byId: byId, envs: envs };
-}
+/* The Cards pane's data-shaping — per-run card view (cardRunView), fleet-wide
+   fire-time quartiles (cardFleetFireTimes), and the whole-pane display model
+   (CHART_MODEL.buildCardsModel) — lives in report-model.js / ui/chart-model.js;
+   these functions only draw whatever the model hands them. */
 
 /* =================== Cards §1: sight quadrant ===================
    x = win % — the SPEC §2 doctrine slice (HQ-capture endings × non-simple
@@ -1155,7 +1138,7 @@ function crdRunCards(rows) {
    (that one's x is AvgSeen, so its danger corner is top-LEFT; this one's x is
    win%, so danger is top-RIGHT). Documented here since it's a discretionary
    call, not a spec-pinned coordinate. */
-function chartCardSightQuadrant(rows) {
+function chartCardSightQuadrant(rows, maxPlays) {
   var W = 860, H = 500, L = 48, R = 18, T = 44, B = 48;
   var pw = W - L - R, ph = H - T - B;
   function sx(v) { return L + v / 100 * pw; }
@@ -1179,8 +1162,6 @@ function chartCardSightQuadrant(rows) {
   chrome += chText(L + pw - 4, T + ph - 8, 'over-performs →', { fs: 10.5, fill: CHART.muted, italic: true, anchor: 'end' });
   chrome += chText(L + 6, T + ph - 8, '← under-performs', { fs: 10.5, fill: CHART.muted, italic: true });
 
-  var maxPlays = 1;
-  rows.forEach(function (r) { var p = Math.max(r.a ? r.a.plays : 0, r.b ? r.b.plays : 0); if (p > maxPlays) maxPlays = p; });
   function rad(p) { return Math.max(5, 20 * Math.sqrt(p / maxPlays)); }
 
   var pts = rows.map(function (r) {
@@ -1279,31 +1260,6 @@ function crdSimpleDumbbells(rows) {
   return h;
 }
 
-/* Per-card FLEET-wide "when cards fire" quartile — REUSES report-model.js's
-   cardPlayTurnQuartiles as-is (per the ticket: "reuse, do not reimplement"):
-   that fold already answers "at what normalized time did this card fire, in
-   ONE skirmish" (its own quartile handles a skirmish where a card has multiple
-   copies in the deck, so n>1 within a single skirmish is real). This pools each
-   skirmish's MEDIAN across the whole run's envelopes and re-quantiles that
-   pooled array with the SAME exported WOA_REPORT.quantile() the per-skirmish
-   fold itself calls — no new quantile math is written here, just the one
-   that already exists applied a second time, one level up (per-skirmish ->
-   fleet). n (for small-n greying) is each strip's OWN plays count, read from
-   crdRunCards at the call site — a skirmish-count here would undercount a
-   multi-copy card. */
-function crdFleetFireTimes(envs) {
-  var byCard = {};
-  envs.forEach(function (env) {
-    var q = WOA_REPORT.cardPlayTurnQuartiles(env);
-    Object.keys(q).forEach(function (id) { (byCard[id] || (byCard[id] = [])).push(q[id].median); });
-  });
-  var out = {};
-  Object.keys(byCard).forEach(function (id) {
-    var arr = byCard[id].sort(function (a, b) { return a - b; });
-    out[id] = { q1: WOA_REPORT.quantile(arr, 0.25), median: WOA_REPORT.quantile(arr, 0.5), q3: WOA_REPORT.quantile(arr, 0.75) };
-  });
-  return out;
-}
 // sequential brass->ink fill by normalized-time fraction (0=early turn 1,
 // 1=skirmish end) — the SAME CHART.seq ramp mdLensFill uses for magnitude, here
 // indexed by a [0,1] fraction instead of a value/max ratio.
@@ -1366,26 +1322,22 @@ function crdFireStrips(rows, fireA, fireB) {
 /* Assembles the full Cards pane from two runs' already-fetched skirmish rows
    (the SAME rowsA/rowsB shape ovRenderBody/mdRenderBody consume). */
 function crdRenderBody(el, rowsA, rowsB) {
-  var A = crdRunCards(rowsA), B = crdRunCards(rowsB);
-  var rows = Object.keys(E.CARDS.reduce(function (m, c) { m[c.id] = 1; return m; }, {})).map(function (id) {
-    return { id: id, name: (A.byId[id] || B.byId[id]).name, a: A.byId[id] || null, b: B.byId[id] || null };
-  }).filter(function (r) { return (r.a && r.a.plays) || (r.b && r.b.plays); });
-  var quadEligible = rows.filter(function (r) { return (r.a && r.a.winHq != null) || (r.b && r.b.winHq != null); }).length;
-  var omitted = rows.length - quadEligible;
-  var fireA = crdFleetFireTimes(A.envs), fireB = crdFleetFireTimes(B.envs);
+  // All the pane's data-shaping is one pure call; this function only draws.
+  var model = CHART_MODEL.buildCardsModel(rowsA, rowsB, E.CARDS);
+  var rows = model.rows;
 
   var h = '<div class="crd-wrap">';
   h += '<div class="chcard"><h3>Which cards are on the overpowered watchlist?</h3>' +
     '<p class="small">' + rows.length + ' card(s) with plays in run A and/or B' +
-    (omitted ? '; ' + omitted + ' never played in a non-simple HQ-capture ending (omitted here — the SPEC §2 slice)' : '') +
+    (model.omitted ? '; ' + model.omitted + ' never played in a non-simple HQ-capture ending (omitted here — the SPEC §2 slice)' : '') +
     '. Bubble area = plays; A hollow ghost → B solid.</p>' +
     '<div class="chkey"><span>fill B = win % deviation from 50:</span>' +
     '<span>' + chSwatch(CHART.divBlue[2]) + 'under 50%</span>' +
     '<span>' + chSwatch(CHART.divMid) + '≈ 50%</span>' +
     '<span>' + chSwatch(CHART.divRed[2]) + 'over 50%</span></div>' +
-    chartCardSightQuadrant(rows) + '</div>';
+    chartCardSightQuadrant(rows, model.maxPlays) + '</div>';
   h += '<div class="chcard">' + crdSimpleDumbbells(rows) + '</div>';
-  h += '<div class="chcard">' + crdFireStrips(rows, fireA, fireB) + '</div>';
+  h += '<div class="chcard">' + crdFireStrips(rows, model.fireA, model.fireB) + '</div>';
   h += '</div>';
   el.innerHTML = h;
   chBindHits(el);
