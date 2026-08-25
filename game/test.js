@@ -1469,6 +1469,52 @@ console.log('\n== chart-model: buildMapDrillModel (Maps pane display model) ==')
   ok(mab.tempo.ghostEnv === mab.envA && mab.hex.ghost === mab.hex.foldA, "abMode 'AB': run A is the ghost overlay");
 })();
 
+console.log('\n== report-model: unitsAggFromRows (Units pane per-run fold) ==');
+(function () {
+  var R = require('./report-model.js');
+  // One skirmish, 10 turns: infantry deploys T2, dies T8 (lifespan 6); cavalry
+  // deploys T3, never dies. Hand-fold below is independent of the loop.
+  var env = { turns: 10, units: {
+    infantry: { dep: [2], atk: 4, abs: 6, kill: 2, die: 2, dieT: [8] },
+    cavalry: { dep: [3], atk: 6, abs: 0, kill: 1, die: 0 } } };
+  var rows = [
+    { map: 'X', trace: JSON.stringify(env) },
+    { map: 'X', trace: 'not json' }        // unparseable -> envelopeFromRow null -> dropped
+  ];
+  var A = R.unitsAggFromRows(rows), inf = A.types.infantry, cav = A.types.cavalry;
+  ok(inf.n === 1 && inf.atk === 4 && inf.abs === 6 && inf.kill === 2 && inf.die === 2, 'infantry folds n=1 with raw atk/abs/kill/die (unparseable row dropped)');
+  ok(inf.depMedian === 0.2 && inf.roleY === 40 && inf.breakthrough === 6 && inf.exchange === 1 && inf.lifespan === 6, 'infantry derived: depMedian .2, roleY 40%, breakthrough 6, exchange 1.0, lifespan 6');
+  ok(cav.roleY === 100 && cav.breakthrough === 0 && cav.exchange === null && cav.lifespan === null, 'cavalry: all-attack roleY 100%, no deaths -> exchange/lifespan null');
+  ok(A.hasDieT === true, 'hasDieT true when any type carries dieT');
+  ok(R.unitsAggFromRows([]).hasDieT === false && Object.keys(R.unitsAggFromRows([]).types).length === 0, 'empty rows -> no types, hasDieT false');
+})();
+
+console.log('\n== chart-model: buildUnitsModel + unLinearDomain/unPos (Units pane) ==');
+(function () {
+  var C = require('./ui/chart-model.js');
+  function near(a, b) { return Math.abs(a - b) < 1e-9; }
+  var env = { turns: 10, units: {
+    infantry: { dep: [2], atk: 4, abs: 6, kill: 2, die: 2, dieT: [8] },
+    cavalry: { dep: [3], atk: 6, abs: 0, kill: 1, die: 0 } } };
+  var rowsA = [{ map: 'X', trace: JSON.stringify(env) }];
+
+  var m = C.buildUnitsModel(rowsA, []);
+  ok(m.rows.length === 2, 'only fielded types make rows (artillery, never deployed, is dropped)');
+  ok(m.rows[0].type === 'infantry' && m.rows[0].idx === 0 && m.rows[0].name === 'Infantry', 'row 0 = infantry, idx 0 (ENG.UNITS order), engine name');
+  ok(m.rows[1].type === 'cavalry' && m.rows[1].idx === 1, 'row 1 = cavalry, idx 1 preserved for the palette');
+  ok(m.rows[0].a && m.rows[0].a.n === 1 && m.rows[0].b === null, 'run A fold present on .a, empty run B -> .b null');
+  ok(m.hasDieT === true && m.rows[0].color === undefined, 'hasDieT surfaced; model carries NO colour (palette is the renderer\'s job)');
+  ok(C.buildUnitsModel([], []).rows.length === 0, 'no rows either run -> empty rows');
+
+  // unLinearDomain: floor at 1, +15% headroom over the largest real value.
+  ok(JSON.stringify(C.unLinearDomain([])) === JSON.stringify({ lo: 0, hi: 1.15 }), 'unLinearDomain([]) floors hi at 1 -> {0, 1.15}');
+  var dom = C.unLinearDomain([6, 0, null]);
+  ok(dom.lo === 0 && near(dom.hi, 6.9), 'unLinearDomain sizes hi to max(6)*1.15 = 6.9, ignoring null');
+  // unPos: linear map into [0,100], clamped, null-passthrough.
+  ok(C.unPos(dom, null) === null && near(C.unPos(dom, 6), 6 / 6.9 * 100), 'unPos: null passes through, 6 maps to 86.96%');
+  ok(C.unPos(dom, 100) === 100 && C.unPos(dom, -5) === 0, 'unPos clamps out-of-domain values to [0,100]');
+})();
+
 console.log(fails === 0 ? '\nALL TESTS PASSED' : '\n' + fails + ' FAILURES');
 process.exit(fails === 0 ? 0 : 1);
 /* end */
