@@ -14,15 +14,10 @@ function testSkirmish(seed) {
   return E.newSkirmish(m);
 }
 
-// Card-behaviour fixtures (WOA-030): pin a card's DEF from the full content
-// catalog -- every deck loaded from content/decks/ (node's require() loop in
-// engine/01-core.js pushes them all into the global WOA_CONTENT regardless of
-// which one is flagged active) -- not just the active deck's resolved card
-// list (E.CARDS / E.CARD_BY_ID). A deck that cuts the card (e.g. the 17-card
-// adopt cuts Ordered Withdraw + Airdrop) must never crash a test that only
-// wants to exercise the card's STEP MECHANICS. Registers into E.CARD_BY_ID
-// (same object I.playCard/I.stepOptions read) without touching E.CARDS, so
-// the fixture never leaks into an actual shuffled deck.
+// Card-behaviour fixtures: pin a card's DEF from the full content catalog (every
+// deck loaded from content/decks/, not just the active deck's resolved list) so a
+// test can exercise a card the active deck cut. Registers into E.CARD_BY_ID
+// without touching E.CARDS, so the fixture never leaks into a shuffled deck.
 var ALL_DECK_CARDS = [].concat.apply([], ((typeof global !== 'undefined' && global.WOA_CONTENT && global.WOA_CONTENT.decks) || [])
   .map(function (d) { return d.cards || []; }));
 function fixtureCard(id) {
@@ -74,7 +69,7 @@ console.log('== human-readable grid labels ==');
   ok(E.hexLabel('9,9') === '9,9', 'off-board key falls back to raw coords');
 })();
 
-console.log('== custom board shapes (explicit hex sets, V0 map-roster-and-shapes) ==');
+console.log('== custom board shapes (explicit hex sets) ==');
 (function () {
   // explicit hex set builds like a rows shape
   var s = E.buildShape('tst', { hexes: [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1]] });
@@ -115,7 +110,7 @@ console.log('== custom board shapes (explicit hex sets, V0 map-roster-and-shapes
   ok(sim.phase === 'skirmish-over', 'AI skirmish completes on an irregular board (winner ' + sim.skirmishWinner + ')');
 })();
 
-console.log('== terrain pieces live inside ONE hex (the yellow-line bug) ==');
+console.log('== terrain pieces live inside ONE hex ==');
 (function () {
   ok(E.pieceProblem({ t: 'F', edges: [[0, 0, 4], [0, 0, 5], [0, 0, 0]] }) === null, 'contiguous single-hex piece accepted (wraps 4-5-0)');
   ok(E.pieceProblem({ t: 'M', edges: [[0, 0, 2], [0, 0, 1], [1, -1, 3]] }) !== null, 'hex-spanning piece rejected (old High Pass mountain)');
@@ -129,11 +124,8 @@ console.log('== terrain pieces live inside ONE hex (the yellow-line bug) ==');
 console.log('== map validation ==');
 var probs = E.validateMaps();
 ok(probs.length === 0, 'all built-in maps valid' + (probs.length ? ': ' + probs.join('; ') : ''));
-// Content roster (Feedback Round 4 Pass 2): maps are per-item files under
-// game/content/maps/. `custom:true` marks Bill's experiments; the shipped
-// roster is the non-custom maps (V1 trim to 12 total: −Black Forest −Open
-// Mountain Pass −The Bulge −Twin Woods −Highwater; see
-// logs/reports/analysis/2026-07-06-v1-map-trim.md).
+// Maps are per-item files under game/content/maps/. `custom:true` marks Bill's
+// experiments; the shipped roster is the non-custom maps.
 var builtinMaps = E.MAPS.filter(function (m) { return !m.custom; });
 ok(builtinMaps.length === 10, '10 shipped (non-custom) maps in the content roster (got ' + builtinMaps.length + ' of ' + E.MAPS.length + ' total)');
 (function () {
@@ -164,14 +156,12 @@ console.log('== trench/terrain edge exclusivity ==');
   ok(thrown, 'engine rejects trench over a terrain edge');
 })();
 
-console.log('== multiple trenches per hex (DoubleTrenchNotAllowed report) ==');
+console.log('== multiple trenches per hex ==');
 (function () {
-  // Bill's repro: infantry on D3 (classic '-1,1'), already entrenched on its
-  // west/southwest edges; a second trench along the C3/C4 edges must be legal.
   var st = testSkirmish(60);
   st.units['-1,1'] = { type: 'infantry', owner: 'red' };
   st.trenches['-1,1'] = [{ dirs: [3, 4], owner: 'red' }];
-  ok(E.trenchTargets(st, 'red').indexOf('-1,1') >= 0, 'a hex with a trench can be entrenched again');
+  ok(E.trenchTargets(st, 'red').indexOf('-1,1') >= 0, 'an already-entrenched hex can take a second trench on different edges');
   var ors = E.trenchOrientations(st, '-1,1');
   ok(ors.some(function (pr) { return pr[0] === 1 && pr[1] === 2; }), 'orientation toward C3/C4 (dirs 1-2) offered');
   ok(!ors.some(function (pr) { return pr.indexOf(3) >= 0 || pr.indexOf(4) >= 0; }), 'already-covered edges excluded');
@@ -201,7 +191,7 @@ console.log('== multiple trenches per hex (DoubleTrenchNotAllowed report) ==');
   ok(thrown, 'overlapping trench edges rejected');
 })();
 
-console.log('== HexClarificationDiagram A/B/C table ==');
+console.log('== terrain attack table (A/B/C) ==');
 (function () {
   // A top, B = A's SW neighbor, C = A's SE neighbor. Forest in A on edges A|B and A|C.
   // Mountain in B on edges B|A and B|C.
@@ -234,9 +224,8 @@ console.log('== HexClarificationDiagram A/B/C table ==');
 
 console.log('== noOpener cards never in the opening hand (e.g. Airdrop) ==');
 (function () {
-  // WOA-030: derive from the ACTIVE deck rather than hardcoding a card id/deck
-  // size -- a deck that cuts every noOpener card (the 17-card adopt cuts
-  // Airdrop) still exercises the "nothing lost" bookkeeping and passes clean.
+  // Derive from the ACTIVE deck rather than hardcoding a card id/deck size, so a
+  // deck that cuts every noOpener card still exercises the "nothing lost" bookkeeping.
   var noOpenerIds = E.CARDS.filter(function (c) { return c.noOpener; }).map(function (c) { return c.id; });
   var deckTotal = E.CARDS.reduce(function (s, c) { return s + c.count; }, 0);
   var bad = 0;
@@ -270,7 +259,7 @@ console.log('== house rule: play any card as basic attack/reposition ==');
   var cid2 = st2.hands.red[0];
   E.playCard(st2, cid2, 'reposition');
   ok(E.stepOptions(st2).type === 'reposition', 'card resolves as plain reposition step');
-  // Feedback Round 1: reposition is refused while a basic attack is possible
+  // reposition is refused while a basic attack is possible
   var st3 = testSkirmish(23);
   st3.units['0,0'] = { type: 'infantry', owner: 'red' };
   st3.units['0,1'] = { type: 'infantry', owner: 'blue' }; // a basic attack IS available
@@ -281,7 +270,7 @@ console.log('== house rule: play any card as basic attack/reposition ==');
   ok(st3.phase === 'choose-card' && st3.hands.red.indexOf(cid3) >= 0, 'the refused card stays in hand');
 })();
 
-console.log('== Feedback Round 2: at least one step of a card must be played ==');
+console.log('== at least one step of a card must be played ==');
 (function () {
   // Red inf at 0,0 can only strike blue inf at 0,1 (both far from either HQ).
   var st = testSkirmish(31);
@@ -336,7 +325,7 @@ console.log('== deck composition (data-driven from maps.js) ==');
   ok(Object.keys(E.PIECE_TOTALS).length >= 2 && E.PIECE_TOTALS.trench >= 0, 'piece totals derive from maps.js: ' + JSON.stringify(E.PIECE_TOTALS));
 })();
 
-console.log('== deploy step budget vs stock (WOA-017: no deploy fallback, oversubscription = broken content) ==');
+console.log('== deploy step budget vs stock (no deploy fallback, oversubscription = broken content) ==');
 (function () {
   // Printed deploy steps per unit type, weighted by each card's deck count. A
   // single card can print more than one deploy step for the same type (e.g.
@@ -352,15 +341,10 @@ console.log('== deploy step budget vs stock (WOA-017: no deploy fallback, oversu
     });
     return sums;
   }
-  // E.CARDS IS the active deck's resolved card list (engine/01-core.js:
-  // ACTIVE_DECK -> CARD_LIST), so this checks exactly the deck that's live --
-  // no separate "which deck is active" lookup needed. Stock comes from
-  // E.PIECE_TOTALS, which itself resolves from the active units variant (or
-  // the maps.js default), never a hardcoded 7/2/1. There is NO deploy
-  // fallback in the house rules: printing more deploy steps for a type than
-  // its stock guarantees a stranded unit / a dead turn once the stock runs
-  // out (measured: Raiding Party's 8th infantry step vs a 7-stock cavsplit17
-  // variant -> Deploy Infantry Noop 26%, balance-loop-v2 final report S5c.3).
+  // E.CARDS IS the active deck's resolved card list and E.PIECE_TOTALS the active
+  // stock, so this checks exactly the live deck. There is NO deploy fallback:
+  // printing more deploy steps for a type than its stock strands a unit / burns a
+  // dead turn once the stock runs out.
   var deploySums = deploySumsByType(E.CARDS);
   Object.keys(E.PIECE_TOTALS).forEach(function (t) {
     if (t === 'trench') return; // trenches aren't a deploy-step unit type
@@ -446,10 +430,10 @@ console.log('== V0 terrain-crossing rules: trench support denial + rivers ==');
   var atks = E.listAttacks(st, 'red').filter(function (a) { return a.from === '0,0' && a.to === '0,1'; });
   ok(atks.length === 1, 'attacks still cross trenched borders');
 
-  // Rivers no longer block support (Feedback Round 3): support crosses freely
-  // for both sides. Bill's board example — red holds B3 and C2, blue holds C3,
-  // river on the C2|C3 border. B3's attack on C3 STILL gets C2's support across
-  // the water; the river's job is now deploy-control (see the deploy section).
+  // Rivers no longer block support: it crosses freely for both sides. Fixture:
+  // red holds B3 and C2, blue holds C3, river on the C2|C3 border — B3's attack
+  // on C3 still gets C2's support across the water. The river's job is now
+  // deploy-control (see the deploy section).
   var B3 = '0,-1', C2 = '-2,0', C3 = '-1,0';
   var st2 = testSkirmish(131);
   st2.units[B3] = { type: 'infantry', owner: 'red' };
@@ -459,16 +443,15 @@ console.log('== V0 terrain-crossing rules: trench support denial + rivers ==');
   var rB = E.computeAttack(st2, { from: B3, to: C3 });
   ok(rB.attackerPower === 2, 'B3->C3: support crosses the river now (got ' + rB.attackerPower + ')');
   ok(!rB.attackerParts.some(function (p) { return p.indexOf('blocked by river') >= 0; }), 'river no longer blocks support');
-  // Defender support crosses the river too (the check used to read either hex's
-  // side; now neither blocks):
+  // Defender support crosses the river too (neither hex's side blocks):
   var D3 = '-1,1';
   st2.units[D3] = { type: 'infantry', owner: 'blue' };
   st2.terrainEdges[E.sideKey(C3, 5)] = 'R'; // river owned by the SKIRMISH hex side toward D3
   var rD = E.computeAttack(st2, { from: B3, to: C3 });
   ok(rD.defenderPower === 2, "D3's defender support crosses the river (got " + rD.defenderPower + ')');
 
-  // River pieces now come in the same lengths as forest/mountain (2- and 3-side,
-  // Feedback Round 1), validated against the R3/R2 stock; still not barrageable.
+  // River pieces come in the same lengths as forest/mountain (2- and 3-side),
+  // validated against the R3/R2 stock; still not barrageable.
   ok(E.pieceProblem({ t: 'R', edges: [[0, 0, 0], [0, 0, 1]] }) === null, 'two-side river piece accepted');
   var riverMap = { name: 'River Test', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2],
     pieces: [{ t: 'R', edges: [[0, 0, 0], [0, 0, 1]] }, { t: 'R', edges: [[0, 0, 3], [0, 0, 4]] }] };
@@ -511,9 +494,8 @@ console.log('== deploy / control rules ==');
   var t = E.deployTargets(st, 'red', false);
   ok(t.length === 3, 'deploy targets adjacent to corner HQ only at skirmish start (got ' + t.length + ')');
   ok(t.indexOf('-3,2') < 0, 'cannot deploy onto enemy HQ');
-  // Feedback Round 4 bug: a river on the border to a would-be deploy hex must
-  // stop control from extending across it (D2 was wrongly deployable). Put a
-  // river on the HQ|target border and that target drops out of the list.
+  // A river on the border to a would-be deploy hex stops control from extending
+  // across it: put a river on the HQ|target border and that target drops out.
   var hq = st.hq.red, target = t[0];
   st.terrainEdges[E.sideKey(hq, E.dirBetween(hq, target))] = 'R';
   var t2 = E.deployTargets(st, 'red', false);
@@ -567,7 +549,7 @@ console.log('== Field Marshal AI & skirmish sim ==');
 
 console.log('== noAdvance attacks (Ordered Withdraw holds its ground) ==');
 (function () {
-  var card = fixtureCard('ordered_withdraw'); // WOA-030: fixture, not the active deck
+  var card = fixtureCard('ordered_withdraw'); // fixture, not the active deck
   ok(card.steps[0].tieSpare === true && card.steps[0].noAdvance === true,
     'Ordered Withdraw carries tieSpare + noAdvance');
   // outright victory: cavalry (atk 3) vs lone infantry (def 1) — defender dies, attacker stays put
@@ -598,9 +580,9 @@ console.log('== noAdvance attacks (Ordered Withdraw holds its ground) ==');
     'noAdvance attack still captures the HQ');
 })();
 
-console.log('== rules 1.1 (S1): a trench lets the defender survive a combat tie ==');
+console.log('== rules 1.1: a trench lets the defender survive a combat tie ==');
 (function () {
-  fixtureCard('ordered_withdraw'); // WOA-030: fixture, not the active deck (used in (b) below)
+  fixtureCard('ordered_withdraw'); // fixture, not the active deck (used in (b) below)
   // dirs of a trench covering the attacked border of `defHex` (the side facing
   // `fromHex`), plus its clockwise neighbour so it's a legal 2-edge orientation.
   function coverDir(defHex, fromHex) { var d = E.dirBetween(defHex, fromHex); return [d, (d + 1) % 6]; }
@@ -626,7 +608,7 @@ console.log('== rules 1.1 (S1): a trench lets the defender survive a combat tie 
   st2.hands.red = ['ordered_withdraw'];
   E.playCard(st2, 'ordered_withdraw');
   E.applyStep(st2, { from: '0,0', to: '1,0' });
-  ok(st2.units['1,0'] && st2.units['0,0'], 'tieSpare tie vs trenched defender: nobody dies (whiff, A1)');
+  ok(st2.units['1,0'] && st2.units['0,0'], 'tieSpare tie vs trenched defender: nobody dies (whiff)');
 
   // (e) REGRESSION — a plain tie on an UNtrenched border still kills both units.
   var st3 = testSkirmish(203);
@@ -661,7 +643,7 @@ console.log('== rules 1.1 (S1): a trench lets the defender survive a combat tie 
     'tie at an untrenched HQ still captures it (unchanged)');
 })();
 
-console.log('== Barrage targets ANY trench or forest (Feedback Round 5 ruling) ==');
+console.log('== Barrage targets ANY trench or forest ==');
 (function () {
   // forest + trench deep in blue territory, far from anything red controls
   var BARMAP = { name: 'Barrage Range', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2],
@@ -696,7 +678,7 @@ console.log('== no-op plays are logged and marked (skipped-turn report) ==');
   ok('noop' in r.cards[anyCard], 'balanceMap aggregates noop per card');
 })();
 
-console.log('== attrition victory (surviving units on the board, June 2026) ==');
+console.log('== attrition victory (surviving units on the board) ==');
 (function () {
   // Drain blue's card pool so red's next completed turn triggers attrition.
   function drainBlue(st) {
@@ -740,9 +722,9 @@ console.log('== behaviour counters (balance-lab metrics) ==');
   E.applyStep(st, { hex: E.stepOptions(st).targets[0] });
   ok(st.stats.deploys === 1, 'deploy increments stats.deploys');
   var r = E.balanceMap(E.MAPS[0], 2, { seedBase: 5 });
-  // WOA-039 (rules 1.2): deploys (for Attack/Swap share), the attrition slice
-  // (attritionEndings/attritionKillTail for Tie%/Drag) and the HQ slice
-  // (hqEndings/reserveEndRedHQ/reserveEndBlueHQ for Reserves) join the agg.
+  // deploys (Attack/Swap share), the attrition slice (attritionEndings/
+  // attritionKillTail for Tie%/Drag) and the HQ slice (hqEndings/reserveEndRedHQ/
+  // reserveEndBlueHQ for Reserves) join the agg.
   ['attacks', 'swaps', 'marches', 'deploys', 'zeroKill', 'tiebreak', 'firstBloodGames', 'controlGames', 'deployedShare',
    'reserveEndRed', 'reserveEndBlue', 'killTail', 'leadChanges',
    'attritionEndings', 'attritionKillTail', 'hqEndings', 'reserveEndRedHQ', 'reserveEndBlueHQ']
@@ -755,8 +737,8 @@ console.log('== behaviour counters (balance-lab metrics) ==');
   ok(r.attritionKillTail >= 0 && r.attritionKillTail <= r.killTail, 'attritionKillTail ≤ pooled killTail (HQ tails excluded)');
   ok(r.hqEndings + r.attritionEndings <= (r.n - r.unfinished), 'HQ + attrition endings never exceed finished skirmishes');
   ok(r.leadChanges >= 0, 'lead changes non-negative (got ' + r.leadChanges + ')');
-  // WOA-016: reserveEndRed/Blue are the per-side split of the SAME reserves-at-end
-  // read deployedShare folds (both only accumulate over finished skirmishes) — they
+  // reserveEndRed/Blue are the per-side split of the SAME reserves-at-end read
+  // deployedShare folds (both accumulate only over finished skirmishes) — they
   // must reconcile: deployedShare = done - 0.5*(reserveEndRed + reserveEndBlue).
   var done = r.n - r.unfinished;
   ok(r.reserveEndRed >= 0 && r.reserveEndBlue >= 0, 'reserveEndRed/Blue are non-negative');
@@ -764,7 +746,7 @@ console.log('== behaviour counters (balance-lab metrics) ==');
     'reserveEndRed/Blue reconcile with deployedShare (same reserves-at-end read, split by side)');
 })();
 
-console.log('== metrics-v2 trace capture (WOA-031: per-play trace + units fold, SPEC §4) ==');
+console.log('== metrics-v2 trace capture (per-play trace + units fold) ==');
 (function () {
   var VALID_A = { deploy: 1, attack: 1, swap: 1, march: 1 };
   var seeds = [4242, 5150, 8181, 9091, 1212];
@@ -791,7 +773,7 @@ console.log('== metrics-v2 trace capture (WOA-031: per-play trace + units fold, 
         'seed ' + seed + ': unitMetrics.' + t + ' has {dep,atk,abs,kill,die} (' + JSON.stringify(u) + ')');
       dieSum += u.die;
       u.dep.forEach(function (turn) { ok(turn >= 1 && turn <= st.turnNumber, t + ' dep turn within skirmish range'); });
-      // WOA-044: dieT is a death-TURN list, symmetric to dep and equal-length to die.
+      // dieT is a death-TURN list, symmetric to dep and equal-length to die.
       ok(Array.isArray(u.dieT) && u.dieT.length === u.die,
         'seed ' + seed + ': unitMetrics.' + t + '.dieT is an array with one entry per death (' + (u.dieT || []).length + ' == ' + u.die + ')');
       u.dieT.forEach(function (turn) { ok(turn >= 1 && turn <= st.turnNumber, t + ' dieT turn within skirmish range'); });
@@ -815,7 +797,7 @@ console.log('== metrics-v2 trace capture (WOA-031: per-play trace + units fold, 
   ok(totalDieTSum === totalDieSum && totalDieTSum > 0, 'fleet-wide: dieT capture produced ' + totalDieTSum + ' death-turn entries, matching total deaths');
 })();
 
-console.log('== trench orientations are never fully off-board (Feedback Round 2) ==');
+console.log('== trench orientations are never fully off-board ==');
 (function () {
   var st = testSkirmish(77);
   var offBoard = 0, total = 0;
@@ -828,7 +810,7 @@ console.log('== trench orientations are never fully off-board (Feedback Round 2)
   ok(total > 0 && offBoard === 0, 'no offered trench faces fully off-board (' + offBoard + '/' + total + ' bad)');
 })();
 
-console.log('== AI personalities are data (V0 ai-variety) ==');
+console.log('== AI personalities are data ==');
 (function () {
   ok(E.AI_PRESETS.easy && E.AI_PRESETS.normal && E.AI_PRESETS.hard, 'built-in presets exist');
   ok(E.AI_PRESETS.brawler && E.AI_PRESETS.turtle, 'maps.js "ai" personalities registered');
@@ -851,7 +833,7 @@ console.log('== AI personalities are data (V0 ai-variety) ==');
   ok(E.AI_WEIGHTS.noopPenalty === 80 && E.AI_WEIGHTS.antiShuffle === 10, 'anti-degeneracy weights present in defaults');
 })();
 
-console.log('== AI dead-turn regression (round 6: hard AI must not skip turn 1) ==');
+console.log('== AI dead-turn regression (hard AI must not skip turn 1) ==');
 (function () {
   ['normal', 'hard'].forEach(function (diff) {
     var noops = 0;
@@ -931,7 +913,7 @@ seeds.forEach(function (seed) {
 });
 console.log('  skirmish endings: ' + hqWins + ' HQ captures, ' + attrWins + ' attrition; longest skirmish ' + maxTurns + ' turns');
 
-console.log('== fsTimeline: one [fsRed,fsBlue] pair per completed turn (WOA-037) ==');
+console.log('== fsTimeline: one [fsRed,fsBlue] pair per completed turn ==');
 (function () {
   // A REAL (non-sim) skirmish, played the same way the AI-vs-AI loop above
   // does — st here is never cloneForSim'd (that's the AI search's hot-loop
@@ -997,7 +979,7 @@ console.log('== fsTimeline: one [fsRed,fsBlue] pair per completed turn (WOA-037)
   var big = E.rankChoices(st2, { k: 99 });
   ok(big.shown.length === all.length, 'k >= N shows the whole list (' + big.shown.length + ')');
 
-  // Round-3 ruling enforced in 1.0: same-type swaps are a hidden skip — illegal.
+  // same-type swaps are a hidden skip — illegal.
   var st3 = E.newSkirmish(E.newMatch({ seed: 5, maps: [cmap], firstPlayer: 'red' }));
   st3.units = {
     '0,0': { type: 'infantry', owner: 'red' }, '1,0': { type: 'infantry', owner: 'red' },
@@ -1015,14 +997,14 @@ console.log('== fsTimeline: one [fsRed,fsBlue] pair per completed turn (WOA-037)
   ok(reps.swaps.length >= 2, 'cross-type swaps still legal (infantry<->cavalry both pairs)');
 })();
 
-/* ---------- unit composition & values as content data (WOA-011) ----------
+/* ---------- unit composition & values as content data ----------
    A units variant in content/units/*.js (exactly one active, the deck/map-set
    pattern) fully replaces the default unit block, so composition (counts), VP,
    and atk/def/sup are all data. The engine snapshots unit stats at require time
    and keeps module-global board state, so each case runs a FRESH engine in a
    child process with the chosen config preloaded. */
 (function () {
-  console.log('== unit composition & values as content data (WOA-011) ==');
+  console.log('== unit composition & values as content data ==');
   var cp = require('child_process'), path = require('path');
   // The child loads the real content dirs, then either injects+activates a
   // variant (WOA_TEST_UNITS = its JSON) or flips an existing one active
@@ -1086,7 +1068,7 @@ console.log('== fsTimeline: one [fsRed,fsBlue] pair per completed turn (WOA-037)
 /* ---------- index.html script-tag chain matches the on-disk parts ----------
    The browser loads engine/ + ui/ via hand-ordered <script src> tags while
    node loads them by filename sort — this assert is what keeps the two
-   orderings from drifting (V1 Seam-Split guard). */
+   orderings from drifting. */
 (function () {
   console.log('== index.html script-tag chain ==');
   var fs = require('fs'), path = require('path');
@@ -1118,7 +1100,7 @@ console.log('== fsTimeline: one [fsRed,fsBlue] pair per completed turn (WOA-037)
   }
 })();
 
-/* ---------- content/manifest.js is in sync with the content dirs (WOA-030) ----
+/* ---------- content/manifest.js is in sync with the content dirs ----
    The manifest is generated (by the server) from the content/ dirs; a hand-added
    or renamed content file leaves it stale until regenerated. Re-derive it from
    the SAME generator the server uses and fail loud if the committed file drifted
@@ -1135,22 +1117,22 @@ console.log('== fsTimeline: one [fsRed,fsBlue] pair per completed turn (WOA-037)
     (actual === expected ? '' : ' — STALE: regenerate it (boot the server, or `node -e "require(\'./game/content/manifest-gen.js\').regen()"`)'));
 })();
 
-console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
+console.log('\n== report-model: bands as data + trace folds ==');
 (function () {
   var R = require('./report-model.js');
   function near(a, b) { return Math.abs(a - b) < 1e-9; }
 
-  // ---- band table unifies with balanceScore (WOA-039: scored set stays 8; the
-  // guard set gains Attack%/Swap% share alongside First-blood→win) ----
+  // ---- band table unifies with balanceScore (scored set is 8; the guard set is
+  // Attack%/Swap% share alongside First-blood→win) ----
   ok(R.BANDS.filter(function (b) { return b.feedsScore; }).length === 8, 'BANDS has the 8 scored metrics (feedsScore:true)');
   ok(R.BANDS.filter(function (b) { return !b.feedsScore; }).length === 3, 'BANDS has 3 guard metrics (First-blood→win + Attack%/Swap% share)');
   ok(R.BANDS.some(function (b) { return b.key === 'attackShare'; }) && R.BANDS.some(function (b) { return b.key === 'swapShare'; }),
-    'Attack%/Swap% share bands present (WOA-039)');
+    'Attack%/Swap% share bands present');
   ok(R.BANDS.every(function (b) { return 'lo' in b && 'hi' in b && 'weight' in b && 'feedsScore' in b; }),
     'each band row carries {lo, hi, weight, feedsScore}');
-  // WOA-039 (rules 1.2): Tie%/Drag divide by the ATTRITION slice, not `done`.
-  // attritionEndings 80 ≠ done 100 proves the denominator switched; attritionKillTail
-  // 280 (not the pooled killTail 300) proves Drag reads the sliced kill-tail.
+  // Tie%/Drag divide by the ATTRITION slice, not `done`. attritionEndings 80 ≠
+  // done 100 proves the denominator switched; attritionKillTail 280 (not the
+  // pooled killTail 300) proves Drag reads the sliced kill-tail.
   var sc = { redWins: 60, firstWins: 50, hqWins: 5, zeroKill: 10, tiebreak: 20,
     attritionEndings: 80, attritionKillTail: 280, killTail: 300,
     leadChanges: 100, controlGames: 100, controlWins: 60, firstBloodGames: 40, firstBloodWins: 30 };
@@ -1224,9 +1206,9 @@ console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
     '|VP-diff| track = |red-blue| per turn (peak 3, final 0)');
   ok(R.vpDiffTrack({ turns: 3, trace: [] }) === null, 'vpDiffTrack = null when env.fs is absent (caller greys it)');
 
-  // ---- envelopeFromRow attaches the DB-sibling fs (WOA-037: GET /api/skirmishes
-  // joins the timeline table onto the row; row.fs sits beside row.trace, not
-  // inside the trace blob, since dev/db.js's insertSkirmish never put it there) ----
+  // ---- envelopeFromRow attaches the DB-sibling fs (GET /api/skirmishes joins the
+  // timeline table onto the row; row.fs sits beside row.trace, not inside the
+  // trace blob, since dev/db.js's insertSkirmish never put it there) ----
   var dbRow = { trace: JSON.stringify({ turns: 3, trace: [] }), fs: [[1, 0], [2, 0], [2, 1]] };
   var envFromRow = R.envelopeFromRow(dbRow);
   ok(R.vpDiffTrack(envFromRow) !== null, 'envelopeFromRow folds row.fs into the parsed envelope, so vpDiffTrack sees it');
@@ -1239,7 +1221,7 @@ console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
   ok(q.B.n === 1 && near(q.B.median, 0.25) && near(q.A.median, 0.3125),
     'single-play card = its own normalized time; card A (turns 1,4) median 0.3125');
 
-  // ---- per-card DB-rows aggregate + the Win% doctrine slice (WOA-043) ----
+  // ---- per-card DB-rows aggregate + the Win% doctrine slice ----
   var cardEnv1 = {
     winner: 'red', winType: 'hq', turns: 6,
     trace: [
@@ -1268,11 +1250,11 @@ console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
   var WS12 = R.cardHqWinSlice([cardEnv1, cardEnv2]);
   ok(WS12.A.plays === 2 && WS12.A.wins === 1, 'cardHqWinSlice ignores the attrition-ending envelope entirely (unchanged from HQ-only)');
   ok(typeof R.cardAggFromEnvelopes === 'function' && typeof R.cardHqWinSlice === 'function',
-    'WOA-043 card folds exported on the shared surface');
+    'card folds exported on the shared surface');
 
-  // ---- per-unit-type fold (WOA-044, SPEC §3): unitsAggFromEnvelopes on a
-  // hand-built two-skirmish fixture with known answers, incl. the dep[]/dieT[]
-  // lifespan pairing (real deaths + a right-censored survivor per skirmish) ----
+  // ---- per-unit-type fold: unitsAggFromEnvelopes on a hand-built two-skirmish
+  // fixture with known answers, incl. the dep[]/dieT[] lifespan pairing (real
+  // deaths + a right-censored survivor per skirmish) ----
   var unitEnv1 = { turns: 10, units: {
     infantry: { dep: [1, 3], atk: 4, abs: 2, kill: 3, die: 1, dieT: [5] },   // pair (1,5)->4; dep 3 survives -> 10-3=7
     cavalry:  { dep: [2],    atk: 1, abs: 3, kill: 0, die: 1, dieT: [6] }    // pair (2,6)->4
@@ -1301,16 +1283,16 @@ console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
   ok(uArt.exchange === null, 'artillery exchange = null when die = 0 (not a fabricated 0), got ' + uArt.exchange);
   ok(uArt.lifespanN === 1 && near(uArt.lifespan, 7), 'artillery lifespan: one censored survivor (dep 1, turns 8) -> 7, got ' + uArt.lifespan);
 
-  // legacy row (predates WOA-044): units block with NO dieT key on any type
+  // legacy row: units block with NO dieT key on any type
   var legacyUnitEnv = { turns: 5, units: { infantry: { dep: [1], atk: 1, abs: 0, kill: 0, die: 0 } } };
   var UAlegacy = R.unitsAggFromEnvelopes([legacyUnitEnv]);
   ok(UAlegacy.hasUnits === true && UAlegacy.hasDieT === false, 'a units block with no dieT array on any type reads hasDieT = false (legacy, "predates capture")');
   ok(UAlegacy.types.infantry.lifespan === null && UAlegacy.types.infantry.lifespanN === 0,
     'legacy row: lifespan stays null (not a fabricated 0) when dieT was never captured');
-  ok(typeof R.unitsAggFromEnvelopes === 'function', 'WOA-044 unit fold exported on the shared surface');
+  ok(typeof R.unitsAggFromEnvelopes === 'function', 'unit fold exported on the shared surface');
 
-  // ---- per-hex lenses (WOA-042, SPEC §5): occupancy / flips / kills folded
-  // from the trace's h-stream, on a hand-built fixture with known answers ----
+  // ---- per-hex lenses: occupancy / flips / kills folded from the trace's
+  // h-stream, on a hand-built fixture with known answers ----
   var henv = { turns: 4, trace: [
     { p: 'red',  turn: 1, a: 'deploy', h: '0,0' },        // red takes 0,0
     { p: 'blue', turn: 2, a: 'deploy', h: '1,0' },        // blue takes 1,0
@@ -1340,21 +1322,21 @@ console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
   // ---- consumable from node here; browser gets the same WOA_REPORT global (dual export) ----
   ok(typeof R.bands === 'function' && typeof R.actionOctileLanes === 'function' && typeof R.BANDS === 'object',
     'folds + band table exported on the shared WOA_REPORT surface');
-  ok(typeof R.hexLenses === 'function' && typeof R.foldHexLenses === 'function', 'WOA-042 hex lenses exported on the shared surface');
+  ok(typeof R.hexLenses === 'function' && typeof R.foldHexLenses === 'function', 'hex lenses exported on the shared surface');
 })();
 
-console.log('\n== report-model: foldSkirmishes control% from hexesRed/hexesBlue (WOA-038) ==');
+console.log('\n== report-model: foldSkirmishes control% from hexesRed/hexesBlue ==');
 (function () {
   var R = require('./report-model.js');
-  // A mixed row set: real control skirmishes (some ties), plus legacy rows that
-  // predate WOA-038 (hexesRed/hexesBlue never written -> NULL, one row with
-  // only ONE side null to prove the guard needs BOTH, not either).
+  // A mixed row set: real control skirmishes (some ties), plus legacy rows with
+  // hexesRed/hexesBlue never written -> NULL (one row with only ONE side null to
+  // prove the guard needs BOTH, not either).
   var rows = [
     { winner: 'red',  hexesRed: 6,    hexesBlue: 3 },    // control: red held more, red won -> WIN
     { winner: 'blue', hexesRed: 6,    hexesBlue: 3 },    // control: red held more, blue won -> not a win
     { winner: 'blue', hexesRed: 3,    hexesBlue: 6 },    // control: blue held more, blue won -> WIN
     { winner: 'red',  hexesRed: 5,    hexesBlue: 5 },    // a REAL hex tie -> not a control game (matches balanceAdd)
-    { winner: 'red',  hexesRed: null, hexesBlue: null }, // legacy row (pre-WOA-038) -> excluded, not 0/0
+    { winner: 'red',  hexesRed: null, hexesBlue: null }, // legacy row -> excluded, not 0/0
     { winner: 'blue', hexesRed: 4,    hexesBlue: null }  // malformed/partial -> excluded (needs BOTH non-null)
   ];
   var f = R.foldSkirmishes(rows);
@@ -1543,7 +1525,7 @@ console.log('\n== chart-model: buildOverviewModel (Overview display model) ==');
   ok(m.verdict.breaches.filter(function (b) { return b.key === 'red'; })[0].val === '90%', 'the breach carries the ovFmt-formatted run-B value (90%)');
   ok(m.verdict.temperature === 'T2', 'verdict echoes the selected temperature');
 
-  // a small-n run raises no breaches (the fleet gate, SPEC §8).
+  // a small-n run raises no breaches (the fleet gate).
   var small = C.buildOverviewModel(wins(10, 0.5, 'Frontier'), wins(10, 0.9, 'Frontier'), 'T2');
   ok(small.verdict.breaches.length === 0, 'small-n (< 240) run B raises no breaches');
 
@@ -1574,7 +1556,7 @@ console.log('\n== report-model: Cards-pane folds (cardRunView / cardFleetFireTim
     ] })
   ];
 
-  // ---- cardRunView: parses rows -> envs, folds cardRows + the SPEC §2 slice ----
+  // ---- cardRunView: parses rows -> envs, folds cardRows + the win slice ----
   var A = R.cardRunView(rowsA, CARDS);
   ok(A.envs.length === 2, 'cardRunView parses both rows into envelopes');
   ok(A.byId.raid.plays === 3 && A.byId.raid.sight === 67, 'raid: 3 plays, 1st-sight % pooled (2/3 = 67)');
@@ -1619,7 +1601,7 @@ console.log('\n== chart-model: buildCardsModel (Cards pane display model) ==');
   ok(m.rows.length === 2 && m.rows[0].id === 'raid' && m.rows[1].id === 'hold', 'rows = both played cards, in card-list order');
   ok(m.rows[0].a.plays === 3 && m.rows[0].b.plays === 1, 'raid carries per-run a/b views (A=3, B=1)');
   ok(m.rows[1].b.plays === 0, 'hold\'s run-B view is a zero-play row (cardRows emits every card)');
-  // quadrant coverage: only raid is in the SPEC §2 slice for either run -> 1 eligible, 1 omitted
+  // quadrant coverage: only raid is in the HQ × non-simple slice for either run -> 1 eligible, 1 omitted
   ok(m.quadEligible === 1 && m.omitted === 1, 'quadEligible=1 / omitted=1 (only raid ever in the HQ × non-simple slice)');
   // maxPlays drives bubble radius: max over max(a,b) per card = raid's 3
   ok(m.maxPlays === 3, 'maxPlays = 3 (raid, the most-played card across runs)');

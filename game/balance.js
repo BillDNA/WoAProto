@@ -30,8 +30,8 @@
    - Swings                  -> avg times the field-score lead flipped to the OTHER
                                 side per skirmish. High = real back-and-forth (you can
                                 feel you'll come back); 0 = one side led wire-to-wire.
-   - Card report             -> Simple%/1stSight%/AvgSeen per card (per-card Win% was
-                                dropped from print, WOA-019: dead at n=700, still in logs/woa.db)
+   - Card report             -> Simple%/1stSight%/AvgSeen per card (per-card Win% is
+                                computed but not printed; see docs/report-model.md)
 
    Attrition victory (June 2026 rules): the player with more VP of SURVIVING
    units on the board wins when the cards run out; reserves count for nothing.
@@ -42,9 +42,9 @@ var E = require('./engine.js');
 var R = require('./report-model.js');
 var fs = require('fs');
 var path = require('path');
-// V1/WOA-032 skirmish persistence — guarded exactly like game/server.js's own
-// require: a zipped game/ without dev/ still runs and prints, just doesn't
-// persist. dev/ may carry deps (node:sqlite); game/ itself stays dependency-free.
+// Skirmish persistence, guarded like game/server.js's require: a zipped game/
+// without dev/ still runs and prints, just doesn't persist. dev/ may carry deps
+// (node:sqlite); game/ itself stays dependency-free.
 var db = null;
 try { db = require(path.join(__dirname, '..', 'dev', 'db.js')); } catch (e) { /* persistence off */ }
 
@@ -101,9 +101,8 @@ function matchup(n, a, b, maps) {
 }
 
 /* ---------------- per-map report ---------------- */
-// mapsetArg: the --mapset value the caller resolved `maps` from (null = the
-// active map-set's pool) — WOA-032 run-identity stamp only, doesn't affect
-// which maps run.
+// mapsetArg: the --mapset value `maps` was resolved from (null = active pool) —
+// a run-identity stamp only, doesn't affect which maps run.
 function mapReport(n, diff, filter, maps, mapsetArg) {
   if (filter) {
     maps = maps.filter(function (m) { return m.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0; });
@@ -112,8 +111,8 @@ function mapReport(n, diff, filter, maps, mapsetArg) {
   var probs = E.validateMaps(maps);
   if (probs.length) { console.log('Fix these first:\n  ' + probs.join('\n  ')); return; }
 
-  // V1/WOA-032: one runs row per invocation (SPEC §7), skirmishes reference it.
-  // Best-effort — a persistence hiccup must never break the report itself.
+  // One runs row per invocation; skirmishes reference it. Best-effort — a
+  // persistence hiccup must never break the report itself.
   var dbh = null, runId = null;
   if (db) {
     try {
@@ -150,8 +149,8 @@ function mapReport(n, diff, filter, maps, mapsetArg) {
     var done = n - r.unfinished;
     mapRows.push({ agg: r, done: done });
     var notes = R.mapNotes(r, done);
-    // WOA-039 (rules 1.2): Atk%/Swp% are shares of all actions; Drag is over
-    // attrition endings only (HQ endings have Drag 0 by definition).
+    // Atk%/Swp% are shares of all actions; Drag is over attrition endings only
+    // (HQ endings have Drag 0 by definition).
     var act = R.actionTotal(r), att = r.attritionEndings || 0;
     console.log(
       pad(map.name.slice(0, 15), 16, true) + pad(map.shape || '?', 11, true) +
@@ -168,9 +167,8 @@ function mapReport(n, diff, filter, maps, mapsetArg) {
   });
 
   var G = R.foldGlobal(mapRows);
-  // WOA-039 (rules 1.2): Behaviour is action SHARES; Reserves conditions to HQ
-  // endings (with the SPEC §8 small-n note); tie-goes-to-2nd + Drag condition to
-  // attrition endings.
+  // Behaviour is action shares; Reserves conditions to HQ endings (with a small-n
+  // note); tie-goes-to-2nd + Drag condition to attrition endings.
   var gAct = R.actionTotal(G), gAtt = Math.max(1, G.attritionEndings);
   function nNote(k) { return ' (n=' + k + (k < R.SMALL_N.fleet ? ', small-n' : '') + ')'; }
   function hqRes(sum, k) { return k ? Math.round(100 * sum / k) + '%' : '—'; }
@@ -188,9 +186,8 @@ function mapReport(n, diff, filter, maps, mapsetArg) {
     (G.leadChanges / Math.max(1, G.games)).toFixed(1) + ' lead swings per skirmish (higher = more back-and-forth)');
 
   console.log('\nCard report (' + G.games + ' skirmishes of AI play — biases noted below):');
-  // Win% dropped from print July 2026 (WOA-019): dead at n=700, all cards read
-  // 49-52 against the +/-8 rubric threshold — still computed in cardRows()
-  // and recorded per-skirmish in logs/woa.db, just not shown here.
+  // Win% deliberately not printed (still computed in cardRows() + logged) —
+  // docs/report-model.md#reporting-doctrine.
   var ch = pad('Card', 20, true) + pad('Simple%', 9) + pad('1stSight%', 11) + pad('AvgSeen', 9) + pad('plays', 8);
   console.log(ch);
   console.log(new Array(ch.length + 1).join('-'));
