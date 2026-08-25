@@ -22,15 +22,26 @@
       skirmishIndex: 0,
       wins: { red: 0, blue: 0 },
       firstPlayer: opts.firstPlayer || (I.rnd(s) < 0.5 ? 'red' : 'blue'),
+      // WOA-055: per-side deck selection {red, blue} (each null|deck|id|name);
+      // travels with the match like maps do. null = both sides share the active deck.
+      decks: opts.decks || null,
       winner: null
     };
     match.seed = s.seed;
     return match;
   }
 
+  // WOA-055: the card registry for one side — the skirmish's per-side deck if it
+  // seats them, else the active-deck default. Self-heals pre-055 saves/sims that
+  // have no st.sideDecks. Every per-side card lookup (buildDeck, drawHand,
+  // playCard, stepOptions) routes through here so a side always reads ITS deck.
+  function sideReg(st, p) {
+    return (st.sideDecks && st.sideDecks[p]) || I.DEFAULT_REG;
+  }
+
   function buildDeck(s, player) {
     var deck = [];
-    I.CARDS.forEach(function (c) {
+    sideReg(s, player).cards.forEach(function (c) {
       for (var i = 0; i < c.count; i++) if (!c.starting) deck.push(c.id);
     });
     I.shuffle(s, deck);
@@ -79,6 +90,13 @@
       fsTimeline: []     // [fsRed, fsBlue] per completed turn (V1 DB timeline; absent on sims + old saves)
     };
     st.second = I.other(st.current);
+    // WOA-055: only seat per-side registries when a non-default deck is actually
+    // chosen. The default (symmetric) path leaves st.sideDecks absent — sideReg
+    // falls back to DEFAULT_REG — so live/synced/persisted state never carries a
+    // redundant card catalog on the hot path.
+    var dsel = match.decks;
+    if (dsel && (dsel.red || dsel.blue))
+      st.sideDecks = { red: I.resolveDeck(dsel.red), blue: I.resolveDeck(dsel.blue) };
     st.decks.red = buildDeck(st, 'red');
     st.decks.blue = buildDeck(st, 'blue');
     log(st, 'Skirmish ' + (match.skirmishIndex + 1) + ' — "' + map.name + '". ' + I.cap(st.current) + ' moves first.');
@@ -126,7 +144,7 @@
     var first = !st.firstTurnDone[p];
     if (first) {
       st.firstTurnDone[p] = true;
-      hand.push(I.STARTING_CARD);
+      hand.push(sideReg(st, p).starting);
     }
     var want = first ? 3 : 4;
     var total = st.decks[p].length + st.discards[p].length;
@@ -135,7 +153,7 @@
     if (first) { // house rule: cards flagged noOpener (e.g. Airdrop) never open
       for (var hi = st.decks[p].length - 1; hi >= 0; hi--) {
         var cid = st.decks[p][hi];
-        if (I.CARD_BY_ID[cid] && I.CARD_BY_ID[cid].noOpener) held.push(st.decks[p].splice(hi, 1)[0]);
+        if (sideReg(st, p).byId[cid] && sideReg(st, p).byId[cid].noOpener) held.push(st.decks[p].splice(hi, 1)[0]);
       }
     }
     for (var i = 0; i < want; i++) {
@@ -250,7 +268,7 @@
     if (!st.playLog) st.playLog = []; // self-heal pre-metrics saves
     st.playLog.push({ p: p, id: cardId, mode: mode, turn: st.turnNumber,
       seen: (st.seen && st.seen[p] && st.seen[p][cardId]) || 1 });
-    var card = I.CARD_BY_ID[cardId];
+    var card = sideReg(st, p).byId[cardId];
     var steps;
     if (mode === 'attack') steps = [{ type: 'attack' }];
     else if (mode === 'reposition') steps = [{ type: 'reposition' }];
@@ -282,7 +300,7 @@
     var step = currentStep(st);
     if (!step) return null;
     var p = st.current;
-    var card = I.CARD_BY_ID[st.pending.cardId];
+    var card = sideReg(st, p).byId[st.pending.cardId];
     var o = { type: step.type, cardName: card.name, stepIndex: st.pending.idx, stepCount: st.pending.steps.length };
     if (step.type === 'deploy') {
       o.unit = step.unit;

@@ -118,9 +118,39 @@
   var TERRAIN_STOCK = BUILTIN.terrainStock || { F3: 2, F2: 4, M3: 2, M2: 4 };
   var CARDS = BUILTIN.cards;
   if (!UNITS || !CARDS) throw new Error('War of Attrition: maps.js must define units and cards');
-  var CARD_BY_ID = {};
-  CARDS.forEach(function (c) { CARD_BY_ID[c.id] = c; });
-  var STARTING_CARD = (CARDS.filter(function (c) { return c.starting; })[0] || CARDS[0]).id;
+  // A card registry is "everything the skirmish needs to know about one deck's
+  // cards": the id->def map + which card opens. Built once for the active deck
+  // (the global default) and once per side when a skirmish seats asymmetric
+  // decks (WOA-055). One builder, so both paths derive it identically.
+  function deckRegistry(cards) {
+    var byId = {};
+    cards.forEach(function (c) { byId[c.id] = c; });
+    var starting = (cards.filter(function (c) { return c.starting; })[0] || cards[0]).id;
+    return { cards: cards, byId: byId, starting: starting };
+  }
+  var DEFAULT_REG = deckRegistry(CARDS);
+  var CARD_BY_ID = DEFAULT_REG.byId;
+  var STARTING_CARD = DEFAULT_REG.starting;
+  // WOA-055 per-side deck binding: turn a deck SELECTION into a registry.
+  // null/undefined -> the active deck (default = today's symmetric behaviour);
+  // a deck object with .cards; or an id/name string looked up in CONTENT.decks.
+  // Registries are immutable for the process lifetime, so memoize the by-name
+  // lookup — a balance run resolves the same two decks per skirmish (200x for a
+  // 100-skirmish sweep) and would otherwise rebuild each byId map every time.
+  var REG_CACHE = {};
+  function resolveDeck(sel) {
+    if (!sel) return DEFAULT_REG;
+    if (typeof sel === 'string') {
+      if (REG_CACHE[sel]) return REG_CACHE[sel];
+      var found = (CONTENT.decks || []).filter(function (d) { return d && (d.id === sel || d.name === sel); })[0];
+      if (!found) throw new Error('War of Attrition: no deck "' + sel + '" (known: ' +
+        ((CONTENT.decks || []).map(function (d) { return d.id; }).join(', ') || 'none') + ')');
+      if (!found.cards || !found.cards.length) throw new Error('War of Attrition: deck "' + found.id + '" has no cards');
+      return (REG_CACHE[sel] = deckRegistry(found.cards));
+    }
+    if (!sel.cards || !sel.cards.length) throw new Error('War of Attrition: deck "' + (sel.id || sel) + '" has no cards');
+    return deckRegistry(sel.cards);
+  }
   // one slot per physical piece on the player mat
   var PIECE_TOTALS = { trench: TRENCH_COUNT };
   Object.keys(UNITS).forEach(function (t) { PIECE_TOTALS[t] = UNITS[t].count || 0; });
@@ -175,6 +205,10 @@
   // gotcha). Run-identity stampers (game/balance.js, the dashboard Run loop)
   // read this instead of re-deriving from content/decks/'s active flag.
   I.ACTIVE_DECK = ACTIVE_DECK;
+  I.DECKS = CONTENT.decks || [];
+  I.DEFAULT_REG = DEFAULT_REG;
+  I.deckRegistry = deckRegistry;
+  I.resolveDeck = resolveDeck;
   I.rnd = rnd;
   I.shuffle = shuffle;
   I.UNITS = UNITS;
