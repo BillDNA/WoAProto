@@ -14,6 +14,10 @@
                                          pit any two AI personalities (built-in
                                          easy/normal/hard or a maps.js "ai" row)
      node balance.js 40 brawler          per-map report with a personality
+     node balance.js 40 --deck-red cavsplit-16 --deck-blue iter3
+                                         seat a different deck per side (WOA-055);
+                                         id/name from content/decks/. Omit either
+                                         flag to leave that side on the active deck.
 
    Reading the map report:
    - Red%/Blue% far from 50  -> the map itself favours a side (positions/terrain)
@@ -70,7 +74,7 @@ function rosterFor(setArg) {
 }
 
 /* ---------------- matchup mode: how much does skill matter? ---------------- */
-function matchup(n, a, b, maps) {
+function matchup(n, a, b, maps, decks) {
   var pairs = (a && b) ? [[a, b]] : [
     ['normal', 'easy'],
     ['hard', 'normal'],
@@ -78,15 +82,21 @@ function matchup(n, a, b, maps) {
     ['normal', 'normal'] // sanity baseline, should be ~50
   ];
   console.log('Skill-vs-luck report: ' + n + ' skirmishes per map per pairing, ' + maps.length + ' maps.');
-  console.log('Each pairing also swaps sides so colour bias cancels out.\n');
+  console.log('Each pairing also swaps sides so colour bias cancels out.' +
+    (decks ? ' Decks swap WITH the AI so each keeps a fixed deck (skill, not deck, is measured).' : '') + '\n');
+  // WOA-055: the strong AI sits red in r1, blue in r2. If decks stayed seat-bound
+  // the strong AI would swap decks between orientations and the premium would fold
+  // in deck strength — so swap the decks alongside the sides, pinning each AI to
+  // one deck across both halves.
+  var decks2 = decks ? { red: decks.blue, blue: decks.red } : null;
   var results = [];
   pairs.forEach(function (pr) {
     var strong = pr[0], weak = pr[1];
     var sWins = 0, games = 0;
     maps.forEach(function (map, mi) {
       var h1 = Math.ceil(n / 2), h2 = Math.floor(n / 2);
-      var r1 = E.balanceMap(map, h1, { diffRed: strong, diffBlue: weak, seedBase: (mi + 1) * 7919 });
-      var r2 = E.balanceMap(map, h2, { diffRed: weak, diffBlue: strong, seedBase: (mi + 1) * 7919 + 31 });
+      var r1 = E.balanceMap(map, h1, { diffRed: strong, diffBlue: weak, seedBase: (mi + 1) * 7919, decks: decks });
+      var r2 = E.balanceMap(map, h2, { diffRed: weak, diffBlue: strong, seedBase: (mi + 1) * 7919 + 31, decks: decks2 });
       sWins += r1.redWins + ((h2 - r2.unfinished) - r2.redWins);
       games += (h1 - r1.unfinished) + (h2 - r2.unfinished);
       process.stdout.write('.');
@@ -103,7 +113,7 @@ function matchup(n, a, b, maps) {
 /* ---------------- per-map report ---------------- */
 // mapsetArg: the --mapset value `maps` was resolved from (null = active pool) —
 // a run-identity stamp only, doesn't affect which maps run.
-function mapReport(n, diff, filter, maps, mapsetArg) {
+function mapReport(n, diff, filter, maps, mapsetArg, decks) {
   if (filter) {
     maps = maps.filter(function (m) { return m.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0; });
     if (!maps.length) { console.log('No map matches "' + filter + '".'); return; }
@@ -119,7 +129,7 @@ function mapReport(n, diff, filter, maps, mapsetArg) {
       dbh = db.open();
       runId = db.insertRun(dbh, {
         version: E.VERSION, kind: 'balance', redAi: diff, blueAi: diff, n: n, tool: 'balance.js',
-        deck: E.ACTIVE_DECK && E.ACTIVE_DECK.id,
+        deck: deckLabel,
         mapset: mapsetArg || (E.activeMapset() && E.activeMapset().id) || 'all',
         seedBase: 7919 // the SAME base the per-map (mi+1)*7919 schedule below multiplies
       });
@@ -140,7 +150,7 @@ function mapReport(n, diff, filter, maps, mapsetArg) {
 
   maps.forEach(function (map, mi) {
     var seedBase = (mi + 1) * 7919;
-    var r = E.balanceMap(map, n, { diffRed: diff, diffBlue: diff, seedBase: seedBase,
+    var r = E.balanceMap(map, n, { diffRed: diff, diffBlue: diff, seedBase: seedBase, decks: decks,
       onGame: dbh && function (g1, nn, st) {
         try {
           db.insertSkirmish(dbh, runId, st, E.balanceFP(g1 - 1), { seed: E.balanceSeed(seedBase, g1 - 1), version: E.VERSION });
@@ -229,6 +239,25 @@ function mapReport(n, diff, filter, maps, mapsetArg) {
 var args = process.argv.slice(2);
 var setArg = null, si = args.indexOf('--mapset');
 if (si >= 0) { setArg = args[si + 1]; args.splice(si, 2); }
+// WOA-055: seat a different deck per side. --deck-red/--deck-blue take a deck
+// id or name from content/decks/; omit either to leave that side on the active
+// deck. No flags = both sides share the active deck (default).
+var deckRed = null, dri = args.indexOf('--deck-red');
+if (dri >= 0) { deckRed = args[dri + 1]; args.splice(dri, 2); }
+var deckBlue = null, dbi = args.indexOf('--deck-blue');
+if (dbi >= 0) { deckBlue = args[dbi + 1]; args.splice(dbi, 2); }
+var decks = (deckRed || deckBlue) ? { red: deckRed, blue: deckBlue } : null;
+var activeId = (E.ACTIVE_DECK && E.ACTIVE_DECK.id) || null;
+// runs.deck stays a single id in the common case (other writers store one id);
+// only genuinely-different decks get the "X vs Y" composite.
+var deckLabel = activeId;
+if (decks) {
+  try { E.resolveDeck(decks.red); E.resolveDeck(decks.blue); }   // fail fast on a bad name
+  catch (e) { console.log(e.message); process.exit(1); }
+  var redId = decks.red || activeId, blueId = decks.blue || activeId;
+  deckLabel = redId === blueId ? redId : redId + ' vs ' + blueId;
+  console.log('Decks: red = ' + (redId || 'active') + ', blue = ' + (blueId || 'active') + '\n');
+}
 if (args[0] === 'matchup') {
   // node balance.js matchup [n] [aiA aiB]  — aiA/aiB may be any AI_PRESETS
   // name (easy/normal/hard or a maps.js "ai" personality)
@@ -236,7 +265,7 @@ if (args[0] === 'matchup') {
   rest.forEach(function (a) {
     if (!E.AI_PRESETS[a]) { console.log('Unknown AI "' + a + '". Known: ' + Object.keys(E.AI_PRESETS).join(', ')); process.exit(1); }
   });
-  matchup(Math.max(2, +(args.filter(function (a) { return /^\d+$/.test(a); })[0]) || 12), rest[0], rest[1], rosterFor(setArg));
+  matchup(Math.max(2, +(args.filter(function (a) { return /^\d+$/.test(a); })[0]) || 12), rest[0], rest[1], rosterFor(setArg), decks);
 } else {
   var n = 24, diff = 'normal', filter = null;
   args.forEach(function (a) {
@@ -244,5 +273,5 @@ if (args[0] === 'matchup') {
     else if (E.AI_PRESETS[a]) diff = a; // easy/normal/hard or a maps.js personality
     else filter = filter ? filter + ' ' + a : a;
   });
-  mapReport(n, diff, filter, rosterFor(setArg), setArg);
+  mapReport(n, diff, filter, rosterFor(setArg), setArg, decks);
 }

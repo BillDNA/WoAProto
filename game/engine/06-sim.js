@@ -29,8 +29,10 @@
   }
 
   /* ---------- skirmish simulation (shared by balance.js and the in-game lab) ---------- */
-  function simSkirmish(map, seed, firstPlayer, diffRed, diffBlue) {
-    var match = I.newMatch({ seed: seed | 0, maps: [map], firstPlayer: firstPlayer || 'red' });
+  // WOA-055: `decks` = {red, blue} per-side selection (each null|deck|id|name).
+  // Omitted -> both sides share the active deck (behaviour unchanged from pre-055).
+  function simSkirmish(map, seed, firstPlayer, diffRed, diffBlue, decks) {
+    var match = I.newMatch({ seed: seed | 0, maps: [map], firstPlayer: firstPlayer || 'red', decks: decks || null });
     var st = I.newSkirmish(match);
     return playToEnd(st, { decide: function (s) {
       var diff = s.current === 'red' ? (diffRed || 'normal') : (diffBlue || diffRed || 'normal');
@@ -183,7 +185,7 @@
     var out = balanceNew(n);
     for (var g = 0; g < n; g++) {
       var fp = balanceFP(g);
-      var st = simSkirmish(map, balanceSeed(opts.seedBase, g), fp, opts.diffRed, opts.diffBlue);
+      var st = simSkirmish(map, balanceSeed(opts.seedBase, g), fp, opts.diffRed, opts.diffBlue, opts.decks);
       balanceAdd(out, st, fp);
       if (st.phase === 'skirmish-over' && opts.onGame) opts.onGame(g + 1, n, st);
     }

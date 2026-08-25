@@ -572,6 +572,68 @@ console.log('== Field Marshal AI & skirmish sim ==');
   ok(a.skirmishWinner === b.skirmishWinner && a.turnNumber === b.turnNumber, 'simulation is deterministic per seed');
 })();
 
+console.log('== WOA-055 asymmetric deck binding ==');
+(function () {
+  // Deck composition as a sorted "id:count" signature — the fingerprint a side's
+  // built deck should match.
+  function sig(cards) {
+    return cards.filter(function (c) { return !c.starting; })
+      .map(function (c) { return c.id + ':' + c.count; }).sort().join('|');
+  }
+  function deckSigFromState(st, p) {
+    var counts = {};
+    st.decks[p].forEach(function (id) { counts[id] = (counts[id] || 0) + 1; });
+    return Object.keys(counts).map(function (id) { return id + ':' + counts[id]; }).sort().join('|');
+  }
+
+  var active = E.ACTIVE_DECK && E.ACTIVE_DECK.id;
+  // (a) default (no per-side selection) is byte-identical to naming the active
+  //     deck on both sides — the golden-safe path.
+  var base = E.balanceMap(E.MAPS[4], 4, { seedBase: 5 });
+  var named = E.balanceMap(E.MAPS[4], 4, { seedBase: 5, decks: { red: active, blue: active } });
+  ok(JSON.stringify(base) === JSON.stringify(named),
+    'balanceMap with decks={active,active} is identical to no decks (default unchanged)');
+
+  // (b) find two decks with DIFFERENT non-starting composition, seat one per side.
+  var decks = E.DECKS || [];
+  var two = null;
+  for (var i = 0; i < decks.length && !two; i++)
+    for (var j = 0; j < decks.length; j++)
+      if (i !== j && decks[i].cards && decks[j].cards && sig(decks[i].cards) !== sig(decks[j].cards)) {
+        two = [decks[i], decks[j]]; break;
+      }
+  if (!two) { ok(true, '(skipped: need two decks with distinct composition; have ' + decks.length + ')'); return; }
+
+  var st = E.simSkirmish(E.MAPS[0], 4242, 'red', 'normal', 'normal', { red: two[0].id, blue: two[1].id });
+  ok(st.phase === 'skirmish-over', 'asymmetric skirmish (' + two[0].id + ' vs ' + two[1].id + ') finishes');
+  // The deck each side was DEALT (built + hand + discards) must match its own deck.
+  function fullSideSig(st, p) {
+    var counts = {};
+    [].concat(st.decks[p], st.hands[p], st.discards[p]).forEach(function (id) {
+      var c = st.sideDecks[p].byId[id];
+      if (c && c.starting) return;                 // the seeded starting card isn't in the shuffled deck
+      counts[id] = (counts[id] || 0) + 1;
+    });
+    return Object.keys(counts).map(function (id) { return id + ':' + counts[id]; }).sort().join('|');
+  }
+  // Fresh skirmish (no cards drawn yet) so the built deck is the full composition.
+  var m = E.newMatch({ seed: 7, firstPlayer: 'red', maps: [E.MAPS[0]], decks: { red: two[0].id, blue: two[1].id } });
+  var fresh = E.newSkirmish(m);
+  ok(deckSigFromState(fresh, 'blue') === sig(two[1].cards),
+    'blue is dealt its OWN deck (' + two[1].id + '), not red\'s (blue hasn\'t drawn yet)');
+  // red drew its opening hand, so reconstruct from deck+hand+discards (minus the starting card).
+  ok(fullSideSig(fresh, 'red') === sig(two[0].cards),
+    'red is dealt its OWN deck (' + two[0].id + ')');
+  ok(fresh.sideDecks.red.starting === E.resolveDeck(two[0].id).starting &&
+     fresh.sideDecks.blue.starting === E.resolveDeck(two[1].id).starting,
+    'each side gets its own deck\'s starting card');
+
+  // Bad deck name fails loud.
+  var threw = false;
+  try { E.resolveDeck('no-such-deck-xyz'); } catch (e) { threw = true; }
+  ok(threw, 'resolveDeck throws on an unknown deck name');
+})();
+
 console.log('== noAdvance attacks (Ordered Withdraw holds its ground) ==');
 (function () {
   var card = fixtureCard('ordered_withdraw'); // fixture, not the active deck
