@@ -1118,6 +1118,23 @@ console.log('== fsTimeline: one [fsRed,fsBlue] pair per completed turn (WOA-037)
   }
 })();
 
+/* ---------- content/manifest.js is in sync with the content dirs (WOA-030) ----
+   The manifest is generated (by the server) from the content/ dirs; a hand-added
+   or renamed content file leaves it stale until regenerated. Re-derive it from
+   the SAME generator the server uses and fail loud if the committed file drifted
+   — so drift is caught here, not at runtime. Regenerate with a server boot. */
+(function () {
+  console.log('== content/manifest.js staleness ==');
+  var fs = require('fs'), path = require('path');
+  var gen = require('./content/manifest-gen.js');
+  var expected = gen.buildManifest();
+  var actual;
+  try { actual = fs.readFileSync(gen.MANIFEST_PATH, 'utf8').replace(/\r\n/g, '\n'); } catch (e) { actual = null; }
+  ok(actual === expected,
+    'content/manifest.js matches the content/ dirs' +
+    (actual === expected ? '' : ' — STALE: regenerate it (boot the server, or `node -e "require(\'./game/content/manifest-gen.js\').regen()"`)'));
+})();
+
 console.log('\n== report-model: bands as data + trace folds (WOA-033) ==');
 (function () {
   var R = require('./report-model.js');
