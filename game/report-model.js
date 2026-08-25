@@ -621,6 +621,15 @@ var WOA_REPORT = (function () {
     return { types: types, hasUnits: sawUnits, hasDieT: sawDieT };
   }
 
+  // A run's skirmish rows -> per-unit-type agg: parse each row to an envelope
+  // (dropping rows that don't parse), then hand them to the ONE fold above.
+  // The Units pane's per-run input (mirrors cardAggFromEnvelopes' role for
+  // Cards). Pure, node + browser.
+  function unitsAggFromRows(rows) {
+    var envs = (rows || []).map(envelopeFromRow).filter(function (e) { return !!e; });
+    return unitsAggFromEnvelopes(envs);
+  }
+
   /* The full saved-report markdown. dev/balance-report.js and the dashboard's
      Save-report button are two callers of THIS one renderer; the model
      parameterizes exactly what differs between them:
@@ -867,7 +876,7 @@ var WOA_REPORT = (function () {
     // Cards pane: per-run per-card view + fleet-wide fire-time quartiles (many skirmishes)
     cardRunView: cardRunView, cardFleetFireTimes: cardFleetFireTimes,
     // WOA-044: per-unit-type aggregate (role map / breakthrough / lifespan / exchange, SPEC §3)
-    unitsAggFromEnvelopes: unitsAggFromEnvelopes,
+    unitsAggFromEnvelopes: unitsAggFromEnvelopes, unitsAggFromRows: unitsAggFromRows,
     // WOA-042: per-hex lenses (drill-down) + SPEC §5 dead/avenue thresholds
     hexLenses: hexLenses, foldHexLenses: foldHexLenses, HEX_DEAD_OCC: HEX_DEAD_OCC, HEX_AVENUE_Q: HEX_AVENUE_Q,
     // WOA-035: small-n rule + DB-rows-as-agg fold (Overview)

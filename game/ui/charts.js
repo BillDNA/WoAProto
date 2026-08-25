@@ -1384,26 +1384,9 @@ function renderCards(el) {
 var UNIT_COLOR = { cavalry: CHART.divRed[1], infantry: CHART.divBlue[1], artillery: CHART.improve };
 function unColor(t, i) { return UNIT_COLOR[t] || CHART.seq[i % CHART.seq.length]; }
 
-// Per-run per-type fold (mirrors cardRunView's shape for Cards): parse this
-// run's skirmish rows into envelopes once, hand them to the ONE report-model
-// fold. Returns { types:{typeKey:{n,depMedian,roleY,breakthrough,exchange,
-// lifespan,lifespanN}}, hasUnits, hasDieT } — WOA_REPORT.unitsAggFromEnvelopes
-// verbatim (nothing to derive here, unlike Cards' cardRows wrapping).
-function unRunTypes(rows) {
-  var envs = rows.map(WOA_REPORT.envelopeFromRow).filter(function (e) { return !!e; });
-  return WOA_REPORT.unitsAggFromEnvelopes(envs);
-}
-
-// Fixed [0, niceMax] domain for a linear (non-percentage) track — breakthrough
-// (attacks/skirmish) and exchange (kill/death ratio) are open-ended small
-// numbers, not 0-100%, so this is ovTrackDomain's band-driven sizing
-// simplified to "whatever the real A/B values need, +15% headroom".
-function unLinearDomain(vals) {
-  var hi = 1;
-  vals.forEach(function (v) { if (v != null && v > hi) hi = v; });
-  return { lo: 0, hi: hi * 1.15 };
-}
-function unPos(domain, v) { return v == null ? null : Math.max(0, Math.min(100, (v - domain.lo) / (domain.hi - domain.lo) * 100)); }
+// The pane's data-shaping lives in CHART_MODEL.buildUnitsModel (ui/chart-model.js):
+// the per-type rows fold (WOA_REPORT.unitsAggFromRows) + linear-domain positioning
+// (unLinearDomain / unPos). This file only draws over what it returns.
 
 /* One dumbbell row on a linear track — used by both Breakthrough (midline
    null) and Exchange (midline 1.0, "trades even"). A hollow ring / B solid
@@ -1411,9 +1394,9 @@ function unPos(domain, v) { return v == null ? null : Math.max(0, Math.min(100, 
    improved judgement here). Greys per-mark on WOA_REPORT.smallN, same rule
    as every other track on this tab. */
 function unTrackRow(name, color, domain, va, vb, na, nb, fmtFn, midlineVal) {
-  var posA = unPos(domain, va), posB = unPos(domain, vb);
+  var posA = CHART_MODEL.unPos(domain, va), posB = CHART_MODEL.unPos(domain, vb);
   var smallA = WOA_REPORT.smallN(na, 'fleet'), smallB = WOA_REPORT.smallN(nb, 'fleet');
-  var midPos = midlineVal != null ? unPos(domain, midlineVal) : null;
+  var midPos = midlineVal != null ? CHART_MODEL.unPos(domain, midlineVal) : null;
   var inner = '<div style="position:absolute;top:6px;left:0;right:0;height:2px;background:#d8caa2;"></div>' +
     (midPos != null ? '<div style="position:absolute;top:0;bottom:0;left:' + midPos.toFixed(1) + '%;width:1px;background:' + CHART.axis + ';"></div>' : '') +
     (posA != null && posB != null ? '<div style="position:absolute;top:6px;height:2px;left:' + Math.min(posA, posB).toFixed(1) +
@@ -1540,7 +1523,7 @@ function unBreakthroughSection(rows) {
   if (!live.length) return h + '<p class="small">No skirmishes fielding a unit for either run yet.</p>';
   var vals = [];
   live.forEach(function (r) { if (r.a) vals.push(r.a.breakthrough); if (r.b) vals.push(r.b.breakthrough); });
-  var domain = unLinearDomain(vals);
+  var domain = CHART_MODEL.unLinearDomain(vals);
   h += '<div class="ov-grid">' + live.map(function (r) {
     return unTrackRow(r.name, r.color, domain, r.a ? r.a.breakthrough : null, r.b ? r.b.breakthrough : null,
       r.a ? r.a.n : 0, r.b ? r.b.n : 0, function (v) { return WOA_REPORT.f1(v); }, null);
@@ -1563,7 +1546,7 @@ function unLifespanSection(rows, hasDieT) {
   if (!live.length) return h + '<p class="small">No unit deploys recorded for either run yet.</p>';
   var vals = [];
   live.forEach(function (r) { if (r.a && r.a.lifespan != null) vals.push(r.a.lifespan); if (r.b && r.b.lifespan != null) vals.push(r.b.lifespan); });
-  var domain = unLinearDomain(vals);
+  var domain = CHART_MODEL.unLinearDomain(vals);
   h += '<div class="ov-grid">' + live.map(function (r) {
     return unLifespanRow(r.name, r.color, domain, r.a ? r.a.lifespan : null, r.b ? r.b.lifespan : null,
       r.a ? r.a.n : 0, r.b ? r.b.n : 0);
@@ -1577,7 +1560,7 @@ function unExchangeSection(rows) {
   if (!live.length) return h + '<p class="small">No unit deaths recorded for either run yet.</p>';
   var vals = [1];
   live.forEach(function (r) { if (r.a && r.a.exchange != null) vals.push(r.a.exchange); if (r.b && r.b.exchange != null) vals.push(r.b.exchange); });
-  var domain = unLinearDomain(vals);
+  var domain = CHART_MODEL.unLinearDomain(vals);
   h += '<div class="ov-grid">' + live.map(function (r) {
     return unTrackRow(r.name, r.color, domain, r.a ? r.a.exchange : null, r.b ? r.b.exchange : null,
       r.a ? r.a.n : 0, r.b ? r.b.n : 0, function (v) { return WOA_REPORT.f1(v); }, 1.0);
@@ -1588,12 +1571,10 @@ function unExchangeSection(rows) {
 /* Assembles the full Units pane from two runs' already-fetched skirmish rows
    (the SAME rowsA/rowsB shape ovRenderBody/crdRenderBody consume). */
 function unRenderBody(el, rowsA, rowsB) {
-  var A = unRunTypes(rowsA), B = unRunTypes(rowsB);
-  var typeKeys = Object.keys(E.UNITS);
-  var rows = typeKeys.map(function (t, i) {
-    return { type: t, name: E.UNITS[t].name, color: unColor(t, i), a: A.types[t] || null, b: B.types[t] || null };
-  }).filter(function (r) { return (r.a && r.a.n) || (r.b && r.b.n); });
-  var hasDieT = !!(A.hasDieT || B.hasDieT);
+  // All the pane's data-shaping is one pure call; this function only draws.
+  var model = CHART_MODEL.buildUnitsModel(rowsA, rowsB);
+  var rows = model.rows, hasDieT = model.hasDieT;
+  rows.forEach(function (r) { r.color = unColor(r.type, r.idx); }); // theme (palette lives here)
 
   var h = '<div class="un-wrap"><div class="un-grid">';
   h += '<div class="chcard"><h3>Role map</h3>' +
