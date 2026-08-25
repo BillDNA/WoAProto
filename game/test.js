@@ -325,6 +325,22 @@ console.log('== deck composition (data-driven from maps.js) ==');
   ok(Object.keys(E.PIECE_TOTALS).length >= 2 && E.PIECE_TOTALS.trench >= 0, 'piece totals derive from maps.js: ' + JSON.stringify(E.PIECE_TOTALS));
 })();
 
+console.log('== army-points (WOA #54: computed from steps, weight table pinned) ==');
+(function () {
+  // Seeding intent: deploy > attack > reposition. Guard the ordering so a weight
+  // edit that inverts it is a loud, deliberate diff.
+  ok(E.cardPoints({ steps: [{ type: 'deploy', unit: 'infantry' }] }) >
+     E.cardPoints({ steps: [{ type: 'attack' }] }) &&
+     E.cardPoints({ steps: [{ type: 'attack' }] }) >
+     E.cardPoints({ steps: [{ type: 'reposition' }] }),
+    'deploy > attack > reposition base costs');
+  // Representative card: Raiding Party exercises deploy + attack flags (tieSpare,
+  // noAdvance). Pin it and the active deck's total so any weight change is reviewed.
+  ok(E.cardPoints(E.CARD_BY_ID['raiding_party']) === 6.5, 'Raiding Party = 6.5 pts (deploy inf 3 + attack tieSpare/noAdvance 3.5)');
+  ok(E.deckPoints(E.ACTIVE_DECK) === 67.5, 'active deck "' + E.ACTIVE_DECK.id + '" totals 67.5 army-points');
+  ok(E.cardPoints({ steps: [] }) === 0 && E.deckPoints({ cards: [] }) === 0, 'empty card / empty deck = 0');
+})();
+
 console.log('== deploy step budget vs stock (no deploy fallback, oversubscription = broken content) ==');
 (function () {
   // Printed deploy steps per unit type, weighted by each card's deck count. A

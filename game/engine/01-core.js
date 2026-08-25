@@ -126,6 +126,42 @@
   Object.keys(UNITS).forEach(function (t) { PIECE_TOTALS[t] = UNITS[t].count || 0; });
 
   var MAPS = BUILTIN.maps;
+
+  /* ---------- army-points (WOA #54) ----------
+     A descriptive capability yardstick: points are COMPUTED from a card's steps
+     against this ONE hand-seeded weight table, never stored per card (one place
+     to tune, no per-card drift). Measured balance always overrules this number.
+     Seeding intent: deploy > attack > reposition; unit tier and the attack
+     flags/mod add capability on top. `combo` is a global step-density exponent,
+     flat at 1.0 (nSteps^0 = 1) with room to price multi-step combos later. */
+  var POINTS = {
+    combo: 1.0,
+    step: { deploy: 3, attack: 2, reposition: 1, trench: 1, barrage: 2 },
+    tier: { infantry: 0, cavalry: 1, artillery: 2 },   // deploy unit surcharge
+    mod: 1,                                             // per point of |attack mod|
+    tieSpare: 1, noAdvance: 0.5, anywhere: 1            // flag surcharges
+  };
+  function stepPoints(step) {
+    if (!step || !step.type) return 0;
+    var p = POINTS.step[step.type] || 0;
+    p += POINTS.tier[step.unit] || 0;                  // 0 when the step has no unit
+    if (step.mod) p += Math.abs(step.mod) * POINTS.mod;
+    if (step.tieSpare) p += POINTS.tieSpare;
+    if (step.noAdvance) p += POINTS.noAdvance;
+    if (step.anywhere) p += POINTS.anywhere;
+    return p;
+  }
+  function cardPoints(card) {
+    var steps = (card && card.steps) || [];
+    if (!steps.length) return 0;
+    var sum = steps.reduce(function (s, st) { return s + stepPoints(st); }, 0);
+    return sum * Math.pow(steps.length, POINTS.combo - 1);
+  }
+  function deckPoints(deck) {
+    var cards = (deck && deck.cards) || [];
+    return cards.reduce(function (s, c) { return s + cardPoints(c) * (c.count == null ? 1 : c.count); }, 0);
+  }
+
   // tiny pure helpers used by every layer
   function other(p) { return p === 'red' ? 'blue' : 'red'; }
   function cap(p) { return p.charAt(0).toUpperCase() + p.slice(1); }
@@ -148,6 +184,8 @@
   I.CARD_BY_ID = CARD_BY_ID;
   I.STARTING_CARD = STARTING_CARD;
   I.PIECE_TOTALS = PIECE_TOTALS;
+  I.cardPoints = cardPoints;
+  I.deckPoints = deckPoints;
   I.MAPS = MAPS;
   I.MAPSETS = MAPSETS;
   I.activeMapset = activeMapset;
