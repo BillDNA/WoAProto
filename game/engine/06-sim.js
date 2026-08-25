@@ -66,7 +66,7 @@
       // Feedback Round 2 pacing metrics:
       killTail: 0,      // trailing kill-less turns (0 = ended on a kill/HQ, ~32 = no-kill grind)
       leadChanges: 0 }; // field-score lead flips per skirmish (higher = more back-and-forth)
-    I.CARDS.forEach(function (c) { out.cards[c.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 }; });
+    I.CARDS.forEach(function (c) { out.cards[c.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0, hqPlays: 0, hqWins: 0 }; });
     return out;
   }
   /* ---------- the per-Skirmish FACT (architecture review 01) ----------
@@ -161,14 +161,20 @@
       out.reserveEndRedHQ += f.resEndRed / unitTotal;
       out.reserveEndBlueHQ += f.resEndBlue / unitTotal;
     }
+    var hqEnding = st.winType === 'hq';
     (st.playLog || []).forEach(function (e) {
-      var c = out.cards[e.id] || (out.cards[e.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 });
+      var c = out.cards[e.id] || (out.cards[e.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0, hqPlays: 0, hqWins: 0 });
       c.plays++;
       if (e.p === w) c.wins++;
       if (e.mode !== 'normal') c.simple++;     // resolved as a basic attack/reposition
       if (e.seen <= 1) c.firstSight++;          // played the first time it was seen
       if (e.noop) c.noop++;                     // resolved ZERO actions — an effective skipped turn
       c.seenSum += e.seen;
+      // WOA #57 mispricing residual: the axis-worthy card win contribution —
+      // HQ-capture endings × printed (non-simple) plays only, mirroring
+      // cardHqWinSlice (report-model.js). Pooled Win% is dead at these n
+      // (docs/report-model.md#reporting-doctrine); this slice carries the signal.
+      if (hqEnding && e.mode === 'normal') { c.hqPlays++; if (e.p === w) c.hqWins++; }
     });
     return out;
   }

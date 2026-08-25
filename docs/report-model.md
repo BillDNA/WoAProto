@@ -97,6 +97,17 @@ temperature-independent by design.
   skirmish was decided by the standoff, not the last card). Pooled `wins` survives
   only for internal bubble-sizing/tooltips. This slice is thin by construction (HQ
   endings ~17% of skirmishes), so expect small-n at ordinary run sizes.
+- **Mispricing residual (WOA #57) rides the same HQ slice.** The card table's
+  `Resid` column = the card's HQ-slice win *share* minus its army-points *share*,
+  scaled back to points (`cardRows`, tunables `MISPRICE_RESID_PTS` /
+  `MISPRICE_MIN_HQPLAYS`). It reuses the HQ×printed-play signal above (folded as
+  `hqPlays`/`hqWins` on the card agg by `balanceAdd`), NOT the dead pooled Win%.
+  Because the slice is small-n, a card is only flagged once its own `hqPlays` clears
+  `MISPRICE_MIN_HQPLAYS`. The residual is exposure-weighted (win-share, so
+  draw-frequency is a confound) and blind to held-value/late-timing cards — both
+  documented at the flag, both reasons it is advisory-only (ADR-0002). Prints only
+  when the caller passes `cardPoints` (CLI report, dashboard save; the Cards-pane
+  `cardRunView` doesn't, so it's unaffected).
 
 ## DB rows → aggregate (`foldSkirmishes`)
 

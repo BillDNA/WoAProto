@@ -288,7 +288,7 @@ async function run() {
       (accumulated ? ' accumulated across ' + runs + ' run(s) (this run added ' + (n) + '/map)' : ' (this run only, not accumulated)') +
       (DECK ? ' · deck ' + DECK : '') + (UNITSET ? ' · units ' + UNITSET : '') + (flags.mapset ? ' · mapset ' + flags.mapset : '') +
       ' · ±' + noise + ' pts/map · dev/balance-report.js',
-    rows: rows, G: G, cards: E.CARDS
+    rows: rows, G: G, cards: E.CARDS, cardPoints: E.cardPoints
   }) + '\n';
 
   if (flags.stdout) { process.stdout.write(md); console.error('BEST_MAP: ' + best); return; }
