@@ -109,6 +109,10 @@ function deckProblems(cards){
   // cavsplit17-raid-paid adopted 2026-07-18, WOA-030); a custom deck must
   // land in that same band.
   if (total < 16 || total > 17) probs.push('the deck must total 16-17 cards (got ' + total + ') — hand-edit the deck file if you really want an exotic size');
+  // WOA #56: army-points budget ceiling — the fairness constraint that lets two
+  // asymmetric decks be called "matched". Same reject-on-validate as the size band.
+  var pts = E.deckPoints({ cards: cards });
+  if (pts > E.DECK_POINTS_CAP) probs.push('the deck is over the army-points budget (' + pts + ' > ' + E.DECK_POINTS_CAP + ') — cut a card or a step');
   return probs;
 }
 

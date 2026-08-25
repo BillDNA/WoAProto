@@ -182,7 +182,7 @@
     return p;
   }
   function cardPoints(card) {
-    var steps = (card && card.steps) || [];
+    var steps = (card && Array.isArray(card.steps)) ? card.steps : [];
     if (!steps.length) return 0;
     var sum = steps.reduce(function (s, st) { return s + stepPoints(st); }, 0);
     return sum * Math.pow(steps.length, POINTS.combo - 1);
@@ -191,6 +191,11 @@
     var cards = (deck && deck.cards) || [];
     return cards.reduce(function (s, c) { return s + cardPoints(c) * (c.count == null ? 1 : c.count); }, 0);
   }
+  // Army-points budget ceiling (WOA #56): the fairness constraint that lets two
+  // asymmetric decks be called "matched". Seeded above where the shipped roster
+  // sits today (max iter3 = 70.5); the deck editor's sum(count) band guardrail
+  // rejects an over-budget deck the same way it rejects an oversized one.
+  var DECK_POINTS_CAP = 72;
 
   // tiny pure helpers used by every layer
   function other(p) { return p === 'red' ? 'blue' : 'red'; }
@@ -220,6 +225,7 @@
   I.PIECE_TOTALS = PIECE_TOTALS;
   I.cardPoints = cardPoints;
   I.deckPoints = deckPoints;
+  I.DECK_POINTS_CAP = DECK_POINTS_CAP;
   I.MAPS = MAPS;
   I.MAPSETS = MAPSETS;
   I.activeMapset = activeMapset;

@@ -480,6 +480,13 @@ setTimeout(function () {
       var benched = JSON.parse(JSON.stringify(win.Engine.CARDS));
       benched[2].out = true; // benched cards drop from the total (here 17 -> 14, under the 16-17 band)
       ok(win.deckProblems(benched).some(function (p) { return /must total 16-17/.test(p); }), 'benching a card drops it below the 16-17 band');
+      // WOA #56: an over-army-points deck is refused by the same validation pass.
+      // Swap the cheapest card for a maxed-out one so the total blows past the cap
+      // without changing the card count (isolates the points gate from the size band).
+      var overPts = JSON.parse(JSON.stringify(win.Engine.CARDS));
+      overPts.forEach(function (c) { if (!c.starting) c.steps = [{ type: 'deploy', unit: 'artillery' }, { type: 'attack', mod: 5, tieSpare: true, anywhere: true }]; });
+      ok(win.Engine.deckPoints({ cards: overPts.filter(function (c) { return !c.out; }) }) > win.Engine.DECK_POINTS_CAP &&
+         win.deckProblems(overPts).some(function (p) { return /over the army-points budget/.test(p); }), 'over-budget deck refused by the points gate');
       // five deck slots, exactly one active
       ok(doc.querySelectorAll('#dkSlots .dkslot[data-slot]').length === 5, 'five deck slots offered');
       ok(doc.querySelectorAll('#dkSlots .dkslot.active').length === 1, 'exactly one active deck marked');
