@@ -1376,6 +1376,99 @@ console.log('\n== report-model: foldSkirmishes control% from hexesRed/hexesBlue 
   ok(controlBand.val(legacyOnly.agg, legacyOnly.done) === null, 'control band val() = null (not 0) when no row carries control data');
 })();
 
+console.log('\n== report-model: cross-skirmish drill-down folds (Maps pane) ==');
+(function () {
+  var R = require('./report-model.js');
+  function near(a, b) { return Math.abs(a - b) < 1e-9; }
+
+  // The same hand-built envelope the trace-fold tests above pin (known lanes +
+  // |VP-diff| track [0,1,3,1,3,2,1,0]), reused as the fold input here.
+  var env = {
+    turns: 8,
+    trace: [
+      { p: 'red', id: 'A', turn: 1, a: 'deploy', u: 'infantry' },
+      { p: 'blue', id: 'B', turn: 2, a: 'deploy', u: 'cavalry' },
+      { p: 'red', id: 'C', turn: 3, a: 'attack', k: 1, ld: 'red' },
+      { p: 'blue', id: 'A', turn: 4, a: 'deploy', u: 'infantry', ld: 'red' },
+      { p: 'red', id: 'D', turn: 5, a: 'swap', ld: 'blue' },
+      { p: 'blue', id: 'C', turn: 6, a: 'attack', k: 2, ld: 'blue' },
+      { p: 'red', id: 'E', turn: 7, a: 'march', ld: 'red' },
+      { p: 'blue', id: 'C', turn: 8, a: 'attack', ld: 'red' }
+    ],
+    units: { infantry: { dep: [1, 4], atk: 0, abs: 0, kill: 0, die: 0 },
+      cavalry: { dep: [2], atk: 0, abs: 0, kill: 0, die: 0 },
+      artillery: { dep: [], atk: 0, abs: 0, kill: 0, die: 0 } },
+    fs: [[0, 0], [1, 0], [3, 0], [3, 2], [1, 4], [2, 4], [5, 4], [5, 5]]
+  };
+
+  // ---- envelopesForMap: filters by map name, drops rows that don't parse ----
+  var rows = [
+    { map: 'Frontier', trace: JSON.stringify({ turns: 3, trace: [] }), fs: [[1, 0]] },
+    { map: 'The Void', trace: JSON.stringify({ turns: 3, trace: [] }), fs: [[1, 0]] },
+    { map: 'Frontier', trace: 'not json', fs: [] }          // malformed -> envelopeFromRow null -> dropped
+  ];
+  ok(R.envelopesForMap(rows, 'Frontier').length === 1, 'envelopesForMap filters by map + drops the unparseable Frontier row (1 of 2)');
+  ok(R.envelopesForMap(rows, 'The Void').length === 1, 'envelopesForMap picks the other map');
+  ok(R.envelopesForMap(rows, 'Nowhere').length === 0, 'envelopesForMap = [] for a map with no rows');
+
+  // ---- laneAvg: averaging one envelope == that envelope's octile lanes; two
+  // identical envelopes == the same (proves the per-octile averaging loop) ----
+  ok(R.laneAvg([]) === null, 'laneAvg([]) = null (no skirmishes -> caller renders "none")');
+  var one = R.laneAvg([env]), octs = R.actionOctileLanes(env);
+  var reshapeOk = true, avgOk = true, two = R.laneAvg([env, env]);
+  ['deploy', 'attack', 'swap', 'march'].forEach(function (a) {
+    for (var i = 0; i < 8; i++) {
+      if (!near(one[a][i], octs[i][a])) reshapeOk = false;
+      if (!near(two[a][i], one[a][i])) avgOk = false;
+    }
+  });
+  ok(reshapeOk, 'laneAvg([env]) reshapes actionOctileLanes into per-lane octile arrays, value-for-value');
+  ok(avgOk, 'laneAvg of two identical envelopes equals one (averaging is stable)');
+
+  // ---- vpDiffAvg: resample [0,1,3,1,3,2,1,0] onto 9 points over normalized
+  // time (linear interp), hand-computed independently of the implementation ----
+  var vd = R.vpDiffAvg([env], 8);
+  var expect = [0, 0.875, 2.5, 1.75, 2, 2.625, 1.75, 0.875, 0];
+  var ptsOk = vd.points.length === 9 && vd.points.every(function (v, i) { return near(v, expect[i]); });
+  ok(ptsOk, '|VP-diff| resample matches the hand-computed 9-point interpolation (got ' + JSON.stringify(vd.points.map(function (v) { return +v.toFixed(3); })) + ')');
+  ok(vd.n === 1 && vd.total === 1, 'vpDiffAvg counts n=1/total=1 for one fs-carrying envelope');
+  var both = R.vpDiffAvg([env, env], 8);
+  ok(both.points.every(function (v, i) { return near(v, expect[i]); }) && both.n === 2 && both.total === 2, 'two identical tracks average to the same points, n=2/total=2');
+  // an envelope with no fs is skipped from the average but still counted in total
+  var envNoFs = { turns: 3, trace: [] };
+  ok(R.vpDiffAvg([envNoFs]) === null, 'vpDiffAvg = null when NO envelope carries fs');
+  var mixed = R.vpDiffAvg([env, envNoFs], 8);
+  ok(mixed.n === 1 && mixed.total === 2, 'a mix folds only the fs-carrying track (n=1) but reports total=2');
+})();
+
+console.log('\n== chart-model: buildMapDrillModel (Maps pane display model) ==');
+(function () {
+  var C = require('./ui/chart-model.js');
+  function row(map) { return { map: map, winner: 'red', trace: JSON.stringify({ turns: 3, trace: [] }), fs: [[1, 0], [2, 0], [2, 1]] }; }
+  var rowsA = [row('Frontier'), row('Frontier'), row('The Void')];
+  var rowsB = [row('Frontier')];
+
+  ok(C.buildMapDrillModel([], [], null, 'B') === null, 'buildMapDrillModel = null when neither run has rows');
+
+  var m = C.buildMapDrillModel(rowsA, rowsB, null, 'B');
+  ok(JSON.stringify(m.mapList) === JSON.stringify(['Frontier', 'The Void']), 'mapList = sorted union of both runs (Frontier, The Void)');
+  ok(m.mapName === 'Frontier' && m.idx === 0, 'null focus falls back to the first map (idx 0)');
+  ok(m.envA.length === 2 && m.envB.length === 1, 'envelopes are filtered to the focused map per run (A=2, B=1)');
+
+  // the builder never touches DASH — it returns the resolved focus so the caller
+  // can persist it (this test runs in node, where no DASH global exists at all).
+  ok(C.buildMapDrillModel(rowsA, rowsB, 'Nowhere', 'B').mapName === 'Frontier', 'a stale focus (not in mapList) resolves back to the first map');
+  var mv = C.buildMapDrillModel(rowsA, rowsB, 'The Void', 'B');
+  ok(mv.mapName === 'The Void' && mv.idx === 1 && mv.envA.length === 1, 'an explicit valid focus is honoured');
+
+  // the A|B|A/B toggle is resolved in the model, not the renderer
+  ok(m.tempo.solidLabel === 'B' && m.tempo.solidEnv === m.envB && m.tempo.ghostEnv === null && m.hex.ghost === null, "abMode 'B': run B solid, no ghost");
+  var ma = C.buildMapDrillModel(rowsA, rowsB, 'Frontier', 'A');
+  ok(ma.tempo.solidLabel === 'A' && ma.tempo.solidEnv === ma.envA, "abMode 'A': run A solid");
+  var mab = C.buildMapDrillModel(rowsA, rowsB, 'Frontier', 'AB');
+  ok(mab.tempo.ghostEnv === mab.envA && mab.hex.ghost === mab.hex.foldA, "abMode 'AB': run A is the ghost overlay");
+})();
+
 console.log(fails === 0 ? '\nALL TESTS PASSED' : '\n' + fails + ' FAILURES');
 process.exit(fails === 0 ? 0 : 1);
 /* end */

@@ -469,11 +469,8 @@ function chBindHits(root){
 // metrics whose val() returns a 0-100 percentage (drag/swings are raw counts).
 // WOA-039: attackShare/swapShare are % of all actions taken.
 var OV_PERCENT_KEYS = { red: 1, first: 1, hq: 1, zeroKill: 1, tie: 1, control: 1, firstBlood: 1, attackShare: 1, swapShare: 1 };
-// WOA-035/WOA-040: every A/B-comparing pane reads the SAME two runs' skirmish
-// rows (every map, unfiltered — GET /api/skirmishes?run=<id> has no map param),
-// so ONE cache/fetch serves the Overview AND the Maps drill-down; keyed
-// "runA|runB", see dashLoadSkirmishRows below.
-var SKIRMISH_CACHE = { key: null, rowsA: null, rowsB: null };
+// The shared A/B skirmish-row fetch + cache (dashLoadSkirmishRows / SKIRMISH_CACHE)
+// lives in ui/net.js with the rest of the /api access.
 
 function ovFmt(key, v) {
   if (v == null) return 'n/a';
@@ -743,29 +740,6 @@ function ovRenderBody(el, rowsA, rowsB) {
   chBindHits(el);
 }
 
-/* Shared A/B skirmish-row fetch (WOA-035 Overview + WOA-040 Maps drill-down —
-   both compare the SAME two runs' full skirmish sets, so one cache/fetch
-   serves either pane; switching pills, retempering, or flipping the A|B|A/B
-   toggle never refetches). Cache hit -> onReady(rowsA, rowsB) called
-   synchronously and dashLoadSkirmishRows returns true (caller skips its own
-   loading-state paint). Cache miss -> fetches both runs, returns false (the
-   caller paints its own "Loading..." — panes want different wording), then
-   calls onReady once both resolve; a race where DASH.runA/runB changed
-   mid-flight is guarded by re-checking the key. onReady(null, null) on a
-   fetch failure — no server, or a network hiccup. */
-function dashLoadSkirmishRows(onReady) {
-  var key = DASH.runA + '|' + DASH.runB;
-  if (SKIRMISH_CACHE.key === key) { onReady(SKIRMISH_CACHE.rowsA, SKIRMISH_CACHE.rowsB); return true; }
-  Promise.all([
-    fetch('/api/skirmishes?run=' + DASH.runA).then(function (r) { return r.ok ? r.json() : []; }),
-    fetch('/api/skirmishes?run=' + DASH.runB).then(function (r) { return r.ok ? r.json() : []; })
-  ]).then(function (res) {
-    SKIRMISH_CACHE = { key: key, rowsA: res[0] || [], rowsB: res[1] || [] };
-    if (DASH.runA + '|' + DASH.runB === key) onReady(SKIRMISH_CACHE.rowsA, SKIRMISH_CACHE.rowsB);
-  }).catch(function () { onReady(null, null); });
-  return false;
-}
-
 /* Overview entry point (dashboard.js's renderDashPane calls this for the
    'overview' view once the shell's own file:///no-runs/no-A-B guards pass). */
 function renderOverview(el) {
@@ -790,60 +764,11 @@ function renderOverview(el) {
    happens (no new endpoint, no re-derived fold: WOA_REPORT folds per-skirmish
    envelopes, this file only combines many skirmishes' folds into one chart). */
 
-/* Per-skirmish envelopes for ONE map's rows of one run — the shared input every
-   lane/track/settle-curve computation below folds over. */
-function mdEnvelopes(rows, mapName) {
-  return rows.filter(function (r) { return r.map === mapName; })
-    .map(WOA_REPORT.envelopeFromRow).filter(function (e) { return !!e; });
-}
-
-/* Tempo-lane average (design 3a): actionOctileLanes(env) already returns one
-   {deploy,attack,swap,march} row per octile in [0,1] for a SINGLE skirmish
-   (report-model.js, WOA-033) — this only averages that per-octile value
-   ACROSS skirmishes, per lane. null when there are no envelopes (nothing to
-   average) so callers can render "no skirmishes" instead of a flat zero lane. */
+/* The cross-skirmish folds these render functions draw over — envelopesForMap,
+   laneAvg, vpDiffAvg — live in report-model.js (WOA_REPORT), and the whole
+   pane's display model is assembled by CHART_MODEL.buildMapDrillModel
+   (ui/chart-model.js). MD_LANES is the lane draw-order for the tempo section. */
 var MD_LANES = ['deploy', 'attack', 'swap', 'march'];
-function mdLaneAvg(envs) {
-  if (!envs.length) return null;
-  var sums = {};
-  MD_LANES.forEach(function (a) { sums[a] = [0, 0, 0, 0, 0, 0, 0, 0]; });
-  envs.forEach(function (env) {
-    WOA_REPORT.actionOctileLanes(env).forEach(function (row, oi) {
-      MD_LANES.forEach(function (a) { sums[a][oi] += row[a]; });
-    });
-  });
-  var out = {};
-  MD_LANES.forEach(function (a) { out[a] = sums[a].map(function (v) { return v / envs.length; }); });
-  return out;
-}
-
-/* |VP-diff| track (SPEC §1 VPdiff / design 3a): vpDiffTrack(env) is a
-   per-TURN array (length = that skirmish's turn count, so skirmishes of different
-   length can't be averaged index-for-index). Resamples each skirmish's track
-   onto STEPS+1 evenly-spaced points over normalized skirmish time (linear
-   interpolation between the two nearest turns, the same "normalize to skirmish
-   length %" idiom settlePoint/deployInterleave already use), then averages
-   those points across skirmishes. Envelopes with no fs (vpDiffTrack -> null,
-   WOA-037: a run that predates the fs capture) are skipped, not zeroed — n
-   vs total tells the caller how many of this map's skirmishes actually carry
-   fs so it can grey/note honestly instead of drawing a fabricated flat line.
-   null only when NOT ONE envelope has fs (the "predates the fs capture" path
-   the ticket calls out); a partial n < total still draws, with a note. */
-function mdVpDiffAvg(envs, steps) {
-  steps = steps || 8;
-  var tracks = envs.map(function (env) { var vd = WOA_REPORT.vpDiffTrack(env); return vd && vd.track; }).filter(function (t) { return !!t && t.length; });
-  if (!tracks.length) return null;
-  var points = [];
-  for (var s = 0; s <= steps; s++) {
-    var frac = s / steps, sum = 0;
-    tracks.forEach(function (tr) {
-      var pos = frac * (tr.length - 1), lo = Math.floor(pos), hi = Math.min(tr.length - 1, lo + 1), f = pos - lo;
-      sum += tr[lo] + (tr[hi] - tr[lo]) * f;
-    });
-    points.push(sum / tracks.length);
-  }
-  return { points: points, n: tracks.length, total: envs.length };
-}
 
 /* One tempo lane row: 8 octile columns, each BAR_H tall max, scaled to
    laneMax — its OWN lane's peak across the octiles being drawn (NEVER a
@@ -896,11 +821,10 @@ function mdVpDiffTrackHtml(vd, ghostVd, solidLabel) {
    (default) shows run B solid; 'AB' shows run B solid with run A as a ghost
    overlay (both toggle branches read the SAME abMode the ticket specifies —
    there is no separate "which run is primary" state). */
-function mdTempoSection(mapName, envA, envB, abMode) {
-  var solidEnv = abMode === 'A' ? envA : envB, solidLabel = abMode === 'A' ? 'A' : 'B';
-  var ghostEnv = abMode === 'AB' ? envA : null;
-  var laneSolid = mdLaneAvg(solidEnv), laneGhost = ghostEnv ? mdLaneAvg(ghostEnv) : null;
-  var vdSolid = mdVpDiffAvg(solidEnv), vdGhost = ghostEnv ? mdVpDiffAvg(ghostEnv) : null;
+function mdTempoSection(mapName, tempo) {
+  var solidEnv = tempo.solidEnv, solidLabel = tempo.solidLabel, ghostEnv = tempo.ghostEnv;
+  var laneSolid = tempo.laneSolid, laneGhost = tempo.laneGhost;
+  var vdSolid = tempo.vdSolid, vdGhost = tempo.vdGhost;
 
   var h = '<div style="font-size:13px;font-weight:bold;margin-bottom:2px;">Tempo lanes ' +
     '<span class="small" style="font-style:italic;">(design 3a &mdash; each lane its OWN scale, never a 100%-stacked share)</span></div>';
@@ -1039,7 +963,7 @@ function mdLensFill(v, max) {
    SAME shared max — the tempo lanes' ghost-bar idiom, one axis over). The band
    board / settle curve above never toggle; the hex lenses DO (they're the
    toggle's spatial payload). */
-function mdHexLensSection(mapName, envA, envB, abMode) {
+function mdHexLensSection(mapName, hex) {
   var head = '<div style="font-size:13px;font-weight:bold;margin:18px 0 2px;">Hex lenses ' +
     '<span class="small" style="font-style:italic;">(SPEC §5 &mdash; where the skirmish actually happens on this map)</span></div>';
   var map = mdMapDef(mapName);
@@ -1049,10 +973,8 @@ function mdHexLensSection(mapName, envA, envB, abMode) {
   var hexList = shape.list;
   var hqRed = E.key(map.redHQ[0], map.redHQ[1]), hqBlue = E.key(map.blueHQ[0], map.blueHQ[1]);
 
-  var foldA = WOA_REPORT.foldHexLenses(envA), foldB = WOA_REPORT.foldHexLenses(envB);
-  var solid = abMode === 'A' ? foldA : foldB;
-  var ghost = abMode === 'AB' ? foldA : null;
-  var solidLabel = abMode === 'A' ? 'A' : 'B';
+  var foldA = hex.foldA, foldB = hex.foldB;
+  var solid = hex.solid, ghost = hex.ghost, solidLabel = hex.solidLabel;
   if (!solid.n) return head + '<p class="small">No skirmishes on ' + chEsc(mapName) + ' for run ' + solidLabel + ' yet.</p>';
 
   var vb = viewBoxFor(hexList);
@@ -1131,27 +1053,17 @@ function mdHexLensSection(mapName, envA, envB, abMode) {
    to DASH.mapFocus. DASH.mapFocus falls back to the first map (alpha) when
    unset or stale (e.g. it named a map only the PRIOR A/B pair had). */
 function mdRenderBody(el, rowsA, rowsB) {
-  var names = {};
-  rowsA.forEach(function (r) { names[r.map] = 1; });
-  rowsB.forEach(function (r) { names[r.map] = 1; });
-  var mapList = Object.keys(names).sort();
-  if (!mapList.length) { el.innerHTML = '<p class="small">No per-map skirmish rows for either run yet.</p>'; return; }
-  if (!DASH.mapFocus || mapList.indexOf(DASH.mapFocus) < 0) DASH.mapFocus = mapList[0];
-  var idx = mapList.indexOf(DASH.mapFocus), mapName = DASH.mapFocus;
+  // All the pane's data-shaping is one pure call; this function only draws.
+  var model = CHART_MODEL.buildMapDrillModel(rowsA, rowsB, DASH.mapFocus, DASH.abMode);
+  if (!model) { el.innerHTML = '<p class="small">No per-map skirmish rows for either run yet.</p>'; return; }
+  DASH.mapFocus = model.mapName; // persist the builder's resolved focus (may have fallen back from a stale one)
+  var mapList = model.mapList, idx = model.idx, mapName = model.mapName;
 
-  var mapRowsA = rowsA.filter(function (r) { return r.map === mapName; });
-  var mapRowsB = rowsB.filter(function (r) { return r.map === mapName; });
-  var aggA = WOA_REPORT.foldSkirmishes(mapRowsA), aggB = WOA_REPORT.foldSkirmishes(mapRowsB);
-  var scoreA = mapRowsA.length ? WOA_REPORT.balanceScore(aggA.agg, aggA.done) : null;
-  var scoreB = mapRowsB.length ? WOA_REPORT.balanceScore(aggB.agg, aggB.done) : null;
-  var regressed = scoreA != null && scoreB != null && scoreB > scoreA;
-  var envA = mdEnvelopes(rowsA, mapName), envB = mdEnvelopes(rowsB, mapName);
-
-  var h = '<div class="mapd-wrap">' + mdHeaderHtml(mapList, idx, scoreA, scoreB, regressed) + '<div class="mapd-grid">';
-  h += '<div class="mapd-col-l">' + mdTempoSection(mapName, envA, envB, DASH.abMode) + mdBandBoard(aggA, aggB, DASH.temperature) + '</div>';
-  h += '<div class="mapd-col-r">' + mdSettleCurve(envA, envB) + '</div>';
+  var h = '<div class="mapd-wrap">' + mdHeaderHtml(mapList, idx, model.scoreA, model.scoreB, model.regressed) + '<div class="mapd-grid">';
+  h += '<div class="mapd-col-l">' + mdTempoSection(mapName, model.tempo) + mdBandBoard(model.aggA, model.aggB, DASH.temperature) + '</div>';
+  h += '<div class="mapd-col-r">' + mdSettleCurve(model.envA, model.envB) + '</div>';
   h += '</div>'; // close mapd-grid
-  h += mdHexLensSection(mapName, envA, envB, DASH.abMode); // full-width spatial view, follows the A|B|A/B toggle
+  h += mdHexLensSection(mapName, model.hex); // full-width spatial view, follows the A|B|A/B toggle
   h += '</div>'; // close mapd-wrap
   el.innerHTML = h;
 
@@ -1202,7 +1114,7 @@ function crdSw(css) {
 
 /* Per-run per-card view, one fold per run (rowsA/rowsB) feeding all three
    sections below — the SAME "fold once, read many charts" shape
-   mdEnvelopes/ovRenderBody already use elsewhere in this file. envs is
+   ovRenderBody/mdRenderBody already use elsewhere in this file. envs is
    exposed too (the fire-time strips need the raw envelopes, not the folded
    agg). winHq/winHqN are the SPEC §2 doctrine slice (report-model.js
    cardHqWinSlice) — winHq is null when the card was never played in a

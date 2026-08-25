@@ -763,12 +763,63 @@ var WOA_REPORT = (function () {
     return { n: n, avenueThresh: thresh, hexes: hexes };
   }
 
+  /* ===== cross-skirmish drill-down folds (Maps pane) =====
+     Combine many per-skirmish envelopes into one map's chart data. The
+     per-skirmish primitives (envelopeFromRow / actionOctileLanes / vpDiffTrack)
+     are above; these fold them ACROSS a map's skirmishes. Pure, node + browser. */
+
+  // One map's parsed envelopes from a run's rows (skips rows that don't parse).
+  function envelopesForMap(rows, mapName) {
+    return (rows || []).filter(function (r) { return r.map === mapName; })
+      .map(envelopeFromRow).filter(function (e) { return !!e; });
+  }
+
+  // Average each octile lane across skirmishes, per lane. null when there are no
+  // envelopes, so callers render "no skirmishes" instead of a flat zero lane.
+  var DRILL_LANES = ['deploy', 'attack', 'swap', 'march'];
+  function laneAvg(envs) {
+    if (!envs.length) return null;
+    var sums = {};
+    DRILL_LANES.forEach(function (a) { sums[a] = [0, 0, 0, 0, 0, 0, 0, 0]; });
+    envs.forEach(function (env) {
+      actionOctileLanes(env).forEach(function (row, oi) {
+        DRILL_LANES.forEach(function (a) { sums[a][oi] += row[a]; });
+      });
+    });
+    var out = {};
+    DRILL_LANES.forEach(function (a) { out[a] = sums[a].map(function (v) { return v / envs.length; }); });
+    return out;
+  }
+
+  // Resample each skirmish's |VP-diff| track (per-turn, so different lengths
+  // can't be averaged index-for-index) onto steps+1 evenly-spaced points over
+  // normalized skirmish time (linear interpolation), then average across
+  // skirmishes. Envelopes with no fs are skipped, not zeroed; {points, n, total}
+  // tells the caller how many carried fs. null only when NOT ONE envelope has fs.
+  function vpDiffAvg(envs, steps) {
+    steps = steps || 8;
+    var tracks = envs.map(function (env) { var vd = vpDiffTrack(env); return vd && vd.track; }).filter(function (t) { return !!t && t.length; });
+    if (!tracks.length) return null;
+    var points = [];
+    for (var s = 0; s <= steps; s++) {
+      var frac = s / steps, sum = 0;
+      tracks.forEach(function (tr) {
+        var pos = frac * (tr.length - 1), lo = Math.floor(pos), hi = Math.min(tr.length - 1, lo + 1), f = pos - lo;
+        sum += tr[lo] + (tr[hi] - tr[lo]) * f;
+      });
+      points.push(sum / tracks.length);
+    }
+    return { points: points, n: tracks.length, total: envs.length };
+  }
+
   return { pct: pct, f1: f1, actionTotal: actionTotal, balanceScore: balanceScore, mapNotes: mapNotes,
     addAgg: addAgg, foldGlobal: foldGlobal, cardRows: cardRows, reportMarkdown: reportMarkdown,
     // WOA-033: bands-as-data + trace folds (node + browser both consume)
     BANDS: BANDS, bands: bands, outBand: outBand, quantile: quantile,
     firstContactTurn: firstContactTurn, deployInterleave: deployInterleave, settlePoint: settlePoint,
     actionOctileLanes: actionOctileLanes, vpDiffTrack: vpDiffTrack, cardPlayTurnQuartiles: cardPlayTurnQuartiles,
+    // Maps pane: cross-skirmish drill-down folds (one map, many skirmishes)
+    envelopesForMap: envelopesForMap, laneAvg: laneAvg, vpDiffAvg: vpDiffAvg,
     // WOA-043: per-card DB-rows aggregate (cardRows-compatible) + the SPEC §2 Win% doctrine slice
     cardAggFromEnvelopes: cardAggFromEnvelopes, cardHqWinSlice: cardHqWinSlice,
     // WOA-044: per-unit-type aggregate (role map / breakthrough / lifespan / exchange, SPEC §3)
