@@ -812,6 +812,36 @@ var WOA_REPORT = (function () {
     return { points: points, n: tracks.length, total: envs.length };
   }
 
+  /* One balance-score dumbbell per map seen in EITHER run's skirmish rows
+     (Overview pane 1f): fold each map's rows per run through the SAME
+     foldSkirmishes/balanceScore the fleet-wide totals use. score is null for a
+     map a run never played; done is that run's skirmish count for the map.
+     Sorted worst-first on B (B's score if it has one, else A's, else last) so
+     the regression lands at the top. Pure cross-skirmish fold, node + browser. */
+  function mapScoreDumbbells(rowsA, rowsB) {
+    var byMapA = {}, byMapB = {};
+    (rowsA || []).forEach(function (r) { (byMapA[r.map] || (byMapA[r.map] = [])).push(r); });
+    (rowsB || []).forEach(function (r) { (byMapB[r.map] || (byMapB[r.map] = [])).push(r); });
+    var names = {};
+    Object.keys(byMapA).forEach(function (m) { names[m] = 1; });
+    Object.keys(byMapB).forEach(function (m) { names[m] = 1; });
+    var rows = Object.keys(names).map(function (m) {
+      var gA = byMapA[m] ? foldSkirmishes(byMapA[m]) : null;
+      var gB = byMapB[m] ? foldSkirmishes(byMapB[m]) : null;
+      return {
+        map: m, doneA: gA ? gA.done : 0, doneB: gB ? gB.done : 0,
+        scoreA: gA ? balanceScore(gA.agg, gA.done) : null,
+        scoreB: gB ? balanceScore(gB.agg, gB.done) : null
+      };
+    });
+    rows.sort(function (a, b) {
+      var av = a.scoreB != null ? a.scoreB : (a.scoreA != null ? a.scoreA : -1);
+      var bv = b.scoreB != null ? b.scoreB : (b.scoreA != null ? b.scoreA : -1);
+      return bv - av;
+    });
+    return rows;
+  }
+
   return { pct: pct, f1: f1, actionTotal: actionTotal, balanceScore: balanceScore, mapNotes: mapNotes,
     addAgg: addAgg, foldGlobal: foldGlobal, cardRows: cardRows, reportMarkdown: reportMarkdown,
     // WOA-033: bands-as-data + trace folds (node + browser both consume)
@@ -820,6 +850,8 @@ var WOA_REPORT = (function () {
     actionOctileLanes: actionOctileLanes, vpDiffTrack: vpDiffTrack, cardPlayTurnQuartiles: cardPlayTurnQuartiles,
     // Maps pane: cross-skirmish drill-down folds (one map, many skirmishes)
     envelopesForMap: envelopesForMap, laneAvg: laneAvg, vpDiffAvg: vpDiffAvg,
+    // Overview pane: per-map balance-score dumbbell fold (1f)
+    mapScoreDumbbells: mapScoreDumbbells,
     // WOA-043: per-card DB-rows aggregate (cardRows-compatible) + the SPEC §2 Win% doctrine slice
     cardAggFromEnvelopes: cardAggFromEnvelopes, cardHqWinSlice: cardHqWinSlice,
     // WOA-044: per-unit-type aggregate (role map / breakthrough / lifespan / exchange, SPEC §3)
