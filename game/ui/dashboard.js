@@ -109,8 +109,8 @@ var DASH_PANE_LABEL = { overview:'Overview', maps:'Maps', cards:'Cards', units:'
 function renderDashPane(view){
   var el = $('dashPane' + view.charAt(0).toUpperCase() + view.slice(1));
   if (!el) return;
-  // WOA-035/WOA-040/WOA-043/WOA-044: every pill gets the real thing (charts.js,
-  // reads both runs' DB skirmish rows) once at least one run + both A/B pickers
+  // WOA-035/WOA-040/WOA-043/WOA-044: every pill gets the real thing (the
+  // pane-*.js render modules, reading both runs' DB skirmish rows) once at least one run + both A/B pickers
   // are set — otherwise the no-runs / pick-runs fallback note below.
   if ((view === 'overview' || view === 'maps' || view === 'cards' || view === 'units') && DASH.runs.length && DASH.runA != null && DASH.runB != null){
     var PANE_RENDER = { overview: renderOverview, maps: renderMapDrill, cards: renderCards, units: renderUnits };
