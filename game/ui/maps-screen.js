@@ -47,7 +47,6 @@ function msNewSet(){
   MS.slot = sets.length - 1;
 }
 function msSave(){
-  if (!canNet){ toast('Map-set files need the local server (<code>node game/server.js</code>) — edits hold for this session only.', 5000); return; }
   api('savemapsets', { mapsets: msSets() }).then(function(){
     toast('Map-sets saved to content/mapsets/.', 2500);
   }).catch(function(){ toast('Could not save the map-sets.', 3500); });
@@ -64,15 +63,10 @@ function rosterRemove(id){
 // regenerates the loader). The caller updates E.MAPS first so it is usable at
 // once; the file makes it survive a reload.
 function saveMapFile(def){
-  if (!canNet){ updateMapsHint(); return Promise.resolve({ offline: true }); }
   return api('savemap', { map: def }).then(function(r){ updateMapsHint(); return r; })
     .catch(function(e){ updateMapsHint(); throw e; });
 }
 function deleteMapById(id){
-  if (!canNet){
-    toast('Deleting a map removes its file, which needs the local server (<code>node game/server.js</code>). Or just untick &ldquo;in play&rdquo; to drop it from matches.', 6500);
-    return;
-  }
   api('deletemap', { id: id }).then(function(){
     rosterRemove(id); renderMapsScr();
   }).catch(function(){ toast('Could not delete the map file.', 3500); });
@@ -80,9 +74,7 @@ function deleteMapById(id){
 function updateMapsHint(){
   var el = $('mapsHint');
   if (!el) return;
-  el.innerHTML = canNet
-    ? 'Maps are files in <b>game/content/maps/</b> — deleting one here deletes its file. Zip the folder and friends get your roster.'
-    : 'Maps are files in <b>game/content/maps/</b>. Adding, editing or deleting a map writes/removes a file, which needs the local server (<code>node game/server.js</code>); double-clicked, you can still play and toggle maps in/out of the pool.';
+  el.innerHTML = 'Maps are files in <b>game/content/maps/</b> — deleting one here deletes its file. Zip the folder and friends get your roster.';
 }
 
 /* mini preview svg (self-contained, no global board state) */

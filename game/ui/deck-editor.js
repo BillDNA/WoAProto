@@ -264,6 +264,5 @@ function dkStatus(){
 }
 
 function syncDeckFile(deck, done){
-  if (!canNet){ done(); return; }
   api('savedeck', { deck: deck }).then(done).catch(done);
 }

@@ -1,5 +1,5 @@
 /* War of Attrition — ui part: app state hub & shared helpers (APP, $, show,
-   toast, api/canNet, art lookup, clipboard). Classic script, NO wrapper —
+   toast, api, art lookup, clipboard). Classic script, NO wrapper —
    top-level declarations attach to window on purpose: the ui files
    cross-reference each other by bare name, and dev/smoke.js plus inline
    onload=/onerror= attributes in generated markup reach them via window.
@@ -32,8 +32,6 @@ function aiDisplayName(diff){
 }
 
 var SAVE_V = 3; // bumped when old saves can no longer be loaded (board shapes, trench arrays, ...)
-
-var canNet = location.protocol === 'http:' || location.protocol === 'https:';
 
 function api(path, body){
   return fetch('/api/'+path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body||{}) })
