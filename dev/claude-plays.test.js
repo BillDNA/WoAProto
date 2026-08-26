@@ -8,17 +8,12 @@
    match is a proof, not a heuristic. */
 'use strict';
 
+const { test } = require('node:test');
+const assert = require('node:assert');
 const path = require('path');
 const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
 const cp = require(path.join(__dirname, 'claude-plays.js'));
 
-let fails = 0;
-function ok(cond, msg) {
-  if (cond) console.log('  ok - ' + msg);
-  else { console.log('  FAIL - ' + msg); fails++; }
-}
-
-console.log('== honest-info sentinel ==');
 // A card the real deck can never contain — if its id or name shows up in a
 // red-side prompt, hidden information leaked.
 const SENTINEL = { id: 'zz_hidden_sentinel', name: 'ZZHIDDENSENTINEL', text: 'you should never see this', steps: [{ type: 'attack' }], count: 1 };
@@ -47,41 +42,48 @@ if (st.phase === 'step') {
 }
 surfaces.push(['rules text', cp.RULES]);
 surfaces.push(['system prompt', cp.sysPrompt('red', 3)]);
-surfaces.forEach(function (s) {
-  ok(!leaks(s[1]), s[0] + ' never shows the enemy hidden card');
+
+test('honest-info sentinel', () => {
+  // The opening play must actually reach a step, or the step-header/step-choices
+  // surfaces above never got collected and the strongest leak vectors go untested.
+  assert.ok(st.phase === 'step', 'setup reached the step phase (step surfaces collected)');
+  surfaces.forEach(function (s) {
+    assert.ok(!leaks(s[1]), s[0] + ' never shows the enemy hidden card');
+  });
+  assert.ok(cp.stateView(st, 'blue', true, null).indexOf('ZZHIDDENSENTINEL') >= 0,
+    "control: BLUE's own view DOES show its card (the sentinel is really there)");
 });
-ok(cp.stateView(st, 'blue', true, null).indexOf('ZZHIDDENSENTINEL') >= 0,
-  "control: BLUE's own view DOES show its card (the sentinel is really there)");
 
-console.log('== enemy hand shown as count only ==');
-const view = cp.stateView(st, 'red', true, null);
-ok(/holds \d+ hidden cards/.test(view), 'enemy hand appears as a count');
+test('enemy hand shown as count only', () => {
+  const view = cp.stateView(st, 'red', true, null);
+  assert.ok(/holds \d+ hidden cards/.test(view), 'enemy hand appears as a count');
+});
 
-console.log('== rules text matches the live rules version ==');
-ok(cp.RULES.indexOf('v' + E.VERSION) >= 0, 'RULES header carries v' + E.VERSION);
-ok(/denies attacker support|attacker support cannot cross a TRENCHED border/i.test(cp.RULES),
-  'RULES teach 1.0 trench semantics (support denial, not +1 defense)');
-ok(!/trench covers the attacked edge|\+ 1 if a trench/i.test(cp.RULES), 'no stale trench +1-defense wording');
-ok(/RIVERS block nothing in combat/i.test(cp.RULES), 'RULES teach 1.0 river semantics');
-ok(/DIFFERENT types/.test(cp.RULES), 'RULES teach the same-type swap ban');
+test('rules text matches the live rules version', () => {
+  assert.ok(cp.RULES.indexOf('v' + E.VERSION) >= 0, 'RULES header carries v' + E.VERSION);
+  assert.ok(/denies attacker support|attacker support cannot cross a TRENCHED border/i.test(cp.RULES),
+    'RULES teach 1.0 trench semantics (support denial, not +1 defense)');
+  assert.ok(!/trench covers the attacked edge|\+ 1 if a trench/i.test(cp.RULES), 'no stale trench +1-defense wording');
+  assert.ok(/RIVERS block nothing in combat/i.test(cp.RULES), 'RULES teach 1.0 river semantics');
+  assert.ok(/DIFFERENT types/.test(cp.RULES), 'RULES teach the same-type swap ban');
+});
 
-console.log('== ranked option diet ==');
-const m2 = E.newMatch({ maps: [E.MAPS[0]], seed: 77, firstPlayer: 'red' });
-const st2 = E.newSkirmish(m2);
-E.playCard(st2, st2.hands.red[0], 'normal');
-if (st2.phase === 'step') {
-  const all = E.enumerateChoices(st2);
-  const l1 = cp.stepChoiceList(st2, 15, false);
-  ok(l1.total === all.length, 'total reports the full legal count');
-  ok(l1.choices.length <= all.length, 'diet never exceeds the legal list');
-  ok(l1.choices.some(function (c) { return c.skip; }), 'skip stays listed');
-  const l2 = cp.stepChoiceList(st2, 15, true);
-  ok(l2.choices.length === all.length && !l2.pruned, '--full-options shows everything');
-  const l3 = cp.stepChoiceList(st2, 3, false);
-  ok(l3.choices.every(function (c) {
-    return all.some(function (a) { return JSON.stringify(a) === JSON.stringify(c); });
-  }), 'every dieted choice is a real legal option');
-}
-
-console.log(fails === 0 ? '\nCLAUDE-PLAYS TESTS PASSED' : '\n' + fails + ' FAILURES');
-process.exit(fails === 0 ? 0 : 1);
+test('ranked option diet', () => {
+  const m2 = E.newMatch({ maps: [E.MAPS[0]], seed: 77, firstPlayer: 'red' });
+  const st2 = E.newSkirmish(m2);
+  E.playCard(st2, st2.hands.red[0], 'normal');
+  assert.ok(st2.phase === 'step', 'setup reached the step phase (diet invariants get exercised)');
+  {
+    const all = E.enumerateChoices(st2);
+    const l1 = cp.stepChoiceList(st2, 15, false);
+    assert.ok(l1.total === all.length, 'total reports the full legal count');
+    assert.ok(l1.choices.length <= all.length, 'diet never exceeds the legal list');
+    assert.ok(l1.choices.some(function (c) { return c.skip; }), 'skip stays listed');
+    const l2 = cp.stepChoiceList(st2, 15, true);
+    assert.ok(l2.choices.length === all.length && !l2.pruned, '--full-options shows everything');
+    const l3 = cp.stepChoiceList(st2, 3, false);
+    assert.ok(l3.choices.every(function (c) {
+      return all.some(function (a) { return JSON.stringify(a) === JSON.stringify(c); });
+    }), 'every dieted choice is a real legal option');
+  }
+});
