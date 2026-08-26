@@ -1,6 +1,8 @@
 /* Headless UI smoke test: boots index.html in jsdom, plays a full AI-vs-AI
    skirmish through the real DOM, pokes the maps screen and the editor.
-   Run from the repo root:  node dev/smoke.js  */
+   Run from the repo root:  node --test dev/smoke.js  (or `npm test`) */
+var test = require('node:test');
+var assert = require('node:assert');
 var fs = require('fs');
 var path = require('path');
 var { JSDOM } = require(path.join(__dirname, 'node_modules', 'jsdom'));
@@ -31,16 +33,13 @@ html = html.replace(/<script src="([^"]+)"><\/script>/g, function (tag, src) {
   return '<script>' + read(src) + '</script>';
 });
 if (/<script [^>]*src=/.test(html)) {
-  console.log('FAIL - un-inlined <script src> tag survived (inliner regex mismatch)');
-  process.exit(1);
+  throw new Error('un-inlined <script src> tag survived (inliner regex mismatch)');
 }
 
-var fails = 0;
-function ok(cond, msg) {
-  if (cond) console.log('  ok - ' + msg);
-  else { console.log('  FAIL - ' + msg); fails++; }
-}
-
+// One async node:test: the whole play-through is a single linear flow, so any
+// failed assertion (or app error) thrown in a scheduled callback rejects this
+// promise and fails the test. 180s covers the dashboard's real balance runs.
+test('headless UI smoke (jsdom)', { timeout: 180000 }, () => new Promise((resolve, reject) => {
 // Serve the page from an http origin — the local server (node game/server.js)
 // is the only supported run path (ADR-0001), so the UI is always server-backed.
 var dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true, url: 'http://localhost/game/index.html' });
@@ -54,34 +53,38 @@ win.fetch = function () {
   return Promise.resolve({ ok: true, json: function () { return Promise.resolve([]); } });
 };
 
-// jsdom has no rAF-based timers issue but uses real setTimeout — speed the AI up
-var realSetTimeout = win.setTimeout;
+// jsdom has no rAF-based timers issue but uses real setTimeout — speed the AI up.
+// Wrap the raw scheduler so a thrown assertion (or app error) inside any
+// scheduled callback rejects the test promise instead of dying as an uncaught
+// jsdom exception.
+var rawSetTimeout = win.setTimeout;
+function realSetTimeout(fn, ms) { return rawSetTimeout(function () { try { return fn(); } catch (e) { reject(e); } }, ms); }
 win.setTimeout = function (fn, ms) { return realSetTimeout(fn, Math.min(ms || 0, 5)); };
 
-setTimeout(function () {
+realSetTimeout(function () {
   console.log('== boot ==');
-  ok(win.Engine && win.Engine.MAPS.length >= 5, 'engine loaded the map roster (' + (win.Engine && win.Engine.MAPS.length) + ' maps)');
-  ok(doc.querySelectorAll('#edShape option').length === Object.keys(win.Engine.SHAPES).length + 1,
+  assert.ok(win.Engine && win.Engine.MAPS.length >= 5, 'engine loaded the map roster (' + (win.Engine && win.Engine.MAPS.length) + ' maps)');
+  assert.ok(doc.querySelectorAll('#edShape option').length === Object.keys(win.Engine.SHAPES).length + 1,
     'editor shape dropdown = maps.js shapes + the Custom entry');
 
   console.log('== AI skirmish through the DOM ==');
   doc.getElementById('btnAI').click();
-  ok(doc.getElementById('game').classList.contains('active'), 'game screen shown');
-  ok(doc.querySelectorAll('#board polygon.hex').length >= 19, 'board hexes rendered');
-  ok(doc.querySelectorAll('#board .coordlbl').length >= 19, 'grid labels rendered on hexes');
+  assert.ok(doc.getElementById('game').classList.contains('active'), 'game screen shown');
+  assert.ok(doc.querySelectorAll('#board polygon.hex').length >= 19, 'board hexes rendered');
+  assert.ok(doc.querySelectorAll('#board .coordlbl').length >= 19, 'grid labels rendered on hexes');
   var lblTexts = Array.prototype.map.call(doc.querySelectorAll('#board .coordlbl'), function (t) { return t.textContent; });
-  ok(lblTexts.indexOf('A1') >= 0, 'label A1 present (got e.g. ' + lblTexts.slice(0, 4).join(',') + ')');
+  assert.ok(lblTexts.indexOf('A1') >= 0, 'label A1 present (got e.g. ' + lblTexts.slice(0, 4).join(',') + ')');
 
   console.log('== player mats ==');
-  ok(doc.querySelectorAll('#matRed .slot').length === 13, 'red mat has 13 piece slots (7+2+1+3)');
-  ok(doc.querySelectorAll('#matBlue .slot').length === 13, 'blue mat has 13 piece slots');
+  assert.ok(doc.querySelectorAll('#matRed .slot').length === 13, 'red mat has 13 piece slots (7+2+1+3)');
+  assert.ok(doc.querySelectorAll('#matBlue .slot').length === 13, 'blue mat has 13 piece slots');
   // one .scard per card COPY in the active deck — derive the total from the
   // deck so this stays correct at any deck size, not a hardcoded count.
   var deckTotal = win.Engine.CARDS.reduce(function (a, c) { return a + (+c.count || 0); }, 0);
-  ok(doc.querySelectorAll('#matRed .scard').length === deckTotal, 'red mat tracks all ' + deckTotal + ' orders');
-  ok(doc.querySelectorAll('#matBlue .scard').length === deckTotal, 'blue mat tracks all ' + deckTotal + ' orders (enemy spend visible)');
-  ok(doc.querySelectorAll('#matRed .slot svg').length === 13, 'reserve slots carry piece glyphs at skirmish start');
-  ok(!!doc.getElementById('scorecard'), 'campaign score card present in top bar');
+  assert.ok(doc.querySelectorAll('#matRed .scard').length === deckTotal, 'red mat tracks all ' + deckTotal + ' orders');
+  assert.ok(doc.querySelectorAll('#matBlue .scard').length === deckTotal, 'blue mat tracks all ' + deckTotal + ' orders (enemy spend visible)');
+  assert.ok(doc.querySelectorAll('#matRed .slot svg').length === 13, 'reserve slots carry piece glyphs at skirmish start');
+  assert.ok(!!doc.getElementById('scorecard'), 'campaign score card present in top bar');
 
   // play like a (random but legal) human until the skirmish ends or 80 turns pass
   var steps = 0;
@@ -116,68 +119,68 @@ setTimeout(function () {
         }
         win.afterChange();
       }
-    } catch (e) { console.log('  FAIL - exception mid-skirmish: ' + e.message); fails++; return done(); }
+    } catch (e) { return reject(e); }
     realSetTimeout(tick, 2);
   }
   function done() {
     var st = win.APP.st;
-    ok(st && (st.phase === 'skirmish-over' || st.turnNumber > 3), 'skirmish progressed (phase=' + (st && st.phase) + ', turn=' + (st && st.turnNumber) + ')');
+    assert.ok(st && (st.phase === 'skirmish-over' || st.turnNumber > 3), 'skirmish progressed (phase=' + (st && st.phase) + ', turn=' + (st && st.turnNumber) + ')');
     var logTxt = doc.getElementById('log').textContent;
-    ok(/at [A-G][0-9]/.test(logTxt), 'journal uses grid references (sample: "' + (logTxt.match(/[A-Z][a-z]+ deploys [^.]+\./) || ['?'])[0] + '")');
-    ok(doc.querySelectorAll('#log .entry.hdr').length >= 1, 'journal skirmish header styled');
-    ok(doc.querySelectorAll('#log .tn').length >= 3, 'journal entries carry turn markers');
+    assert.ok(/at [A-G][0-9]/.test(logTxt), 'journal uses grid references (sample: "' + (logTxt.match(/[A-Z][a-z]+ deploys [^.]+\./) || ['?'])[0] + '")');
+    assert.ok(doc.querySelectorAll('#log .entry.hdr').length >= 1, 'journal skirmish header styled');
+    assert.ok(doc.querySelectorAll('#log .tn').length >= 3, 'journal entries carry turn markers');
     var spentRed = doc.querySelectorAll('#matRed .scard.gone').length;
     var spentBlue = doc.querySelectorAll('#matBlue .scard.gone').length;
-    ok(spentRed >= 1 && spentBlue >= 1, 'both mats show spent orders (red ' + spentRed + ', blue ' + spentBlue + ')');
-    ok(doc.querySelectorAll('#matRed .slot.field, #matRed .slot.lost').length >= 1, 'red mat slots emptied as pieces deployed/died');
+    assert.ok(spentRed >= 1 && spentBlue >= 1, 'both mats show spent orders (red ' + spentRed + ', blue ' + spentBlue + ')');
+    assert.ok(doc.querySelectorAll('#matRed .slot.field, #matRed .slot.lost').length >= 1, 'red mat slots emptied as pieces deployed/died');
 
     console.log('== maps screen & editor ==');
     doc.getElementById('btnQuit').click();
     doc.getElementById('btnMaps').click();
     var tiles = doc.querySelectorAll('#mapGrid .mapitem').length;
-    ok(tiles >= win.Engine.MAPS.length, 'all built-in maps listed (+ any shipped customs): ' + tiles + ' tiles');
+    assert.ok(tiles >= win.Engine.MAPS.length, 'all built-in maps listed (+ any shipped customs): ' + tiles + ' tiles');
     var tileBtns = Array.prototype.map.call(doc.querySelectorAll('#mapGrid .mapitem')[0].querySelectorAll('.btns button'), function (b) { return b.textContent; });
-    ok(tileBtns.indexOf('Play') >= 0 && tileBtns.indexOf('Balance') >= 0, 'map tiles offer Play + Balance (' + tileBtns.join('/') + ')');
+    assert.ok(tileBtns.indexOf('Play') >= 0 && tileBtns.indexOf('Balance') >= 0, 'map tiles offer Play + Balance (' + tileBtns.join('/') + ')');
     doc.getElementById('btnNewMap').click();
-    ok(doc.getElementById('editorScr').classList.contains('active'), 'editor opens');
+    assert.ok(doc.getElementById('editorScr').classList.contains('active'), 'editor opens');
     var hits = doc.querySelectorAll('#edBoard .edge-hit');
-    ok(hits.length > 0, 'editor edge hit-targets present (' + hits.length + ')');
+    assert.ok(hits.length > 0, 'editor edge hit-targets present (' + hits.length + ')');
     hits[0].dispatchEvent(new win.Event('click', { bubbles: true }));
     var painted = Object.keys(win.ED.edges).length;
-    ok(painted === 1, 'clicking an edge paints terrain (' + painted + ' side)');
+    assert.ok(painted === 1, 'clicking an edge paints terrain (' + painted + ' side)');
     doc.getElementById('edMirror').click();
-    ok(Object.keys(win.ED.edges).length === 2, 'Mirror creates the rotated twin side');
+    assert.ok(Object.keys(win.ED.edges).length === 2, 'Mirror creates the rotated twin side');
 
     console.log('== map roster deletion + board-shape carving (V0) ==');
     var firstTileBtns = doc.querySelector('#mapGrid .mapitem .btns');
-    ok(firstTileBtns && firstTileBtns.textContent.indexOf('Delete') >= 0, 'built-in map tiles offer Delete (floor of 5 enforced on click)');
+    assert.ok(firstTileBtns && firstTileBtns.textContent.indexOf('Delete') >= 0, 'built-in map tiles offer Delete (floor of 5 enforced on click)');
     var hexTool = doc.querySelector('.edtools button[data-tool="hexes"]');
     hexTool.dispatchEvent(new win.Event('click', { bubbles: true }));
-    ok(win.ED.hexes && Object.keys(win.ED.hexes).length === 24, 'Board-hexes tool converts to a custom outline seeded from the template');
-    ok(doc.getElementById('edShape').value === '@custom', 'shape dropdown flips to Custom');
+    assert.ok(win.ED.hexes && Object.keys(win.ED.hexes).length === 24, 'Board-hexes tool converts to a custom outline seeded from the template');
+    assert.ok(doc.getElementById('edShape').value === '@custom', 'shape dropdown flips to Custom');
     var beforeCarve = Object.keys(win.ED.hexes).length;
     win.edRemoveHex('0,0');
     win.renderEditor();
-    ok(Object.keys(win.ED.hexes).length === beforeCarve - 1, 'a hex can be carved out');
-    ok(/23\/24 hexes/.test(doc.getElementById('edStock').textContent), 'hex count shown against the 24 ceiling');
+    assert.ok(Object.keys(win.ED.hexes).length === beforeCarve - 1, 'a hex can be carved out');
+    assert.ok(/23\/24 hexes/.test(doc.getElementById('edStock').textContent), 'hex count shown against the 24 ceiling');
     win.ED.red = [2, -2]; win.ED.blue = [-3, 2];
     win.ED.edges = {}; // the stray single side painted above has no physical piece
     doc.getElementById('edName').value = 'Carved Smoke Test';
     var carvedDef = win.edBuildDef();
-    ok(carvedDef && carvedDef.shapeDef && carvedDef.shapeDef.hexes.length === 23, 'carved map saves an inline shapeDef');
-    ok(win.Engine.validateMaps([carvedDef]).length === 0, 'carved map validates: ' + win.Engine.validateMaps([carvedDef]).join('; '));
+    assert.ok(carvedDef && carvedDef.shapeDef && carvedDef.shapeDef.hexes.length === 23, 'carved map saves an inline shapeDef');
+    assert.ok(win.Engine.validateMaps([carvedDef]).length === 0, 'carved map validates: ' + win.Engine.validateMaps([carvedDef]).join('; '));
 
     console.log('== TwoSetsOfThree: long terrain runs split into stock pieces ==');
     var ring = win.splitRun([0, 1, 2, 3, 4, 5]);
-    ok(ring.length === 2 && ring[0].length === 3 && ring[1].length === 3, 'full forest ring = two length-3 pieces');
+    assert.ok(ring.length === 2 && ring[0].length === 3 && ring[1].length === 3, 'full forest ring = two length-3 pieces');
     var five = win.splitRun([5, 0, 1, 2, 3]);
-    ok(five.length === 2 && five[0].length === 3 && five[1].length === 2 && five[0][0] === 5,
+    assert.ok(five.length === 2 && five[0].length === 3 && five[1].length === 2 && five[0][0] === 5,
       'five-side arc splits 3+2 from its true start (' + JSON.stringify(five) + ')');
     var ringPieces = win.groupEdgesToPieces({ '0,0>0': 'F', '0,0>1': 'F', '0,0>2': 'F', '0,0>3': 'F', '0,0>4': 'F', '0,0>5': 'F' });
-    ok(ringPieces.length === 2 && ringPieces.every(function (p) { return p.edges.length === 3; }),
+    assert.ok(ringPieces.length === 2 && ringPieces.every(function (p) { return p.edges.length === 3; }),
       'editor groups a painted ring as two stock pieces');
     var ringMap = { name: 'Ring Test', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2], pieces: ringPieces };
-    ok(win.Engine.validateMaps([ringMap]).length === 0, 'two sets of three validate cleanly');
+    assert.ok(win.Engine.validateMaps([ringMap]).length === 0, 'two sets of three validate cleanly');
 
     console.log('== editor Balance -> dashboard, map as drawn ==');
     // the editor's Balance button routes the UNSAVED carved map (still open in
@@ -185,20 +188,20 @@ setTimeout(function () {
     // transient '(as drawn)' option.
     doc.getElementById('dashN').value = '20'; // openDashDef runs with whatever n is picked — keep it fast
     doc.getElementById('edBalance').click();  // openDashDef(edBuildDef())
-    ok(doc.getElementById('dashScr').classList.contains('active'), 'editor Balance opens the Balance Dashboard');
+    assert.ok(doc.getElementById('dashScr').classList.contains('active'), 'editor Balance opens the Balance Dashboard');
     var adhocOpt = doc.querySelector('#dashMap option[value="@adhoc"]');
-    ok(!!adhocOpt && /as drawn.*Carved Smoke Test/.test(adhocOpt.textContent) && doc.getElementById('dashMap').value === '@adhoc',
+    assert.ok(!!adhocOpt && /as drawn.*Carved Smoke Test/.test(adhocOpt.textContent) && doc.getElementById('dashMap').value === '@adhoc',
       'ad-hoc "(as drawn)" option injected and selected');
-    ok(win.DASH.adhoc && win.DASH.adhoc.name === 'Carved Smoke Test' && win.DASH.running,
+    assert.ok(win.DASH.adhoc && win.DASH.adhoc.name === 'Carved Smoke Test' && win.DASH.running,
       'DASH.adhoc carries the unsaved def and the run started');
     var waited = 0;
     (function waitAdhoc() {
       if (!win.DASH.running && win.DASH.results.length) {
-        ok(win.DASH.results.length === 1 && win.DASH.results[0].map.name === 'Carved Smoke Test',
+        assert.ok(win.DASH.results.length === 1 && win.DASH.results[0].map.name === 'Carved Smoke Test',
           'ad-hoc dashboard run finished on the map as drawn');
         return watchMode();
       }
-      if ((waited += 100) > 60000) { ok(false, 'ad-hoc dashboard run never finished'); return watchMode(); }
+      if ((waited += 100) > 60000) { assert.ok(false, 'ad-hoc dashboard run never finished'); return watchMode(); }
       realSetTimeout(waitAdhoc, 100);
     })();
 
@@ -207,35 +210,35 @@ setTimeout(function () {
       doc.getElementById('edBack').click();
       doc.getElementById('btnMapsBack').click();
       doc.getElementById('btnDash').click();
-      ok(doc.getElementById('dashScr').classList.contains('active'), 'dashboard opens from the menu');
-      ok(doc.querySelectorAll('#dashMap option').length >= win.Engine.MAPS.length, 'map picker lists the pool');
+      assert.ok(doc.getElementById('dashScr').classList.contains('active'), 'dashboard opens from the menu');
+      assert.ok(doc.querySelectorAll('#dashMap option').length >= win.Engine.MAPS.length, 'map picker lists the pool');
 
       console.log('== dashboard shell: header pickers + pill nav + temperature ==');
-      ok(doc.getElementById('dashHead') && doc.getElementById('dashRunA') && doc.getElementById('dashRunB'),
+      assert.ok(doc.getElementById('dashHead') && doc.getElementById('dashRunA') && doc.getElementById('dashRunB'),
         'dark header + run A/B pickers present');
       // dashLoadRuns' GET /api/runs is async — let the empty-runs fetch settle
       // before reading the picker's fallback text.
       realSetTimeout(function () {
-        ok(doc.getElementById('dashRunA').disabled && doc.getElementById('dashRunA').options[0].textContent === 'No runs yet',
+        assert.ok(doc.getElementById('dashRunA').disabled && doc.getElementById('dashRunA').options[0].textContent === 'No runs yet',
           'no saved runs — run pickers show the "No runs yet" fallback');
       }, 0);
-      ok(doc.querySelectorAll('#dashPills .dpill').length === 5, 'five pills: Overview | Maps | Cards | Units | Tables');
-      ok(doc.querySelector('#dashPills .dpill[data-view="tables"]').classList.contains('sel'), 'Tables is the selected pill');
-      ok(doc.getElementById('dashRunControls').style.display !== 'none', 'Run/Save controls visible on Tables');
+      assert.ok(doc.querySelectorAll('#dashPills .dpill').length === 5, 'five pills: Overview | Maps | Cards | Units | Tables');
+      assert.ok(doc.querySelector('#dashPills .dpill[data-view="tables"]').classList.contains('sel'), 'Tables is the selected pill');
+      assert.ok(doc.getElementById('dashRunControls').style.display !== 'none', 'Run/Save controls visible on Tables');
       doc.querySelector('#dashPills .dpill[data-view="overview"]').click();
-      ok(win.DASH.view === 'overview', 'clicking Overview switches DASH.view');
-      ok(doc.getElementById('dashRunControls').style.display === 'none' && doc.getElementById('dashOut').style.display === 'none',
+      assert.ok(win.DASH.view === 'overview', 'clicking Overview switches DASH.view');
+      assert.ok(doc.getElementById('dashRunControls').style.display === 'none' && doc.getElementById('dashOut').style.display === 'none',
         'Run/Save + the Tables output hide outside Tables (charts context is view-only)');
-      ok(doc.getElementById('dashPaneOverview').style.display !== 'none' &&
+      assert.ok(doc.getElementById('dashPaneOverview').style.display !== 'none' &&
          /no saved runs yet/i.test(doc.getElementById('dashPaneOverview').textContent),
         'Overview pane: "no saved runs yet" fallback note when the db is empty');
-      ok(doc.getElementById('dashPaneMaps').style.display === 'none' && doc.getElementById('dashPaneUnits').style.display === 'none',
+      assert.ok(doc.getElementById('dashPaneMaps').style.display === 'none' && doc.getElementById('dashPaneUnits').style.display === 'none',
         'the other three panes stay hidden while Overview is active');
       doc.getElementById('dashTemp').value = 'T2';
       doc.getElementById('dashTemp').dispatchEvent(new win.Event('change', { bubbles: true }));
-      ok(win.DASH.temperature === 'T2', 'temperature selector writes DASH.temperature');
+      assert.ok(win.DASH.temperature === 'T2', 'temperature selector writes DASH.temperature');
       doc.querySelector('#dashPills .dpill[data-view="tables"]').click();
-      ok(win.DASH.view === 'tables' && doc.getElementById('dashRunControls').style.display !== 'none' &&
+      assert.ok(win.DASH.view === 'tables' && doc.getElementById('dashRunControls').style.display !== 'none' &&
          doc.getElementById('dashOut').style.display !== 'none',
         'back on Tables: run controls + output reappear');
 
@@ -245,49 +248,49 @@ setTimeout(function () {
       var dw = 0;
       (function waitDash() {
         if (!win.DASH.running && win.DASH.results.length) {
-          ok(win.DASH.results.length === 1, 'dashboard run finished on the chosen map');
-          ok(doc.querySelectorAll('#dashOut table').length === 2, 'map table + card report rendered');
-          ok(doc.querySelectorAll('#dashOut th.sortable').length > 10, 'columns are sortable');
+          assert.ok(win.DASH.results.length === 1, 'dashboard run finished on the chosen map');
+          assert.ok(doc.querySelectorAll('#dashOut table').length === 2, 'map table + card report rendered');
+          assert.ok(doc.querySelectorAll('#dashOut th.sortable').length > 10, 'columns are sortable');
           var dashTxt = doc.getElementById('dashOut').textContent;
-          ok(/Aggression/.test(dashTxt) && /Decisiveness/.test(dashTxt), 'behaviour + decisiveness metrics shown');
+          assert.ok(/Aggression/.test(dashTxt) && /Decisiveness/.test(dashTxt), 'behaviour + decisiveness metrics shown');
           // dashboard numbers must equal the CLI's: same fold, same seeds
           var cli = win.Engine.balanceMap(win.Engine.MAPS[4], 20, { seedBase: 1 * 7919, diffRed: 'normal', diffBlue: 'normal' });
           var gui = win.DASH.results[0].out;
-          ok(cli.redWins === gui.redWins && cli.turns === gui.turns && cli.attacks === gui.attacks,
+          assert.ok(cli.redWins === gui.redWins && cli.turns === gui.turns && cli.attacks === gui.attacks,
             'GUI and CLI agree exactly (red ' + gui.redWins + '/' + cli.redWins + ', turns ' + gui.turns + '/' + cli.turns + ')');
           var th = doc.querySelector('#dashOut th[data-key="red"]');
           th.dispatchEvent(new win.Event('click', { bubbles: true }));
-          ok(doc.querySelector('#dashOut th.sorted'), 'clicking a header sorts');
+          assert.ok(doc.querySelector('#dashOut th.sorted'), 'clicking a header sorts');
           // save-report builder produces a full markdown report
           var rpt = win.dashReportMarkdown();
-          ok(doc.getElementById('dashSave') && /## Maps/.test(rpt) && /## Card report/.test(rpt) && /Drag \| Swings/.test(rpt),
+          assert.ok(doc.getElementById('dashSave') && /## Maps/.test(rpt) && /## Card report/.test(rpt) && /Drag \| Swings/.test(rpt),
             'Save report button + markdown report (maps, card report, pacing cols)');
 
           // per-skirmish detail still collected for ui/charts.js's primitives (the
           // Cards tab reuses them) — not wired to a pill yet, so check the data survives.
           var detKey = win.DASH.results[0].map.name;
-          ok(win.DASH.detail[detKey] && win.DASH.detail[detKey].turns.length === 20 &&
+          assert.ok(win.DASH.detail[detKey] && win.DASH.detail[detKey].turns.length === 20 &&
              win.DASH.detail[detKey].winTypes.length === 20,
             'dashRun collected per-skirmish turns + winTypes (' + (win.DASH.detail[detKey] || { turns: [] }).turns.length + ' skirmishes)');
 
           console.log('== view-only panes: pill switch keeps the last run in memory ==');
           doc.querySelector('#dashPills .dpill[data-view="maps"]').click();
-          ok(win.DASH.view === 'maps', 'Maps pill selected');
-          ok(doc.getElementById('dashRunControls').style.display === 'none' && doc.getElementById('dashOut').style.display === 'none',
+          assert.ok(win.DASH.view === 'maps', 'Maps pill selected');
+          assert.ok(doc.getElementById('dashRunControls').style.display === 'none' && doc.getElementById('dashOut').style.display === 'none',
             'Run/Save + the Tables table hide on the Maps pane');
           var mapsTxt = doc.getElementById('dashPaneMaps').textContent;
-          ok(/no saved runs yet/i.test(mapsTxt),
+          assert.ok(/no saved runs yet/i.test(mapsTxt),
             'Maps pane: "no saved runs yet" fallback note while the db is empty');
           doc.querySelector('#dashPills .dpill[data-view="cards"]').click();
-          ok(win.DASH.view === 'cards' && doc.getElementById('dashPaneCards').style.display !== 'none' &&
+          assert.ok(win.DASH.view === 'cards' && doc.getElementById('dashPaneCards').style.display !== 'none' &&
              doc.getElementById('dashPaneMaps').style.display === 'none',
             'Cards pill shows its own pane and hides Maps');
           doc.querySelector('#dashPills .dpill[data-view="tables"]').click();
-          ok(doc.querySelectorAll('#dashOut table').length === 2, 'back on Tables: map table + card report still render');
-          ok(doc.querySelector('#dashOut th.sorted'), 'sort state survived the pill round-trip');
+          assert.ok(doc.querySelectorAll('#dashOut table').length === 2, 'back on Tables: map table + card report still render');
+          assert.ok(doc.querySelector('#dashOut th.sorted'), 'sort state survived the pill round-trip');
           return overviewSmoke(startWatch);
         }
-        if ((dw += 100) > 60000) { ok(false, 'dashboard run never finished'); return startWatch(); }
+        if ((dw += 100) > 60000) { assert.ok(false, 'dashboard run never finished'); return startWatch(); }
         realSetTimeout(waitDash, 100);
       })();
     }
@@ -348,23 +351,23 @@ setTimeout(function () {
       (function waitOverview() {
         var el = doc.getElementById('dashPaneOverview');
         if (el.querySelector('.ov-wrap')) {
-          ok(fetchCalls.some(function (u) { return /run=9001/.test(u); }) && fetchCalls.some(function (u) { return /run=9002/.test(u); }),
+          assert.ok(fetchCalls.some(function (u) { return /run=9001/.test(u); }) && fetchCalls.some(function (u) { return /run=9002/.test(u); }),
             'renderOverview fetched both runs via GET /api/skirmishes?run=<id> (' + fetchCalls.join(', ') + ')');
           var txt = el.textContent;
-          ok(/Verdict:/.test(txt), 'verdict banner rendered');
-          ok(/Red%/.test(txt) && /Drag/.test(txt) && /Swings/.test(txt), 'band board rows rendered (scored metrics)');
-          ok(/First-blood/.test(txt), 'guard row (First-blood→win) rendered below the fold');
-          ok(/\(n=3\)/.test(txt), 'fleet-wide n=3 < 240 small-n greys the row with "(n=N)"');
-          ok(/Fixture Alpha/.test(txt) && /Fixture Beta/.test(txt), 'map dumbbells rendered one row per map seen in either run');
-          ok(/deploy interleave/.test(txt) && /median settle/.test(txt), 'pacing minis rendered (1e)');
+          assert.ok(/Verdict:/.test(txt), 'verdict banner rendered');
+          assert.ok(/Red%/.test(txt) && /Drag/.test(txt) && /Swings/.test(txt), 'band board rows rendered (scored metrics)');
+          assert.ok(/First-blood/.test(txt), 'guard row (First-blood→win) rendered below the fold');
+          assert.ok(/\(n=3\)/.test(txt), 'fleet-wide n=3 < 240 small-n greys the row with "(n=N)"');
+          assert.ok(/Fixture Alpha/.test(txt) && /Fixture Beta/.test(txt), 'map dumbbells rendered one row per map seen in either run');
+          assert.ok(/deploy interleave/.test(txt) && /median settle/.test(txt), 'pacing minis rendered (1e)');
           var mapRow = el.querySelector('.ov-map-row[data-map="Fixture Alpha"]');
-          ok(!!mapRow, 'a map dumbbell row carries data-map and is clickable');
+          assert.ok(!!mapRow, 'a map dumbbell row carries data-map and is clickable');
           if (mapRow) mapRow.click();
-          ok(win.DASH.mapFocus === 'Fixture Alpha' && win.DASH.view === 'maps',
+          assert.ok(win.DASH.mapFocus === 'Fixture Alpha' && win.DASH.view === 'maps',
             'clicking a map row sets DASH.mapFocus + switches to the Maps pill (AC2)');
           return mapDrillSmoke(next);
         }
-        if ((ow += 50) > 5000) { ok(false, 'Overview never finished its seeded render'); return next(); }
+        if ((ow += 50) > 5000) { assert.ok(false, 'Overview never finished its seeded render'); return next(); }
         realSetTimeout(waitOverview, 50);
       })();
     }
@@ -378,72 +381,72 @@ setTimeout(function () {
     function mapDrillSmoke(next) {
       console.log('== Map drill-down screen: seeded DASH state ==');
       var el = doc.getElementById('dashPaneMaps');
-      ok(!!el.querySelector('.mapd-wrap'), 'the real drill-down rendered');
+      assert.ok(!!el.querySelector('.mapd-wrap'), 'the real drill-down rendered');
 
       console.log('-- breadcrumb map switcher --');
       var crumbs = el.querySelectorAll('.mapd-crumb');
-      ok(crumbs.length === 2, 'one breadcrumb crumb per map seen in either run (' + crumbs.length + ')');
+      assert.ok(crumbs.length === 2, 'one breadcrumb crumb per map seen in either run (' + crumbs.length + ')');
       var cur = el.querySelector('.mapd-crumb.cur');
-      ok(!!cur && cur.textContent === 'Fixture Alpha', 'the focused map is marked current in the breadcrumb');
+      assert.ok(!!cur && cur.textContent === 'Fixture Alpha', 'the focused map is marked current in the breadcrumb');
       el.querySelector('.mapd-arrow[data-step="1"]').click();
-      ok(win.DASH.mapFocus === 'Fixture Beta', '› arrow steps to the next map (' + win.DASH.mapFocus + ')');
+      assert.ok(win.DASH.mapFocus === 'Fixture Beta', '› arrow steps to the next map (' + win.DASH.mapFocus + ')');
       el.querySelector('.mapd-arrow[data-step="1"]').click();
-      ok(win.DASH.mapFocus === 'Fixture Alpha', '› wraps back around (2 maps, 2 steps) to the first (' + win.DASH.mapFocus + ')');
+      assert.ok(win.DASH.mapFocus === 'Fixture Alpha', '› wraps back around (2 maps, 2 steps) to the first (' + win.DASH.mapFocus + ')');
       el.querySelector('.mapd-crumb[data-map="Fixture Beta"]').click();
-      ok(win.DASH.mapFocus === 'Fixture Beta' && el.querySelector('.mapd-crumb.cur').textContent === 'Fixture Beta',
+      assert.ok(win.DASH.mapFocus === 'Fixture Beta' && el.querySelector('.mapd-crumb.cur').textContent === 'Fixture Beta',
         'clicking a crumb directly focuses that map');
       el.querySelector('.mapd-crumb[data-map="Fixture Alpha"]').click(); // back to the fixture with 2 skirmishes/run
       el = doc.getElementById('dashPaneMaps'); // el.innerHTML was replaced by the click's re-render
 
       console.log('-- A|B|A/B toggle (default B) --');
       var sel = el.querySelector('.ab-toggle span.sel');
-      ok(!!sel && sel.textContent === 'B' && win.DASH.abMode === 'B', 'toggle defaults to B');
+      assert.ok(!!sel && sel.textContent === 'B' && win.DASH.abMode === 'B', 'toggle defaults to B');
 
       console.log('-- tempo lanes: absolute per-lane scale, never 100%-stacked --');
       var laneRows = {};
       el.querySelectorAll('[data-lane]').forEach(function (r) { laneRows[r.getAttribute('data-lane')] = r; });
-      ok(Object.keys(laneRows).length === 4, 'four lanes rendered: deploy/attack/swap/march');
+      assert.ok(Object.keys(laneRows).length === 4, 'four lanes rendered: deploy/attack/swap/march');
       // Fixture Alpha's fixed trace (1 deploy/attack/swap each, spread across
       // octiles, no march at all) -> deploy/attack/swap each peak at 1/turn,
       // march peaks at 0. A shared-scale ("100%-stacked") bug would drag
       // march's printed max up to match the other lanes' 1.00 instead of its
       // own true (zero) peak — this is the forbidden pattern's fingerprint.
       ['deploy', 'attack', 'swap'].forEach(function (a) {
-        ok(laneRows[a].getAttribute('data-lanemax') === '1.00', a + ' lane scales to its OWN max (1.00/turn)');
+        assert.ok(laneRows[a].getAttribute('data-lanemax') === '1.00', a + ' lane scales to its OWN max (1.00/turn)');
       });
-      ok(laneRows.march.getAttribute('data-lanemax') === '0.00',
+      assert.ok(laneRows.march.getAttribute('data-lanemax') === '0.00',
         'march lane (never played this fixture) keeps its OWN 0.00 max, not borrowed from the other lanes (proves per-lane scale, not a shared 100% total)');
-      ok(/max \d+\.\d\d\/turn/.test(el.textContent), 'each lane prints its own "max N.NN/turn" scale label');
+      assert.ok(/max \d+\.\d\d\/turn/.test(el.textContent), 'each lane prints its own "max N.NN/turn" scale label');
 
       console.log('-- |VP-diff| track: honest grey on a run that predates fs capture --');
-      ok(!/unavailable/.test(el.textContent), 'run B (default) carries fs -> track renders, no "unavailable" note');
-      ok(el.querySelectorAll('.mapd-col-l svg polyline').length >= 1, '|VP-diff| track drew a polyline for run B');
+      assert.ok(!/unavailable/.test(el.textContent), 'run B (default) carries fs -> track renders, no "unavailable" note');
+      assert.ok(el.querySelectorAll('.mapd-col-l svg polyline').length >= 1, '|VP-diff| track drew a polyline for run B');
       el.querySelector('.ab-toggle [data-ab="A"]').click();
-      ok(win.DASH.abMode === 'A', 'clicking A switches the toggle');
+      assert.ok(win.DASH.abMode === 'A', 'clicking A switches the toggle');
       el = doc.getElementById('dashPaneMaps');
-      ok(/predates the fs capture/.test(el.textContent),
+      assert.ok(/predates the fs capture/.test(el.textContent),
         'run A (no fs on its rows) greys the |VP-diff| track with the honest "predates the fs capture" note instead of a fabricated line');
 
       console.log('-- A/B mode: B solid, A ghost overlay --');
       el.querySelector('.ab-toggle [data-ab="AB"]').click();
-      ok(win.DASH.abMode === 'AB', 'clicking A/B switches the toggle');
+      assert.ok(win.DASH.abMode === 'AB', 'clicking A/B switches the toggle');
       el = doc.getElementById('dashPaneMaps');
-      ok(!/predates the fs capture/.test(el.textContent), 'A/B mode draws run B (which has fs) solid — the grey note is gone again');
-      ok(el.querySelectorAll('[data-lane] [style*="dashed"]').length > 0, 'A/B mode overlays run A as a dashed ghost bar in the lanes');
-      ok(/B solid, A ghost outline/.test(el.textContent), 'caption names the overlay convention');
+      assert.ok(!/predates the fs capture/.test(el.textContent), 'A/B mode draws run B (which has fs) solid — the grey note is gone again');
+      assert.ok(el.querySelectorAll('[data-lane] [style*="dashed"]').length > 0, 'A/B mode overlays run A as a dashed ghost bar in the lanes');
+      assert.ok(/B solid, A ghost outline/.test(el.textContent), 'caption names the overlay convention');
 
       console.log('-- per-map band board (reuses the Overview row renderer, map small-n scope) --');
-      ok(/This map vs its bands/.test(el.textContent), 'band board section rendered');
-      ok(/Red%/.test(el.textContent) && /Drag/.test(el.textContent) && /Swings/.test(el.textContent), 'scored band rows rendered');
-      ok(/First-blood/.test(el.textContent), 'guard row rendered below the fold');
-      ok(/\(n=2\)/.test(el.textContent), 'map-scope n=2 < 40 (map threshold) greys the row with "(n=N)" — not the fleet 240 threshold');
+      assert.ok(/This map vs its bands/.test(el.textContent), 'band board section rendered');
+      assert.ok(/Red%/.test(el.textContent) && /Drag/.test(el.textContent) && /Swings/.test(el.textContent), 'scored band rows rendered');
+      assert.ok(/First-blood/.test(el.textContent), 'guard row rendered below the fold');
+      assert.ok(/\(n=2\)/.test(el.textContent), 'map-scope n=2 < 40 (map threshold) greys the row with "(n=N)" — not the fleet 240 threshold');
 
       console.log('-- settle curve, this map --');
-      ok(/settle curve, this map/.test(el.textContent), 'settle curve section rendered');
-      ok(el.querySelectorAll('.mapd-col-r svg polyline').length >= 2, 'settle curve drew both A and B polylines');
+      assert.ok(/settle curve, this map/.test(el.textContent), 'settle curve section rendered');
+      assert.ok(el.querySelectorAll('.mapd-col-r svg polyline').length >= 2, 'settle curve drew both A and B polylines');
 
       console.log('-- balance score header --');
-      ok(/balance/.test(el.textContent) && el.textContent.indexOf('→') >= 0, 'this map\'s balance score A → B is shown in the header');
+      assert.ok(/balance/.test(el.textContent) && el.textContent.indexOf('→') >= 0, 'this map\'s balance score A → B is shown in the header');
 
       el.querySelector('.ab-toggle [data-ab="B"]').click(); // leave the toggle back at its default for anything downstream
       next();
@@ -453,60 +456,60 @@ setTimeout(function () {
       console.log('== deck editor ==');
       doc.getElementById('dashBack').click();
       doc.getElementById('btnDeck').click();
-      ok(doc.getElementById('deckScr').classList.contains('active'), 'deck editor opens');
-      ok(doc.querySelectorAll('#dkList .dkli').length === win.Engine.CARDS.length,
+      assert.ok(doc.getElementById('deckScr').classList.contains('active'), 'deck editor opens');
+      assert.ok(doc.querySelectorAll('#dkList .dkli').length === win.Engine.CARDS.length,
         'one list row per card (' + doc.querySelectorAll('#dkList .dkli').length + ')');
-      ok(doc.querySelector('#dkDetail .dkd-name') && doc.querySelectorAll('#dkStepList .dkstep').length >= 1,
+      assert.ok(doc.querySelector('#dkDetail .dkd-name') && doc.querySelectorAll('#dkStepList .dkstep').length >= 1,
         'detail panel + GUI step builder render for the selected card');
       // deckProblems() accepts a 16-17 band (design ceiling, not one exact count;
       // every shipped content/decks/*.js deck lands in that band), so "clean" and
       // the break-it thresholds below are proved against the real band, not a
       // hardcoded count.
-      ok(win.deckProblems(win.Engine.CARDS).length === 0, 'built-in deck validates clean');
-      ok(!doc.getElementById('dkSave').disabled, 'Save enabled on a valid deck');
+      assert.ok(win.deckProblems(win.Engine.CARDS).length === 0, 'built-in deck validates clean');
+      assert.ok(!doc.getElementById('dkSave').disabled, 'Save enabled on a valid deck');
       // break it: bump the selected card's count so the total exceeds the 16-17 band -> validation refuses
       var cnt = doc.querySelector('#dkDetail .dkd-count');
       cnt.value = String(+cnt.value + 1);
       cnt.dispatchEvent(new win.Event('input', { bubbles: true }));
-      ok(/must total 16-17/.test(doc.getElementById('dkWarn').textContent), 'over-band (>17) deck flagged');
-      ok(doc.getElementById('dkSave').disabled, 'Save disabled while invalid');
+      assert.ok(/must total 16-17/.test(doc.getElementById('dkWarn').textContent), 'over-band (>17) deck flagged');
+      assert.ok(doc.getElementById('dkSave').disabled, 'Save disabled while invalid');
       // two starting cards / bad step type are refused too
       var broken = JSON.parse(JSON.stringify(win.Engine.CARDS));
       broken[1].starting = true;
-      ok(win.deckProblems(broken).some(function (p) { return /exactly ONE/.test(p); }), 'double starting card refused');
+      assert.ok(win.deckProblems(broken).some(function (p) { return /exactly ONE/.test(p); }), 'double starting card refused');
       var badStep = JSON.parse(JSON.stringify(win.Engine.CARDS));
       badStep[0].steps = [{ type: 'heal' }];
-      ok(win.deckProblems(badStep).some(function (p) { return /unknown type/.test(p); }), 'unknown step type refused');
+      assert.ok(win.deckProblems(badStep).some(function (p) { return /unknown type/.test(p); }), 'unknown step type refused');
       var benched = JSON.parse(JSON.stringify(win.Engine.CARDS));
       benched[2].out = true; // benched cards drop from the total (here 17 -> 14, under the 16-17 band)
-      ok(win.deckProblems(benched).some(function (p) { return /must total 16-17/.test(p); }), 'benching a card drops it below the 16-17 band');
+      assert.ok(win.deckProblems(benched).some(function (p) { return /must total 16-17/.test(p); }), 'benching a card drops it below the 16-17 band');
       // WOA #56: an over-army-points deck is refused by the same validation pass.
       // Swap the cheapest card for a maxed-out one so the total blows past the cap
       // without changing the card count (isolates the points gate from the size band).
       var overPts = JSON.parse(JSON.stringify(win.Engine.CARDS));
       overPts.forEach(function (c) { if (!c.starting) c.steps = [{ type: 'deploy', unit: 'artillery' }, { type: 'attack', mod: 5, tieSpare: true, anywhere: true }]; });
-      ok(win.Engine.deckPoints({ cards: overPts.filter(function (c) { return !c.out; }) }) > win.Engine.DECK_POINTS_CAP &&
+      assert.ok(win.Engine.deckPoints({ cards: overPts.filter(function (c) { return !c.out; }) }) > win.Engine.DECK_POINTS_CAP &&
          win.deckProblems(overPts).some(function (p) { return /over the army-points budget/.test(p); }), 'over-budget deck refused by the points gate');
       // five deck slots, exactly one active
-      ok(doc.querySelectorAll('#dkSlots .dkslot[data-slot]').length === 5, 'five deck slots offered');
-      ok(doc.querySelectorAll('#dkSlots .dkslot.active').length === 1, 'exactly one active deck marked');
+      assert.ok(doc.querySelectorAll('#dkSlots .dkslot[data-slot]').length === 5, 'five deck slots offered');
+      assert.ok(doc.querySelectorAll('#dkSlots .dkslot.active').length === 1, 'exactly one active deck marked');
       doc.querySelector('#dkSlots .dkslot[data-slot="2"]').click();
-      ok(doc.querySelector('#dkSlots .dkslot[data-slot="2"]').classList.contains('open') &&
+      assert.ok(doc.querySelector('#dkSlots .dkslot[data-slot="2"]').classList.contains('open') &&
          doc.querySelectorAll('#dkList .dkli').length === win.Engine.CARDS.length,
         'switching to an empty slot clones the open deck for editing');
       doc.getElementById('dkBack').click();
 
       console.log('== watch mode (AI vs AI spectate) ==');
       doc.getElementById('btnWatch').click();
-      ok(doc.getElementById('game').classList.contains('active'), 'watch mode starts a game');
+      assert.ok(doc.getElementById('game').classList.contains('active'), 'watch mode starts a game');
       var w0 = 0;
       (function waitWatch() {
         var st = win.APP.st;
         if (st && (st.turnNumber >= 3 || st.phase === 'skirmish-over')) {
-          ok(true, 'both generals played without input (turn ' + st.turnNumber + ')');
+          assert.ok(true, 'both generals played without input (turn ' + st.turnNumber + ')');
           return manualPlayer();
         }
-        if ((w0 += 100) > 30000) { ok(false, 'watch mode stalled at turn ' + (st && st.turnNumber)); return manualPlayer(); }
+        if ((w0 += 100) > 30000) { assert.ok(false, 'watch mode stalled at turn ' + (st && st.turnNumber)); return manualPlayer(); }
         realSetTimeout(waitWatch, 100);
       })();
     }
@@ -516,17 +519,17 @@ setTimeout(function () {
       doc.getElementById('btnQuit').click();
       var liveShape = win.Engine.currentShape();
       doc.getElementById('btnManual').click();
-      ok(doc.getElementById('manualOvr').classList.contains('active'), 'manual overlay opens');
-      ok(doc.querySelectorAll('#mpTabs .mptab').length === 3, 'diagram player present with 3 example tabs');
-      ok(doc.querySelectorAll('#mpBoard polygon.hex').length >= 8,
+      assert.ok(doc.getElementById('manualOvr').classList.contains('active'), 'manual overlay opens');
+      assert.ok(doc.querySelectorAll('#mpTabs .mptab').length === 3, 'diagram player present with 3 example tabs');
+      assert.ok(doc.querySelectorAll('#mpBoard polygon.hex').length >= 8,
         'mini-board hexes rendered (' + doc.querySelectorAll('#mpBoard polygon.hex').length + ')');
-      ok(win.Engine.currentShape() === liveShape, 'rendering restored the live board shape (' + liveShape + ')');
+      assert.ok(win.Engine.currentShape() === liveShape, 'rendering restored the live board shape (' + liveShape + ')');
       var c0 = doc.getElementById('mpCounter').textContent;
       doc.getElementById('mpNext').click();
       doc.getElementById('mpNext').click();
       var c2 = doc.getElementById('mpCounter').textContent;
-      ok(c0 === '1/7' && c2 === '3/7', 'Next advances the beat counter (' + c0 + ' -> ' + c2 + ')');
-      ok(doc.querySelectorAll('#mpBoard .mring.gold').length >= 1, 'gold attacker-support ring(s) on the mini board');
+      assert.ok(c0 === '1/7' && c2 === '3/7', 'Next advances the beat counter (' + c0 + ' -> ' + c2 + ')');
+      assert.ok(doc.querySelectorAll('#mpBoard .mring.gold').length >= 1, 'gold attacker-support ring(s) on the mini board');
       // engine-truth guarantee: the tallies shown must equal supportFor/computeAttack
       // run fresh on the EXACT fixture state being shown (window.MANUAL.state/atk)
       var E2 = win.Engine, M = win.MANUAL;
@@ -537,27 +540,28 @@ setTimeout(function () {
       var res = E2.computeAttack(M.state, M.atk);
       E2.setBoard(prevShape);
       var pill3 = doc.querySelector('#mpBoard .mpill-t').textContent;
-      ok(pill3 === (base + asup.total) + ' vs ?', 'beat-3 tally = engine base + supportFor total (' + pill3 + ')');
-      ok(doc.querySelectorAll('#mpBoard .mring.gold').length === asup.hexes.length,
+      assert.ok(pill3 === (base + asup.total) + ' vs ?', 'beat-3 tally = engine base + supportFor total (' + pill3 + ')');
+      assert.ok(doc.querySelectorAll('#mpBoard .mring.gold').length === asup.hexes.length,
         'one gold ring per engine-confirmed supporter (' + asup.hexes.length + ')');
       doc.getElementById('mpNext').click(); // forest beat
       doc.getElementById('mpNext').click(); // defender beat
       doc.getElementById('mpNext').click(); // totals beat
       var pill6 = doc.querySelector('#mpBoard .mpill-t').textContent;
-      ok(pill6 === res.attackerPower + ' vs ' + res.defenderPower,
+      assert.ok(pill6 === res.attackerPower + ' vs ' + res.defenderPower,
         'final pill = engine computeAttack (' + pill6 + ')');
-      ok(doc.querySelectorAll('#mpBoard .mring.steel').length >= 1, 'steel defender-support ring shown');
+      assert.ok(doc.querySelectorAll('#mpBoard .mring.steel').length >= 1, 'steel defender-support ring shown');
       doc.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
-      ok(doc.getElementById('mpCounter').textContent === '5/7', 'ArrowLeft steps back a beat');
+      assert.ok(doc.getElementById('mpCounter').textContent === '5/7', 'ArrowLeft steps back a beat');
       doc.querySelector('#manualOvr .ovr-btns button').click();
-      ok(!doc.getElementById('manualOvr').classList.contains('active'), 'manual closes');
+      assert.ok(!doc.getElementById('manualOvr').classList.contains('active'), 'manual closes');
       finish();
     }
 
     function finish() {
-      console.log(fails === 0 ? '\nSMOKE PASSED' : '\n' + fails + ' SMOKE FAILURES');
-      process.exit(fails === 0 ? 0 : 1);
+      console.log('\n== smoke play-through complete ==');
+      resolve();
     }
   }
   realSetTimeout(tick, 30);
 }, 50);
+}));
