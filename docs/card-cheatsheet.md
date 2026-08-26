@@ -25,6 +25,13 @@ node game/balance.js   # shows what your change did to win rates + the card repo
 | `text`     | string | Card body and glossary entry. Cosmetic only — the engine never reads it, so keep it honest when you change `steps`. |
 | `starting` | bool   | `true` on exactly ONE card: it is guaranteed in each player's opening hand (drawn as 1 + 3 random). |
 | `steps`    | array  | The printed action, resolved in order. Each entry is `{ "type": ..., ...options }` — see below. |
+| `notes`    | string | *Author-facing, optional.* Free text to get a gut-feeling about the card out of your head and onto the card. The engine never reads it. |
+| `tags`     | array  | *Author-facing, optional.* Strings naming the cluster(s) a card belongs to, so you can talk about groups of cards in concrete terms (e.g. `["tempo", "deploy"]`). The engine never reads it. |
+
+`notes` and `tags` are **inert data** — no gameplay effect and no scoring input.
+They are legal on any card, survive the Deck Editor round-trip untouched, and are
+independent of the measured *capability classes* the army-points calibration works
+in (#82): tags are the author's own vocabulary, never wired into the `POINTS` math.
 
 ### Special ids the engine knows by name
 
