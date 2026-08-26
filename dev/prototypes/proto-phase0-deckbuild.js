@@ -6,20 +6,29 @@
  * validated) is concrete and reactable. Fold the verdict into dev/claude-plays.js;
  * this file dies on its branch.
  *
- * Strawman the human reacts to:
+ * Decisions (resolved with Bill on #84 — this stub reflects them):
  *  1. POOL = deduped union of cards across every content/decks/*.js (20 today).
  *     That is "all Cards" until the roguelite pool>deck split lands.
- *  2. LLM SEES: the pool as `id | pts | name — text`, the cap (72), the size
- *     band (16-17), the starting-card rule. LLM RETURNS: {picks:[{id,count}], why}.
- *  3. ASSEMBLE: map picks -> {cards:[...]} via the pool lookup.
- *  4. VALIDATE on the SAME cap fact the deck-editor uses — the exported
- *     E.deckPoints / E.DECK_POINTS_CAP primitives (NOT a new number). See the
- *     SEAM note at the bottom: full legality (size band + starting) today lives
- *     ONLY in game/ui/deck-editor.js (a browser file) — real integration should
- *     lift that gate into the engine so there's one implementation.
- *  5. HOOK: draft -> match.decks={red,blue} -> E.newMatch({...,decks}) ->
+ *  2. THE ONE HARD RULE = the army-points cap (72). Everything else is
+ *     best-practice prompt guidance, NOT a gate — the point of LLM deckbuild is
+ *     to search the space, and hard rules railroad it back to the same decks.
+ *  3. LLM SEES: the pool as `id | pts | name — text`, the cap, and soft
+ *     best-practices (16-20 cards; run deploys ~ MTG lands; pick a basic opener,
+ *     noOpener cards can't open). RETURNS: {picks:[{id,count}], why}.
+ *  4. VALIDATE: cap is the only hard fail, on the EXPORTED E.deckPoints /
+ *     E.DECK_POINTS_CAP (same primitive the deck-editor uses). Size 16-20 and
+ *     starting-card are advisory notes (0/2 starting tolerated: deckRegistry
+ *     falls back to cards[0]).
+ *  5. QUESTIONNAIRE: a pre-match deck-construction questionnaire, data-defined,
+ *     sharing #85's post-match debrief machinery (#91 dashboard edits it).
+ *  6. HOOK: draft -> match.decks={red,blue} -> E.newMatch({...,decks}) ->
  *     E.newSkirmish already seats st.sideDecks (WOA-055, zero engine change).
  *     decks:null keeps the symmetric default path byte-for-byte golden.
+ *
+ * Filed to #82 (calibration/POINTS): should guaranteed-opener status carry a
+ * point surcharge like `anywhere` already does, and should `noOpener` be DERIVED
+ * from step properties instead of a hand-set flag — so army-points MEASURES the
+ * rule-bends. Out of scope for this ticket (POINTS-table territory).
  */
 'use strict';
 const fs = require('fs');
@@ -51,13 +60,26 @@ function draftPrompt(pool) {
     'Draft a War of Attrition deck for your side. Cards available (id, army-points, text):',
     rows,
     '',
-    'Rules:',
-    '  - Total 16-17 cards (a card may repeat via count).',
-    '  - Army-points must be <= ' + E.DECK_POINTS_CAP + ' (sum of cardPoints * count).',
-    '  - Exactly ONE card must be your starting card (count 1); pick a deploy.',
+    'The ONE hard rule:',
+    '  - Army-points must be <= ' + E.DECK_POINTS_CAP + ' (sum of cardPoints * count). This is the fence.',
+    'Best practices (not rules — break them on purpose if you have a reason):',
+    '  - Aim for 16-20 cards total (a card may repeat via count).',
+    '  - Run some deploys. A deck with no deploys is like an MTG deck with no lands —',
+    '    usually a trap, but the space is yours to search.',
+    '  - Pick a basic deploy as your opener; noOpener cards (e.g. Airdrop) never open.',
     'Return JSON: {"picks":[{"id":"<card id>","count":<n>}], "why":"<one line>"}',
   ].join('\n');
 }
+
+/* Pre-match deck-construction questionnaire (issue #84). Data-defined, one place —
+ * the SAME shape #85 chose for the post-match debrief; a real build shares that
+ * table and #91's dashboard edits it. Output is prose for the judge role, no pin. */
+const CONSTRUCTION_QUESTIONS = [
+  { id: 'plan',      text: 'In one line, what is this deck trying to do?' },
+  { id: 'keystone',  text: 'Which card(s) are the keystone, and why those?' },
+  { id: 'ruleBend',  text: 'Did you lean on any rule-bend (anywhere placement, tie-survival, opener)?' },
+  { id: 'cut',       text: 'What did you deliberately leave out, and what did it cost you?' },
+];
 const DRAFT_SCHEMA = {
   type: 'object',
   required: ['picks', 'why'],
@@ -80,18 +102,20 @@ function assemble(picks, pool) {
   return { id: 'draft', name: 'Drafted deck', cards };
 }
 
-/* 4. Validate. Cap reuses the EXPORTED engine fact (same as the deck-editor).
- *    Size-band + starting are re-stated here only because the real gate is
- *    trapped in the browser deck-editor — SEAM note below. */
+/* 4. Validate. The cap is the ONLY hard gate (issue #84) — reuses the EXPORTED
+ *    engine fact (same primitive the deck-editor uses). Size band (16-20) is a
+ *    soft guardrail; starting-card is advisory — 0/2 is tolerated (deckRegistry
+ *    falls back to cards[0]), so it's a note, never a failure. */
 function legality(deck) {
-  const probs = [];
+  const notes = [];
   const total = deck.cards.reduce((s, c) => s + (c.count == null ? 1 : c.count), 0);
   const starting = deck.cards.filter(c => c.starting).length;
-  if (total < 16 || total > 17) probs.push('size ' + total + ' outside 16-17');
-  if (starting !== 1) probs.push('starting-card count is ' + starting + ' (need exactly 1)');
   const pts = E.deckPoints(deck);                       // <-- one implementation of the cap fact
-  if (pts > E.DECK_POINTS_CAP) probs.push('over budget ' + pts + ' > ' + E.DECK_POINTS_CAP);
-  return { ok: probs.length === 0, pts, total, starting, probs };
+  const ok = pts <= E.DECK_POINTS_CAP;                  // the fence, and the ONLY hard fail
+  if (total < 16 || total > 20) notes.push('size ' + total + ' outside the 16-20 best-practice band');
+  if (starting !== 1) notes.push('starting-card count is ' + starting + ' (engine will open with cards[0])');
+  if (!ok) notes.push('OVER BUDGET ' + pts + ' > ' + E.DECK_POINTS_CAP + ' — rejected');
+  return { ok, pts, total, starting, notes };
 }
 
 /* Mock "LLM" drafts — deterministic, no transport. Two DIFFERENT legal builds so
@@ -130,6 +154,10 @@ const rl = legality(red), bl = legality(blue);
 console.log('RED  draft:', JSON.stringify(redRaw.picks), '=>', rl);
 console.log('BLUE draft:', JSON.stringify(blueRaw.picks), '=>', bl, '\n');
 
+console.log('--- deck-construction questionnaire (pre-match, data-defined) ---');
+CONSTRUCTION_QUESTIONS.forEach(q => console.log('  [' + q.id + '] ' + q.text));
+console.log('  (LLM answers in prose alongside its draft; feeds the judge role, no pin)\n');
+
 /* 5. HOOK: the drafted decks travel as match.decks; the engine seats sideDecks. */
 const match = E.newMatch({ seed: 1234, firstPlayer: 'red', decks: { red, blue } });
 const st = E.newSkirmish(match);
@@ -140,8 +168,8 @@ console.log('asymmetric skirmish: sideDecks.red.starting=%s sideDecks.blue.start
 console.log('symmetric skirmish : sideDecks=%s (golden path untouched)', sym.sideDecks);
 
 /* ---- assertions (the throwaway's proof) ---- */
-assert.ok(rl.ok, 'RED draft must be legal: ' + rl.probs.join('; '));
-assert.ok(bl.ok, 'BLUE draft must be legal: ' + bl.probs.join('; '));
+assert.ok(rl.ok, 'RED draft must be under cap: ' + rl.notes.join('; '));
+assert.ok(bl.ok, 'BLUE draft must be under cap: ' + bl.notes.join('; '));
 assert.ok(st.sideDecks && st.sideDecks.red && st.sideDecks.blue, 'asymmetric decks must seat sideDecks');
 assert.strictEqual(sym.sideDecks, undefined, 'symmetric path must leave sideDecks absent (golden)');
 // over-cap draft must be rejected by the SAME primitive
