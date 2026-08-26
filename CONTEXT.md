@@ -153,6 +153,26 @@ The gap between a Card's *measured* win-contribution and its *army-points* cost.
 **Timing blind spot**:
 The balance scorer's known inability to value a Card whose worth is in *when* it is held or played (e.g. a saved attack buff). Such a Card can read as weak or mispriced without being either. Same class of gap as the AI eval not seeing reserve-hoarding.
 
+**Card dominance**:
+A game-theory reading of a Card against its alternatives: *Dominant* (worth playing whenever available), *Weakly dominated* (never strictly better than another option), or *Strictly dominated* (always a worse choice than something else). What a calibration pass is really trying to classify — a Deck of dominant-vs-dominated Cards is a Deck of non-decisions.
+_Avoid_: Strength, tier (dominance is relative to the alternatives, not an absolute power level).
+
+**Decline signal**:
+How often a Card sat *in hand and was passed over* — the observable that separates a Strictly-dominated Card from one that was simply never drawn. Read *per game-phase*, because a phase-appropriate hold (a late-game buff idle early) is not dominance. The measurement the Timing blind spot was waiting on.
+_Avoid_: Skip rate (a played Card can still No-op; decline is about not playing at all).
+
+**Capability class**:
+The set of Cards sharing a single army-points *lever* (one step type, one unit tier, the attack-mod, a flag). The unit at which a *shared* weight is tuned — one lever, one class, one candidate weight-move. A Card joins its classes by *realized* contribution, not printed cost, because resolution may skip a Card's actions.
+_Avoid_: Card type, archetype (a class is a pricing-lever grouping, not a theme).
+
+**Feels loop**:
+The qualitative LLM read on a build — "were the decisions interesting, or a reflex?" — run as a sanity check alongside the crunchable balance metrics. Balance is numbers, feels are not, and a mathematically balanced game is not automatically a fun one; so the feels read can veto a change the numbers endorse, but never feeds the metric math.
+_Avoid_: Fun score (it is a judgment, not a number on the balance ledger).
+
+**Fairness sweep**:
+An on-demand run asking "is this *content* fair?" — distinct from the every-commit test sweep asking "does the *code* still function." The two never merge (ADR-0003): fairness is a property of the build, function a property of the code.
+_Avoid_: Test (the test sweep is the functional gate; the fairness sweep is the balance oracle).
+
 **AI personality**:
 A named heuristic weight-set that gives the bot a *character* — a playstyle that is fun to beat and fun to lose to — rather than maximal strength. A personality is one row of data. Distinct from a Commander trait.
 _Avoid_: Difficulty (a personality is a style, not a strength tier), Bot.
