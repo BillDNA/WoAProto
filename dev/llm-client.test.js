@@ -66,9 +66,6 @@ test('parseEnvelope: result missing / not a string -> errored', function () {
 });
 
 /* ---- send (shape only; the real spawn is covered by the manual end-to-end) ---- */
-test('send: is a function', function () {
-  assert.strictEqual(typeof send, 'function');
-});
 test('send: fails open (errored response, no throw) on a missing binary', async function () {
   const r = await send({ userMessage: 'x', model: 'haiku', binaryPath: 'definitely-not-a-real-binary-xyz', timeoutMs: 5000 });
   assert.deepStrictEqual(r, ERRORED);
