@@ -140,12 +140,18 @@ _Avoid_: Cost (a step has a cost; the Card's total is its army-points), Power le
 **Points cap**:
 The shared army-points budget every Deck is built under. Two Decks at the same cap are "matched" in capability, which is what lets a Skirmish be asymmetric yet fair.
 
-**Tolerance temperature**:
-How far a *measured* metric may sit outside its band before a result is accepted — the existing band-widening dial (strict / explore / hot). A verdict on outputs.
-_Avoid_: bare "temperature" (say which one; the two are different concepts).
+**Tolerance**:
+One knob in a balance report — a single metric's accept/reject band (Red%, Drag, Swings, …). The report's job: one Tolerance per scored metric. _Was_ "Tolerance temperature"; "temperature" now names a distinct, larger thing (below).
+_Avoid_: calling one band a "temperature."
 
-**Exploration temperature**:
-How large a *step* content iteration takes through design space — the willingness to try a structurally different but budget-legal candidate to escape a local optimum. An input to the search, realized chiefly *through* the points cap. Distinct from Tolerance temperature.
+**Grace class**:
+How much slack a single Tolerance (or a Step) is granted for one iteration loop: `hold` (baseline band, strict — the held/cold knobs), `nudge` (small grace), `bold` (large grace), `bypass` (band not enforced — don't-care this loop). Ranges are *per-Tolerance*: a `nudge` on Red% is a different width than a `nudge` on Drag.
+
+**Step**:
+The input-side facet of an iteration (a.k.a. *exploration*) — how far a candidate Deck jumps from the current best, measured in *army-points re-allocated* (one per iterated axis), classed `nudge`/`bold` with its own points range. A bold Step can still land in-band; Grace governs when it doesn't. _Was_ "Exploration temperature."
+
+**Temperature**:
+A *named profile over Tolerances* for one content-iteration loop — which knobs loosen and which stay tight — assigning each Tolerance a Grace class (and the Step its class for the iterated axis). A **vector, not a scalar**, and the iteration loop's job, not the report's: a card loop sets card-relevant Tolerances to `nudge`/`bold` while map Tolerances stay `hold`. The former global T0/T1/T2 are the three *uniform* Temperatures (all-`hold` / all-`nudge` / all-`bold`); non-uniform profiles are the generalization.
 
 **Mispricing residual**:
 The gap between a Card's *measured* win-contribution and its *army-points* cost. A large gap flags an over- or under-priced Card — the anti-slop signal. Advisory only, because of the Timing blind spot.
