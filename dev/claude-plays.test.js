@@ -44,6 +44,9 @@ surfaces.push(['rules text', cp.RULES]);
 surfaces.push(['system prompt', cp.sysPrompt('red', 3)]);
 
 test('honest-info sentinel', () => {
+  // The opening play must actually reach a step, or the step-header/step-choices
+  // surfaces above never got collected and the strongest leak vectors go untested.
+  assert.ok(st.phase === 'step', 'setup reached the step phase (step surfaces collected)');
   surfaces.forEach(function (s) {
     assert.ok(!leaks(s[1]), s[0] + ' never shows the enemy hidden card');
   });
@@ -69,7 +72,8 @@ test('ranked option diet', () => {
   const m2 = E.newMatch({ maps: [E.MAPS[0]], seed: 77, firstPlayer: 'red' });
   const st2 = E.newSkirmish(m2);
   E.playCard(st2, st2.hands.red[0], 'normal');
-  if (st2.phase === 'step') {
+  assert.ok(st2.phase === 'step', 'setup reached the step phase (diet invariants get exercised)');
+  {
     const all = E.enumerateChoices(st2);
     const l1 = cp.stepChoiceList(st2, 15, false);
     assert.ok(l1.total === all.length, 'total reports the full legal count');
