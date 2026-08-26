@@ -18,7 +18,19 @@ test('commanders content loads + schema', () => {
     assert.ok(c.side === 'red' || c.side === 'blue' || c.side === null,
       c.id + ": side is 'red' | 'blue' | null");
     assert.ok(typeof c.theme === 'string' && c.theme, c.id + ': theme is a non-empty string');
-    assert.ok(typeof c.pilotAi === 'string' && c.pilotAi, c.id + ': pilotAi is a non-empty string pointer');
+    // personality is an aiConfig value: a preset/panel-name STRING, or an inline
+    // AI_WEIGHTS override OBJECT (the commander holding its own weights). Either
+    // must be non-empty; difficulty/search-depth is a separate run dial, not here.
+    if (typeof c.personality === 'string') {
+      assert.ok(c.personality, c.id + ': personality string is non-empty');
+    } else {
+      assert.ok(c.personality && typeof c.personality === 'object' && !Array.isArray(c.personality)
+        && Object.keys(c.personality).length > 0,
+        c.id + ': personality is a non-empty weights object');
+      Object.keys(c.personality).forEach(function (k) {
+        assert.ok(typeof c.personality[k] === 'number', c.id + ': weight "' + k + '" is a number');
+      });
+    }
     assert.ok(Array.isArray(c.abilities), c.id + ': abilities is an array');
     assert.strictEqual(c.abilities.length, 0, c.id + ': abilities stays inert/empty (the #24 hook)');
   });
