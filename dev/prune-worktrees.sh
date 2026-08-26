@@ -3,16 +3,25 @@
 # then delete that branch. Skips locked worktrees (active jobs) and any with
 # uncommitted changes automatically — git refuses without --force, and we don't force.
 # Pass -n / --dry-run to just print what would be removed.
+# ponytail: uses ancestry (merge-base), so squash-merged branches read as
+# "not merged" and are left for manual review — remove those by hand.
 set -euo pipefail
 
 dry=0
 [ "${1:-}" = "-n" ] || [ "${1:-}" = "--dry-run" ] && dry=1
 
+# Compare against the remote tip, not local main (which is often behind after
+# PRs merge on GitHub). Fall back to local main if there's no remote.
+base=main
+if git remote get-url origin >/dev/null 2>&1; then
+  git fetch -q origin main && base=origin/main
+fi
+
 git worktree list --porcelain \
   | awk '/^worktree /{p=$2} /^branch /{sub("refs/heads/","",$2); print p"\t"$2}' \
   | while IFS=$'\t' read -r path branch; do
       case "$path" in */.claude/worktrees/*) ;; *) continue ;; esac
-      git merge-base --is-ancestor "$branch" main 2>/dev/null || continue
+      git merge-base --is-ancestor "$branch" "$base" 2>/dev/null || continue
       if [ "$dry" = 1 ]; then
         echo "would remove: $path ($branch)"
         continue
