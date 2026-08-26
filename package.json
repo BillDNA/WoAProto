@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "test": "node --test game/test.js dev/*.test.js dev/smoke.js"
+  }
+}
