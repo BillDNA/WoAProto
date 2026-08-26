@@ -139,6 +139,24 @@ test('report-model: bands as data + trace folds', () => {
   assert.ok(WS12.A.plays === 2 && WS12.A.wins === 1, 'cardHqWinSlice ignores the attrition-ending envelope entirely (unchanged from HQ-only)');
   assert.ok(typeof R.cardAggFromEnvelopes === 'function' && typeof R.cardHqWinSlice === 'function',
     'card folds exported on the shared surface');
+  // pre-#89 traces (no `declined`) fold to zero declines, appears == plays
+  assert.ok(CA1.A.declines === 0 && CA1.A.appears === CA1.A.plays,
+    'cardAggFromEnvelopes: legacy trace without declined -> declines 0, appears == plays');
+
+  // ---- #89 in-hand-declined signal (held-but-passed-over, turn-stamped) ----
+  var declEnv = { winner: 'red', winType: 'hq', turns: 4, trace: [
+    { p: 'red', id: 'A', mode: 'normal', turn: 1, seen: 1, declined: ['D', 'E'] }, // D,E held
+    { p: 'red', id: 'A', mode: 'normal', turn: 2, seen: 2, declined: ['D'] },       // D still held
+    { p: 'red', id: 'D', mode: 'normal', turn: 3, seen: 2, declined: ['E'] }        // D played; E held, never played
+  ] };
+  var DA = R.cardAggFromEnvelopes([declEnv]);
+  assert.ok(DA.A.declines === 0 && DA.A.appears === 2, 'decline: A always played -> 0 declines, appears 2');
+  assert.ok(DA.D.plays === 1 && DA.D.declines === 2 && DA.D.appears === 3, 'decline: D passed over twice then played -> decline-rate 2/3');
+  assert.ok(DA.E.plays === 0 && DA.E.declines === 2 && DA.E.appears === 2, 'decline: E seen twice, never played -> strictly-dominated signal (decline-rate 1.0)');
+  var DO = R.cardDeclineByOctile(declEnv);
+  assert.deepStrictEqual(DO.D, [1, 0, 1, 0, 0, 0, 0, 0], 'cardDeclineByOctile: D declined in octiles 0 and 2');
+  assert.deepStrictEqual(DO.E, [1, 0, 0, 0, 1, 0, 0, 0], 'cardDeclineByOctile: E declined in octiles 0 and 4 (phase-conditioned)');
+  assert.deepStrictEqual(R.cardDeclineByOctile(cardEnv1), {}, 'cardDeclineByOctile: pre-#89 trace yields no decline rows');
 
   // ---- per-unit-type fold: unitsAggFromEnvelopes on a hand-built two-skirmish
   // fixture with known answers, incl. the dep[]/dieT[] lifespan pairing (real

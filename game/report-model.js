@@ -388,16 +388,40 @@ var WOA_REPORT = (function () {
     (envs || []).forEach(function (env) {
       var winner = env && env.winner, tr = traceOf(env);
       tr.forEach(function (e) {
-        var c = cards[e.id] || (cards[e.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 });
+        var c = cards[e.id] || (cards[e.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0, declines: 0 });
         c.plays++;
         if (e.p === winner) c.wins++;
         if (e.mode !== 'normal') c.simple++;       // resolved as a basic attack/reposition
         if ((e.seen || 1) <= 1) c.firstSight++;     // played the first time it was seen
         if (e.noop) c.noop++;                       // resolved ZERO actions
         c.seenSum += (e.seen || 1);
+        // #89 decline signal: every card held-but-passed-over this turn (older
+        // traces without `declined` contribute nothing). appears = plays +
+        // declines; decline-rate = declines / appears (per card).
+        (e.declined || []).forEach(function (did) {
+          var d = cards[did] || (cards[did] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0, declines: 0 });
+          d.declines++;
+        });
       });
     });
+    Object.keys(cards).forEach(function (id) { cards[id].appears = cards[id].plays + cards[id].declines; });
     return cards;
+  }
+
+  /* #89 phase-conditioned decline: per-card decline count in each of the 8
+     turn-octiles (reusing the octile index at actionOctileLanes). A card is
+     "declined" in a turn when it was in hand and a DIFFERENT card was played.
+     Returns { cardId: [8 counts] }; #82 slices decline-rate by phase from this
+     against the same-octile play counts. Empty for pre-#89 traces. */
+  function cardDeclineByOctile(env) {
+    var tr = traceOf(env), turns = turnsOf(env) || 1, out = {};
+    tr.forEach(function (e) {
+      var oi = Math.min(7, Math.max(0, Math.floor((e.turn - 1) * 8 / turns)));
+      (e.declined || []).forEach(function (did) {
+        (out[did] || (out[did] = [0, 0, 0, 0, 0, 0, 0, 0]))[oi]++;
+      });
+    });
+    return out;
   }
 
   /* The axis-worthy card Win%: sliced to HQ-capture endings × non-simple plays only
@@ -777,7 +801,7 @@ var WOA_REPORT = (function () {
     // Overview pane: per-map balance-score dumbbell fold (1f)
     mapScoreDumbbells: mapScoreDumbbells,
     // per-card DB-rows aggregate (cardRows-compatible) + the Win% doctrine slice
-    cardAggFromEnvelopes: cardAggFromEnvelopes, cardHqWinSlice: cardHqWinSlice,
+    cardAggFromEnvelopes: cardAggFromEnvelopes, cardHqWinSlice: cardHqWinSlice, cardDeclineByOctile: cardDeclineByOctile,
     // Cards pane: per-run per-card view + fleet-wide fire-time quartiles (many skirmishes)
     cardRunView: cardRunView, cardFleetFireTimes: cardFleetFireTimes,
     // per-unit-type aggregate (role map / breakthrough / lifespan / exchange)
