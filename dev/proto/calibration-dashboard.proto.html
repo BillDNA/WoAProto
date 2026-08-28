@@ -3,7 +3,8 @@
      Plan: drop "held fixed", light-touch accept settings (pending Temperature spec #93).
      Run: "over the playtester's shoulder" — live match feed + anomaly signals, not just a progress bar.
      Results: one-pager stays the main view; full balance + feels reports NEST underneath (native <details>).
-     Switch phase: bottom bar or ?phase=plan|run|results. Mock data — NOT a live run. -->
+     Trajectory (#105): progress-over-time from woa.db — 3 framings via ?traj=champ|search|content.
+     Switch phase: bottom bar or ?phase=plan|run|results|trajectory. Mock data — NOT a live run. -->
 <style>
   :root{
     --paper:#f4f3ec; --card:#fbfaf5; --sunk:#efeee5; --ink:#1b1d17; --ink-2:#4a4d40; --ink-3:#8a8c7c;
@@ -184,7 +185,8 @@
 <div id="switch">
   <button data-p="plan" onclick="goPhase('plan')"><b>1</b> Plan</button><span class="step">→</span>
   <button data-p="run" onclick="goPhase('run')"><b>2</b> Run</button><span class="step">→</span>
-  <button data-p="results" onclick="goPhase('results')"><b>3</b> Results</button>
+  <button data-p="results" onclick="goPhase('results')"><b>3</b> Results</button><span class="step">→</span>
+  <button data-p="trajectory" onclick="goPhase('trajectory')"><b>4</b> Trajectory</button>
 </div>
 
 <script>
@@ -439,8 +441,119 @@ function resultsPhase(){
   ${reportDetails(false)}`;
 }
 
+/* ================= PHASE 4 — TRAJECTORY (progress over time, from the db) =================
+   Wayfinder #105. The loop trajectory is the parent→candidate Step chain persisted in woa.db
+   (#95 parent-id column). This screen renders it live from the db — NOT into a committed .md
+   (grep-poisoning tension resolved in #95: db is the non-grep archive). Three framings of
+   "progress over time" switch via ?traj=champ|search|content — the open question this proto asks
+   is WHICH framing (what the view must show). Mock data, grounded in the db Step model. */
+const TRAJ={loop:'Card loop', nudge:RUN.nudge, deck:'cavsplit17', target:8.0, /* balanceScore ↓ = closer to ideal */
+  iters:[ // incumbent chain: parent→candidate, Step = Δ deckPoints, adopt flips the incumbent
+   {i:0, when:'day 1', cand:'cavsplit17 (opening incumbent)', kind:'baseline', step:0,  from:null, verdict:'base', score:14.2, axis:null,        note:'the loop’s starting deck — iteration-0 incumbent (#95)'},
+   {i:1, when:'day 1', cand:'Raiding Party tuned · cost 5→6',  kind:'tune',     step:1,  from:0,    verdict:'adopt', score:12.8, axis:'resid ↓',   note:'mispricing residual pulled toward band; new incumbent'},
+   {i:2, when:'day 2', cand:'Mass Assault added · 8pt',        kind:'add',      step:8,  from:1,    verdict:'reject',score:14.6, axis:'Swings ↑',  note:'bold step, but declined 55–70% and Swings blew the band — incumbent held'},
+   {i:3, when:'day 2', cand:'Flank swap · Reckless held',      kind:'swap',     step:3,  from:1,    verdict:'adopt', score:11.5, axis:'Drag ↓',    note:'midgame opened up; adopted over iter-1'},
+   {i:4, when:'day 3', cand:'Flanking Order added · 6pt',      kind:'add',      step:6,  from:3,    verdict:'iter',  score:11.9, axis:'seen 23%',  note:'under-appeared (trigger too narrow) — parked to iterate, incumbent held'},
+   {i:5, when:'day 3', cand:'Cav curve rebalance',            kind:'tune',     step:2,  from:3,    verdict:'adopt', score:10.9, axis:'win% →',    note:'current champion'},
+   {i:6, when:'now',   cand:'Flanking Order · widened trigger',kind:'add',      step:6,  from:5,    verdict:'running',score:null, axis:null,       note:'sweeping now — the live iteration from the Run screen'}]};
+
+/* helpers for the trajectory viz */
+const V={adopt:['good','adopted'],reject:['crit','rejected'],iter:['nudge','iterate'],base:['accent','baseline'],running:['accent','running']};
+function trajLine(){ // balanceScore over iterations, adopted chain solid, others as ticks
+  const W=680,H=200,pad={l:44,r:16,t:18,b:34}, iw=W-pad.l-pad.r, ih=H-pad.t-pad.b;
+  const pts=TRAJ.iters.filter(t=>t.score!=null); const xs=TRAJ.iters.length-1;
+  const lo=8, hi=15; const X=i=>pad.l+iw*(i/xs); const Y=s=>pad.t+ih*(1-(s-lo)/(hi-lo));
+  const adopted=pts.filter(t=>t.verdict==='adopt'||t.verdict==='base');
+  const path=adopted.map((t,k)=>(k?'L':'M')+X(t.i).toFixed(1)+' '+Y(t.score).toFixed(1)).join(' ');
+  const tgtY=Y(TRAJ.target);
+  const dots=pts.map(t=>{const c=t.verdict==='adopt'||t.verdict==='base'?'var(--good)':t.verdict==='reject'?'var(--crit)':'var(--nudge)';
+    const solid=t.verdict==='adopt'||t.verdict==='base';
+    return `<circle cx="${X(t.i)}" cy="${Y(t.score)}" r="${solid?5:4}" fill="${solid?c:'var(--card)'}" stroke="${c}" stroke-width="2"/>
+      <text x="${X(t.i)}" y="${Y(t.score)-11}" text-anchor="middle" class="mono" font-size="10" fill="var(--ink-2)">${t.score}</text>`;}).join('');
+  const xlabs=TRAJ.iters.map(t=>`<text x="${X(t.i)}" y="${H-12}" text-anchor="middle" class="mono" font-size="10" fill="var(--ink-3)">${t.i}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="balanceScore over iterations">
+    <line x1="${pad.l}" y1="${tgtY}" x2="${W-pad.r}" y2="${tgtY}" stroke="var(--good)" stroke-dasharray="4 4" opacity=".6"/>
+    <text x="${W-pad.r}" y="${tgtY-5}" text-anchor="end" class="mono" font-size="10" fill="var(--good)">target ${TRAJ.target}</text>
+    <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>
+    ${dots}${xlabs}
+    <text x="6" y="${pad.t+4}" class="mono" font-size="10" fill="var(--ink-3)">${hi}</text>
+    <text x="6" y="${H-pad.b}" class="mono" font-size="10" fill="var(--ink-3)">${lo}</text>
+    <text x="${pad.l}" y="${H-2}" class="mono" font-size="10" fill="var(--ink-3)">iteration →</text></svg>`;
+}
+function stepBar(step,verdict){const c=V[verdict]?`var(--${V[verdict][0]==='accent'?'accent':V[verdict][0]==='good'?'good':V[verdict][0]==='crit'?'crit':'nudge'})`:'var(--ink-3)';
+  const w=Math.min(100,step/8*100); return `<div class="prog" style="max-width:90px;height:6px"><i style="width:${w}%;background:${c}"></i></div>`;}
+
+function trajChamp(){ // FRAMING A — champion line: "are we getting better?"
+  const adopted=TRAJ.iters.filter(t=>t.verdict==='adopt'||t.verdict==='base');
+  const first=adopted[0].score, last=adopted[adopted.length-1].score, gain=(first-last).toFixed(1);
+  return `
+  <div class="card pad">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
+      <div class="eyebrow">balanceScore · the fixed ruler (#83) · lower = closer to ideal</div>
+      <span class="pill good">${gain} closer over 3 adopted steps</span></div>
+    ${trajLine()}
+    <p class="barnote" style="margin-top:4px">Solid line = the <b>champion</b> (adopted incumbent). Hollow dots = candidates the loop <b>tried and dropped</b> — they never moved the champion. This is “progress over time” read as one number trending toward target.</p>
+  </div>
+  <div class="statgrid" style="margin-top:16px">
+    <div><div class="k">iterations run</div><div class="v">6</div></div>
+    <div><div class="k">adopted</div><div class="v" style="color:var(--good)">3</div></div>
+    <div><div class="k">rejected / parked</div><div class="v" style="color:var(--crit)">2</div></div>
+    <div><div class="k">champion score</div><div class="v">10.9</div></div>
+    <div><div class="k">to target</div><div class="v" style="color:var(--nudge)">+2.9</div></div>
+    <div><div class="k">boldest step</div><div class="v">8pt</div></div>
+  </div>`;
+}
+function trajSearch(){ // FRAMING B — every attempt: "what did the search try?"
+  const rows=TRAJ.iters.map(t=>{const [cls,lab]=V[t.verdict];const running=t.verdict==='running';
+    return `<tr>
+      <td class="mono">${t.i}</td>
+      <td class="l"><b>${t.cand}</b><div class="muted" style="font-size:11.5px">${t.note}</div></td>
+      <td>${t.step?stepBar(t.step,t.verdict):''}<span class="mono muted" style="font-size:11px">${t.step?t.step+'pt':'—'}</span></td>
+      <td class="mono">${t.axis||'—'}</td>
+      <td class="mono">${t.score!=null?t.score:'<span class="livedot" style="width:7px;height:7px"></span>'}</td>
+      <td><span class="pill ${cls}">${lab}</span></td></tr>`;}).join('');
+  return `
+  <div class="card pad">
+    <div class="eyebrow" style="margin-bottom:10px">every candidate the loop tried · parent→candidate Step chain from woa.db (#95)</div>
+    <div class="tableScroll"><table>
+      <thead><tr><th>#</th><th class="l">candidate</th><th class="l">Step</th><th class="l">axis moved</th><th>score</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <p class="barnote" style="margin-top:10px">The <b>search effort</b>, not just the wins — bold steps (8pt Mass Assault) and dead-ends are visible, so you can see whether the loop is exploring or grinding. Step = Δ deckPoints (adopt flips the incumbent).</p>
+  </div>`;
+}
+function trajContent(){ // FRAMING C — content provenance: "what got built, and did it stick?"
+  const built=TRAJ.iters.filter(t=>t.kind!=='baseline'&&t.verdict!=='running');
+  const el=t=>{const [cls,lab]=V[t.verdict];const stuck=t.verdict==='adopt';
+    return `<div class="gcard"><div class="verdict ${t.verdict==='adopt'?'keep':t.verdict==='reject'?'cut':'iter'}">${lab}</div>
+      <div class="top"><div class="cost">${t.step}</div><div><div class="nm">${t.cand.split('·')[0].trim()}</div>
+        <div class="type">${t.kind} · iter ${t.i} · ${t.when}</div></div></div>
+      <div class="txt">${t.note}</div>
+      <div class="diff">${stuck?'stuck — in the champion deck':'did not stick — champion held'} · axis ${t.axis||'—'}</div></div>`;};
+  return `
+  <div class="card pad" style="margin-bottom:16px">
+    <div class="eyebrow">the champion deck today</div>
+    <h2 style="font-size:19px;margin:6px 0 2px">cavsplit17 <span class="mono muted" style="font-size:13px">+ 2 adopted changes · score 14.2 → 10.9</span></h2>
+    <p class="muted" style="font-size:13px;margin:0">Every adopted step folded into the current best; every rejected candidate is provenance, not clutter.</p>
+  </div>
+  <div class="gallery">${built.map(el).join('')}</div>
+  <p class="barnote" style="margin-top:12px">Content-first: the <b>artifacts built</b> as the spine, each stamped with when it entered and whether it survived. Closest to the Results one-pager, but across the whole loop history rather than one iteration.</p>`;
+}
+function trajectoryPhase(){
+  const v=new URLSearchParams(location.search).get('traj')||'champ';
+  const bodies={champ:trajChamp,search:trajSearch,content:trajContent};
+  const seg=(k,l)=>`<button class="${v===k?'on':''}" onclick="goTraj('${k}')">${l}</button>`;
+  return `
+  <div class="vhead"><div><div class="eyebrow">War of Attrition · iteration workbench</div>
+    <h1 style="font-size:26px">Trajectory · progress over time</h1>
+    <div class="sub"><b>${TRAJ.loop}</b> · nudged “${TRAJ.nudge}” — rendered <b>live from <span class="mono">logs/woa.db</span></b> (never a committed .md — #95). The open question: <b>which framing is the one you’d actually open between loops?</b></div></div></div>
+  <div class="seg" style="margin-bottom:18px">${seg('champ','① Champion line')}${seg('search','② Every attempt')}${seg('content','③ Content built')}</div>
+  ${bodies[v]()}
+  <p class="barnote" style="margin-top:16px">PROTOTYPE · three framings of the same db data — react to <b>what each shows</b> (a trend line? the search ledger? the built artifacts?), not the styling. Not a live query.</p>`;
+}
+
 /* ================= plumbing ================= */
-const PHASES={plan:planPhase,run:runPhase,results:resultsPhase};
+const PHASES={plan:planPhase,run:runPhase,results:resultsPhase,trajectory:trajectoryPhase};
+function goTraj(k){const u=new URL(location);u.searchParams.set('traj',k);history.replaceState(null,'',u);render();}
 function curPhase(){const p=new URLSearchParams(location.search).get('phase');return PHASES[p]?p:'plan';}
 function render(){const p=curPhase();document.getElementById('app').innerHTML=PHASES[p]();
   document.querySelectorAll('#switch button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));scrollTo(0,0);}
@@ -452,7 +565,7 @@ function toggleTheme(){const r=document.documentElement;
   const cur=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
   r.setAttribute('data-theme',cur==='dark'?'light':'dark');}
 addEventListener('keydown',e=>{if(/^(INPUT|TEXTAREA)$/.test(e.target.tagName))return;
-  const o=['plan','run','results'],i=o.indexOf(curPhase());
-  if(e.key==='ArrowLeft')goPhase(o[(i+2)%3]);if(e.key==='ArrowRight')goPhase(o[(i+1)%3]);});
+  const o=['plan','run','results','trajectory'],i=o.indexOf(curPhase());
+  if(e.key==='ArrowLeft')goPhase(o[(i+o.length-1)%o.length]);if(e.key==='ArrowRight')goPhase(o[(i+1)%o.length]);});
 render();
 </script>
