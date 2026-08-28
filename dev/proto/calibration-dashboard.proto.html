@@ -270,6 +270,31 @@ function hexThumb(kind){const W=150,H=118,r=13,dx=r*Math.sqrt(3),dy=r*1.5;let ce
   const a=cells[0],b=cells[cells.length-1];
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="map outline">${hexes}<circle cx="${a.x}" cy="${a.y}" r="5" fill="var(--crit)"/><circle cx="${b.x}" cy="${b.y}" r="5" fill="var(--accent)"/></svg>`;}
 const vpill={keep:['keep','keep'],cut:['cut','cut'],iter:['iter','iterate']};
+function boardSketch(){const W=360,H=215,r=20,dx=r*Math.sqrt(3),dy=r*1.5;let cells=[];
+  for(let row=0;row<6;row++)for(let col=0;col<6;col++){const x=34+col*dx+(row%2?dx/2:0),y=26+row*dy;
+    if((row===0&&col>3)||(row===5&&col<2))continue;cells.push({x,y,row,col});}
+  const hp=(cx,cy)=>{let p='';for(let i=0;i<6;i++){const a=Math.PI/180*(60*i-90);p+=(i?'L':'M')+(cx+r*Math.cos(a)).toFixed(1)+' '+(cy+r*Math.sin(a)).toFixed(1)+' ';}return p+'Z';};
+  const hexes=cells.map(c=>`<path d="${hp(c.x,c.y)}" fill="var(--card)" stroke="var(--line-2)" stroke-width="1"/>`).join('');
+  const n=cells.length,units=[[cells[1],'var(--crit)'],[cells[5],'var(--crit)'],[cells[9],'var(--crit)'],[cells[n-2],'var(--accent)'],[cells[n-6],'var(--accent)'],[cells[n-10],'var(--accent)']];
+  const dots=units.map(u=>`<circle cx="${u[0].x}" cy="${u[0].y}" r="7" fill="${u[1]}"/>`).join('');
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="game board sketch" style="max-width:100%;height:auto;opacity:.45">${hexes}${dots}</svg>`;}
+
+/* Balance + Feels report panels — shared by Run (accumulating) and Results (final) */
+function reportDetails(partial){
+  const balRows=BALANCE.map(m=>`<tr><td class="l">${m.k}</td><td class="mono">${m.cur}${m.u}</td>
+    <td class="mono muted">${m.tgt}${m.u}</td><td>${m.in?'<span class="pill good">in-band</span>':'<span class="pill crit">out</span>'}</td></tr>`).join('');
+  const feelsEl=FEELS.map(f=>`<div><div class="eyebrow" style="margin-bottom:8px">${f.sk}</div><div class="feels">
+    ${f.qa.map(qa=>`<div class="feelblk"><div class="q">${qa[0]}</div><div class="a">“${qa[1]}”</div></div>`).join('')}</div></div>`).join('<div style="height:16px"></div>');
+  const balFoot=partial
+    ? '<p class="barnote" style="margin-top:10px">Partial — 4 of 6 iterations swept · fills in live as the loop runs.</p>'
+    : '<p class="barnote" style="margin-top:10px">The balance report — deliberately <b>nested</b>, not the front page. Evidence for the built content, not the point of the loop.</p>';
+  return `
+  <details><summary>Balance report <span class="eyebrow">${partial?'so far · vs 1.2 baselines':'full metrics vs 1.2 baselines'}</span></summary>
+    <div class="body"><div class="tableScroll"><table>
+      <thead><tr><th class="l">metric</th><th>this run</th><th>target</th><th></th></tr></thead><tbody>${balRows}</tbody></table></div>${balFoot}</div></details>
+  <details><summary>Feels reports <span class="eyebrow">${partial?'per-skirmish so far (#85)':'per-skirmish playtester debriefs (#85)'}</span></summary>
+    <div class="body" style="padding-top:14px">${feelsEl}</div></details>`;
+}
 
 /* ================= PHASE 1 — PLAN ================= */
 function planPhase(){
@@ -329,8 +354,6 @@ function planPhase(){
 /* ================= PHASE 2 — RUN (over the shoulder) ================= */
 function runPhase(){
   const pct=RUN.skirm/RUN.skirmTotal*100;
-  const feed=LIVE.feed.map(f=>`<div class="turn ${f.flag?'flag':''}"><div class="tn">t${f.t}</div>
-    <div><div class="mv">${f.mv}</div><div class="say">“${f.say}”</div></div></div>`).join('');
   const sig=SIGNALS.map(s=>`<div class="sig ${s.sev}"><span class="ic">${s.sev==='ok'?'✓':'⚠'}</span>
     <span class="tx">${s.text}</span>${s.act?`<button class="btn ghost act" style="font-size:12px;padding:5px 10px">${s.act}</button>`:''}</div>`).join('');
   return `
@@ -347,19 +370,27 @@ function runPhase(){
   <div class="sectlabel"><h2>⚠ Worth a look</h2><span class="eyebrow">auto-flagged anomalies · the “is this working?” read</span></div>
   <div class="signals">${sig}</div>
 
-  <div class="sectlabel"><h2>Over the playtester’s shoulder</h2><span class="eyebrow">live skirmish · the LLM talking as it plays</span></div>
-  <div class="card pad">
+  <div class="sectlabel"><h2>Over the playtester’s shoulder</h2><span class="pill nudge" style="margin-left:auto">pinned · design after watching a real loop</span></div>
+  <div class="card pad" style="border-style:dashed">
     <div class="nowplaying">
       <span class="pill accent">candidate · ${LIVE.candidate}</span>
       <span class="badge">map · ${LIVE.map}</span>
-      <span class="badge">turn ${LIVE.turn}/${LIVE.turns}</span>
-      <button class="btn ghost" style="margin-left:auto;font-size:12px">skip to next skirmish ↦</button></div>
-    <div class="feed">${feed}</div>
+      <span class="badge">turn ${LIVE.turn}/${LIVE.turns}</span></div>
+    <div style="position:relative;display:grid;place-items:center;background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:18px;min-height:220px">
+      ${boardSketch()}
+      <div style="position:absolute;text-align:center;max-width:44ch">
+        <div style="font-family:var(--disp);font-weight:640;font-size:15px">▶ Render the live game here</div>
+        <p class="muted" style="font-size:12.5px;margin:6px 0 0">When the feels-pass runs it plays a real skirmish — the literal over-the-shoulder is to <b>render that board live</b>. Parked until we watch a loop run and learn what actually needs surfacing.</p>
+      </div>
+    </div>
   </div>
 
-  <details><summary>Iteration log <span class="eyebrow">the debug trail</span></summary>
+  <div class="sectlabel"><h2>Reports so far</h2><span class="eyebrow">accumulating · read them as they pile up</span></div>
+  ${reportDetails(true)}
+
+  <details style="margin-top:14px"><summary>Iteration log <span class="eyebrow">the debug trail</span></summary>
     <div class="body"><div class="logtail">${RUNLOG.map(l=>`<div><span class="t">${l[0]}</span> &nbsp;${l[1]} — ${l[2]}</div>`).join('')}</div></div></details>
-  <p class="barnote" style="margin-top:12px">Writes every skirmish to <span class="mono">logs/woa.db</span>; the full report lands in Results when the loop finishes. Leave it running.</p>`;
+  <p class="barnote" style="margin-top:12px">Writes every skirmish to <span class="mono">logs/woa.db</span>; the reports above fill in live and finalize in Results. Leave it running.</p>`;
 }
 
 /* ================= PHASE 3 — RESULTS (one-pager + nested reports) ================= */
@@ -377,10 +408,6 @@ function resultsPhase(){
   const heurRows=HEURISTICS.map(h=>{const d=h.to-h.from,cls=h.note?'':(d>0?'up':d<0?'down':'');
     return `<tr><td class="l mono">${h.key}</td><td class="l">${h.who}</td><td class="mono">${h.from}</td>
     <td class="arrow">→</td><td class="mono ${cls}">${h.note?'held':h.to}</td><td class="mono ${cls}">${h.note?'—':(d>0?'+':'')+d.toFixed(1)}</td></tr>`;}).join('');
-  const balRows=BALANCE.map(m=>`<tr><td class="l">${m.k}</td><td class="mono">${m.cur}${m.u}</td>
-    <td class="mono muted">${m.tgt}${m.u}</td><td>${m.in?'<span class="pill good">in-band</span>':'<span class="pill crit">out</span>'}</td></tr>`).join('');
-  const feelsEl=FEELS.map(f=>`<div><div class="eyebrow" style="margin-bottom:8px">${f.sk}</div><div class="feels">
-    ${f.qa.map(qa=>`<div class="feelblk"><div class="q">${qa[0]}</div><div class="a">“${qa[1]}”</div></div>`).join('')}</div></div>`).join('<div style="height:16px"></div>');
   return `
   <div class="vhead"><div><div class="eyebrow">War of Attrition · iteration workbench</div>
     <h1 style="font-size:26px">Results · iteration review</h1>
@@ -409,12 +436,7 @@ function resultsPhase(){
     <tbody>${heurRows}</tbody></table></div></div>
 
   <div class="sectlabel"><h2>Dig deeper</h2><span class="eyebrow">the reports, nested for the morning session</span></div>
-  <details><summary>Balance report <span class="eyebrow">full metrics vs 1.2 baselines</span></summary>
-    <div class="body"><div class="tableScroll"><table>
-      <thead><tr><th class="l">metric</th><th>this run</th><th>target</th><th></th></tr></thead><tbody>${balRows}</tbody></table></div>
-      <p class="barnote" style="margin-top:10px">This is the balance report — deliberately <b>nested</b>, not the front page. It’s evidence for the built content, not the point of the loop.</p></div></details>
-  <details><summary>Feels reports <span class="eyebrow">per-skirmish playtester debriefs (#85)</span></summary>
-    <div class="body" style="padding-top:14px">${feelsEl}</div></details>`;
+  ${reportDetails(false)}`;
 }
 
 /* ================= plumbing ================= */
