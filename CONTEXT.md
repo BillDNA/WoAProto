@@ -175,6 +175,9 @@ _Avoid_: Card type, archetype (a class is a pricing-lever grouping, not a theme)
 The qualitative LLM read on a build — "were the decisions interesting, or a reflex?" — run as a sanity check alongside the crunchable balance metrics. Balance is numbers, feels are not, and a mathematically balanced game is not automatically a fun one; so the feels read can veto a change the numbers endorse, but never feeds the metric math.
 _Avoid_: Fun score (it is a judgment, not a number on the balance ledger).
 
+**Blind-spot flag**:
+A free-prose observation from the Feels loop that the tooling itself is missing something — either the heuristic AI can't *see* a consideration a strong player would weigh (a missing eval *input*, not just a re-weighting of the existing knobs), or a balance *number* you'd want to judge the match by is absent. Deliberately unstructured to catch unknown-unknowns; accumulates across an overnight loop into the review-reports analysis artifact for a human morning-review, who gates every one (a new AI eval term or balance metric is human-implemented code, never auto-wired). The anti-bloat test is a goal — *reject a proposed knob that's just a wrapper/combination of existing knobs* — stated with a couple of examples, never an enumerated checklist (enumerating it would train future sessions to answer the list and miss the unknown-unknowns).
+
 **Fairness sweep**:
 An on-demand run asking "is this *content* fair?" — distinct from the every-commit test sweep asking "does the *code* still function." The two never merge (ADR-0003): fairness is a property of the build, function a property of the code.
 _Avoid_: Test (the test sweep is the functional gate; the fairness sweep is the balance oracle).
