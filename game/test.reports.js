@@ -633,3 +633,17 @@ test('loop-config: temperature profiles parse + hard-gate Red%/1st%', () => {
     /hard-gated/, '1st% stays gated even in asymmetric mode');
 })();
 });
+
+test('loop-config: debrief questionnaire is an ordered id+text table with feel + reflex', () => {
+(function () {
+  var Q = require('./content/questionnaire.js');   // load asserts on its own; requiring proves it parses
+  assert.ok(Array.isArray(Q.questions) && Q.questions.length, 'questionnaire is a non-empty ordered list');
+  var ids = Q.questions.map(function (q) { return q.id; });
+  assert.ok(ids.indexOf('feel') >= 0, 'the feel question is an entry');
+  assert.ok(ids.indexOf('reflex') >= 0, 'the reflex question is an entry');
+  Q.questions.forEach(function (q) { assert.ok(q.id && typeof q.text === 'string' && q.text.trim(), 'every row has id + non-empty text'); });
+  // the exported gate rejects a malformed / duplicate-id table
+  assert.throws(function () { Q.validate([{ id: 'a', text: '' }]); }, /id \+ text/, 'gate rejects an empty question text');
+  assert.throws(function () { Q.validate([{ id: 'a', text: 'x' }, { id: 'a', text: 'y' }]); }, /duplicate id/, 'gate rejects a duplicate id');
+})();
+});
