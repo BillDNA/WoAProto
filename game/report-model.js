@@ -6,8 +6,9 @@
 
    - pct(a, b)                 rounded percentage (0 when b is 0)
    - f1(x)                     one-decimal string, round-half-up
-   - BANDS / bands(m,temp)     per-metric band table as DATA + effective band at
-                               a temperature
+   - BANDS / bands(m,grace)    per-metric band table as DATA + effective band under
+                               a grace class (hold|nudge|bold|bypass; legacy
+                               T0/T1/T2 alias hold/nudge/bold). RANGES = per-axis ±.
    - balanceScore(agg, done)   balance-quality score, LOWER = better (folds BANDS)
    - mapNotes(agg, done)       health-flag strings for one map's aggregate
    - addAgg(dst, src)          fold one balanceMap aggregate into another
@@ -90,17 +91,44 @@ var WOA_REPORT = (function () {
     return 0;
   }
 
-  /* Effective band at a temperature: widen each CLOSED edge outward by 20% (T1) /
-     40% (T2) of band width; OPEN edges stay open; a half-open band (Swings) widens
-     by that fraction of |edge|. T0 = stored edges. See docs/report-model.md#metric-bands. */
-  function bands(metric, temperature) {
+  /* Own-band-width basis for a grace ± (closed: hi-lo; half-open: |edge|; fully
+     open: 0). The fraction each grace class widens by — hold=0, nudge=0.2,
+     bold=0.4 — matching the legacy T0/T1/T2 tiers exactly. */
+  function bandWidth(b) {
+    var loOpen = (b.lo == null), hiOpen = (b.hi == null);
+    return (!loOpen && !hiOpen) ? (b.hi - b.lo) : (!loOpen ? Math.abs(b.lo) : (!hiOpen ? Math.abs(b.hi) : 0));
+  }
+  var GRACE_FRAC = { hold: 0, nudge: 0.2, bold: 0.4 };   // bypass handled in bands()
+  // Legacy report-wide tiers alias the per-axis grace classes — one code path.
+  var GRACE_ALIAS = { T0: 'hold', T1: 'nudge', T2: 'bold' };
+
+  /* Per-Tolerance authored ± widths — the loop's tunable knobs (#93). SEEDED here
+     from today's GRACE_FRAC × own-band-width so the shipped grader is byte-identical
+     (golden); edit a cell to widen ONE axis's grace independent of the others (a
+     nudge on Red% need not equal a nudge on Drag). {key: {nudge, bold}} in points. */
+  var RANGES = {};
+  BANDS.forEach(function (b) {
+    var w = bandWidth(b);
+    RANGES[b.key] = Object.freeze({ nudge: GRACE_FRAC.nudge * w, bold: GRACE_FRAC.bold * w });
+  });
+  Object.freeze(RANGES);   // exported by reference — frozen so a consumer can't perturb band widths process-wide
+
+  /* Effective band under a grace class: widen each CLOSED edge outward by the
+     Tolerance's authored ± (RANGES); OPEN edges stay open. Grace ∈
+     hold|nudge|bold|bypass (legacy T0/T1/T2 route through GRACE_ALIAS to the same
+     path). `bypass` = never rejects → both edges open (outBand always 0), a shaded
+     warning row only. See docs/report-model.md#metric-bands. */
+  function bands(metric, grace) {
     var b = (typeof metric === 'string') ? BAND_BY_KEY[metric] : metric;
     if (!b) return null;
-    var frac = temperature === 'T1' ? 0.2 : temperature === 'T2' ? 0.4 : 0;
-    var lo = b.lo, hi = b.hi, loOpen = (lo == null), hiOpen = (hi == null);
-    var w = (!loOpen && !hiOpen) ? (hi - lo) : (!loOpen ? Math.abs(lo) : (!hiOpen ? Math.abs(hi) : 0));
-    return { key: b.key, label: b.label, weight: b.weight, feedsScore: b.feedsScore,
-      lo: loOpen ? null : lo - frac * w, hi: hiOpen ? null : hi + frac * w };
+    grace = GRACE_ALIAS[grace] || grace || 'hold';
+    var out = { key: b.key, label: b.label, weight: b.weight, feedsScore: b.feedsScore };
+    if (grace === 'bypass') { out.lo = null; out.hi = null; return out; }
+    var r = RANGES[b.key] || { nudge: 0, bold: 0 };
+    var delta = grace === 'bold' ? r.bold : grace === 'nudge' ? r.nudge : 0;   // hold / unknown → 0
+    out.lo = (b.lo == null) ? null : b.lo - delta;
+    out.hi = (b.hi == null) ? null : b.hi + delta;
+    return out;
   }
 
   /* Balance-quality score (LOWER = better, 0 = ideal) — the "best map" ideal-range
@@ -793,7 +821,7 @@ var WOA_REPORT = (function () {
     addAgg: addAgg, foldGlobal: foldGlobal, cardRows: cardRows, reportMarkdown: reportMarkdown,
     MISPRICE_RESID_PTS: MISPRICE_RESID_PTS, MISPRICE_MIN_HQPLAYS: MISPRICE_MIN_HQPLAYS,
     // bands-as-data + trace folds (node + browser both consume)
-    BANDS: BANDS, bands: bands, outBand: outBand, quantile: quantile,
+    BANDS: BANDS, bands: bands, RANGES: RANGES, outBand: outBand, quantile: quantile,
     firstContactTurn: firstContactTurn, deployInterleave: deployInterleave, settlePoint: settlePoint,
     actionOctileLanes: actionOctileLanes, vpDiffTrack: vpDiffTrack, cardPlayTurnQuartiles: cardPlayTurnQuartiles,
     // Maps pane: cross-skirmish drill-down folds (one map, many skirmishes)

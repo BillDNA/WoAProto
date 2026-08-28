@@ -200,7 +200,16 @@ const QUESTIONNAIRE=[
   {id:'reflex',text:'Where were your plays real choices vs. reflex / only-legal-move?'},
   {id:'arc',text:'Name the turn the game tipped, if it did.'},
   {id:'blind',text:'Anything the AI seemed to miss that you could see? (blind-spot flag)'}];
-const GRACE=[{k:'win%',g:'nudge'},{k:'HQ%',g:'hold'},{k:'Drag',g:'bold'},{k:'Swings',g:'bold'},{k:'resid',g:'nudge'}];
+/* The #94 default Temperature profiles, keyed by loop type — the Plan phase pre-loads
+   the one for the chosen loop (Track A of #108). SOT is game/content/temperatures.js;
+   mirrored here because this proto is a classic-script mock with no require(). Red%/1st%
+   stay hold (hard-gated); loosened cells default nudge. */
+const LOOP_PROFILES={
+  card:{hq:'nudge',zeroKill:'nudge',drag:'nudge',swings:'nudge'},
+  map:{hq:'nudge',zeroKill:'nudge',tie:'nudge',drag:'nudge',control:'nudge'},
+  ai:{hq:'nudge',drag:'nudge',swings:'nudge',control:'nudge'}};
+const GRACE_METRICS=[['red','Red%'],['first','1st%'],['hq','HQ%'],['zeroKill','0kill%'],['tie','Tie%'],['drag','Drag'],['swings','Swings'],['control','Control%']];
+let LOOP='card';   // active loop type; pickLoop rewrites it and re-renders
 
 /* RUN: over-the-shoulder — one live skirmish, the playtester talking as it plays */
 const LIVE={candidate:'Flanking Order', map:'Split Ford', turn:7, turns:12,
@@ -262,7 +271,9 @@ const FEELS=[ // per-skirmish debrief, keyed to the questionnaire
 
 /* ================= helpers ================= */
 function graceStrip(){const c={hold:'var(--ink-2)',nudge:'var(--nudge)',bold:'var(--accent-ink)',bypass:'var(--crit)'};
-  return '<div class="graceaxes">'+GRACE.map(a=>`<span class="pill" style="color:${c[a.g]}">${a.k}·${a.g}</span>`).join('')+'</div>';}
+  const prof=LOOP_PROFILES[LOOP]||{};
+  return '<div class="graceaxes">'+GRACE_METRICS.map(([k,lbl])=>{const g=prof[k]||'hold';
+    const gated=(k==='red'||k==='first')?' 🔒':'';return `<span class="pill" style="color:${c[g]}">${lbl}·${g}${gated}</span>`;}).join('')+'</div>';}
 function hexThumb(kind){const W=150,H=118,r=13,dx=r*Math.sqrt(3),dy=r*1.5;let cells=[];
   for(let row=0;row<5;row++)for(let col=0;col<4;col++){const x=18+col*dx+(row%2?dx/2:0),y=16+row*dy;
     if((row===0&&col===3)||(row===4&&col===0))continue;cells.push({x,y,row,col});}
@@ -300,8 +311,8 @@ function reportDetails(partial){
 
 /* ================= PHASE 1 — PLAN ================= */
 function planPhase(){
-  const lt=(ic,nm,desc,tag,on)=>`<div class="lt ${on?'on':'off'}" onclick="pickLoop(this)">
-    ${on?'':'<span class="held">held</span>'}<div class="ic">${ic}</div><h3>${nm}</h3><p>${desc}</p><div class="tag">${tag}</div></div>`;
+  const lt=(key,ic,nm,desc,tag)=>{const on=LOOP===key;return `<div class="lt ${on?'on':'off'}" onclick="pickLoop('${key}')">
+    ${on?'':'<span class="held">held</span>'}<div class="ic">${ic}</div><h3>${nm}</h3><p>${desc}</p><div class="tag">${tag}</div></div>`;};
   return `
   <div class="vhead"><div><div class="eyebrow">War of Attrition · iteration workbench</div>
     <h1 style="font-size:26px">Plan the iteration</h1>
@@ -309,9 +320,9 @@ function planPhase(){
 
   <div class="sectlabel"><h2>1 · What does this loop build?</h2><span class="eyebrow">one lever moves · the rest hold</span></div>
   <div class="looptypes">
-    ${lt('🃏','Card loop','Draft / tune cards under the 72-pt cap.','builds cards',true)}
-    ${lt('⬡','Map loop','Carve maps to fill a roster gap.','builds maps',false)}
-    ${lt('◆','AI loop','Tune heuristic personality weights.','builds personalities',false)}
+    ${lt('card','🃏','Card loop','Draft / tune cards under the 72-pt cap.','builds cards')}
+    ${lt('map','⬡','Map loop','Carve maps to fill a roster gap.','builds maps')}
+    ${lt('ai','◆','AI loop','Tune heuristic personality weights.','builds personalities')}
   </div>
 
   <div class="row" style="margin-top:20px">
@@ -558,9 +569,7 @@ function curPhase(){const p=new URLSearchParams(location.search).get('phase');re
 function render(){const p=curPhase();document.getElementById('app').innerHTML=PHASES[p]();
   document.querySelectorAll('#switch button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));scrollTo(0,0);}
 function goPhase(p){const u=new URL(location);u.searchParams.set('phase',p);history.replaceState(null,'',u);render();}
-function pickLoop(el){el.parentElement.querySelectorAll('.lt').forEach(x=>{x.classList.remove('on');x.classList.add('off');
-  const h=x.querySelector('.held');if(!h){const s=document.createElement('span');s.className='held';s.textContent='held';x.prepend(s);}});
-  el.classList.add('on');el.classList.remove('off');const h=el.querySelector('.held');if(h)h.remove();}
+function pickLoop(key){LOOP=key;render();}   // re-render pre-loads the profile's grace strip
 function toggleTheme(){const r=document.documentElement;
   const cur=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
   r.setAttribute('data-theme',cur==='dark'?'light':'dark');}
