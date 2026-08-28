@@ -35,3 +35,8 @@ logs/woa.db-shm
 .claude/settings.local.json
 .board-log.jsonl
 
+
+# graphify knowledge graph — regenerable local index (nodes/edges via `graphify update .`,
+# no LLM; community label names via `graphify label`). Kept fresh by the post-commit hook;
+# not tracked, to keep the multi-MB wholesale rebuild churn out of history.
+graphify-out/
