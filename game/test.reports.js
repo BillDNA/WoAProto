@@ -60,6 +60,23 @@ test('report-model: bands as data + trace folds', () => {
   assert.ok(R.bands('swings', 'T2').hi === null && near(R.bands('swings', 'T2').lo, 1.2), 'Swings lo 2.0 → 1.2 at T2');
   assert.ok(R.bands('firstBlood', 'T0').feedsScore === false, 'bands() carries feedsScore (guard band = false)');
 
+  // ---- generalized bands(metric, grace): legacy T0/T1/T2 alias hold/nudge/bold on ONE path ----
+  ['red', 'zeroKill', 'swings', 'tie', 'control', 'hq'].forEach(function (k) {
+    ['T0:hold', 'T1:nudge', 'T2:bold'].forEach(function (pair) {
+      var legacy = R.bands(k, pair.split(':')[0]), grace = R.bands(k, pair.split(':')[1]);
+      assert.ok(legacy.lo === grace.lo && legacy.hi === grace.hi,
+        k + ' ' + pair + ' resolve identically (' + legacy.lo + '/' + legacy.hi + ')');
+    });
+  });
+  // RANGES is the seeded per-axis ± table (nudge = 0.2×width, bold = 0.4×width)
+  assert.ok(near(R.RANGES.red.nudge, 2) && near(R.RANGES.red.bold, 4), 'RANGES seeds Red% ± from own width (10): nudge 2, bold 4');
+  assert.ok(near(R.RANGES.swings.nudge, 0.4), 'RANGES seeds half-open Swings ± from |edge| (2.0): nudge 0.4');
+  // bypass = never rejects: both edges open, so nothing is ever out-of-band
+  var byp = R.bands('red', 'bypass');
+  assert.ok(byp.lo === null && byp.hi === null && R.outBand(999, byp.lo, byp.hi, byp.weight) === 0, 'bypass opens both edges → outBand always 0 (never rejects)');
+  // default grace (missing/unknown) = hold = stored edges
+  assert.ok(near(R.bands('red').lo, 45) && near(R.bands('red', 'wat').lo, 45), 'unknown/absent grace falls back to hold (stored edges)');
+
   // ---- trace folds on a hand-built fixture with known answers ----
   var env = {
     turns: 8,
@@ -573,5 +590,46 @@ test('chart-model: buildUnitsModel + unLinearDomain/unPos (Units pane)', () => {
   // unPos: linear map into [0,100], clamped, null-passthrough.
   assert.ok(C.unPos(dom, null) === null && near(C.unPos(dom, 6), 6 / 6.9 * 100), 'unPos: null passes through, 6 maps to 86.96%');
   assert.ok(C.unPos(dom, 100) === 100 && C.unPos(dom, -5) === 0, 'unPos clamps out-of-domain values to [0,100]');
+})();
+});
+
+test('loop-config: temperature profiles parse + hard-gate Red%/1st%', () => {
+(function () {
+  var R = require('./report-model.js');
+  var T = require('./content/temperatures.js');   // load asserts on its own; requiring proves it parses
+
+  // the three #94 default profiles exist, each a { name, step, tolerances } object
+  ['card', 'map', 'ai'].forEach(function (k) {
+    var p = T.profiles[k];
+    assert.ok(p && p.name && p.step && p.tolerances, 'profile "' + k + '" is a {name, step, tolerances} object');
+    // every loosened key is a real BANDS metric with a valid grace class
+    Object.keys(p.tolerances).forEach(function (m) {
+      assert.ok(R.BANDS.some(function (b) { return b.key === m; }), k + '.tolerances.' + m + ' is a BANDS key');
+      assert.ok(T.GRACE.indexOf(p.tolerances[m]) >= 0, k + '.tolerances.' + m + ' has a valid grace');
+    });
+    // Red%/1st% are hard-gated: absent (⇒ hold) or explicitly hold, never loosened
+    T.HARD_GATED.forEach(function (g) {
+      assert.ok(!(g in p.tolerances) || p.tolerances[g] === 'hold', k + ' does not loosen hard-gated ' + g + '%');
+    });
+  });
+  // #94 mapping spot-checks (loosened cells default nudge)
+  assert.ok(T.profiles.card.tolerances.swings === 'nudge' && !('tie' in T.profiles.card.tolerances), 'Card loosens Swings, not Tie%');
+  assert.ok(T.profiles.map.tolerances.tie === 'nudge' && !('swings' in T.profiles.map.tolerances), 'Map loosens Tie%, not Swings');
+  assert.ok(T.profiles.ai.tolerances.control === 'nudge' && !('zeroKill' in T.profiles.ai.tolerances), 'AI loosens Control%, not 0kill%');
+
+  // the exported load gate (same code the defaults pass) rejects loosening a hard-gated metric
+  assert.throws(function () { T.validate({ name: 'X', step: 'card', tolerances: { first: 'nudge' } }); },
+    /hard-gated/, 'the schema gate rejects loosening 1st% (default mode)');
+  assert.throws(function () { T.validate({ name: 'X', step: 'card', tolerances: { red: 'nudge' } }); },
+    /hard-gated/, 'the schema gate rejects loosening Red% in default mode');
+  assert.throws(function () { T.validate({ name: 'X', step: 'card', tolerances: { hq: 'wat' } }); },
+    /unknown grace/, 'the schema gate rejects an unknown grace class');
+  assert.throws(function () { T.validate({ name: 'X', step: 'card', tolerances: { hqq: 'nudge' } }); },
+    /not a band metric key/, 'the schema gate rejects a typo\'d metric key');
+  assert.ok(T.validate({ name: 'Asym', step: 'card', tolerances: { red: 'hold', hq: 'nudge' } }), 'a valid custom profile passes the gate');
+  // Red% is the ONE manual-loosen for asymmetric runs; 1st% is never loosenable
+  assert.ok(T.validate({ name: 'Asym', step: 'card', tolerances: { red: 'nudge' } }, null, { asymmetric: true }), 'opts.asymmetric permits the manual Red% loosen');
+  assert.throws(function () { T.validate({ name: 'Asym', step: 'card', tolerances: { first: 'nudge' } }, null, { asymmetric: true }); },
+    /hard-gated/, '1st% stays gated even in asymmetric mode');
 })();
 });
