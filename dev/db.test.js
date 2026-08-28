@@ -91,6 +91,8 @@ test('round-trip (real simSkirmish state)', function () {
   hexesExpected = hexTally(st.units);
   assert.ok(b.hexes_red === hexesExpected.red && b.hexes_blue === hexesExpected.blue,
     'hexes_red/hexes_blue match a hex-ownership tally of st.units (' + b.hexes_red + '/' + b.hexes_blue + ')');
+  // WOA-110 (#95): no extra.parentId -> parent_id NULL (off-loop / iteration-0 fixture)
+  assert.ok(b.parent_id === null, 'parent_id defaults to NULL when no incumbent is passed (' + b.parent_id + ')');
 });
 
 /* ---------- card_plays ---------- */
@@ -123,7 +125,10 @@ test('timeline', function () {
   assert.ok(tlAbsent === 0, 'a state without fsTimeline (pre-V1 save) -> zero rows, tolerated silently');
 
   st.fsTimeline = [[2, 2], [4, 2], [4, 5]]; // synthetic, to pin the column mapping
-  var skirmishId2 = db.insertSkirmish(h, runId, st, 'blue', { seed: 1234 });
+  var skirmishId2 = db.insertSkirmish(h, runId, st, 'blue', { seed: 1234, parentId: 'cavsplit17' });
+  // WOA-110 (#95): the incumbent deck id round-trips into parent_id verbatim
+  var pRow = h.db.prepare('SELECT parent_id FROM skirmishes WHERE id = ?').get(skirmishId2);
+  assert.ok(pRow.parent_id === 'cavsplit17', 'extra.parentId stored as parent_id (' + pRow.parent_id + ')');
   var tl = h.db.prepare('SELECT turn, fs_red, fs_blue FROM timeline WHERE skirmish_id = ? ORDER BY turn').all(skirmishId2);
   assert.ok(tl.length === 3, 'synthetic 3-entry fsTimeline -> 3 rows (got ' + tl.length + ')');
   assert.ok(tl[0].turn === 1 && tl[2].turn === 3, 'timeline turns are 1-based (index 0 = turn 1)');
@@ -171,9 +176,13 @@ test('listSkirmishes (WOA-035)', function () {
   var bRow = skirmishesForRun1[0];
   ['id', 'map', 'seed', 'firstPlayer', 'winner', 'winType', 'turns', 'fsRed', 'fsBlue', 'firstBlood',
     'leadChanges', 'killTail', 'zeroKill', 'tiebreak', 'attacks', 'swaps', 'marches', 'deploys',
-    'resEndRed', 'resEndBlue', 'trace', 'hexesRed', 'hexesBlue'].forEach(function (k) {
+    'resEndRed', 'resEndBlue', 'trace', 'hexesRed', 'hexesBlue', 'parentId'].forEach(function (k) {
     assert.ok(k in bRow, 'listSkirmishes row carries camelCase "' + k + '"');
   });
+  // WOA-110 (#95): parent_id surfaces as camelCase parentId — NULL for the off-loop
+  // first row, the incumbent id for the row that carried one (skirmishId2, index 2).
+  assert.ok(bRow.parentId === null, 'listSkirmishes parentId is NULL for the off-loop skirmish');
+  assert.ok(skirmishesForRun1[2].parentId === 'cavsplit17', 'listSkirmishes parentId round-trips the incumbent id (' + skirmishesForRun1[2].parentId + ')');
   assert.ok(bRow.hexesRed === hexesExpected.red && bRow.hexesBlue === hexesExpected.blue,
     'listSkirmishes hexesRed/hexesBlue round-trip the same tally (' + bRow.hexesRed + '/' + bRow.hexesBlue + ')');
   assert.ok(bRow.map === E.MAPS[0].name && bRow.firstPlayer === 'red' && bRow.winner === st.skirmishWinner,

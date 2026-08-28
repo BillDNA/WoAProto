@@ -124,6 +124,12 @@ test('army-points (WOA #54: computed from steps, weight table pinned)', () => {
     'all ' + allDecks.length + ' shipped decks are within the army-points cap (' + E.DECK_POINTS_CAP + ')');
   var overBudget = { cards: E.ACTIVE_DECK.cards.concat([{ id: 'gild', name: 'Gild', count: 1, steps: [{ type: 'deploy', unit: 'artillery' }, { type: 'attack', mod: 3 }] }]) };
   assert.ok(E.deckPoints(overBudget) > E.DECK_POINTS_CAP, 'a deck pushed over the cap is over budget (gate rejects it)');
+  // WOA-110 (#95): Step = pure signed Δ of (parent, candidate) deckPoints — the deck-loop
+  // distance the woa.db parent-id column is measured against. Null parent (iteration 0) = 0.
+  assert.ok(E.deckStep(E.ACTIVE_DECK, overBudget) === E.deckPoints(overBudget) - E.deckPoints(E.ACTIVE_DECK),
+    'deckStep is the signed deckPoints delta (candidate - parent)');
+  assert.ok(E.deckStep(E.ACTIVE_DECK, E.ACTIVE_DECK) === 0, 'deckStep of a deck against itself is 0 (no move)');
+  assert.ok(E.deckStep(null, E.ACTIVE_DECK) === 0, 'deckStep with no parent (iteration-0 fixture) is 0');
 })();
 });
 

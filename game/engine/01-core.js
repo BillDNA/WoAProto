@@ -196,6 +196,12 @@
   // sits today (max iter3 = 70.5); the deck editor's sum(count) band guardrail
   // rejects an over-budget deck the same way it rejects an oversized one.
   var DECK_POINTS_CAP = 72;
+  // Step (#110): signed deckPoints delta from incumbent to candidate. Null parent
+  // (iteration-0 fixture) → 0.
+  function deckStep(parent, candidate) {
+    if (!parent) return 0;
+    return deckPoints(candidate) - deckPoints(parent);
+  }
 
   // tiny pure helpers used by every layer
   function other(p) { return p === 'red' ? 'blue' : 'red'; }
@@ -225,6 +231,7 @@
   I.PIECE_TOTALS = PIECE_TOTALS;
   I.cardPoints = cardPoints;
   I.deckPoints = deckPoints;
+  I.deckStep = deckStep;
   I.DECK_POINTS_CAP = DECK_POINTS_CAP;
   I.MAPS = MAPS;
   I.MAPSETS = MAPSETS;
