@@ -195,6 +195,10 @@ const RUN={loop:'Card loop', nudge:'Reward committing to an early cavalry push �
   deck:'cavsplit17-raid-paid', mapset:'core7', panel:'brawler · turtle · hawk',
   iter:4, iters:6, skirm:1740, skirmTotal:6000};
 
+/* The data-defined debrief questionnaire the Plan phase edits pre-run (#85/#111). SOT is
+   game/content/questionnaire.js (rows feel + reflex, wired into claude-plays' debrief);
+   mirrored here because this proto is a classic-script mock with no require(). arc/blind
+   are preview rows for the separate per-match note and #87 blind-spot track. */
 const QUESTIONNAIRE=[
   {id:'feel',text:'Did the match feel fair, or lopsided from the opening?'},
   {id:'reflex',text:'Where were your plays real choices vs. reflex / only-legal-move?'},

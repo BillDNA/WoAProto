@@ -121,6 +121,7 @@ function preloadContent(deckId, unitsId) {
 const ARGS = parseArgs(process.argv);
 if (ARGS.deck || ARGS.units || ARGS.mapset) preloadContent(ARGS.deck, ARGS.units);
 const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
+const QUESTIONNAIRE = require(path.join(__dirname, '..', 'game', 'content', 'questionnaire.js')).questions;
 const llm = require(path.join(__dirname, 'llm-client.js'));
 const { LlmSession } = require(path.join(__dirname, 'llm-session.js'));
 
@@ -587,6 +588,18 @@ async function playSkirmish(st, args, transports, matchInfo, usage) {
 }
 
 /* ---------- felt-notes ---------- */
+// The journal-fed debrief prompt: the campaign journal + the active data-defined
+// questionnaire (game/content/questionnaire.js) concatenated into one prose ask. Run
+// after every skirmish in both modes; output is prose for the judge, no scores.
+function journalLine(e) { return 'T' + e.turn + ' ' + e.msg; }  // one place: journal render, shared with the transcript
+function debriefPrompt(side, st, resultLine) {
+  const journal = st.log.map(journalLine).join('\n');
+  const qs = QUESTIONNAIRE.map(function (q, i) { return (i + 1) + '. ' + q.text; }).join('\n\n');
+  return 'You just played a full skirmish of War of Attrition as ' + side.toUpperCase() +
+    ' (' + resultLine + '). The final campaign journal:\n\n' + journal +
+    '\n\nYou are the playtester in the room. Answer each question below in prose — ' +
+    'no scores, ratios, or numbers, just your read:\n\n' + qs;
+}
 async function feltNotes(args, transports, side, prompt, usage) {
   const spec = side === 'red' ? args.red : args.blue;
   if (HEURISTIC[spec]) return null;
@@ -659,13 +672,13 @@ async function main() {
         (target ? '  (match R ' + match.wins.red + '-' + match.wins.blue + ' B)' : '')
       : '== skirmish unfinished at the --max-turns cap (' + args.maxTurns + ') ==');
 
-    // short per-skirmish notes from each LLM player (Bill: per-skirmish AND per-match)
+    // one journal-fed debrief per side after every skirmish (both modes) — the
+    // data-defined questionnaire concatenated into a single prose ask (#85/#111).
+    const resultLine = finished ? cap(st.skirmishWinner) + ' won by ' + st.winType + ' after ' + st.turnNumber + ' turns' : 'unfinished at the turn cap';
     const notes = {};
     for (const side of ['red', 'blue']) {
-      const n = await feltNotes(args, transports, side,
-        'Skirmish ' + (skirmishes.length + 1) + ' just ended: ' + (finished ? cap(st.skirmishWinner) + ' won by ' + st.winType : 'unfinished') +
-        ' after ' + st.turnNumber + ' turns. In ONE or TWO sentences: how did that skirmish feel from your side?', usage);
-      if (n) { notes[side] = n; say(side + ' notes: ' + n); }
+      const n = await feltNotes(args, transports, side, debriefPrompt(side, st, resultLine), usage);
+      if (n) { notes[side] = n; say(side + ' debrief: ' + n); }
     }
 
     const rec = {
@@ -712,18 +725,9 @@ async function main() {
         'and ONE suggested change to the game.', usage);
       if (n) { matchNotes[side] = n; console.log('\n-- ' + side + ' match felt-notes --\n' + n); }
     }
-  } else if (!target) {
-    for (const side of ['red', 'blue']) {
-      const st = skirmishes[0].st;
-      const journal = st.log.map(function (e) { return 'T' + e.turn + ' ' + e.msg; }).join('\n');
-      const n = await feltNotes(args, transports, side,
-        'You just played a full skirmish of War of Attrition as ' + side.toUpperCase() +
-        '. The final campaign journal:\n\n' + journal +
-        '\n\nGive short notes (under 150 words) on how the game FELT to play: what felt strong, ' +
-        'what felt weak, what felt luck-driven, and ONE suggested change to the game.', usage);
-      if (n) { matchNotes[side] = n; console.log('\n-- ' + side + ' felt-notes --\n' + n); }
-    }
   }
+  // single-skirmish mode has no separate arc note — its per-skirmish debrief (above) is
+  // the journal-fed read, now unified across both modes (#111).
   transports.red.close(); transports.blue.close();
   if (dbm) try { dbm.close(dbh); } catch (e) {}
 
@@ -768,16 +772,16 @@ async function main() {
     });
     if (Object.keys(b.notes).length) {
       md.push('');
-      md.push('### Skirmish notes');
+      md.push('### Debrief');
       Object.keys(b.notes).forEach(function (side) { md.push('- **' + side + '**: ' + b.notes[side]); });
     }
     md.push('');
     md.push('### Campaign journal');
-    b.st.log.forEach(function (e) { md.push('- T' + e.turn + ' ' + e.msg); });
+    b.st.log.forEach(function (e) { md.push('- ' + journalLine(e)); });
   });
   if (Object.keys(matchNotes).length) {
     md.push('');
-    md.push('## ' + (target ? 'Match felt-notes' : 'Felt-notes'));
+    md.push('## Match felt-notes');
     Object.keys(matchNotes).forEach(function (side) {
       md.push('');
       md.push('### ' + side + ' (' + (side === 'red' ? args.red : args.blue) + ')');
