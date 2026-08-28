@@ -1,15 +1,16 @@
-<title>Calibration Cockpit</title>
-<!-- PROTOTYPE — throwaway. Wayfinder #91: "how should the calibration dashboard + content-loop kickoff look?"
-     3 structurally-different variants, switch with the floating bar or ?variant=A|B|C.
-     Mock data grounded in real report-model fields (resid, points, seen, decline-rate, capability class) — NOT a live run. -->
+<title>Iteration Workbench</title>
+<!-- PROTOTYPE — throwaway. Wayfinder #91, v2 (rebuilt on Bill's steer):
+     a CONTENT-ITERATION tool, not a balance report. Three phases: Plan → Run → Results.
+     Switch phase with the bottom bar or ?phase=plan|run|results. Mock data — NOT a live run. -->
 <style>
   :root{
-    --paper:#f4f3ec; --card:#fbfaf5; --ink:#1b1d17; --ink-2:#4a4d40; --ink-3:#73766650;
+    --paper:#f4f3ec; --card:#fbfaf5; --sunk:#efeee5; --ink:#1b1d17; --ink-2:#4a4d40; --ink-3:#8a8c7c;
     --line:#dedbcd; --line-2:#cbc8b6;
     --accent:#3f6d8a; --accent-ink:#2c556e; --accent-wash:#3f6d8a18;
     --good:#4e7a4a; --good-wash:#4e7a4a1f;
     --nudge:#b8851f; --nudge-wash:#c8922a22;
     --crit:#a8432f; --crit-wash:#a8432f1c;
+    --live:#3f6d8a;
     --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
     --sans:'IBM Plex Sans',system-ui,sans-serif;
     --disp:'Archivo','IBM Plex Sans',system-ui,sans-serif;
@@ -17,491 +18,409 @@
   }
   @media (prefers-color-scheme:dark){
     :root:not([data-theme="light"]){
-      --paper:#14150f; --card:#1c1e16; --ink:#eceadb; --ink-2:#a7a898; --ink-3:#6a6c5c55;
+      --paper:#14150f; --card:#1c1e16; --sunk:#191b13; --ink:#eceadb; --ink-2:#a7a898; --ink-3:#71735f;
       --line:#2c2e23; --line-2:#3a3c2f;
       --accent:#78aecb; --accent-ink:#9cc6de; --accent-wash:#78aecb1c;
       --good:#8bc286; --good-wash:#8bc28620;
       --nudge:#e0ad4a; --nudge-wash:#e0ad4a22;
       --crit:#e08066; --crit-wash:#e0806622;
+      --live:#78aecb;
       --shadow:0 1px 2px #0006,0 8px 24px #0004;
     }
   }
   :root[data-theme="dark"]{
-    --paper:#14150f; --card:#1c1e16; --ink:#eceadb; --ink-2:#a7a898; --ink-3:#6a6c5c55;
+    --paper:#14150f; --card:#1c1e16; --sunk:#191b13; --ink:#eceadb; --ink-2:#a7a898; --ink-3:#71735f;
     --line:#2c2e23; --line-2:#3a3c2f;
     --accent:#78aecb; --accent-ink:#9cc6de; --accent-wash:#78aecb1c;
     --good:#8bc286; --good-wash:#8bc28620;
     --nudge:#e0ad4a; --nudge-wash:#e0ad4a22;
     --crit:#e08066; --crit-wash:#e0806622;
+    --live:#78aecb;
     --shadow:0 1px 2px #0006,0 8px 24px #0004;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
-    font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:76px}
+    font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:78px}
   h1,h2,h3{font-family:var(--disp);margin:0;text-wrap:balance;font-weight:640;letter-spacing:-.01em}
   .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
   .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
-  .wrap{max-width:1180px;margin:0 auto;padding:26px 24px}
+  .wrap{max-width:1200px;margin:0 auto;padding:26px 24px}
   button{font-family:var(--sans);cursor:pointer}
   a{color:var(--accent-ink)}
+  .muted{color:var(--ink-2)} .barnote{font-family:var(--mono);font-size:11px;color:var(--ink-2)}
 
-  /* shared atoms ---------------------------------------------------- */
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+  .pad{padding:18px}
   .pill{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;
     padding:2px 8px;border-radius:999px;border:1px solid var(--line-2);white-space:nowrap}
   .pill.good{color:var(--good);background:var(--good-wash);border-color:transparent}
   .pill.nudge{color:var(--nudge);background:var(--nudge-wash);border-color:transparent}
   .pill.crit{color:var(--crit);background:var(--crit-wash);border-color:transparent}
   .pill.accent{color:var(--accent-ink);background:var(--accent-wash);border-color:transparent}
-  .cls{font-family:var(--mono);font-size:11px;font-weight:600;white-space:nowrap}
-  .cls.dom{color:var(--crit)} .cls.wdom{color:var(--nudge)} .cls.bal{color:var(--ink-2)}
-  .cls.wdd{color:var(--accent-ink)} .cls.sdd{color:var(--accent-ink);opacity:.8}
   .btn{border:1px solid var(--line-2);background:var(--card);color:var(--ink);
     padding:8px 14px;border-radius:7px;font-size:13px;font-weight:560}
   .btn:hover{border-color:var(--accent)}
   .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  :root[data-theme="dark"] .btn.primary,:root:not([data-theme="light"]) .btn.primary{color:#0e1410}
   .btn.primary:hover{filter:brightness(1.06)}
-  :root[data-theme="dark"] .btn.primary,
-  :root:not([data-theme="light"]) .btn.primary{color:#0e1410}
   .btn.ghost{background:transparent}
-  .btn.crit{border-color:var(--crit);color:var(--crit)}
-  .btn.good{border-color:var(--good);color:var(--good)}
+  .btn.crit{border-color:var(--crit);color:var(--crit)} .btn.good{border-color:var(--good);color:var(--good)}
+  .btn.big{padding:11px 20px;font-size:14px}
 
+  .vhead{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-end;justify-content:space-between;margin-bottom:22px}
+  .vhead .sub{color:var(--ink-2);font-size:13px;max-width:60ch;margin-top:5px}
+  .sectlabel{display:flex;align-items:baseline;gap:10px;margin:22px 0 12px}
+  .sectlabel h2{font-size:15px} .sectlabel .eyebrow{margin-left:auto}
+  .kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line)}
+  .kv:last-child{border-bottom:none} .kv .k{color:var(--ink-2)}
+  .hold{opacity:.5}
+  .row{display:flex;gap:16px;flex-wrap:wrap} .col{flex:1;min-width:270px}
+
+  /* PLAN: loop-type chooser */
+  .looptypes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .lt{border:1.5px solid var(--line-2);border-radius:var(--r);padding:15px;cursor:pointer;background:var(--card);transition:.12s}
+  .lt:hover{border-color:var(--accent)}
+  .lt.on{border-color:var(--accent);background:var(--accent-wash)}
+  .lt .ic{font-size:20px;line-height:1}
+  .lt h3{font-size:15px;margin:8px 0 3px}
+  .lt p{margin:0;font-size:12px;color:var(--ink-2)}
+  .lt .tag{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3)}
+
+  .nudge-in{width:100%;background:var(--sunk);border:1px solid var(--line);border-radius:8px;color:var(--ink);
+    font-family:var(--sans);font-size:14px;padding:11px 13px;resize:vertical;min-height:64px}
+  .nudge-in:focus{outline:2px solid var(--accent);border-color:transparent}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+  .chip{font-size:12px;padding:4px 11px;border-radius:999px;border:1px dashed var(--line-2);background:transparent;color:var(--ink-2)}
+  .chip:hover{border-color:var(--accent);color:var(--accent-ink)}
+
+  .seg{display:inline-flex;border:1px solid var(--line-2);border-radius:8px;overflow:hidden}
+  .seg button{background:var(--card);border:none;padding:7px 14px;font-family:var(--mono);font-size:12px;color:var(--ink-2);border-right:1px solid var(--line)}
+  .seg button:last-child{border-right:none}
+  .seg button.on{background:var(--accent);color:#fff}
+  :root[data-theme="dark"] .seg button.on,:root:not([data-theme="light"]) .seg button.on{color:#0e1410}
+
+  .graceaxes{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .qitem{display:flex;gap:9px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line)}
+  .qitem .mono{flex:none;color:var(--ink-2);width:52px}
+  .qitem input{flex:1;background:transparent;border:none;color:var(--ink);font:inherit}
+  .qitem input:focus{outline:none;border-bottom:1px solid var(--accent)}
+
+  /* RUN */
+  .livedot{width:9px;height:9px;border-radius:50%;background:var(--live);display:inline-block;
+    box-shadow:0 0 0 0 var(--live);animation:pulse 1.6s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 #3f6d8a66}70%{box-shadow:0 0 0 8px #3f6d8a00}100%{box-shadow:0 0 0 0 #3f6d8a00}}
+  @media (prefers-reduced-motion:reduce){.livedot{animation:none}}
+  .bigstat{font-family:var(--mono);font-size:30px;font-weight:600;line-height:1}
+  .prog{height:10px;border-radius:6px;background:var(--sunk);overflow:hidden;border:1px solid var(--line)}
+  .prog>i{display:block;height:100%;background:var(--accent);border-radius:6px}
+  .logtail{background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+    font-family:var(--mono);font-size:12px;line-height:1.7;max-height:210px;overflow:auto}
+  .logtail .t{color:var(--ink-3)} .logtail .ok{color:var(--good)} .logtail .hl{color:var(--accent-ink)}
+  .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .statgrid>div{background:var(--card);padding:13px 15px}
+  .statgrid .k{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2)}
+  .statgrid .v{font-family:var(--mono);font-size:19px;font-weight:600;margin-top:3px}
+
+  /* RESULTS — content gallery */
+  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:6px}
+  .summary>div{background:var(--card);padding:15px 16px}
+  .summary .big{font-family:var(--mono);font-size:24px;font-weight:600}
+  .summary .lab{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);margin-top:2px}
+
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+  /* game card face */
+  .gcard{border:1px solid var(--line-2);border-radius:11px;background:linear-gradient(180deg,var(--card),var(--sunk));
+    padding:13px;display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden}
+  .gcard .verdict{position:absolute;top:0;right:0;font-family:var(--mono);font-size:10px;padding:3px 9px;border-bottom-left-radius:8px;text-transform:uppercase;letter-spacing:.06em}
+  .verdict.keep{background:var(--good-wash);color:var(--good)}
+  .verdict.cut{background:var(--crit-wash);color:var(--crit)}
+  .verdict.iter{background:var(--nudge-wash);color:var(--nudge)}
+  .gcard .top{display:flex;align-items:center;gap:8px;padding-right:56px}
+  .gcard .cost{font-family:var(--mono);font-weight:700;font-size:15px;background:var(--ink);color:var(--paper);
+    width:28px;height:28px;border-radius:7px;display:grid;place-items:center;flex:none}
+  .gcard .nm{font-family:var(--disp);font-weight:640;font-size:15px;line-height:1.1}
+  .gcard .type{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3)}
+  .gcard .txt{font-size:12.5px;color:var(--ink-2);min-height:34px}
+  .gcard .diff{font-family:var(--mono);font-size:11px;color:var(--accent-ink);background:var(--accent-wash);border-radius:6px;padding:5px 8px}
+  .gcard .ev{display:flex;gap:6px;flex-wrap:wrap;border-top:1px dashed var(--line);padding-top:8px}
+  .gcard .ev .m{font-family:var(--mono);font-size:11px;color:var(--ink-2)}
+  .gcard .ev .m b{color:var(--ink)}
+  .new-badge{font-family:var(--mono);font-size:9.5px;background:var(--accent);color:#fff;padding:1px 6px;border-radius:4px;letter-spacing:.06em}
+  :root[data-theme="dark"] .new-badge,:root:not([data-theme="light"]) .new-badge{color:#0e1410}
+
+  /* map thumb */
+  .mapcard{border:1px solid var(--line-2);border-radius:11px;background:var(--card);overflow:hidden;display:flex;flex-direction:column}
+  .mapthumb{background:var(--sunk);display:grid;place-items:center;padding:12px;border-bottom:1px solid var(--line)}
+  .mapmeta{padding:12px 13px;display:flex;flex-direction:column;gap:7px}
+  .mapmeta .nm{font-family:var(--disp);font-weight:640;font-size:15px}
+
+  /* heuristics table */
   table{border-collapse:collapse;width:100%;font-size:13px}
-  th{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
-    color:var(--ink-2);text-align:right;padding:7px 9px;border-bottom:1px solid var(--line-2);font-weight:500}
+  th{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);text-align:right;padding:7px 10px;border-bottom:1px solid var(--line-2);font-weight:500}
   th.l,td.l{text-align:left}
-  td{padding:8px 9px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+  td{padding:8px 10px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
   tr:last-child td{border-bottom:none}
-  tr.flag td{background:var(--crit-wash)}
-  .cardname{font-weight:560}
-  .num{font-family:var(--mono)}
-  .pos{color:var(--good)} .neg{color:var(--crit)}
+  .arrow{color:var(--ink-3)} .up{color:var(--good)} .down{color:var(--crit)}
   .tableScroll{overflow-x:auto}
 
-  /* mini decline bar */
-  .decl{display:inline-flex;gap:2px;align-items:flex-end;height:16px}
-  .decl i{width:6px;background:var(--accent);border-radius:1px 1px 0 0;opacity:.85;display:block}
-
-  /* delta chip */
-  .metric{display:flex;flex-direction:column;gap:3px}
-  .metric .v{font-family:var(--mono);font-size:20px;font-weight:600;line-height:1}
-  .metric .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
-  .metric .d{font-family:var(--mono);font-size:11px}
-  .band{height:4px;border-radius:2px;margin-top:5px;background:var(--line)}
-  .band>i{display:block;height:100%;border-radius:2px}
-
-  .grid-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:1px;
-    background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-  .grid-metrics>div{background:var(--card);padding:13px 14px}
-
-  /* editable target */
-  .tgt{font-family:var(--mono);border:1px dashed var(--line-2);background:transparent;color:var(--ink);
-    width:46px;border-radius:5px;padding:2px 5px;font-size:12px;text-align:right}
-  .tgt:focus{outline:2px solid var(--accent);border-color:transparent}
-
-  /* cap meter */
-  .cap{height:9px;border-radius:5px;background:var(--line);overflow:hidden;position:relative}
-  .cap>i{display:block;height:100%}
-  .cap.over>i{background:var(--crit)} .cap.ok>i{background:var(--good)}
-
-  /* variant chrome */
-  .vhead{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:baseline;justify-content:space-between;margin-bottom:20px}
-  .vhead .sub{color:var(--ink-2);font-size:13px;max-width:52ch}
-  section.blk{margin-bottom:18px;padding:18px}
-  section.blk>.blkhead{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-  section.blk>.blkhead h2{font-size:15px}
-  section.blk>.blkhead .eyebrow{margin-left:auto}
-
-  /* switcher */
-  #switch{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;
-    display:flex;align-items:center;gap:2px;background:var(--ink);color:var(--paper);
-    border-radius:999px;padding:5px;box-shadow:0 8px 30px #0003,0 2px 6px #0004}
-  #switch button{background:transparent;border:none;color:var(--paper);width:34px;height:34px;
-    border-radius:999px;font-size:16px}
-  #switch button:hover{background:#ffffff22}
-  #switch .lbl{padding:0 14px;font-family:var(--mono);font-size:12.5px;white-space:nowrap;min-width:186px;text-align:center}
-  #switch .lbl b{font-family:var(--disp);letter-spacing:.02em}
+  /* phase switcher (bottom bar) */
+  #switch{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:4px;background:var(--ink);color:var(--paper);border-radius:999px;padding:5px 6px;box-shadow:0 8px 30px #0003,0 2px 6px #0004}
+  #switch button{background:transparent;border:none;color:var(--paper);opacity:.6;padding:7px 16px;border-radius:999px;font-family:var(--mono);font-size:12.5px;letter-spacing:.02em}
+  #switch button:hover{opacity:.85} #switch button.on{opacity:1;background:#ffffff1f}
+  #switch button.on b{color:#fff}
+  #switch .step{font-family:var(--mono);opacity:.35;font-size:12px}
   #themeBtn{position:fixed;right:18px;top:18px;z-index:50}
-
-  /* variant B wizard */
-  .steps{display:flex;gap:0;margin-bottom:22px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-  .steps .st{flex:1;padding:12px 14px;background:var(--card);border-right:1px solid var(--line);cursor:pointer}
-  .steps .st:last-child{border-right:none}
-  .steps .st .n{font-family:var(--mono);font-size:11px;color:var(--ink-2)}
-  .steps .st .t{font-family:var(--disp);font-weight:600;font-size:14px;margin-top:2px}
-  .steps .st.on{background:var(--accent-wash)}
-  .steps .st.on .t{color:var(--accent-ink)}
-  .steps .st.done .n::after{content:' ✓';color:var(--good)}
-  .stepPane{display:none} .stepPane.on{display:block}
-
-  /* variant C diff */
-  .diffgrid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-  .diffgrid>div{padding:14px 16px}
-  .diffgrid .before{background:var(--crit-wash);border-right:1px solid var(--line)}
-  .diffgrid .after{background:var(--good-wash)}
-  .checkrow{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}
-  .checkrow:last-child{border-bottom:none}
-  .checkrow .ic{width:18px;flex:none;text-align:center;font-family:var(--mono)}
-  .ic.pass{color:var(--good)} .ic.warnic{color:var(--nudge)} .ic.failic{color:var(--crit)}
-
-  .row{display:flex;gap:14px;flex-wrap:wrap}
-  .col{flex:1;min-width:260px}
-  .kv{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dashed var(--line)}
-  .kv .k{color:var(--ink-2)}
-  .muted{color:var(--ink-2)}
-  .lever{display:flex;gap:8px;flex-wrap:wrap}
-  .lever label{display:flex;gap:7px;align-items:center;border:1px solid var(--line-2);border-radius:7px;
-    padding:8px 12px;cursor:pointer;font-size:13px}
-  .lever input{accent-color:var(--accent)}
-  .lever label.sel{border-color:var(--accent);background:var(--accent-wash)}
-  .qitem{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line)}
-  .qitem .mono{flex:none;color:var(--ink-2)}
-  .qitem input[type=text]{flex:1;background:transparent;border:none;color:var(--ink);font-size:13px;font-family:var(--sans)}
-  .qitem input[type=text]:focus{outline:none;border-bottom:1px solid var(--accent)}
-  .hold{opacity:.55}
-  .barnote{font-family:var(--mono);font-size:11px;color:var(--ink-2)}
 </style>
 
 <button class="btn ghost" id="themeBtn" onclick="toggleTheme()">◐ theme</button>
 <div class="wrap" id="app"></div>
 
 <div id="switch">
-  <button onclick="cycle(-1)" aria-label="previous">‹</button>
-  <div class="lbl" id="swlabel"></div>
-  <button onclick="cycle(1)" aria-label="next">›</button>
+  <button data-p="plan" onclick="goPhase('plan')"><b>1</b> Plan</button>
+  <span class="step">→</span>
+  <button data-p="run" onclick="goPhase('run')"><b>2</b> Run</button>
+  <span class="step">→</span>
+  <button data-p="results" onclick="goPhase('results')"><b>3</b> Results</button>
 </div>
 
 <script>
-/* ---------------- mock data (grounded in report-model fields) ---------------- */
-// capability class per #82: DOM=single-card dominator(redesign flag), WDOM=weakly-dominant,
-// BAL=balanced, WDD=weakly-dominated, SDD=strictly-dominated(redesign flag).
-// decl = per-phase decline-rate % [Open, Mid, Late] from #89 in-hand-declined signal.
-const CARDS = [
-  {id:'deploy_inf_start', name:'Deploy Infantry',   pts:4, seen:100, resid:0.4,  cls:'BAL',  decl:null},
-  {id:'conscription',     name:'Conscription',      pts:7, seen:58,  resid:2.6,  cls:'DOM',  decl:[4,9,15]},
-  {id:'deploy_cavalry',   name:'Deploy Cavalry',    pts:6, seen:63,  resid:1.8,  cls:'WDOM', decl:[6,18,33]},
-  {id:'raiding_party',    name:'Raiding Party',     pts:6, seen:55,  resid:1.1,  cls:'WDOM', decl:[10,20,30]},
-  {id:'deploy_inf_trench',name:'Entrench',          pts:5, seen:66,  resid:0.9,  cls:'WDOM', decl:[8,22,40]},
-  {id:'careful_maneuvers',name:'Careful Maneuvers', pts:4, seen:52,  resid:0.6,  cls:'BAL',  decl:[15,26,38]},
-  {id:'forced_march',     name:'Forced March',      pts:5, seen:47,  resid:0.3,  cls:'BAL',  decl:[24,32,44]},
-  {id:'attack_plus1',     name:'Attack +1',         pts:5, seen:49,  resid:0.2,  cls:'BAL',  decl:[20,30,45]},
-  {id:'reckless_maneuvers',name:'Reckless Maneuvers',pts:4,seen:38,  resid:-0.8, cls:'WDD',  decl:[40,44,52]},
-  {id:'naval_barrage',    name:'Naval Barrage',     pts:9, seen:41,  resid:-1.5, cls:'WDD',  decl:[33,48,66]},
-  {id:'deploy_artillery', name:'Deploy Artillery',  pts:6, seen:71,  resid:-1.2, cls:'BAL',  decl:[12,34,61]},
-  {id:'mass_assault',     name:'Mass Assault',      pts:8, seen:44,  resid:-2.3, cls:'SDD',  decl:[55,61,70]},
-];
-const RESID_FLAG = 2.0;         // MISPRICE_RESID_PTS
-const CAP = 72;                 // DECK_POINTS_CAP — the one hard rule
-const DECK_PTS = 72;            // current build sits at cap
-const CLS_LABEL = {DOM:'Dominant',WDOM:'Weakly-dom',BAL:'Balanced',WDD:'Weakly-dd',SDD:'Strictly-dd'};
-const CLS_KEY   = {DOM:'dom',WDOM:'wdom',BAL:'bal',WDD:'wdd',SDD:'sdd'};
+/* ================= mock data (grounded shapes; NOT a live run) ================= */
+const RUN = {loop:'Card loop', nudge:'Reward committing to an early cavalry push — the midgame feels too safe.',
+  deck:'cavsplit17-raid-paid', mapset:'core7', panel:'brawler · turtle · hawk',
+  temp:'T1 · card-dev', tol:'T1', started:'09:12', iter:4, iters:6, skirm:1740, skirmTotal:6000};
 
-// balance anchors: [key, current, target(baseline), lo, hi, unit]
-const METRICS = [
-  {k:'First-mover', cur:51, tgt:47, lo:44, hi:53, u:'%'},
-  {k:'Red win',     cur:49, tgt:49, lo:46, hi:52, u:'%'},
-  {k:'HQ endings',  cur:19, tgt:17, lo:10, hi:40, u:'%'},
-  {k:'Tie→2nd',     cur:15, tgt:13, lo:8,  hi:20, u:'%'},
-  {k:'Drag',        cur:2.7,tgt:2.4,lo:1.8,hi:3.2,u:''},
-  {k:'Swings',      cur:3.6,tgt:3.5,lo:2.8,hi:4.4,u:''},
-  {k:'Control',     cur:91, tgt:93, lo:85, hi:99, u:'%'},
-];
-// temperature profile: per-axis grace class (#83)
-const TEMP = {name:'T1 · card-dev', axes:[
-  {k:'win%',   g:'nudge'}, {k:'HQ%', g:'hold'}, {k:'Drag', g:'bold'},
-  {k:'Swings', g:'bold'},  {k:'resid', g:'nudge'}, {k:'cap', g:'bypass'},
-]};
-// the proposed one-weight move (a SHARED step-weight, not a single card)
-const MOVE = {
-  step:'deploy', from:6, to:7, dir:'tighten',
-  evidence:['Deploy Cavalry','Raiding Party','Entrench'],
-  meanResid:1.3, klass:'WDOM',
-  velocity:0.62,           // soft accept gauge 0..1
-  projDeckPts:75,          // > CAP → the hard gate bites
-};
-const REDESIGN = [
-  {name:'Conscription', why:'single-card dominator (resid +2.6, decline 4/9/15%) — redesign, never a weight move'},
-  {name:'Mass Assault', why:'strictly-dominated + mispriced (resid −2.3, declined 55–70%)'},
-];
 const QUESTIONNAIRE = [
-  {id:'feel',    text:'Did the match feel fair, or lopsided from the opening?'},
-  {id:'reflex',  text:'Where were your plays real choices vs. reflex / only-legal-move?'},
-  {id:'arc',     text:'Name the turn the game tipped, if it did.'},
-  {id:'blind',   text:'Any moment the AI seemed to miss something you could see? (blind-spot flag)'},
+  {id:'feel',   text:'Did the match feel fair, or lopsided from the opening?'},
+  {id:'reflex', text:'Where were your plays real choices vs. reflex / only-legal-move?'},
+  {id:'arc',    text:'Name the turn the game tipped, if it did.'},
+  {id:'blind',  text:'Anything the AI seemed to miss that you could see? (blind-spot flag)'},
+];
+const GRACE = [
+  {k:'win%',g:'nudge'},{k:'HQ%',g:'hold'},{k:'Drag',g:'bold'},{k:'Swings',g:'bold'},{k:'resid',g:'nudge'},{k:'cap',g:'bypass'}];
+
+// content the loop BUILT this iteration
+const BUILT_CARDS = [
+  {nm:'Flanking Order', cost:6, type:'maneuver', isNew:true, verdict:'keep',
+   txt:'Move a Cavalry unit up to 2 hexes; if it ends adjacent to an enemy, it attacks free.',
+   diff:'NEW — drafted to reward the early push', ev:[['resid','+0.7'],['win','54%'],['seen','61%']]},
+  {nm:'Raiding Party', cost:6, type:'maneuver', isNew:false, verdict:'iter',
+   txt:'Deploy a Cavalry unit behind enemy lines; it cannot be reinforced this turn.',
+   diff:'TUNED — added “free reposition” clause; cost 5→6', ev:[['resid','+1.1→+0.4'],['win','58%→52%'],['seen','55%']]},
+  {nm:'Reckless Maneuvers', cost:4, type:'maneuver', isNew:false, verdict:'keep',
+   txt:'Move any two units; each ends its move exposed (−1 defense this round).',
+   diff:'HELD — sits in-band, kept as control', ev:[['resid','-0.3'],['win','48%'],['seen','40%']]},
+  {nm:'Mass Assault', cost:8, type:'attack', isNew:false, verdict:'cut',
+   txt:'All adjacent units attack the same enemy hex simultaneously.',
+   diff:'CUT — strictly-dominated, declined 55–70%', ev:[['resid','-2.3'],['win','43%'],['seen','44%']]},
+];
+const BUILT_MAPS = [
+  {nm:'Split Ford', shape:'river', verdict:'keep', drag:2.5, swings:3.8, note:'two crossings force a commit'},
+  {nm:'The Pinch', shape:'choke', verdict:'iter', drag:3.1, swings:2.6, note:'too grindy — Drag over band'},
+];
+// heuristic numbers the loop tuned (AI_WEIGHTS keys, real)
+const HEURISTICS = [
+  {key:'advance',   who:'hawk',    from:2.2, to:2.9},
+  {key:'hqGuard',   who:'turtle',  from:4,   to:5.5},
+  {key:'threatKill',who:'brawler', from:6,   to:6, note:'held'},
+  {key:'fallbackBias',who:'hawk',  from:12,  to:9},
+  {key:'trenchHome',who:'turtle',  from:6,   to:7.5},
 ];
 
-/* ---------------- shared render helpers ---------------- */
-const $ = (h)=>{const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstChild;};
-const sign = (n)=> (n>0?'+':'')+n;
-function bandFill(m){ // position within band, colour by in/out
-  const span=m.hi-m.lo, p=Math.max(0,Math.min(1,(m.cur-m.lo)/span));
-  const out = m.cur<m.lo||m.cur>m.hi;
-  const drift = Math.abs(m.cur-m.tgt) > span*0.28;
-  const col = out?'var(--crit)':drift?'var(--nudge)':'var(--good)';
-  return {p,col,out,drift};
+/* ================= helpers ================= */
+function graceStrip(){
+  const c={hold:'var(--ink-2)',nudge:'var(--nudge)',bold:'var(--accent-ink)',bypass:'var(--crit)'};
+  return '<div class="graceaxes">'+GRACE.map(a=>`<span class="pill" style="color:${c[a.g]}">${a.k}·${a.g}</span>`).join('')+'</div>';
 }
-function declBars(decl){
-  if(!decl) return '<span class="muted mono" style="font-size:11px">always</span>';
-  return `<span class="decl" title="decline-rate Open/Mid/Late">`+
-    decl.map(v=>`<i style="height:${Math.max(2,v/72*16)}px"></i>`).join('')+
-    `</span> <span class="mono muted" style="font-size:11px">${decl.join('/')}</span>`;
+function hexThumb(kind){ // stylized pointy-top hex cluster, HQ dots + terrain hint
+  const W=150,H=118,r=13,dx=r*Math.sqrt(3),dy=r*1.5;
+  let cells=[];
+  for(let row=0;row<5;row++)for(let col=0;col<4;col++){
+    const x=18+col*dx+(row%2?dx/2:0), y=16+row*dy;
+    if((row===0&&col===3)||(row===4&&col===0))continue; // ragged edge
+    cells.push({x,y,row,col});
+  }
+  const hexPath=(cx,cy)=>{let p='';for(let i=0;i<6;i++){const a=Math.PI/180*(60*i-90);p+=(i?'L':'M')+(cx+r*Math.cos(a)).toFixed(1)+' '+(cy+r*Math.sin(a)).toFixed(1)+' ';}return p+'Z';};
+  const terr = kind==='river'
+    ? c=>((c.col===1&&c.row>0)?'var(--accent-wash)':null)
+    : c=>((c.col===1||c.col===2)&&c.row===2?'var(--nudge-wash)':null);
+  const hexes=cells.map(c=>`<path d="${hexPath(c.x,c.y)}" fill="${terr(c)||'var(--card)'}" stroke="var(--line-2)" stroke-width="1"/>`).join('');
+  const hq=[cells[0],cells[cells.length-1]];
+  const dots=`<circle cx="${hq[0].x}" cy="${hq[0].y}" r="5" fill="var(--crit)"/><circle cx="${hq[1].x}" cy="${hq[1].y}" r="5" fill="var(--accent)"/>`;
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="map outline">${hexes}${dots}</svg>`;
 }
-function cardTable(opts={}){
-  const editable = opts.editableTarget;
-  const rows = CARDS.map(c=>{
-    const flag = Math.abs(c.resid)>=RESID_FLAG;
-    const rc = c.resid>0?'pos':'neg';
-    return `<tr class="${flag?'flag':''}">
-      <td class="l"><span class="cardname">${c.name}</span>${flag?' <span class="pill crit">⚠ mispriced</span>':''}</td>
-      <td class="num">${c.pts}</td>
-      <td class="num">${c.seen}%</td>
-      <td class="num ${rc}">${sign(c.resid)}</td>
-      <td><span class="cls ${CLS_KEY[c.cls]}">${CLS_LABEL[c.cls]}</span></td>
-      <td class="l">${declBars(c.decl)}</td>
-    </tr>`;
-  }).join('');
-  return `<div class="tableScroll"><table>
-    <thead><tr>
-      <th class="l">Card</th><th>pts</th><th>seen</th><th>resid</th>
-      <th class="l">class</th><th class="l">decline · O/M/L</th>
-    </tr></thead><tbody>${rows}</tbody></table></div>`;
-}
-function capMeter(pts){
-  const over = pts>CAP, p=Math.min(1,pts/ (Math.max(pts,CAP)) );
-  return `<div class="cap ${over?'over':'ok'}"><i style="width:${p*100}%"></i></div>
-    <div class="mono" style="font-size:12px;margin-top:5px">
-      deckPoints <b>${pts}</b> / ${CAP} ${over?'<span class="pill crit">✗ over cap</span>':'<span class="pill good">✓ legal</span>'}</div>`;
-}
-function tempStrip(){
-  const gcol={hold:'var(--ink-2)',nudge:'var(--nudge)',bold:'var(--accent-ink)',bypass:'var(--crit)'};
-  return `<div style="display:flex;gap:6px;flex-wrap:wrap">`+TEMP.axes.map(a=>
-    `<span class="pill" style="color:${gcol[a.g]}">${a.k}·${a.g}</span>`).join('')+`</div>`;
-}
-function moveCard(){
-  const over = MOVE.projDeckPts>CAP;
-  return `<div class="card" style="padding:16px">
-    <div class="eyebrow">proposed · one weight, one lever</div>
-    <div style="display:flex;align-items:baseline;gap:10px;margin:6px 0 2px">
-      <h2 style="font-size:19px">↑ <span class="mono">${MOVE.step}</span> step-weight</h2>
-      <span class="mono" style="font-size:18px">${MOVE.from}→${MOVE.to}</span>
-      <span class="pill accent">${MOVE.dir}</span>
-    </div>
-    <p class="muted" style="margin:8px 0 12px">Shared-weight move: driven by a <b>${CLS_LABEL[MOVE.klass]}</b>
-      capability class across ${MOVE.evidence.length} cards — mean resid <span class="pos mono">${sign(MOVE.meanResid)}</span>.
-      Single-card dominators route to redesign, never here.</p>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
-      ${MOVE.evidence.map(e=>`<span class="pill">${e}</span>`).join('')}
-    </div>
-    <div class="kv"><span class="k">Accept · soft velocity + direction</span>
-      <span class="mono">${(MOVE.velocity*100)|0}% · within ${TEMP.name}</span></div>
-    <div class="band" style="margin:6px 0 12px"><i style="width:${MOVE.velocity*100}%;background:var(--accent)"></i></div>
-    <div class="kv"><span class="k">Projected deckPoints</span>
-      <span class="mono ${over?'neg':'pos'}">72→${MOVE.projDeckPts} ${over?'✗ breaks cap':'✓'}</span></div>
-    ${over?`<p class="pill crit" style="margin-top:10px">The 72 cap is the one hard rule — this move forces a trim before it can land.</p>`:''}
-    <div style="display:flex;gap:8px;margin-top:14px">
-      <button class="btn good">Accept move</button>
-      <button class="btn ghost">Simulate</button>
-      <button class="btn crit ghost">Reject</button>
-    </div>
-  </div>`;
-}
-function redesignList(){
-  return `<div class="card" style="padding:16px">
-    <div class="eyebrow">redesign flags · not weight moves</div>
-    ${REDESIGN.map(r=>`<div style="padding:9px 0;border-bottom:1px solid var(--line)">
-      <b>${r.name}</b><div class="muted" style="font-size:12.5px">${r.why}</div></div>`).join('')}
-  </div>`;
-}
-function leverKickoff(compact){
-  return `<div class="card" style="padding:16px">
-    <div class="eyebrow">content-loop kickoff · one lever at a time</div>
-    <p class="muted" style="margin:8px 0 10px">Pick the one content kind this run iterates. The rest are <b>held fixed</b>.</p>
-    <div class="lever" id="leverPick">
-      <label class="sel"><input type="radio" name="lv" checked onchange="pickLever(this)"> Card <span class="muted">· step-weights + deck</span></label>
-      <label><input type="radio" name="lv" onchange="pickLever(this)"> Map <span class="muted">· roster + terrain</span></label>
-      <label><input type="radio" name="lv" onchange="pickLever(this)"> AI <span class="muted">· personality panel</span></label>
-    </div>
-    <div class="row" style="margin-top:14px">
-      <div class="col"><div class="kv"><span class="k">Deck</span><span class="mono">cavsplit17-raid-paid</span></div>
-        <div class="kv hold"><span class="k">Map-set</span><span class="mono">core7 · held</span></div>
-        <div class="kv hold"><span class="k">AI panel</span><span class="mono">brawler·turtle·hawk · held</span></div>
-        <div class="kv"><span class="k">Temperature</span><span class="mono">${TEMP.name}</span></div>
-      </div>
-      <div class="col">
-        <div class="barnote" style="margin-bottom:6px">Post-match debrief questionnaire (LLM playtester · #85)</div>
-        ${QUESTIONNAIRE.map(q=>`<div class="qitem"><span class="mono">${q.id}</span>
-          <input type="text" value="${q.text}"></div>`).join('')}
-        <button class="btn ghost" style="margin-top:8px;font-size:12px">+ add question</button>
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;align-items:center;margin-top:16px">
-      <button class="btn primary">▶ Launch iteration</button>
-      <span class="barnote">100-skirmish hard-vs-hard sweep + 1 LLM feels-match · seed 1001</span>
-    </div>
-  </div>`;
-}
+const vpill={keep:['keep','keep'],cut:['cut','cut'],iter:['iter','iterate']};
 
-/* ---------------- VARIANT A — Cockpit (everything at once) ---------------- */
-function variantA(){
-  const metrics = METRICS.map(m=>{
-    const b=bandFill(m), d=+(m.cur-m.tgt).toFixed(1);
-    const dc = Math.abs(d)<0.05?'muted':(b.out||b.drift?'neg':'pos');
-    return `<div class="metric">
-      <span class="k">${m.k}</span>
-      <span class="v">${m.cur}${m.u}</span>
-      <span class="d ${dc}">${d===0?'on target':sign(d)+m.u+' vs '+m.tgt+m.u}</span>
-      <div class="band"><i style="width:${b.p*100}%;background:${b.col}"></i></div>
-    </div>`;
-  }).join('');
+/* ================= PHASE 1 — PLAN ================= */
+function planPhase(){
+  const lt=(id,ic,nm,desc,tag,on)=>`<div class="lt ${on?'on':''}" onclick="pickLoop(this)"><div class="ic">${ic}</div>
+    <h3>${nm}</h3><p>${desc}</p><div class="tag" style="margin-top:8px">${tag}</div></div>`;
   return `
-  <div class="vhead">
-    <div><div class="eyebrow">War of Attrition · calibration</div>
-      <h1 style="font-size:26px">Cockpit</h1>
-      <div class="sub">Every readout on one screen — current sweep against the committed baselines, the per-card table, the proposed weight move, and the loop trigger.</div></div>
-    <div style="text-align:right"><div class="eyebrow">run</div>
-      <div class="mono">hard-v-hard · n=100 · core7</div>
-      <div class="mono muted" style="font-size:12px">2026-08-28 · vs 1.2 baselines</div></div>
+  <div class="vhead"><div><div class="eyebrow">War of Attrition · iteration workbench</div>
+    <h1 style="font-size:26px">Plan the iteration</h1>
+    <div class="sub">Pick the one content kind this loop iterates, point it with an opening nudge, tune the accept settings and the playtester's questionnaire — then hand it to the machine.</div></div></div>
+
+  <div class="sectlabel"><h2>1 · What does this loop build?</h2><span class="eyebrow">one lever · the rest held fixed</span></div>
+  <div class="looptypes">
+    ${lt('card','🃏','Card loop','Draft / tune cards under the 72-pt cap.','builds cards',true)}
+    ${lt('map','⬡','Map loop','Carve maps to fill a roster gap.','builds maps',false)}
+    ${lt('ai','◆','AI loop','Tune heuristic personality weights.','builds personalities',false)}
   </div>
 
-  <div class="grid-metrics" style="margin-bottom:16px">${metrics}</div>
-
-  <div class="row" style="align-items:flex-start">
-    <div class="col" style="flex:2.2">
-      <section class="card blk">
-        <div class="blkhead"><h2>Per-card diagnosis</h2>
-          <span class="eyebrow">resid ±${RESID_FLAG} flags · decline from #89</span></div>
-        ${cardTable()}
-      </section>
+  <div class="row" style="margin-top:20px">
+    <div class="col card pad">
+      <div class="eyebrow">2 · Opening nudge</div>
+      <p class="muted" style="margin:6px 0 10px">A directional steer the drafter/search starts from. Optional, but this is where your taste enters the loop.</p>
+      <textarea class="nudge-in">${RUN.nudge}</textarea>
+      <div class="chips">
+        <button class="chip">+ more aggression</button><button class="chip">+ reward defense</button>
+        <button class="chip">+ open the midgame</button><button class="chip">+ punish greed</button></div>
     </div>
-    <div class="col" style="flex:1.3;display:flex;flex-direction:column;gap:14px">
-      ${moveCard()}
-      <div class="card" style="padding:16px">
-        <div class="eyebrow">fairness temperature · ${TEMP.name}</div>
-        <div style="margin:10px 0">${tempStrip()}</div>
-        <div class="barnote">grace per axis · balanceScore stays temperature-independent (#83)</div>
+    <div class="col card pad">
+      <div class="eyebrow">Held fixed this run</div>
+      <div style="margin-top:8px">
+        <div class="kv"><span class="k">Deck</span><span class="mono">${RUN.deck}</span></div>
+        <div class="kv hold"><span class="k">Map-set</span><span class="mono">${RUN.mapset}</span></div>
+        <div class="kv hold"><span class="k">AI panel</span><span class="mono">${RUN.panel}</span></div>
+        <div class="kv hold"><span class="k">Rules</span><span class="mono">1.2 · golden</span></div>
       </div>
-      ${redesignList()}
     </div>
   </div>
 
-  <section class="card blk" style="margin-top:16px">${leverKickoff()}</section>
-  <p class="barnote" style="margin-top:10px">Target adjustment (A): baseline chips above are the anchor — <b>click a delta to override its target</b> for this loop.</p>`;
-}
-
-/* ---------------- VARIANT B — Guided loop (one lever at a time) ---------------- */
-let bStep=0;
-const B_STEPS=['Read','Diagnose','Propose','Assemble & launch'];
-function variantB(){
-  const panes = [readPane(), diagnosePane(), proposePane(), assemblePane()];
-  return `
-  <div class="vhead">
-    <div><div class="eyebrow">War of Attrition · calibration</div>
-      <h1 style="font-size:26px">Guided loop</h1>
-      <div class="sub">The one-lever-at-a-time loop as four steps: read the run, diagnose the cards, weigh the single proposed move, then assemble and fire the next iteration.</div></div>
+  <div class="row" style="margin-top:16px">
+    <div class="col card pad">
+      <div class="eyebrow">3 · Tolerance · how wide the accept-bands sit</div>
+      <div style="margin:12px 0 6px" class="seg">
+        <button>T0 · strict</button><button class="on">T1 · normal</button><button>T2 · loose</button></div>
+      <p class="barnote">Widens the pass/fail bands the grader applies to a result.</p>
+    </div>
+    <div class="col card pad">
+      <div class="eyebrow">Temperature · per-axis grace + step size</div>
+      <div style="margin:12px 0 4px" class="seg">
+        <button>T0</button><button class="on">card-dev</button><button>T2</button><button>custom…</button></div>
+      ${graceStrip()}
+      <p class="barnote" style="margin-top:8px">Loosens the axes this lever is allowed to move; balanceScore stays fixed (#83).</p>
+    </div>
   </div>
-  <div class="steps">${B_STEPS.map((s,i)=>`<div class="st ${i===bStep?'on':''} ${i<bStep?'done':''}" onclick="setStep(${i})">
-    <div class="n">step ${i+1}</div><div class="t">${s}</div></div>`).join('')}</div>
-  <div id="bpanes">${panes.map((p,i)=>`<div class="stepPane ${i===bStep?'on':''}">${p}</div>`).join('')}</div>
-  <div style="display:flex;gap:10px;margin-top:18px;justify-content:space-between">
-    <button class="btn ghost" onclick="setStep(${Math.max(0,bStep-1)})" ${bStep===0?'disabled':''}>‹ back</button>
-    <button class="btn primary" onclick="setStep(${Math.min(3,bStep+1)})">${bStep===3?'▶ Launch iteration':'next ›'}</button>
+
+  <div class="card pad" style="margin-top:16px">
+    <div class="eyebrow">4 · Playtester debrief · asked after every skirmish (#85)</div>
+    <div style="margin-top:8px">${QUESTIONNAIRE.map(q=>`<div class="qitem"><span class="mono">${q.id}</span><input value="${q.text}"></div>`).join('')}
+      <button class="btn ghost" style="margin-top:9px;font-size:12px">+ add question</button></div>
+  </div>
+
+  <div style="display:flex;gap:12px;align-items:center;margin-top:20px">
+    <button class="btn primary big" onclick="goPhase('run')">▶ Launch on the machine</button>
+    <span class="barnote">100-skirmish sweep × 6 iterations + 1 LLM feels-match per candidate · seed 1001</span>
   </div>`;
 }
-function readPane(){
-  const metrics = METRICS.map(m=>{
-    const b=bandFill(m), d=+(m.cur-m.tgt).toFixed(1);
-    return `<div><div class="kv"><span class="k">${m.k}</span>
-      <span class="mono">${m.cur}${m.u} <span class="muted">/ tgt ${m.tgt}${m.u}</span>
-      <span class="pill ${b.out?'crit':b.drift?'nudge':'good'}">${b.out?'out':b.drift?'drift':'in-band'}</span></span></div>
-      <div class="band"><i style="width:${b.p*100}%;background:${b.col}"></i></div></div>`;
-  }).join('');
-  return `<section class="card blk"><div class="blkhead"><h2>Read the run against the baselines</h2>
-    <span class="eyebrow">n=100 · core7 · vs 1.2</span></div>
-    <div style="display:grid;gap:12px">${metrics}</div>
-    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
-      <div class="eyebrow" style="margin-bottom:8px">fairness temperature · ${TEMP.name}</div>${tempStrip()}</div>
-  </section>`;
-}
-function diagnosePane(){
-  return `<section class="card blk"><div class="blkhead"><h2>Diagnose the cards</h2>
-    <span class="eyebrow">capability class + decline · sort resid</span></div>
-    ${cardTable()}
-    <p class="muted" style="margin-top:12px">Two cards route to <b>redesign</b>, not the weight lever: ${REDESIGN.map(r=>r.name).join(', ')}.</p>
-  </section>`;
-}
-function proposePane(){
-  return `<div class="row" style="align-items:flex-start">
-    <div class="col" style="flex:1.4">${moveCard()}</div>
-    <div class="col">${redesignList()}</div></div>`;
-}
-function assemblePane(){ return leverKickoff(); }
 
-/* ---------------- VARIANT C — Proposal review (calibration as a PR) ---------------- */
-function variantC(){
-  const over=MOVE.projDeckPts>CAP;
-  const checks=[
-    {ic:'pass',lbl:`Capability-class signal — ${MOVE.evidence.length} cards, ${CLS_LABEL[MOVE.klass]}, mean resid ${sign(MOVE.meanResid)}`},
-    {ic:'pass',lbl:`Direction — ${MOVE.dir}, soft velocity ${(MOVE.velocity*100)|0}% within ${TEMP.name}`},
-    {ic:'failic',lbl:`Hard cap — projected deckPoints 72→${MOVE.projDeckPts} exceeds ${CAP} (blocking; needs a trim)`},
-    {ic:'warnic',lbl:`Redesign flags untouched — Conscription (dominator), Mass Assault (strictly-dd)`},
-    {ic:'pass',lbl:`LLM feels-pass — no fairness veto (advisory, never feeds the math)`},
+/* ================= PHASE 2 — RUN ================= */
+function runPhase(){
+  const pct=(RUN.skirm/RUN.skirmTotal*100);
+  const log=[
+    ['09:41','iter 4/6 · drafted','<span class="hl">Flanking Order</span> (6pt) — sweeping…'],
+    ['09:38','iter 4/6 · candidate','Raiding Party +free-reposition, cost 5→6'],
+    ['09:33','iter 3/6 · <span class="ok">kept</span>','Split Ford — Drag 2.5, Swings 3.8 ✓ in-band'],
+    ['09:27','iter 3/6 · feels-match','“early push felt committal, not forced” ✓'],
+    ['09:19','iter 2/6 · <span class="ok">cut</span>','Mass Assault — declined 55–70%, resid −2.3'],
+    ['09:12','iter 1/6 · start','loop armed · nudge locked · rules 1.2 golden'],
   ];
   return `
-  <div class="vhead">
-    <div><div class="eyebrow">War of Attrition · calibration · proposal #<span class="mono">c-0417</span></div>
-      <h1 style="font-size:24px">↑ deploy step-weight 6→7</h1>
-      <div class="sub">Each iteration is a reviewable change: the before/after baselines, the checks it must pass, and the card table as the “files changed.”</div></div>
-    <div style="display:flex;gap:8px"><button class="btn good">✓ Approve &amp; launch</button>
-      <button class="btn crit ghost">Request changes</button></div>
+  <div class="vhead"><div><div class="eyebrow">War of Attrition · iteration workbench</div>
+    <h1 style="font-size:26px" style="display:flex;align-items:center;gap:10px"><span class="livedot"></span> Loop running on the machine</h1>
+    <div class="sub"><b>${RUN.loop}</b> · nudged “${RUN.nudge}”</div></div>
+    <div style="display:flex;gap:8px"><button class="btn ghost">⏸ pause</button><button class="btn crit">■ stop</button></div></div>
+
+  <div class="card pad" style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;align-items:flex-end">
+      <div><div class="eyebrow">iteration</div><div class="bigstat">${RUN.iter} <span class="muted" style="font-size:18px">/ ${RUN.iters}</span></div></div>
+      <div><div class="eyebrow">skirmishes swept</div><div class="bigstat">${RUN.skirm.toLocaleString()} <span class="muted" style="font-size:18px">/ ${RUN.skirmTotal.toLocaleString()}</span></div></div>
+      <div><div class="eyebrow">elapsed · eta</div><div class="mono" style="font-size:16px">29 min · ~24 min left</div></div>
+      <div style="text-align:right"><div class="eyebrow">running best</div><div class="mono" style="font-size:15px;color:var(--good)">Flanking Order · +0.7 resid</div></div>
+    </div>
+    <div class="prog" style="margin-top:14px"><i style="width:${pct}%"></i></div>
+    <div class="barnote" style="margin-top:6px">${pct.toFixed(0)}% · currently sweeping candidate <b>Flanking Order</b> across ${RUN.mapset}</div>
   </div>
 
-  <section class="card blk"><div class="blkhead"><h2>Baselines · before → after (simulated)</h2>
-    <span class="eyebrow">edit ‘after’ to retarget</span></div>
-    <div class="diffgrid">
-      <div class="before"><div class="eyebrow" style="color:var(--crit)">current run</div>
-        ${METRICS.slice(0,5).map(m=>`<div class="kv"><span class="k">${m.k}</span><span class="mono">${m.cur}${m.u}</span></div>`).join('')}</div>
-      <div class="after"><div class="eyebrow" style="color:var(--good)">target after move · editable</div>
-        ${METRICS.slice(0,5).map(m=>`<div class="kv"><span class="k">${m.k}</span>
-          <span><input class="tgt" value="${m.tgt}"><span class="muted mono">${m.u}</span></span></div>`).join('')}</div>
-    </div>
-  </section>
+  <div class="statgrid" style="margin-bottom:16px">
+    <div><div class="k">built so far</div><div class="v">2 kept · 1 cut</div></div>
+    <div><div class="k">first-mover (live)</div><div class="v">50%</div></div>
+    <div><div class="k">Drag (live)</div><div class="v">2.6</div></div>
+    <div><div class="k">feels-veto</div><div class="v" style="color:var(--good)">none</div></div>
+  </div>
 
-  <section class="card blk"><div class="blkhead"><h2>Checks</h2>
-    <span class="eyebrow">${over?'1 blocking':'all clear'}</span></div>
-    ${checks.map(c=>`<div class="checkrow"><span class="ic ${c.ic}">${c.ic==='pass'?'✓':c.ic==='warnic'?'△':'✗'}</span>
-      <span>${c.lbl}</span></div>`).join('')}
-  </section>
-
-  <section class="card blk"><div class="blkhead"><h2>Files changed · per-card table</h2>
-    <span class="eyebrow">${CARDS.filter(c=>Math.abs(c.resid)>=RESID_FLAG).length} mispriced</span></div>
-    ${cardTable()}
-  </section>
-
-  <section class="card blk">${leverKickoff()}
-    <p class="barnote" style="margin-top:12px">Target adjustment (C): retarget by editing the ‘after’ column above — the diff shows the move against your revised anchor.</p>
-  </section>`;
+  <div class="sectlabel"><h2>Live log</h2><span class="eyebrow">tail · newest first</span></div>
+  <div class="logtail">${log.map(l=>`<div><span class="t">${l[0]}</span> &nbsp;${l[1]} — ${l[2]}</div>`).join('')}</div>
+  <p class="barnote" style="margin-top:12px">Leave it; it writes every skirmish to <span class="mono">logs/woa.db</span> and lands a report in phase 3 when done. Come back whenever.</p>`;
 }
 
-/* ---------------- switcher / plumbing ---------------- */
-const VARIANTS={A:{name:'Cockpit',fn:variantA},B:{name:'Guided loop',fn:variantB},C:{name:'Proposal review',fn:variantC}};
-const ORDER=['A','B','C'];
-function curVar(){const p=new URLSearchParams(location.search).get('variant');return VARIANTS[p]?p:'A';}
+/* ================= PHASE 3 — RESULTS ================= */
+function resultsPhase(){
+  const cardEl=c=>{const [vk,vl]=vpill[c.verdict];return `<div class="gcard">
+    <div class="verdict ${vk}">${vl}</div>
+    <div class="top"><div class="cost">${c.cost}</div><div><div class="nm">${c.nm} ${c.isNew?'<span class="new-badge">new</span>':''}</div><div class="type">${c.type}</div></div></div>
+    <div class="txt">${c.txt}</div>
+    <div class="diff">${c.diff}</div>
+    <div class="ev">${c.ev.map(m=>`<span class="m">${m[0]} <b>${m[1]}</b></span>`).join('')}</div>
+  </div>`;};
+  const mapEl=m=>{const [vk,vl]=vpill[m.verdict];const dragOver=m.drag>3.0;return `<div class="mapcard">
+    <div class="mapthumb">${hexThumb(m.shape)}</div>
+    <div class="mapmeta"><div style="display:flex;justify-content:space-between;align-items:center">
+      <span class="nm">${m.nm}</span><span class="pill ${vk==='keep'?'good':vk==='cut'?'crit':'nudge'}">${vl}</span></div>
+      <div class="muted" style="font-size:12.5px">${m.note}</div>
+      <div style="display:flex;gap:8px"><span class="pill ${dragOver?'crit':'good'}">Drag ${m.drag}</span><span class="pill">Swings ${m.swings}</span></div>
+    </div></div>`;};
+  const heurRows=HEURISTICS.map(h=>{const d=h.to-h.from;const cls=h.note?'':(d>0?'up':d<0?'down':'');
+    return `<tr><td class="l mono">${h.key}</td><td class="l">${h.who}</td><td class="num mono">${h.from}</td>
+      <td class="arrow">→</td><td class="num mono ${cls}">${h.note?'held':h.to}</td>
+      <td class="num mono ${cls}">${h.note?'—':(d>0?'+':'')+d.toFixed(1)}</td></tr>`;}).join('');
+  return `
+  <div class="vhead"><div><div class="eyebrow">War of Attrition · iteration workbench</div>
+    <h1 style="font-size:26px">Results · iteration review</h1>
+    <div class="sub"><b>${RUN.loop}</b> · nudged “${RUN.nudge}” · finished 10:05 — the shared surface for you + the review session.</div></div>
+    <div style="display:flex;gap:8px"><button class="btn">↻ Re-run with edits</button><button class="btn ghost">open balance report ↗</button></div></div>
+
+  <div class="summary">
+    <div><div class="big">1</div><div class="lab">card added</div></div>
+    <div><div class="big">1</div><div class="lab">card tuned</div></div>
+    <div><div class="big">1</div><div class="lab">card cut</div></div>
+    <div><div class="big">1</div><div class="lab">map added</div></div>
+    <div><div class="big">5</div><div class="lab">weights tuned</div></div>
+    <div><div class="big" style="color:var(--good)">✓</div><div class="lab">stayed in-band</div></div>
+  </div>
+
+  <div class="sectlabel"><h2>Cards built</h2><span class="eyebrow">design first · measured evidence beneath</span></div>
+  <div class="gallery">${BUILT_CARDS.map(cardEl).join('')}</div>
+
+  <div class="sectlabel"><h2>Maps built</h2><span class="eyebrow">outline + feel read</span></div>
+  <div class="gallery" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">${BUILT_MAPS.map(mapEl).join('')}</div>
+
+  <div class="sectlabel"><h2>Heuristic numbers</h2><span class="eyebrow">AI_WEIGHTS · per personality · before → after</span></div>
+  <div class="card pad"><div class="tableScroll"><table>
+    <thead><tr><th class="l">weight</th><th class="l">personality</th><th>from</th><th></th><th>to</th><th>Δ</th></tr></thead>
+    <tbody>${heurRows}</tbody></table></div>
+    <p class="barnote" style="margin-top:10px">These are the levers the AI loop moved — the personalities the built content was measured against.</p>
+  </div>
+
+  <p class="barnote" style="margin-top:16px">The full balance report is one click away (top-right) — this surface leads with <b>what got built</b> so you and the reviewer discuss the same artifacts, not a metrics dump.</p>`;
+}
+
+/* ================= plumbing ================= */
+const PHASES={plan:planPhase,run:runPhase,results:resultsPhase};
+function curPhase(){const p=new URLSearchParams(location.search).get('phase');return PHASES[p]?p:'plan';}
 function render(){
-  const v=curVar();
-  document.getElementById('app').innerHTML=VARIANTS[v].fn();
-  document.getElementById('swlabel').innerHTML=`<b>${v}</b> · ${VARIANTS[v].name}`;
+  const p=curPhase();
+  document.getElementById('app').innerHTML=PHASES[p]();
+  document.querySelectorAll('#switch button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
+  scrollTo(0,0);
 }
-function goVar(v){const u=new URL(location);u.searchParams.set('variant',v);history.replaceState(null,'',u);render();}
-function cycle(d){const i=ORDER.indexOf(curVar());goVar(ORDER[(i+d+3)%3]);}
-function setStep(i){bStep=i;render();}
-function pickLever(el){[...document.querySelectorAll('#leverPick label')].forEach(l=>l.classList.remove('sel'));
-  el.closest('label').classList.add('sel');}
+function goPhase(p){const u=new URL(location);u.searchParams.set('phase',p);history.replaceState(null,'',u);render();}
+function pickLoop(el){el.parentElement.querySelectorAll('.lt').forEach(x=>x.classList.remove('on'));el.classList.add('on');}
 function toggleTheme(){const r=document.documentElement;
-  const cur=r.getAttribute('data-theme')|| (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  const cur=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
   r.setAttribute('data-theme',cur==='dark'?'light':'dark');}
-addEventListener('keydown',e=>{
-  if(/^(INPUT|TEXTAREA)$/.test(e.target.tagName)||e.target.isContentEditable)return;
-  if(e.key==='ArrowLeft')cycle(-1); if(e.key==='ArrowRight')cycle(1);});
+addEventListener('keydown',e=>{if(/^(INPUT|TEXTAREA)$/.test(e.target.tagName))return;
+  const o=['plan','run','results'],i=o.indexOf(curPhase());
+  if(e.key==='ArrowLeft')goPhase(o[(i+2)%3]); if(e.key==='ArrowRight')goPhase(o[(i+1)%3]);});
 render();
 </script>
