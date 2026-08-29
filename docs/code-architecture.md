@@ -150,4 +150,4 @@ measured on a map pool that no longer exists.
 
 ## Related
 
-[[workflow]] · [[War Of Attrition rule book]] · [[ai-heuristic-model]] · [[card-cheatsheet]] · [[balance-baselines]] · [[report-model]] · [[code-style]]
+[[workflow]] · [[War Of Attrition rule book]] · [[ai-heuristic-model]] · [[card-cheatsheet]] · [[commander-cheatsheet]] · [[balance-baselines]] · [[report-model]] · [[code-style]]
