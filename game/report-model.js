@@ -10,6 +10,9 @@
                                a grace class (hold|nudge|bold|bypass; legacy
                                T0/T1/T2 alias hold/nudge/bold). RANGES = per-axis ±.
    - balanceScore(agg, done)   balance-quality score, LOWER = better (folds BANDS)
+   - foldPanel(rows, profile)  score a candidate across the personality panel —
+                               worst-case per metric, fairness hard-gated, overfit
+                               spread (no mean); one level above foldGlobal
    - mapNotes(agg, done)       health-flag strings for one map's aggregate
    - addAgg(dst, src)          fold one balanceMap aggregate into another
    - foldGlobal(rows)          [{agg, done}] -> G totals (incl. G.cards)
@@ -139,6 +142,58 @@ var WOA_REPORT = (function () {
     var s = 0;
     BANDS.forEach(function (b) { if (b.feedsScore) s += outBand(b.val(agg, done), b.lo, b.hi, b.weight); });
     return s;
+  }
+
+  /* Panel fold — score ONE content candidate across the whole personality panel
+     (#101/#115). `rows` = [{name, agg, done}], one per personality (each agg the
+     addAgg fold of that personality's symmetric mapReport sweep — no second fold,
+     one nesting level above foldGlobal). `profile` = a loop-config Temperature
+     ({tolerances:{key:grace}}); loosened cells (grace ≠ hold) are EXPLORATORY,
+     read-only. Rule: WORST-CASE per metric (the panel leaves nowhere to hide) —
+     a mean would hide overfit, so it is never taken. Fairness (Red%/1st%) is the
+     ONLY hard gate, always at the fixed `hold` ruler; every other metric is
+     surfaced (worst member + spread) as the per-archetype overfit finding, never
+     rejected. See docs/rubrics/personality-rubric.md. */
+  var PANEL_GATE = ['red', 'first'];
+  function foldPanel(rows, profile) {
+    var tol = (profile && profile.tolerances) || {};
+    var metrics = {};
+    BANDS.forEach(function (b) {
+      var gated = PANEL_GATE.indexOf(b.key) >= 0;
+      var grace = gated ? 'hold' : (tol[b.key] || 'hold');   // fairness never loosens
+      var eff = bands(b.key, grace);
+      var samples = rows.map(function (r) {
+          var v = b.val(r.agg, r.done);
+          return { name: r.name, val: v, out: v == null ? 0 : outBand(v, eff.lo, eff.hi, 1) };
+        }).filter(function (s) { return s.val != null; });
+      if (!samples.length) return;
+      // worst = the member the candidate fails hardest against (max out-of-band);
+      // ties fall to the largest raw value — the extreme member, not an average.
+      var worst = samples.reduce(function (m, s) {
+        return (s.out > m.out || (s.out === m.out && s.val > m.val)) ? s : m; }, samples[0]);
+      var vals = samples.map(function (s) { return s.val; });
+      var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+      metrics[b.key] = { key: b.key, label: b.label, grace: grace, gated: gated,
+        lo: eff.lo, hi: eff.hi, feedsScore: b.feedsScore,
+        samples: samples, worst: worst, min: min, max: max, spread: max - min };
+    });
+    // Hard gate: fairness only — worst-case member out of the hold band fails.
+    var failures = [];
+    PANEL_GATE.forEach(function (k) {
+      var m = metrics[k];
+      if (m && m.worst.out > 0) failures.push({ key: k, label: m.label, name: m.worst.name, val: m.worst.val, lo: m.lo, hi: m.hi });
+    });
+    // Overfit lens: the EXPLORATORY (loosened) Tolerances only — the axes the loop
+    // is iterating — whose worst member breaks its loosened band. That is the style
+    // the candidate does not survive; spread rides along as the "no two members fall
+    // to the same read" signal. Held/guard metrics stay off it (they aren't being
+    // explored), fairness stays off it (it's a gate). Read-only, never a gate.
+    var overfit = [];
+    Object.keys(tol).forEach(function (k) {
+      var m = metrics[k];
+      if (m && !m.gated && m.worst.out > 0) overfit.push({ key: k, label: m.label, name: m.worst.name, val: m.worst.val, lo: m.lo, hi: m.hi, spread: m.spread });
+    });
+    return { metrics: metrics, gate: { pass: failures.length === 0, failures: failures }, overfit: overfit };
   }
 
   /* Per-map health flags — the 62/38/8/55/20 thresholds every report quotes.
@@ -817,7 +872,7 @@ var WOA_REPORT = (function () {
     return rows;
   }
 
-  return { pct: pct, f1: f1, actionTotal: actionTotal, balanceScore: balanceScore, mapNotes: mapNotes,
+  return { pct: pct, f1: f1, actionTotal: actionTotal, balanceScore: balanceScore, foldPanel: foldPanel, mapNotes: mapNotes,
     addAgg: addAgg, foldGlobal: foldGlobal, cardRows: cardRows, reportMarkdown: reportMarkdown,
     MISPRICE_RESID_PTS: MISPRICE_RESID_PTS, MISPRICE_MIN_HQPLAYS: MISPRICE_MIN_HQPLAYS,
     // bands-as-data + trace folds (node + browser both consume)

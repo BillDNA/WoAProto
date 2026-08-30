@@ -634,6 +634,41 @@ test('loop-config: temperature profiles parse + hard-gate Red%/1st%', () => {
 })();
 });
 
+test('report-model: foldPanel takes worst-case per metric (never a mean), fairness hard-gated', () => {
+(function () {
+  var R = require('./report-model.js');
+  var TEMPS = require('./content/temperatures.js');
+  // Synthetic panel — three "personalities", done=100 so redWins etc. read as %.
+  // attritionEndings/controlGames left 0 so tie/drag/control fall out (null) — a
+  // smoke-check of the fold, not a pinned sweep.
+  function row(name, red, first, hq) {
+    return { name: name, done: 100, agg: { redWins: red, firstWins: first, hqWins: hq,
+      zeroKill: 2, leadChanges: 300, attritionEndings: 0, controlGames: 0, attacks: 0, swaps: 0, marches: 0, deploys: 0 } };
+  }
+  // Red% mean = (30+55+50)/3 = 45, INSIDE the 45–55 hold band — but member A sits
+  // at 30, out. Worst-case must still fail; a mean would hide it. That's the point.
+  var rows = [row('A', 30, 50, 5), row('B', 55, 50, 60), row('C', 50, 50, 20)];
+  var pf = R.foldPanel(rows, TEMPS.profiles.card);   // card loosens hq → nudge
+
+  assert.ok(!pf.gate.pass, 'fairness gate FAILS on the worst member even though the Red% mean is in band');
+  var redFail = pf.gate.failures.filter(function (f) { return f.key === 'red'; })[0];
+  assert.ok(redFail && redFail.name === 'A' && redFail.val === 30, 'the gate names member A (Red% 30), the worst case — not the 45 mean');
+  assert.ok(!pf.gate.failures.some(function (f) { return f.key === 'first'; }), '1st% (all 50, in band) does not fail');
+
+  assert.ok(pf.metrics.red.gated && !pf.metrics.hq.gated, 'red/first are gated; hq is exploratory');
+  assert.strictEqual(pf.metrics.hq.grace, 'nudge', 'hq carries the loosened (nudge) grace from the card profile');
+  // hq nudge band = 10±? → 4–46 (0.2 × 30 width); member B at 60 breaks it.
+  var hqOver = pf.overfit.filter(function (o) { return o.key === 'hq'; })[0];
+  assert.ok(hqOver && hqOver.name === 'B', 'overfit finding surfaces hq breaking against member B');
+  assert.strictEqual(pf.metrics.hq.spread, 55, 'hq spread is max−min (60−5), the "no two members share a read" signal');
+  assert.ok(!pf.overfit.some(function (o) { return o.key === 'red' || o.key === 'first'; }), 'fairness never appears as an overfit finding (it is a gate, not a spread)');
+
+  // An all-fair panel with hq in its loosened band passes clean.
+  var clean = R.foldPanel([row('A', 50, 50, 20), row('B', 48, 52, 25), row('C', 52, 49, 15)], TEMPS.profiles.card);
+  assert.ok(clean.gate.pass && !clean.overfit.length, 'a fair, in-band panel passes with no overfit finding');
+})();
+});
+
 test('loop-config: debrief questionnaire is an ordered id+text table with feel + reflex', () => {
 (function () {
   var Q = require('./content/questionnaire.js');   // load asserts on its own; requiring proves it parses

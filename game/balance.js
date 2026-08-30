@@ -59,6 +59,10 @@ function pad(s, w, right) {
   return s;
 }
 
+// The per-map seed base — the ONE seed schedule (mapReport + panelReport both
+// fold it), so every sweep of the same roster replays byte-identical skirmishes.
+function mapSeedBase(mi) { return (mi + 1) * 7919; }
+
 // Roster selection (V1 map-sets): default = the ACTIVE map-set's pool (one
 // shared roster across play modes + tools); `--mapset <id>` picks a specific
 // set; `--mapset all` = every map on disk.
@@ -149,7 +153,7 @@ function mapReport(n, diff, filter, maps, mapsetArg, decks) {
   var mapRows = []; // [{agg, done}] for the shared foldGlobal
 
   maps.forEach(function (map, mi) {
-    var seedBase = (mi + 1) * 7919;
+    var seedBase = mapSeedBase(mi);
     var r = E.balanceMap(map, n, { diffRed: diff, diffBlue: diff, seedBase: seedBase, decks: decks,
       onGame: dbh && function (g1, nn, st) {
         try {
@@ -242,6 +246,85 @@ function mapReport(n, diff, filter, maps, mapsetArg, decks) {
   if (dbh) { console.log('\nPersisted ' + G.games + ' skirmishes to logs/woa.db (run ' + runId + ').'); db.close(dbh); }
 }
 
+/* ---------------- panel mode: score a candidate across the personality panel ----
+   Runs the symmetric map sweep ONCE per personality (the maps.js "ai" rows), folds
+   each personality's maps into one aggregate, and hands the set to R.foldPanel:
+   worst-case per metric, Red%/1st% hard-gated, the rest surfaced as an overfit
+   spread (no mean). Read-only — no DB write, no second fold. See #101/#115 and
+   docs/rubrics/personality-rubric.md. `kind` (card|map|ai) picks the loop-config
+   Temperature profile that says which metrics are exploratory. */
+function panelReport(n, kind, maps, mapsetArg, decks) {
+  var probs = E.validateMaps(maps);
+  if (probs.length) { console.log('Fix these first:\n  ' + probs.join('\n  ')); return; }
+  var TEMPS = require('./content/temperatures.js');
+  var profile = TEMPS.profiles[kind];
+  if (!profile) { console.log('Unknown loop kind "' + kind + '". Known: ' + Object.keys(TEMPS.profiles).join(', ')); process.exit(1); }
+  // The panel = every maps.js "ai" personality (built-in easy/normal/hard excluded).
+  var panel = Object.keys(E.AI_PRESETS).filter(function (k) { return ['easy', 'normal', 'hard'].indexOf(k) < 0; });
+  if (!panel.length) { console.log('No maps.js "ai" personalities to panel.'); return; }
+
+  console.log('Panel: scoring across ' + panel.length + ' personalities [' + panel.join(', ') + '] on ' +
+    maps.length + ' maps, ' + n + ' skirmishes each, "' + profile.name + '" profile.\n');
+  var rows = panel.map(function (name) {
+    process.stdout.write('  ' + pad(name, 10, true) + ' ');
+    var agg = {}, unfinished = 0;
+    maps.forEach(function (map, mi) {
+      var r = E.balanceMap(map, n, { diffRed: name, diffBlue: name, seedBase: mapSeedBase(mi), decks: decks });
+      R.addAgg(agg, r); unfinished += r.unfinished; process.stdout.write('.');
+    });
+    console.log('');
+    return { name: name, agg: agg, done: n * maps.length - unfinished };
+  });
+
+  var panelFold = R.foldPanel(rows, profile);
+  var M = panelFold.metrics;
+
+  // Per-archetype profile: every metric read per personality, worst-case marked (*),
+  // never averaged. Exploratory metrics carry their loosened band; fairness the ruler.
+  var header = pad('Metric', 9, true) + pad('band', 12, true) +
+    panel.map(function (name) { return pad(name.slice(0, 8), 9); }).join('') + pad('spread', 8) + '  ';
+  console.log('\n' + header);
+  console.log(new Array(header.length + 1).join('-'));
+  function edge(x) { return x == null ? '·' : Math.round(x * 10) / 10; }
+  R.BANDS.forEach(function (b) {
+    var m = M[b.key];
+    if (!m) return;
+    var band = edge(m.lo) + '–' + edge(m.hi);
+    var line = pad(b.label, 9, true) + pad(band, 12, true);
+    panel.forEach(function (name) {
+      var s = m.samples.filter(function (x) { return x.name === name; })[0];
+      var cell = s ? (Math.round(s.val * 10) / 10) + (s === m.worst && s.out > 0 ? '*' : '') : '—';
+      line += pad(cell, 9);
+    });
+    line += pad(Math.round(m.spread * 10) / 10, 8) + '  ' +
+      (m.gated ? 'GATE' : m.grace !== 'hold' ? m.grace : '');
+    console.log(line);
+  });
+  console.log('\n(* = worst-case member, out of band. Mean is never taken — a candidate');
+  console.log(' that beats the panel on average can still fall to one personality.)');
+
+  // Fairness hard-gate (Red%/1st%): the only reject.
+  console.log('\nFairness gate (Red%/1st%, hard): ' + (panelFold.gate.pass ? 'PASS' : 'FAIL'));
+  panelFold.gate.failures.forEach(function (f) {
+    console.log('  ✗ ' + f.label + ' hits ' + (Math.round(f.val * 10) / 10) + ' vs ' + f.name +
+      ' (band ' + f.lo + '–' + f.hi + ') — side/first-player fairness broken, not exploration.');
+  });
+
+  // Overfit finding (read-only, no pin): exploratory metrics the panel punishes.
+  console.log('\nOverfit finding (per-archetype, read-only — smoke-check, not a gate):');
+  if (!panelFold.overfit.length) {
+    console.log('  none — no exploratory metric falls out of its loosened band on any personality.');
+  } else {
+    panelFold.overfit.forEach(function (o) {
+      console.log('  • ' + o.label + ' breaks against ' + o.name + ' (' + (Math.round(o.val * 10) / 10) +
+        ' vs band ' + edge(o.lo) + '–' + edge(o.hi) +
+        ', spread ' + (Math.round(o.spread * 10) / 10) + ') — the style this candidate does not survive.');
+    });
+    console.log('  Read as a per-member profile (personality-rubric.md): a wide spread means');
+    console.log('  no two members share a read; the member it breaks against is the gap.');
+  }
+}
+
 /* ---------------- args ---------------- */
 var args = process.argv.slice(2);
 var setArg = null, si = args.indexOf('--mapset');
@@ -273,6 +356,13 @@ if (args[0] === 'matchup') {
     if (!E.AI_PRESETS[a]) { console.log('Unknown AI "' + a + '". Known: ' + Object.keys(E.AI_PRESETS).join(', ')); process.exit(1); }
   });
   matchup(Math.max(2, +(args.filter(function (a) { return /^\d+$/.test(a); })[0]) || 12), rest[0], rest[1], rosterFor(setArg), decks);
+} else if (args[0] === 'panel') {
+  // node balance.js panel [n] [card|map|ai]  — score a candidate across the
+  // personality panel under the named loop-config profile (default card).
+  var rest = args.slice(1);
+  var pn = Math.max(2, +(rest.filter(function (a) { return /^\d+$/.test(a); })[0]) || 24);
+  var kind = rest.filter(function (a) { return !/^\d+$/.test(a); })[0] || 'card';
+  panelReport(pn, kind, rosterFor(setArg), setArg, decks);
 } else {
   var n = 24, diff = 'normal', filter = null;
   args.forEach(function (a) {
