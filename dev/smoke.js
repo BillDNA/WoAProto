@@ -67,6 +67,27 @@ realSetTimeout(function () {
   assert.ok(doc.querySelectorAll('#edShape option').length === Object.keys(win.Engine.SHAPES).length + 1,
     'editor shape dropdown = maps.js shapes + the Custom entry');
 
+  console.log('== iteration workbench shell (#139) ==');
+  doc.getElementById('btnWorkbench').click();
+  assert.ok(doc.getElementById('wbScr').classList.contains('active'), 'workbench screen shown');
+  var wbTabs = doc.querySelectorAll('#wbNav .wb-tab');
+  var wbPhases = Array.prototype.map.call(wbTabs, function (b) { return b.getAttribute('data-phase'); });
+  assert.deepStrictEqual(wbPhases, ['plan', 'run', 'results', 'trajectory'],
+    'all four phase tabs present in order (got ' + wbPhases.join(',') + ')');
+  assert.ok(doc.querySelector('#wbNav .wb-tab.sel').getAttribute('data-phase') === 'plan', 'Plan is the default phase');
+  assert.ok(doc.getElementById('wbPane-plan').style.display !== 'none' &&
+    doc.getElementById('wbPane-run').style.display === 'none', 'only the active phase pane is shown');
+  // each tab switches the shown pane and carries a labeled placeholder body
+  wbPhases.forEach(function (id) {
+    doc.querySelector('#wbNav .wb-tab[data-phase="' + id + '"]').click();
+    assert.ok(win.WB_PHASE === id && doc.getElementById('wbPane-' + id).style.display !== 'none',
+      'clicking the ' + id + ' tab shows its pane');
+    assert.ok(/Placeholder/.test(doc.getElementById('wbPane-' + id).textContent),
+      id + ' pane shows its labeled placeholder');
+  });
+  doc.getElementById('wbBack').click();
+  assert.ok(doc.getElementById('menu').classList.contains('active'), 'workbench Back returns to the menu');
+
   console.log('== AI skirmish through the DOM ==');
   doc.getElementById('btnAI').click();
   assert.ok(doc.getElementById('game').classList.contains('active'), 'game screen shown');

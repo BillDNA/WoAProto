@@ -643,3 +643,13 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
 .mapset-bar .mschip.active { border-width:2px; }
 .mapset-bar .mschip .msn { opacity:.7; font-size:11px; }
 .mapset-bar .msname { width:130px; font-size:13px; padding:2px 6px; }
+
+/* Iteration Workbench (#139) — the four-phase switcher + placeholder panes. */
+.wb-nav { display:flex; gap:6px; flex-wrap:wrap; align-items:center; justify-content:center; margin:14px 0; }
+.wb-nav .wb-tab { font-family:inherit; font-size:13px; font-weight:normal; padding:4px 18px; border:1px solid var(--brass-dark); border-radius:14px; background:rgba(255,255,255,.3); color:var(--ink); cursor:pointer; box-shadow:none; letter-spacing:.5px; }
+.wb-nav .wb-tab.sel { background:var(--brass); color:#fff; font-weight:bold; }
+.wb-nav .wb-tab b { font-weight:bold; margin-right:3px; opacity:.75; }
+.wb-nav .wb-step { opacity:.4; }
+.wb-pane { border:1px solid var(--brass-dark); border-radius:10px; padding:16px 18px; background:rgba(255,255,255,.18); min-height:120px; }
+.wb-phase-h { font-variant:small-caps; margin:0 0 6px; }
+.wb-placeholder { opacity:.75; }

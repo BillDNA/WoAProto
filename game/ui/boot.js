@@ -362,6 +362,8 @@ E.hooks.onSkirmishEnd.push(function (st) {
 });
 
 $('btnDash').onclick = openDash;
+$('btnWorkbench').onclick = function(){ show('wbScr'); renderWorkbench(); };
+$('wbBack').onclick = function(){ show('menu'); checkResume(); };
 $('dashBack').onclick = function(){ DASH.cancel = true; show('menu'); checkResume(); };
 $('dashStop').onclick = function(){ DASH.cancel = true; };
 // WOA-034: pill nav (Overview|Maps|Cards|Units|Tables) replaces the old
