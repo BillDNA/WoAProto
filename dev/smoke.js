@@ -83,7 +83,7 @@ realSetTimeout(function () {
     doc.querySelector('#wbNav .wb-tab[data-phase="' + id + '"]').click();
     assert.ok(win.WB_PHASE === id && doc.getElementById('wbPane-' + id).style.display !== 'none',
       'clicking the ' + id + ' tab shows its pane');
-    if (id !== 'plan' && id !== 'trajectory') assert.ok(/Placeholder/.test(doc.getElementById('wbPane-' + id).textContent),
+    if (id !== 'plan' && id !== 'trajectory' && id !== 'run') assert.ok(/Placeholder/.test(doc.getElementById('wbPane-' + id).textContent),
       id + ' pane shows its labeled placeholder');
   });
 
@@ -187,6 +187,50 @@ realSetTimeout(function () {
   doc.getElementById('wbQAdd').click();
   assert.ok(doc.querySelectorAll('#wbQz .wb-qrow').length === qRows.length + 1, '+ add question appends an editable row');
   doc.getElementById('wbQSave').click(); // persists through the (stubbed) server without error
+
+  console.log('== Run phase: live loop monitor + Worth-a-look anomaly panel (#144) ==');
+  doc.querySelector('#wbNav .wb-tab[data-phase="run"]').click();
+  // Idle before any loop reports: no progress, just the "no loop running" note.
+  assert.ok(/No loop running/i.test(doc.getElementById('wbRun').textContent), 'Run phase idle until the loop reports');
+  // AC1: feed a mock #138 loop status (LOOP_STEP shape) and assert progress renders.
+  win.wbSetRunStatus({
+    loopType: 'card', state: 'running', iter: 3, iters: 6, swept: 1200,
+    best: { candidate: 'cand2', score: 4.1 },
+    steps: [
+      { iter: 1, candidate: 'cand1', score: 5.2, velocity: -0.3, verdict: 'reject', reason: 'no improvement (-0.30)' },
+      { iter: 2, candidate: 'cand2', score: 4.1, velocity: 1.1, verdict: 'adopt', reason: 'healthier by 1.10' },
+      { iter: 3, candidate: 'cand3', score: 4.4, velocity: -0.3, verdict: 'reject', reason: 'no improvement (-0.30)' }
+    ],
+    signals: {
+      declines: [{ card: 'Bombardment', declined: 14, offered: 18 }, { card: 'Advance', declined: 2, offered: 20 }],
+      zeroKills: { count: 7, total: 1200 },
+      feelNotes: { count: 42 }
+    }
+  });
+  var runPane = doc.getElementById('wbPane-run').textContent;
+  assert.ok(/3 \/ 6/.test(runPane), 'Run panel shows live iteration N / total (3 / 6)');
+  assert.ok(/1200/.test(runPane), 'Run panel shows skirmishes swept');
+  assert.ok(/4\.1/.test(runPane) && /cand2/.test(runPane), 'Run panel shows the running-best candidate + score');
+  assert.ok(/cand3/.test(doc.getElementById('wbRunLog').textContent), 'log tail shows the latest LOOP_STEP rows');
+  // AC2: the Worth-a-look panel surfaces the anomaly classes from the run.
+  var anom = doc.getElementById('wbAnom').textContent;
+  assert.ok(/Bombardment/.test(anom) && /14\/18/.test(anom), 'anomaly panel flags a card declined most of its offered turns');
+  assert.ok(!/Advance/.test(anom), 'a card declined only occasionally is NOT flagged (below the majority threshold)');
+  assert.ok(/zero-kill/i.test(anom), 'anomaly panel flags zero-kill stalemates');
+  assert.ok(/feel-notes engaged/i.test(anom) && /42/.test(anom), 'anomaly panel confirms feel-notes are engaged');
+  // AC2: pause/stop control the loop through the WB_ON_CONTROL hook.
+  var controls = [];
+  win.WB_ON_CONTROL = function (action) { controls.push(action); };
+  doc.getElementById('wbPause').click();
+  doc.getElementById('wbStop').click();
+  assert.deepStrictEqual(controls, ['pause', 'stop'], 'pause + stop buttons signal the loop through WB_ON_CONTROL');
+  // A paused status flips Pause -> Resume; a terminal status disables both controls.
+  win.wbSetRunStatus({ loopType: 'card', state: 'paused', iter: 3, iters: 6, swept: 1200, signals: { feelNotes: { count: 0 } } });
+  assert.ok(/Resume/.test(doc.getElementById('wbPause').textContent), 'a paused loop offers Resume');
+  assert.ok(/feel-notes silent/i.test(doc.getElementById('wbAnom').textContent), 'a silent debrief is itself flagged worth a look');
+  win.wbSetRunStatus({ loopType: 'card', state: 'done', iter: 6, iters: 6, swept: 2400 });
+  assert.ok(doc.getElementById('wbStop').disabled && doc.getElementById('wbPause').disabled, 'a finished loop disables pause/stop');
+  win.WB_RUN_STATUS = null; // leave the pane idle for a clean re-open
 
   doc.getElementById('wbBack').click();
   assert.ok(doc.getElementById('menu').classList.contains('active'), 'workbench Back returns to the menu');
