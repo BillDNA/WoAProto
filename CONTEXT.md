@@ -84,7 +84,11 @@ A one-shot order played from the hand and then spent. Any Card may instead be sp
 _Avoid_: Order (a Card *is* the order; "order an attack" is the verb).
 
 **Deck**:
-A side's set of Cards for a Skirmish.
+A side's set of Cards for a Skirmish. Stored as refs (`{id, count, starting?}`) into the Catalog — a Deck names cards, it does not define them.
+
+**Catalog**:
+The single definition site for every Card (`game/content/cards/`, one file per card). A Card is defined once, in the Catalog; Decks, the draft pool, tournaments, and the deck editor all resolve cards from it by id. The Catalog is wider than any one Deck — a card can exist to be drafted before it ships in a playable Deck.
+_Avoid_: "card database" / "card pool" for the definition site (the **pool** is a Catalog-derived draft view, not a second store).
 
 ## Endings & scoring
 
