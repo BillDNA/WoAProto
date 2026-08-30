@@ -50,7 +50,20 @@ var WOA_QUESTIONNAIRE = (function () {
   }
   validate(QUESTIONS);
 
-  return { questions: QUESTIONS, validate: validate };
+  /* Pre-match deck-construction questionnaire (#116/#84, Track F). Rides the SAME
+     machinery as the debrief table above — an ordered {id,text} list through the
+     one validate() gate — so the #91 Plan phase edits both from one place. The
+     phase-0 drafter (dev/deckbuild.js) asks these alongside its draft; output is
+     prose for the judge role, no pin, exactly like the debrief. */
+  var DECK_CONSTRUCTION = [
+    { id: 'plan',     text: 'In one line, what is this deck trying to do?' },
+    { id: 'keystone', text: 'Which card(s) are the keystone, and why those?' },
+    { id: 'ruleBend', text: 'Did you lean on any rule-bend (anywhere placement, tie-survival, opener)?' },
+    { id: 'cut',      text: 'What did you deliberately leave out, and what did it cost you?' }
+  ];
+  validate(DECK_CONSTRUCTION);
+
+  return { questions: QUESTIONS, deckConstruction: DECK_CONSTRUCTION, validate: validate };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = WOA_QUESTIONNAIRE;

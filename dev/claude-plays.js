@@ -26,6 +26,10 @@
      --cold             one claude -p process per decision (the V0 transport)
                         instead of one persistent session per side per match
      --max-turns <n>    per-skirmish turn cap (default 60)
+     --draft            phase-0 LLM deckbuild (#116): each side drafts a deck from
+                        the deduped card pool under the 72-pt cap, onto the sideDecks
+                        path (overrides the symmetric --deck; heuristic/mock sides
+                        get a deterministic mock draft)
      --mock             deterministic fake transport (offline loop test)
      --out <file>       JSONL master log (default logs/reports/skirmish/claude-plays-log.jsonl)
      --typical-n <n>    baseline skirmishes for the typicality footer (default 40;
@@ -53,7 +57,7 @@ const path = require('path');
 function parseArgs(argv) {
   const a = { map: '', red: 'haiku', blue: 'normal', seed: 1234, maxTurns: 60, mock: false, typicalN: 40,
     effort: '', redEffort: '', blueEffort: '', deck: '', units: '', mapset: '', k: 15, fullOptions: false,
-    cold: false, matchWins: 0, out: '' };
+    cold: false, matchWins: 0, out: '', draft: false };
   for (let i = 2; i < argv.length; i++) {
     const k = argv[i];
     if (k === '--map') a.map = argv[++i] || '';
@@ -73,6 +77,7 @@ function parseArgs(argv) {
     else if (k === '--cold') a.cold = true;
     else if (k === '--match') a.matchWins = /^\d+$/.test(argv[i + 1] || '') ? +argv[++i] : 3;
     else if (k === '--mock') a.mock = true;
+    else if (k === '--draft') a.draft = true;
     else if (k === '--out') a.out = path.resolve(argv[++i]);
     else { console.error('unknown option: ' + k); process.exit(1); }
   }
@@ -608,6 +613,45 @@ async function feltNotes(args, transports, side, prompt, usage) {
   return (res.finishReason !== 'error' && res.text.trim()) ? res.text.trim() : null;
 }
 
+/* ---------- phase-0 LLM deckbuild (#116/#84, Track F) ----------
+   Each side drafts a deck from the deduped card pool under the 72-pt cap, routed
+   onto the WOA-055 sideDecks path (match.decks). LLM sides draft through their own
+   transport (prose -> JSON); heuristic/mock sides get a deterministic mock draft.
+   draftSide guarantees a legal (<= cap) deck per side. Then the pre-match
+   deck-construction questionnaire (game/content/questionnaire.js deckConstruction,
+   riding #111's table) — prose for the judge, no pin. */
+async function draftDecks(args, transports, usage) {
+  const db = require(path.join(__dirname, 'deckbuild.js'));
+  const pool = db.buildPool();
+  const mockSpecs = {
+    red:  { opening: 'deploy_cavalry',   filler: 'attack_plus1' },
+    blue: { opening: 'deploy_artillery', filler: 'forced_march' }
+  };
+  const decks = {}, construct = {};
+  for (const side of ['red', 'blue']) {
+    const spec = side === 'red' ? args.red : args.blue;
+    const useLlm = !args.mock && !HEURISTIC[spec];
+    const ask = useLlm ? async function (prompt) {
+      const res = await transports[side].send(prompt, false);
+      usage.inputTokens += res.inputTokens; usage.outputTokens += res.outputTokens;
+      return res.finishReason !== 'error' ? res.text : null;
+    } : null;
+    const r = await db.draftSide(pool, ask, mockSpecs[side]);
+    decks[side] = r.deck;
+    say(side + ' draft: ' + r.deck.cards.reduce(function (s, c) { return s + c.count; }, 0) + ' cards, ' +
+      r.legality.pts + '/' + E.DECK_POINTS_CAP + ' pts' + (r.fromMock ? ' [mock]' : '') + ' — ' + r.draft.why +
+      (r.legality.advisories.length ? '  (advisory: ' + r.legality.advisories.join('; ') + ')' : ''));
+    if (useLlm) {
+      const qs = db.CONSTRUCTION_QUESTIONS.map(function (q, i) { return (i + 1) + '. ' + q.text; }).join('\n');
+      const deckList = r.deck.cards.map(function (c) { return c.count + '× ' + c.name; }).join(', ');
+      const res = await transports[side].send('You drafted: ' + deckList + '.\nAnswer briefly in prose (no scores or numbers):\n' + qs, false);
+      usage.inputTokens += res.inputTokens; usage.outputTokens += res.outputTokens;
+      if (res.finishReason !== 'error' && res.text.trim()) { construct[side] = res.text.trim(); say(side + ' deck notes: ' + construct[side]); }
+    }
+  }
+  return { decks, construct };
+}
+
 /* ---------- the run ---------- */
 async function main() {
   const args = ARGS;
@@ -638,13 +682,16 @@ async function main() {
     (args.deck ? ' — deck "' + args.deck + '"' : '') +
     (args.mock ? '  [MOCK]' : args.cold ? '  [cold transport]' : '  [persistent sessions]'));
 
-  const match = E.newMatch({ maps: pool, seed: args.seed, firstPlayer: 'red' });
-  const matchInfo = { targetWins: target, wins: match.wins, skirmishesPlayed: 0 };
   const transports = {
     red: makeSideTransport(args, 'red', target),
     blue: makeSideTransport(args, 'blue', target)
   };
   const usage = { inputTokens: 0, outputTokens: 0 };
+  // phase-0 deckbuild (#116): draft before the match so the drafted decks ride the
+  // sideDecks path; without --draft, decks stay undefined (symmetric golden path).
+  const draftInfo = args.draft ? await draftDecks(args, transports, usage) : null;
+  const match = E.newMatch({ maps: pool, seed: args.seed, firstPlayer: 'red', decks: draftInfo ? draftInfo.decks : undefined });
+  const matchInfo = { targetWins: target, wins: match.wins, skirmishesPlayed: 0 };
 
   // per-skirmish DB rows (guarded — the transcript never depends on it).
   // Mock runs are loop tests, not data — they stay out of the DB.

@@ -359,3 +359,42 @@ test('no-op plays are logged and marked (skipped-turn report)', () => {
   assert.ok('noop' in r.cards[anyCard], 'balanceMap aggregates noop per card');
 })();
 });
+
+test('deck legality lifted into the engine (#116): E.deckProblems shared by editor + drafter', () => {
+(function () {
+  // Parity with the deck editor's old local deckProblems (dev/smoke.js pins the same
+  // strings against the browser global, which now aliases E.deckProblems).
+  assert.ok(E.deckProblems(E.CARDS).length === 0, 'the active deck validates clean');
+  var dbl = E.CARDS.map(function (c) { return Object.assign({}, c, { starting: true, count: 1 }); });
+  assert.ok(E.deckProblems(dbl).some(function (p) { return /exactly ONE/.test(p); }), 'two starting cards refused');
+  var badStep = [{ id: 'x', name: 'X', count: 16, starting: true, steps: [{ type: 'teleport' }] }];
+  assert.ok(E.deckProblems(badStep).some(function (p) { return /unknown type/.test(p); }), 'unknown step type refused');
+  var over = E.ACTIVE_DECK.cards.concat([{ id: 'gild', name: 'Gild', count: 1, steps: [{ type: 'deploy', unit: 'artillery' }, { type: 'attack', mod: 3 }] }]);
+  assert.ok(E.deckProblems(over).some(function (p) { return /over the army-points budget/.test(p); }), 'over-cap deck refused by the points gate');
+})();
+});
+
+test('phase-0 LLM deckbuild (#116/#84, Track F): legal draft on the sideDecks path', async () => {
+  var db = require('../dev/deckbuild.js');
+  var pool = db.buildPool();
+  // Pool = deduped union of every content/decks/*.js (dedupe by id).
+  var seen = {}; pool.forEach(function (c) { seen[c.id] = (seen[c.id] || 0) + 1; });
+  assert.ok(pool.length > 0 && Object.keys(seen).every(function (k) { return seen[k] === 1; }), 'pool is a deduped union of the deck files');
+
+  // Only the 72 cap gates: size/starting are advisory, an over-cap deck is rejected.
+  var over = db.assemble(pool.map(function (c) { return { id: c.id, count: 3 }; }), pool);
+  assert.ok(!db.legality(over).ok && E.deckPoints(over) > E.DECK_POINTS_CAP, 'over-cap draft fails the one hard gate');
+
+  // A mock draft produces a legal deck that seats sideDecks per side (WOA-055 path).
+  var red = await db.draftSide(pool, null, { opening: 'deploy_cavalry', filler: 'attack_plus1' });
+  var blue = await db.draftSide(pool, null, { opening: 'deploy_artillery', filler: 'forced_march' });
+  assert.ok(red.legality.ok && blue.legality.ok, 'both mock drafts are under the cap');
+  var st = E.newSkirmish(E.newMatch({ seed: 7, firstPlayer: 'red', decks: { red: red.deck, blue: blue.deck } }));
+  assert.ok(st.sideDecks && st.sideDecks.red && st.sideDecks.blue, 'drafted decks seat sideDecks');
+  var sym = E.newSkirmish(E.newMatch({ seed: 7, firstPlayer: 'red' }));
+  assert.strictEqual(sym.sideDecks, undefined, 'symmetric path stays golden (no sideDecks)');
+
+  // The construction questionnaire rides #111's machinery (ordered id+text rows).
+  assert.ok(db.CONSTRUCTION_QUESTIONS.length && db.CONSTRUCTION_QUESTIONS.every(function (q) { return q.id && q.text; }),
+    'deck-construction questionnaire is an id+text table');
+});
