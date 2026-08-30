@@ -505,3 +505,46 @@ test('phase-0 LLM deckbuild (#116/#84, Track F): legal draft on the sideDecks pa
   assert.ok(db.CONSTRUCTION_QUESTIONS.length && db.CONSTRUCTION_QUESTIONS.every(function (q) { return q.id && q.text; }),
     'deck-construction questionnaire is an id+text table');
 });
+
+test('card catalog (#159): decks are refs, catalog is the one definition site', () => {
+(function () {
+  var fs = require('fs'), path = require('path');
+  var decksDir = path.join(__dirname, 'content', 'decks');
+  // A deck FILE carries only refs {id, count, starting?} — never an inlined card
+  // def. steps/text are card-def-exclusive (a deck's own id/name are fine), so
+  // their presence is the bespoke card-data path this refactor removed: red if
+  // any survive.
+  fs.readdirSync(decksDir).filter(function (f) { return /\.js$/.test(f); }).forEach(function (f) {
+    var src = fs.readFileSync(path.join(decksDir, f), 'utf8');
+    ['"steps"', '"text"'].forEach(function (defKey) {
+      assert.ok(src.indexOf(defKey) < 0,
+        'deck file ' + f + ' inlines a card def (' + defKey + ') — decks must be refs only');
+    });
+  });
+
+  // The catalog resolves every deck ref: after content-load hydration, every
+  // deck card is a full def (has steps) and its id lives in the catalog.
+  var content = (typeof global !== 'undefined' && global.WOA_CONTENT) || {};
+  var catalogIds = {};
+  (content.cards || []).forEach(function (c) { catalogIds[c.id] = true; });
+  assert.ok((content.cards || []).length > 0, 'the catalog (WOA_CONTENT.cards) is populated');
+  var refIds = {};
+  (content.decks || []).forEach(function (d) {
+    (d.cards || []).forEach(function (c) {
+      refIds[c.id] = true;
+      assert.ok(Array.isArray(c.steps), 'deck ' + d.id + ' card ' + c.id + ' did not hydrate (no steps)');
+      assert.ok(catalogIds[c.id], 'deck ' + d.id + ' card ' + c.id + ' has no catalog def');
+    });
+  });
+
+  // The pool is genuinely wider than the shipped decks: at least one catalog card
+  // is in NO deck (AC #4 — proves a card can exist to be drafted before it ships
+  // in a playable deck). buildPool() reads the catalog, so it carries it.
+  var catalogOnly = Object.keys(catalogIds).filter(function (id) { return !refIds[id]; });
+  assert.ok(catalogOnly.length > 0, 'at least one catalog-only card exists (in no shipped deck)');
+  var pool = require('../dev/deckbuild.js').buildPool();
+  var poolIds = {}; pool.forEach(function (c) { poolIds[c.id] = true; });
+  assert.ok(catalogOnly.every(function (id) { return poolIds[id]; }),
+    'every catalog-only card appears in buildPool()');
+})();
+});

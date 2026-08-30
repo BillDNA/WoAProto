@@ -6,167 +6,52 @@
  "cards": [
   {
    "id": "deploy_inf_start",
-   "name": "Deploy Infantry",
    "count": 1,
-   "starting": true,
-   "text": "Place an Infantry unit adjacent to any controlled hex.",
-   "steps": [
-    {
-     "type": "deploy",
-     "unit": "infantry"
-    }
-   ]
+   "starting": true
   },
   {
    "id": "deploy_artillery",
-   "name": "Deploy Artillery",
-   "count": 1,
-   "text": "Place an Artillery unit adjacent to any controlled hex.",
-   "steps": [
-    {
-     "type": "deploy",
-     "unit": "artillery"
-    }
-   ]
+   "count": 1
   },
   {
    "id": "deploy_inf_trench",
-   "name": "Entrench",
-   "count": 3,
-   "text": "Place an Infantry unit adjacent to any controlled hex. Then build a trench on any controlled hex.",
-   "steps": [
-    {
-     "type": "deploy",
-     "unit": "infantry"
-    },
-    {
-     "type": "trench"
-    }
-   ]
+   "count": 3
   },
   {
    "id": "airdrop",
-   "name": "Airdrop",
-   "count": 1,
-   "noOpener": true,
-   "text": "Place an Infantry unit on any empty hex. (Never in your opening hand.)",
-   "steps": [
-    {
-     "type": "deploy",
-     "unit": "infantry",
-     "anywhere": true
-    }
-   ]
+   "count": 1
   },
   {
    "id": "conscription",
-   "name": "Conscription",
-   "count": 1,
-   "text": "Place two Infantry units adjacent to any controlled hex, in sequence.",
-   "steps": [
-    {
-     "type": "deploy",
-     "unit": "infantry"
-    },
-    {
-     "type": "deploy",
-     "unit": "infantry"
-    }
-   ]
+   "count": 1
   },
   {
-   "id": "deploy_cavalry",
-   "name": "Deploy Cavalry",
-   "count": 2,
-   "text": "Place a Cavalry unit adjacent to any controlled hex.",
-   "steps": [
-    {
-     "type": "deploy",
-     "unit": "cavalry"
-    }
-   ]
+   "id": "deploy_cav_single",
+   "count": 2
   },
   {
    "id": "attack_plus1",
-   "name": "Attack +1",
-   "count": 2,
-   "text": "Order an attack with +1 support.",
-   "steps": [
-    {
-     "type": "attack",
-     "mod": 1
-    }
-   ]
+   "count": 2
   },
   {
    "id": "mass_assault",
-   "name": "Mass Assault",
-   "count": 1,
-   "text": "Order an attack. Then order another attack.",
-   "steps": [
-    {
-     "type": "attack"
-    },
-    {
-     "type": "attack"
-    }
-   ]
+   "count": 1
   },
   {
    "id": "careful_maneuvers",
-   "name": "Careful Maneuvers",
-   "count": 1,
-   "text": "Reposition a unit. Then order an attack with −1 support.",
-   "steps": [
-    {
-     "type": "reposition"
-    },
-    {
-     "type": "attack",
-     "mod": -1
-    }
-   ]
+   "count": 1
   },
   {
    "id": "reckless_maneuvers",
-   "name": "Reckless Maneuvers",
-   "count": 1,
-   "text": "Order an attack. Then reposition a unit.",
-   "steps": [
-    {
-     "type": "attack"
-    },
-    {
-     "type": "reposition"
-    }
-   ]
+   "count": 1
   },
   {
    "id": "ordered_withdraw",
-   "name": "Ordered Withdraw",
-   "count": 1,
-   "text": "Order an attack. Your attacker survives a tie, and never advances into the hex.",
-   "steps": [
-    {
-     "type": "attack",
-     "tieSpare": true,
-     "noAdvance": true
-    }
-   ]
+   "count": 1
   },
   {
    "id": "naval_barrage",
-   "name": "Naval Barrage",
-   "count": 1,
-   "text": "Remove any trench or forest on the board (optional). Then order an attack.",
-   "steps": [
-    {
-     "type": "barrage"
-    },
-    {
-     "type": "attack"
-    }
-   ]
+   "count": 1
   }
  ]
 }

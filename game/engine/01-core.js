@@ -32,7 +32,7 @@
     global.WOA_CONTENT = { maps: [], cards: [], decks: [], mapsets: [], units: [] };
     try {
       var fs = require('fs'), path = require('path');
-      var kinds = ['decks', 'maps', 'mapsets', 'units'];
+      var kinds = ['cards', 'decks', 'maps', 'mapsets', 'units', 'commanders'];
       try { kinds = require('../content/kinds.js'); } catch (e2) { /* kinds.js is the source of truth when present */ }
       kinds.forEach(function (kind) {
         var dir = path.join(__dirname, '..', 'content', kind);
@@ -47,6 +47,32 @@
     }
   })();
   var CONTENT = global.WOA_CONTENT || { maps: [], cards: [], decks: [], mapsets: [], units: [] };
+  // Card catalog (#159): the single definition site for every card lives in
+  // content/cards/*.js (WOA_CONTENT.cards). Deck files carry only refs
+  // {id, count, starting?}; hydrate each ref into the full card def here, once,
+  // in place — so EVERY reader of WOA_CONTENT.decks (engine, deck editor, node
+  // tools) inherits fully-resolved cards without its own card-data path. An
+  // entry that already carries a def (the browser __applied override, or any
+  // hand-authored deck) passes through unchanged.
+  var CATALOG = {};
+  (CONTENT.cards || []).forEach(function (c) { if (c && c.id) CATALOG[c.id] = c; });
+  function hydrateDeck(deck) {
+    if (!deck || !Array.isArray(deck.cards)) return deck;
+    deck.cards = deck.cards.map(function (ref) {
+      var def = CATALOG[ref && ref.id];
+      var card = def ? Object.assign({}, def, ref) : ref;   // catalog def + count/starting
+      // A ref that resolved to no catalog def AND carries no inline steps is a
+      // dangling pointer — inlined defs made that impossible pre-#159; re-establish
+      // the invariant loudly instead of dealing a step-less card at play. (A full
+      // override entry — the browser __applied / custom deck — already has steps.)
+      if (!Array.isArray(card.steps))
+        throw new Error('War of Attrition: deck "' + (deck.id || '?') + '" references card "' +
+          (ref && ref.id) + '" with no catalog def (content/cards/' + (ref && ref.id) + '.js)');
+      return card;
+    });
+    return deck;
+  }
+  (CONTENT.decks || []).forEach(hydrateDeck);
   // the active deck decides the card list; fall back to any deck, then to any
   // loose WOA_CONTENT.cards (belt-and-braces for hand-authored content).
   var ACTIVE_DECK = (CONTENT.decks || []).filter(function (d) { return d && d.active; })[0] ||
