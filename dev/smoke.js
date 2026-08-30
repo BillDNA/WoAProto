@@ -78,12 +78,12 @@ realSetTimeout(function () {
   assert.ok(doc.getElementById('wbPane-plan').style.display !== 'none' &&
     doc.getElementById('wbPane-run').style.display === 'none', 'only the active phase pane is shown');
   // each tab switches the shown pane; the still-stubbed phases carry a labeled
-  // placeholder body (Plan is filled by #140, so it is exempt from that check).
+  // placeholder body (Plan #140 and Trajectory #143 are filled, so exempt).
   wbPhases.forEach(function (id) {
     doc.querySelector('#wbNav .wb-tab[data-phase="' + id + '"]').click();
     assert.ok(win.WB_PHASE === id && doc.getElementById('wbPane-' + id).style.display !== 'none',
       'clicking the ' + id + ' tab shows its pane');
-    if (id !== 'plan') assert.ok(/Placeholder/.test(doc.getElementById('wbPane-' + id).textContent),
+    if (id !== 'plan' && id !== 'trajectory') assert.ok(/Placeholder/.test(doc.getElementById('wbPane-' + id).textContent),
       id + ' pane shows its labeled placeholder');
   });
 
@@ -489,7 +489,7 @@ realSetTimeout(function () {
           if (mapRow) mapRow.click();
           assert.ok(win.DASH.mapFocus === 'Fixture Alpha' && win.DASH.view === 'maps',
             'clicking a map row sets DASH.mapFocus + switches to the Maps pill (AC2)');
-          return mapDrillSmoke(next);
+          return mapDrillSmoke(function () { workbenchTrajSmoke(next); });
         }
         if ((ow += 50) > 5000) { assert.ok(false, 'Overview never finished its seeded render'); return next(); }
         realSetTimeout(waitOverview, 50);
@@ -574,6 +574,68 @@ realSetTimeout(function () {
 
       el.querySelector('.ab-toggle [data-ab="B"]').click(); // leave the toggle back at its default for anything downstream
       next();
+    }
+
+    // Trajectory phase (#143): the champion line rendered live from SEEDED woa.db
+    // rows. jsdom has no server, so stub GET /api/runs + /api/skirmishes the way a
+    // real server+db would, seeding a parent_id chain (#110): two candidates lose
+    // to the opening incumbent 'seed' (reject), the third is adopted (parent flips
+    // to 'cand3'), a fourth is the current candidate. The panel must fold that
+    // chain into a champion line — a red test that fails if the db read/fold/plot
+    // path is dropped (the AC's guard against an all-placeholder Trajectory).
+    function workbenchTrajSmoke(next) {
+      console.log('== Trajectory phase: champion line from seeded woa.db (#143) ==');
+      function traj(map, seed, winner, parentId) {
+        return { id: seed, map: map, seed: seed, firstPlayer: 'red', winner: winner, winType: 'hq', turns: 4,
+          fsRed: 5, fsBlue: 3, firstBlood: winner, leadChanges: 1, killTail: 0, zeroKill: 0, tiebreak: 0,
+          attacks: 1, swaps: 1, marches: 0, deploys: 2, resEndRed: 0, resEndBlue: 0, parentId: parentId,
+          trace: JSON.stringify({ v: '9.9-test', map: map, seed: seed, fp: 'red', winner: winner, winType: 'hq', turns: 4,
+            trace: [{ p: 'red', id: 'c1', mode: 'normal', turn: 1, seen: 1, a: 'attack', h: '0,0', k: 1, ld: 'red' }],
+            units: { infantry: { dep: [1], atk: 1, abs: 0, kill: 1, die: 0 } } }) };
+      }
+      // Each iteration replays the SAME (map,seed) schedule [(Alpha,101),(Alpha,102)];
+      // parent_id is the reigning incumbent. Iter1/2 chain to 'seed' (rejects),
+      // iter3 also to 'seed' but the incumbent then flips to 'cand3' -> iter3 adopted,
+      // iter4 chains to 'cand3' as the current candidate.
+      var rows = [
+        traj('Alpha', 101, 'red', 'seed'), traj('Alpha', 102, 'blue', 'seed'),   // iter1 (reject)
+        traj('Alpha', 101, 'red', 'seed'), traj('Alpha', 102, 'red', 'seed'),    // iter2 (reject)
+        traj('Alpha', 101, 'red', 'seed'), traj('Alpha', 102, 'blue', 'seed'),   // iter3 (adopt)
+        traj('Alpha', 101, 'blue', 'cand3'), traj('Alpha', 102, 'blue', 'cand3') // iter4 (current)
+      ];
+      rows.forEach(function (r, i) { r.id = i + 1; }); // unique row ids (seed repeats across iterations)
+      var runsResp = [{ id: 7001, version: '9.9-test', kind: 'balance', tool: 'loop.js', redAi: 'hard', blueAi: 'hard', n: 2, label: 'loop' }];
+      win.fetch = function (url) {
+        var data = /\/api\/runs/.test(url) ? runsResp : (/\/api\/skirmishes/.test(url) ? rows : []);
+        return Promise.resolve({ ok: true, json: function () { return Promise.resolve(data); } });
+      };
+      win.renderWorkbench();
+      doc.querySelector('#wbNav .wb-tab[data-phase="trajectory"]').click();
+      var tw = 0;
+      (function waitTraj() {
+        var el = doc.getElementById('wbTraj');
+        if (el && el.querySelector('svg.wb-traj-svg path[d]') && el.querySelector('svg.wb-traj-svg path').getAttribute('d')) {
+          var svg = el.querySelector('svg.wb-traj-svg');
+          assert.ok(win.WB_PHASE === 'trajectory', 'trajectory phase active');
+          // AC1: a champion LINE from real parent_id rows — the path has >=2 points (M..L..).
+          var d = svg.querySelector('path').getAttribute('d');
+          assert.ok(/M[\d.\s]+L[\d.\s]+/.test(d), 'champion line drawn as an SVG path through >=2 adopted points (' + d.slice(0, 40) + ')');
+          // AC1: adopt/reject/iterate markers present — one dot per iteration, with
+          // rejects hollow (fill = parchment) and the champion filled.
+          var dots = svg.querySelectorAll('circle');
+          assert.ok(dots.length === 4, 'one dot per reconstructed iteration (' + dots.length + ' for 4 iterations)');
+          var hollow = Array.prototype.filter.call(dots, function (c) { return /parch/.test(c.getAttribute('fill')); });
+          assert.ok(hollow.length === 2, 'the two rejected candidates render as hollow off-line dots (' + hollow.length + ')');
+          // the stat strip surfaces the fold: iterations / adopted / rejected.
+          var txt = el.textContent;
+          assert.ok(/iterations/.test(txt) && /adopted/.test(txt) && /rejected/.test(txt), 'stat strip surfaces iterations/adopted/rejected');
+          assert.ok(/logs\/woa\.db/.test(txt), 'the panel names logs/woa.db as its live source (never a committed .md)');
+          win.fetch = function () { return Promise.resolve({ ok: true, json: function () { return Promise.resolve([]); } }); }; // restore
+          return next();
+        }
+        if ((tw += 50) > 5000) { assert.ok(false, 'Trajectory champion line never rendered'); win.fetch = function () { return Promise.resolve({ ok: true, json: function () { return Promise.resolve([]); } }); }; return next(); }
+        realSetTimeout(waitTraj, 50);
+      })();
     }
 
     function startWatch() {

@@ -687,3 +687,10 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
 .wb-qtext { flex:1 1 auto; box-sizing:border-box; font-family:inherit; font-size:13px; padding:6px 8px;
   border:1px solid var(--brass-dark); border-radius:6px; background:rgba(255,255,255,.5); color:var(--ink); resize:vertical; }
 .wb-qbtns { display:flex; gap:6px; }
+
+/* trajectory phase (#143) — champion line + stat strip */
+.wb-traj-svg { display:block; margin:4px 0; border:1px solid var(--brass-dark); border-radius:8px; background:rgba(255,255,255,.28); }
+.wb-stats { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+.wb-stat { flex:1 1 80px; border:1px solid var(--brass-dark); border-radius:6px; padding:6px 10px; background:rgba(255,255,255,.18); text-align:center; }
+.wb-stat-k { font-size:11px; font-variant:small-caps; opacity:.7; }
+.wb-stat-v { font-size:18px; font-weight:bold; }
