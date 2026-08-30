@@ -21,16 +21,18 @@ const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
 // The pre-match deck-construction questionnaire rides #111's questionnaire table.
 const CONSTRUCTION_QUESTIONS = require(path.join(__dirname, '..', 'game', 'content', 'questionnaire.js')).deckConstruction;
 
-/* POOL — deduped union of every shipped deck's cards (dedupe by id, first wins).
-   require() is cached, so calling this after claude-plays already loaded the decks
-   is a no-op re-registration; the dedupe collapses shared cards either way. */
+/* POOL — the card catalog (#159): the single definition site for every card is
+   content/cards/*.js (WOA_CONTENT.cards), which is genuinely wider than any one
+   16-card deck (it includes catalog-only cards in no shipped deck). require() is
+   cached, so re-registering after the engine already loaded the catalog is a
+   no-op; dedupe by id keeps the pool one-per-card either way. */
 function buildPool() {
-  const dir = path.join(__dirname, '..', 'game', 'content', 'decks');
+  const dir = path.join(__dirname, '..', 'game', 'content', 'cards');
   global.WOA_CONTENT = global.WOA_CONTENT || { maps: [], cards: [], decks: [], mapsets: [], units: [] };
   fs.readdirSync(dir).filter(f => /\.js$/.test(f)).sort()
     .forEach(f => { try { require(path.join(dir, f)); } catch (e) { console.error('deckbuild: skipped ' + f + ' — ' + e.message); } });
   const pool = {};
-  (global.WOA_CONTENT.decks || []).forEach(d => (d.cards || []).forEach(c => { if (!pool[c.id]) pool[c.id] = c; }));
+  (global.WOA_CONTENT.cards || []).forEach(c => { if (c && c.id && !pool[c.id]) pool[c.id] = c; });
   return Object.values(pool);
 }
 

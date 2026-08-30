@@ -58,7 +58,9 @@ var DECK = '', UNITSET = '';
   UNITSET = take('--units');
   if (!DECK && !UNITSET) return;
   global.WOA_CONTENT = { maps: [], cards: [], decks: [], mapsets: [], units: [] };
-  ['decks', 'maps', 'mapsets', 'units'].forEach(function (kind) {
+  // load every content kind (cards catalog included, #159) from the single
+  // kind-list source so the engine's deck-ref hydration finds the catalog.
+  require(path.join(__dirname, '..', 'game', 'content', 'kinds.js')).forEach(function (kind) {
     var dir = path.join(__dirname, '..', 'game', 'content', kind);
     var files = [];
     try { files = fs.readdirSync(dir).filter(function (f) { return /\.js$/.test(f); }).sort(); } catch (e) { return; }

@@ -15,7 +15,7 @@ function read(f) { return fs.readFileSync(path.join(GAME, f), 'utf8'); }
 // window.WOA_CONTENT the same way) plus the core scripts.
 function readContent() {
   var out = '';
-  ['decks', 'maps'].forEach(function (kind) {
+  ['cards', 'decks', 'maps'].forEach(function (kind) {   // cards catalog (#159): deck refs hydrate against it
     var d = path.join(GAME, 'content', kind);
     fs.readdirSync(d).filter(function (f) { return /\.js$/.test(f); }).sort().forEach(function (f) {
       out += fs.readFileSync(path.join(d, f), 'utf8') + '\n';
