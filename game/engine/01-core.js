@@ -203,6 +203,47 @@
     return deckPoints(candidate) - deckPoints(parent);
   }
 
+  /* Deck legality (#116, lifted verbatim from the deck editor's deckProblems).
+     ONE implementation of "is this deck legal", shared by the browser deck editor
+     (game/ui/deck-editor.js aliases E.deckProblems) and the phase-0 drafter
+     (dev/deckbuild.js). Returns human-readable problem strings; empty = legal.
+     The army-points cap is the load-bearing gate the drafter hard-gates on; the
+     size band + starting-card rules are the editor's stricter guardrails (the
+     drafter treats them as advisory — size/starting are soft, only the cap fences). */
+  var STEP_FLAGS = { deploy: { unit: 1, anywhere: 1 }, trench: {}, attack: { mod: 1, tieSpare: 1, noAdvance: 1 }, reposition: {}, barrage: {} };
+  function deckProblems(cards) {
+    var probs = [], ids = {}, total = 0, starting = 0;
+    cards = (cards || []).filter(function (c) { return !c.out; }); // benched cards aren't shipped or validated
+    cards.forEach(function (c, i) {
+      var tag = c.name || c.id || ('card ' + (i + 1));
+      if (!c.id || !/^[a-z0-9_]+$/i.test(c.id)) probs.push(tag + ': id must be letters/digits/underscores');
+      else if (ids[c.id]) probs.push('duplicate id "' + c.id + '"');
+      ids[c.id] = 1;
+      if (!c.name) probs.push('card ' + (i + 1) + ' needs a name');
+      var n = +c.count;
+      if (!(n >= 1) || n !== Math.floor(n)) probs.push(tag + ': count must be a whole number ≥ 1');
+      else total += n;
+      if (c.starting && n !== 1) probs.push(tag + ': the starting card must have count 1 (the engine deals exactly one)');
+      if (c.starting) starting++;
+      if (!Array.isArray(c.steps) || !c.steps.length) probs.push(tag + ': needs at least one step');
+      else c.steps.forEach(function (s, si) {
+        var stp = tag + ' step ' + (si + 1);
+        if (!s || !STEP_FLAGS[s.type]) { probs.push(stp + ': unknown type "' + (s && s.type) + '" (deploy / trench / attack / reposition / barrage)'); return; }
+        Object.keys(s).forEach(function (k) { if (k !== 'type' && !STEP_FLAGS[s.type][k]) probs.push(stp + ': "' + k + '" is not a ' + s.type + ' option'); });
+        if (s.type === 'deploy' && !UNITS[s.unit]) probs.push(stp + ': unknown unit "' + s.unit + '" (' + Object.keys(UNITS).join(' / ') + ')');
+        if (s.type === 'attack' && s.mod !== undefined && typeof s.mod !== 'number') probs.push(stp + ': mod must be a number');
+      });
+    });
+    if (starting !== 1) probs.push('exactly ONE card must be marked starting (got ' + starting + ')');
+    // WOA-036: the physical guardrail is a design band, not one exact count — every
+    // shipped deck totals 16 or 17. A custom deck must land in that same band.
+    if (total < 16 || total > 17) probs.push('the deck must total 16-17 cards (got ' + total + ') — hand-edit the deck file if you really want an exotic size');
+    // WOA #56: army-points budget ceiling — the fairness constraint. Same reject-on-validate as the size band.
+    var pts = deckPoints({ cards: cards });
+    if (pts > DECK_POINTS_CAP) probs.push('the deck is over the army-points budget (' + pts + ' > ' + DECK_POINTS_CAP + ') — cut a card or a step');
+    return probs;
+  }
+
   // tiny pure helpers used by every layer
   function other(p) { return p === 'red' ? 'blue' : 'red'; }
   function cap(p) { return p.charAt(0).toUpperCase() + p.slice(1); }
@@ -233,6 +274,7 @@
   I.deckPoints = deckPoints;
   I.deckStep = deckStep;
   I.DECK_POINTS_CAP = DECK_POINTS_CAP;
+  I.deckProblems = deckProblems;
   I.MAPS = MAPS;
   I.MAPSETS = MAPSETS;
   I.activeMapset = activeMapset;
