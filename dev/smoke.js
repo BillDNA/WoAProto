@@ -77,14 +77,56 @@ realSetTimeout(function () {
   assert.ok(doc.querySelector('#wbNav .wb-tab.sel').getAttribute('data-phase') === 'plan', 'Plan is the default phase');
   assert.ok(doc.getElementById('wbPane-plan').style.display !== 'none' &&
     doc.getElementById('wbPane-run').style.display === 'none', 'only the active phase pane is shown');
-  // each tab switches the shown pane and carries a labeled placeholder body
+  // each tab switches the shown pane; the still-stubbed phases carry a labeled
+  // placeholder body (Plan is filled by #140, so it is exempt from that check).
   wbPhases.forEach(function (id) {
     doc.querySelector('#wbNav .wb-tab[data-phase="' + id + '"]').click();
     assert.ok(win.WB_PHASE === id && doc.getElementById('wbPane-' + id).style.display !== 'none',
       'clicking the ' + id + ' tab shows its pane');
-    assert.ok(/Placeholder/.test(doc.getElementById('wbPane-' + id).textContent),
+    if (id !== 'plan') assert.ok(/Placeholder/.test(doc.getElementById('wbPane-' + id).textContent),
       id + ' pane shows its labeled placeholder');
   });
+
+  console.log('== Plan phase: loop-type picker + nudge + fixtures -> config (#140) ==');
+  doc.querySelector('#wbNav .wb-tab[data-phase="plan"]').click();
+  // AC1: three loop types (card/map/ai); one selected, the other two shown held.
+  var ltypes = doc.querySelectorAll('#wbLoopTypes .wb-ltype');
+  var ltIds = Array.prototype.map.call(ltypes, function (b) { return b.getAttribute('data-loop'); });
+  assert.deepStrictEqual(ltIds, ['card', 'map', 'ai'], 'three loop types offered in order (got ' + ltIds.join(',') + ')');
+  assert.ok(doc.querySelectorAll('#wbLoopTypes .wb-ltype.sel').length === 1, 'exactly one loop type selected');
+  doc.querySelector('#wbLoopTypes .wb-ltype[data-loop="map"]').click();
+  assert.ok(doc.querySelector('#wbLoopTypes .wb-ltype[data-loop="map"]').classList.contains('sel'), 'clicking Map selects it');
+  assert.ok(doc.querySelector('#wbLoopTypes .wb-ltype[data-loop="card"]').classList.contains('held') &&
+    doc.querySelector('#wbLoopTypes .wb-ltype[data-loop="ai"]').classList.contains('held'),
+    'the two unpicked loop types are visibly marked held');
+  assert.ok(!doc.querySelector('#wbLoopTypes .wb-ltype[data-loop="map"]').classList.contains('held'), 'the picked loop type is not held');
+  // nudge free-text + quick-chips (taste); a chip appends to the nudge.
+  var nudge = doc.getElementById('wbNudge');
+  assert.ok(nudge && nudge.tagName === 'TEXTAREA', 'opening-nudge textarea present');
+  nudge.value = 'punish turtling';
+  var chip = doc.querySelector('#wbChips .wb-chip');
+  assert.ok(!!chip, 'quick-chips present');
+  chip.click();
+  assert.ok(nudge.value.indexOf('punish turtling') === 0 && nudge.value.length > 'punish turtling'.length,
+    'clicking a chip appends its text to the nudge');
+  // Fixtures summary names the deck / mapset / panel candidates are measured on.
+  // (jsdom inlines only decks+maps content, so activeMapset() falls back to 'all'.)
+  var ms = win.Engine.activeMapset();
+  var msId = (ms && ms.id) || 'all';
+  var fx = doc.getElementById('wbFixtures').textContent;
+  assert.ok(/mapset/i.test(fx) && new RegExp(msId).test(fx) && /panel/i.test(fx) && /hard/.test(fx),
+    'Fixtures summary shows the deck / mapset (' + msId + ') / panel (got: ' + fx.slice(0, 90) + ')');
+  // AC2: Launch assembles the run-config the #138 orchestrator consumes and hands off.
+  var launched = null;
+  win.WB_ON_LAUNCH = function (cfg) { launched = cfg; };
+  doc.getElementById('wbLaunch').click();
+  assert.ok(launched && typeof launched === 'object', 'Launch hands a config object to the launch hook');
+  assert.ok(launched === win.WB_LAST_CONFIG, 'the handed config is also exposed as WB_LAST_CONFIG');
+  assert.ok(launched.loopType === 'map' && launched.profile === 'map', 'config carries the picked loop type as profile (the #138 Temperature key)');
+  assert.ok(launched.nudge === nudge.value, 'config carries the opening nudge');
+  assert.ok(launched.mapset === msId && Array.isArray(launched.panel) && launched.panel.length >= 1,
+    'config carries the Fixtures (mapset id + personality panel) runDeckLoop consumes');
+
   doc.getElementById('wbBack').click();
   assert.ok(doc.getElementById('menu').classList.contains('active'), 'workbench Back returns to the menu');
 
