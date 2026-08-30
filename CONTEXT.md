@@ -183,7 +183,7 @@ An on-demand run asking "is this *content* fair?" — distinct from the every-co
 _Avoid_: Test (the test sweep is the functional gate; the fairness sweep is the balance oracle).
 
 **AI personality**:
-A named heuristic weight-set that gives the bot a *character* — a playstyle that is fun to beat and fun to lose to — rather than maximal strength. A personality is one row of data. Distinct from a Commander trait.
+A named heuristic weight-set that gives the bot a *character* — a playstyle that is fun to beat and fun to lose to — rather than maximal strength. A personality is one row of data. Distinct from a Commander trait. "Fun to play against" is two tests it must pass, graded in `docs/rubrics/personality-rubric.md`: **Stronghold** — is it a distinct, in-theme character? — and **Punch-Out** — is it a legible, learnable puzzle you can read and beat on purpose?
 _Avoid_: Difficulty (a personality is a style, not a strength tier), Bot.
 
 **Commander trait**:
