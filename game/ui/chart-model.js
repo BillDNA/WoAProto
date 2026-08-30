@@ -221,10 +221,65 @@ var CHART_MODEL = (function () {
     return { rows: rows, hasDieT: !!(A.hasDieT || B.hasDieT) };
   }
 
+  /* ===== Trajectory pane (#143) — the loop's champion line from woa.db =====
+     THE QUESTION: is the loop getting better? Reconstructs the parent_id chain
+     (#110) a loop run persisted into logs/woa.db into per-iteration nodes, each
+     folded to its balanceScore (#83 fixed ruler, LOWER = closer to ideal). Pure
+     — a run's ORDER-BY-id skirmish rows in, display model out. */
+
+  // balanceScore 0 = every scored band ideal (#83 ruler zero) — the honest target
+  // the champion line trends toward; no per-loop target is persisted.
+  var TRAJ_TARGET = 0;
+
+  function buildTrajectoryModel(rows) {
+    rows = (rows || []).filter(function (r) { return r.parentId != null; });
+    if (!rows.length) return null;
+    // Split into iterations: a loop iteration replays the SAME (map,seed) schedule
+    // (loop.js's mapSeedBase), so a (map,seed) already seen in the current block
+    // starts the next iteration — robust to unfinished skirmishes that leave gaps.
+    // ponytail: assumes a single-personality panel (the loop default). A
+    // multi-personality panel replays each (map,seed) once per personality and
+    // over-splits into per-personality nodes — the champion line (adopt
+    // transitions) stays correct, only extra hollow dots appear.
+    var blocks = [], cur = null, seen = null;
+    rows.forEach(function (r) {
+      var key = r.map + '#' + r.seed;
+      if (!cur || seen[key]) { cur = []; seen = {}; blocks.push(cur); }
+      cur.push(r); seen[key] = 1;
+    });
+    var iters = blocks.map(function (b, j) {
+      var f = R.foldSkirmishes(b);
+      return { i: j, parentId: b[0].parentId, n: b.length, score: R.balanceScore(f.agg, f.done) };
+    });
+    // The incumbent advances only on adopt, so a candidate was adopted iff the
+    // NEXT iteration chains to a different parent. The last has no successor, so
+    // its verdict is unknown from the chain — mark it 'current' (last tried) and
+    // keep it OFF the champion line: it must never be presented as the reigning
+    // champion, since a fixed-iters loop often rejects its final candidate.
+    iters.forEach(function (t, j) {
+      t.verdict = (j === iters.length - 1) ? 'current'
+        : (iters[j + 1].parentId !== t.parentId) ? 'adopt' : 'reject';
+    });
+    // Champion line = the CONFIRMED adopted incumbents only, in order. The last
+    // confirmed champion's score is the reigning-champion figure (null if the
+    // loop adopted nothing — the true champion is 'seed', never persisted, #138).
+    var champs = iters.filter(function (t) { return t.verdict === 'adopt'; });
+    var scores = iters.map(function (t) { return t.score; });
+    return {
+      iters: iters, champs: champs, target: TRAJ_TARGET,
+      adopted: champs.length,
+      rejected: iters.filter(function (t) { return t.verdict === 'reject'; }).length,
+      championScore: champs.length ? champs[champs.length - 1].score : null,
+      loScore: Math.min.apply(null, scores.concat(TRAJ_TARGET)),
+      hiScore: Math.max.apply(null, scores.concat(TRAJ_TARGET))
+    };
+  }
+
   return { buildMapDrillModel: buildMapDrillModel,
     buildOverviewModel: buildOverviewModel, ovFmt: ovFmt, ovTrackDomain: ovTrackDomain, ovPos: ovPos, OV_PERCENT_KEYS: OV_PERCENT_KEYS,
     buildCardsModel: buildCardsModel,
-    buildUnitsModel: buildUnitsModel, unLinearDomain: unLinearDomain, unPos: unPos };
+    buildUnitsModel: buildUnitsModel, unLinearDomain: unLinearDomain, unPos: unPos,
+    buildTrajectoryModel: buildTrajectoryModel };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = CHART_MODEL;

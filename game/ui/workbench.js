@@ -58,6 +58,7 @@ function renderWorkbench() {
 
   var panes = WORKBENCH_PHASES.map(function (p) {
     var body = p.id === 'plan' ? wbPlanBody()
+      : p.id === 'trajectory' ? '<div id="wbTraj"><p class="small wb-hint">Open this phase to load the champion line from <code>logs/woa.db</code>.</p></div>'
       : '<p class="small wb-placeholder">Placeholder &mdash; a follow-on ticket fills this phase with ' + p.fills + '.</p>';
     return '<div class="wb-pane" id="wbPane-' + p.id + '"' + (p.id === WB_PHASE ? '' : ' style="display:none;"') + '>' +
       '<h3 class="wb-phase-h">' + p.n + ' &middot; ' + p.label + '</h3>' + body +
@@ -282,4 +283,75 @@ function wbGoPhase(id) {
   WORKBENCH_PHASES.forEach(function (p) {
     document.getElementById('wbPane-' + p.id).style.display = p.id === id ? '' : 'none';
   });
+  if (id === 'trajectory') wbLoadTrajectory();   // refresh the champion line from the db each open
+}
+
+/* Trajectory phase (#143) — render the loop's champion line live from
+   logs/woa.db. Picks the latest loop run (GET /api/runs), fetches its skirmish
+   rows (GET /api/skirmishes — the same read path the dashboard uses), and folds
+   the parent_id chain into the champion line. Never a committed .md. */
+function wbTrajEmpty() {
+  return '<p class="small wb-hint">No loop trajectory yet &mdash; run a Card loop (Plan &rarr; Launch) to write a ' +
+    'parent-id chain into <code>logs/woa.db</code>, then reopen this phase.</p>';
+}
+function wbLoadTrajectory() {
+  var el = document.getElementById('wbTraj');
+  if (!el || typeof fetch !== 'function') return;
+  el.innerHTML = '<p class="small wb-hint">Loading trajectory from <code>logs/woa.db</code>&hellip;</p>';
+  fetch('/api/runs').then(function (r) { return r.ok ? r.json() : []; }).then(function (runs) {
+    // Only a loop run (tool 'loop.js') writes a parent_id chain; any other run's
+    // rows are all parent_id NULL, so there is nothing to fetch or fold for them.
+    var run = (runs || []).filter(function (x) { return x.tool === 'loop.js'; })[0];
+    if (!run) { el.innerHTML = wbTrajEmpty(); return; }
+    return fetch('/api/skirmishes?run=' + run.id).then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) {
+      var model = (typeof CHART_MODEL !== 'undefined') && CHART_MODEL.buildTrajectoryModel(rows);
+      el.innerHTML = model ? wbTrajBody(model, run) : wbTrajEmpty();
+    });
+  }).catch(function () { el.innerHTML = wbTrajEmpty(); });
+}
+
+// The champion line as an SVG: solid line through adopted incumbents, hollow
+// off-line dots for rejected/parked candidates, a dashed target line at the
+// ruler zero. Mirrors dev/proto/calibration-dashboard.proto.html framing ①.
+function wbTrajSvg(m) {
+  var W = 620, H = 200, pad = { l: 40, r: 16, t: 18, b: 30 };
+  var iw = W - pad.l - pad.r, ih = H - pad.t - pad.b;
+  var xs = Math.max(1, m.iters.length - 1);
+  var lo = m.loScore, hi = m.hiScore + (m.hiScore - m.loScore) * 0.12 || 1;
+  if (hi <= lo) hi = lo + 1;
+  var X = function (i) { return pad.l + iw * (i / xs); };
+  var Y = function (s) { return pad.t + ih * (1 - (s - lo) / (hi - lo)); };
+  var champ = m.champs;
+  var path = champ.map(function (t, k) { return (k ? 'L' : 'M') + X(t.i).toFixed(1) + ' ' + Y(t.score).toFixed(1); }).join(' ');
+  var tgtY = Y(m.target);
+  var dots = m.iters.map(function (t) {
+    var solid = t.verdict === 'adopt', current = t.verdict === 'current';
+    var c = t.verdict === 'reject' ? 'var(--red)' : current ? 'var(--copper)' : 'var(--forest)';
+    return '<circle cx="' + X(t.i).toFixed(1) + '" cy="' + Y(t.score).toFixed(1) + '" r="' + (solid || current ? 5 : 4) +
+      '" fill="' + (solid || current ? c : 'var(--parch)') + '" stroke="' + c + '" stroke-width="2"/>' +
+      '<text x="' + X(t.i).toFixed(1) + '" y="' + (Y(t.score) - 10).toFixed(1) + '" text-anchor="middle" font-size="10" fill="var(--ink-soft)">' +
+      t.score.toFixed(1) + '</text>';
+  }).join('');
+  var xlabs = m.iters.map(function (t) {
+    return '<text x="' + X(t.i).toFixed(1) + '" y="' + (H - 12) + '" text-anchor="middle" font-size="10" fill="var(--ink-soft)">' + (t.i + 1) + '</text>';
+  }).join('');
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" class="wb-traj-svg" role="img" aria-label="balanceScore over loop iterations">' +
+    '<line x1="' + pad.l + '" y1="' + tgtY.toFixed(1) + '" x2="' + (W - pad.r) + '" y2="' + tgtY.toFixed(1) + '" stroke="var(--forest)" stroke-dasharray="4 4" opacity=".6"/>' +
+    '<text x="' + (W - pad.r) + '" y="' + (tgtY - 5).toFixed(1) + '" text-anchor="end" font-size="10" fill="var(--forest)">target ' + m.target + '</text>' +
+    '<path d="' + path + '" fill="none" stroke="var(--brass-dark)" stroke-width="2.5" stroke-linejoin="round"/>' +
+    dots + xlabs +
+    '<text x="' + pad.l + '" y="' + (H - 2) + '" font-size="10" fill="var(--ink-soft)">iteration &rarr;</text></svg>';
+}
+
+function wbTrajBody(m, run) {
+  var stat = function (k, v) { return '<div class="wb-stat"><div class="wb-stat-k">' + k + '</div><div class="wb-stat-v">' + v + '</div></div>'; };
+  return '<div class="small wb-hint" style="margin-bottom:6px">balanceScore &middot; the fixed ruler (#83) &middot; lower = closer to ideal (target ' + m.target + ') &middot; live from <code>logs/woa.db</code> run ' + wbEsc(String(run.id)) + '</div>' +
+    wbTrajSvg(m) +
+    '<p class="small wb-hint" style="margin-top:4px">Solid line &amp; filled dots = the <b>champion</b> (adopted incumbent). Hollow red dots = candidates the loop <b>tried and dropped</b>. Copper = the last candidate tried (verdict not in the chain).</p>' +
+    '<div class="wb-stats">' +
+      stat('iterations', m.iters.length) +
+      stat('adopted', m.adopted) +
+      stat('rejected', m.rejected) +
+      stat('champion score', m.championScore != null ? m.championScore.toFixed(1) : '&mdash;') +
+    '</div>';
 }
