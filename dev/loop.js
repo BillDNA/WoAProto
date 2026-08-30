@@ -145,6 +145,8 @@ async function runDeckLoop(opts) {
 
     var step = {
       iter: i, candidate: candidate.id, parent: parentId, fromMock: drafted.fromMock,
+      // cumulative skirmishes swept so far (candidate sweeps; the Run monitor's 'swept' stat)
+      swept: i * panel.length * maps.length * n,
       deckPoints: deckPoints, score: Math.round(swept.score * 100) / 100,
       velocity: Math.round(velocity * 100) / 100,
       gatePass: fold.gate.pass, overfit: fold.overfit.map(function (o) { return o.key; }),
@@ -181,12 +183,13 @@ if (require.main === module) {
   var profArg = opt('--profile', 'card');
   var profile = /^\s*\{/.test(profArg) ? JSON.parse(profArg) : profArg;
   var dbArg = opt('--db', null);
+  var cliDbh = dbArg ? db.open(dbArg) : undefined;  // we opened it -> we close it (below)
   var o = {
     iters: Math.max(1, +opt('--iters', 6) | 0),
     n: Math.max(2, +opt('--n', 20) | 0),
     panel: opt('--ai', 'hard').split(','),
     profile: profile,
-    dbh: dbArg ? db.open(dbArg) : undefined,
+    dbh: cliDbh,
     maps: maps
   };
   console.log('loop: ' + o.iters + ' deck iterations, ' + o.n + ' skirmishes/map/personality, panel [' +
@@ -198,6 +201,7 @@ if (require.main === module) {
       adopted: adopted, iterations: res.history.length,
       candidates: res.history.map(function (s) { return { id: s.candidate, verdict: s.verdict, score: s.score }; })
     }));
-    console.log('\n' + adopted + ' of ' + res.history.length + ' candidates adopted. Chain persisted to logs/woa.db (run ' + res.runId + ').');
+    console.log('\n' + adopted + ' of ' + res.history.length + ' candidates adopted. Chain persisted to ' + (dbArg || 'logs/woa.db') + ' (run ' + res.runId + ').');
+    if (cliDbh) db.close(cliDbh);   // runDeckLoop only auto-closes the handle it opened itself
   }).catch(function (e) { console.error(e); process.exit(1); });
 }

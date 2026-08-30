@@ -71,9 +71,10 @@ function foldLoopLine(line) {
 }
 function startLoop(cfg) {
   if (loopProc) { try { loopProc.kill('SIGKILL'); } catch (e) {} loopProc = null; }
-  var iters = Math.max(1, cfg.iters | 0) || 6;
+  var iters = Math.max(1, (cfg.iters | 0) || 6);   // missing/0 -> 6, then floor at 1
+  var n = Math.max(2, (cfg.n | 0) || 20);          // missing/0 -> 20, then floor at 2
   var args = [path.join(ROOT, '..', 'dev', 'loop.js'),
-    '--iters', String(iters), '--n', String(Math.max(2, cfg.n | 0) || 20),
+    '--iters', String(iters), '--n', String(n),
     '--ai', (cfg.panel && cfg.panel.length ? cfg.panel : ['hard']).join(','),
     // profile may be an edited Temperature object — forward it as inline JSON (loop.js parses it)
     '--profile', typeof cfg.profile === 'object' && cfg.profile ? JSON.stringify(cfg.profile) : String(cfg.profile || 'card'),
@@ -90,8 +91,9 @@ function startLoop(cfg) {
   });
   p.stderr.on('data', function () {});  // loop's own warnings — surfaced in its process, not fatal here
   p.on('close', function () {
+    if (loopProc !== p) return;  // a newer launch already replaced us — don't clobber its status
     if (loopStatus && loopStatus.state !== 'done' && loopStatus.state !== 'stopped') loopStatus.state = 'stopped';
-    if (loopProc === p) loopProc = null;
+    loopProc = null;
   });
 }
 function controlLoop(action) {

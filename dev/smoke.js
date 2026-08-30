@@ -889,6 +889,7 @@ realSetTimeout(function () {
             assert.ok(maxIter >= 2, 'Run status advanced iter 1 -> 2 (reached ' + maxIter + ')');
             assert.strictEqual(s.state, 'done', 'the 2-iteration loop reached state:done');
             assert.ok((s.steps || []).length === 2, 'both LOOP_STEP lines folded into the status (' + (s.steps || []).length + ')');
+            assert.ok((s.swept || 0) > 0, 'the swept counter advanced from the loop output (' + s.swept + ')');
             teardown();
             win.fetch = function () { return Promise.resolve({ ok: true, json: function () { return Promise.resolve([]); } }); }; // restore no-op
             return done();
