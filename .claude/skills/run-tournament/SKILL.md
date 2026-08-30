@@ -36,6 +36,15 @@ findings meant to feed `create-card`/`create-map`).
      full roster, identical numbers.)
    - `node game/balance.js matchup 16` — skill premium (stronger AI's win rate).
    - Pit personalities when relevant: `node game/balance.js matchup 16 brawler turtle`.
+   - **Panel aggregation** — to score ONE candidate (card/map/deck change) across
+     the whole personality panel instead of one matchup: `node game/balance.js
+     panel 60 [card|map|ai]`. Runs the symmetric sweep once per maps.js `ai`
+     personality, then folds worst-case per metric (never a mean): `Red%`/`1st%`
+     are hard-gated (a fairness FAIL is a reject); the loop-config profile's
+     loosened metrics surface a per-archetype **overfit finding** — the member the
+     candidate breaks against, plus the spread. Read it against
+     `docs/rubrics/personality-rubric.md` (a finding, not a score); a wide spread
+     = no two members share a read, and the member it breaks is the gap.
 2. **LLM skirmishes** (only if asked): `node dev/claude-plays.js --red haiku --blue normal
    --map <name>` per interesting map (add `--match 3` for a first-to-3 match; each
    LLM side gets one persistent session, so matches are token-cheap per skirmish).
