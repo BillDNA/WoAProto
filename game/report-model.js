@@ -452,6 +452,205 @@ var WOA_REPORT = (function () {
     return out;
   }
 
+  /* ===== Army-points calibration pass (#82 / #114, Track C of the #108 build order) =====
+     A ONE-WAY ADVISORY pass (ADR-0002): points are a descriptive yardstick, never fitted
+     to win-rate. This reads the two measured signals already in report-model — the `resid`
+     from cardRows (measured contribution − price) and the #89 phase-conditioned decline —
+     classifies each Card, folds a CONTRIBUTION-WEIGHTED capability-class signal, and proposes
+     shared `POINTS` weight moves. Two guardrails are load-bearing:
+       • a SHARED weight moves only on a consistent class signal (≥2 cards, no single card
+         dominating the class's contribution); SINGLE-card domination is a REDESIGN flag,
+         never a weight move (prune the card, don't distort the price table);
+       • `deckPoints ≤ cap` is the one HARD gate — positive moves clamp to cap headroom;
+         the Temperature (#109) supplies only SOFT velocity + direction, never a reject.
+     Engine-global-free like cardRows: the caller passes cardPoints/deckPoints facts in. */
+  var CALIB = {
+    resid: MISPRICE_RESID_PTS,   // |resid| (pts) for a Card to read mispriced (reuse the #57 anchor)
+    declineHigh: 0.6,            // decline-rate (declines/appears) at/above = heavily passed over
+    classSignal: MISPRICE_RESID_PTS, // contribution-weighted |resid| (pts) a class needs to justify a move
+    minClassCards: 2,            // a class needs ≥ this many classified cards to move (else single-card ⇒ flag)
+    soloShare: 0.6,              // one card > this share of a class's contribution ⇒ single-card domination (flag, no move)
+    stepPts: 0.5                 // base weight-move magnitude (one nudge); Temperature scales it up
+  };
+  // The loosenable axes a Temperature can widen (the scored feedsScore bands; Red%/1st% are
+  // among them but hard-gated). The accept-gate "heat" is the fraction of THESE a profile
+  // loosens — the denominator must be the full set, not the profile's own (sparse) key list.
+  var LOOSENABLE_AXES = BANDS.filter(function (b) { return b.feedsScore; }).length;
+
+  /* The POINTS levers a Card exercises, as a structural multiset {leverKey: count} —
+     the calibration's read of the pricing structure (mirrors the engine's stepPoints
+     shape: `step.<type>`, `tier.<unit>`, `mod` per |mod| point, `flag.<name>`). Counting
+     occurrences is a different fact from PRICING them (that stays the engine's one weight
+     table), so this is not a second copy of POINTS. capabilityClasses = its keys;
+     leverExposure = its count-weighted sum over a deck. */
+  function cardLevers(card) {
+    var out = {}, steps = (card && Array.isArray(card.steps)) ? card.steps : [];
+    steps.forEach(function (st) {
+      if (!st || !st.type) return;
+      out['step.' + st.type] = (out['step.' + st.type] || 0) + 1;
+      if (st.unit) out['tier.' + st.unit] = (out['tier.' + st.unit] || 0) + 1;
+      if (st.mod) out.mod = (out.mod || 0) + Math.abs(st.mod);
+      if (st.tieSpare) out['flag.tieSpare'] = (out['flag.tieSpare'] || 0) + 1;
+      if (st.noAdvance) out['flag.noAdvance'] = (out['flag.noAdvance'] || 0) + 1;
+      if (st.anywhere) out['flag.anywhere'] = (out['flag.anywhere'] || 0) + 1;
+    });
+    return out;
+  }
+
+  /* Classify ONE Card from its measured `resid` + phase-conditioned decline octiles.
+       Dominant          — out-wins its price share (resid ≥ +CALIB.resid) and players keep
+                           reaching for it (decline-rate < declineHigh).
+       Strictly-Dominated — under-delivers or unpriced-thin AND heavily declined EVEN in a
+                           LATE octile (passed over even when its timing should be right).
+       Weakly-Dominated  — under-delivers but declined only EARLY (held-value / timing —
+                           the ADR-0002 blind spot; correctly priced, just saved), or
+                           mispriced-negative without being shunned.
+       null              — no trustworthy signal.
+     octiles = the 8-count phase array (cardDeclineByOctile); absent ⇒ can't see "late",
+     so a resid-negative card is Weakly (conservative — never a redesign flag on thin data). */
+  function classifyCard(row, declineRate, octiles) {
+    declineRate = declineRate || 0;
+    var lateDeclined = !!(octiles && octiles.slice(4).some(function (n) { return n > 0; }));
+    var resid = row ? row.resid : null;
+    if (resid != null && resid >= CALIB.resid && declineRate < CALIB.declineHigh) return 'Dominant';
+    var shunned = declineRate >= CALIB.declineHigh;
+    if ((resid != null && resid <= -CALIB.resid) || shunned) {
+      return (shunned && lateDeclined) ? 'Strictly-Dominated' : 'Weakly-Dominated';
+    }
+    return null;
+  }
+
+  /* Contribution-weighted capability-class signal over the classified cards. ONLY the
+     trustworthy classes feed it — Dominant and Strictly-Dominated. Weakly-Dominated cards
+     are EXCLUDED: their negative resid is a known held-value / timing artifact (ADR-0002),
+     so folding it back into a shared move would reintroduce the very confound the class
+     quarantines. Each contributing card adds its `resid` to every POINTS lever it exercises,
+     weighted by its decisive-win contribution (hqWins, matching resid's basis; falls back to
+     plays). Returns {lever: {weightedResid, contrib, cards, topShare}} where topShare is one
+     card's share of the SIGNAL (Σ|w·resid|), not of head-count — a lone high-resid card
+     dominates the signal even with few decisive wins, and the single-card guard must see that. */
+  function capabilityClassSignal(classified) {
+    var acc = {};
+    (classified || []).forEach(function (c) {
+      if (c.class !== 'Dominant' && c.class !== 'Strictly-Dominated') return;   // Weakly excluded (timing artifact)
+      if (c.resid == null) return;
+      var w = c.hqWins || c.plays || 0; if (w <= 0) return;
+      Object.keys(c.levers).forEach(function (lever) {
+        var a = acc[lever] || (acc[lever] = { wResid: 0, contrib: 0, cards: 0, absSig: 0, topAbs: 0 });
+        var sig = Math.abs(w * c.resid);
+        a.wResid += w * c.resid; a.contrib += w; a.cards++;
+        a.absSig += sig; if (sig > a.topAbs) a.topAbs = sig;
+      });
+    });
+    var out = {};
+    Object.keys(acc).forEach(function (lever) {
+      var a = acc[lever];
+      out[lever] = { weightedResid: a.contrib ? a.wResid / a.contrib : 0, contrib: a.contrib,
+        cards: a.cards, topShare: a.absSig ? a.topAbs / a.absSig : 1 };
+    });
+    return out;
+  }
+
+  /* Count-weighted occurrences of a lever across a deck (deck.cards[].count × cardLevers). */
+  function leverExposure(deck, lever) {
+    return ((deck && deck.cards) || []).reduce(function (s, c) {
+      return s + (cardLevers(c)[lever] || 0) * (c.count == null ? 1 : c.count);
+    }, 0);
+  }
+  /* Max positive Δ a lever's weight can take before the TIGHTEST deck hits `cap` (the one
+     hard gate). deckPointsFn is the engine's E.deckPoints (kept engine-global-free). Infinity
+     when no deck exposes the lever; never negative (a maxed deck yields 0 headroom).
+     ponytail: exact only while POINTS.combo === 1.0 (deckPoints linear in each step weight).
+     A non-unit combo makes cardPoints = Σstep · nSteps^(combo−1) nonlinear in a lever's
+     weight — revisit this headroom (and the cap clamp it feeds) before tuning combo off 1.0. */
+  function pointsHeadroom(decks, lever, deckPointsFn, cap) {
+    var h = Infinity;
+    (decks || []).forEach(function (d) {
+      var ex = leverExposure(d, lever); if (!ex) return;
+      var room = (cap - deckPointsFn(d)) / ex;
+      if (room < h) h = room;
+    });
+    return h === Infinity ? Infinity : Math.max(0, h);
+  }
+
+  /* Accept gate — SOFT velocity + direction within a Temperature (#109). Direction is the
+     signal's sign; magnitude is one nudge (CALIB.stepPts) scaled up by the profile's "heat"
+     (fraction of loosened, non-hold tolerances) — a broadly-loosened Exploration temperature
+     steps bigger. Soft by construction: it only sizes a move, it never rejects (the cap does
+     that). null temperature ⇒ heat 0 ⇒ one nudge. Returns the signed magnitude. */
+  function acceptMove(dir, temperature) {
+    var tol = (temperature && temperature.tolerances) || {};
+    // Profiles are SPARSE (holds omitted), so "heat" = loosened axes / all loosenable axes,
+    // NOT / the profile's own key count (that would read 1.0 for every real profile).
+    var loosened = Object.keys(tol).filter(function (k) { return tol[k] && tol[k] !== 'hold'; }).length;
+    var heat = LOOSENABLE_AXES ? loosened / LOOSENABLE_AXES : 0;
+    var mag = CALIB.stepPts * (1 + heat);
+    return (dir >= 0 ? 1 : -1) * mag;
+  }
+
+  /* The calibration pass. Inputs (all measured, engine-global-free):
+       rows        — cardRows(...) output (carries resid / hqWins / plays per card)
+       aggById     — cardAggFromEnvelopes(...) (carries declines / appears per card)
+       octilesById — {cardId: 8-count phase array} (folded cardDeclineByOctile), optional
+       cardsById   — {cardId: card} (for cardLevers); defaults to deriving from rows if absent
+       temperature — a #109 profile (soft velocity + direction), optional
+       capHeadroom — fn(lever) → max positive Δ before the cap (from pointsHeadroom), optional
+       weightOf    — fn(lever) → the lever's current POINTS weight, so a `lower` move floors at
+                     weight 0 (a negative weight is nonsensical); optional
+       veto        — fn(lever, move) → truthy DROPS the move (LLM feels-pass; applied AFTER
+                     the math so taste can stop a move but never feeds the signal)
+     Returns { classes, redesignFlags, signal, moves }. A move is proposed only for a lever
+     with a consistent shared signal (|weightedResid| ≥ CALIB.classSignal, ≥ minClassCards,
+     no single card > soloShare of the signal). A Dominant/Strictly-Dominated card raises a
+     REDESIGN flag ONLY when NO shared move covers it — single-card domination the class
+     signal can't move (prune the card); cards that co-drive a class move are handled by the
+     move, not flagged. Positive moves clamp to cap headroom; lower moves floor at weight 0. */
+  function calibratePoints(opts) {
+    opts = opts || {};
+    var rows = opts.rows || [], aggById = opts.aggById || {}, octilesById = opts.octilesById || {};
+    var cardsById = opts.cardsById || {};
+    var classes = rows.map(function (r) {
+      var a = aggById[r.id] || {};
+      var declineRate = a.appears ? a.declines / a.appears : 0;
+      var card = cardsById[r.id] || { steps: r.steps };
+      return { id: r.id, name: r.name, resid: r.resid, hqWins: r.hqWins, plays: r.plays,
+        declineRate: +declineRate.toFixed(3), levers: cardLevers(card),
+        class: classifyCard(r, declineRate, octilesById[r.id]) };
+    });
+    var signal = capabilityClassSignal(classes);
+    var moves = [];
+    Object.keys(signal).forEach(function (lever) {
+      var s = signal[lever];
+      if (Math.abs(s.weightedResid) < CALIB.classSignal) return;      // not a strong enough class lean
+      if (s.cards < CALIB.minClassCards || s.topShare > CALIB.soloShare) return; // single-card domination ⇒ flag only
+      // resid > 0 = class UNDER-priced (out-wins its price) ⇒ raise the weight; resid < 0 ⇒ lower it.
+      var delta = acceptMove(s.weightedResid > 0 ? 1 : -1, opts.temperature);
+      if (delta > 0 && opts.capHeadroom) {
+        var room = opts.capHeadroom(lever);
+        if (room <= 0) return;                                        // no cap headroom ⇒ no move (hard gate)
+        if (delta > room) delta = room;                               // clamp positive move to the tightest deck (exact, never rounds over the cap)
+      }
+      if (delta < 0 && opts.weightOf) {
+        var floor = -opts.weightOf(lever);                            // most we can lower before weight hits 0
+        if (delta < floor) delta = floor;
+        if (delta >= 0) return;                                       // already at/over 0 ⇒ no lower move
+      }
+      moves.push({ lever: lever, delta: delta, weightedResid: +s.weightedResid.toFixed(2),
+        cards: s.cards, direction: delta >= 0 ? 'raise' : 'lower' });
+    });
+    if (opts.veto) moves = moves.filter(function (m) { return !opts.veto(m.lever, m); });
+    // Redesign flags: a Dominant/Strictly-Dominated card whose imbalance NO shared move covers.
+    var moved = {}; moves.forEach(function (m) { moved[m.lever] = true; });
+    var redesignFlags = classes.filter(function (c) {
+      if (c.class !== 'Dominant' && c.class !== 'Strictly-Dominated') return false;
+      return !Object.keys(c.levers).some(function (lever) { return moved[lever]; });   // uncovered by any class move
+    }).map(function (c) {
+      return { id: c.id, name: c.name, class: c.class, resid: c.resid, declineRate: c.declineRate,
+        reason: 'single-card ' + c.class.toLowerCase() + ', not covered by a shared class move — redesign the card, not the price' };
+    });
+    return { classes: classes, redesignFlags: redesignFlags, signal: signal, moves: moves };
+  }
+
   /* The axis-worthy card Win%: sliced to HQ-capture endings × non-simple plays only
      (pooled Win% stays off print and off the quadrant axis — see the doctrine in
      docs/report-model.md#reporting-doctrine). Returns {cardId:{plays,wins}}; pct() at
@@ -830,6 +1029,9 @@ var WOA_REPORT = (function () {
     mapScoreDumbbells: mapScoreDumbbells,
     // per-card DB-rows aggregate (cardRows-compatible) + the Win% doctrine slice
     cardAggFromEnvelopes: cardAggFromEnvelopes, cardHqWinSlice: cardHqWinSlice, cardDeclineByOctile: cardDeclineByOctile,
+    // Army-points calibration pass (#82/#114): classify → contribution-weighted class signal → cap-safe shared-weight moves
+    CALIB: CALIB, cardLevers: cardLevers, classifyCard: classifyCard, capabilityClassSignal: capabilityClassSignal,
+    leverExposure: leverExposure, pointsHeadroom: pointsHeadroom, acceptMove: acceptMove, calibratePoints: calibratePoints,
     // Cards pane: per-run per-card view + fleet-wide fire-time quartiles (many skirmishes)
     cardRunView: cardRunView, cardFleetFireTimes: cardFleetFireTimes,
     // per-unit-type aggregate (role map / breakthrough / lifespan / exchange)
