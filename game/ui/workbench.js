@@ -58,6 +58,7 @@ function renderWorkbench() {
 
   var panes = WORKBENCH_PHASES.map(function (p) {
     var body = p.id === 'plan' ? wbPlanBody()
+      : p.id === 'run' ? '<div id="wbRun">' + wbRunBody() + '</div>'
       : p.id === 'trajectory' ? '<div id="wbTraj"><p class="small wb-hint">Open this phase to load the champion line from <code>logs/woa.db</code>.</p></div>'
       : '<p class="small wb-placeholder">Placeholder &mdash; a follow-on ticket fills this phase with ' + p.fills + '.</p>';
     return '<div class="wb-pane" id="wbPane-' + p.id + '"' + (p.id === WB_PHASE ? '' : ' style="display:none;"') + '>' +
@@ -71,6 +72,7 @@ function renderWorkbench() {
     b.onclick = function () { wbGoPhase(b.getAttribute('data-phase')); };
   });
   wbWirePlan();
+  wbWireRun();
 }
 
 // The Plan pane body: loop-type picker (one iterated, two held), opening nudge +
@@ -284,6 +286,105 @@ function wbGoPhase(id) {
     document.getElementById('wbPane-' + p.id).style.display = p.id === id ? '' : 'none';
   });
   if (id === 'trajectory') wbLoadTrajectory();   // refresh the champion line from the db each open
+}
+
+/* Run phase (#144) — a live monitor for the running loop (#138). The browser has
+   no bridge to the node loop process (mirrors the launch handoff, WB_ON_LAUNCH), so
+   a follow-on server proxy tails the loop's LOOP_STEP/LOOP_RESULT stdout and calls
+   wbSetRunStatus(status); until one runs, the pane shows an idle note. The panel is a
+   pure render of that status object, so the red-test feeds it a mock (dev/smoke.js).
+   Status shape (every field optional — a partial status still renders):
+     { loopType, state:'running'|'paused'|'stopped'|'done', iter, iters, swept,
+       best:{candidate,score}, steps:[LOOP_STEP,...],
+       signals:{ declines:[{card,declined,offered}], zeroKills:{count,total}, feelNotes:{count} } } */
+var WB_RUN_STATUS = null;
+// Majority of offered turns declined = "worth a look" (the #89 declined tell).
+var WB_DECLINE_FLAG = 0.6;
+// pause/stop/resume signalled back to the loop — a hook a proxy overrides to POST the
+// control; the default just surfaces it (same posture as WB_ON_LAUNCH).
+var WB_ON_CONTROL = function (action) {
+  if (typeof toast === 'function') toast('Loop ' + action + ' requested.', 2000);
+  if (typeof console !== 'undefined') console.log('WB_CONTROL', action);
+};
+
+// Inject a fresh loop status and re-render the Run pane in place. The proxy calls
+// this per LOOP_STEP; the red-test calls it with a mock status.
+function wbSetRunStatus(status) {
+  WB_RUN_STATUS = status;
+  var el = document.getElementById('wbRun');
+  if (el) { el.innerHTML = wbRunBody(); wbWireRun(); }
+}
+
+// Classify the run signals into "worth a look" items — the tells worth catching
+// mid-run. Each item: { level:'flag'|'ok', text }. A card that declined a majority of
+// its offered turns, any zero-kill stalemate, and whether debrief feel-notes engaged.
+function wbRunAnomalies(s) {
+  var sig = (s && s.signals) || {}, out = [];
+  (sig.declines || []).forEach(function (d) {
+    if (d.offered && d.declined / d.offered >= WB_DECLINE_FLAG) {
+      out.push({ level: 'flag', text: '<b>' + wbEsc(d.card) + '</b> declined ' + d.declined + '/' + d.offered +
+        ' offered turns (' + Math.round(100 * d.declined / d.offered) + '%) — a card the AI keeps passing up' });
+    }
+  });
+  if (sig.zeroKills && sig.zeroKills.count > 0) {
+    out.push({ level: 'flag', text: sig.zeroKills.count + ' zero-kill stalemate' + (sig.zeroKills.count === 1 ? '' : 's') +
+      (sig.zeroKills.total ? ' of ' + sig.zeroKills.total + ' skirmishes' : '') + ' — games ending with nothing traded' });
+  }
+  if (sig.feelNotes) {
+    out.push(sig.feelNotes.count > 0
+      ? { level: 'ok', text: 'feel-notes engaged — ' + sig.feelNotes.count + ' debrief note' + (sig.feelNotes.count === 1 ? '' : 's') + ' captured' }
+      : { level: 'flag', text: 'feel-notes silent — the debrief is producing no notes this run' });
+  }
+  return out;
+}
+
+function wbAnomalyPanel(s) {
+  var items = wbRunAnomalies(s);
+  var body = items.length
+    ? items.map(function (a) {
+        return '<div class="wb-anom ' + a.level + '"><span class="wb-anom-dot"></span><span>' + a.text + '</span></div>';
+      }).join('')
+    : '<p class="small wb-hint">Nothing worth a look yet — no declined-card, stalemate, or silent-debrief tell so far.</p>';
+  return '<label class="small wb-lbl">Worth a look <span class="wb-hint">&mdash; anomalies auto-flagged mid-run</span></label>' +
+    '<div id="wbAnom" class="wb-anoms">' + body + '</div>';
+}
+
+// The Run pane body: progress (iteration / swept / running-best / state), pause+stop
+// controls, a tail of recent LOOP_STEP lines, and the Worth-a-look anomaly panel.
+function wbRunBody() {
+  var s = WB_RUN_STATUS;
+  if (!s) return '<p class="small wb-hint">No loop running &mdash; assemble one in <b>Plan &rarr; Launch</b>. ' +
+    'Once the loop reports, this phase tracks iteration, skirmishes swept, and the running-best, live, and flags anything worth a look.</p>';
+  var stat = function (k, v) { return '<div class="wb-stat"><div class="wb-stat-k">' + k + '</div><div class="wb-stat-v">' + v + '</div></div>'; };
+  var state = s.state || 'running';
+  var best = s.best ? s.best.score + (s.best.candidate ? ' <span class="wb-hint">' + wbEsc(s.best.candidate) + '</span>' : '') : '&mdash;';
+  var stats = '<div class="wb-stats">' +
+    stat('iteration', (s.iter != null ? s.iter : '?') + ' / ' + (s.iters != null ? s.iters : '?')) +
+    stat('swept', s.swept != null ? s.swept : '&mdash;') +
+    stat('running-best', best) +
+    stat('state', '<span class="wb-run-state ' + state + '">' + state + '</span>') +
+    '</div>';
+  var running = state === 'running' || state === 'paused';
+  var controls = '<div class="ovr-btns wb-run-ctrls">' +
+    '<button id="wbPause" type="button"' + (running ? '' : ' disabled') + '>' + (state === 'paused' ? 'Resume' : 'Pause') + '</button>' +
+    '<button id="wbStop" type="button" class="ghost"' + (running ? '' : ' disabled') + '>Stop</button></div>';
+  var steps = (s.steps || []).slice(-8).map(function (st) {
+    var v = st.verdict || '?';
+    return '<div class="wb-log-row ' + v + '"><code>iter ' + st.iter + '</code> ' + wbEsc(st.candidate || '') +
+      ' &middot; score ' + (st.score != null ? st.score : '?') +
+      (st.velocity != null ? ' &middot; vel ' + (st.velocity > 0 ? '+' : '') + st.velocity : '') +
+      ' &middot; <b class="wb-verdict">' + v + '</b>' + (st.reason ? ' <span class="wb-hint">' + wbEsc(st.reason) + '</span>' : '') + '</div>';
+  }).join('');
+  var log = '<label class="small wb-lbl">Log tail <span class="wb-hint">&mdash; latest iterations</span></label>' +
+    '<div id="wbRunLog" class="wb-log">' + (steps || '<p class="small wb-hint">No iterations reported yet.</p>') + '</div>';
+  return stats + controls + wbAnomalyPanel(s) + log;
+}
+
+function wbWireRun() {
+  var pause = document.getElementById('wbPause'), stop = document.getElementById('wbStop');
+  var st = WB_RUN_STATUS && WB_RUN_STATUS.state;
+  if (pause) pause.onclick = function () { WB_ON_CONTROL(st === 'paused' ? 'resume' : 'pause'); };
+  if (stop) stop.onclick = function () { WB_ON_CONTROL('stop'); };
 }
 
 /* Trajectory phase (#143) — render the loop's champion line live from
