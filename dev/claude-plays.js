@@ -123,7 +123,10 @@ function preloadContent(deckId, unitsId) {
   }
 }
 
-const ARGS = parseArgs(process.argv);
+// Parsed only when run as the CLI. When required as a module (dev/loop.js --llm
+// reuses makeSideTransport/draftAsk), argv is the requiring script's — parsing it
+// would reject its flags and exit — so ARGS stays empty and preload is skipped.
+const ARGS = require.main === module ? parseArgs(process.argv) : {};
 if (ARGS.deck || ARGS.units || ARGS.mapset) preloadContent(ARGS.deck, ARGS.units);
 const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
 const QUESTIONNAIRE = require(path.join(__dirname, '..', 'game', 'content', 'questionnaire.js')).questions;
@@ -416,6 +419,18 @@ function makeSideTransport(args, side, matchWins) {
   };
 }
 
+/* Adapt a side transport into the ask(prompt)->Promise<string|null> that
+   deckbuild.draftSide wants (prose reply, null on error -> mock fallback). The
+   ONE draft-transport wiring, reused by draftDecks and dev/loop.js --llm. usage
+   optional — pass the accumulator to bill draft tokens, omit it in the loop. */
+function draftAsk(transport, usage) {
+  return async function (prompt) {
+    const res = await transport.send(prompt, false);
+    if (usage) { usage.inputTokens += res.inputTokens; usage.outputTokens += res.outputTokens; }
+    return res.finishReason !== 'error' ? res.text : null;
+  };
+}
+
 /* ---------- typicality (cached per map+version+n) ---------- */
 function typicalityBaseline(map, n) {
   const key = map.name + '|' + E.VERSION + '|' + n;
@@ -631,11 +646,7 @@ async function draftDecks(args, transports, usage) {
   for (const side of ['red', 'blue']) {
     const spec = side === 'red' ? args.red : args.blue;
     const useLlm = !args.mock && !HEURISTIC[spec];
-    const ask = useLlm ? async function (prompt) {
-      const res = await transports[side].send(prompt, false);
-      usage.inputTokens += res.inputTokens; usage.outputTokens += res.outputTokens;
-      return res.finishReason !== 'error' ? res.text : null;
-    } : null;
+    const ask = useLlm ? draftAsk(transports[side], usage) : null;
     const r = await db.draftSide(pool, ask, mockSpecs[side]);
     decks[side] = r.deck;
     say(side + ' draft: ' + r.deck.cards.reduce(function (s, c) { return s + c.count; }, 0) + ' cards, ' +
@@ -868,7 +879,8 @@ async function main() {
 
 /* exported for dev/claude-plays.test.js (honesty sentinel etc.) */
 module.exports = { stateView: stateView, cardOptions: cardOptions, describeChoice: describeChoice,
-  stepHeader: stepHeader, stepChoiceList: stepChoiceList, RULES: RULES, sysPrompt: sysPrompt };
+  stepHeader: stepHeader, stepChoiceList: stepChoiceList, RULES: RULES, sysPrompt: sysPrompt,
+  makeSideTransport: makeSideTransport, draftAsk: draftAsk };
 
 if (require.main === module) {
   main().catch(function (e) { console.error(e); process.exit(1); });

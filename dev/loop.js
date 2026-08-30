@@ -19,7 +19,10 @@
  *
  * Usage: node dev/loop.js [--iters K] [--n S] [--ai P[,P2]] [--profile card] [--mapset id]
  *   node dev/loop.js --iters 6 --n 20 --ai hard --profile card
- * The red-test (node dev/loop.test.js) drives runDeckLoop directly with a mock drafter.
+ *   node dev/loop.js --iters 2 --llm sonnet          # draft candidates with the real LLM
+ * Default drafting is the deterministic mock (offline/CI). `--llm [model]` opts in to the
+ * real drafter, reusing dev/claude-plays.js's transport (no reimplementation).
+ * The red-test (node dev/loop.test.js) drives runDeckLoop directly with a mock/fake drafter.
  */
 'use strict';
 
@@ -184,16 +187,35 @@ if (require.main === module) {
   var profile = /^\s*\{/.test(profArg) ? JSON.parse(profArg) : profArg;
   var dbArg = opt('--db', null);
   var cliDbh = dbArg ? db.open(dbArg) : undefined;  // we opened it -> we close it (below)
+  // --llm [model]: draft candidates with the REAL LLM transport instead of the mock.
+  // Reuse claude-plays' makeSideTransport + draftAsk (don't reimplement); default the
+  // model when the flag is bare. Required lazily so the mock path never loads it.
+  // cold:true — each iteration is an INDEPENDENT draft, so a stateless cold call is
+  // right (a persistent session would grow tokens per iter and echo its last deck).
+  // ponytail: every iteration sends the same draftPrompt(pool), so diversity rides on
+  // model sampling; per-iteration steering is the bridge's `nudge` (#154 sibling), not here.
+  var llmIdx = args.indexOf('--llm');
+  var ask = null, askClose = null, usage = { inputTokens: 0, outputTokens: 0 };
+  if (llmIdx >= 0) {
+    var mnext = args[llmIdx + 1];
+    var model = (mnext && mnext[0] !== '-') ? mnext : 'sonnet';
+    var cp = require(path.join(__dirname, 'claude-plays.js'));
+    var transport = cp.makeSideTransport({ red: model, mock: false, cold: true, redEffort: opt('--effort', '') }, 'red', 0);
+    ask = cp.draftAsk(transport, usage);
+    askClose = transport.close;
+  }
   var o = {
     iters: Math.max(1, +opt('--iters', 6) | 0),
     n: Math.max(2, +opt('--n', 20) | 0),
     panel: opt('--ai', 'hard').split(','),
     profile: profile,
     dbh: cliDbh,
-    maps: maps
+    maps: maps,
+    ask: ask
   };
   console.log('loop: ' + o.iters + ' deck iterations, ' + o.n + ' skirmishes/map/personality, panel [' +
-    o.panel.join(', ') + '], ' + maps.length + ' maps, "' + (o.profile.name || o.profile) + '" profile\n');
+    o.panel.join(', ') + '], ' + maps.length + ' maps, "' + (o.profile.name || o.profile) + '" profile, ' +
+    (ask ? 'LLM(' + model + ')' : 'mock') + ' drafter\n');
   runDeckLoop(o).then(function (res) {
     var adopted = res.history.filter(function (s) { return s.verdict === 'adopt'; }).length;
     console.log('\nLOOP_RESULT ' + JSON.stringify({
@@ -202,6 +224,8 @@ if (require.main === module) {
       candidates: res.history.map(function (s) { return { id: s.candidate, verdict: s.verdict, score: s.score }; })
     }));
     console.log('\n' + adopted + ' of ' + res.history.length + ' candidates adopted. Chain persisted to ' + (dbArg || 'logs/woa.db') + ' (run ' + res.runId + ').');
+    if (ask) console.log('LLM draft tokens: ' + usage.inputTokens + ' in / ' + usage.outputTokens + ' out.');
     if (cliDbh) db.close(cliDbh);   // runDeckLoop only auto-closes the handle it opened itself
-  }).catch(function (e) { console.error(e); process.exit(1); });
+    if (askClose) askClose();       // close the LLM draft session, if one was opened
+  }).catch(function (e) { if (askClose) askClose(); console.error(e); process.exit(1); });
 }
