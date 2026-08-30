@@ -31,7 +31,22 @@ var WOA_QUESTIONNAIRE = (function () {
       'best play basically forced — one obvious move — or a genuine choice between real ' +
       'options? Call out the stretches that played themselves and the moments a real ' +
       'decision mattered. Talk like a playtester describing where the game made you think ' +
-      'versus where you were on autopilot — no scores or ratios, just your read.' }
+      'versus where you were on autopilot — no scores or ratios, just your read.' },
+    // Blind-spot flag (#87). One standing baseline question that lets the debrief name a
+    // thing the tooling can't currently see: an eval input the AI reasons blind to, or a
+    // balance number the reports never surface. Proposed only — a human decides whether to
+    // wire it (dev/blind-spots.js parses the tagged line, review-reports accumulates them).
+    // The tag routes the proposal: ai-input → game/engine/05-ai.js, balance-metric →
+    // report-model.js. The line format below is machine-greppable; keep the tag literal.
+    { id: 'blind-spot', text:
+      'Was there anything you clearly wanted to weigh but the game never told you, or a ' +
+      'number about balance you wish the report tracked and it does not? If so, flag ONE ' +
+      'on its own line, exactly:\n' +
+      '  BLIND-SPOT [ai-input]: <the missing thing an AI would want to weigh>\n' +
+      'or\n' +
+      '  BLIND-SPOT [balance-metric]: <the balance number the report should track>\n' +
+      'Only flag a genuinely new signal — not a rename, wrapper, or blend of things the ' +
+      'game already accounts for. If nothing is missing, write "BLIND-SPOT: none".' }
   ];
 
   /* Schema gate — throws on a malformed row so a bad edit fails loud at require()/load,
