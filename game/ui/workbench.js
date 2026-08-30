@@ -89,8 +89,36 @@ function wbPlanBody() {
     '<div id="wbChips" class="wb-chips">' + chips + '</div>' +
     '<label class="small wb-lbl">Accept settings <span class="wb-hint">&mdash; Tolerance grace per axis (click to escalate; Red%/1st% hard-gated)</span></label>' +
     '<div id="wbAccept" class="wb-accept">' + wbAcceptBody() + '</div>' +
+    '<label class="small wb-lbl">Debrief questionnaire <span class="wb-hint">&mdash; asked after every skirmish (#111)</span></label>' +
+    '<div id="wbQz" class="wb-qz">' + wbQzRows() + '</div>' +
     '<div id="wbFixtures" class="wb-fixtures small">' + wbFixturesText() + '</div>' +
     '<div class="ovr-btns"><button id="wbLaunch" type="button">Assemble &rarr; Launch</button></div>';
+}
+
+// The debrief questionnaire (game/content/questionnaire.js, #111) is editable
+// pre-run: each {id,text} row is a stable-key label + editable text. Edits live
+// in WB_QUESTIONS until saved through the server (POST /api/savequestionnaire),
+// the same write path other content/ uses. questionnaire.js is loaded as a
+// browser global here; guard so the pane still renders if it is absent.
+var WB_QUESTIONS = null;
+function wbQuestions() {
+  if (!WB_QUESTIONS) {
+    var src = (typeof WOA_QUESTIONNAIRE !== 'undefined' && WOA_QUESTIONNAIRE.questions) || [];
+    WB_QUESTIONS = src.map(function (q) { return { id: q.id, text: q.text }; });
+  }
+  return WB_QUESTIONS;
+}
+function wbEsc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function wbQzRows() {
+  var rows = wbQuestions().map(function (q, i) {
+    return '<div class="wb-qrow" data-i="' + i + '">' +
+      '<code class="wb-qid">' + wbEsc(q.id) + '</code>' +
+      '<textarea class="wb-qtext" data-i="' + i + '" rows="2">' + wbEsc(q.text) + '</textarea>' +
+      '</div>';
+  }).join('');
+  return rows +
+    '<div class="wb-qbtns"><button id="wbQAdd" type="button" class="wb-chip">+ add question</button>' +
+    '<button id="wbQSave" type="button" class="wb-chip">Save questionnaire</button></div>';
 }
 
 // Resolve the profiles authority (temperatures.js → WOA_TEMPERATURES) + the band
@@ -169,6 +197,33 @@ function wbWirePlan() {
   });
   wbWireAccept();
   document.getElementById('wbLaunch').onclick = wbLaunch;
+  wbWireQz();
+}
+
+// Wire the questionnaire rows (re-called after add, which re-renders #wbQz).
+function wbWireQz() {
+  document.querySelectorAll('#wbQz .wb-qtext').forEach(function (ta) {
+    ta.oninput = function () { wbQuestions()[+ta.getAttribute('data-i')].text = ta.value; };
+  });
+  document.getElementById('wbQAdd').onclick = function () {
+    var qs = wbQuestions();
+    var used = {}; qs.forEach(function (q) { used[q.id] = true; });
+    var n = qs.length + 1; while (used['q' + n]) n++; // skip ids already in use (post-reload safety)
+    qs.push({ id: 'q' + n, text: '' });
+    document.getElementById('wbQz').innerHTML = wbQzRows();
+    wbWireQz();
+  };
+  document.getElementById('wbQSave').onclick = wbSaveQz;
+}
+
+// Persist the edited questionnaire through the server (mirrors savedeck/savemap):
+// the server rewrites content/questionnaire.js's QUESTIONS rows in place.
+function wbSaveQz() {
+  var qs = wbQuestions().filter(function (q) { return q.text.trim(); });
+  if (typeof api !== 'function') return;
+  api('savequestionnaire', { questions: qs })
+    .then(function () { if (typeof toast === 'function') toast('Debrief questionnaire saved (' + qs.length + ' questions).', 2500); })
+    .catch(function (e) { if (typeof toast === 'function') toast('Save failed — ' + e.message, 3500); });
 }
 
 // Pick the iterated loop type; the other two flip to `held`.

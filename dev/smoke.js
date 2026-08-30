@@ -166,6 +166,28 @@ realSetTimeout(function () {
   assert.ok(!('red' in launched.profile.tolerances) && !('first' in launched.profile.tolerances),
     'fairness axes (Red%/1st%) never loosen into the config');
 
+  console.log('== Plan phase: debrief questionnaire editor (#142) ==');
+  // AC1/2: the #111 questionnaire's entries (feel + reflex) render as editable
+  // rows pre-run, not hardcoded prose — one row per WOA_QUESTIONNAIRE.questions.
+  assert.ok(win.WOA_QUESTIONNAIRE && win.WOA_QUESTIONNAIRE.questions.length,
+    'questionnaire.js loaded as a browser global');
+  var qRows = doc.querySelectorAll('#wbQz .wb-qrow');
+  assert.ok(qRows.length === win.WOA_QUESTIONNAIRE.questions.length,
+    'editor lists every questionnaire entry (' + qRows.length + ' rows for ' + win.WOA_QUESTIONNAIRE.questions.length + ' questions)');
+  var qIds = Array.prototype.map.call(doc.querySelectorAll('#wbQz .wb-qid'), function (c) { return c.textContent; });
+  assert.ok(qIds.indexOf('feel') >= 0 && qIds.indexOf('reflex') >= 0,
+    'feel + reflex entries present as rows (got ' + qIds.join(',') + ')');
+  var qText = doc.querySelector('#wbQz .wb-qtext');
+  assert.ok(qText && qText.tagName === 'TEXTAREA' && qText.value.trim(), 'each entry is an editable text field, not fixed prose');
+  // editing a row updates the in-memory model that Save posts to the server.
+  qText.value = 'edited question text';
+  qText.dispatchEvent(new win.Event('input', { bubbles: true }));
+  assert.ok(win.WB_QUESTIONS[0].text === 'edited question text', 'editing a row updates the questionnaire model');
+  // + add question appends an editable row.
+  doc.getElementById('wbQAdd').click();
+  assert.ok(doc.querySelectorAll('#wbQz .wb-qrow').length === qRows.length + 1, '+ add question appends an editable row');
+  doc.getElementById('wbQSave').click(); // persists through the (stubbed) server without error
+
   doc.getElementById('wbBack').click();
   assert.ok(doc.getElementById('menu').classList.contains('active'), 'workbench Back returns to the menu');
 
