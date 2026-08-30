@@ -89,6 +89,11 @@ realSetTimeout(function () {
 
   console.log('== Plan phase: loop-type picker + nudge + fixtures -> config (#140) ==');
   doc.querySelector('#wbNav .wb-tab[data-phase="plan"]').click();
+  // #141 accept-settings pre-loads the picked loop type's default profile. On open the
+  // loop type is Card, whose default loosens `swings` (Map's default does not).
+  var acc0 = doc.getElementById('wbAccept');
+  assert.ok(acc0 && acc0.querySelectorAll('.wb-tol').length > 0, 'accept-settings panel is populated on the Plan phase');
+  assert.ok(acc0.querySelector('button.wb-tol[data-metric="swings"]'), 'Card profile pre-loaded (its swings Tolerance is present)');
   // AC1: three loop types (card/map/ai); one selected, the other two shown held.
   var ltypes = doc.querySelectorAll('#wbLoopTypes .wb-ltype');
   var ltIds = Array.prototype.map.call(ltypes, function (b) { return b.getAttribute('data-loop'); });
@@ -100,6 +105,33 @@ realSetTimeout(function () {
     doc.querySelector('#wbLoopTypes .wb-ltype[data-loop="ai"]').classList.contains('held'),
     'the two unpicked loop types are visibly marked held');
   assert.ok(!doc.querySelector('#wbLoopTypes .wb-ltype[data-loop="map"]').classList.contains('held'), 'the picked loop type is not held');
+
+  console.log('== Plan phase: accept-settings Temperature slot (#141) ==');
+  // AC1: switching loop type re-loads the accept-settings default. Map loosens `control`
+  // (Card does not) and drops Card's `swings`.
+  var acc = doc.getElementById('wbAccept');
+  assert.ok(acc.querySelector('button.wb-tol[data-metric="control"]') && !acc.querySelector('button.wb-tol[data-metric="swings"]'),
+    'picking Map re-loads its default profile (control in, swings out)');
+  // AC2: Red% / 1st% shown hard-gated — locked at hold, never a clickable escalation.
+  var gatedRows = acc.querySelectorAll('.wb-tol.gated');
+  assert.ok(gatedRows.length === 2, 'two hard-gated fairness rows shown (got ' + gatedRows.length + ')');
+  Array.prototype.forEach.call(gatedRows, function (r) {
+    assert.ok(/hard-gated/.test(r.textContent) && r.tagName !== 'BUTTON', 'fairness row is locked (' + r.textContent.trim() + ')');
+  });
+  assert.ok(!acc.querySelector('button.wb-tol[data-metric="red"]') && !acc.querySelector('button.wb-tol[data-metric="first"]'),
+    'Red% / 1st% are never rendered as loosenable buttons');
+  // Each loosenable Tolerance renders its grace class; escalate one per-axis (nudge -> bold).
+  var tolBtns = acc.querySelectorAll('button.wb-tol[data-metric]');
+  assert.ok(tolBtns.length >= 1, 'loosenable Tolerance rows rendered');
+  Array.prototype.forEach.call(tolBtns, function (b) {
+    assert.ok(/hold|nudge|bold|bypass/.test(b.textContent), b.getAttribute('data-metric') + ' Tolerance shows its grace class');
+  });
+  var hq = acc.querySelector('button.wb-tol[data-metric="hq"]');
+  assert.ok(hq && /nudge/.test(hq.textContent), 'HQ Tolerance pre-loads the profile default (nudge)');
+  hq.click();
+  assert.ok(/bold/.test(doc.getElementById('wbAccept').querySelector('button.wb-tol[data-metric="hq"]').textContent),
+    'clicking a Tolerance escalates its grace one step (nudge -> bold)');
+
   // nudge free-text + quick-chips (taste); a chip appends to the nudge.
   var nudge = doc.getElementById('wbNudge');
   assert.ok(nudge && nudge.tagName === 'TEXTAREA', 'opening-nudge textarea present');
@@ -122,10 +154,17 @@ realSetTimeout(function () {
   doc.getElementById('wbLaunch').click();
   assert.ok(launched && typeof launched === 'object', 'Launch hands a config object to the launch hook');
   assert.ok(launched === win.WB_LAST_CONFIG, 'the handed config is also exposed as WB_LAST_CONFIG');
-  assert.ok(launched.loopType === 'map' && launched.profile === 'map', 'config carries the picked loop type as profile (the #138 Temperature key)');
+  assert.ok(launched.loopType === 'map' && launched.profile && launched.profile.step === 'map',
+    'config carries the picked loop type (loopType string + the profile Temperature, #138)');
   assert.ok(launched.nudge === nudge.value, 'config carries the opening nudge');
   assert.ok(launched.mapset === msId && Array.isArray(launched.panel) && launched.panel.length >= 1,
     'config carries the Fixtures (mapset id + personality panel) runDeckLoop consumes');
+  // #141: the edited grace classes flow into the run config's Temperature (profile is
+  // the edited object runDeckLoop consumes), and fairness axes never loosen into it.
+  assert.ok(launched.profile && launched.profile.tolerances, 'config profile is the edited Temperature object');
+  assert.ok(launched.profile.tolerances.hq === 'bold', 'the per-axis escalation (HQ -> bold) flows into the run config');
+  assert.ok(!('red' in launched.profile.tolerances) && !('first' in launched.profile.tolerances),
+    'fairness axes (Red%/1st%) never loosen into the config');
 
   doc.getElementById('wbBack').click();
   assert.ok(doc.getElementById('menu').classList.contains('active'), 'workbench Back returns to the menu');

@@ -29,7 +29,11 @@ var WB_LOOP_TYPES = [
 ];
 // Opening-nudge quick-chips — taste presets that append to the free-text nudge.
 var WB_CHIPS = ['shorten games', 'punish turtling', 'reward aggression', 'make cavalry matter', 'tighten first-mover edge'];
-var WB_PLAN = { loopType: 'card', panel: ['hard'], iters: 6, n: 20 };
+// `temp` = the working Temperature the operator edits before a run — a deep copy
+// of the picked loop type's default profile (game/content/temperatures.js), loaded
+// by wbLoadProfile on render and on every loop-type switch. Sparse {key: grace};
+// an omitted key ⇒ hold, the fixed ruler.
+var WB_PLAN = { loopType: 'card', panel: ['hard'], iters: 6, n: 20, temp: null };
 var WB_LAST_CONFIG = null;
 // Launch handoff hook — the browser has no bridge to the node loop engine, so the
 // real, testable handoff is the assembled run-config object. A follow-on server
@@ -46,6 +50,7 @@ var WB_ON_LAUNCH = function (cfg) {
 // rebuilt away.
 function renderWorkbench() {
   WB_PHASE = 'plan';
+  wbLoadProfile(WB_PLAN.loopType);   // reset the accept-settings default on open (predictable re-entry)
   var tabs = WORKBENCH_PHASES.map(function (p) {
     return '<button class="wb-tab' + (p.id === WB_PHASE ? ' sel' : '') +
       '" data-phase="' + p.id + '" type="button"><b>' + p.n + '</b> ' + p.label + '</button>';
@@ -82,8 +87,65 @@ function wbPlanBody() {
     '<label class="small wb-lbl" for="wbNudge">Opening nudge <span class="wb-hint">&mdash; where taste enters the loop</span></label>' +
     '<textarea id="wbNudge" class="wb-nudge" rows="2" placeholder="e.g. reward pushing the centre, punish turtling"></textarea>' +
     '<div id="wbChips" class="wb-chips">' + chips + '</div>' +
+    '<label class="small wb-lbl">Accept settings <span class="wb-hint">&mdash; Tolerance grace per axis (click to escalate; Red%/1st% hard-gated)</span></label>' +
+    '<div id="wbAccept" class="wb-accept">' + wbAcceptBody() + '</div>' +
     '<div id="wbFixtures" class="wb-fixtures small">' + wbFixturesText() + '</div>' +
     '<div class="ovr-btns"><button id="wbLaunch" type="button">Assemble &rarr; Launch</button></div>';
+}
+
+// Resolve the profiles authority (temperatures.js → WOA_TEMPERATURES) + the band
+// mechanism (report-model → WOA_REPORT). Both load before this in index.html; a
+// browser-order slip degrades the panel to a note rather than throwing.
+function wbTemps() { return (typeof WOA_TEMPERATURES !== 'undefined') ? WOA_TEMPERATURES : null; }
+
+// Deep-copy the default profile for a loop type into WB_PLAN.temp (the working
+// Temperature). Fairness axes (Red%/1st%) are never in a default profile's
+// tolerances — they stay held, rendered as a locked gate below.
+function wbLoadProfile(id) {
+  var T = wbTemps(), p = T && T.profiles[id];
+  WB_PLAN.temp = p ? { name: p.name, step: p.step, tolerances: Object.assign({}, p.tolerances) } : null;
+}
+
+// The accept-settings rows: the hard-gated fairness pair (locked at hold) then one
+// clickable pill per loosenable Tolerance, showing its grace class.
+function wbAcceptBody() {
+  var T = wbTemps(), R = (typeof WOA_REPORT !== 'undefined') ? WOA_REPORT : null;
+  if (!T || !WB_PLAN.temp) return '<p class="small wb-hint">Temperature profiles unavailable.</p>';
+  function label(k) { var b = R && R.bands(k, 'hold'); return (b && b.label) || k; }
+  var rows = T.HARD_GATED.map(function (k) {
+    return '<div class="wb-tol gated" data-metric="' + k + '"><b>' + label(k) +
+      '</b><span class="wb-grace">hold &middot; hard-gated</span></div>';
+  });
+  var tol = WB_PLAN.temp.tolerances;
+  Object.keys(tol).forEach(function (k) {
+    rows.push('<button type="button" class="wb-tol" data-metric="' + k + '"><b>' + label(k) +
+      '</b><span class="wb-grace">' + tol[k] + '</span></button>');
+  });
+  return rows.join('');
+}
+
+// Escalate one loosenable Tolerance one step around the grace cycle
+// (hold→nudge→bold→bypass→hold). Fairness axes are locked out — they are not
+// buttons and are refused here too.
+function wbCycleTol(k) {
+  var T = wbTemps(), tol = WB_PLAN.temp && WB_PLAN.temp.tolerances;
+  if (!T || !tol || T.HARD_GATED.indexOf(k) >= 0) return;
+  var order = T.GRACE, i = order.indexOf(tol[k]);
+  tol[k] = order[(i + 1) % order.length];
+  wbRenderAccept();
+}
+
+function wbWireAccept() {
+  document.querySelectorAll('#wbAccept button.wb-tol').forEach(function (b) {
+    b.onclick = function () { wbCycleTol(b.getAttribute('data-metric')); };
+  });
+}
+
+function wbRenderAccept() {
+  var el = document.getElementById('wbAccept');
+  if (!el) return;
+  el.innerHTML = wbAcceptBody();
+  wbWireAccept();
 }
 
 // Fixtures = the deck / mapset / personality panel a candidate is measured on,
@@ -105,6 +167,7 @@ function wbWirePlan() {
       ta.value = (ta.value.trim() ? ta.value.trim() + '; ' : '') + b.getAttribute('data-chip');
     };
   });
+  wbWireAccept();
   document.getElementById('wbLaunch').onclick = wbLaunch;
 }
 
@@ -112,6 +175,8 @@ function wbWirePlan() {
 function wbPickLoop(id) {
   if (!WB_LOOP_TYPES.some(function (t) { return t.id === id; })) return;
   WB_PLAN.loopType = id;
+  wbLoadProfile(id);       // re-load the accept-settings default for the newly picked loop type
+  wbRenderAccept();
   WB_LOOP_TYPES.forEach(function (t) {
     var b = document.querySelector('#wbLoopTypes .wb-ltype[data-loop="' + t.id + '"]');
     var held = t.id !== id;
@@ -121,17 +186,24 @@ function wbPickLoop(id) {
   });
 }
 
-// Assemble the run-config the #138 orchestrator consumes. Keys mirror dev/loop.js's
-// CLI flags — its process boundary — not runDeckLoop's internal opts: `profile`
-// (=--profile, the picked loopType), `mapset` id (=--mapset, loop.js expands it to
-// the maps array itself), `panel` (=--ai), `iters`/`n`. `nudge` is the taste the LLM
-// drafter reads; `deck` records the active-deck fixture a candidate is measured
-// against (loop.js has no --deck — the launching proxy applies it before the run).
+// Assemble the run-config the #138 orchestrator consumes. Keys mostly mirror
+// dev/loop.js's CLI flags — its process boundary: `mapset` id (=--mapset, loop.js
+// expands it to the maps array itself), `panel` (=--ai), `iters`/`n`. `profile` is
+// the exception — it carries the EDITED Temperature OBJECT (not the --profile key
+// string), which runDeckLoop's opts.profile accepts directly, so a launching proxy
+// forwards it as-is (the CLI --profile can't express an escalated profile). `loopType`
+// keeps the picked-type string for display. `nudge` is the taste the LLM drafter
+// reads; `deck` records the active-deck fixture a candidate is measured against
+// (loop.js has no --deck — the launching proxy applies it before the run).
 function wbBuildConfig() {
   var ms = E.activeMapset() || {};
   return {
     loopType: WB_PLAN.loopType,
-    profile: WB_PLAN.loopType,
+    // `profile` carries the operator's EDITED Temperature object (name/step/tolerances)
+    // — runDeckLoop's opts.profile accepts an object directly (dev/loop.js), so the
+    // per-axis escalations flow straight into the run. Falls back to the loop-type key
+    // string only if the profiles authority failed to load (browser-order slip).
+    profile: WB_PLAN.temp ? { name: WB_PLAN.temp.name, step: WB_PLAN.temp.step, tolerances: Object.assign({}, WB_PLAN.temp.tolerances) } : WB_PLAN.loopType,
     nudge: (document.getElementById('wbNudge').value || '').trim(),
     deck: (E.ACTIVE_DECK && E.ACTIVE_DECK.id) || 'seed',
     mapset: ms.id || 'all',
