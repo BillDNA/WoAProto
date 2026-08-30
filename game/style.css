@@ -672,3 +672,12 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
   background:rgba(255,255,255,.3); color:var(--ink); cursor:pointer; box-shadow:none; }
 .wb-fixtures { padding:8px 10px; border:1px dashed var(--brass-dark); border-radius:6px; background:rgba(255,255,255,.12); margin-bottom:12px; }
 .wb-fixtures code { font-size:12px; }
+
+/* Accept settings (#141) — Temperature/Tolerance grace per axis. */
+.wb-accept { display:flex; flex-wrap:wrap; gap:6px; margin:2px 0 14px; }
+.wb-tol { font-family:inherit; font-size:12px; display:flex; align-items:center; gap:8px; padding:4px 10px;
+  border:1px solid var(--brass-dark); border-radius:6px; background:rgba(255,255,255,.3); color:var(--ink);
+  cursor:pointer; box-shadow:none; }
+.wb-tol.gated { cursor:default; opacity:.6; background:rgba(255,255,255,.12); border-style:dashed; }
+.wb-tol b { font-variant:small-caps; letter-spacing:.5px; }
+.wb-grace { font-size:11px; opacity:.8; font-variant:small-caps; }
