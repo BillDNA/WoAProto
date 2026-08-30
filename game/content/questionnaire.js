@@ -15,13 +15,23 @@
    produced. The per-MATCH arc note ("could you adapt between skirmishes?") is separate:
    it reads the whole set, not one journal, and stays in claude-plays.js.
 
-   Loaded via require() by dev/claude-plays.js (module.exports.questions); the #91 proto
-   hand-mirrors these rows since it is a classic-script mock with no require(). The IIFE
-   shape mirrors temperatures.js — this file is not pulled into any browser script chain. */
+   Loaded via require() by dev/claude-plays.js (module.exports.questions) AND as a classic
+   <script> in game/index.html — the IIFE leaves WOA_QUESTIONNAIRE as a browser global so the
+   #91 Plan phase editor (game/ui/workbench.js) reads + edits these rows and saves them back
+   through POST /api/savequestionnaire, which rewrites the QUESTIONS block below in place. */
 
 var WOA_QUESTIONNAIRE = (function () {
   // Ordered id + text rows. `feel` is the existing felt-sense read; `reflex` is the
   // #85 interesting-decisions / autopilot read (draft wording from the resolution).
+  // NOTE: keep row docs OUT of the array literal — POST /api/savequestionnaire (#142)
+  // rewrites the whole QUESTIONS array below in place, so any comment inside the
+  // array is stripped on the first save from the Plan-phase editor.
+  //   `blind-spot` (#87): a standing baseline question that lets the debrief name a thing
+  //   the tooling can't see — an eval input the AI reasons blind to, or a balance number
+  //   the reports never surface. Proposed only; a human decides whether to wire it
+  //   (dev/blind-spots.js parses the tagged line, review-reports accumulates them). The tag
+  //   routes the proposal: ai-input → game/engine/05-ai.js, balance-metric → report-model.js.
+  //   The line format in its text is machine-greppable; keep the tag literal.
   var QUESTIONS = [
     { id: 'feel', text:
       'How did the game feel to play — what felt strong, what felt weak, what felt ' +
@@ -32,12 +42,6 @@ var WOA_QUESTIONNAIRE = (function () {
       'options? Call out the stretches that played themselves and the moments a real ' +
       'decision mattered. Talk like a playtester describing where the game made you think ' +
       'versus where you were on autopilot — no scores or ratios, just your read.' },
-    // Blind-spot flag (#87). One standing baseline question that lets the debrief name a
-    // thing the tooling can't currently see: an eval input the AI reasons blind to, or a
-    // balance number the reports never surface. Proposed only — a human decides whether to
-    // wire it (dev/blind-spots.js parses the tagged line, review-reports accumulates them).
-    // The tag routes the proposal: ai-input → game/engine/05-ai.js, balance-metric →
-    // report-model.js. The line format below is machine-greppable; keep the tag literal.
     { id: 'blind-spot', text:
       'Was there anything you clearly wanted to weigh but the game never told you, or a ' +
       'number about balance you wish the report tracked and it does not? If so, flag ONE ' +
@@ -67,9 +71,10 @@ var WOA_QUESTIONNAIRE = (function () {
 
   /* Pre-match deck-construction questionnaire (#116/#84, Track F). Rides the SAME
      machinery as the debrief table above — an ordered {id,text} list through the
-     one validate() gate — so the #91 Plan phase edits both from one place. The
-     phase-0 drafter (dev/deckbuild.js) asks these alongside its draft; output is
-     prose for the judge role, no pin, exactly like the debrief. */
+     one validate() gate. The phase-0 drafter (dev/deckbuild.js) asks these alongside
+     its draft; output is prose for the judge role, no pin, exactly like the debrief.
+     (The #142 Plan-phase editor edits the debrief QUESTIONS above; these rows are
+     still hand-edited here — no editor surface exposes them yet.) */
   var DECK_CONSTRUCTION = [
     { id: 'plan',     text: 'In one line, what is this deck trying to do?' },
     { id: 'keystone', text: 'Which card(s) are the keystone, and why those?' },

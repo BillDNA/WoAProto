@@ -672,3 +672,10 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
   background:rgba(255,255,255,.3); color:var(--ink); cursor:pointer; box-shadow:none; }
 .wb-fixtures { padding:8px 10px; border:1px dashed var(--brass-dark); border-radius:6px; background:rgba(255,255,255,.12); margin-bottom:12px; }
 .wb-fixtures code { font-size:12px; }
+/* Debrief-questionnaire editor (#142) — id label + editable text per row. */
+.wb-qz { display:flex; flex-direction:column; gap:8px; margin:2px 0 12px; }
+.wb-qrow { display:flex; gap:8px; align-items:flex-start; }
+.wb-qid { flex:0 0 72px; font-size:11px; padding-top:6px; opacity:.8; overflow-wrap:anywhere; }
+.wb-qtext { flex:1 1 auto; box-sizing:border-box; font-family:inherit; font-size:13px; padding:6px 8px;
+  border:1px solid var(--brass-dark); border-radius:6px; background:rgba(255,255,255,.5); color:var(--ink); resize:vertical; }
+.wb-qbtns { display:flex; gap:6px; }

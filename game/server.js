@@ -171,6 +171,38 @@ var ROUTES = {
       json(res, 200, { ok: true });
     });
   },
+  'POST /api/savequestionnaire': function (req, res, body) {
+    // The Plan phase's debrief-questionnaire editor (#142): rewrite just the
+    // QUESTIONS rows of content/questionnaire.js in place, leaving the header,
+    // validate() gate, DECK_CONSTRUCTION rows, and exports untouched. Mirrors the
+    // questionnaire.js validate() so a bad edit fails loud here, not at debrief time.
+    var qs = body.questions;
+    if (!Array.isArray(qs) || !qs.length) return json(res, 400, { error: 'need a non-empty questions list' });
+    var seen = {};
+    for (var i = 0; i < qs.length; i++) {
+      var q = qs[i];
+      if (!q || !q.id || typeof q.text !== 'string' || !q.text.trim())
+        return json(res, 400, { error: 'row ' + i + ' needs a non-empty id + text' });
+      if (seen[q.id]) return json(res, 400, { error: 'duplicate id "' + q.id + '"' });
+      seen[q.id] = true;
+    }
+    var file = path.join(CONTENT_DIR, 'questionnaire.js');
+    fs.readFile(file, 'utf8', function (rerr, src) {
+      if (rerr) return json(res, 500, { error: 'read failed' });
+      // Anchor to the line-start declaration (2-space indent) so a comment that
+      // merely mentions "var QUESTIONS = [" can't be matched instead.
+      var marker = '\n  var QUESTIONS = [', tail = '\n  ];';
+      var s = src.indexOf(marker);
+      var e = s < 0 ? -1 : src.indexOf(tail, s + marker.length);
+      if (s < 0 || e < 0) return json(res, 500, { error: 'questionnaire.js: QUESTIONS block not found' });
+      var rows = qs.map(function (r) { return '    { id: ' + JSON.stringify(r.id) + ', text: ' + JSON.stringify(r.text) + ' }'; }).join(',\n');
+      var out = src.slice(0, s) + marker + '\n' + rows + tail + src.slice(e + tail.length);
+      fs.writeFile(file, out, function (werr) {
+        if (werr) return json(res, 500, { error: 'write failed' });
+        json(res, 200, { ok: true, path: 'content/questionnaire.js' });
+      });
+    });
+  },
   'POST /api/savereport': function (req, res, body) {
     // Balance Dashboard report -> logs/reports/balance/<version>/ (Round 4)
     if (!body.filename || typeof body.content !== 'string') return json(res, 400, { error: 'bad request' });
