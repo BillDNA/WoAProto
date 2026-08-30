@@ -17,6 +17,7 @@ const path = require('path');
 const loop = require(path.join(__dirname, 'loop.js'));
 const deckbuild = require(path.join(__dirname, 'deckbuild.js'));
 const db = require(path.join(__dirname, 'db.js'));
+const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
 
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'woa-loop-test-'));
 const dbFile = path.join(tmpDir, 'test.db');
@@ -63,4 +64,30 @@ test('2-iteration mock run iterates, chains parent_id, and verdicts each candida
     'parent_id values are real deck ids: ' + JSON.stringify(parents));
 
   db.close(h);
+});
+
+test('a supplied ask is called and its draft threads into the candidate (fromMock:false); null ask runs the mock', async function () {
+  const pool = deckbuild.buildPool();
+  const cheapest = pool.slice().sort((a, b) => E.cardPoints(a) - E.cardPoints(b))[0].id;
+  // A legal draft the fake LLM "returns" — 16× the cheapest card is always under the cap.
+  const fakeReply = JSON.stringify({ picks: [{ id: cheapest, count: 16 }], why: 'fake llm draft' });
+  const seen = [];
+  const ask = async function (prompt) { seen.push(prompt); return fakeReply; };
+
+  const common = { iters: 2, n: 2, panel: ['normal'], profile: 'card', maps: [E.mapPool()[0]], onStep: function () {} };
+
+  const askDbh = db.open(path.join(tmpDir, 'ask.db'));
+  const withAsk = await loop.runDeckLoop(Object.assign({}, common, { dbh: askDbh, ask: ask }));
+  db.close(askDbh);
+  // The loop consulted the transport every iteration...
+  assert.strictEqual(seen.length, 2, 'ask was called once per iteration');
+  assert.ok(seen.every(p => /Draft a War of Attrition deck/.test(p)), 'ask got the draft prompt');
+  // ...and threaded the parsed draft into the candidate (mock would be true if ignored).
+  withAsk.history.forEach(s => assert.strictEqual(s.fromMock, false, 'iter ' + s.iter + ' drafted via the ask, not the mock'));
+
+  // Without the ask, the deterministic mock path runs — the guard against a no-op ask.
+  const mockDbh = db.open(path.join(tmpDir, 'mock.db'));
+  const noAsk = await loop.runDeckLoop(Object.assign({}, common, { dbh: mockDbh, ask: null }));
+  db.close(mockDbh);
+  noAsk.history.forEach(s => assert.strictEqual(s.fromMock, true, 'iter ' + s.iter + ' fell back to the mock'));
 });
