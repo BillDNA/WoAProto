@@ -299,8 +299,9 @@ function wbLoadTrajectory() {
   if (!el || typeof fetch !== 'function') return;
   el.innerHTML = '<p class="small wb-hint">Loading trajectory from <code>logs/woa.db</code>&hellip;</p>';
   fetch('/api/runs').then(function (r) { return r.ok ? r.json() : []; }).then(function (runs) {
-    // Prefer the newest loop run (tool 'loop.js'); fall back to the newest run of any kind.
-    var run = (runs || []).filter(function (x) { return x.tool === 'loop.js'; })[0] || (runs || [])[0];
+    // Only a loop run (tool 'loop.js') writes a parent_id chain; any other run's
+    // rows are all parent_id NULL, so there is nothing to fetch or fold for them.
+    var run = (runs || []).filter(function (x) { return x.tool === 'loop.js'; })[0];
     if (!run) { el.innerHTML = wbTrajEmpty(); return; }
     return fetch('/api/skirmishes?run=' + run.id).then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) {
       var model = (typeof CHART_MODEL !== 'undefined') && CHART_MODEL.buildTrajectoryModel(rows);
@@ -343,16 +344,14 @@ function wbTrajSvg(m) {
 }
 
 function wbTrajBody(m, run) {
-  var toTarget = m.championScore != null ? (m.championScore - m.target).toFixed(1) : '—';
   var stat = function (k, v) { return '<div class="wb-stat"><div class="wb-stat-k">' + k + '</div><div class="wb-stat-v">' + v + '</div></div>'; };
-  return '<div class="small wb-hint" style="margin-bottom:6px">balanceScore &middot; the fixed ruler (#83) &middot; lower = closer to ideal &middot; live from <code>logs/woa.db</code> run ' + wbEsc(String(run.id)) + '</div>' +
+  return '<div class="small wb-hint" style="margin-bottom:6px">balanceScore &middot; the fixed ruler (#83) &middot; lower = closer to ideal (target ' + m.target + ') &middot; live from <code>logs/woa.db</code> run ' + wbEsc(String(run.id)) + '</div>' +
     wbTrajSvg(m) +
-    '<p class="small wb-hint" style="margin-top:4px">Solid line &amp; filled dots = the <b>champion</b> (adopted incumbent). Hollow red dots = candidates the loop <b>tried and dropped</b>. Copper = the current candidate.</p>' +
+    '<p class="small wb-hint" style="margin-top:4px">Solid line &amp; filled dots = the <b>champion</b> (adopted incumbent). Hollow red dots = candidates the loop <b>tried and dropped</b>. Copper = the last candidate tried (verdict not in the chain).</p>' +
     '<div class="wb-stats">' +
       stat('iterations', m.iters.length) +
       stat('adopted', m.adopted) +
       stat('rejected', m.rejected) +
-      stat('champion score', m.championScore != null ? m.championScore.toFixed(1) : '—') +
-      stat('to target', toTarget) +
+      stat('champion score', m.championScore != null ? m.championScore.toFixed(1) : '&mdash;') +
     '</div>';
 }

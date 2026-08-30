@@ -594,14 +594,16 @@ realSetTimeout(function () {
             units: { infantry: { dep: [1], atk: 1, abs: 0, kill: 1, die: 0 } } }) };
       }
       // Each iteration replays the SAME (map,seed) schedule [(Alpha,101),(Alpha,102)];
-      // parent_id is the reigning incumbent. Iter1/2 chain to 'seed' (rejects),
-      // iter3 also to 'seed' but the incumbent then flips to 'cand3' -> iter3 adopted,
-      // iter4 chains to 'cand3' as the current candidate.
+      // parent_id is the reigning incumbent. The incumbent advances (adopt) only
+      // when the NEXT iteration chains to a different parent: iter2 (seed->cand2)
+      // and iter4 (cand2->cand4) are the two adopts; iter1/iter3 are rejects; iter5
+      // is the last candidate tried (verdict not in the chain).
       var rows = [
-        traj('Alpha', 101, 'red', 'seed'), traj('Alpha', 102, 'blue', 'seed'),   // iter1 (reject)
-        traj('Alpha', 101, 'red', 'seed'), traj('Alpha', 102, 'red', 'seed'),    // iter2 (reject)
-        traj('Alpha', 101, 'red', 'seed'), traj('Alpha', 102, 'blue', 'seed'),   // iter3 (adopt)
-        traj('Alpha', 101, 'blue', 'cand3'), traj('Alpha', 102, 'blue', 'cand3') // iter4 (current)
+        traj('Alpha', 101, 'red', 'seed'),  traj('Alpha', 102, 'blue', 'seed'),  // iter1 (reject)
+        traj('Alpha', 101, 'red', 'seed'),  traj('Alpha', 102, 'red', 'seed'),   // iter2 (adopt)
+        traj('Alpha', 101, 'red', 'cand2'), traj('Alpha', 102, 'blue', 'cand2'), // iter3 (reject)
+        traj('Alpha', 101, 'red', 'cand2'), traj('Alpha', 102, 'red', 'cand2'),  // iter4 (adopt)
+        traj('Alpha', 101, 'blue', 'cand4'), traj('Alpha', 102, 'blue', 'cand4') // iter5 (current)
       ];
       rows.forEach(function (r, i) { r.id = i + 1; }); // unique row ids (seed repeats across iterations)
       var runsResp = [{ id: 7001, version: '9.9-test', kind: 'balance', tool: 'loop.js', redAi: 'hard', blueAi: 'hard', n: 2, label: 'loop' }];
@@ -617,18 +619,21 @@ realSetTimeout(function () {
         if (el && el.querySelector('svg.wb-traj-svg path[d]') && el.querySelector('svg.wb-traj-svg path').getAttribute('d')) {
           var svg = el.querySelector('svg.wb-traj-svg');
           assert.ok(win.WB_PHASE === 'trajectory', 'trajectory phase active');
-          // AC1: a champion LINE from real parent_id rows — the path has >=2 points (M..L..).
+          // AC1: a champion LINE from real parent_id rows — the path connects the
+          // two CONFIRMED adopts (M..L..), never the unverified last candidate.
           var d = svg.querySelector('path').getAttribute('d');
-          assert.ok(/M[\d.\s]+L[\d.\s]+/.test(d), 'champion line drawn as an SVG path through >=2 adopted points (' + d.slice(0, 40) + ')');
-          // AC1: adopt/reject/iterate markers present — one dot per iteration, with
-          // rejects hollow (fill = parchment) and the champion filled.
+          assert.ok(/M[\d.\s]+L[\d.\s]+/.test(d), 'champion line drawn as an SVG path through the >=2 adopted points (' + d.slice(0, 40) + ')');
+          // AC1: adopt/reject/current markers present — one dot per iteration, with
+          // rejects hollow (fill = parchment) and adopted champions filled.
           var dots = svg.querySelectorAll('circle');
-          assert.ok(dots.length === 4, 'one dot per reconstructed iteration (' + dots.length + ' for 4 iterations)');
+          assert.ok(dots.length === 5, 'one dot per reconstructed iteration (' + dots.length + ' for 5 iterations)');
           var hollow = Array.prototype.filter.call(dots, function (c) { return /parch/.test(c.getAttribute('fill')); });
           assert.ok(hollow.length === 2, 'the two rejected candidates render as hollow off-line dots (' + hollow.length + ')');
-          // the stat strip surfaces the fold: iterations / adopted / rejected.
+          // the stat strip surfaces the fold: iterations / adopted / rejected, with
+          // the two confirmed adopts counted (the last candidate is not an adopt).
           var txt = el.textContent;
           assert.ok(/iterations/.test(txt) && /adopted/.test(txt) && /rejected/.test(txt), 'stat strip surfaces iterations/adopted/rejected');
+          assert.ok(/adopted2/.test(txt.replace(/\s+/g, '')), 'exactly the two confirmed adopts are counted, not the unverified last candidate (' + txt.replace(/\s+/g, '').slice(0, 120) + ')');
           assert.ok(/logs\/woa\.db/.test(txt), 'the panel names logs/woa.db as its live source (never a committed .md)');
           win.fetch = function () { return Promise.resolve({ ok: true, json: function () { return Promise.resolve([]); } }); }; // restore
           return next();
