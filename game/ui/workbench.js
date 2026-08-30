@@ -16,9 +16,15 @@ var WORKBENCH_PHASES = [
 ];
 var WB_PHASE = 'plan';
 
+// Builds the whole shell once per open — every pane is rendered up front and the
+// switcher only toggles which is shown (wbGoPhase). Opening always starts on Plan
+// so re-entry is predictable; keeping all panes mounted means a follow-on ticket's
+// pane content (a half-filled Plan form) survives a tab switch instead of being
+// rebuilt away.
 function renderWorkbench() {
+  WB_PHASE = 'plan';
   var tabs = WORKBENCH_PHASES.map(function (p) {
-    return '<button class="dpill wb-tab' + (p.id === WB_PHASE ? ' sel' : '') +
+    return '<button class="wb-tab' + (p.id === WB_PHASE ? ' sel' : '') +
       '" data-phase="' + p.id + '" type="button"><b>' + p.n + '</b> ' + p.label + '</button>';
   }).join('<span class="wb-step">&rarr;</span>');
 
@@ -39,5 +45,10 @@ function renderWorkbench() {
 function wbGoPhase(id) {
   if (!WORKBENCH_PHASES.some(function (p) { return p.id === id; })) return;
   WB_PHASE = id;
-  renderWorkbench();
+  document.querySelectorAll('#wbNav .wb-tab').forEach(function (b) {
+    b.classList.toggle('sel', b.getAttribute('data-phase') === id);
+  });
+  WORKBENCH_PHASES.forEach(function (p) {
+    document.getElementById('wbPane-' + p.id).style.display = p.id === id ? '' : 'none';
+  });
 }
