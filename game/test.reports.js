@@ -666,6 +666,17 @@ test('report-model: foldPanel takes worst-case per metric (never a mean), fairne
   // An all-fair panel with hq in its loosened band passes clean.
   var clean = R.foldPanel([row('A', 50, 50, 20), row('B', 48, 52, 25), row('C', 52, 49, 15)], TEMPS.profiles.card);
   assert.ok(clean.gate.pass && !clean.overfit.length, 'a fair, in-band panel passes with no overfit finding');
+
+  // Two-sided break: A below the floor (30), B above the ceiling (72). BOTH named —
+  // reporting only the single worst would hide half the fairness break.
+  var twoSided = R.foldPanel([row('A', 30, 50, 20), row('B', 72, 50, 20)], TEMPS.profiles.card);
+  var redFails = twoSided.gate.failures.filter(function (f) { return f.key === 'red'; }).map(function (f) { return f.name; });
+  assert.ok(redFails.indexOf('A') >= 0 && redFails.indexOf('B') >= 0, 'both opposite-direction Red% breaks (A low, B high) are named');
+
+  // A personality with no finished games (done=0) is dropped, not read as a real 0%.
+  var withDead = R.foldPanel([row('A', 50, 50, 20), { name: 'dead', done: 0, agg: {} }], TEMPS.profiles.card);
+  assert.ok(withDead.gate.pass, 'a done=0 personality is dropped (no data), not a fabricated 0% fairness FAIL');
+  assert.ok(!withDead.metrics.red.samples.some(function (s) { return s.name === 'dead'; }), 'the no-data personality contributes no samples');
 })();
 });
 

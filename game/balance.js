@@ -281,7 +281,8 @@ function panelReport(n, kind, maps, mapsetArg, decks) {
 
   // Per-archetype profile: every metric read per personality, worst-case marked (*),
   // never averaged. Exploratory metrics carry their loosened band; fairness the ruler.
-  var header = pad('Metric', 9, true) + pad('band', 12, true) +
+  var LW = 16;   // widest BANDS label ('First-blood→win') so long guard rows align
+  var header = pad('Metric', LW, true) + pad('band', 12, true) +
     panel.map(function (name) { return pad(name.slice(0, 8), 9); }).join('') + pad('spread', 8) + '  ';
   console.log('\n' + header);
   console.log(new Array(header.length + 1).join('-'));
@@ -289,19 +290,25 @@ function panelReport(n, kind, maps, mapsetArg, decks) {
   R.BANDS.forEach(function (b) {
     var m = M[b.key];
     if (!m) return;
+    // Only gated (fairness) and exploratory (loosened) metrics can '*' a member —
+    // a held/guard metric being out of band is often the personality's intended
+    // character (a brawler SHOULD run high Attack%), so starring it would warn on
+    // exactly what the panel wants distinct.
+    var actionable = m.gated || m.grace !== 'hold';
     var band = edge(m.lo) + '–' + edge(m.hi);
-    var line = pad(b.label, 9, true) + pad(band, 12, true);
+    var line = pad(b.label, LW, true) + pad(band, 12, true);
     panel.forEach(function (name) {
       var s = m.samples.filter(function (x) { return x.name === name; })[0];
-      var cell = s ? (Math.round(s.val * 10) / 10) + (s === m.worst && s.out > 0 ? '*' : '') : '—';
+      var cell = s ? (Math.round(s.val * 10) / 10) + (actionable && s === m.worst && s.out > 0 ? '*' : '') : '—';
       line += pad(cell, 9);
     });
     line += pad(Math.round(m.spread * 10) / 10, 8) + '  ' +
       (m.gated ? 'GATE' : m.grace !== 'hold' ? m.grace : '');
     console.log(line);
   });
-  console.log('\n(* = worst-case member, out of band. Mean is never taken — a candidate');
-  console.log(' that beats the panel on average can still fall to one personality.)');
+  console.log('\n(* = worst-case member, out of a GATED or EXPLORATORY band. Mean is never');
+  console.log(' taken — a candidate that beats the panel on average can still fall to one');
+  console.log(' personality. Held/guard rows are shown for the full profile, never starred.)');
 
   // Fairness hard-gate (Red%/1st%): the only reject.
   console.log('\nFairness gate (Red%/1st%, hard): ' + (panelFold.gate.pass ? 'PASS' : 'FAIL'));

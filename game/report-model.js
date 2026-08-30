@@ -163,7 +163,9 @@ var WOA_REPORT = (function () {
       var grace = gated ? 'hold' : (tol[b.key] || 'hold');   // fairness never loosens
       var eff = bands(b.key, grace);
       var samples = rows.map(function (r) {
-          var v = b.val(r.agg, r.done);
+          // done=0 = a personality with no finished games — no data, not a real 0%
+          // (pct's 0-denominator returns 0). Drop it to null so it can't trip a gate.
+          var v = r.done ? b.val(r.agg, r.done) : null;
           return { name: r.name, val: v, out: v == null ? 0 : outBand(v, eff.lo, eff.hi, 1) };
         }).filter(function (s) { return s.val != null; });
       if (!samples.length) return;
@@ -177,11 +179,16 @@ var WOA_REPORT = (function () {
         lo: eff.lo, hi: eff.hi, feedsScore: b.feedsScore,
         samples: samples, worst: worst, min: min, max: max, spread: max - min };
     });
-    // Hard gate: fairness only — worst-case member out of the hold band fails.
+    // Hard gate: fairness only. Names EVERY out-of-band member, not just the worst —
+    // a candidate can break the two-sided band on opposite sides against two
+    // personalities (one below the floor, one above the ceiling), and both matter.
     var failures = [];
     PANEL_GATE.forEach(function (k) {
       var m = metrics[k];
-      if (m && m.worst.out > 0) failures.push({ key: k, label: m.label, name: m.worst.name, val: m.worst.val, lo: m.lo, hi: m.hi });
+      if (!m) return;
+      m.samples.forEach(function (s) {
+        if (s.out > 0) failures.push({ key: k, label: m.label, name: s.name, val: s.val, lo: m.lo, hi: m.hi });
+      });
     });
     // Overfit lens: the EXPLORATORY (loosened) Tolerances only — the axes the loop
     // is iterating — whose worst member breaks its loosened band. That is the style
