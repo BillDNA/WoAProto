@@ -1,34 +1,25 @@
 ---
-summary: What makes a good War of Attrition Map — a battlefield where neither seat nor colour is the victory condition, both win paths stay live, and holding ground matters.
+summary: What makes a good War of Attrition Map — a board whose intent you can read before the first card, that offers more than one way to fight, and where every hex earns its place.
 applies-to: any Map in the active Mapset (`content/maps/`) — an existing Map under review or a proposed new one. Read Maps only against peers measured with the same Deck.
 ---
 # Map rubric
 
 A Map is one battlefield — a hex layout with terrain and the two HQ start
-positions. This rubric judges whether a Map is a *fair and decisive place to
-fight*. It grades taste; the per-map bands and the "best map" ideal-range score
-(the runnable definition of a healthy Map) live in `docs/balance/`.
-
-The one lever behind every axis below is the Map's geometry — terrain sides, HQ
-and colour placement, HQ spacing. Each axis just names the aspect of geometry it
-leans on.
+positions. Whether it is *fair* is arithmetic and belongs to the sweep
+(`docs/balance/best-map-score.md`): a map can sit inside every band and still be
+a dull place to fight, and that is the only question this doc asks. Grade by
+setting the board up and playing it in your head, not by reading its row.
 
 ## Goals
 
-* ==**the map decides nothing the players should**== — neither Red/Blue nor first/second mover wins on geometry alone.
-* ==**both roads open**== — the HQ is threatenable but not rushable, so HQ capture and Attrition are both live win paths.
-* ==**ground is worth holding**== — the side that controls more of *this* board is the side that tends to win it.
+* ==**the board tells you the fight**== — a player who has never seen it can say where the battle will happen and why, before the first card.
+* ==**more than one way in**== — the geometry offers distinct plans, not one correct line with decoration around it.
+* ==**every hex earns its place**== — each feature changes a decision someone will actually face; nothing is scenery.
 
 ## Axes of evaluation
 
-1. **Does a side win on geometry?** Does one colour take the Map materially more than the other, with nothing but terrain sides and HQ placement to explain it?
-2. **Does the seat win the fight?** Is going first (or second) the Map's real victory condition, rather than a small edge?
-3. **Do both win paths live?** Can the HQ realistically be threatened without being trivially rushable — so battles resolve by capture *and* by Attrition, not overwhelmingly one?
-4. **Are the HQs close enough to keep the HQ path real?** Are the two HQs spaced so the capture road stays reachable, rather than so distant that every battle collapses into Attrition? Confirm against axis 3 rather than judging on raw distance alone.
-5. **Does control track winning here?** On *this* Map — not on the roster average — does holding more hexes actually predict the win? If ground is decorative here, the geometry gives players nothing to fight over.
-6. **Does the Map funnel battles into stand-offs?** Does its terrain and HQ spacing push an outsized share of endings into equal-field-score attrition tiebreaks — the symmetric-grind signature of too-distant HQs and defensible terrain on both sides?
-
-## Related runnable checks (`docs/balance/`)
-
-Red%/1st%/HQ%/Tie% per-map bands and the "best map" ideal-range score are the
-evidence for axes 1–3 and 6; grade the reading against peers on the same Deck.
+1. ==**The story is legible from the setup.**== Set it up and say, in one sentence, what this map is about. If the sentence needs the numbers to write, or two graders write different sentences, the geometry isn't saying anything yet. The fix is to sharpen the feature that should carry the sentence, not add more.
+2. ==**Turn one changes with the opponent.**== Say what you'd Deploy first — then change the opponent's opening and ask again. If the answer never moves, there is one line and the rest is camouflage, whatever the board looks like. A real second plan is one you'd switch to because of what they did; say which feature would make that switch worth taking.
+3. ==**Remove the feature and someone notices.**== Take each Mountain, Forest, and River off the board in turn: who plays differently, and on which turn? A feature nobody would miss is a tax on the player's attention — delete it, or move it to the hex where its absence would be felt.
+4. ==**There is a move you can't take back.**== Play it forward and find the moment a commitment stops being retractable — the Control line crossed, the ford taken — after which it is a different fight. If every position can be walked back until the deck runs out, the battle is a slope; the finding names the feature that would create the point of no return and where.
+5. ==**You would know it with the names filed off.**== Against its Mapset peers, does this map ask a question the others don't — or is it a peer with a hex moved? The finding names the map it shadows and the fight this one could own instead.

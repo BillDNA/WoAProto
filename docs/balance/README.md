@@ -23,9 +23,9 @@ criterion wins and this table gets fixed.
 
 | Report line / column | Good range | Full criterion |
 | --- | --- | --- |
-| Red% | 45–55 (marginal to 40–60; 62/38 = SIDE-BIASED) | map-rubric §1 |
-| 1st% | 45–55 (marginal to 40–60) | map-rubric §2 |
-| HQ% | 10–40 (≤8 attrition-only, ≥55 rushable) | map-rubric §3 |
+| Red% | 45–55 (marginal to 40–60; 62/38 = SIDE-BIASED) | best-map-score |
+| 1st% | 45–55 (marginal to 40–60) | best-map-score |
+| HQ% | 10–40 (≤8 attrition-only, ≥55 rushable) | best-map-score |
 | Turns | comfortably under the play cap (2× deck size) | Pacing |
 | Atk% / Swp% | share of all actions; near baseline; ±30% move = regression | Behaviour |
 | 0kill% | ≤5 — **hard floor** | North star 2 |
