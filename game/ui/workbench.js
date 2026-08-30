@@ -50,6 +50,7 @@ var WB_ON_LAUNCH = function (cfg) {
 // rebuilt away.
 function renderWorkbench() {
   WB_PHASE = 'plan';
+  WB_RUN_STATUS = null; WB_RESULTS = null;   // predictable re-entry: a prior run's live status / results don't linger as if current
   wbLoadProfile(WB_PLAN.loopType);   // reset the accept-settings default on open (predictable re-entry)
   var tabs = WORKBENCH_PHASES.map(function (p) {
     return '<button class="wb-tab' + (p.id === WB_PHASE ? ' sel' : '') +
@@ -59,6 +60,7 @@ function renderWorkbench() {
   var panes = WORKBENCH_PHASES.map(function (p) {
     var body = p.id === 'plan' ? wbPlanBody()
       : p.id === 'run' ? '<div id="wbRun">' + wbRunBody() + '</div>'
+      : p.id === 'results' ? '<div id="wbResults">' + wbResultsBody() + '</div>'
       : p.id === 'trajectory' ? '<div id="wbTraj"><p class="small wb-hint">Open this phase to load the champion line from <code>logs/woa.db</code>.</p></div>'
       : '<p class="small wb-placeholder">Placeholder &mdash; a follow-on ticket fills this phase with ' + p.fills + '.</p>';
     return '<div class="wb-pane" id="wbPane-' + p.id + '"' + (p.id === WB_PHASE ? '' : ' style="display:none;"') + '>' +
@@ -385,6 +387,159 @@ function wbWireRun() {
   var st = WB_RUN_STATUS && WB_RUN_STATUS.state;
   if (pause) pause.onclick = function () { WB_ON_CONTROL(st === 'paused' ? 'resume' : 'pause'); };
   if (stop) stop.onclick = function () { WB_ON_CONTROL('stop'); };
+}
+
+/* Results phase (#145) — leads with the CONTENT the loop built, not metrics. The
+   browser has no bridge to the node loop, so (like Run) a follow-on server proxy
+   injects the final candidate set via wbSetResults(results); the panel is a pure
+   render of it, and the red-test feeds a mock (dev/smoke.js). Reports (balance,
+   feels debriefs #111) are nested under <details>, deliberately not the front page;
+   the Run-phase "worth a look" flags carry forward from results.signals.
+   Results shape (every field optional — a partial result still renders):
+     { loopType, adopted, total, runId,
+       cards:   [{ tag:'keep'|'iterate'|'cut', change:'new'|'tuned'|'held',
+                   card:{name,cost,text,steps:[{type,mod}]}, resid, win, seen, note }],
+       maps:    [{ tag, name, def:<shapeDef>, drag, swings, verdict }],
+       weights: [{ personality, deltas:[{key, before, after}] }],
+       balance: { metrics:[{label,value,cls}], note },   // nested, collapsed
+       feels:   { count, notes:[string,...] },            // nested, collapsed
+       signals: {...} } // same shape wbRunAnomalies reads — carried forward */
+var WB_RESULTS = null;
+
+// Inject the final candidate set and re-render the Results pane in place. The proxy
+// calls this once the loop finishes; the red-test calls it with a mock.
+function wbSetResults(results) {
+  WB_RESULTS = results;
+  var el = document.getElementById('wbResults');
+  if (el) el.innerHTML = wbResultsBody();
+}
+
+// keep/iterate/cut pill — the verdict on a built card or map. Whitelisted: the
+// tag is proxy-fed, so an unexpected value falls back to 'keep' rather than
+// interpolating untrusted text into the class + label (the file's wbEsc posture).
+function wbTagPill(tag) {
+  var t = { keep: 1, iterate: 1, cut: 1 }[tag] ? tag : 'keep';
+  return '<span class="wb-tag ' + t + '">' + t + '</span>';
+}
+
+// One built card face: the pill + change-note, the card itself (cost/text/steps),
+// then resid·win·seen as evidence BENEATH the design (the issue's ordering).
+function wbResCards(cards) {
+  if (!cards || !cards.length) return '';
+  var faces = cards.map(function (c) {
+    var card = c.card || {};
+    var steps = (card.steps || []).map(function (s) {
+      return wbEsc(s.type) + (s.mod != null && s.mod !== 0 ? ' ' + (s.mod > 0 ? '+' : '') + s.mod : '');
+    }).join(' &middot; ');
+    var ev = [];
+    if (c.resid != null) ev.push('resid ' + c.resid);
+    if (c.win != null) ev.push('win ' + c.win);
+    if (c.seen != null) ev.push('seen ' + c.seen);
+    return '<div class="wb-built">' +
+      '<div class="wb-built-hd">' + wbTagPill(c.tag) +
+        '<b class="wb-built-name">' + wbEsc(card.name || '?') + '</b>' +
+        (card.cost != null ? '<span class="wb-hint">cost ' + wbEsc(String(card.cost)) + '</span>' : '') +
+        (c.change ? '<span class="wb-change">' + wbEsc(c.change) + '</span>' : '') + '</div>' +
+      (card.text ? '<div class="wb-built-text">' + wbEsc(card.text) + '</div>' : '') +
+      (steps ? '<div class="small wb-hint wb-built-steps">' + steps + '</div>' : '') +
+      (c.note ? '<div class="small wb-built-note">' + wbEsc(c.note) + '</div>' : '') +
+      (ev.length ? '<div class="small wb-hint wb-built-ev">' + ev.join(' &middot; ') + '</div>' : '') +
+      '</div>';
+  }).join('');
+  return '<label class="small wb-lbl">Cards built <span class="wb-hint">&mdash; tagged keep / iterate / cut; evidence beneath the design</span></label>' +
+    '<div class="wb-built-grid">' + faces + '</div>';
+}
+
+// One built map: the outline thumbnail (reusing previewSVG) + the Drag/Swings
+// feel-read and verdict. previewSVG needs the engine geometry; guard it.
+function wbResMaps(maps) {
+  if (!maps || !maps.length) return '';
+  var tiles = maps.map(function (m) {
+    var svg = '';
+    try { if (typeof previewSVG === 'function' && m.def) svg = previewSVG(m.def); } catch (e) { svg = ''; }
+    var feel = [];
+    if (m.drag != null) feel.push('Drag ' + m.drag);
+    if (m.swings != null) feel.push('Swings ' + m.swings);
+    return '<div class="wb-built">' +
+      '<div class="wb-built-hd">' + wbTagPill(m.tag) + '<b class="wb-built-name">' + wbEsc(m.name || '?') + '</b></div>' +
+      (svg ? '<div class="wb-map-thumb">' + svg + '</div>' : '') +
+      (feel.length ? '<div class="small wb-hint wb-built-ev">' + feel.join(' &middot; ') + '</div>' : '') +
+      (m.verdict ? '<div class="small wb-built-note">' + wbEsc(m.verdict) + '</div>' : '') +
+      '</div>';
+  }).join('');
+  return '<label class="small wb-lbl">Maps built <span class="wb-hint">&mdash; outline + Drag/Swings feel-read</span></label>' +
+    '<div class="wb-built-grid">' + tiles + '</div>';
+}
+
+// Heuristic deltas — the AI_WEIGHTS the loop tuned, per personality, before&rarr;after.
+function wbResWeights(weights) {
+  if (!weights || !weights.length) return '';
+  var blocks = weights.map(function (w) {
+    var rows = (w.deltas || []).map(function (d) {
+      var moved = d.before !== d.after;
+      return '<div class="wb-wrow' + (moved ? ' moved' : '') + '"><code>' + wbEsc(d.key) + '</code>' +
+        '<span class="wb-wdelta">' + wbEsc(String(d.before)) + ' &rarr; <b>' + wbEsc(String(d.after)) + '</b></span></div>';
+    }).join('');
+    return '<div class="wb-built"><div class="wb-built-hd"><b class="wb-built-name">' + wbEsc(w.personality || '?') + '</b></div>' + rows + '</div>';
+  }).join('');
+  return '<label class="small wb-lbl">Heuristic deltas <span class="wb-hint">&mdash; AI_WEIGHTS the loop tuned, per personality</span></label>' +
+    '<div class="wb-built-grid">' + blocks + '</div>';
+}
+
+// The nested balance report (collapsed by default): the full metrics table is one
+// click away, deliberately not the front page. metrics = [{label,value,cls}].
+function wbResBalance(balance) {
+  var m = balance && balance.metrics;
+  var body = (m && m.length)
+    ? '<div class="wb-log">' + m.map(function (r) {
+        return '<div class="wb-log-row"><b>' + wbEsc(r.label) + '</b> &middot; ' +
+          '<span class="' + (r.cls ? 'wb-band ' + wbEsc(r.cls) : '') + '">' + wbEsc(String(r.value)) + '</span></div>';
+      }).join('') + '</div>'
+    : '<p class="small wb-hint">Full metrics live on the Balance Dashboard and in <code>logs/reports/balance</code>.</p>';
+  return '<details class="wb-details"><summary>Balance report' +
+    (balance && balance.note ? ' <span class="wb-hint">&mdash; ' + wbEsc(balance.note) + '</span>' : '') +
+    '</summary>' + body + '</details>';
+}
+
+// Feels debriefs (#111) nested (collapsed): the debrief notes captured this run.
+function wbResFeels(feels) {
+  if (!feels) return '';
+  var notes = (feels.notes || []);
+  var body = notes.length
+    ? '<div class="wb-log">' + notes.map(function (n) { return '<div class="wb-log-row">' + wbEsc(n) + '</div>'; }).join('') + '</div>'
+    : '<p class="small wb-hint">No debrief notes captured this run.</p>';
+  return '<details class="wb-details"><summary>Feels debriefs' +
+    (feels.count != null ? ' <span class="wb-hint">&mdash; ' + feels.count + ' note' + (feels.count === 1 ? '' : 's') + '</span>' : '') +
+    '</summary>' + body + '</details>';
+}
+
+// The Run-phase "worth a look" flags, carried forward into Results.
+function wbResFlags(s) {
+  var items = wbRunAnomalies(s);
+  if (!items.length) return '';
+  var body = items.map(function (a) {
+    return '<div class="wb-anom ' + a.level + '"><span class="wb-anom-dot"></span><span>' + a.text + '</span></div>';
+  }).join('');
+  return '<label class="small wb-lbl">Worth a look <span class="wb-hint">&mdash; carried forward from the run</span></label>' +
+    '<div class="wb-anoms">' + body + '</div>';
+}
+
+// The Results pane body: built content leads (cards, maps, heuristic deltas), the
+// carried-forward flags, then the reports nested collapsed beneath.
+function wbResultsBody() {
+  var r = WB_RESULTS;
+  if (!r) return '<p class="small wb-hint">No results yet &mdash; finish a loop in <b>Run</b> and its final candidate set lands here: ' +
+    'the content it built (cards / maps / heuristic deltas) tagged keep / iterate / cut, with the balance and feels reports nested beneath.</p>';
+  var head = '';
+  if (r.adopted != null || r.total != null) {
+    head = '<div class="small wb-hint" style="margin-bottom:8px">' +
+      (r.loopType ? '<b>' + wbEsc(r.loopType) + '</b> loop &middot; ' : '') +
+      (r.adopted != null && r.total != null ? r.adopted + ' of ' + r.total + ' candidates adopted' : '') +
+      (r.runId != null ? ' &middot; run ' + wbEsc(String(r.runId)) : '') + '</div>';
+  }
+  var built = wbResCards(r.cards) + wbResMaps(r.maps) + wbResWeights(r.weights);
+  if (!built) built = '<p class="small wb-hint">This run adopted no new content.</p>';
+  return head + wbResFlags(r) + built + wbResBalance(r.balance) + wbResFeels(r.feels);
 }
 
 /* Trajectory phase (#143) — render the loop's champion line live from

@@ -77,14 +77,12 @@ realSetTimeout(function () {
   assert.ok(doc.querySelector('#wbNav .wb-tab.sel').getAttribute('data-phase') === 'plan', 'Plan is the default phase');
   assert.ok(doc.getElementById('wbPane-plan').style.display !== 'none' &&
     doc.getElementById('wbPane-run').style.display === 'none', 'only the active phase pane is shown');
-  // each tab switches the shown pane; the still-stubbed phases carry a labeled
-  // placeholder body (Plan #140 and Trajectory #143 are filled, so exempt).
+  // each tab switches the shown pane; every phase is now filled (Plan #140, Run
+  // #144, Results #145, Trajectory #143), so none carries a placeholder body.
   wbPhases.forEach(function (id) {
     doc.querySelector('#wbNav .wb-tab[data-phase="' + id + '"]').click();
     assert.ok(win.WB_PHASE === id && doc.getElementById('wbPane-' + id).style.display !== 'none',
       'clicking the ' + id + ' tab shows its pane');
-    if (id !== 'plan' && id !== 'trajectory' && id !== 'run') assert.ok(/Placeholder/.test(doc.getElementById('wbPane-' + id).textContent),
-      id + ' pane shows its labeled placeholder');
   });
 
   console.log('== Plan phase: loop-type picker + nudge + fixtures -> config (#140) ==');
@@ -231,6 +229,43 @@ realSetTimeout(function () {
   win.wbSetRunStatus({ loopType: 'card', state: 'done', iter: 6, iters: 6, swept: 2400 });
   assert.ok(doc.getElementById('wbStop').disabled && doc.getElementById('wbPause').disabled, 'a finished loop disables pause/stop');
   win.WB_RUN_STATUS = null; // leave the pane idle for a clean re-open
+
+  console.log('== Results phase: content-first review (#145) ==');
+  doc.querySelector('#wbNav .wb-tab[data-phase="results"]').click();
+  // Idle before the loop reports its final candidate set.
+  assert.ok(/No results yet/i.test(doc.getElementById('wbResults').textContent), 'Results phase idle until the loop reports');
+  // AC1/AC3: feed a mock #138 final candidate set and assert the built content leads.
+  win.wbSetResults({
+    loopType: 'card', adopted: 1, total: 3, runId: 42,
+    cards: [
+      { tag: 'keep', change: 'new', card: { name: 'Sapper', cost: 4, text: 'Dig in and hold.', steps: [{ type: 'attack', mod: 1 }] }, resid: 0.4, win: 52, seen: 18 },
+      { tag: 'cut', change: 'tuned', card: { name: 'Bombardment', text: 'Blow it up.', steps: [{ type: 'attack', mod: 2 }] }, resid: 2.1, win: 61, seen: 14, note: 'always-good-on-sight' }
+    ],
+    weights: [{ personality: 'hard', deltas: [{ key: 'aggression', before: 1.0, after: 1.4 }, { key: 'hold', before: 0.5, after: 0.5 }] }],
+    balance: { note: 'panel fold', metrics: [{ label: 'Drag', value: '2.1', cls: 'ok' }, { label: 'Swings', value: '3.4', cls: 'ok' }] },
+    feels: { count: 2, notes: ['felt grindy mid-game', 'cavalry mattered'] },
+    signals: { declines: [{ card: 'Bombardment', declined: 14, offered: 18 }], zeroKills: { count: 7, total: 1200 }, feelNotes: { count: 42 } }
+  });
+  var resPane = doc.getElementById('wbPane-results').textContent;
+  // AC1: built content leads, tagged keep/iterate/cut with change-notes.
+  assert.ok(/Cards built/i.test(resPane), 'Results leads with the Cards built section');
+  assert.ok(/Sapper/.test(resPane) && /Dig in and hold/.test(resPane), 'a built card face renders (name + text)');
+  var tags = Array.prototype.map.call(doc.querySelectorAll('#wbResults .wb-tag'), function (t) { return t.textContent; });
+  assert.ok(tags.indexOf('keep') >= 0 && tags.indexOf('cut') >= 0, 'cards are tagged keep / cut (got ' + tags.join(',') + ')');
+  assert.ok(/resid 0\.4/.test(resPane) && /win 52/.test(resPane) && /seen 18/.test(resPane), 'resid·win·seen render as evidence beneath the design');
+  assert.ok(/Heuristic deltas/i.test(resPane) && /aggression/.test(resPane) && /1\.4/.test(resPane), 'heuristic deltas render before&rarr;after');
+  // AC1: the full balance report is NESTED (a <details>), not the front page.
+  var details = doc.querySelectorAll('#wbResults details.wb-details');
+  assert.ok(details.length >= 2, 'balance + feels reports are nested under <details> (' + details.length + ')');
+  var bal = Array.prototype.filter.call(details, function (d) { return /Balance report/i.test(d.querySelector('summary').textContent); })[0];
+  assert.ok(bal && !bal.open, 'the balance report is collapsed by default, not the front page');
+  assert.ok(/Drag/.test(bal.textContent) && /2\.1/.test(bal.textContent), 'the nested balance report carries the metrics table');
+  // AC2: feels debriefs nested; Run-phase anomaly flags carried forward.
+  var feels = Array.prototype.filter.call(details, function (d) { return /Feels debriefs/i.test(d.querySelector('summary').textContent); })[0];
+  assert.ok(feels && /cavalry mattered/.test(feels.textContent), 'feels debriefs (#111) render nested');
+  assert.ok(/Worth a look/i.test(resPane) && /Bombardment/.test(doc.querySelector('#wbResults .wb-anoms').textContent),
+    'Run-phase anomaly flags carry forward into Results');
+  win.WB_RESULTS = null; // leave idle for a clean re-open
 
   doc.getElementById('wbBack').click();
   assert.ok(doc.getElementById('menu').classList.contains('active'), 'workbench Back returns to the menu');
