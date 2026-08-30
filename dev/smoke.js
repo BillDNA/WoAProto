@@ -61,8 +61,13 @@ var rawSetTimeout = win.setTimeout;
 function realSetTimeout(fn, ms) { return rawSetTimeout(function () { try { return fn(); } catch (e) { reject(e); } }, ms); }
 win.setTimeout = function (fn, ms) { return realSetTimeout(fn, Math.min(ms || 0, 5)); };
 
+// The real server-served launch/control hooks (boot.js) — captured before the
+// #144 section overrides them with capture stubs, so the #154 loop-bridge section
+// can drive the genuine POST-to-/api/runloop flow.
+var wbRealLaunch, wbRealControl;
 realSetTimeout(function () {
   console.log('== boot ==');
+  wbRealLaunch = win.WB_ON_LAUNCH; wbRealControl = win.WB_ON_CONTROL;
   assert.ok(win.Engine && win.Engine.MAPS.length >= 5, 'engine loaded the map roster (' + (win.Engine && win.Engine.MAPS.length) + ' maps)');
   assert.ok(doc.querySelectorAll('#edShape option').length === Object.keys(win.Engine.SHAPES).length + 1,
     'editor shape dropdown = maps.js shapes + the Custom entry');
@@ -828,8 +833,72 @@ realSetTimeout(function () {
     }
 
     function finish() {
-      console.log('\n== smoke play-through complete ==');
-      resolve();
+      loopBridge(function () {
+        console.log('\n== smoke play-through complete ==');
+        resolve();
+      });
+    }
+
+    // #154 loop bridge — the ONE seam crossing game/<->dev/: clicking Launch in the
+    // Plan phase must spawn a real dev/loop.js and the Run phase advance through its
+    // live LOOP_STEP output. Drive it through the REAL route: stand up a throwaway
+    // server on server.js's exported handler, point the browser's fetch at it, then
+    // fire the genuine WB_ON_LAUNCH (boot.js) and poll the genuine wbPollRunStatus.
+    function loopBridge(done) {
+      console.log('== Run phase: real dev/loop.js launch through /api/runloop (#154) ==');
+      var http = require('http'), os = require('os');
+      var srvMod = require(path.join(GAME, 'server.js'));
+      var srv = http.createServer(srvMod.handler).listen(0, function () {
+        var port = srv.address().port;
+        var tmpDb = path.join(os.tmpdir(), 'woa-smoke-loop-' + process.pid + '.db');
+        // Proxy the browser's relative /api/* fetches to the throwaway server.
+        win.fetch = function (url, opts) {
+          opts = opts || {};
+          return new Promise(function (res, rej) {
+            var r = http.request({ host: '127.0.0.1', port: port, path: url, method: opts.method || 'GET', headers: opts.headers || {} }, function (resp) {
+              var chunks = []; resp.on('data', function (d) { chunks.push(d); });
+              resp.on('end', function () {
+                var text = Buffer.concat(chunks).toString('utf8');
+                res({ ok: resp.statusCode >= 200 && resp.statusCode < 300, status: resp.statusCode,
+                  json: function () { return Promise.resolve(text ? JSON.parse(text) : null); } });
+              });
+            });
+            r.on('error', rej);
+            if (opts.body) r.write(opts.body);
+            r.end();
+          });
+        };
+        function teardown() { try { srv.close(); } catch (e) {} try { fs.unlinkSync(tmpDb); } catch (e) {} }
+
+        // Re-open the workbench and restore the genuine (server-served) launch hook,
+        // then fire it with a small, isolated config (1 map, temp db) so a real hard-AI
+        // sweep is ~6s, not the full roster's minute-plus.
+        doc.getElementById('btnWorkbench').click();
+        win.WB_ON_LAUNCH = wbRealLaunch; win.WB_ON_CONTROL = wbRealControl;
+        win.WB_ON_LAUNCH({ loopType: 'card', iters: 2, n: 2, panel: ['hard'], profile: 'card', mapset: 'all', maps: 1, db: tmpDb });
+        if (win.WB_POLL) { win.clearInterval(win.WB_POLL); win.WB_POLL = null; } // drive polling ourselves, faster than boot's 1s tick
+
+        var seenRunning = false, maxIter = 0, waited = 0;
+        function poll() {
+          win.wbPollRunStatus();           // the genuine bridge poll: GET /api/runloop -> wbSetRunStatus
+          var s = win.WB_RUN_STATUS || {};
+          if (s.state === 'running' || s.state === 'paused') seenRunning = true;
+          if (typeof s.iter === 'number' && s.iter > maxIter) maxIter = s.iter;
+          if (s.state === 'done' || s.state === 'stopped') {
+            assert.ok(seenRunning, 'Run phase saw the loop process running (status produced from a spawned process)');
+            assert.ok(maxIter >= 2, 'Run status advanced iter 1 -> 2 (reached ' + maxIter + ')');
+            assert.strictEqual(s.state, 'done', 'the 2-iteration loop reached state:done');
+            assert.ok((s.steps || []).length === 2, 'both LOOP_STEP lines folded into the status (' + (s.steps || []).length + ')');
+            assert.ok((s.swept || 0) > 0, 'the swept counter advanced from the loop output (' + s.swept + ')');
+            teardown();
+            win.fetch = function () { return Promise.resolve({ ok: true, json: function () { return Promise.resolve([]); } }); }; // restore no-op
+            return done();
+          }
+          if ((waited += 200) > 120000) { teardown(); assert.ok(false, 'loop never reached done (last state ' + s.state + ', iter ' + maxIter + ')'); }
+          realSetTimeout(poll, 200);
+        }
+        realSetTimeout(poll, 200);
+      });
     }
   }
   realSetTimeout(tick, 30);

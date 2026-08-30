@@ -145,6 +145,8 @@ async function runDeckLoop(opts) {
 
     var step = {
       iter: i, candidate: candidate.id, parent: parentId, fromMock: drafted.fromMock,
+      // cumulative skirmishes swept so far (candidate sweeps; the Run monitor's 'swept' stat)
+      swept: i * panel.length * maps.length * n,
       deckPoints: deckPoints, score: Math.round(swept.score * 100) / 100,
       velocity: Math.round(velocity * 100) / 100,
       gatePass: fold.gate.pass, overfit: fold.overfit.map(function (o) { return o.key; }),
@@ -171,15 +173,27 @@ if (require.main === module) {
   var maps = !setArg ? E.mapPool()
     : setArg === 'all' ? E.MAPS
     : E.MAPS.filter(function (m) { var s = E.MAPSETS.filter(function (x) { return x.id === setArg; })[0]; return s && (s.maps.indexOf(m.id) >= 0 || s.maps.indexOf(m.name) >= 0); });
+  // --maps N caps the roster to the first N (fast, small runs — the loop bridge's
+  // smoke test drives 1 map so a full hard-AI sweep isn't 77s); --db points the
+  // skirmish chain at an alternate file (tests isolate off the real logs/woa.db).
+  var cap = +opt('--maps', 0) | 0;
+  if (cap > 0) maps = maps.slice(0, cap);
+  // --profile accepts a profiles key OR an inline JSON Temperature object (the loop
+  // bridge forwards the operator's per-axis-edited profile as JSON, #154).
+  var profArg = opt('--profile', 'card');
+  var profile = /^\s*\{/.test(profArg) ? JSON.parse(profArg) : profArg;
+  var dbArg = opt('--db', null);
+  var cliDbh = dbArg ? db.open(dbArg) : undefined;  // we opened it -> we close it (below)
   var o = {
     iters: Math.max(1, +opt('--iters', 6) | 0),
     n: Math.max(2, +opt('--n', 20) | 0),
     panel: opt('--ai', 'hard').split(','),
-    profile: opt('--profile', 'card'),
+    profile: profile,
+    dbh: cliDbh,
     maps: maps
   };
   console.log('loop: ' + o.iters + ' deck iterations, ' + o.n + ' skirmishes/map/personality, panel [' +
-    o.panel.join(', ') + '], ' + maps.length + ' maps, "' + o.profile + '" profile\n');
+    o.panel.join(', ') + '], ' + maps.length + ' maps, "' + (o.profile.name || o.profile) + '" profile\n');
   runDeckLoop(o).then(function (res) {
     var adopted = res.history.filter(function (s) { return s.verdict === 'adopt'; }).length;
     console.log('\nLOOP_RESULT ' + JSON.stringify({
@@ -187,6 +201,7 @@ if (require.main === module) {
       adopted: adopted, iterations: res.history.length,
       candidates: res.history.map(function (s) { return { id: s.candidate, verdict: s.verdict, score: s.score }; })
     }));
-    console.log('\n' + adopted + ' of ' + res.history.length + ' candidates adopted. Chain persisted to logs/woa.db (run ' + res.runId + ').');
+    console.log('\n' + adopted + ' of ' + res.history.length + ' candidates adopted. Chain persisted to ' + (dbArg || 'logs/woa.db') + ' (run ' + res.runId + ').');
+    if (cliDbh) db.close(cliDbh);   // runDeckLoop only auto-closes the handle it opened itself
   }).catch(function (e) { console.error(e); process.exit(1); });
 }
