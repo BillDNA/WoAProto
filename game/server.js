@@ -11,6 +11,7 @@ var http = require('http');
 var fs = require('fs');
 var path = require('path');
 var os = require('os');
+var spawn = require('child_process').spawn;
 
 var PORT = process.env.PORT || 8420;
 var ROOT = __dirname;
@@ -47,6 +48,65 @@ function recordSkirmish(body) {
   return { status: 200, out: { ok: true, runId: dbRuns[runKey], skirmishId: skirmishId } };
 }
 
+// --- #154 loop bridge: the browser Workbench's Launch spawns dev/loop.js here and
+// the Run phase polls GET /api/runloop for a folded status. One run at a time — a
+// new Launch replaces the old process. loopStatus is the exact shape wbSetRunStatus
+// renders ({ loopType, state, iter, iters, swept, best, steps }); we fold each
+// LOOP_STEP stdout line into it (same stdout-line contract balance-report.js uses).
+var loopProc = null, loopStatus = null, loopBuf = '';
+function foldLoopLine(line) {
+  var m = /^(LOOP_STEP|LOOP_RESULT) (.*)$/.exec(line);
+  if (!m || !loopStatus) return;
+  var obj; try { obj = JSON.parse(m[2]); } catch (e) { return; }
+  if (m[1] === 'LOOP_STEP') {
+    loopStatus.iter = obj.iter;
+    loopStatus.steps.push(obj);
+    loopStatus.swept = obj.swept != null ? obj.swept : loopStatus.swept;
+    if (obj.score != null && (!loopStatus.best || obj.score < loopStatus.best.score))
+      loopStatus.best = { candidate: obj.candidate, score: obj.score };  // lower score = healthier
+  } else { // LOOP_RESULT — the run finished cleanly
+    loopStatus.result = obj;
+    loopStatus.state = 'done';
+  }
+}
+function startLoop(cfg) {
+  if (loopProc) { try { loopProc.kill('SIGKILL'); } catch (e) {} loopProc = null; }
+  var iters = Math.max(1, cfg.iters | 0) || 6;
+  var args = [path.join(ROOT, '..', 'dev', 'loop.js'),
+    '--iters', String(iters), '--n', String(Math.max(2, cfg.n | 0) || 20),
+    '--ai', (cfg.panel && cfg.panel.length ? cfg.panel : ['hard']).join(','),
+    // profile may be an edited Temperature object — forward it as inline JSON (loop.js parses it)
+    '--profile', typeof cfg.profile === 'object' && cfg.profile ? JSON.stringify(cfg.profile) : String(cfg.profile || 'card'),
+    '--mapset', String(cfg.mapset || 'all')];
+  if (cfg.maps) args.push('--maps', String(cfg.maps | 0));  // test lever: cap the roster
+  if (cfg.db) args.push('--db', String(cfg.db));            // test lever: isolate the db
+  loopStatus = { loopType: cfg.loopType || 'card', state: 'running', iter: 0, iters: iters, swept: 0, best: null, steps: [] };
+  loopBuf = '';
+  var p = loopProc = spawn(process.execPath, args, { cwd: path.join(ROOT, '..') });
+  p.stdout.on('data', function (d) {
+    loopBuf += d.toString('utf8');
+    var lines = loopBuf.split('\n'); loopBuf = lines.pop();
+    lines.forEach(foldLoopLine);
+  });
+  p.stderr.on('data', function () {});  // loop's own warnings — surfaced in its process, not fatal here
+  p.on('close', function () {
+    if (loopStatus && loopStatus.state !== 'done' && loopStatus.state !== 'stopped') loopStatus.state = 'stopped';
+    if (loopProc === p) loopProc = null;
+  });
+}
+function controlLoop(action) {
+  if (!loopProc) return { status: 409, out: { error: 'no loop running' } };
+  // ponytail: POSIX SIGSTOP/SIGCONT pause/resume, SIGTERM stop — dev tooling on
+  // darwin/linux; no Windows pause (would need a stop-flag file the loop polls).
+  try {
+    if (action === 'pause') { loopProc.kill('SIGSTOP'); loopStatus.state = 'paused'; }
+    else if (action === 'resume') { loopProc.kill('SIGCONT'); loopStatus.state = 'running'; }
+    else if (action === 'stop') { loopProc.kill('SIGTERM'); loopStatus.state = 'stopped'; }
+    else return { status: 400, out: { error: 'unknown action "' + action + '"' } };
+  } catch (e) { return { status: 500, out: { error: e.message } }; }
+  return { status: 200, out: { ok: true, state: loopStatus.state } };
+}
+
 var VERSION = (function () { // engine's rules version, for LAN mismatch warnings
   try { return require(path.join(ROOT, 'engine.js')).VERSION; } catch (e) { return null; }
 })();
@@ -75,7 +135,9 @@ function cleanup() {
     }
   }
 }
-setInterval(cleanup, 600000);
+// unref so requiring this module for its handler (dev/smoke.js's loop-bridge test)
+// doesn't keep the process alive on this timer alone.
+setInterval(cleanup, 600000).unref();
 
 function json(res, status, obj) {
   var body = JSON.stringify(obj);
@@ -297,6 +359,21 @@ var ROUTES = {
       json(res, 200, rows);
     } catch (e) { json(res, 500, { error: e.message }); }
   },
+  'POST /api/runloop': function (req, res, body) {
+    // #154: the Workbench Launch — spawn dev/loop.js from the assembled run-config.
+    try { startLoop(body || {}); json(res, 200, { ok: true, state: loopStatus.state }); }
+    catch (e) { json(res, 500, { error: e.message }); }
+  },
+  'GET /api/runloop': function (req, res) {
+    // The Run phase's status feed (poll pattern, like /api/poll) — the folded status
+    // object wbSetRunStatus renders, or a null-ish idle marker before any launch.
+    json(res, 200, loopStatus || { state: 'idle' });
+  },
+  'POST /api/runloopctl': function (req, res, body) {
+    // #144 pause/stop, now live: signal the spawned loop process.
+    var r = controlLoop((body && body.action) || '');
+    json(res, r.status, r.out);
+  },
   'GET /api/poll': function (req, res, body, u) {
     var r = rooms[(u.searchParams.get('room') || '').toUpperCase()];
     if (!r) return json(res, 404, { error: 'room not found' });
@@ -307,7 +384,9 @@ var ROUTES = {
   }
 };
 
-http.createServer(function (req, res) {
+// The request handler, exported so dev/smoke.js can drive the /api routes over a
+// throwaway server (the loop bridge is tested through the real route, #154).
+function handler(req, res) {
   var u = new URL(req.url, 'http://x');
   var route = ROUTES[req.method + ' ' + u.pathname];
   if (route) {
@@ -328,7 +407,12 @@ http.createServer(function (req, res) {
     res.writeHead(200, { 'Content-Type': MIME[path.extname(full)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
     res.end(data);
   });
-}).on('error', function (err) {
+}
+module.exports = { handler: handler, ROUTES: ROUTES };
+
+if (require.main !== module) return;  // required for its handler (tests) — don't bind a port
+
+http.createServer(handler).on('error', function (err) {
   if (err.code === 'EADDRINUSE') {
     console.log('');
     console.log('  Port ' + PORT + ' is already taken — the server is probably already running');

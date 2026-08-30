@@ -363,6 +363,36 @@ E.hooks.onSkirmishEnd.push(function (st) {
 
 $('btnDash').onclick = openDash;
 $('btnWorkbench').onclick = function(){ show('wbScr'); renderWorkbench(); };
+
+// #154 loop bridge (server-served build): the Workbench's Launch/pause/stop hooks,
+// inert by default (workbench.js just toasts), are wired here to the real node loop
+// process. Launch POSTs the assembled config to /api/runloop (server spawns
+// dev/loop.js), flips to the Run phase, and polls /api/runloop for the folded status
+// wbSetRunStatus renders — the same poll pattern net.js uses for /api/poll.
+var WB_POLL = null;
+function wbPollRunStatus(){
+  api2('GET', 'runloop').then(function(s){
+    if (!s) return;
+    wbSetRunStatus(s);
+    if (s.state === 'done' || s.state === 'stopped') { clearInterval(WB_POLL); WB_POLL = null; }
+  }).catch(function(){ /* transient — the next tick retries */ });
+}
+WB_ON_LAUNCH = function(cfg){
+  if (WB_POLL) { clearInterval(WB_POLL); WB_POLL = null; }
+  api('runloop', cfg).then(function(){
+    wbGoPhase('run');
+    wbPollRunStatus();
+    WB_POLL = setInterval(wbPollRunStatus, 1000);
+  }).catch(function(e){ if (typeof toast === 'function') toast('Launch failed: ' + e.message, 3500); });
+};
+WB_ON_CONTROL = function(action){
+  api('runloopctl', { action: action }).then(function(){ wbPollRunStatus(); })
+    .catch(function(e){ if (typeof toast === 'function') toast('Control failed: ' + e.message, 3000); });
+};
+// GET twin of api() (app.js's api() is POST-only) — the status feed is a plain read.
+function api2(method, path){
+  return fetch('/api/'+path, { method: method }).then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); });
+}
 $('wbBack').onclick = function(){ show('menu'); checkResume(); };
 $('dashBack').onclick = function(){ DASH.cancel = true; show('menu'); checkResume(); };
 $('dashStop').onclick = function(){ DASH.cancel = true; };
