@@ -38,6 +38,7 @@ criterion wins and this table gets fixed.
 | Simple% | <40 good, 40–60 marginal, >60 failing | card evidence |
 | Noop% | ~0; >2% investigate — **hard floor ≈0** | North star 3 |
 | 1stSight% / AvgSeen | no band — **diagnostic of the AI** | card evidence |
+| Pts / Resid | `⚠` at \|Resid\| ≥ `MISPRICE_RESID_PTS`, `-` under `MISPRICE_MIN_HQPLAYS` — **soft flag, never a gate** (ADR-0002); arithmetic in `docs/report-model.md` | card-rubric §4 |
 | skill premium | adjacent tiers ≥60%, two apart ≥75% | North star 1 |
 
 **Small-n rule:** a conditioned metric (Tie%/Drag over attrition endings;
