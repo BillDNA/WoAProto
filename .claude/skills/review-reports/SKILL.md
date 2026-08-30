@@ -112,6 +112,13 @@ the same way; the tags are how the right era's reports are found fast.
    timing blind-spot caveat (a held-value card can read negative without being
    weak). Never promote it to a hard verdict; measured balance overrules the
    price (ADR-0002).
+7. **Blind spots flagged** — run `node dev/blind-spots.js` (accumulates the
+   Feels-loop `blind-spot` flags across every skirmish in the master log) and drop
+   its output in verbatim. These are **proposed only** (#87): an `ai-input` flag
+   names a signal a human might wire into `game/engine/05-ai.js`, a
+   `balance-metric` flag one for `report-model.js`. You are the anti-bloat gate —
+   flag, in one line, any that are just a rename/wrapper/blend of a signal the
+   game already weighs, so Bill can reject them fast. Never auto-wire one.
 
 Then tell Bill the saved path and give a 3-line verbal summary.
 
