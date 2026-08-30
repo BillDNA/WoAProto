@@ -166,6 +166,113 @@ test('mispricing residual (WOA #57: cardRows points + residual, soft flag)', () 
 })();
 });
 
+test('army-points calibration pass (#82/#114: classify → class signal → cap-safe shared moves)', () => {
+(function () {
+  var R = require('./report-model.js');
+
+  // ---- classifyCard: resid + phase-conditioned decline ----
+  // Dominant: out-wins its price, rarely declined.
+  assert.ok(R.classifyCard({ resid: 3 }, 0.1, null) === 'Dominant', 'resid ≥ +2 & low decline → Dominant');
+  // Strictly-Dominated: heavily declined EVEN in a late octile (the #89 "E" card: never played, decline-rate 1.0).
+  assert.ok(R.classifyCard({ resid: null }, 1.0, [1, 0, 0, 0, 1, 0, 0, 0]) === 'Strictly-Dominated',
+    'shunned across phases (late octile too) → Strictly-Dominated, even unpriced-thin');
+  // Weakly-Dominated: declined only EARLY = held-value / timing (ADR-0002 blind spot), not a redesign.
+  assert.ok(R.classifyCard({ resid: -3 }, 0.8, [2, 1, 0, 0, 0, 0, 0, 0]) === 'Weakly-Dominated',
+    'shunned only early (never late) → Weakly-Dominated (held-value, correctly priced)');
+  assert.ok(R.classifyCard({ resid: -3 }, 0, null) === 'Weakly-Dominated', 'resid-negative, not shunned → Weakly (advisory, no flag)');
+  assert.ok(R.classifyCard({ resid: 1 }, 0.1, null) === null && R.classifyCard({ resid: null }, 0.1, null) === null,
+    'sub-threshold / no-signal card → unclassified (null)');
+
+  // ---- calibratePoints: a shared class signal MOVES the weight; single-card domination FLAGS ----
+  var cardsById = {
+    A: { steps: [{ type: 'attack' }, { type: 'attack', tieSpare: true }] }, // step.attack×2, flag.tieSpare
+    B: { steps: [{ type: 'attack' }, { type: 'attack' }] },                  // step.attack×2 (shares with A)
+    C: { steps: [{ type: 'deploy', unit: 'artillery' }] },                   // step.deploy, tier.artillery (C's own)
+    D: { steps: [{ type: 'reposition', tieSpare: true }] }                   // step.reposition, flag.tieSpare
+  };
+  var rows = [
+    { id: 'A', name: 'A', resid: 3, hqWins: 10, plays: 20 },   // Dominant, shares step.attack with B
+    { id: 'B', name: 'B', resid: 4, hqWins: 8, plays: 20 },    // Dominant, shares step.attack with A
+    { id: 'C', name: 'C', resid: 6, hqWins: 12, plays: 20 },   // Dominant, tier.artillery is C's alone
+    { id: 'D', name: 'D', resid: -3, hqWins: 1, plays: 20 }    // Weakly (resid<0, not shunned) — held-value
+  ];
+  var aggById = { A: { declines: 0, appears: 20 }, B: { declines: 0, appears: 20 },
+    C: { declines: 0, appears: 20 }, D: { declines: 0, appears: 20 } };
+  var res = R.calibratePoints({ rows: rows, aggById: aggById, cardsById: cardsById });
+
+  var moved = {}; res.moves.forEach(function (m) { moved[m.lever] = m; });
+  assert.ok(moved['step.attack'] && moved['step.attack'].direction === 'raise',
+    'step.attack: 2 under-priced Dominant cards, no single-card domination → shared weight moves UP');
+  assert.ok(!moved['tier.artillery'], 'tier.artillery: only card C → single-card domination, NO shared weight move');
+  assert.ok(res.signal['step.reposition'] === undefined && res.signal['flag.tieSpare'].cards === 1,
+    'Weakly-Dominated D is EXCLUDED from the class signal (held-value resid is a timing artifact, ADR-0002)');
+  var flagged = {}; res.redesignFlags.forEach(function (f) { flagged[f.id] = f; });
+  assert.ok(flagged.C, 'C (Dominant, single-card, no covering move) raises a redesign flag');
+  assert.ok(!flagged.A && !flagged.B, 'A/B are covered by the shared step.attack move → NOT redesign-flagged (the move handles them)');
+  assert.ok(!flagged.D, 'Weakly-Dominated D (held-value) does NOT raise a redesign flag');
+
+  // ---- single-card domination is measured on the SIGNAL (Σ|w·resid|), not hqWins head-count ----
+  var domRows = [
+    { id: 'P', name: 'P', resid: 2, hqWins: 10, plays: 20 },     // shares step.barrage, modest resid
+    { id: 'Q', name: 'Q', resid: 100, hqWins: 11, plays: 20 }    // shares step.barrage, huge resid, ~half the hqWins
+  ];
+  var domRes = R.calibratePoints({ rows: domRows, aggById: { P: { declines: 0, appears: 20 }, Q: { declines: 0, appears: 20 } },
+    cardsById: { P: { steps: [{ type: 'barrage' }] }, Q: { steps: [{ type: 'barrage' }] } } });
+  assert.ok(!domRes.moves.some(function (m) { return m.lever === 'step.barrage'; }),
+    'Q drives ~98% of the w·resid signal (though only ~half the hqWins) → single-card domination, NO move (guard reads the signal, not head-count)');
+
+  // ---- accept gate: SOFT velocity + direction within the Temperature (#109) ----
+  var TEMP = require('./content/temperatures.js');
+  assert.ok(R.acceptMove(1, null) === 0.5 && R.acceptMove(-1, null) === -0.5,
+    'null temperature → one nudge (±0.5); sign = direction');
+  // Profiles are SPARSE (holds omitted): heat = loosened / 8 loosenable axes, so velocity really varies.
+  assert.ok(R.acceptMove(1, TEMP.profiles.card) === 0.75, 'Card profile (4/8 axes loosened → heat 0.5) → 0.75');
+  assert.ok(R.acceptMove(1, TEMP.profiles.map) === 0.8125, 'Map profile (5/8 loosened → heat 0.625) → 0.8125 (a broader temperature steps bigger)');
+  assert.ok(R.acceptMove(1, { name: 'Hold', step: 'x', tolerances: {} }) === 0.5, 'a hold-only profile → base nudge (0.5), no scale-up');
+
+  // ---- lower moves floor at weight 0 (a negative POINTS weight is nonsensical) ----
+  // A lower move comes from Strictly-Dominated cards (negative resid AND shunned across phases).
+  var lowRows = [
+    { id: 'L1', name: 'L1', resid: -5, hqWins: 10, plays: 20 },
+    { id: 'L2', name: 'L2', resid: -6, hqWins: 8, plays: 20 }
+  ];
+  var shunned = { declines: 9, appears: 10 };                 // decline-rate 0.9
+  var lateOctile = [1, 0, 0, 0, 1, 0, 0, 0];                  // declined in a LATE octile → Strictly, not held-value
+  var lowRes = R.calibratePoints({ rows: lowRows,
+    aggById: { L1: shunned, L2: shunned }, octilesById: { L1: lateOctile, L2: lateOctile },
+    cardsById: { L1: { steps: [{ type: 'reposition' }] }, L2: { steps: [{ type: 'reposition' }] } },
+    temperature: TEMP.profiles.map, weightOf: function () { return 0.3; } });  // reposition-like weight 0.3
+  var lower = lowRes.moves.filter(function (m) { return m.lever === 'step.reposition'; })[0];
+  assert.ok(lower && lower.delta === -0.3, 'a lower move clamps to −weight (0.3) so the weight floors at 0, never negative');
+
+  // ---- deckPoints ≤ cap is the ONE hard gate: positive moves clamp to headroom ----
+  var capHeadroom = function (lever) { return R.pointsHeadroom(E.DECKS, lever, E.deckPoints, E.DECK_POINTS_CAP); };
+  var capped = R.calibratePoints({ rows: rows, aggById: aggById, cardsById: cardsById,
+    temperature: TEMP.profiles.card, capHeadroom: capHeadroom });
+  capped.moves.forEach(function (m) {
+    if (m.delta <= 0) return;
+    E.DECKS.forEach(function (d) {
+      var after = E.deckPoints(d) + m.delta * R.leverExposure(d, m.lever);
+      assert.ok(after <= E.DECK_POINTS_CAP + 1e-9,
+        'calibrated ' + m.lever + ' (+' + m.delta + ') keeps deck "' + d.id + '" ≤ cap (' + after.toFixed(1) + ')');
+    });
+  });
+  // headroom is exact: nudging a lever by its headroom lands the tightest deck AT the cap, never over.
+  var attackRoom = R.pointsHeadroom(E.DECKS, 'step.attack', E.deckPoints, E.DECK_POINTS_CAP);
+  assert.ok(attackRoom >= 0 && E.DECKS.every(function (d) {
+    return E.deckPoints(d) + attackRoom * R.leverExposure(d, 'step.attack') <= E.DECK_POINTS_CAP + 1e-9;
+  }), 'pointsHeadroom(step.attack) is the exact ± before the tightest shipped deck hits the cap');
+
+  // ---- LLM feels-pass VETO: drops a move but never feeds the math ----
+  var vetoed = R.calibratePoints({ rows: rows, aggById: aggById, cardsById: cardsById,
+    veto: function (lever) { return lever === 'step.attack'; } });
+  assert.ok(!vetoed.moves.some(function (m) { return m.lever === 'step.attack'; }),
+    'feels-pass veto drops the step.attack move');
+  assert.deepStrictEqual(vetoed.signal['step.attack'], res.signal['step.attack'],
+    'veto is applied AFTER the math — the class signal is byte-identical with or without it');
+})();
+});
+
 test('deploy step budget vs stock (no deploy fallback, oversubscription = broken content)', () => {
 (function () {
   // Printed deploy steps per unit type, weighted by each card's deck count. A
