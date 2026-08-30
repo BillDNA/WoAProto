@@ -1,26 +1,25 @@
 ---
-summary: What makes a good War of Attrition Map — a battlefield whose geometry hands neither colour nor seat the win, keeps both roads to victory open, and gives the middle a reason to be fought over.
+summary: What makes a good War of Attrition Map — a board whose intent you can read before the first card, that offers more than one way to fight, and where every hex earns its place.
 applies-to: any Map in the active Mapset (`content/maps/`) — an existing Map under review or a proposed new one. Read Maps only against peers measured with the same Deck.
 ---
 # Map rubric
 
 A Map is one battlefield — a hex layout with terrain and the two HQ start
-positions. Its whole vocabulary is geometry: terrain sides, HQ spacing, and where
-Control can reach. This rubric judges the one thing the balance sweep can't:
-whether that geometry makes a *fight worth having*. Whether the numbers sit in
-band is the sweep's job (`docs/balance/best-map-score.md`); a metric appears
-here only as evidence for something a grader saw on the board.
+positions. Whether it is *fair* is arithmetic and belongs to the sweep
+(`docs/balance/best-map-score.md`): a map can sit inside every band and still be
+a dull place to fight, and that is the only question this doc asks. Grade by
+setting the board up and playing it in your head, not by reading its row.
 
 ## Goals
 
-* ==**the map decides nothing the players should**== — neither Red/Blue nor first/second mover wins on geometry alone.
-* ==**both roads open**== — the HQ is threatenable but not rushable, so HQ capture and Attrition are both live win paths.
-* ==**ground is worth holding**== — the side that controls more of *this* board is the side that tends to win it.
+* ==**the board tells you the fight**== — a player who has never seen it can say where the battle will happen and why, before the first card.
+* ==**more than one way in**== — the geometry offers distinct plans, not one correct line with decoration around it.
+* ==**every hex earns its place**== — each feature changes a decision someone will actually face; nothing is scenery.
 
 ## Axes of evaluation
 
-1. ==**Terrain is a fight, not a favour.**== Walk the board as each colour. Does a feature help only one of them — a Mountain that shields one HQ's approach, a Forest that faces one way, a River that cuts one side's Control and not the other's? Name the hex and what its mirror would be; that's the fix. A lopsided Red% is a reason to go look, not the finding.
-2. ==**The opening is a move, not the verdict.**== Play the first two turns from both seats. If the first mover's opening claims ground the second seat can't answer at the same price — a choke reached one hex sooner, the only good Deploy edge — name that ground and what would put the second seat's reply within reach. A first-mover edge a card can swing is fine; one only geometry explains (1st%) is the map's to fix.
-3. ==**The road is lined by someone's terrain.**== Trace the shortest capture path from each HQ and say *whose* terrain shapes it — Mountain hands the road to the defender, Forest to the attacker, open hexes to whoever moves first. The finding says which lever moves it: spacing (a road too long turns every battle into Attrition, and the equal-Field-score tiebreaks and long kill tails — Tie%, Drag — follow) or the terrain on the approach (open to the door and it's a race, Mountain at the door and it's a wall). HQ% says which side of the line the map fell on, not why.
-4. ==**The middle is a prize, not scenery.**== Point at the hex a player would fight over — one whose Control opens a Deploy, carries Support across, or shortens the road. If there isn't one, holding more of this board decides nothing (Control% on *this* Map, not the roster mean) and both sides sit on their own defensible line with no reason to leave it. The fix is a feature that makes the ground between the HQs pay.
-5. ==**No two maps are the same battle.**== Across the Mapset, does the plan that wins one map win another? A roster where the same opening beats every board is one map wearing several names, and an extreme corner (attrition-only, seat-skewed) is a *shape* only if the roster needs that shape — otherwise it's a defect the sweep will keep penalising. The finding names which corner is missing or duplicated; that, not a new tune of an existing map, is what `create-map` should fill.
+1. ==**The story is legible from the setup.**== Set it up and say, in one sentence, what this map is about — the ridge, the ford, the long flank. If the sentence needs the numbers to write, or two graders write different sentences, the geometry isn't saying anything yet. The fix is to sharpen the feature that should carry the sentence, not add more.
+2. ==**There are plans, and they feel different.**== Name the ways a side could try to win here and what each costs. If they all reduce to the same first three moves, the map is a corridor; if one is obviously right, the rest are camouflage. A real second plan changes what you'd Deploy on turn one — say which feature would make it real.
+3. ==**Each feature changes a decision.**== Walk every Mountain, Forest, and River and ask who ever fights across it, and what they'd do differently if it weren't there. A feature no plan touches is a tax on the player's attention — delete it or move it to a hex where someone must choose because of it.
+4. ==**The battle has a turn in it.**== Play it forward: is there a moment where a commitment can't be walked back — the Control line crossed, the ford taken — and the fight becomes a different fight? A map without one is a slope, decided at setup or at the deck's bottom; the finding names what feature would create the moment and where.
+5. ==**You would know it with the names filed off.**== Against its Mapset peers, does this map ask a question the others don't — or is it a peer with a hex moved? A roster is only as wide as the distinct fights it contains; the finding names the map it shadows and the fight this one could own instead.
