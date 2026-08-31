@@ -757,6 +757,37 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
 .wb-band.ok { color:var(--forest); }
 .wb-band.warn { color:var(--copper); }
 .wb-band.bad { color:var(--red); }
+/* Fresh grader's rubric findings under an authored card (#166) — the subjective read (position +
+   velocity prose per axis), deliberately distinct from the balance numbers. A graded card is a
+   two-column review PANEL on its own full-width row: the card (face + note) on the LEFT, the
+   findings on the RIGHT — so it uses the width instead of a narrow column under a wide card, reads
+   as one "card + its review" unit, and (row wrapper forcing the grid break) no bare card floats
+   beside it. The findings are scannable, not a transcript: the set-fit headline + the fix-pass
+   show up front, the per-card axes collapse behind a click. */
+.wb-authored-row { flex-basis:100%; width:100%; }              /* forces the grid line break */
+.wb-authored.has-findings { flex-direction:row; flex-wrap:wrap; align-items:flex-start;
+  width:auto; max-width:940px; gap:16px; border:1px solid var(--brass-dark); border-radius:10px;
+  padding:12px 16px; background:rgba(255,255,255,.12); }
+.wb-auth-col { flex:0 0 150px; display:flex; flex-direction:column; align-items:flex-start; gap:5px; }
+.wb-auth-col .wb-auth-face { width:150px; }
+.wb-authored.has-findings .wb-auth-meta, .wb-authored.has-findings .wb-auth-note { max-width:none; text-align:left; }
+.wb-auth-grade { flex:1 1 360px; min-width:280px; }
+.wb-findings { text-align:left; }
+.wb-fx-head { margin:0 0 6px; }
+.wb-fx-more { margin:4px 0 2px; }
+.wb-fx-more > summary { cursor:pointer; color:var(--copper); font-variant:small-caps;
+  letter-spacing:.3px; padding:2px 0; list-style-position:inside; }
+.wb-fx-more > summary:hover { text-decoration:underline; }
+.wb-fx-more-body { margin-top:6px; padding-left:2px; border-left:1px dotted var(--brass-dark); }
+.wb-finding { margin:0 0 7px; padding-left:8px; border-left:3px solid var(--brass-dark); }
+.wb-finding.wb-setfit { border-left-color:var(--copper); background:rgba(184,115,51,.10);
+  padding:3px 0 3px 8px; border-radius:0 4px 4px 0; }
+.wb-fx-axis { font-weight:600; font-size:12px; margin-bottom:1px; }
+.wb-fx-tag { font-size:9px; font-variant:small-caps; letter-spacing:.5px; padding:1px 6px;
+  border-radius:9px; background:var(--copper); color:#fff; }
+.wb-fx-pos, .wb-fx-vel { margin:1px 0; line-height:1.3; }
+.wb-fx-vel { color:var(--ink-soft); }
+.wb-fixpass { margin-top:5px; padding-top:4px; border-top:1px dotted var(--brass-dark); }
 .wb-map-thumb { margin:4px 0; }
 .wb-map-thumb svg { display:block; width:100%; max-height:120px; }
 .wb-wrow { display:flex; justify-content:space-between; gap:8px; font-size:12px; padding:2px 0; }

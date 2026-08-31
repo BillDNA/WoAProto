@@ -362,11 +362,59 @@ function wbAuthoredCard(rec) {
   var meta = [];
   if (card.points != null) meta.push(wbEsc(String(card.points)) + ' pts');
   if (steps) meta.push(steps);
-  return '<div class="wb-authored ' + act + '">' +
-    '<span class="wb-act ' + act + '">' + badge + '</span>' +
-    '<div class="card wb-auth-face">' + cardFace(card, { placeholder: true }) + '</div>' +
-    (meta.length ? '<div class="small wb-hint wb-auth-meta">' + meta.join(' &middot; ') + '</div>' : '') +
-    (rec && rec.note ? '<div class="small wb-built-note wb-auth-note">' + wbEsc(rec.note) + '</div>' : '') +
+  var isGraded = !!(rec && rec.findings && rec.findings.axes && rec.findings.axes.length);
+  var badgeEl = '<span class="wb-act ' + act + '">' + badge + '</span>';
+  var faceEl = '<div class="card wb-auth-face">' + cardFace(card, { placeholder: true }) + '</div>';
+  var metaEl = meta.length ? '<div class="small wb-hint wb-auth-meta">' + meta.join(' &middot; ') + '</div>' : '';
+  var noteEl = rec && rec.note ? '<div class="small wb-built-note wb-auth-note">' + wbEsc(rec.note) + '</div>' : '';
+  // A BARE authored card is a compact tile that flows several per grid row (unchanged, #165).
+  if (!isGraded) return '<div class="wb-authored ' + act + '">' + badgeEl + faceEl + metaEl + noteEl + '</div>';
+  // A GRADED card is a two-column review PANEL on its own full-width row: the card (face + note)
+  // on the left, the fresh grader's findings on the right — so it uses the width, reads as one
+  // "card + its review" unit, and no bare card can float beside it (the row wrapper forces the
+  // grid line break; max-width alone let the next tile share the row).
+  return '<div class="wb-authored-row">' +
+    '<div class="wb-authored ' + act + ' has-findings">' +
+      '<div class="wb-auth-col">' + badgeEl + faceEl + metaEl + noteEl + '</div>' +
+      '<div class="wb-auth-grade">' + wbAuthoredFindings(rec) + '</div>' +
+    '</div>' +
+    '</div>';
+}
+
+/* The FRESH grader's rubric findings under the card (#166). Distinct from the balance numbers
+   (Simple%/1stSight% live in the Run/Results anomaly + built-card blocks): these are the
+   subjective read — per axis, POSITION (where the card sits) + VELOCITY (the fix toward good),
+   prose, never a score/band/pass-fail. The finding record carries each axis keyed with its
+   title + setFit (grade-card.js stamps them from the one axis source), so we render a pure
+   function of the data: the SET-FIT (catalog-fit, #163) finding is pulled out into its own
+   labelled block, the per-card axes follow, and the Author's one-fix-pass outcome closes it —
+   the card proceeds regardless of what the grader said (it cannot bounce). */
+function wbAuthoredFinding(f) {
+  return '<div class="wb-finding' + (f.setFit ? ' wb-setfit' : '') + '">' +
+    '<div class="wb-fx-axis">' + (f.setFit ? '<span class="wb-fx-tag">set-fit</span> ' : '') + wbEsc(f.title) + '</div>' +
+    '<div class="small wb-fx-pos"><b>Position</b> ' + wbEsc(f.position) + '</div>' +
+    '<div class="small wb-fx-vel"><b>Velocity</b> ' + wbEsc(f.velocity) + '</div>' +
+    '</div>';
+}
+function wbAuthoredFindings(rec) {
+  var g = rec && rec.findings;
+  if (!g || !(g.axes && g.axes.length)) return '';
+  // Scannable, not a transcript (spec §1): show the SET-FIT finding (the catalog-fit headline,
+  // #177) and the one-fix-pass outcome up front; tuck the per-card axes behind a click so the
+  // morning feed reads at a glance and the reviewer expands to inspect the full read.
+  var setFit = g.axes.filter(function (a) { return a.setFit; })[0];
+  var perCard = g.axes.filter(function (a) { return !a.setFit; });
+  var fx = g.fixPass;
+  return '<div class="wb-findings">' +
+    '<div class="small wb-lbl wb-fx-head">Rubric findings <span class="wb-hint">&mdash; fresh grader, an aim not a gate</span></div>' +
+    (setFit ? wbAuthoredFinding(setFit) : '') +
+    (perCard.length ?
+      '<details class="wb-fx-more"><summary class="small">' + perCard.length + ' more ax' + (perCard.length === 1 ? 'is' : 'es') +
+      ' <span class="wb-hint">&mdash; per-card read</span></summary>' +
+      '<div class="wb-fx-more-body">' + perCard.map(wbAuthoredFinding).join('') + '</div></details>' : '') +
+    (fx ? '<div class="small wb-fixpass"><b>Author\'s one fix pass:</b> ' +
+      (fx.note ? wbEsc(fx.note) : (fx.applied ? 'applied' : 'none')) +
+      ' <span class="wb-hint">&mdash; card proceeds regardless</span></div>' : '') +
     '</div>';
 }
 

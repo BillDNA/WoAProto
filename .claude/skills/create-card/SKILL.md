@@ -98,7 +98,10 @@ goal, not a big one.
 4. **Self-grade the batch** against the card rubric (predicted dead-turn risk, Simple% risk,
    always-good-on-sight?, and does it open a draft-line the set doesn't already have). One
    adversarial skeptic pass per card. This is *your* self-check; the loop's real grade comes
-   from a **separate fresh grader** — you never mark your own homework.
+   from a **separate fresh grader** (the `grade-card` skill — a subagent that is never you) —
+   you never mark your own homework. Its findings (position + velocity, keyed per axis incl.
+   set-fit, an aim not a gate) come back on `logs/authored/latest.json` under each card; on the
+   next pass, move toward the aim it named.
 5. **Hand off** — the files are written and the feed is recorded. The playtest pins each new
    card into a harness deck and sweeps it; the feels pass lets an LLM draft the catalog freely.
    Tell whoever's driving how to eyeball it: `node game/test.js` green, then a Balance Dashboard
