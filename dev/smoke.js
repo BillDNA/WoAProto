@@ -208,8 +208,9 @@ realSetTimeout(function () {
 
   console.log('== Run phase: live loop monitor + Worth-a-look anomaly panel (#144) ==');
   doc.querySelector('#wbNav .wb-tab[data-phase="run"]').click();
-  // Idle before any loop reports: no progress, just the "no loop running" note.
-  assert.ok(/No loop running/i.test(doc.getElementById('wbRun').textContent), 'Run phase idle until the loop reports');
+  // Idle before any run reports: the Run pane now LEADS with the #167 content-loop feed
+  // (its idle note), and the legacy deck-loop monitor only appears once WB_RUN_STATUS reports.
+  assert.ok(/No content run yet/i.test(doc.getElementById('wbRun').textContent), 'Run phase idle until a loop reports');
   // AC1: feed a mock #138 loop status (LOOP_STEP shape) and assert progress renders.
   win.wbSetRunStatus({
     loopType: 'card', state: 'running', iter: 3, iters: 6, swept: 1200,
@@ -249,6 +250,62 @@ realSetTimeout(function () {
   win.wbSetRunStatus({ loopType: 'card', state: 'done', iter: 6, iters: 6, swept: 2400 });
   assert.ok(doc.getElementById('wbStop').disabled && doc.getElementById('wbPause').disabled, 'a finished loop disables pause/stop');
   win.WB_RUN_STATUS = null; // leave the pane idle for a clean re-open
+
+  console.log('== Run phase: content-loop per-iteration feed (#167) ==');
+  // The content loop writes a structured run record (dev/run-record.js -> logs/content-runs/
+  // latest.json, served by GET /api/contentrun). Feed a mock record and assert the WHOLE
+  // night's story renders on screen: every stage in order, authored cards as real faces, the
+  // fresh grade findings, the balance-pin columns + Tolerance flags, feels non-selection, a
+  // failed-iteration finding, and the LIVE in-flight stage before a commit.
+  win.wbSetContentRun({
+    runId: 'content-run-9999', kind: 'card', state: 'running',
+    config: { nudge: 'build out toward 30 cards', temperature: 'bold', tolerance: 'card', stopAt: '2026-08-31T23:59:00.000Z', questionnaire: 'default' },
+    stage: { iter: 3, name: 'balance' },
+    iterations: [
+      { iter: 1, stages: ['author', 'grade', 'balance', 'feels', 'commit'], commit: 'deadbeefcafebabe',
+        authored: [
+          { action: 'add', id: 'trench_hold', name: 'Dig In', points: 4, note: 'rewards holding a trench under pressure',
+            card: { id: 'trench_hold', name: 'Dig In', text: 'Hold a trench under fire.', points: 4, steps: [{ type: 'trench' }] },
+            legal: true, problems: [],
+            findings: { grader: 'fresh', axes: [
+              { axis: 'set-fit', title: 'Across the set', setFit: true, position: 'fills the hold-under-pressure gap the catalog lacks', velocity: 'sharpen the trigger so it is not always-good-on-sight' },
+              { axis: 'board-had-to-be-there', title: 'The board had to be there', setFit: false, position: 'a real board decision', velocity: 'keep the cost lever visible' } ] },
+            balance: { legal: true, problems: [], swept: 60, columns: { plays: 40, win: 52, simple: 20, sight: 33, points: 4 }, flags: ['1st% 71% on hard (band 45-55)'] } },
+          { action: 'add', id: 'bad_teleport', name: 'Bad Teleport', points: null, note: 'illegal on purpose',
+            card: { id: 'bad_teleport', name: 'Bad Teleport', text: '', steps: [{ type: 'teleport' }] },
+            legal: false, problems: ['bad_teleport step 1: unknown type "teleport"'], findings: null, balance: null } ],
+        feels: { reportPath: 'logs/reports/skirmish/1.2/run-match.md', redPicks: ['trench_hold'], bluePicks: ['cav_charge'], nothingWanted: ['lonely_forgotten_card'], findings: ['nothing wanted "lonely_forgotten_card" — neither free draft picked it'] },
+        balanceReportPath: 'logs/reports/balance/1.2/run-iter1-balance.md', feelsReportPath: 'logs/reports/skirmish/1.2/run-match.md', failure: null },
+      { iter: 2, stages: ['author', 'grade', 'balance', 'feels'], commit: null,
+        authored: [{ action: 'add', id: 'mid_card', name: 'Mid', points: 3, card: { id: 'mid_card', name: 'Mid', text: 't', points: 3, steps: [{ type: 'attack', mod: 1 }] }, legal: true, problems: [], findings: null, balance: { legal: true, problems: [], swept: 40, columns: { plays: 22, win: 48, simple: 10, sight: 25, points: 3 }, flags: [] } }],
+        feels: null, failure: { stage: 'feels', message: 'claude-plays timed out twice', at: 'now' }, balanceReportPath: null, feelsReportPath: null },
+      { iter: 3, stages: ['author', 'grade', 'balance'], commit: null,
+        authored: [{ action: 'add', id: 'wip_card', name: 'WIP', points: 2, card: { id: 'wip_card', name: 'WIP', text: 't', points: 2, steps: [{ type: 'deploy', unit: 'infantry' }] }, legal: true, problems: [], findings: null, balance: null }],
+        feels: null, failure: null, balanceReportPath: null, feelsReportPath: null }
+    ]
+  });
+  var crPane = doc.getElementById('wbContentRun').textContent;
+  // config knobs read back (the run-config block #164/#169/#171 consume)
+  assert.ok(/build out toward 30 cards/.test(crPane) && /bold/.test(crPane) && /tolerance/i.test(crPane), 'content-run feed shows the run-config knobs (nudge/temperature/tolerance)');
+  // every iteration in order
+  assert.ok(/Iteration 1/.test(crPane) && /Iteration 2/.test(crPane) && /Iteration 3/.test(crPane), 'every iteration appears');
+  // stages in order + a LIVE in-flight stage before commit (iteration 3 balance running)
+  assert.ok(/now: iteration/i.test(crPane) && /balance/i.test(crPane) && /running/i.test(crPane), 'the live in-flight stage shows before the iteration commits');
+  // authored card renders as a real card FACE (name + step), reusing cardFace
+  assert.ok(/Dig In/.test(crPane) && /trench/i.test(crPane), 'an authored card renders as a card (name + steps), not JSON');
+  // fresh-grade rubric findings (set-fit) render as an aim
+  assert.ok(/set-fit/i.test(crPane) && /fills the hold-under-pressure gap/.test(crPane), 'the fresh grader findings render (set-fit position)');
+  // balance-pin columns + a Tolerance FLAG (never a reject)
+  assert.ok(/Simple/.test(crPane) && /1stSight/.test(crPane) && /1st% 71%/.test(crPane) && /never a reject/i.test(crPane), 'balance-pin columns + the Tolerance flag (a flag, never a reject) render');
+  // the legality guard: an illegal card is a finding, never swept
+  assert.ok(/illegal/i.test(crPane) && /teleport/.test(crPane), 'the illegal authored card is shown as a caught finding, not swept');
+  // feels non-selection is kept, not dropped
+  assert.ok(/lonely_forgotten_card/.test(crPane) && /neither free draft wanted/i.test(crPane), 'a card neither free draft wanted is kept as a feels finding');
+  // a failed iteration is a finding and the loop advanced past it
+  assert.ok(/failed at/i.test(crPane) && /claude-plays timed out/.test(crPane), 'a failed-iteration finding renders and the loop advanced');
+  // the batch is the commit (short sha)
+  assert.ok(/deadbee/.test(crPane), 'the iteration commit sha renders (the batch is the commit)');
+  win.wbSetContentRun({ state: 'idle', iterations: [] }); // leave idle for a clean re-open
 
   console.log('== Results phase: content-first review (#145) ==');
   doc.querySelector('#wbNav .wb-tab[data-phase="results"]').click();
@@ -939,18 +996,26 @@ realSetTimeout(function () {
       });
     }
 
-    // #154 loop bridge — the ONE seam crossing game/<->dev/: clicking Launch in the
-    // Plan phase must spawn a real dev/loop.js and the Run phase advance through its
-    // live LOOP_STEP output. Drive it through the REAL route: stand up a throwaway
-    // server on server.js's exported handler, point the browser's fetch at it, then
-    // fire the genuine WB_ON_LAUNCH (boot.js) and poll the genuine wbPollRunStatus.
+    // #167 content-loop bridge — the ONE seam crossing game/<->dev/: clicking Launch in the
+    // Plan phase must spawn the REAL content loop and the Run phase advance through the
+    // per-iteration run record it mirrors back. Drive it through the REAL route: stand up a
+    // throwaway server on server.js's exported handler, point the browser's fetch at it, then
+    // fire the genuine WB_ON_LAUNCH (boot.js -> POST /api/contentloop) + wbPollContentRun.
+    // headless:true keeps the Terminal window closed; mock:true keeps the brains offline; the
+    // run still authors a real card, sweeps a real (tiny) AI balance, runs a real claude-plays
+    // feels, and commits — no mocked STAGE, only offline brains — in its own worktree/branch.
     function loopBridge(done) {
-      console.log('== Run phase: real dev/loop.js launch through /api/runloop (#154) ==');
-      var http = require('http'), os = require('os');
+      console.log('== Run phase: real content-loop launch through /api/contentloop (#167) ==');
+      var http = require('http'), cp = require('child_process'), os = require('os');
       var srvMod = require(path.join(GAME, 'server.js'));
+      var repoRoot = path.join(GAME, '..');
+      var tmpDb = path.join(os.tmpdir(), 'woa-smoke-contentloop-' + process.pid + '.db');
+      // Back up any pre-existing run-record so this test never clobbers a real overnight run's
+      // logs/content-runs on a dev box (the test shares the fixed path the dashboard reads).
+      var latestFile = path.join(repoRoot, 'logs', 'content-runs', 'latest.json');
+      var latestBackup = null; try { latestBackup = fs.readFileSync(latestFile, 'utf8'); } catch (e) {}
       var srv = http.createServer(srvMod.handler).listen(0, function () {
         var port = srv.address().port;
-        var tmpDb = path.join(os.tmpdir(), 'woa-smoke-loop-' + process.pid + '.db');
         // Proxy the browser's relative /api/* fetches to the throwaway server.
         win.fetch = function (url, opts) {
           opts = opts || {};
@@ -968,36 +1033,45 @@ realSetTimeout(function () {
             r.end();
           });
         };
-        function teardown() { try { srv.close(); } catch (e) {} try { fs.unlinkSync(tmpDb); } catch (e) {} }
+        function teardown(runId) {
+          try { srv.close(); } catch (e) {}
+          if (runId) {
+            try { cp.execFileSync('git', ['worktree', 'remove', '--force', path.join(repoRoot, '.claude', 'worktrees', runId)], { cwd: repoRoot, stdio: 'pipe' }); } catch (e) {}
+            try { cp.execFileSync('git', ['branch', '-D', runId], { cwd: repoRoot, stdio: 'pipe' }); } catch (e) {}
+          }
+          // remove only THIS test's run dir; restore the pre-existing latest.json (or clear it)
+          if (runId) { try { fs.rmSync(path.join(repoRoot, 'logs', 'content-runs', runId), { recursive: true, force: true }); } catch (e) {} }
+          try { if (latestBackup != null) fs.writeFileSync(latestFile, latestBackup); else fs.rmSync(latestFile, { force: true }); } catch (e) {}
+          try { fs.unlinkSync(tmpDb); } catch (e) {}
+        }
 
-        // Re-open the workbench and restore the genuine (server-served) launch hook,
-        // then fire it with a small, isolated config (1 map, temp db) so a real hard-AI
-        // sweep is ~6s, not the full roster's minute-plus.
+        // Re-open the workbench and restore the genuine (server-served) launch hook, then fire
+        // it with a tiny, offline, headless config so the whole seam runs in a few seconds.
         doc.getElementById('btnWorkbench').click();
         win.WB_ON_LAUNCH = wbRealLaunch; win.WB_ON_CONTROL = wbRealControl;
-        win.WB_ON_LAUNCH({ loopType: 'card', iters: 2, n: 2, panel: ['hard'], profile: 'card', mapset: 'all', maps: 1, db: tmpDb });
-        if (win.WB_POLL) { win.clearInterval(win.WB_POLL); win.WB_POLL = null; } // drive polling ourselves, faster than boot's 1s tick
+        win.WB_ON_LAUNCH({ nudge: 'smoke', temperature: 'standard', profile: 'card', stop: '+3m',
+          iters: 1, n: 2, maps: 1, feelsMatch: 1, feelsTurns: 4, mock: true, headless: true, db: tmpDb });
+        if (win.WB_POLL) { win.clearInterval(win.WB_POLL); win.WB_POLL = null; } // drive polling ourselves
 
-        var seenRunning = false, maxIter = 0, waited = 0;
+        var waited = 0;
         function poll() {
-          win.wbPollRunStatus();           // the genuine bridge poll: GET /api/runloop -> wbSetRunStatus
-          var s = win.WB_RUN_STATUS || {};
-          if (s.state === 'running' || s.state === 'paused') seenRunning = true;
-          if (typeof s.iter === 'number' && s.iter > maxIter) maxIter = s.iter;
-          if (s.state === 'done' || s.state === 'stopped') {
-            assert.ok(seenRunning, 'Run phase saw the loop process running (status produced from a spawned process)');
-            assert.ok(maxIter >= 2, 'Run status advanced iter 1 -> 2 (reached ' + maxIter + ')');
-            assert.strictEqual(s.state, 'done', 'the 2-iteration loop reached state:done');
-            assert.ok((s.steps || []).length === 2, 'both LOOP_STEP lines folded into the status (' + (s.steps || []).length + ')');
-            assert.ok((s.swept || 0) > 0, 'the swept counter advanced from the loop output (' + s.swept + ')');
-            teardown();
+          win.wbPollContentRun();          // the genuine bridge poll: GET /api/contentrun -> wbSetContentRun
+          var r = win.WB_CONTENT_RUN || {};
+          var it = (r.iterations || [])[0];
+          if (r.state === 'done' || r.state === 'stopped') {
+            assert.strictEqual(r.state, 'done', 'the content loop reached state:done');
+            assert.ok(it, 'the run record carries iteration 1');
+            assert.ok(it && it.stages && it.stages.indexOf('author') >= 0 && it.stages.indexOf('feels') >= 0 && it.stages.indexOf('commit') >= 0, 'iteration ran author..feels..commit (' + (it && it.stages || []).join(',') + ')');
+            assert.ok(it && it.authored && it.authored.length >= 1, 'the batch authored a card, mirrored to the feed');
+            assert.ok(/Iteration 1/i.test(doc.getElementById('wbContentRun').textContent), 'the Run feed rendered the real run record');
+            teardown(r.runId);
             win.fetch = function () { return Promise.resolve({ ok: true, json: function () { return Promise.resolve([]); } }); }; // restore no-op
             return done();
           }
-          if ((waited += 200) > 120000) { teardown(); assert.ok(false, 'loop never reached done (last state ' + s.state + ', iter ' + maxIter + ')'); }
-          realSetTimeout(poll, 200);
+          if ((waited += 300) > 120000) { teardown(r.runId); assert.ok(false, 'content loop never reached done (last state ' + r.state + ')'); }
+          realSetTimeout(poll, 300);
         }
-        realSetTimeout(poll, 200);
+        realSetTimeout(poll, 300);
       });
     }
   }

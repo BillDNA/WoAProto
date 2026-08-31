@@ -7,8 +7,9 @@
  *   2. sweep it vs the incumbent            (E.balanceMap over the map roster × a
  *                                            personality panel, folded with R.addAgg)
  *   3. score it against a Tolerance         (#109 profile: R.foldPanel flags + balanceScore)
- *   4. adopt or reject vs the incumbent      (soft velocity + direction; deckPoints>72 = the
- *                                            ONE hard reject; Red%/1st% balance drift only FLAGS)
+ *   4. adopt or reject vs the incumbent      (velocity + direction only; over-cap and the
+ *                                            Red%/1st% balance drift only FLAG — no hard reject,
+ *                                            #167. The gateless successor is dev/content-loop.js)
  *   5. write each skirmish row with its real parent_id = the incumbent it was measured
  *      against (#110), so a trajectory chain exists in logs/woa.db.
  *
@@ -126,7 +127,7 @@ async function runDeckLoop(opts) {
     var drafted = await deckbuild.draftSide(pool, ask, specs[i - 1] || specs[specs.length - 1]);
     var candidate = Object.assign({}, drafted.deck, { id: 'cand' + i });
     var deckPoints = E.deckPoints(candidate);
-    var overCap = deckPoints > E.DECK_POINTS_CAP;   // the ONE hard reject
+    var overCap = deckPoints > E.DECK_POINTS_CAP;   // #167: a FLAG now, no longer a reject
 
     // Sweep candidate vs the reigning incumbent; every skirmish row chains to it.
     var swept = sweep(candidate, incumbent, panel, maps, n, function (g1, seedBase, st) {
@@ -143,15 +144,17 @@ async function runDeckLoop(opts) {
     var fold = R.foldPanel(swept.rows, profile);
     var velocity = incumbentScore - swept.score;    // >0 = candidate makes games healthier
 
-    // Adopt/reject: 72-pt cap is the one hard reject; otherwise SOFT — adopt on positive
-    // velocity in the right direction. A Red%/1st% balance drift is a LOUD FLAG on the
-    // numbers (balanceFlags below), never a reject (#164/#162 §4.4) — it does not bounce a run.
+    // #167: retire the drafter's hard REJECTS. The 72-pt cap is no longer an auto-reject —
+    // that gate (and the pool-drafter it lived in) is condemned; its gateless successor is
+    // dev/content-loop.js. Over-cap is now a LOUD FLAG on the numbers, exactly like the
+    // Red%/1st% balance drift (#164/#162 §4.4) — it never bounces a run. The verdict is
+    // velocity-only (the incumbent search, which Wave D retires wholesale with this file).
     var balanceFlags = fold.flag.members.map(function (f) { return f.label; });
+    if (overCap) balanceFlags.unshift('over the ' + E.DECK_POINTS_CAP + '-pt cap (' + deckPoints + ')');
     var verdict, reason;
-    if (overCap) { verdict = 'reject'; reason = 'over the ' + E.DECK_POINTS_CAP + '-pt cap (' + deckPoints + ')'; }
-    else if (velocity > 0) { verdict = 'adopt'; reason = 'healthier by ' + velocity.toFixed(2); }
+    if (velocity > 0) { verdict = 'adopt'; reason = 'healthier by ' + velocity.toFixed(2); }
     else { verdict = 'reject'; reason = 'no improvement (' + velocity.toFixed(2) + ')'; }
-    if (balanceFlags.length) reason += ' · balance flag: ' + balanceFlags.join(', ');
+    if (balanceFlags.length) reason += ' · flag: ' + balanceFlags.join(', ');
 
     var step = {
       iter: i, candidate: candidate.id, parent: parentId, fromMock: drafted.fromMock,

@@ -1,8 +1,10 @@
 # Obsidian workspace (local editor state)
 .obsidian/
 
-# dev harness dependencies (jsdom for dev/smoke.js) and scratch screenshots
-dev/node_modules/
+# dev harness dependencies (jsdom for dev/smoke.js) and scratch screenshots.
+# No trailing slash: a worktree may wire this as a symlink to the main checkout's
+# install, and a dir-only pattern (node_modules/) would leave that symlink tracked.
+dev/node_modules
 dev/package*.json
 dev/*.png
 
@@ -34,6 +36,11 @@ logs/woa.db-shm
 # regenerated every run (like woa.db). The committed content/cards files + markdown
 # reports are the durable artifacts; the Workbench reads this live from the last run.
 logs/authored/
+
+# Content-loop run record (#167): the structured per-iteration machine-readable
+# contract the dashboard (#170) + "Review with Claude" (#171) read live. Regenerable
+# machine state (points at the committed reports + commits by sha) — like woa.db.
+logs/content-runs/
 
 # DynamicScrum — per-machine/ephemeral (statusLine readout, local settings, hub mutation log)
 .claude-status

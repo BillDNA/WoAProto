@@ -121,6 +121,8 @@ function wbQuestions() {
   return WB_QUESTIONS;
 }
 function wbEsc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+// Same, but also escapes the double-quote so the value is safe inside a "…" HTML attribute.
+function wbAttr(s) { return wbEsc(s).replace(/"/g, '&quot;'); }
 function wbQzRows() {
   var rows = wbQuestions().map(function (q, i) {
     return '<div class="wb-qrow" data-i="' + i + '">' +
@@ -324,6 +326,11 @@ function wbGoPhase(id) {
   });
   if (id === 'trajectory') wbLoadTrajectory();   // refresh the champion line from the db each open
   if (id === 'results') wbLoadAuthored();         // refresh the Author's this-run feed from logs/authored each open
+  // #167: the content-loop feed leads the Run pane — pull its run record each open (re-clicking
+  // the tab refreshes; the record already carries the live in-flight stage). A continuous
+  // auto-poll is a Wave-C nicety (#170) — deliberately NOT a persistent timer here, so the
+  // headless UI test can't be kept alive by a runaway interval.
+  if (id === 'run') wbLoadContentRun();
 }
 
 /* Authored feed (#165) — the card-Author's SHAPING of the catalog this run, rendered as
@@ -366,7 +373,7 @@ function wbAuthoredCard(rec) {
   var badgeEl = '<span class="wb-act ' + act + '">' + badge + '</span>';
   var faceEl = '<div class="card wb-auth-face">' + cardFace(card, { placeholder: true }) + '</div>';
   var metaEl = meta.length ? '<div class="small wb-hint wb-auth-meta">' + meta.join(' &middot; ') + '</div>' : '';
-  var noteEl = rec && rec.note ? '<div class="small wb-built-note wb-auth-note">' + wbEsc(rec.note) + '</div>' : '';
+  var noteEl = rec && rec.note ? '<div class="small wb-built-note wb-auth-note" title="' + wbAttr(rec.note) + '">' + wbEsc(rec.note) + '</div>' : '';
   // A BARE authored card is a compact tile that flows several per grid row (unchanged, #165).
   if (!isGraded) return '<div class="wb-authored ' + act + '">' + badgeEl + faceEl + metaEl + noteEl + '</div>';
   // A GRADED card is a two-column review PANEL on its own full-width row: the card (face + note)
@@ -381,20 +388,43 @@ function wbAuthoredCard(rec) {
     '</div>';
 }
 
+// The first sentence (or a clamped lead) of a prose block — the teaser shown in a finding's
+// collapsed summary so the feed is a scannable list of axis + gist, the full read one click away.
+function wbLead(s, n) {
+  s = String(s == null ? '' : s).trim();
+  n = n || 130;
+  var m = s.match(/^[\s\S]*?[.!?](?=\s|$)/);
+  var lead = m ? m[0] : s;
+  if (lead.length > n) lead = lead.slice(0, n).replace(/\s+\S*$/, '') + '…';
+  return lead;
+}
+
 /* The FRESH grader's rubric findings under the card (#166). Distinct from the balance numbers
    (Simple%/1stSight% live in the Run/Results anomaly + built-card blocks): these are the
    subjective read — per axis, POSITION (where the card sits) + VELOCITY (the fix toward good),
    prose, never a score/band/pass-fail. The finding record carries each axis keyed with its
-   title + setFit (grade-card.js stamps them from the one axis source), so we render a pure
-   function of the data: the SET-FIT (catalog-fit, #163) finding is pulled out into its own
-   labelled block, the per-card axes follow, and the Author's one-fix-pass outcome closes it —
-   the card proceeds regardless of what the grader said (it cannot bounce). */
-function wbAuthoredFinding(f) {
-  return '<div class="wb-finding' + (f.setFit ? ' wb-setfit' : '') + '">' +
-    '<div class="wb-fx-axis">' + (f.setFit ? '<span class="wb-fx-tag">set-fit</span> ' : '') + wbEsc(f.title) + '</div>' +
+   title + setFit (grade-card.js stamps them from the one axis source). Each axis is a COLLAPSED
+   teaser — summary = tag + title + the Position lead sentence, so the feed reads at a glance;
+   expand for the full Position + Velocity. The SET-FIT (catalog-fit, #163) finding leads; the
+   per-card axes tuck behind one more expand; the Author's one-fix-pass outcome closes it — the
+   card proceeds regardless of what the grader said (it cannot bounce). */
+function wbAuthoredFinding(f, opts) {
+  var tag = f.setFit ? '<span class="wb-fx-tag">set-fit</span> ' : '';
+  var body =
     '<div class="small wb-fx-pos"><b>Position</b> ' + wbEsc(f.position) + '</div>' +
-    '<div class="small wb-fx-vel"><b>Velocity</b> ' + wbEsc(f.velocity) + '</div>' +
-    '</div>';
+    '<div class="small wb-fx-vel"><b>Velocity</b> ' + wbEsc(f.velocity) + '</div>';
+  // Inside the "more axes" expand we are already one click in — render the axis in full, flat.
+  if (opts && opts.full) {
+    return '<div class="wb-finding' + (f.setFit ? ' wb-setfit' : '') + '">' +
+      '<div class="wb-fx-axis">' + tag + wbEsc(f.title) + '</div>' + body + '</div>';
+  }
+  return '<details class="wb-finding' + (f.setFit ? ' wb-setfit' : '') + '">' +
+    '<summary class="wb-fx-sum">' + tag +
+      '<span class="wb-fx-axis">' + wbEsc(f.title) + '</span>' +
+      '<span class="wb-fx-lead">' + wbEsc(wbLead(f.position)) + '</span>' +
+    '</summary>' +
+    '<div class="wb-fx-body">' + body + '</div>' +
+    '</details>';
 }
 function wbAuthoredFindings(rec) {
   var g = rec && rec.findings;
@@ -411,7 +441,7 @@ function wbAuthoredFindings(rec) {
     (perCard.length ?
       '<details class="wb-fx-more"><summary class="small">' + perCard.length + ' more ax' + (perCard.length === 1 ? 'is' : 'es') +
       ' <span class="wb-hint">&mdash; per-card read</span></summary>' +
-      '<div class="wb-fx-more-body">' + perCard.map(wbAuthoredFinding).join('') + '</div></details>' : '') +
+      '<div class="wb-fx-more-body">' + perCard.map(function (a) { return wbAuthoredFinding(a, { full: true }); }).join('') + '</div></details>' : '') +
     (fx ? '<div class="small wb-fixpass"><b>Author\'s one fix pass:</b> ' +
       (fx.note ? wbEsc(fx.note) : (fx.applied ? 'applied' : 'none')) +
       ' <span class="wb-hint">&mdash; card proceeds regardless</span></div>' : '') +
@@ -450,6 +480,154 @@ function wbLoadAuthored() {
   if (typeof fetch !== 'function') return;
   fetch('/api/authored').then(function (r) { return r.ok ? r.json() : { cards: [] }; })
     .then(function (feed) { wbSetAuthored(feed); })
+    .catch(function () { /* keep whatever is shown */ });
+}
+
+/* ---------- the CONTENT LOOP feed (#167) — the per-iteration run record on screen ----------
+   The content loop (dev/content-loop.js) writes a structured per-iteration run record
+   (dev/run-record.js -> logs/content-runs/latest.json, served by GET /api/contentrun). This
+   renders it as the night's STORY: every iteration, every stage in order (author -> grade ->
+   balance -> feels -> commit), authored cards as real card FACES (reusing cardFace via
+   wbAuthoredCard), the fresh grader's findings, the per-card balance pin columns + Tolerance
+   FLAGS (never a reject), the feels non-selection findings, and any failed-iteration finding.
+   The live in-flight stage shows BEFORE the iteration commits ("author running now"). Pure
+   render of the record — the red-test (dev/smoke.js) feeds it a mock. */
+var WB_CONTENT_RUN = null;
+
+function wbCRpct(v) { return (v == null || v === '' || isNaN(v)) ? '&mdash;' : wbEsc(String(v)) + '%'; }
+
+// Humanize a stop-datetime: the local clock time (not raw ISO machine text) plus, while it is
+// still ahead, how long until the wall — so the header reads "stops 6:59 PM · in 2h", not
+// "2026-08-31T23:59:00.000Z".
+function wbWhen(iso) {
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return String(iso == null ? '' : iso);
+  var t = d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  var ms = d.getTime() - Date.now();
+  if (ms <= 0) return t;
+  var min = Math.round(ms / 60000);
+  return t + ' · in ' + (min < 60 ? min + 'm' : Math.round(min / 60) + 'h');
+}
+
+var WB_CR_STAGE_ORDER = ['author', 'grade', 'balance', 'feels', 'commit'];
+function wbCRStages(it, liveStage) {
+  return '<span class="wb-cr-stages">' + WB_CR_STAGE_ORDER.map(function (nm) {
+    var done = (it.stages || []).indexOf(nm) >= 0;
+    var live = liveStage === nm;
+    var cls = live ? 'live' : done ? 'done' : 'pending';
+    return '<span class="wb-cr-stage ' + cls + '">' + nm + (live ? '&hellip;' : '') + '</span>';
+  }).join('') + '</span>';
+}
+
+// The card's balance-pin read (or the legality-guard finding). Distinct from the rubric
+// findings above it: this is the sweep's Simple%/1stSight% + the Tolerance flags. The numbers
+// go in a compact stat-grid (reusing .wb-stat) and each Tolerance flag is its own chip, so it
+// reads at a glance instead of as a middot/semicolon run-on.
+function wbCRStat(k, v) {
+  return '<div class="wb-stat"><div class="wb-stat-k">' + k + '</div><div class="wb-stat-v">' + v + '</div></div>';
+}
+function wbCRBalance(a) {
+  if (a.legal === false) return '<div class="small wb-cr-illegal">&#9940; illegal &mdash; ' + wbEsc((a.problems || []).join('; ')) + ' <span class="wb-hint">(caught, never swept)</span></div>';
+  var b = a.balance;
+  if (!b) return '';
+  if (b.legal === false) return '<div class="small wb-cr-illegal">&#9940; ' + wbEsc((b.problems || []).join('; ')) + '</div>';
+  var c = b.columns || {};
+  var stats = '<div class="wb-stats compact wb-cr-stats">' +
+    wbCRStat('win', wbCRpct(c.win)) +
+    wbCRStat('Simple', wbCRpct(c.simple)) +
+    wbCRStat('1stSight', wbCRpct(c.sight)) +
+    wbCRStat('plays', (c.plays || 0)) +
+    wbCRStat('skirmishes', (b.swept || 0)) +
+    '</div>';
+  var flags = (b.flags && b.flags.length)
+    ? '<div class="wb-cr-flags"><span class="small wb-lbl">flags <span class="wb-hint">&mdash; a flag, never a reject</span></span>' +
+      '<div class="wb-cr-flaglist">' + b.flags.map(function (f) { return '<span class="wb-cr-flag">' + wbEsc(f) + '</span>'; }).join('') + '</div></div>'
+    : '<div class="small wb-hint wb-cr-inband">in band on every axis &mdash; no flags</div>';
+  return '<div class="wb-cr-balance"><div class="small wb-lbl wb-cr-baltitle">Balance pin</div>' + stats + flags + '</div>';
+}
+
+// One authored card in the content-run feed: the real card face + rubric findings (shared
+// wbAuthoredCard) with the balance-pin read tucked beneath.
+function wbCRCard(a) {
+  var rec = { action: a.action, card: a.card || { id: a.id, name: a.name, points: a.points, text: '', steps: [] }, note: a.note, findings: a.findings };
+  return '<div class="wb-cr-card">' + wbAuthoredCard(rec) + wbCRBalance(a) + '</div>';
+}
+
+function wbCRFeels(it) {
+  var f = it.feels;
+  if (!f) return '';
+  var nothing = f.nothingWanted || [];
+  var body = nothing.length
+    ? '<b>' + nothing.length + '</b> card(s) neither free draft wanted: ' +
+      nothing.slice(0, 12).map(function (id) { return '<code>' + wbEsc(id) + '</code>'; }).join(' ') +
+      (nothing.length > 12 ? ' &hellip;' : '') + ' <span class="wb-hint">(non-selection = signal, kept not dropped)</span>'
+    : 'every catalog card was drafted by at least one side';
+  return '<div class="wb-cr-feels"><label class="small wb-lbl">Feels <span class="wb-hint">&mdash; first-to-3, two free drafts</span></label>' +
+    '<div class="small">' + body + '</div></div>';
+}
+
+function wbContentRunIter(it, liveStage) {
+  var head = '<div class="wb-cr-ithead"><b>Iteration ' + wbEsc(String(it.iter)) + '</b> ' + wbCRStages(it, liveStage) +
+    (it.commit ? ' <code class="wb-cr-sha" title="' + wbEsc(it.commit) + '">' + wbEsc(String(it.commit).slice(0, 7)) + '</code>' : '') + '</div>';
+  var fail = it.failure
+    ? '<div class="wb-cr-fail">&#9888; failed at <b>' + wbEsc(it.failure.stage) + '</b>: ' + wbEsc(it.failure.message) +
+      ' <span class="wb-hint">&mdash; recorded, loop advanced</span></div>' : '';
+  var cards = (it.authored && it.authored.length)
+    ? '<div class="wb-auth-grid">' + it.authored.map(wbCRCard).join('') + '</div>'
+    : '<p class="small wb-hint">no cards authored this iteration</p>';
+  var reports = [];
+  if (it.balanceReportPath) reports.push('balance: <code>' + wbEsc(it.balanceReportPath) + '</code>');
+  if (it.feelsReportPath) reports.push('feels: <code>' + wbEsc(String(it.feelsReportPath).split('/').pop()) + '</code>');
+  var rep = reports.length ? '<div class="small wb-hint wb-cr-reports">' + reports.join(' &middot; ') + '</div>' : '';
+  return '<div class="wb-cr-iter">' + head + fail + cards + wbCRFeels(it) + rep + '</div>';
+}
+
+function wbContentRunBody() {
+  var r = WB_CONTENT_RUN;
+  if (!r || !r.iterations || (r.state === 'idle' && !r.iterations.length)) {
+    return '<label class="small wb-lbl">Content loop <span class="wb-hint">&mdash; the night\'s story, per iteration</span></label>' +
+      '<p class="small wb-hint">No content run yet &mdash; launch one (<code>node dev/content-loop.js</code>) and every stage ' +
+      '(author &rarr; grade &rarr; balance &rarr; feels) appears here in order, live, read from <code>logs/content-runs/latest.json</code>.</p>';
+  }
+  var cfg = r.config || {};
+  // The long directive (the nudge/brief) gets its own row, clamped to two lines so a wordy
+  // brief can never break the window; the short knobs become chips; the stop time is humanized.
+  var brief = cfg.nudge
+    ? '<div class="small wb-cr-brief" title="' + wbAttr(cfg.nudge) + '"><span class="wb-lbl">brief</span> ' + wbEsc(cfg.nudge) + '</div>' : '';
+  var chips = [];
+  if (cfg.temperature) chips.push('<span class="wb-cr-chip">temperature <b>' + wbEsc(cfg.temperature) + '</b></span>');
+  if (cfg.tolerance) chips.push('<span class="wb-cr-chip">tolerance <b>' + wbEsc(cfg.tolerance) + '</b></span>');
+  if (cfg.stopAt) chips.push('<span class="wb-cr-chip">stops <b>' + wbEsc(wbWhen(cfg.stopAt)) + '</b></span>');
+  if (cfg.questionnaire) chips.push('<span class="wb-cr-chip">questionnaire <b>' + wbEsc(cfg.questionnaire) + '</b></span>');
+  var state = r.state || 'running';
+  var live = (state === 'running' && r.stage)
+    ? '<div class="small wb-cr-live">now: iteration <b>' + wbEsc(String(r.stage.iter)) + '</b> &mdash; <b>' + wbEsc(r.stage.name) + '</b> running&hellip;</div>' : '';
+  var header = '<div class="wb-cr-head">' +
+    '<label class="small wb-lbl">Content run <span class="wb-hint">&mdash; ' + wbEsc(r.runId || '') + '</span> ' +
+    '<span class="wb-run-state ' + wbEsc(state) + '">' + wbEsc(state) + '</span></label>' +
+    brief +
+    (chips.length ? '<div class="wb-cr-chips">' + chips.join('') + '</div>' : '') + live + '</div>';
+  // newest iteration first so the live one is at the top while a run is going
+  var iters = (r.iterations || []).slice().sort(function (a, b) { return b.iter - a.iter; });
+  var liveIter = (state === 'running' && r.stage) ? r.stage.iter : null;
+  var body = iters.map(function (it) { return wbContentRunIter(it, it.iter === liveIter ? r.stage.name : null); }).join('');
+  return header + body;
+}
+
+// Inject a run record and re-render the content-loop feed in place. The live poller calls
+// this from a fetch; the red-test (dev/smoke.js) calls it with a mock record.
+function wbSetContentRun(rec) {
+  WB_CONTENT_RUN = rec;
+  var el = document.getElementById('wbContentRun');
+  if (el) el.innerHTML = wbContentRunBody();
+}
+
+// Poll the content-loop run record (used by the Run phase while a loop is live, and on
+// Results open). Fails open to whatever is shown if the read hiccups / no server.
+function wbLoadContentRun() {
+  if (typeof fetch !== 'function') return;
+  fetch('/api/contentrun').then(function (r) { return r.ok ? r.json() : { state: 'idle', iterations: [] }; })
+    .then(function (rec) { wbSetContentRun(rec); })
     .catch(function () { /* keep whatever is shown */ });
 }
 
@@ -517,9 +695,12 @@ function wbAnomalyPanel(s) {
 // The Run pane body: progress (iteration / swept / running-best / state), pause+stop
 // controls, a tail of recent LOOP_STEP lines, and the Worth-a-look anomaly panel.
 function wbRunBody() {
+  // #167: the content-loop feed (author -> grade -> balance -> feels, per iteration, live)
+  // leads the Run pane — its own container so the poller re-renders it in place. The legacy
+  // deck-loop monitor (WB_RUN_STATUS, dev/loop.js) follows only when that older loop reports.
+  var contentFeed = '<div id="wbContentRun" class="wb-contentrun">' + wbContentRunBody() + '</div>';
   var s = WB_RUN_STATUS;
-  if (!s) return '<p class="small wb-hint">No loop running &mdash; assemble one in <b>Plan &rarr; Launch</b>. ' +
-    'Once the loop reports, this phase tracks iteration, skirmishes swept, and the running-best, live, and flags anything worth a look.</p>';
+  if (!s) return contentFeed;
   var stat = function (k, v) { return '<div class="wb-stat"><div class="wb-stat-k">' + k + '</div><div class="wb-stat-v">' + v + '</div></div>'; };
   var state = s.state || 'running';
   var best = s.best ? s.best.score + (s.best.candidate ? ' <span class="wb-hint">' + wbEsc(s.best.candidate) + '</span>' : '') : '&mdash;';
@@ -542,7 +723,7 @@ function wbRunBody() {
   }).join('');
   var log = '<label class="small wb-lbl">Log tail <span class="wb-hint">&mdash; latest iterations</span></label>' +
     '<div id="wbRunLog" class="wb-log">' + (steps || '<p class="small wb-hint">No iterations reported yet.</p>') + '</div>';
-  return stats + controls + wbAnomalyPanel(s) + log;
+  return contentFeed + stats + controls + wbAnomalyPanel(s) + log;
 }
 
 function wbWireRun() {
