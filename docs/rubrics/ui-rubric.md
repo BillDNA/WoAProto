@@ -5,16 +5,14 @@ applies-to: any screen or on-screen element in the browser rig (`game/`) — an 
 # UI rubric
 
 A screen can render every right pixel and still not *read* — and a UI is not a
-page. It is a place the player inhabits and a thing that answers back,
-speaking in motion, colour, weight, and the shape of what you can touch, not
-words alone. This rubric asks whether that live thing is **understood**: whether
-it reads as one world, speaks and answers in every channel it has, and never
-leaves the player lost. Those are matters of taste, judged the way a designer
-critiques a running interface, not the way QA checks a slide: each axis is a
-question you put to the screen and answer with an **observation and a direction
-to move**, never a pass, a fail, a score, or a band. Drive it, and read the
-whole before you read the parts — most of this lives between the elements and
-across time, where an element-by-element pass is blind.
+page. It is a place the player inhabits and a thing that answers back, speaking
+in motion, colour, weight, and the shape of what you can touch, not words alone.
+This rubric asks whether that live thing is **understood**. It is a matter of
+taste, judged the way a designer critiques a running interface, not the way QA
+checks a slide: each axis is a question you put to the screen and answer with an
+**observation and a direction to move** — never a pass, a fail, a score, or a
+band. Drive it, and read the whole before the parts; most of this lives between
+the elements and across time, where an element-by-element pass is blind.
 
 ## Goals
 
@@ -26,16 +24,14 @@ across time, where an element-by-element pass is blind.
 
 ### Per surface
 
-1. ==**It reads as one world, not a dozen widgets.**== Squint at the whole screen until the detail dissolves — does what's left cohere into one designed place, held by a single light, texture, and palette, or fall apart into unrelated things sharing a rectangle? And for the ornament a declutter would cut — the frame, the grain, the flourish — name what it says about this game's world: if it carries the story or binds the parts it has earned its place, and only what says nothing is the thing to cut. This is the axis an element-by-element pass gets backwards, deleting the very tissue that makes the screen one thing.
+1. ==**Blur it — is it one place?**== Squint until the detail dissolves: does what's left cohere into a single designed place under one light, texture, and palette, or fall into unrelated things sharing a rectangle? And the ornament a declutter would cut — the frame, the grain, the flourish — what does it say about this game's world: if it carries the story or binds the parts it has earned its place, and only what says nothing is worth cutting. Judge the whole here, not the marks one at a time.
 
-2. ==**It speaks in more than words.**== Cover every label — can you still read what's happening and what matters from colour, weight, position, and motion alone? A screen that collapses into nonsense the moment the captions are gone is making the words do a job the whole visual language should carry; the move is to let a state show in its colour or its place, not only in what it is labelled.
+2. ==**Cover the labels.**== Hide every word — can you still read what is happening from colour, weight, position, and motion, and does the decision this turn still lead the eye? The wordless channels should both carry the state and rank it, the live choice loudest, so the labels only confirm what the picture already says; when covering them leaves you blind, or leaves the wrong thing shouting, the visual language isn't pulling its share.
 
-3. ==**It shows you what you can do.**== Before reading a word, what on the screen looks pressable, draggable, yours to move, a place to drop something — and does anything look live that is inert, or sit dead that should be inviting you? A surface advertises its own moves through shape, depth, and the way it answers a hover; the move is to sign the real actions and quiet the false ones.
+3. ==**Point at what's live.**== Before reading a word, which marks look pressable, draggable, yours to move, a place to drop something — and does anything look live that is inert, or sit dead that should be inviting you? A surface should advertise its own moves through shape, depth, and the way it answers a hover; the move is to sign the real actions and quiet the false ones.
 
-4. ==**It answers the moment you touch it.**== Act on it — does the screen reply at once, where your hand is, in proportion to what you did, so the act and its answer land as one event? And does that reply carry you to the next state — showing what changed and where it went — rather than swapping the numbers in silence? An interface you would fidget with for the pleasure of it is alive; one that answers late, elsewhere, or not at all reads as dead however correct it is.
-
-5. ==**The important thing is still the loud thing.**== In all that richness, squint again — does the decision this turn lead the eye, or does a frame, a static readout, or the busiest corner outshout the live choice? Weight, size, and place should rank the turn's decision to the top; when it doesn't lead, the move is to lift the choice, not to strip the world around it.
+4. ==**Act, and count the beats.**== Touch it — does the screen reply at once, where your hand is, in proportion to what you did, so the act and its answer land as one event? And does the reply carry you onward, showing what changed and where it went, rather than swapping the numbers in silence? An interface you would fidget with for the pleasure of it is alive; one that answers late, elsewhere, or not at all reads as dead however correct.
 
 ### Across the set
 
-6. ==**You've met this before.**== Point at any control or readout — can a fresh player name what it is and does from a convention the world already taught or a plain word on its face? And set it beside its kin on other screens: does the same role wear the same clothes everywhere, or has a twin borrowed a costume it hasn't earned? A vocabulary learned once and never contradicted lets a new screen be read on sight; a cryptic or a drifted control sends the player back to translate.
+5. ==**Name it cold, everywhere the same.**== Point at any control or readout — can a fresh player name what it is and does from a convention the world already taught or a plain word on its face? And beside its kin on other screens, does the same role wear the same clothes, or has a twin borrowed a costume it hasn't earned? A vocabulary learned once and never contradicted lets a new screen be read on sight; a cryptic or a drifted control sends the player back to translate.
