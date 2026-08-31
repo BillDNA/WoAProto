@@ -69,22 +69,24 @@ function definitionsIn(entry) {
     const blockFn = /(?:^|\n)(?:function\s+([A-Za-z_$][\w$]*)\s*\([^)]*\)|(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:function\s*\*?\s*\([^)]*\)|\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>)\s*\{/g;
     while ((m = blockFn.exec(s))) {
       const body = braceBody(s, m.index + m[0].length - 1); // m[0] ends at the `{`
-      if (buildsMarkup(body)) defs.push({ name: m[1] || m[2], form: 'fn', rel: entry.rel });
+      if (buildsMarkup(body)) defs.push({ name: m[1] || m[2], form: 'fn', rel: entry.rel, body });
     }
     // fn, expression-bodied arrow `NAME = a => <expr>` — bounded so it can't slurp the next def
     const exprFn = /(?:^|\n)(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>\s*([^;\n]+)/g;
     while ((m = exprFn.exec(s))) {
-      if (buildsMarkup(m[2])) defs.push({ name: m[1], form: 'fn', rel: entry.rel });
+      if (buildsMarkup(m[2])) defs.push({ name: m[1], form: 'fn', rel: entry.rel, body: m[2] });
     }
     const cls = /(?:^|\n)\s*class\s+([A-Za-z_$][\w$]*)/g;
-    while ((m = cls.exec(s))) defs.push({ name: m[1], form: 'class', rel: entry.rel });
+    while ((m = cls.exec(s))) {
+      defs.push({ name: m[1], form: 'class', rel: entry.rel, body: braceBody(s, m.index + m[0].length) });
+    }
     // obj: token bag (>= 2 colour hexes, e.g. CHART) or a method that builds markup
     const obj = /(?:^|\n)(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*\{/g;
     while ((m = obj.exec(s))) {
       const body = braceBody(s, m.index + m[0].indexOf('{'));
       const hexes = (body.match(/['"`]#[0-9a-fA-F]{3,8}['"`]/g) || []).length;
       const methodBuildsMarkup = /[A-Za-z_$][\w$]*\s*(?:\([^)]*\)|:\s*(?:function\s*\([^)]*\)|\([^)]*\)\s*=>))/.test(body) && MARKUP_LITERAL.test(body);
-      if (hexes >= 2 || methodBuildsMarkup) defs.push({ name: m[1], form: 'obj', rel: entry.rel });
+      if (hexes >= 2 || methodBuildsMarkup) defs.push({ name: m[1], form: 'obj', rel: entry.rel, body });
     }
   } else if (entry.type === 'css') {
     // modifier: every `.a.b(.c)` compound chain; scope (base in `bases`) applied by scan()
@@ -130,4 +132,52 @@ function scan(opts) {
   return { violations, defs: allDefs, roster };
 }
 
-module.exports = { scan, ROSTER, UI_VOCAB_DOC, definitionsIn, defaultSources, buildsMarkup };
+// ---- register-or-extend (diff classifier, #194) ------------------------------------
+// The general case of #190's route-through-base: given a *change* (before→after source
+// lists plus the ui.md text it edits), every newly-added primitive must EITHER extend a
+// registered role OR register a genuinely new role in docs/context/ui.md the same diff.
+// #190 locks the one card-face home; this locks every base role and the new-role escape.
+//
+// Per-base-role fork signature: markup that IS an instance of the role's primitive. A
+// new definition carrying it, outside the role's home, is a FORK — a red even when the
+// diff adds a glossary entry, because the role is already served (extend, don't re-mint).
+const FORK_SIGNATURES = [
+  { id: 'card-face',   home: 'game/ui/app.js',   sig: /class=["'`]corner c[1-4][\s"'`]/ }, // #190 brass corners
+  { id: 'svg-factory', home: 'game/ui/board.js', sig: /createElementNS\(/ },               // mints raw SVG nodes
+];
+function defKey(d) { return d.form + ':' + d.name + '@' + d.rel; }
+
+// Classify the primitives a change adds. Returns { added, violations } where each
+// violation is { def, why:'fork'|'unregistered' }. Pure — the diff is the two source
+// lists, so the gate exercises it on fixtures exactly as a PR-callout tool would on a
+// real diff.
+function registerOrExtend(opts) {
+  opts = opts || {};
+  const roster = opts.roster || ROSTER;
+  const before = opts.before || [];
+  const after = opts.after || [];
+  const uiBefore = opts.uiDocBefore || '';
+  const uiAfter = opts.uiDocAfter || '';
+  const baseSet = new Set(roster.bases);
+
+  const beforeKeys = new Set(scan({ sources: before, roster }).defs.map(defKey));
+  const added = scan({ sources: after, roster }).defs.filter(d => !beforeKeys.has(defKey(d)));
+
+  const violations = [];
+  for (const def of added) {
+    // FORK — the def re-implements a base role's markup outside that role's home.
+    const fork = FORK_SIGNATURES.find(f => f.home !== def.rel && f.sig.test(def.body || ''));
+    if (fork) { violations.push({ def, why: 'fork', role: fork.id }); continue; }
+    // EXTEND — a modifier on a registered base, or a variant a registered role's match
+    // already claims (an opts-driven variant adds no def at all, so never reaches here).
+    const extendsBase = def.form === 'modifier' && (def.classes || []).some(c => baseSet.has(c));
+    const extendsRole = roster.roles.some(r => r.form === def.form && r.home === def.rel && r.match.test(def.name));
+    if (extendsBase || extendsRole) continue;
+    // REGISTER — the diff names this new role in ui.md (present after, absent before).
+    if (uiAfter.includes(def.name) && !uiBefore.includes(def.name)) continue;
+    violations.push({ def, why: 'unregistered' });
+  }
+  return { added, violations };
+}
+
+module.exports = { scan, registerOrExtend, FORK_SIGNATURES, ROSTER, UI_VOCAB_DOC, definitionsIn, defaultSources, buildsMarkup };

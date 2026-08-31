@@ -53,3 +53,10 @@ matcher) is **`game/ui-glossary.js`** (`ROSTER`), enforced by `game/test.ui.js` 
 unregistered, so the roster stays a complete census for the register-or-extend gate to
 diff against — and reds if this doc stops naming a registered home, so the vocabulary here
 cannot drift from the code.
+
+The **register-or-extend gate** itself is `registerOrExtend` in `game/ui-glossary.js`
+(also enforced by `game/test.ui.js`): the diff case of #190's route-through-base. Given a
+change, a newly-added element-factory / modifier must *extend* a registered role (an
+`opts` flag or a modifier on a base primitive) or *register* a genuinely new role in this
+doc that same diff; an unregistered new primitive reds, and a **fork** of an already-served
+role (a second card face, a second SVG factory) reds even when a glossary entry is added.
