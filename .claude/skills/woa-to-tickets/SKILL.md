@@ -95,6 +95,33 @@ half is **not a falsifier kind** — it is `woa-implement`'s fresh-grader rail (
 review), owned downstream. Drop it from the criterion; do not hunt for a home for "fresh
 session" — it has none here, and trying to encode it invents one.
 
+### A transport-bearing feature needs a **real-seam** falsifier
+
+The four falsifier kinds can each be satisfied by a **fake transport** — a fake capture, an
+injected `ask`, a stubbed network/subprocess. So a ticket whose feature has a **real
+transport** (a browser/Playwright, an LLM `claude -p`, a network call, a spawned process)
+can hold four green falsifiers while **the real seam has never run once end to end** — the
+80% problem wearing a green check. (Lesson from `dev/ui-review.js` Phase 2: every AC was
+red-at-base, yet every falsifier passed against a text fake standing in for the pixel
+pipeline, so real capture → Phase-1 → Phase-2 was never exercised together — the two real
+halves literally could not run in the same harness, and nothing forced them to.)
+
+So for any transport-bearing ticket, **at least one criterion's falsifier must exercise the
+real components wired together** — one a fake transport cannot satisfy. A **faithful
+deterministic stand-in counts** (a pixel-aware fake that consumes the real capture *bytes*);
+a **text fake standing in for a pixel pipeline does not** — the tell is structural: if the
+real and fake halves cannot run in the same harness, the seam is untested. Its home is an
+**always-run integration test** (`game/test.js` / `dev/smoke.js`) that drives the real seam,
+**paired with** a committed **live smoke** that runs the whole pipeline against the real
+model/browser once and is pasted on the PR (not in `node game/test.js` — a "run it for real
+once" proof, per `dev/ui-review.smoke.js`).
+
+A transport-bearing ticket whose criteria are **all fake-satisfiable** has, in effect, **no
+usable falsifier for the real seam** — treat it as the second rejection below (a criterion
+with no usable falsifier) and add the integration + live-smoke pair before publishing. Rule
+of thumb: **if a green suite is possible while the real seam has never run, the ticket is
+under-specified.**
+
 The **anti-enumeration principle** governs all four (`docs/adr/0004`, Further Notes): bind
 to an oracle or a label, never to an up-front complete list — you always miss one. Never
 hand smoke an interaction checklist, never enumerate licensed test changes, never replace a
