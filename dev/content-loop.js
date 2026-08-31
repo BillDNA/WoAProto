@@ -548,17 +548,28 @@ if (require.main === module) {
   });
 
   // ---- FEELS transport: spawn claude-plays --draft (real) / --mock (offline) ----
-  const feels = async function () {
+  // STREAM claude-plays' turn-by-turn output straight to our stdout as it plays (so a
+  // terminal watcher sees the battle unfold — §1 "watch it happen") while ALSO capturing
+  // it to parse the FEELS_DRAFT / FEELS_REPORT machine lines. execFileSync would swallow
+  // the whole match into a buffer and show nothing until it ended.
+  const feels = function () {
     const args = ['dev/claude-plays.js', '--match', String(feelsMatch), '--red', feelsModel, '--blue', feelsModel,
       '--draft', '--seed', '1001'];
     if (feelsTurns > 0) args.push('--max-turns', String(feelsTurns));
     if (effort) args.push('--effort', effort);
     if (mapset) args.push('--mapset', mapset);
     if (mock) args.push('--mock', '--map', maps[0].name);
-    let stdout = '';
-    try { stdout = cp.execFileSync(process.execPath, args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 128e6 }); }
-    catch (e) { stdout = (e.stdout || '').toString(); if (!stdout) throw new Error('feels: claude-plays failed — ' + (e.message || e)); }
-    return parseFeelsOutput(stdout);
+    return new Promise(function (resolve, reject) {
+      let out = '';
+      const child = cp.spawn(process.execPath, args, { cwd: ROOT });
+      child.stdout.on('data', function (d) { out += d.toString(); process.stdout.write(d); });
+      child.stderr.on('data', function (d) { process.stderr.write(d); });
+      child.on('error', function (e) { reject(new Error('feels: claude-plays failed — ' + (e.message || e))); });
+      child.on('close', function () {
+        if (!out) return reject(new Error('feels: claude-plays produced no output'));
+        resolve(parseFeelsOutput(out));
+      });
+    });
   };
 
   // ---- AUTHOR / GRADE / one-FIX-PASS: real LLM brains, or deterministic mock brains ----
