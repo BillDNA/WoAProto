@@ -69,9 +69,11 @@ the same nudge must produce **measurably different** cards. Hold to the band:
   per batch; two-step cards combining existing levers in a combination not yet in the catalog.
 - **bold** — multi-step cards and cost levers used against type (a negative `mod` as a
   discount, `tieSpare`/`noAdvance` on an unexpected step), decisions the pool doesn't offer yet.
-- **wild** — the weird end: three-step sequences, deliberately lopsided cost/effect, mechanics
-  that stress the engine's edges. Expect several to grade poorly — that's the point of the high
-  end; the grader and playtest catch them, git rolls back the ones that shape badly.
+- **wild** — the weird end: three-step sequences, cost/effect used hard against type,
+  mechanics that stress the engine's edges. Expect several to grade poorly — that's the point
+  of the high end; the grader and playtest catch them, git rolls back the ones that shape
+  badly. (A single card must still be *seatable* — one too expensive to fit any legal deck,
+  ~27+ pts, is refused by the write path regardless of Temperature; that's legality, not taste.)
 
 Higher Temperature → weirder candidates reach playtest. Never let boldness produce an *illegal*
 card — the write path refuses those regardless of Temperature.

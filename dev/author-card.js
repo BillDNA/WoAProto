@@ -58,43 +58,52 @@ function wrapCard(card) {
     JSON.stringify(card, null, 1) + "\n);})(typeof window!=='undefined'?window:globalThis);\n";
 }
 
+// Deck-ref-only properties: a deck entry carries count/starting/out, a CATALOG card never
+// does (its shape is {id,name,text,steps,...engine flags}). Strip them so they can't leak
+// into a content/cards file or slip past the validator masked as a "second starting card".
+const DECK_REF_PROPS = ['count', 'starting', 'out'];
+function toCatalogShape(card) {
+  const out = Object.assign({}, card);
+  DECK_REF_PROPS.forEach(function (k) { delete out[k]; });
+  return out;
+}
+
 /* Card legality via the engine's shared deckProblems. A catalog card is the shape
-   {id,name,text,steps} — count/starting are DECK-ref properties, not the card's — so we
-   seat the card at count 1 in a legal probe deck (one starting card + cheap filler to the
-   16-card band) and run deckProblems over full card objects. Any problem the probe reports
-   is the AUTHORED card's, because the rest of the probe is known-legal. Returns the
-   human-readable problem strings (empty = legal), scoped to this card. */
+   {id,name,text,steps} — so we seat it at count 1 in a legal probe deck (cheapest cards to
+   the 16-card band) and DIFF the deck's problems against a baseline probe with the card
+   replaced by another filler. Every problem the card introduces is attributable to it, and
+   attribution is by set-difference of the actual problem strings — NOT substring-matching a
+   filler's name (which mis-judged a card whose own name contained a filler's). Returns the
+   card's problem strings (empty = legal). The probe is the cheapest legal 16-card deck, so
+   its budget headroom (cap − 15 cheapest slots ≈ 27 pts) is the true most a single card can
+   cost and still be seatable in ANY legal deck — a principled per-card budget, not an
+   artefact of the filler count. */
 function cardProblems(card) {
-  // Build the probe from the TWO CHEAPEST catalog cards (never the card under test — an
-  // edit of a filler would else look like a duplicate id). Cheapest fillers leave the most
-  // budget headroom, so the "over budget" line fires only when the authored card can't be
-  // seated even in the leanest legal deck — a real, permissive per-card budget signal, not
-  // an artefact of expensive filler.
-  const cheapest = E.CARDS.slice()
+  const cheapest = catalogCards().slice()
     .filter(function (c) { return !card || c.id !== card.id; })
     .sort(function (a, b) { return E.cardPoints(a) - E.cardPoints(b); });
   const start = cheapest[0], fill = cheapest[1];
   if (!start || !fill) return ['author-card: too few probe cards in the catalog — cannot validate'];
-  const probe = [
-    Object.assign({}, start, { count: 1, starting: true }),
-    Object.assign({}, card || {}, { count: 1 }),
-    Object.assign({}, fill, { count: 14 })
-  ];
-  const startTag = start.name || start.id, fillTag = fill.name || fill.id;
-  // Keep only problems attributable to the card: everything except the two probe
-  // fillers and the deck-size/one-starting bookkeeping, plus the army-points budget
-  // line (seating this card is what could bust the cap — the card's own budget signal).
-  return E.deckProblems(probe).filter(function (p) {
-    if (p.indexOf('army-points budget') >= 0) return true;
-    return p.indexOf(startTag) < 0 && p.indexOf(fillTag) < 0 &&
-      p.indexOf('total 16-17') < 0 && p.indexOf('exactly ONE card must be marked starting') < 0;
-  });
+  const startRef = Object.assign(toCatalogShape(start), { count: 1, starting: true });
+  const cardRef = Object.assign(toCatalogShape(card || {}), { count: 1 });
+  const fillRef = Object.assign(toCatalogShape(fill), { count: 14 });
+  // Baseline = the same legal deck with the card's slot given back to the filler (count 15).
+  const baseline = E.deckProblems([startRef, Object.assign(toCatalogShape(fill), { count: 15 })]);
+  const withCard = E.deckProblems([startRef, cardRef, fillRef]);
+  const baseSet = {}; baseline.forEach(function (p) { baseSet[p] = 1; });
+  return withCard.filter(function (p) { return !baseSet[p]; });
 }
 
 // --- feed (logs/authored/latest.json) — the renderable record the Workbench reads ---
 function readFeed(feedFile) {
-  try { return JSON.parse(fs.readFileSync(feedFile || FEED_FILE, 'utf8')); }
-  catch (e) { return { authoredAt: null, nudge: '', temperature: '', cards: [] }; }
+  const f = feedFile || FEED_FILE;
+  let src;
+  try { src = fs.readFileSync(f, 'utf8'); }
+  catch (e) { return { authoredAt: null, nudge: '', temperature: '', cards: [] }; } // absent = fresh run
+  // Present but unparseable: DON'T silently reset — that would wipe the run's prior records
+  // on the next append. Fail loud so the operator recovers (or re-runs `reset` deliberately).
+  try { return JSON.parse(src); }
+  catch (e) { throw new Error('author feed at ' + f + ' is corrupt (' + e.message + ') — fix it or run `author-card.js reset`'); }
 }
 function writeFeed(feed, feedFile) {
   const f = feedFile || FEED_FILE;
@@ -152,6 +161,7 @@ function addCard(card, meta, opts) {
   opts = opts || {};
   const dir = opts.cardsDir || CARDS_DIR;
   if (!card || !card.id) throw new Error('add: card needs an id');
+  card = toCatalogShape(card);   // deck-ref props (count/starting/out) never belong in a catalog file
   if (fs.existsSync(cardFile(card.id, dir))) throw new Error('add: ' + card.id + ' already exists — use `edit`');
   const probs = cardProblems(card);
   if (probs.length) throw new Error('add: refusing an illegal card:\n  - ' + probs.join('\n  - '));
@@ -165,6 +175,7 @@ function editCard(card, meta, opts) {
   opts = opts || {};
   const dir = opts.cardsDir || CARDS_DIR;
   if (!card || !card.id) throw new Error('edit: card needs an id');
+  card = toCatalogShape(card);   // deck-ref props (count/starting/out) never belong in a catalog file
   const before = readStoredCard(card.id, dir);
   if (!before) throw new Error('edit: ' + card.id + ' does not exist — use `add`');
   const probs = cardProblems(card);

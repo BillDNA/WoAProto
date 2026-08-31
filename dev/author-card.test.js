@@ -39,6 +39,24 @@ test('cardProblems: flags the card-level checks the AC names', () => {
   assert.ok(A.cardProblems(huge).some(p => /army-points budget/.test(p)), 'over budget');
 });
 
+test('cardProblems: attribution survives a name that contains a probe filler name', () => {
+  // Regression: substring-matching a filler's name used to DROP the real problem when the
+  // card's own name contained it — writing an illegal card. Set-difference attribution fixes it.
+  const collide = { id: 'attack_plus1_reserve', name: 'Attack +1 Reserve', text: 'x', steps: [{ type: 'deploy', unit: 'dragon' }] };
+  assert.ok(A.cardProblems(collide).some(p => /unknown unit/.test(p)), 'illegal step still caught despite name collision');
+});
+test('addCard strips deck-ref props (count/starting/out) — never written to a catalog file', () => {
+  // starting/count/out belong to a DECK ref, not a catalog card. The write path strips them
+  // so a catalog file is always the clean {id,name,text,steps} shape.
+  const s = sandbox();
+  A.addCard({ id: 'stray', name: 'Stray', text: 'x', steps: [{ type: 'trench' }], starting: true, count: 3, out: true }, {}, s);
+  const stored = A.readStoredCard('stray', s.cardsDir);
+  assert.strictEqual(stored.starting, undefined, 'starting stripped');
+  assert.strictEqual(stored.count, undefined, 'count stripped');
+  assert.strictEqual(stored.out, undefined, 'out stripped');
+  assert.deepStrictEqual(Object.keys(stored).sort(), ['id', 'name', 'steps', 'text'], 'only catalog-shape keys remain');
+});
+
 /* ---------- add / edit / remove write real files + record the feed ---------- */
 test('addCard writes a real catalog file and records an add in the feed', () => {
   const s = sandbox();
@@ -91,6 +109,14 @@ test('addCard refuses to clobber an existing card; edit refuses a missing one', 
   A.addCard(CARD, {}, s);
   assert.throws(() => A.addCard(CARD, {}, s), /already exists/);
   assert.throws(() => A.editCard({ id: 'ghost', name: 'x', steps: [{ type: 'trench' }] }, {}, s), /does not exist/);
+});
+
+test('a corrupt feed fails loud instead of silently wiping the run', () => {
+  const s = sandbox();
+  A.addCard(CARD, {}, s);
+  fs.writeFileSync(s.feedFile, '{ this is not json');
+  // The next append must NOT reset the feed to empty (which would discard the run's records).
+  assert.throws(() => A.addCard(Object.assign({}, CARD, { id: 'reserve_two' }), {}, s), /corrupt/);
 });
 
 test('TEMPERATURES matches the Workbench author-boldness knob', () => {
