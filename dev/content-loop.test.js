@@ -38,6 +38,42 @@ const FINDINGS = { grader: 'fresh-subagent', axes: [
 // The injected catalog: the real active cards + our GOOD card, so the sweep can find it.
 function catalogWith(card) { return E.CARDS.concat([card]); }
 
+test('pure: parseFeelsOutput reads claude-plays FEELS_DRAFT / FEELS_REPORT lines', function () {
+  const stdout = [
+    '[00:01] claude-plays: some prose',
+    'FEELS_DRAFT {"red":["a","b"],"blue":["b","c"]}',
+    '[00:02] transcript written to x',
+    'FEELS_REPORT logs/reports/skirmish/1.2/foo-match.md'
+  ].join('\n');
+  const r = CL.parseFeelsOutput(stdout);
+  assert.deepStrictEqual(r.redPicks, ['a', 'b']);
+  assert.deepStrictEqual(r.bluePicks, ['b', 'c']);
+  assert.strictEqual(r.reportPath, 'logs/reports/skirmish/1.2/foo-match.md');
+  // and the loop's non-selection over these: catalog {a,b,c,d} minus {a,b,c} = {d}
+  assert.deepStrictEqual(CL.nonSelection(['a', 'b', 'c', 'd'], r.redPicks, r.bluePicks), ['d']);
+});
+
+test('pure: parseAuthorBatch extracts a move batch from prose-wrapped JSON', function () {
+  const reply = 'Sure, here is my batch:\n[{"action":"add","card":{"id":"dig_in","name":"Dig In","text":"t","steps":[{"type":"trench"}]},"note":"gap"},' +
+    '{"action":"remove","id":"dead_card","note":"never played"}]\nHope that helps.';
+  const moves = CL.parseAuthorBatch(reply);
+  assert.strictEqual(moves.length, 2);
+  assert.strictEqual(moves[0].action, 'add');
+  assert.strictEqual(moves[0].card.id, 'dig_in');
+  assert.strictEqual(moves[1].action, 'remove');
+  assert.strictEqual(moves[1].id, 'dead_card');
+  assert.deepStrictEqual(CL.parseAuthorBatch('no json here'), [], 'junk -> empty batch (loop authors nothing, never crashes)');
+  assert.deepStrictEqual(CL.parseAuthorBatch('{"moves":[{"action":"add","card":{"id":"x","name":"X","text":"t","steps":[{"type":"trench"}]}}]}').length, 1, 'accepts {moves:[...]}');
+});
+
+test('pure: parseStopAt reads +Nm / +Nh / ISO relative to now', function () {
+  const now = 1_000_000_000_000;
+  assert.strictEqual(CL.parseStopAt('+15m', now), now + 15 * 60000);
+  assert.strictEqual(CL.parseStopAt('+2h', now), now + 2 * 3600000);
+  assert.strictEqual(CL.parseStopAt('', now), 0, 'unset -> 0 (no wall)');
+  assert.strictEqual(CL.parseStopAt('2026-08-31T23:59:00.000Z', now), Date.parse('2026-08-31T23:59:00.000Z'));
+});
+
 test('pure: nonSelection is the catalog minus what either free draft picked', function () {
   assert.deepStrictEqual(CL.nonSelection(['a', 'b', 'c', 'd'], ['a'], ['c']), ['b', 'd']);
   assert.deepStrictEqual(CL.nonSelection(['a', 'b'], ['a', 'b'], []), [], 'everything drafted -> nothing flagged');

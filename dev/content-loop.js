@@ -367,4 +367,229 @@ function writeReport(reportsDir, parts, name, md) {
   return rel.indexOf('..') === 0 ? file : rel;
 }
 
-module.exports = { runContentLoop, pinSweep, nonSelection, resolveTolerance, balanceMarkdown, STAGES };
+/* ---------- pure parse helpers for the CLI's real transports (unit-tested) ---------- */
+
+/* Parse claude-plays' machine lines (FEELS_DRAFT / FEELS_REPORT) out of its stdout, so the
+   FEELS non-selection is derived from the ACTUAL match the loop ran (not a re-draft). */
+function parseFeelsOutput(stdout) {
+  const out = { redPicks: [], bluePicks: [], reportPath: null };
+  String(stdout || '').split('\n').forEach(function (line) {
+    let m = line.match(/^FEELS_DRAFT\s+(.*)$/);
+    if (m) { try { const d = JSON.parse(m[1]); out.redPicks = d.red || []; out.bluePicks = d.blue || []; } catch (e) {} return; }
+    m = line.match(/^FEELS_REPORT\s+(.*)$/);
+    if (m) { out.reportPath = m[1].trim() || null; }
+  });
+  return out;
+}
+
+/* Parse the Author LLM's reply into a batch of shaping moves. Accepts a bare JSON array of
+   moves, or { moves:[...] } / { batch:[...] }. Scans for the first balanced array/object that
+   parses (a stray prose brace must not swallow the real batch), and normalizes each move to
+   { action:'add'|'edit'|'remove', card?, id?, note? }. Returns [] on anything unparseable. */
+function parseAuthorBatch(text) {
+  const raw = extractJson(text);
+  if (!raw) return [];
+  const list = Array.isArray(raw) ? raw : (raw.moves || raw.batch || raw.cards || []);
+  if (!Array.isArray(list)) return [];
+  return list.map(function (m) {
+    if (!m || typeof m !== 'object') return null;
+    const action = m.action === 'edit' ? 'edit' : m.action === 'remove' ? 'remove' : 'add';
+    if (action === 'remove') return { action: 'remove', id: m.id || (m.card && m.card.id), note: m.note || '' };
+    const card = m.card || (m.id && m.steps ? m : null);
+    if (!card || !card.id) return null;
+    return { action: action, card: card, note: m.note || '' };
+  }).filter(Boolean);
+}
+
+// Scan text for the first balanced {...} or [...] that JSON-parses (tolerates prose around it).
+function extractJson(text) {
+  if (!text) return null;
+  const s = String(text);
+  for (let i = 0; i < s.length; i++) {
+    const open = s[i];
+    if (open !== '{' && open !== '[') continue;
+    const close = open === '{' ? '}' : ']';
+    let depth = 0, inStr = false, esc = false;
+    for (let j = i; j < s.length; j++) {
+      const ch = s[j];
+      if (inStr) { if (esc) esc = false; else if (ch === '\\') esc = true; else if (ch === '"') inStr = false; continue; }
+      if (ch === '"') inStr = true;
+      else if (ch === open) depth++;
+      else if (ch === close && --depth === 0) { try { return JSON.parse(s.slice(i, j + 1)); } catch (e) { break; } }
+    }
+  }
+  return null;
+}
+
+/* Parse a stop-datetime: a relative "+15m" / "+2h" / "+90s", an ISO string, or a Date.
+   Returns epoch ms (0 = unset). now is injectable for tests. */
+function parseStopAt(v, now) {
+  now = now || Date.now();
+  if (v == null || v === '') return 0;
+  if (v instanceof Date) return v.getTime();
+  const rel = String(v).match(/^\+(\d+)\s*([smh])$/i);
+  if (rel) { const k = { s: 1e3, m: 6e4, h: 36e5 }[rel[2].toLowerCase()]; return now + (+rel[1]) * k; }
+  const t = Date.parse(v);
+  return isNaN(t) ? 0 : t;
+}
+
+module.exports = { runContentLoop, pinSweep, nonSelection, resolveTolerance, balanceMarkdown, STAGES,
+  parseFeelsOutput, parseAuthorBatch, parseStopAt, extractJson };
+
+/* ============================ CLI ============================
+   One launch drives the whole headless cycle. The real transports wire the LLM brains
+   (create-card as the Author's brain, a FRESH grade-card call, claude-plays --draft for
+   feels); --mock swaps them for deterministic offline brains so the DETERMINISTIC machine
+   can be run end to end without an API key. The deterministic machinery (pin sweep, run
+   record, Tolerance flag, legality guard, non-selection, stop wall, per-iteration commit)
+   is identical on both paths.
+
+     node dev/content-loop.js --nudge "build out toward 30 cards" --temperature standard \
+       --tolerance card --stop +45m [--panel easy,normal,hard] [--n 6] [--maps 2] \
+       [--mapset core7] [--feels-model haiku] [--branch content-run-<ts>] [--mock]
+*/
+if (require.main === module) {
+  const cp = require('child_process');
+  const argv = process.argv.slice(2);
+  const flag = function (name, def) { const i = argv.indexOf('--' + name); return i >= 0 ? argv[i + 1] : def; };
+  const has = function (name) { return argv.indexOf('--' + name) >= 0; };
+
+  const runId = flag('run-id', 'content-run-' + Date.now());
+  const mock = has('mock');
+  const noCommit = has('no-commit');
+  const branch = flag('branch', null);
+  const config = {
+    nudge: flag('nudge', 'build out toward 30 cards'),
+    temperature: flag('temperature', 'standard'),
+    tolerance: flag('tolerance', 'card'),
+    questionnaire: flag('questionnaire', 'default'),
+    stopAt: null
+  };
+  const stopAtMs = parseStopAt(flag('stop', '+30m'));
+  config.stopAt = stopAtMs ? new Date(stopAtMs).toISOString() : '';
+  const panel = flag('panel', 'easy,normal,hard').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+  const n = Math.max(2, +flag('n', 6) | 0);
+  let maps = E.mapPool();
+  const mapset = flag('mapset', null);
+  if (mapset && mapset !== 'all') { const s = E.MAPSETS.filter(function (x) { return x.id === mapset; })[0]; if (s) maps = E.MAPS.filter(function (m) { return s.maps.indexOf(m.id) >= 0 || s.maps.indexOf(m.name) >= 0; }); }
+  else if (mapset === 'all') maps = E.MAPS;
+  const capMaps = +flag('maps', 0) | 0; if (capMaps > 0) maps = maps.slice(0, capMaps);
+  const maxIters = +flag('iters', 0) | 0;
+
+  const ROOT = path.join(__dirname, '..');
+  const cardsDir = flag('cards-dir', null);           // temp override for a safe dry run
+  const feedFile = flag('feed-file', null);
+  const recDir = flag('rec-dir', null);
+  const reportsDir = flag('reports-dir', null);
+  const authorOpts = {}; if (cardsDir) authorOpts.cardsDir = cardsDir; if (feedFile) authorOpts.feedFile = feedFile;
+
+  const feelsModel = flag('feels-model', 'haiku');
+  const authorModel = flag('author-model', 'sonnet');
+  const gradeModel = flag('grade-model', 'sonnet');
+  const effort = flag('effort', '');
+
+  // ---- git commit hook (the batch is the commit; runs in THIS worktree) ----
+  function git(args) { return cp.execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim(); }
+  if (branch && !noCommit) { try { git(['switch', '-c', branch]); console.log('content-loop: on branch ' + branch); } catch (e) { console.error('content-loop: could not create branch ' + branch + ' — ' + e.message); } }
+  const commit = noCommit ? (async function () { return null; }) : (async function (iter, msg) {
+    try {
+      git(['add', '-A']);
+      // nothing staged (no content change this iter) -> no commit, no crash
+      const staged = cp.execFileSync('git', ['diff', '--cached', '--name-only'], { cwd: ROOT, encoding: 'utf8' }).trim();
+      if (!staged) return null;
+      git(['commit', '-q', '-m', msg + '\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>']);
+      return git(['rev-parse', 'HEAD']);
+    } catch (e) { return null; }
+  });
+
+  // ---- FEELS transport: spawn claude-plays --draft (real) / --mock (offline) ----
+  const feels = async function () {
+    const args = ['dev/claude-plays.js', '--match', '3', '--red', feelsModel, '--blue', feelsModel,
+      '--draft', '--seed', '1001'];
+    if (effort) args.push('--effort', effort);
+    if (mapset) args.push('--mapset', mapset);
+    if (mock) args.push('--mock', '--map', maps[0].name);
+    let stdout = '';
+    try { stdout = cp.execFileSync(process.execPath, args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 128e6 }); }
+    catch (e) { stdout = (e.stdout || '').toString(); if (!stdout) throw new Error('feels: claude-plays failed — ' + (e.message || e)); }
+    return parseFeelsOutput(stdout);
+  };
+
+  // ---- AUTHOR / GRADE: real LLM brains, or deterministic mock brains ----
+  let author, grade;
+  if (mock) {
+    let seqn = 0;
+    author = async function (ctx) {
+      const id = 'loop_probe_' + ctx.iter + '_' + (++seqn);
+      // a deterministic, legal single-step card so the whole machine runs offline
+      return [{ action: 'add', note: 'mock brain probe (iter ' + ctx.iter + ')',
+        card: { id: id, name: 'Probe ' + ctx.iter + '.' + seqn, text: 'A mock probe card.', steps: [{ type: 'trench' }] } }];
+    };
+    grade = async function (ids) {
+      const o = {};
+      ids.forEach(function (id) { o[id] = { grader: 'mock-fresh', axes: [
+        { axis: 'set-fit', position: 'a mock probe; sits apart from the catalog on purpose', velocity: 'a real Author would sharpen it toward a genuine gap' },
+        { axis: 'board-had-to-be-there', position: 'trivially playable, no real board decision yet', velocity: 'add a trigger that ties it to the board' } ] }; });
+      return o;
+    };
+  } else {
+    const llm = require(path.join(__dirname, 'llm-client.js'));
+    const skillText = readMaybe(path.join(ROOT, '.claude', 'skills', 'create-card', 'SKILL.md'));
+    const cheatsheet = readMaybe(path.join(ROOT, 'docs', 'card-cheatsheet.md'));
+    author = async function (ctx) {
+      const um = authorUserMessage(ctx, cheatsheet);
+      const res = await llm.send({ systemPrompt: skillText + '\n\nReturn ONLY a JSON array of moves; no prose.', userMessage: um, model: authorModel, effort: effort, timeoutMs: 600000 });
+      return parseAuthorBatch(res.text);
+    };
+    grade = async function (ids, ctx) {
+      const out = {};
+      for (const id of ids) {
+        const brief = G.briefFor('game/content/cards/' + id + '.js', require(path.join(ROOT, 'game', 'card-rubric-axes.js')).CARD_RUBRIC_AXES.map(function (a) { return a.id; }))
+          + '\n\nIMPORTANT: do NOT run any command. Return ONLY the findings JSON object.';
+        const res = await llm.send({ systemPrompt: 'You are a FRESH card grader (never the author). Findings are an aim, not a gate — no score/band/pass-fail.', userMessage: brief, model: gradeModel, effort: effort, timeoutMs: 600000 });
+        const f = extractJson(res.text);
+        if (f) out[id] = f;
+      }
+      return out;
+    };
+  }
+
+  console.log('content-loop: ' + (mock ? 'MOCK brains' : 'real LLM brains') + ' · nudge "' + config.nudge + '" · temperature ' + config.temperature +
+    ' · tolerance ' + config.tolerance + ' · stop ' + (config.stopAt || 'none') + ' · panel [' + panel.join(',') + '] · ' + maps.length + ' maps' + (noCommit ? ' · NO-COMMIT' : ''));
+
+  runContentLoop({
+    runId: runId, config: config, stopAt: stopAtMs, maxIters: maxIters,
+    panel: panel, maps: maps, n: n, tolerance: config.tolerance,
+    authorOpts: authorOpts, recDir: recDir, reportsDir: reportsDir,
+    author: author, grade: grade, feels: feels, commit: commit,
+    onStage: function (s) { process.stdout.write('CONTENT_STAGE ' + JSON.stringify(s) + '\n'); }
+  }).then(function (res) {
+    console.log('\nCONTENT_RESULT ' + JSON.stringify({ runId: res.runId, iterations: res.iterations, record: res.recordFile }));
+    console.log('\n' + res.iterations + ' iteration(s). Run record: ' + res.recordFile);
+  }).catch(function (e) { console.error(e); process.exit(1); });
+}
+
+function readMaybe(f) { try { return require('fs').readFileSync(f, 'utf8'); } catch (e) { return ''; } }
+
+// The Author's live context: nudge + Temperature + the current catalog + last reports (INTAKE).
+function authorUserMessage(ctx, cheatsheet) {
+  const lines = [];
+  lines.push('OPENING NUDGE: ' + (ctx.config.nudge || '(none)'));
+  lines.push('TEMPERATURE: ' + (ctx.config.temperature || 'standard') + ' (honor the band — a safe run and a wild run must differ)');
+  lines.push('ITERATION: ' + ctx.iter);
+  lines.push('');
+  lines.push('CURRENT CATALOG (' + ctx.catalog.length + ' cards): ' + ctx.catalog.join(', '));
+  lines.push('');
+  if (ctx.lastBalanceReport) lines.push('INTAKE — last balance report: ' + tail(readMaybe(path.join(__dirname, '..', ctx.lastBalanceReport)), 2000));
+  if (ctx.lastFeelsReport) lines.push('INTAKE — last feels report: ' + tail(readMaybe(path.join(__dirname, '..', ctx.lastFeelsReport)), 2000));
+  lines.push('');
+  if (cheatsheet) lines.push('STEP VOCABULARY (card-cheatsheet):\n' + cheatsheet);
+  lines.push('');
+  lines.push('Shape the catalog toward the nudge at this Temperature — a BATCH sized by your judgment ' +
+    '(~4 when growing to 30; shift to edit/remove near target). Spread the decisions; do not write four attack buffs.');
+  lines.push('Return ONLY a JSON array of moves, each: ' +
+    '{"action":"add"|"edit"|"remove","card":{"id":"snake_case","name":"...","text":"...","steps":[...]},"note":"why"} ' +
+    '(for remove, use {"action":"remove","id":"...","note":"why"}). Card JSON is the catalog shape (no count/starting).');
+  return lines.join('\n');
+}
+function tail(s, k) { s = String(s || ''); return s.length > k ? s.slice(s.length - k) : s; }

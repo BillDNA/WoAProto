@@ -142,6 +142,22 @@ if (!ARGS.out) ARGS.out = path.join(LOG_DIR, 'claude-plays-log.jsonl');
 
 const HEURISTIC = {};
 Object.keys(E.AI_PRESETS).forEach(function (k) { HEURISTIC[k] = true; });
+
+// Card metadata lookup. E.CARD_BY_ID is only the ACTIVE deck's cards; under --draft each
+// side draws from the FULL catalog (dev/deckbuild.buildPool), so a drafted catalog-only
+// card is absent from E.CARD_BY_ID and reading its .name/.text would crash the render.
+// setCardsInPlay() merges the drafted decks' card objects over the active lookup once the
+// match's sideDecks are known; cardMeta() falls back safely so an unknown id never throws.
+var CARDS_IN_PLAY = null;
+function setCardsInPlay(draftInfo) {
+  if (!draftInfo) return;
+  const merged = Object.assign({}, E.CARD_BY_ID);
+  ['red', 'blue'].forEach(function (s) {
+    (draftInfo.decks[s].cards || []).forEach(function (c) { if (c && c.id) merged[c.id] = c; });
+  });
+  CARDS_IN_PLAY = merged;
+}
+function cardMeta(id) { return (CARDS_IN_PLAY && CARDS_IN_PLAY[id]) || E.CARD_BY_ID[id] || { id: id, name: id, text: '' }; }
 const DIRN = ['E', 'NE', 'NW', 'W', 'SW', 'SE'];
 
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
@@ -224,7 +240,7 @@ function reservesStr(st, p) {
     ', ' + r.trench + ' trenches';
 }
 function spentStr(st, p) {
-  return st.removed[p].map(function (id) { return E.CARD_BY_ID[id].name; }).join(', ') || 'none yet';
+  return st.removed[p].map(function (id) { return cardMeta(id).name; }).join(', ') || 'none yet';
 }
 function rowsStr(st) {
   const s = E.SHAPES[st.boardShape];
@@ -275,7 +291,7 @@ function stateView(st, p, withHand, match) {
   if (withHand) {
     L.push('Your hand:');
     st.hands[p].forEach(function (id) {
-      L.push('- ' + E.CARD_BY_ID[id].name + ': ' + E.CARD_BY_ID[id].text);
+      L.push('- ' + cardMeta(id).name + ': ' + cardMeta(id).text);
     });
   }
   return L.join('\n');
@@ -288,12 +304,12 @@ function cardOptions(st, p) {
   hand.forEach(function (id) { counts[id] = (counts[id] || 0) + 1; });
   const opts = [];
   Object.keys(counts).forEach(function (id) {
-    const c = E.CARD_BY_ID[id];
+    const c = cardMeta(id);
     opts.push({ cardId: id, mode: 'normal',
       desc: 'Play "' + c.name + '"' + (counts[id] > 1 ? ' (' + counts[id] + ' copies in hand)' : '') + ' — ' + c.text });
   });
   const burn = hand.slice().sort(function (a, b) { return (E.CARD_KEEP[a] || 5) - (E.CARD_KEEP[b] || 5); })[0];
-  const bn = E.CARD_BY_ID[burn].name;
+  const bn = cardMeta(burn).name;
   opts.push({ cardId: burn, mode: 'attack',
     desc: 'Basic Attack — burn "' + bn + '" to order one ordinary attack instead of its printed action.' });
   // House rule (engine): a basic reposition is only legal when no basic attack exists.
@@ -523,7 +539,7 @@ async function playSkirmish(st, args, transports, matchInfo, usage) {
     const turn = st.turnNumber;
     const mode = plan.mode || 'normal';
     E.playCard(st, plan.cardId, mode);
-    const desc = '"' + E.CARD_BY_ID[plan.cardId].name + '"' + (mode !== 'normal' ? ' as basic ' + mode : '');
+    const desc = '"' + cardMeta(plan.cardId).name + '"' + (mode !== 'normal' ? ' as basic ' + mode : '');
     say('T' + turn + ' ' + side + ' [' + diff + ']: plays ' + desc);
     decisions.push({ turn: turn, side: side, kind: 'card', choice: desc, why: '', fallback: false });
     let g = 0;
@@ -559,7 +575,7 @@ async function playSkirmish(st, args, transports, matchInfo, usage) {
       why = '(fallback: illegal pick — ' + e.message + ')'; fb = true;
       E.playCard(st, pick.cardId, pick.mode);
     }
-    const desc = '"' + E.CARD_BY_ID[pick.cardId].name + '"' + (pick.mode !== 'normal' ? ' as basic ' + pick.mode : '');
+    const desc = '"' + cardMeta(pick.cardId).name + '"' + (pick.mode !== 'normal' ? ' as basic ' + pick.mode : '');
     say('T' + turn + ' ' + side + ' [' + model + ']: plays ' + desc +
       (why ? ' — "' + why + '"' : '') + (fb ? '  (fallback)' : ''));
     record(turn, 'card', side, desc, why, fb);
@@ -644,13 +660,17 @@ async function draftDecks(args, transports, usage) {
     red:  { opening: 'deploy_cavalry',   filler: 'attack_plus1' },
     blue: { opening: 'deploy_artillery', filler: 'forced_march' }
   };
-  const decks = {}, construct = {};
+  const decks = {}, construct = {}, picks = {};
   for (const side of ['red', 'blue']) {
     const spec = side === 'red' ? args.red : args.blue;
     const useLlm = !args.mock && !HEURISTIC[spec];
     const ask = useLlm ? draftAsk(transports[side], usage) : null;
     const r = await db.draftSide(pool, ask, mockSpecs[side]);
     decks[side] = r.deck;
+    // The FEELS pass reads which cards each FREE draft actually picked, so the content
+    // loop can flag a card NEITHER side wanted ("nothing wanted this" — non-selection is
+    // a first-class finding, #167). Unique ids: presence is the signal, not the count.
+    picks[side] = Array.from(new Set(r.deck.cards.map(function (c) { return c.id; })));
     say(side + ' draft: ' + r.deck.cards.reduce(function (s, c) { return s + c.count; }, 0) + ' cards, ' +
       r.legality.pts + '/' + E.DECK_POINTS_CAP + ' pts' + (r.fromMock ? ' [mock]' : '') + ' — ' + r.draft.why +
       (r.legality.advisories.length ? '  (advisory: ' + r.legality.advisories.join('; ') + ')' : ''));
@@ -662,7 +682,7 @@ async function draftDecks(args, transports, usage) {
       if (res.finishReason !== 'error' && res.text.trim()) { construct[side] = res.text.trim(); say(side + ' deck notes: ' + construct[side]); }
     }
   }
-  return { decks, construct };
+  return { decks, construct, picks };
 }
 
 /* ---------- the run ---------- */
@@ -703,6 +723,10 @@ async function main() {
   // phase-0 deckbuild (#116): draft before the match so the drafted decks ride the
   // sideDecks path; without --draft, decks stay undefined (symmetric golden path).
   const draftInfo = args.draft ? await draftDecks(args, transports, usage) : null;
+  setCardsInPlay(draftInfo);   // so the render resolves drafted catalog-only cards, not just the active deck
+  // Machine-readable draft line for the content loop's FEELS pass (spec §11.5). Distinct
+  // prefix (like LOOP_STEP) so a driver parses it without scraping the timestamped prose.
+  if (draftInfo) process.stdout.write('FEELS_DRAFT ' + JSON.stringify({ red: draftInfo.picks.red, blue: draftInfo.picks.blue }) + '\n');
   const match = E.newMatch({ maps: pool, seed: args.seed, firstPlayer: 'red', decks: draftInfo ? draftInfo.decks : undefined });
   const matchInfo = { targetWins: target, wins: match.wins, skirmishesPlayed: 0 };
 
@@ -871,12 +895,16 @@ async function main() {
       target: target, wins: { red: match.wins.red, blue: match.wins.blue },
       winner: matchWinner, skirmishes: skirmishes.length,
       game1Winner: skirmishes[0].winner, seriesFlipped: !!(matchWinner && skirmishes[0].winner && matchWinner !== skirmishes[0].winner),
+      // the FREE drafts each side played (#167 FEELS non-selection is derived from these)
+      draftRed: draftInfo ? draftInfo.picks.red : null, draftBlue: draftInfo ? draftInfo.picks.blue : null,
       fallbacks: totalFallbacks, decisions: totalDecisions, usage: usage
     }) + '\n');
   }
 
   say('record(s) appended to ' + args.out);
   say('transcript written to ' + tPath);
+  // Machine-readable report path for the content loop (the committed feels artifact).
+  process.stdout.write('FEELS_REPORT ' + tPath + '\n');
 }
 
 /* exported for dev/claude-plays.test.js (honesty sentinel etc.) */
