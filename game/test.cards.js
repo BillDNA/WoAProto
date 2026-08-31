@@ -2,7 +2,7 @@
    Frozen-API entry game/test.js delegates here; run this file directly with
    `node game/test.cards.js` or the whole gate with `node game/test.js`. */
 'use strict';
-const { test } = require('node:test');
+const { test } = require('./test.helpers.js');
 const assert = require('node:assert');
 const { E, testSkirmish, fixtureCard } = require('./test.helpers.js');
 
@@ -546,5 +546,66 @@ test('card catalog (#159): decks are refs, catalog is the one definition site', 
   var poolIds = {}; pool.forEach(function (c) { poolIds[c.id] = true; });
   assert.ok(catalogOnly.every(function (id) { return poolIds[id]; }),
     'every catalog-only card appears in buildPool()');
+})();
+});
+
+// Card-face markup is single-source: only cardFace() (game/ui/app.js, #165) may build
+// it; every other browser file wraps cardFace. This source-scan reds on a fork.
+// (#190; spec #185; ADR-0004 "route-through-base".) The anchor is the brass corner
+// divs — emitted in every cardFace branch, and card-specific unlike banner/body/art.
+// Static-only: a fork whose classes are computed at runtime is not caught.
+var routeThroughBase = (function () {
+  var FACE_MARKUP = /class=["']corner c[1-4][\s"']/;  // a corner div, any quote, extra classes ok
+  var DEFINES_RENDERER = /function\s+cardFace\s*\(/;  // the renderer's home, exempt
+
+  // Pure scanner over { relPath: sourceText }: the files that build face markup outside
+  // the renderer's home. Pure so the gate can run it on the tree and on a fixture alike.
+  function bespokeCardFaces(sources) {
+    var homes = Object.keys(sources).filter(function (rel) { return DEFINES_RENDERER.test(sources[rel]); });
+    var offenders = Object.keys(sources).filter(function (rel) {
+      return homes.indexOf(rel) < 0 && FACE_MARKUP.test(sources[rel]);
+    });
+    return { homes: homes, offenders: offenders };
+  }
+
+  // Browser source that could forge a face: index.html + game/ui/**.js (recursive).
+  function browserSources() {
+    var fs = require('fs'), path = require('path');
+    var gameDir = __dirname, out = {};
+    (function walk(dir) {
+      fs.readdirSync(dir, { withFileTypes: true }).forEach(function (e) {
+        var abs = path.join(dir, e.name);
+        if (e.isDirectory()) walk(abs);
+        else if (/\.js$/.test(e.name)) out['game/ui/' + path.relative(path.join(gameDir, 'ui'), abs)] = fs.readFileSync(abs, 'utf8');
+      });
+    })(path.join(gameDir, 'ui'));
+    out['game/index.html'] = fs.readFileSync(path.join(gameDir, 'index.html'), 'utf8');
+    return out;
+  }
+
+  return { FACE_MARKUP: FACE_MARKUP, bespokeCardFaces: bespokeCardFaces, browserSources: browserSources };
+})();
+
+test('route-through-base: card markup only via the shared cardFace (#190)', () => {
+(function () {
+  // 1. The scanner flags a face built outside the renderer and leaves a wrapper alone.
+  var renderer = 'function cardFace(card, opts){ return \'<div class="corner c1"></div>\' + card.name; }';
+  var forged = '<div class="card"><div class="corner c1 hot"></div><div class="banner">Airdrop</div></div>';
+  var wrapper = 'el.className = "card"; el.innerHTML = cardFace(c, {});'; // wraps, does not forge
+
+  var dirty = routeThroughBase.bespokeCardFaces({ 'game/ui/app.js': renderer, 'game/ui/evil.js': forged });
+  assert.deepStrictEqual(dirty.offenders, ['game/ui/evil.js'],
+    'scanner reds on a card face built outside cardFace() (extra classes and all)');
+  var clean = routeThroughBase.bespokeCardFaces({ 'game/ui/app.js': renderer, 'game/ui/hand.js': wrapper });
+  assert.deepStrictEqual(clean.offenders, [],
+    'scanner leaves a file that WRAPS cardFace() alone');
+
+  // 2. The live browser layer is clean.
+  var scan = routeThroughBase.bespokeCardFaces(routeThroughBase.browserSources());
+  assert.strictEqual(scan.homes.length, 1,
+    'exactly one file defines cardFace() — the single shared renderer (found: ' + scan.homes.join(', ') + ')');
+  assert.deepStrictEqual(scan.offenders, [],
+    'no browser file builds card-face markup outside cardFace(): ' + scan.offenders.join(', ') +
+    ' — route it through the shared renderer (game/ui/app.js)');
 })();
 });

@@ -3,7 +3,7 @@
    detects an unregistered primitive of every definitional form, and that ui.md still
    names each base-primitive home. */
 'use strict';
-const { test } = require('node:test');
+const { test } = require('./test.helpers.js'); // records each as a pin (#189 deletion guard)
 const assert = require('node:assert');
 const glossary = require('./ui-glossary.js');
 const fs = require('fs');

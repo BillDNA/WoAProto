@@ -2,7 +2,7 @@
    Frozen-API entry game/test.js delegates here; run this file directly with
    `node game/test.geometry.js` or the whole gate with `node game/test.js`. */
 'use strict';
-const { test } = require('node:test');
+const { test } = require('./test.helpers.js');
 const assert = require('node:assert');
 const { E } = require('./test.helpers.js');
 
