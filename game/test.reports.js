@@ -680,6 +680,42 @@ test('report-model: foldPanel takes worst-case per metric (never a mean), fairne
 })();
 });
 
+test('report-model: reportMarkdown surfaces calibratePoints suggestions (#156)', () => {
+(function () {
+  var R = require('./report-model.js');
+  // Minimal report model: a zeroed G (all Overall denominators safe) with a seeded
+  // card fold. Two attack cards out-win their price share (Dominant, resid ≥ 2) and
+  // share step.attack with no single-card domination → a shared RAISE move; a third
+  // card is fairly priced. cardPoints supplied so cardRows computes resid.
+  function model(cards, cardAgg, points) {
+    var G = R.foldGlobal([]);          // zeroed totals + empty G.cards
+    G.cards = cardAgg;
+    return { style: 'report', title: 't', version: '1.2', metaTail: 'x',
+      rows: [], G: G, cards: cards, cardPoints: function (c) { return points[c.id]; } };
+  }
+  var agg = function (hqWins) {
+    return { plays: 20, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0, hqPlays: 20, hqWins: hqWins };
+  };
+  var cards = [
+    { id: 'A', name: 'CardA', steps: [{ type: 'attack' }] },
+    { id: 'B', name: 'CardB', steps: [{ type: 'attack' }] },
+    { id: 'Z', name: 'CardZ', steps: [{ type: 'reposition' }] }
+  ];
+  // hqWins 20/20/2, points 5 each → resid_A/B ≈ +2.1 (Dominant), resid_Z ≈ −4.3 (Weakly, excluded).
+  var md = R.reportMarkdown(model(cards, { A: agg(20), B: agg(20), Z: agg(2) }, { A: 5, B: 5, Z: 5 }));
+  assert.ok(md.indexOf('## Calibration suggestions') >= 0, 'the calibration section renders');
+  assert.ok(/`step\.attack` raise \+0\.5/.test(md), 'the shared step.attack raise move is surfaced with its magnitude');
+  assert.ok(md.indexOf('_No calibration suggestions this run._') < 0, 'a mispriced pool does NOT show the empty line');
+
+  // A fairly-priced pool (resid ≈ 0, no card Dominant) → explicit no-suggestions line.
+  var clean = R.reportMarkdown(model(
+    [{ id: 'A', name: 'CardA', steps: [{ type: 'attack' }] }, { id: 'B', name: 'CardB', steps: [{ type: 'attack' }] }],
+    { A: agg(10), B: agg(10) }, { A: 5, B: 5 }));
+  assert.ok(clean.indexOf('## Calibration suggestions') >= 0, 'the section renders for a clean pool too');
+  assert.ok(clean.indexOf('_No calibration suggestions this run._') >= 0, 'a clean pool shows the explicit no-suggestions line');
+})();
+});
+
 test('loop-config: debrief questionnaire is an ordered id+text table with feel + reflex', () => {
 (function () {
   var Q = require('./content/questionnaire.js');   // load asserts on its own; requiring proves it parses

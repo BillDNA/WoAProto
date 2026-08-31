@@ -908,7 +908,8 @@ var WOA_REPORT = (function () {
     L.push('| Card | Simple% | Noop% | 1stSight% | AvgSeen | ' + (style === 'report' ? 'Plays' : 'plays') +
       (withPts ? ' | Pts | Resid' : '') + ' |');
     L.push('|---|--:|--:|--:|--:|--:|' + (withPts ? '--:|--:|' : ''));
-    cardRows(G.cards, model.cards, model.cardPoints).forEach(function (r) {
+    var crows = cardRows(G.cards, model.cards, model.cardPoints);
+    crows.forEach(function (r) {
       var tail = '';
       if (withPts) {
         var resid = r.resid == null ? '-' : (r.resid > 0 ? '+' : '') + f1(r.resid) + (r.mispriced ? ' ⚠' : '');
@@ -923,6 +924,36 @@ var WOA_REPORT = (function () {
         f1(MISPRICE_RESID_PTS) + ' — a **soft** mispricing flag, never a gate. Two confounds: a held-value Card (a saved attack buff) wins off-slice and can read − without being weak, and Resid is exposure-weighted so a draw-frequency gap can masquerade as price. Signal is the thin HQ-capture × printed-play slice (Cards under ' +
         MISPRICE_MIN_HQPLAYS + ' such plays show \'-\'); read at scale.' +
         (flagged ? '' : ' None flagged this run.') + '_');
+      L.push('');
+      // #156 — surface the Track-C calibratePoints suggestions (moves + redesign flags) for
+      // the same fold. Advisory only (ADR-0002): a POINTS move is a human decision, never
+      // auto-applied. Engine-global-free — resid/hqWins drive the class signal; the report
+      // fold carries no decline/octile data, so this is the raise-move + Dominant-flag view.
+      var cardsById = {};
+      (model.cards || []).forEach(function (c) { cardsById[c.id] = c; });
+      var calib = calibratePoints({ rows: crows, cardsById: cardsById });
+      L.push('## Calibration suggestions');
+      L.push('');
+      L.push('_Advisory (ADR-0002): a `POINTS` weight move is a human decision — bump the rules version atomically with its test pins, never auto-applied. Moves are directional only, NOT gated against the deck-points cap or current weight (this fold has no engine facts) — re-check headroom before applying. Source: report-model.js calibratePoints (#108 Track C)._');
+      L.push('');
+      if (!calib.moves.length && !calib.redesignFlags.length) {
+        L.push('_No calibration suggestions this run._');
+      } else {
+        if (calib.moves.length) {
+          L.push('**Weight moves** — a shared capability-class signal (≥2 cards, no single-card domination):');
+          calib.moves.forEach(function (m) {
+            L.push('- `' + m.lever + '` ' + m.direction + ' ' + (m.delta > 0 ? '+' : '') + m.delta +
+              ' (class weighted-resid ' + (m.weightedResid > 0 ? '+' : '') + m.weightedResid + ' pts over ' + m.cards + ' cards)');
+          });
+        }
+        if (calib.redesignFlags.length) {
+          if (calib.moves.length) L.push('');
+          L.push('**Redesign flags** — Dominant/Strictly-Dominated cards no shared move covers:');
+          calib.redesignFlags.forEach(function (f) {
+            L.push('- ' + f.name + ' (resid ' + (f.resid > 0 ? '+' : '') + f.resid + '): ' + f.reason);
+          });
+        }
+      }
       L.push('');
     }
     // Obsidian-style tag footer so reports are findable by kind + rules version
