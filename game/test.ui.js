@@ -1,12 +1,7 @@
-/* Subsystem: the UI-element glossary (ADR-0004, #187). Frozen-API entry
-   game/test.js delegates here; run alone with `node game/test.ui.js` or the whole
-   gate with `node game/test.js`.
-
-   Proves the role-keyed ROSTER in game/ui-glossary.js is a COMPLETE census of the
-   front-end's rendering primitives (green today) AND that the scan that guards it is
-   not a hollow oracle: it detects an unregistered factory of EVERY definitional form
-   the codebase uses, not just the one the happy path matches. A last test keeps the
-   shared vocabulary in docs/context/ui.md from drifting off the code it names. */
+/* UI-element glossary gate. game/test.js delegates here; run alone with
+   `node game/test.ui.js`. Checks ROSTER is complete on the current tree, that the scan
+   detects an unregistered primitive of every definitional form, and that ui.md still
+   names each base-primitive home. */
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
@@ -23,8 +18,6 @@ test('ui-glossary: the four base primitives are each a registered role', () => {
 });
 
 test('ui-glossary: roster is complete — no unregistered primitive on the current tree', () => {
-  // AC2: the scan enumerates every element-factory / modifier-class definition and is
-  // green on the current tree (every detected primitive is claimed by a role).
   const { violations, defs } = glossary.scan();
   assert.ok(defs.length > 40, 'the scan actually enumerates the UI primitives (found ' + defs.length + ')');
   assert.deepStrictEqual(violations, [],
@@ -33,9 +26,7 @@ test('ui-glossary: roster is complete — no unregistered primitive on the curre
 });
 
 test('ui-glossary: the scan detects an unregistered factory of EVERY definitional form', () => {
-  // AC3 — exhaustiveness, red-at-base. Each fixture is one unregistered factory of a
-  // distinct definitional form the codebase uses; the scan must red on each in turn,
-  // proving it detects the form and cannot be defeated by only matching the happy path.
+  // one unregistered factory per form; the scan must red on each, so no form is a blind spot
   const forms = {
     'function-returning-markup': {
       rel: 'game/ui/__fixture__.js', type: 'js',
@@ -88,9 +79,7 @@ test('ui-glossary: the scan detects an unregistered factory of EVERY definitiona
 });
 
 test('ui-glossary: the shared vocabulary doc still names each base-primitive home', () => {
-  // Keep docs/context/ui.md (the vocabulary) from drifting off ROSTER (the authority):
-  // every base-primitive role must still be locatable from the doc, so the glossary a
-  // reader learns can't silently stop pointing at where the primitive lives.
+  // keep ui.md pointing at where each base primitive lives (no drift off ROSTER)
   const doc = fs.readFileSync(glossary.UI_VOCAB_DOC, 'utf8');
   const baseIds = new Set(['card-face', 'chart-builders', 'design-tokens', 'svg-factory']);
   for (const r of glossary.ROSTER.roles) {
