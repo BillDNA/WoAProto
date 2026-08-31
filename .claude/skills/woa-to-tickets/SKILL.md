@@ -15,8 +15,10 @@ grade nothing. Here, every acceptance criterion is classified and structured so 
 that can gate ship a **falsifier that is red at the base commit**, and the ones that can't
 become reviewed **goals** instead of faked tests or rejected tickets.
 
-**This wrapper carries no enforcement of its own.** The teeth live in the always-run suite —
-`game/test.js`, `dev/smoke.js`, `dev/ui-review.js` — per `docs/adr/0004-build-chain-teeth.md`.
+**This wrapper carries no enforcement of its own.** The teeth live in the suite the chain
+already runs — `game/test.js` and `dev/smoke.js` on every commit (bare `/implement`
+included), plus `dev/ui-review.js` for the fidelity gate (a `woa-implement`-only delta per
+the ADR gate-to-home table) — per `docs/adr/0004-build-chain-teeth.md`.
 Do not move any gate into this skill; "put the teeth in the wrappers" is a rejected
 alternative in the ADR (a wrapper is skippable; the suite is not). All this skill does is
 *name*, for each criterion, the red that already has a home.
@@ -29,8 +31,10 @@ means exactly what those files carve.
 
 Follow `to-tickets` steps 1–4 unchanged — gather context, explore the codebase in the
 project glossary, draft vertical tracer-bullet slices with their blocking edges, and quiz
-the user on granularity and edges until approved. **Step 5, the acceptance criteria, is
-where this wrapper diverges:** classify each one before publishing.
+the user on granularity and edges until approved. `to-tickets` steps 1–4 write no
+acceptance criteria — they appear only inside the **step-5 issue template** it publishes.
+**That issue template is where this wrapper diverges:** classify each acceptance criterion
+before you publish it.
 
 ### Classify each acceptance criterion
 
@@ -50,7 +54,7 @@ For every line you would have written as a bare `- [ ] Criterion`, decide what i
    | **existence** | an assert in `dev/smoke.js` — the element is present and wired |
    | **interaction** | `dev/smoke.js` drives the real click/keypress and asserts the outcome (never a checklist of interactions — the smoke *does* the human action) |
    | **fidelity** | `dev/ui-review.js` blind-describes the after-render and compares it to a named **Target**; the bounce is on any target element the after-render omits |
-   | **logic / invariant** | an assert in `game/test.js` (a `pin` for this era's output, an `invariant()` for a property that holds every era) |
+   | **logic / invariant** | an assert in `game/test.js` (a `pin` for this era's output, an `invariant()` for a property that holds every era). This home covers **source-scan** asserts too — a mechanical red that greps for the presence/absence of a named construct — the shape `route-through-base` and `no-live-content` already take. A new source-scan is red-at-base when the construct it demands is absent today. |
 
    A criterion whose falsifier you cannot place in one of these homes has **no usable
    falsifier** — **reject it** (it is a wish, not a gate). Do not invent a new home; if a
