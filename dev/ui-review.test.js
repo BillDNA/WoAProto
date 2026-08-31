@@ -242,6 +242,33 @@ test('Phase 2 drive discards the after-click still when the click navigated away
   assert.ok(roles.indexOf('after-click') < 0, 'a click that navigated away must NOT yield an after-click still');
 });
 
+test('INTEGRATION: real capture -> Phase 1 pass -> Phase 2 runs -> findings recorded (the real handoff)', async (t) => {
+  // The seam the fake-transport tests could NOT cover: real Playwright capture (pixels) flowing through
+  // a Phase-1 pass into a real Phase-2 run. Uses the pixel-aware transport so no live model is needed;
+  // skips only if the browser is genuinely absent. THIS is the test that reds if the phases aren't wired.
+  let ok = true;
+  try { await U.defaultCapture(path.join(ROOT, FIX, 'before.html')).then(b => { ok = !!(b && b.length); }); }
+  catch (e) { ok = false; }
+  if (!ok) { await U.closeBrowser(); return t.skip('Playwright chromium not installed'); }
+  const pix = require(path.join(ROOT, FIX, 'fake-transport-pixels.js'));
+  const spec = U.loadSpec(path.join(ROOT, FIX, 'spec-good.json'));
+  const outDir = tmp('woa-uiv-out-');
+  const res = await U.review(spec, {
+    capture: U.defaultCapture, ask: pix.ask, drive: U.defaultDrive,
+    stageShots: false, outDir: outDir, shotsDir: tmp('woa-uiv-shots-')
+  });
+  await U.closeBrowser();
+  // (a) Phase 1 cleared on REAL pixels — not fixture text.
+  assert.equal(res.verdict.pass, true, 'real capture should clear Phase 1; bounces: ' + JSON.stringify(res.verdict.bounces));
+  // (b) that pass ACTUALLY flowed into Phase 2, which recorded findings (the handoff that was never run).
+  assert.ok(res.verdict.rubric && res.verdict.rubric.axes.length, 'Phase 2 must run and record findings on a real pass');
+  const srcs = res.verdict.rubric.axes.map(a => a.source);
+  assert.ok(srcs.indexOf('rubric') >= 0 && srcs.indexOf('goal') >= 0, 'findings cover ui-rubric axes AND ticket goals');
+  // (c) the REAL drive fed an interaction still into Phase 2 (affordance/response evidence, live).
+  const ri = JSON.parse(fs.readFileSync(path.join(outDir, 'rubric-input.json'), 'utf8'));
+  assert.ok(ri.images.indexOf('hover') >= 0, 'the real drive must feed a hover interaction still into Phase 2');
+});
+
 /* ---------------- AC: screenshots go to a shots-branch, never the working tree ---------------- */
 
 test('shots are staged onto a pr-shots branch and NO screenshot lands in the working tree', async () => {
