@@ -65,7 +65,7 @@ function renderWorkbench() {
   var panes = WORKBENCH_PHASES.map(function (p) {
     var body = p.id === 'plan' ? wbPlanBody()
       : p.id === 'run' ? '<div id="wbRun">' + wbRunBody() + '</div>'
-      : p.id === 'results' ? '<div id="wbResults">' + wbResultsBody() + '</div>'
+      : p.id === 'results' ? '<div id="wbAuthored">' + wbAuthoredBody() + '</div><div id="wbResults">' + wbResultsBody() + '</div>'
       : p.id === 'trajectory' ? '<div id="wbTraj"><p class="small wb-hint">Open this phase to load the champion line from <code>logs/woa.db</code>.</p></div>'
       : '<p class="small wb-placeholder">Placeholder &mdash; a follow-on ticket fills this phase with ' + p.fills + '.</p>';
     return '<div class="wb-pane" id="wbPane-' + p.id + '"' + (p.id === WB_PHASE ? '' : ' style="display:none;"') + '>' +
@@ -323,6 +323,83 @@ function wbGoPhase(id) {
     document.getElementById('wbPane-' + p.id).style.display = p.id === id ? '' : 'none';
   });
   if (id === 'trajectory') wbLoadTrajectory();   // refresh the champion line from the db each open
+  if (id === 'results') wbLoadAuthored();         // refresh the Author's this-run feed from logs/authored each open
+}
+
+/* Authored feed (#165) — the card-Author's SHAPING of the catalog this run, rendered as
+   cards (never JSON). Read live from GET /api/authored (logs/authored/latest.json, which
+   dev/author-card.js writes on every add/edit/remove). Each record is a rendered card face
+   with an add / edit / removed badge so the three moves are visibly distinguished — the
+   Author's file writes are visible as content, not only a git diff (spec §12, §2).
+   Feed shape: { nudge, temperature, authoredAt, cards:[{ action:'add'|'edit'|'remove',
+   card:{id,name,text,points,steps}, before?, note }] }. */
+var WB_AUTHORED = null;
+
+// Human-readable step line for a card face — same idiom as wbResCards (type + signed mod),
+// extended to name a deploy's unit and flag tieSpare/noAdvance/anywhere so the reader sees
+// what the card actually does, not just "attack".
+function wbCardSteps(steps) {
+  return (steps || []).map(function (s) {
+    var t = wbEsc(s.type);
+    if (s.unit) t += ' ' + wbEsc(s.unit);
+    if (s.mod != null && s.mod !== 0) t += ' ' + (s.mod > 0 ? '+' : '') + s.mod;
+    var flags = ['tieSpare', 'noAdvance', 'anywhere'].filter(function (f) { return s[f]; });
+    if (flags.length) t += ' (' + flags.join(', ') + ')';
+    return t;
+  }).join(' &middot; ');
+}
+
+// One authored card face. `action` (add/edit/remove) drives a coloured badge + class so a
+// glance tells add from edit from remove; a removed card is rendered struck-through/dimmed
+// (it left the catalog). Evidence beneath the design: army-points cost + the note.
+function wbAuthoredCard(rec) {
+  var act = { add: 1, edit: 1, remove: 1 }[rec && rec.action] ? rec.action : 'add';
+  var badge = { add: 'added', edit: 'edited', remove: 'removed' }[act];
+  var card = (rec && rec.card) || {};
+  var steps = wbCardSteps(card.steps);
+  return '<div class="wb-authored ' + act + '">' +
+    '<div class="wb-built-hd"><span class="wb-act ' + act + '">' + badge + '</span>' +
+      '<b class="wb-built-name">' + wbEsc(card.name || card.id || '?') + '</b>' +
+      (card.points != null ? '<span class="wb-hint">' + wbEsc(String(card.points)) + ' pts</span>' : '') + '</div>' +
+    (card.text ? '<div class="wb-built-text">' + wbEsc(card.text) + '</div>' : '') +
+    (steps ? '<div class="small wb-hint wb-built-steps">' + steps + '</div>' : '') +
+    (rec && rec.note ? '<div class="small wb-built-note">' + wbEsc(rec.note) + '</div>' : '') +
+    '</div>';
+}
+
+function wbAuthoredBody() {
+  var f = WB_AUTHORED;
+  if (!f || !(f.cards && f.cards.length)) {
+    return '<label class="small wb-lbl">Authored this run <span class="wb-hint">&mdash; the catalog the Author shaped</span></label>' +
+      '<p class="small wb-hint">No authored content yet &mdash; when the card Author runs, each card it ' +
+      '<b>adds / edits / removes</b> lands here as a rendered card, read live from <code>logs/authored/latest.json</code>.</p>';
+  }
+  var meta = [];
+  if (f.nudge) meta.push('nudge <b>' + wbEsc(f.nudge) + '</b>');
+  if (f.temperature) meta.push('temperature <b>' + wbEsc(f.temperature) + '</b>');
+  var counts = { add: 0, edit: 0, remove: 0 };
+  f.cards.forEach(function (r) { if (counts[r.action] != null) counts[r.action]++; });
+  var summary = counts.add + ' added &middot; ' + counts.edit + ' edited &middot; ' + counts.remove + ' removed';
+  return '<label class="small wb-lbl">Authored this run <span class="wb-hint">&mdash; ' + summary + '</span></label>' +
+    (meta.length ? '<div class="small wb-hint" style="margin-bottom:6px">' + meta.join(' &middot; ') + '</div>' : '') +
+    '<div class="wb-built-grid">' + f.cards.map(wbAuthoredCard).join('') + '</div>';
+}
+
+// Inject an authored feed and re-render the Authored pane in place. The live loader calls
+// this from a fetch; the red-test (dev/smoke.js) calls it with a mock feed.
+function wbSetAuthored(feed) {
+  WB_AUTHORED = feed;
+  var el = document.getElementById('wbAuthored');
+  if (el) el.innerHTML = wbAuthoredBody();
+}
+
+// Refresh the authored feed from the server each time Results opens (like Trajectory).
+// Fails open to the idle note if the read hiccups or runs under file:// with no server.
+function wbLoadAuthored() {
+  if (typeof fetch !== 'function') return;
+  fetch('/api/authored').then(function (r) { return r.ok ? r.json() : { cards: [] }; })
+    .then(function (feed) { wbSetAuthored(feed); })
+    .catch(function () { /* keep whatever is shown */ });
 }
 
 /* Run phase (#144) — a live monitor for the running loop (#138). The browser has

@@ -733,6 +733,17 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
 .wb-tag.iterate { background:var(--copper); }
 .wb-tag.cut { background:var(--red); }
 .wb-change { font-size:11px; font-variant:small-caps; letter-spacing:.5px; opacity:.7; }
+/* Authored-this-run feed (#165): a card face per add/edit/remove, the action a coloured
+   badge + a left border so the three moves read apart at a glance; removed cards dim + strike. */
+.wb-authored { border:1px solid var(--brass-dark); border-left-width:4px; border-radius:8px; padding:8px 10px; background:rgba(255,255,255,.16); }
+.wb-authored.add { border-left-color:var(--forest); }
+.wb-authored.edit { border-left-color:var(--copper); }
+.wb-authored.remove { border-left-color:var(--red); opacity:.62; }
+.wb-authored.remove .wb-built-name { text-decoration:line-through; }
+.wb-act { font-size:10px; font-variant:small-caps; letter-spacing:.5px; padding:1px 8px; border-radius:10px; color:#fff; }
+.wb-act.add { background:var(--forest); }
+.wb-act.edit { background:var(--copper); }
+.wb-act.remove { background:var(--red); }
 .wb-band.ok { color:var(--forest); }
 .wb-band.warn { color:var(--copper); }
 .wb-band.bad { color:var(--red); }

@@ -1,15 +1,15 @@
 (function(g){var c=g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],decks:[],mapsets:[]};(c.cards=c.cards||[]).push(
 {
- "id": "over_the_top",
- "name": "Over the Top",
- "text": "Charge: reposition a unit into the fray, then order an attack — your attacker holds the line on a tie.",
+ "id": "flanking_march",
+ "name": "Flanking March",
+ "text": "Reposition a unit, then order an attack with +1 support.",
  "steps": [
   {
    "type": "reposition"
   },
   {
    "type": "attack",
-   "tieSpare": true
+   "mod": 1
   }
  ]
 }
