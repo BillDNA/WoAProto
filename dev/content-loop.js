@@ -60,6 +60,20 @@ function resolveTolerance(tol) {
   return profile;
 }
 
+// Re-read the catalog from disk, seeing THIS run's edits and removes. require() caches by
+// path and card files append to global.WOA_CONTENT.cards, so a plain buildPool() in a
+// long-lived process returns an edited card's stale prior body and never drops a removed
+// one. Bust the card require-cache and clear the (append-only) list so buildPool repopulates
+// from exactly the files on disk now. Engine unaffected (it copied E.CARDS at load).
+function freshBuildPool() {
+  const cardsDir = path.join(__dirname, '..', 'game', 'content', 'cards') + path.sep;
+  try {
+    Object.keys(require.cache).forEach(function (k) { if (k.indexOf(cardsDir) === 0) delete require.cache[k]; });
+    if (global.WOA_CONTENT) global.WOA_CONTENT.cards = [];
+  } catch (e) { /* fall back to whatever buildPool can read */ }
+  return deckbuild.buildPool();
+}
+
 // Format a foldPanel balance flag member as a loud one-line flag (never a reject).
 function flagLabel(m) {
   const band = (m.lo == null ? '' : m.lo) + '–' + (m.hi == null ? '' : m.hi);
@@ -208,9 +222,15 @@ async function runContentLoop(opts) {
 
   // The catalog resolver — the real loop re-reads content/cards each iteration (to pick up
   // just-authored files); a test injects a fixed catalog so no disk write is needed.
+  // freshBuildPool busts the card require-cache + clears the append-only WOA_CONTENT.cards
+  // first: without it, this long-lived process sees an EDITED card as its stale prior body
+  // (require() is a path-cache hit) and a REMOVED card lingers forever (its object stays in
+  // the global) — which would silently break the loop's edit/remove-near-target job. The
+  // engine copied its own E.CARDS at load and returns early if the global exists, so clearing
+  // the list here only affects buildPool's live read, never gameplay.
   const catalogOf = opts.catalog
     ? (function () { const c = opts.catalog; return function () { return typeof c === 'function' ? c() : c; }; })()
-    : function () { return deckbuild.buildPool(); };
+    : freshBuildPool;
 
   const dbh = opts.dbh || db.open(opts.dbPath);   // opts.dbPath isolates a test/CI run from the shared woa.db
   const ownsDb = !opts.dbh;
@@ -231,11 +251,14 @@ async function runContentLoop(opts) {
   } });
 
   const reportsDir = opts.reportsDir || path.join(__dirname, '..', 'logs', 'reports');
+  // A bounded run, always: the stop-datetime is the real wall, but with NEITHER a stop nor a
+  // maxIters cap a misconfigured caller would spin forever — do a single iteration instead.
+  const iterCap = maxIters || (stopAtMs ? 0 : 1);
   let lastBalanceReport = null, lastFeelsReport = null, iter = 0;
 
   while (true) {
     if (stopAtMs && clock() >= stopAtMs) break;      // the ONLY hard wall — no NEW iteration past it
-    if (maxIters && iter >= maxIters) break;
+    if (iterCap && iter >= iterCap) break;           // safety cap (also the neither-stop-nor-maxIters guard)
     iter += 1;
 
     // one iteration, with retry-once-then-record self-recovery (driver discipline, no watchdog)
@@ -266,13 +289,20 @@ async function runContentLoop(opts) {
 
   /* ---- one iteration ---- */
   async function runIteration(iter, track) {
-    RR.startIteration(rec, iter);
     const catalogNow = catalogOf();
     const ctx = {
       iter: iter, config: config, catalog: catalogNow.map(function (c) { return c.id; }),
       lastBalanceReport: lastBalanceReport, lastFeelsReport: lastFeelsReport, feedFile: feedFile,
       tolerance: toleranceProfile
     };
+
+    // author -> grade -> balance -> reports run ONCE per iteration; only FEELS + COMMIT are
+    // retried on a stumble (they hold the slow, flaky claude-plays). Re-running author on a
+    // retry would re-add the just-written cards — A.addCard throws 'already exists', flipping a
+    // correctly authored+swept card to illegal — and would double the woa.db rows and re-edit
+    // via the fix pass. So phase 1 runs once and its outputs are carried on `track`.
+    if (!track.phase1) {
+    RR.startIteration(rec, iter);
 
     // ---- AUTHOR: shape the catalog (a batch), via the Author's hands ----
     track.stage = 'author'; RR.setStage(rec, { iter: iter, name: 'author' }); onStage({ runId: runId, iter: iter, stage: 'author' });
@@ -366,6 +396,11 @@ async function runContentLoop(opts) {
       const rmd = rubricMarkdown({ runId: runId, iter: iter, nudge: config.nudge, temperature: config.temperature }, (itRec && itRec.authored) || []);
       rubPath = writeReport(reportsDir, ['rubric', String(E.VERSION)], runId + '-iter' + iter + '-rubric.md', rmd);
     } catch (e) { /* a report write must never break the loop */ }
+
+      track.phase1 = { authoredIds: authoredIds, balPath: balPath, rubPath: rubPath };
+    }
+    // phase-1 outputs (carried across a retry so author/grade/balance are never re-run)
+    const authoredIds = track.phase1.authoredIds, balPath = track.phase1.balPath, rubPath = track.phase1.rubPath;
 
     // ---- FEELS: one full first-to-3, two FREE drafts; non-selection is a finding ----
     track.stage = 'feels'; RR.setStage(rec, { iter: iter, name: 'feels' }); onStage({ runId: runId, iter: iter, stage: 'feels' });
@@ -708,8 +743,11 @@ function authorUserMessage(ctx, cheatsheet) {
   lines.push('');
   lines.push('CURRENT CATALOG (' + ctx.catalog.length + ' cards): ' + ctx.catalog.join(', '));
   lines.push('');
-  if (ctx.lastBalanceReport) lines.push('INTAKE — last balance report: ' + tail(readMaybe(path.join(__dirname, '..', ctx.lastBalanceReport)), 2000));
-  if (ctx.lastFeelsReport) lines.push('INTAKE — last feels report: ' + tail(readMaybe(path.join(__dirname, '..', ctx.lastFeelsReport)), 2000));
+  // writeReport hands back an absolute path when reportsDir is outside the repo, a repo-
+  // relative one otherwise — resolve accordingly (path.join would corrupt an absolute one).
+  const resolveReport = function (p) { return path.isAbsolute(p) ? p : path.join(__dirname, '..', p); };
+  if (ctx.lastBalanceReport) lines.push('INTAKE — last balance report: ' + tail(readMaybe(resolveReport(ctx.lastBalanceReport)), 2000));
+  if (ctx.lastFeelsReport) lines.push('INTAKE — last feels report: ' + tail(readMaybe(resolveReport(ctx.lastFeelsReport)), 2000));
   lines.push('');
   if (cheatsheet) lines.push('STEP VOCABULARY (card-cheatsheet):\n' + cheatsheet);
   lines.push('');

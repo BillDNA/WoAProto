@@ -144,8 +144,16 @@ function startContentLoop(cfg) {
   if (cfg.mock) args.push('--mock');                 // offline launch (mechanism/CI test)
   // mirror the machine-readable record + author feed back into THIS server's logs, so the
   // dashboard renders the same run the terminal is playing (one run, two windows on it).
-  args.push('--rec-dir', path.join(REPO, 'logs', 'content-runs'));
+  var recDir = path.join(REPO, 'logs', 'content-runs');
+  args.push('--rec-dir', recDir);
   args.push('--feed-file', path.join(REPO, 'logs', 'authored', 'latest.json'));
+  // Overwrite latest.json with a 'starting' placeholder SYNCHRONOUSLY, before the detached
+  // child boots and RR.open() rewrites it: otherwise the Workbench's first poll (fired right
+  // after this returns) reads a PRIOR run's stale state:'done' and stops polling the new run.
+  try {
+    fs.mkdirSync(recDir, { recursive: true });
+    fs.writeFileSync(path.join(recDir, 'latest.json'), JSON.stringify({ runId: runId, state: 'starting', startedAt: new Date().toISOString(), config: { nudge: cfg.nudge || '', temperature: cfg.temperature || '', tolerance: tolName || '', stopAt: '', questionnaire: cfg.questionnaire || '' }, stage: null, iterations: [] }, null, 2) + '\n');
+  } catch (e) { /* the child will write the real record shortly regardless */ }
   // 3) write a .command launch script and open it in a visible Terminal (macOS). Off-mac,
   // fall back to a detached headless child (the dashboard mirror still works; no window).
   var cmd = 'cd ' + shq(wt) + ' && node ' + args.map(shq).join(' ');
