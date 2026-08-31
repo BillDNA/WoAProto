@@ -56,6 +56,10 @@ function registryDivergence(registry, collected) {
   collected.forEach(function (t) {
     var key = t.category + '::' + t.name;
     seen[key] = true;
+    // Defensive: invariant() in test.helpers.js already throws on an unknown
+    // category, so this rarely fires from the live suite — but registryDivergence
+    // is an exported predicate that may be called with arbitrary `collected`, so
+    // it validates its own input rather than trusting the caller.
     if (!catSet[t.category]) badCategory.push('test "' + t.name + '" labelled with category "' + t.category + '" outside the frozen set');
     else if (!declared[key]) missingFromRegistry.push(key);
   });

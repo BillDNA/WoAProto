@@ -22,14 +22,10 @@ const { E, testSkirmish, invariant } = H;
 // Requiring every sibling test file here means the collections the guards read
 // (H.collectedInvariants / H.activeTestNames) are fully populated no matter the
 // entry point — `node game/test.js` or `node --test game/test.invariants.js`.
-// Requires are cached, so this never double-registers.
-require('./test.geometry.js');
-require('./test.terrain.js');
-require('./test.cards.js');
-require('./test.maps.js');
-require('./test.ai.js');
-require('./test.reports.js');
-require('./test.commanders.js');
+// The file list is single-sourced in test-files.js so a new subsystem file
+// cannot be wired into the runner yet slip past the guards. Requires are cached,
+// so this never double-registers.
+require('./test-files.js').forEach(function (f) { require(f); });
 
 function classicMap() { return E.MAPS.filter(function (m) { return m.shape === 'classic'; })[0] || E.MAPS[0]; }
 
@@ -194,31 +190,54 @@ test('registry guard reds when a category strays from the frozen five', () => {
 // is lazy (inside the test) so the manifest generator can require this file first.
 test('every base-commit test is still present (deletion/skip is itself a red)', () => {
   var MANIFEST = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-manifest.json'), 'utf8'));
+  // A RULES_VERSION bump licenses pin moves — but only atomically: the manifest
+  // must be regenerated at the new version in the same change. A stale manifest
+  // (version drifted from the engine) is itself a RED, so a bump can never
+  // silently disable this guard by leaving the old baseline unregenerated.
+  assert.strictEqual(MANIFEST.rulesVersion, E.VERSION,
+    'test-manifest.json is stale (rules ' + MANIFEST.rulesVersion + ' vs engine ' + E.VERSION +
+    ') — regenerate with `node dev/gen-test-manifest.js`, atomically with the RULES_VERSION bump');
   var missing = REG.removalViolations(MANIFEST, H.activeTestNames(), E.VERSION);
   assert.deepStrictEqual(missing, [],
     'these base tests were deleted or .skip-ed without a pin-prune record or RULES_VERSION bump: ' + JSON.stringify(missing));
 });
 
-// The deletion-guard's own falsifiers, against synthetic fixtures.
+// Both guards key tests by name; a committed `.only` would fool the deletion
+// guard (it records every test as active at require time while node runs one),
+// and a duplicate name would let one namesake mask the other's deletion. Red on
+// either, so the keying assumption the guards rely on is enforced, not assumed.
+test('suite hygiene: unique test names, no committed .only', () => {
+  assert.deepStrictEqual(H.duplicateTestNames(), [],
+    'duplicate test names collapse in the name-keyed guards and can mask a deletion');
+  assert.deepStrictEqual(H.onlyTests(), [],
+    'a committed test.only() runs one test under --test-only yet reads as all-present to the deletion guard');
+});
+
+// The deletion-guard's own falsifiers. These build the manifest from the REAL
+// active-name accessor + real E.VERSION the live guard consumes (a phantom base
+// test that is not in the active set), so they prove the guard's wiring, not
+// just the pure predicate in isolation (ADR-0004 red-at-base).
+var PHANTOM = 'invariant/phantom: a base test that no longer exists';
 test('deletion guard reds when a base test is removed with no bump', () => {
-  var man = { rulesVersion: E.VERSION, tests: ['keeper', 'doomed'], prunedPins: [] };
-  var afterDelete = REG.removalViolations(man, ['keeper'], E.VERSION);         // 'doomed' gone, same version
-  assert.deepStrictEqual(afterDelete, ['doomed'], 'a bare deletion at the same version is a violation');
+  var man = { rulesVersion: E.VERSION, tests: H.activeTestNames().concat([PHANTOM]), prunedPins: [] };
+  var missing = REG.removalViolations(man, H.activeTestNames(), E.VERSION);   // phantom absent, same version
+  assert.deepStrictEqual(missing, [PHANTOM], 'a base test absent at the same version is a violation');
 });
 test('deletion guard reds when a base test is .skip-ed with no bump', () => {
+  // activeTestNames() already excludes skipped tests, so a .skip-ed base test
+  // reads exactly like a deleted one — same red, which is the point.
   var man = { rulesVersion: E.VERSION, tests: ['keeper', 'sleepy'], prunedPins: [] };
-  // activeTestNames excludes skipped tests, so a .skip-ed base test reads as absent.
-  var afterSkip = REG.removalViolations(man, ['keeper'], E.VERSION);
-  assert.deepStrictEqual(afterSkip, ['sleepy'], 'a .skip-ed base test at the same version is a violation');
+  assert.deepStrictEqual(REG.removalViolations(man, ['keeper'], E.VERSION), ['sleepy'],
+    'a .skip-ed base test (absent from activeTestNames) at the same version is a violation');
 });
 test('deletion guard goes green when the removal rides a RULES_VERSION bump', () => {
-  var man = { rulesVersion: '9.9-old', tests: ['keeper', 'doomed'], prunedPins: [] };
-  var bumped = REG.removalViolations(man, ['keeper'], E.VERSION);              // version differs -> licensed
-  assert.deepStrictEqual(bumped, [], 'a removal that rides a RULES_VERSION bump is licensed');
+  var man = { rulesVersion: '9.9-old', tests: H.activeTestNames().concat([PHANTOM]), prunedPins: [] };
+  assert.deepStrictEqual(REG.removalViolations(man, H.activeTestNames(), E.VERSION), [],
+    'a removal that rides a RULES_VERSION bump is licensed (the stale-manifest red surfaces the bump separately)');
 });
 test('deletion guard goes green when the removal carries a pin-prune record', () => {
-  var man = { rulesVersion: E.VERSION, tests: ['keeper', 'doomed'], prunedPins: [{ name: 'doomed', note: 'superseded pin' }] };
-  var pruned = REG.removalViolations(man, ['keeper'], E.VERSION);             // same version, but recorded
-  assert.deepStrictEqual(pruned, [], 'a removal with a pin-prune record is a surfaced act, not a red');
+  var man = { rulesVersion: E.VERSION, tests: H.activeTestNames().concat([PHANTOM]), prunedPins: [{ name: PHANTOM, note: 'superseded pin' }] };
+  assert.deepStrictEqual(REG.removalViolations(man, H.activeTestNames(), E.VERSION), [],
+    'a removal with a pin-prune record is a surfaced act, not a red');
 });
 

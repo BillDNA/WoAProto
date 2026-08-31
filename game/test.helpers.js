@@ -16,6 +16,7 @@ var REG = require('./test-registry.js');
    the default. The registry in test-registry.js is the exhaustive, audited list. */
 var _ALL_TESTS = [];        // [{name, skipped}] — every registered test
 var _INVARIANTS = [];       // [{category, name}] — the labelled invariant set
+var _ONLY = [];             // names registered with .only (illegal in committed code)
 
 function record(name, skipped) { _ALL_TESTS.push({ name: name, skipped: !!skipped }); }
 
@@ -28,7 +29,7 @@ function test(name) {
 }
 test.skip = function (name) { record(name, true); return nodeTest.test.skip.apply(nodeTest.test, arguments); };
 test.todo = function (name) { record(name, true); return nodeTest.test.todo.apply(nodeTest.test, arguments); };
-test.only = function (name) { record(name, false); return nodeTest.test.only.apply(nodeTest.test, arguments); };
+test.only = function (name) { _ONLY.push(name); record(name, false); return nodeTest.test.only.apply(nodeTest.test, arguments); };
 
 // Explicit pin — identical to the default `test`, for a site that wants to say so.
 function pin(name, fn) { record(name, false); return nodeTest.test(name, fn); }
@@ -47,6 +48,12 @@ function invariant(category, name, fn) {
 function collectedInvariants() { return _INVARIANTS.slice(); }
 function activeTestNames() { return _ALL_TESTS.filter(function (t) { return !t.skipped; }).map(function (t) { return t.name; }); }
 function allTests() { return _ALL_TESTS.slice(); }
+function onlyTests() { return _ONLY.slice(); }
+function duplicateTestNames() {
+  var seen = {}, dups = {};
+  _ALL_TESTS.forEach(function (t) { if (seen[t.name]) dups[t.name] = true; seen[t.name] = true; });
+  return Object.keys(dups);
+}
 
 // A bare classic-board map so rules tests are deterministic regardless of the
 // built-in roster. HQs in opposite corners, no terrain.
@@ -73,5 +80,5 @@ function fixtureCard(id) {
 
 module.exports = {
   E, TESTMAP, testSkirmish, fixtureCard, ALL_DECK_CARDS,
-  test, pin, invariant, collectedInvariants, activeTestNames, allTests,
+  test, pin, invariant, collectedInvariants, activeTestNames, allTests, onlyTests, duplicateTestNames,
 };

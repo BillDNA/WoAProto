@@ -74,6 +74,7 @@
     "registry guard reds when a labelled invariant is removed from the registry",
     "registry guard reds when a category strays from the frozen five",
     "every base-commit test is still present (deletion/skip is itself a red)",
+    "suite hygiene: unique test names, no committed .only",
     "deletion guard reds when a base test is removed with no bump",
     "deletion guard reds when a base test is .skip-ed with no bump",
     "deletion guard goes green when the removal rides a RULES_VERSION bump",
