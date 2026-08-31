@@ -197,7 +197,9 @@ function removeCard(id, meta, opts) {
   return id;
 }
 
-module.exports = { cardProblems, addCard, editCard, removeCard, readStoredCard, readFeed, wrapCard, withPoints, catalogCards, TEMPERATURES, FEED_FILE };
+// writeFeed is exported so the fresh grader (dev/grade-card.js) attaches its findings onto the
+// SAME authored feed the Author wrote — one feed implementation, not two writers of latest.json.
+module.exports = { cardProblems, addCard, editCard, removeCard, readStoredCard, readFeed, writeFeed, wrapCard, withPoints, catalogCards, TEMPERATURES, FEED_FILE };
 
 // ---------------------------------------------------------------- CLI
 if (require.main === module) {

@@ -318,6 +318,53 @@ realSetTimeout(function () {
     'the run nudge + temperature that drove the Author are shown');
   win.WB_AUTHORED = null; // leave idle for a clean re-open
 
+  console.log('== Fresh grader findings render under the card, set-fit distinct, no score (#166) ==');
+  // Feed an authored card carrying the fresh grader's keyed findings (the shape grade-card.js
+  // records) and assert per-axis POSITION + VELOCITY prose renders, the set-fit finding is pulled
+  // out distinctly, the one-fix-pass outcome shows, and nothing verdict-shaped (a score/PASS-FAIL)
+  // leaks — a rubric read is findings, an aim not a gate.
+  win.wbSetAuthored({
+    nudge: 'build out toward 30 cards', temperature: 'bold',
+    cards: [
+      { action: 'add', card: { id: 'reserve_line', name: 'Reserve Line', points: 4, text: 'Dig in, then deploy an infantry.', steps: [{ type: 'trench' }, { type: 'deploy', unit: 'infantry' }] }, note: 'fills a dig-then-push gap',
+        findings: {
+          grader: 'fresh-subagent', gradedAt: '2026-08-30T00:00:00Z',
+          axes: [
+            { axis: 'board-had-to-be-there', title: 'The board had to be there.', setFit: false,
+              position: 'The trench step carries the turn; the deploy rides along.', velocity: 'Tie the deploy to the trench so the sequence is the point.' },
+            { axis: 'set-fit', title: 'You would know it with the name filed off.', setFit: true,
+              position: 'Sits a hair from Sappers — both open on a trench.', velocity: 'Give the deploy a reason only Reserve Line offers, e.g. deploy anywhere.' }
+          ],
+          fixPass: { applied: true, note: 'Deploy now lands anywhere, not just adjacent.' }
+        } }
+    ]
+  });
+  var gradedPane = doc.getElementById('wbAuthored');
+  var findings = gradedPane.querySelector('.wb-findings');
+  assert.ok(findings, 'a graded card renders a findings block under it');
+  assert.ok(/Position/.test(findings.textContent) && /Velocity/.test(findings.textContent),
+    'each finding renders position AND velocity (not just one)');
+  assert.ok(/trench step carries the turn/.test(findings.textContent) && /deploy anywhere/.test(findings.textContent),
+    'the grader prose (both axes) renders readable');
+  // set-fit pulled out distinctly: its own class + tag, and rendered FIRST (not buried).
+  var setfit = findings.querySelector('.wb-finding.wb-setfit');
+  assert.ok(setfit && /name filed off/i.test(setfit.textContent), 'the set-fit (catalog-fit) finding is a distinct labelled block');
+  assert.ok(/set-fit/i.test(setfit.querySelector('.wb-fx-tag').textContent), 'the set-fit finding carries its own tag');
+  assert.strictEqual(findings.querySelector('.wb-finding'), setfit, 'set-fit is rendered first, not buried under the per-card axes');
+  // the one-fix-pass outcome shows AND says the card proceeds regardless (it cannot be bounced).
+  assert.ok(/one fix pass/i.test(findings.textContent) && /Deploy now lands anywhere/.test(findings.textContent),
+    "the Author's one-fix-pass outcome renders under the findings");
+  assert.ok(/proceeds regardless/i.test(findings.textContent), 'the findings state the card proceeds regardless (aim, not gate)');
+  // No verdict leaks in the axis findings: prose, never a score / band / PASS-FAIL / enum. Scope
+  // to the .wb-finding blocks (the graded prose) — the "one fix pass" label legitimately says "pass".
+  var axisProse = Array.prototype.map.call(findings.querySelectorAll('.wb-finding'), function (f) { return f.textContent; }).join(' ');
+  assert.ok(!/\bPASS\b|\bFAIL\b|\bscore\b|\bband\b|\b[1-5]\s*\/\s*5\b|\bverdict\b/i.test(axisProse),
+    'axis findings carry no PASS/FAIL, score, band, or verdict — an aim, not a gate');
+  // Distinct from the balance numbers: the findings block is its own surface, labelled as the
+  // fresh grader's read, separate from the Simple%/1stSight% anomaly + built-card blocks.
+  assert.ok(/fresh grader/i.test(findings.textContent), 'findings are labelled as the fresh grader read, distinct from balance numbers');
+  win.WB_AUTHORED = null; // leave idle for a clean re-open
+
   doc.getElementById('wbBack').click();
   assert.ok(doc.getElementById('menu').classList.contains('active'), 'workbench Back returns to the menu');
 
