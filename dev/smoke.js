@@ -1010,6 +1010,10 @@ realSetTimeout(function () {
       var srvMod = require(path.join(GAME, 'server.js'));
       var repoRoot = path.join(GAME, '..');
       var tmpDb = path.join(os.tmpdir(), 'woa-smoke-contentloop-' + process.pid + '.db');
+      // Back up any pre-existing run-record so this test never clobbers a real overnight run's
+      // logs/content-runs on a dev box (the test shares the fixed path the dashboard reads).
+      var latestFile = path.join(repoRoot, 'logs', 'content-runs', 'latest.json');
+      var latestBackup = null; try { latestBackup = fs.readFileSync(latestFile, 'utf8'); } catch (e) {}
       var srv = http.createServer(srvMod.handler).listen(0, function () {
         var port = srv.address().port;
         // Proxy the browser's relative /api/* fetches to the throwaway server.
@@ -1035,7 +1039,9 @@ realSetTimeout(function () {
             try { cp.execFileSync('git', ['worktree', 'remove', '--force', path.join(repoRoot, '.claude', 'worktrees', runId)], { cwd: repoRoot, stdio: 'pipe' }); } catch (e) {}
             try { cp.execFileSync('git', ['branch', '-D', runId], { cwd: repoRoot, stdio: 'pipe' }); } catch (e) {}
           }
-          try { fs.rmSync(path.join(repoRoot, 'logs', 'content-runs'), { recursive: true, force: true }); } catch (e) {}
+          // remove only THIS test's run dir; restore the pre-existing latest.json (or clear it)
+          if (runId) { try { fs.rmSync(path.join(repoRoot, 'logs', 'content-runs', runId), { recursive: true, force: true }); } catch (e) {} }
+          try { if (latestBackup != null) fs.writeFileSync(latestFile, latestBackup); else fs.rmSync(latestFile, { force: true }); } catch (e) {}
           try { fs.unlinkSync(tmpDb); } catch (e) {}
         }
 
