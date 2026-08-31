@@ -53,10 +53,22 @@ test('ui-glossary: the scan detects an unregistered factory of EVERY definitiona
       src: 'class ZzFixtureWidget { render(){ return this; } }\n',
       expect: 'ZzFixtureWidget',
     },
-    'object-literal builder': {
+    'object-literal token bag': {
       rel: 'game/ui/__fixture__.js', type: 'js',
       src: 'var ZZ_FIXTURE_TOKENS = { ink: \'#123456\', paper: \'#abcdef\' };\n',
       expect: 'ZZ_FIXTURE_TOKENS',
+    },
+    'object-method builder': {
+      rel: 'game/ui/__fixture__.js', type: 'js',
+      // an object-method-shorthand builder, not a hex token bag — the other obj flavour
+      src: 'var ZZ_FIXTURE_BUILDER = { make: function(x){ return \'<b>\' + x + \'</b>\'; } };\n',
+      expect: 'ZZ_FIXTURE_BUILDER',
+    },
+    'expression-arrow markup': {
+      rel: 'game/ui/__fixture__.js', type: 'js',
+      // a brace-less arrow that returns markup — the syntax the return-statement shape misses
+      src: 'var zzFixtureArrow = x => \'<b>\' + x + \'</b>\';\n',
+      expect: 'zzFixtureArrow',
     },
     'modifier class': {
       rel: 'game/__fixture__.css', type: 'css',
@@ -64,6 +76,12 @@ test('ui-glossary: the scan detects an unregistered factory of EVERY definitiona
       // and unregistered, so it must red.
       src: '.card.zzFixtureMod { color: red; }\n',
       expect: 'card.zzFixtureMod',
+    },
+    'modifier class (base not written first)': {
+      rel: 'game/__fixture__.css', type: 'css',
+      // ordering must not hide it: `.x.card` is normalised base-first to `card.x`
+      src: '.zzFixtureFirst.card { color: red; }\n',
+      expect: 'card.zzFixtureFirst',
     },
   };
   for (const [form, fx] of Object.entries(forms)) {

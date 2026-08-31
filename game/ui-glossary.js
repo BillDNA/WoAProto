@@ -60,43 +60,53 @@ function braceBody(s, from) {
     if (c === '{') { if (start < 0) start = j; depth++; }
     else if (c === '}') { if (--depth === 0) return s.slice(start, j + 1); }
   }
-  return s.slice(from);
+  return start < 0 ? '' : s.slice(start);   // no block body (e.g. arrow-expression) → nothing to scan
 }
-function bodyReturnsMarkup(body) {
-  if (/createElementNS/.test(body)) return true;
-  const rets = body.match(/return[^;]*;/gs) || [];
-  // a returned string that opens an HTML/SVG tag: `<name` then whitespace, `/`, or `>`
-  // (so single-letter tags like `<a href>` / `<b>` count, but `a < b` does not).
-  return rets.some(r => /['"`][^'"`]*<[a-zA-Z][\w-]*[\s/>]/.test(r));
+// A string literal in `src` that opens an HTML/SVG tag: `<name` then whitespace, `/`,
+// or `>` (so single-letter tags like `<a href>` / `<b>` count, but `a < b` does not).
+const MARKUP_LITERAL = /['"`][^'"`]*<[a-zA-Z][\w-]*[\s/>]/;
+// Builds markup if its body mints a DOM node or holds a markup string literal anywhere
+// (a factory that stashes markup in a var before returning it still counts — the
+// `;`/return-statement shape is not relied on, so ASI and `return html;` are covered).
+function buildsMarkup(body) {
+  return /createElementNS/.test(body) || MARKUP_LITERAL.test(body);
 }
 
-// Enumerate every fn / obj / class / modifier definition in one source.
+// Enumerate every fn / obj / class / modifier definition in one source. Detection is
+// anchored to MODULE SCOPE (definitions at column 0 of a classic script) so a
+// function-local helper or throwaway object cannot be mistaken for a shared primitive
+// (that would be a false-fail); a genuinely new module-scope primitive is the event the
+// register-or-extend gate wants to see.
 function definitionsIn(entry) {
   const defs = [];
   if (entry.type === 'js') {
     const s = entry.src;
     let m;
-    // function-returning-markup: `function NAME(`, `NAME = function(`, `NAME = (..) =>`
-    const fnDecl = /(?:^|\n)\s*function\s+([A-Za-z_$][\w$]*)\s*\(/g;
-    while ((m = fnDecl.exec(s))) {
-      const body = braceBody(s, m.index + m[0].length);
-      if (bodyReturnsMarkup(body)) defs.push({ name: m[1], form: 'fn', rel: entry.rel });
+    // function-returning-markup, block body: `function NAME(...) {`,
+    // `NAME = function(...) {`, `NAME = (...) => {`, `NAME = ident => {`.
+    const blockFn = /(?:^|\n)(?:function\s+([A-Za-z_$][\w$]*)\s*\([^)]*\)|(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:function\s*\*?\s*\([^)]*\)|\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>)\s*\{/g;
+    while ((m = blockFn.exec(s))) {
+      const body = braceBody(s, m.index + m[0].length - 1); // m[0] ends at the `{`
+      if (buildsMarkup(body)) defs.push({ name: m[1] || m[2], form: 'fn', rel: entry.rel });
     }
-    const fnExpr = /(?:^|\n)\s*(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:function\s*\([^)]*\)|\([^)]*\)\s*=>)/g;
-    while ((m = fnExpr.exec(s))) {
-      const body = braceBody(s, m.index + m[0].length);
-      if (bodyReturnsMarkup(body)) defs.push({ name: m[1], form: 'fn', rel: entry.rel });
+    // function-returning-markup, expression-bodied arrow (no brace): `NAME = a => <expr>`.
+    // Bounded to the single expression so it cannot slurp a later definition's body.
+    const exprFn = /(?:^|\n)(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>\s*([^;\n]+)/g;
+    while ((m = exprFn.exec(s))) {
+      if (buildsMarkup(m[2])) defs.push({ name: m[1], form: 'fn', rel: entry.rel });
     }
-    // class
+    // class (any UI class; none today — the form is still detected so one can't slip in)
     const cls = /(?:^|\n)\s*class\s+([A-Za-z_$][\w$]*)/g;
     while ((m = cls.exec(s))) defs.push({ name: m[1], form: 'class', rel: entry.rel });
-    // design-token object: module-scope object literal with >= 2 colour hexes
-    const obj = /(?:^|\n)\s*(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*\{/g;
+    // object-literal builder / design-token object: a MODULE-SCOPE object literal that
+    // is a shared style/markup source — either >= 2 colour hexes (the CHART tokens) or a
+    // method that builds markup (an object-method-shorthand builder).
+    const obj = /(?:^|\n)(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*\{/g;
     while ((m = obj.exec(s))) {
       const body = braceBody(s, m.index + m[0].indexOf('{'));
-      if ((body.match(/['"`]#[0-9a-fA-F]{3,8}['"`]/g) || []).length >= 2) {
-        defs.push({ name: m[1], form: 'obj', rel: entry.rel });
-      }
+      const hexes = (body.match(/['"`]#[0-9a-fA-F]{3,8}['"`]/g) || []).length;
+      const methodBuildsMarkup = /[A-Za-z_$][\w$]*\s*(?:\([^)]*\)|:\s*(?:function\s*\([^)]*\)|\([^)]*\)\s*=>))/.test(body) && MARKUP_LITERAL.test(body);
+      if (hexes >= 2 || methodBuildsMarkup) defs.push({ name: m[1], form: 'obj', rel: entry.rel });
     }
   } else if (entry.type === 'css') {
     // modifier class: adjacent `.a.b(.c)` chain in a selector — a compound variant.
@@ -111,8 +121,9 @@ function definitionsIn(entry) {
         // maximal runs of `.class.class...` with no whitespace/combinator between
         const chains = one.match(/\.[A-Za-z_][\w-]*(?:\.[A-Za-z_][\w-]*)+/g) || [];
         for (const ch of chains) {
-          const classes = ch.slice(1).split('.');
-          defs.push({ name: classes.join('.'), classes, form: 'modifier', rel: entry.rel });
+          // strip any pseudo/state suffix, then keep the class list of the compound
+          const classes = ch.replace(/:[\w-]+.*$/, '').slice(1).split('.');
+          defs.push({ classes, form: 'modifier', rel: entry.rel });
         }
       }
     }
@@ -127,18 +138,21 @@ function parseRoster(md) {
   const roles = [];
   let bases = [];
   for (let line of block.split('\n')) {
-    line = line.replace(/#.*$/, '').trim();          // strip trailing comments
-    if (!line) continue;
+    line = line.trim();
+    if (!line || line.startsWith('#')) continue;     // blank or full-line comment only
+                                                     // (never strip an inline `#`, which
+                                                     // a match regex may legitimately use)
     const mb = line.match(/^bases:\s*(.+)$/);
     if (mb) { bases = mb[1].split(/[\s,]+/).filter(Boolean); continue; }
     // `match` is the 4th column and may itself contain `|` (regex alternation),
     // so only the first three pipes delimit; everything after is the pattern.
     const cols = line.split('|');
     if (cols.length < 4) throw new Error('ui.md roster: malformed line "' + line + '"');
-    roles.push({
-      id: cols[0].trim(), home: cols[1].trim(), form: cols[2].trim(),
-      match: new RegExp(cols.slice(3).join('|').trim()),
-    });
+    const pattern = cols.slice(3).join('|').trim();
+    if (!pattern || /(^\||\|\||\|$)/.test(pattern)) {
+      throw new Error('ui.md roster: empty match alternative in "' + line + '" (would claim everything)');
+    }
+    roles.push({ id: cols[0].trim(), home: cols[1].trim(), form: cols[2].trim(), match: new RegExp(pattern) });
   }
   return { bases, roles };
 }
@@ -154,8 +168,14 @@ function scan(opts) {
   const allDefs = [];
   for (const entry of sources) {
     for (const def of definitionsIn(entry)) {
-      // modifiers are only in scope when they vary a registered base-primitive class
-      if (def.form === 'modifier' && !baseSet.has(def.classes[0])) continue;
+      if (def.form === 'modifier') {
+        // in scope when the compound varies a registered base class, wherever it sits in
+        // the selector (`.selected.card` counts too); name it base-first, canonically,
+        // so ordering in the CSS can't hide it from the roster regex.
+        const base = def.classes.find(c => baseSet.has(c));
+        if (!base) continue;
+        def.name = base + '.' + def.classes.filter(c => c !== base).sort().join('.');
+      }
       allDefs.push(def);
       const claimed = roster.roles.some(r =>
         r.form === def.form && r.home === def.rel && r.match.test(def.name));
@@ -165,4 +185,4 @@ function scan(opts) {
   return { violations, defs: allDefs, roster };
 }
 
-module.exports = { scan, parseRoster, definitionsIn, defaultSources, bodyReturnsMarkup };
+module.exports = { scan, parseRoster, definitionsIn, defaultSources, buildsMarkup };

@@ -57,20 +57,24 @@ definitional form.
 
 ### Composite renderers
 
-Screen and pane roles that assemble the base primitives above (registered for a complete
-census; each claims its markup family by name):
+Screen and pane roles that assemble the base primitives above. Each role **owns every
+markup primitive in its home file** (the roster claims them all), so the census stays
+complete without enumerating each renderer by name; a markup primitive that appears in a
+*new* home file is unclaimed and reds.
 
-| Role | Lives in |
+| Role | Home |
 | --- | --- |
-| Dashboard bars & stats | `dbar` / `dstat` in `game/ui/dashboard.js` |
-| Deck editor | `render*` in `game/ui/deck-editor.js` |
-| Map preview | `previewSVG` in `game/ui/maps-screen.js` |
-| Cards pane | `crd*` / `barHtml` in `game/ui/pane-cards.js` |
-| Maps pane | `md*` in `game/ui/pane-maps.js` |
-| Overview pane | `ov*` in `game/ui/pane-overview.js` |
-| Units pane | `un*` / `bar` in `game/ui/pane-units.js` |
-| Skirmish HUD | `glyphSVG` / `renderMat` / `row` / `showCards` / `spentCell` in `game/ui/skirmish.js` |
-| Workbench | `wb*` / `renderWorkbench` / `stat` in `game/ui/workbench.js` |
+| Dashboard | `game/ui/dashboard.js` |
+| Deck editor | `game/ui/deck-editor.js` |
+| Map editor | `game/ui/map-editor.js` |
+| Maps screen | `game/ui/maps-screen.js` |
+| Manual | `game/ui/manual.js` |
+| Cards pane | `game/ui/pane-cards.js` |
+| Maps pane | `game/ui/pane-maps.js` |
+| Overview pane | `game/ui/pane-overview.js` |
+| Units pane | `game/ui/pane-units.js` |
+| Skirmish HUD | `game/ui/skirmish.js` |
+| Workbench | `game/ui/workbench.js` |
 
 ### The roster the scan reads
 
@@ -81,24 +85,31 @@ definition's name (or the `base.mod` token for a modifier). A role's regex claim
 family, so a sibling under an existing role extends it; a definition no role claims reds.
 `bases:` names the base-primitive CSS classes whose modifiers are in scope.
 
+Base primitives are claimed by a precise regex so each stays a distinct role (AC1);
+composite renderers each own every markup primitive in their home file (`match` `.`), so
+a new sibling in an existing screen *extends* that role, while a markup primitive in a new
+home — or a new `class`, design-token object, or `.base.modifier` — is unclaimed and reds.
+
 ```ui-roster
 bases: card art
 
-# --- base primitives ---
+# --- base primitives (precise — each a distinct role) ---
 card-face         | game/ui/app.js              | fn       | ^(cardFace|artImg)$
 card-face-mods    | game/style.css              | modifier | ^(card\.(deal|disabled)|art\.placeholder)$
 chart-builders    | game/ui/chart-primitives.js | fn       | ^(ch|ov)
 design-tokens     | game/ui/chart-primitives.js | obj      | ^CHART$
 svg-factory       | game/ui/board.js            | fn       | ^svgEl$
 
-# --- composite renderers ---
-dashboard         | game/ui/dashboard.js        | fn       | ^(dbar|dstat)$
-deck-editor       | game/ui/deck-editor.js      | fn       | ^render
-map-preview       | game/ui/maps-screen.js      | fn       | ^previewSVG$
-cards-pane        | game/ui/pane-cards.js       | fn       | ^(crd|barHtml)
-maps-pane         | game/ui/pane-maps.js        | fn       | ^md
-overview-pane     | game/ui/pane-overview.js    | fn       | ^ov
-units-pane        | game/ui/pane-units.js       | fn       | ^(un|bar)
-skirmish-hud      | game/ui/skirmish.js         | fn       | ^(glyphSVG|renderMat|row|showCards|spentCell)$
-workbench         | game/ui/workbench.js        | fn       | ^(wb|renderWorkbench|stat)
+# --- composite renderers (each owns its home file's markup family) ---
+dashboard         | game/ui/dashboard.js        | fn       | .
+deck-editor       | game/ui/deck-editor.js      | fn       | .
+map-editor        | game/ui/map-editor.js       | fn       | .
+maps-screen       | game/ui/maps-screen.js      | fn       | .
+manual            | game/ui/manual.js           | fn       | .
+cards-pane        | game/ui/pane-cards.js       | fn       | .
+maps-pane         | game/ui/pane-maps.js        | fn       | .
+overview-pane     | game/ui/pane-overview.js    | fn       | .
+units-pane        | game/ui/pane-units.js       | fn       | .
+skirmish-hud      | game/ui/skirmish.js         | fn       | .
+workbench         | game/ui/workbench.js        | fn       | .
 ```
