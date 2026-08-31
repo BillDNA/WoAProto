@@ -142,6 +142,34 @@ function balanceMarkdown(meta, cards) {
   return lines.join('\n') + '\n';
 }
 
+/* ---------- the committed per-iteration RUBRIC-FINDINGS markdown ---------- */
+// The fresh grader's findings as a committed morning artifact (spec #162 §1) — position +
+// velocity per axis, an AIM not a gate, alongside the balance + feels reports. The run record
+// (gitignored) is the machine surface; this markdown is the human-readable committed one.
+function rubricMarkdown(meta, cards) {
+  const lines = [];
+  lines.push('# Rubric findings — content run ' + meta.runId + ', iteration ' + meta.iter);
+  lines.push('');
+  lines.push('_rules ' + E.VERSION + ' · nudge: ' + (meta.nudge || '—') + ' · temperature: ' + (meta.temperature || '—') +
+    ' · fresh grader, an aim not a gate (no pass/fail, the card proceeds regardless)_');
+  lines.push('');
+  (cards || []).forEach(function (c) {
+    lines.push('## `' + c.id + '` — ' + (c.name || c.id) + ' _(' + (c.action || 'add') + ')_');
+    if (c.legal === false) { lines.push(''); lines.push('⛔ **illegal — never graded/swept:** ' + (c.problems || []).join('; ')); lines.push(''); return; }
+    const g = c.findings;
+    if (!g || !g.axes || !g.axes.length) { lines.push(''); lines.push('_(no findings recorded)_'); lines.push(''); return; }
+    g.axes.forEach(function (a) {
+      lines.push('');
+      lines.push('- **' + (a.title || a.axis) + '**' + (a.setFit ? ' _(set-fit)_' : ''));
+      lines.push('  - Position: ' + a.position);
+      lines.push('  - Velocity: ' + a.velocity);
+    });
+    if (g.fixPass) { lines.push(''); lines.push('- Author\'s one fix pass: ' + (g.fixPass.note || (g.fixPass.applied ? 'applied' : 'none')) + ' _(card proceeds regardless)_'); }
+    lines.push('');
+  });
+  return lines.join('\n') + '\n';
+}
+
 /* ---------- the loop ---------- */
 
 /* runContentLoop(opts) — drive the content loop until the stop-datetime wall.
@@ -318,7 +346,7 @@ async function runContentLoop(opts) {
     });
     RR.markStage(rec, iter, 'balance');
 
-    // committed BALANCE markdown (the morning artifact)
+    // committed BALANCE + RUBRIC markdown (the morning artifacts, alongside the feels transcript)
     const itRec = rec.rec.iterations.filter(function (x) { return x.iter === iter; })[0];
     let balPath = null;
     try {
@@ -326,6 +354,11 @@ async function runContentLoop(opts) {
         toleranceName: toleranceProfile.name, panel: panel, swept: swept }, (itRec && itRec.authored) || []);
       balPath = writeReport(reportsDir, ['balance', String(E.VERSION)], runId + '-iter' + iter + '-balance.md', md);
       lastBalanceReport = balPath;
+    } catch (e) { /* a report write must never break the loop */ }
+    let rubPath = null;
+    try {
+      const rmd = rubricMarkdown({ runId: runId, iter: iter, nudge: config.nudge, temperature: config.temperature }, (itRec && itRec.authored) || []);
+      rubPath = writeReport(reportsDir, ['rubric', String(E.VERSION)], runId + '-iter' + iter + '-rubric.md', rmd);
     } catch (e) { /* a report write must never break the loop */ }
 
     // ---- FEELS: one full first-to-3, two FREE drafts; non-selection is a finding ----
@@ -345,7 +378,7 @@ async function runContentLoop(opts) {
     let sha = null;
     try { sha = await commit(iter, 'content-run ' + runId + ' iter ' + iter + ' — ' + authoredIds.length + ' card(s)', ctx); } catch (e) { /* commit best-effort; a failure is a finding, not a crash */ }
     RR.markStage(rec, iter, 'commit');
-    RR.finishIteration(rec, iter, { commit: sha, balanceReportPath: balPath, feelsReportPath: lastFeelsReport });
+    RR.finishIteration(rec, iter, { commit: sha, balanceReportPath: balPath, rubricReportPath: rubPath, feelsReportPath: lastFeelsReport });
   }
 }
 
@@ -433,7 +466,7 @@ function parseStopAt(v, now) {
   return isNaN(t) ? 0 : t;
 }
 
-module.exports = { runContentLoop, pinSweep, nonSelection, resolveTolerance, balanceMarkdown, STAGES,
+module.exports = { runContentLoop, pinSweep, nonSelection, resolveTolerance, balanceMarkdown, rubricMarkdown, STAGES,
   parseFeelsOutput, parseAuthorBatch, parseStopAt, extractJson };
 
 /* ============================ CLI ============================

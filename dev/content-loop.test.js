@@ -135,6 +135,12 @@ test('a full iteration: author batch -> grade -> balance columns -> feels non-se
   // the batch IS the commit
   assert.strictEqual(it.commit, 'abc1234', 'the iteration records its commit sha');
   assert.ok(it.balanceReportPath, 'a committed balance report path is recorded');
+  // the three morning artifacts exist as markdown: balance, rubric findings, (feels transcript is claude-plays')
+  assert.ok(it.rubricReportPath && fs.existsSync(it.rubricReportPath), 'a committed rubric-findings report is written');
+  const rubricMd = fs.readFileSync(it.rubricReportPath, 'utf8');
+  assert.ok(/set-fit/i.test(rubricMd) && /Position:/.test(rubricMd) && /Velocity:/.test(rubricMd), 'the rubric report renders the fresh findings (position + velocity), an aim not a gate');
+  const balMd = fs.readFileSync(path.join(rec, 'reports', 'balance', String(E.VERSION), 'run-full-iter1-balance.md'), 'utf8');
+  assert.ok(/Simple%/.test(balMd) && /1stSight%/.test(balMd), 'the balance report renders the pinned card columns');
 
   // config block survives
   assert.strictEqual(record.config.nudge, 'build out toward 30 cards');

@@ -98,7 +98,7 @@ function startIteration(h, iter) {
   h.rec.iterations.push({
     iter: iter, startedAt: new Date().toISOString(), finishedAt: null,
     stages: [], authored: [], feels: null,
-    balanceReportPath: null, feelsReportPath: null, failure: null, commit: null
+    balanceReportPath: null, rubricReportPath: null, feelsReportPath: null, failure: null, commit: null
   });
   return flush(h);
 }
@@ -173,6 +173,7 @@ function finishIteration(h, iter, done) {
   it.finishedAt = new Date().toISOString();
   it.commit = done.commit != null ? done.commit : it.commit;
   if (done.balanceReportPath) it.balanceReportPath = done.balanceReportPath;
+  if (done.rubricReportPath) it.rubricReportPath = done.rubricReportPath;
   if (done.feelsReportPath) it.feelsReportPath = done.feelsReportPath;
   return flush(h);
 }
