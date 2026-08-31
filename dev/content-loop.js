@@ -196,6 +196,7 @@ async function runContentLoop(opts) {
   const authorOpts = opts.authorOpts || {};          // { cardsDir, feedFile, regen } threaded to the hands
   const feedFile = authorOpts.feedFile;              // author-card default when undefined
   const onStage = opts.onStage || function (s) { process.stdout.write('CONTENT_STAGE ' + JSON.stringify(s) + '\n'); };
+  const onIteration = opts.onIteration || function () {};   // fired with the completed itRec after each iteration (watchable recap)
 
   // Injected brains + hooks (all optional so the orchestration is testable in isolation).
   const author = opts.author || (async function () { return []; });
@@ -255,6 +256,8 @@ async function runContentLoop(opts) {
         done = true;
       }
     }
+    // the completed iteration's watchable recap (balance columns, grade aims, feels, commit)
+    try { onIteration(rec.rec.iterations.filter(function (x) { return x.iter === iter; })[0]); } catch (e) { /* a recap must never break the loop */ }
   }
 
   RR.finish(rec, 'done');
@@ -595,17 +598,28 @@ if (require.main === module) {
     const llm = require(path.join(__dirname, 'llm-client.js'));
     const skillText = readMaybe(path.join(ROOT, '.claude', 'skills', 'create-card', 'SKILL.md'));
     const cheatsheet = readMaybe(path.join(ROOT, 'docs', 'card-cheatsheet.md'));
+    // Live echo: print the model's tokens to our stdout as they arrive, so a terminal
+    // watcher SEES the author write the card / the grader write its findings (not a silent
+    // wait then a dump). Returns the onDelta the streaming transport calls per chunk.
+    const echo = function (label) {
+      process.stdout.write('  ' + label + '\n  ┃ ');
+      return function (chunk) { process.stdout.write(String(chunk).replace(/\n/g, '\n  ┃ ')); };
+    };
     author = async function (ctx) {
       const um = authorUserMessage(ctx, cheatsheet);
-      const res = await llm.send({ systemPrompt: skillText + '\n\nReturn ONLY a JSON array of moves; no prose.', userMessage: um, model: authorModel, effort: effort, timeoutMs: 600000 });
-      return parseAuthorBatch(res.text);
+      const res = await llm.sendStreamed({ systemPrompt: skillText + '\n\nReturn ONLY a JSON array of moves; no prose.', userMessage: um, model: authorModel, effort: effort, timeoutMs: 600000 }, echo('✍️  ' + authorModel + ' is authoring…'));
+      process.stdout.write('\n');
+      const batch = parseAuthorBatch(res.text);
+      console.log('  → ' + batch.length + ' move(s): ' + (batch.map(function (m) { return (m.action || 'add') + ' `' + ((m.card && m.card.id) || m.id) + '`'; }).join(', ') || '(none parsed)'));
+      return batch;
     };
     grade = async function (ids, ctx) {
       const out = {};
       for (const id of ids) {
         const brief = G.briefFor('game/content/cards/' + id + '.js', require(path.join(ROOT, 'game', 'card-rubric-axes.js')).CARD_RUBRIC_AXES.map(function (a) { return a.id; }))
           + '\n\nIMPORTANT: do NOT run any command. Return ONLY the findings JSON object.';
-        const res = await llm.send({ systemPrompt: 'You are a FRESH card grader (never the author). Findings are an aim, not a gate — no score/band/pass-fail.', userMessage: brief, model: gradeModel, effort: effort, timeoutMs: 600000 });
+        const res = await llm.sendStreamed({ systemPrompt: 'You are a FRESH card grader (never the author). Findings are an aim, not a gate — no score/band/pass-fail.', userMessage: brief, model: gradeModel, effort: effort, timeoutMs: 600000 }, echo('🔍 ' + gradeModel + ' grading `' + id + '`…'));
+        process.stdout.write('\n');
         // Build a CLEAN findings object from the LLM reply — keep only axis/position/velocity per
         // axis — so a benign extra key an LLM tends to add (a `summary`, a `gradedAt`) can't trip
         // grade-card's strict verdict-guard whitelist and lose the whole grade.
@@ -626,7 +640,8 @@ if (require.main === module) {
       const um = 'The fresh grader read your card `' + id + '` and named these aims (velocity = the fix toward good):\n' + aim +
         '\n\nTake ONE fix pass toward the aim. If a revision helps, return ONLY the full revised card JSON ' +
         '{"id":"' + id + '","name":"...","text":"...","steps":[...]} (keep the id). If the card is fine as is, return exactly {"noChange":true}.';
-      const res = await llm.send({ systemPrompt: skillText, userMessage: um, model: authorModel, effort: effort, timeoutMs: 600000 });
+      const res = await llm.sendStreamed({ systemPrompt: skillText, userMessage: um, model: authorModel, effort: effort, timeoutMs: 600000 }, echo('🛠️  ' + authorModel + ' one fix pass on `' + id + '`…'));
+      process.stdout.write('\n');
       const j = extractJson(res.text);
       if (j && j.id === id && Array.isArray(j.steps)) return { card: j, note: 'revised toward the aim' };
       return { note: 'reviewed the aim; no change this pass' };
@@ -636,16 +651,49 @@ if (require.main === module) {
   console.log('content-loop: ' + (mock ? 'MOCK brains' : 'real LLM brains') + ' · nudge "' + config.nudge + '" · temperature ' + config.temperature +
     ' · tolerance ' + config.tolerance + ' · stop ' + (config.stopAt || 'none') + ' · panel [' + panel.join(',') + '] · ' + maps.length + ' maps' + (noCommit ? ' · NO-COMMIT' : ''));
 
+  // Readable, watchable stdout: a labelled banner as each stage BEGINS (the machine
+  // surface is the run-record + dashboard, not this stream — so the terminal can be plain
+  // English for the human alt-tabbing in). STAGE_ICON keeps the five stages recognizable.
+  const STAGE_ICON = { author: '✍️  AUTHOR', grade: '🔍 GRADE (fresh grader)',
+    balance: '⚖️  BALANCE (pin + round-robin sweep)', feels: '🎮 FEELS (claude-plays, live)', commit: '💾 COMMIT' };
   runContentLoop({
     runId: runId, config: config, stopAt: stopAtMs, maxIters: maxIters,
     panel: panel, maps: maps, n: n, tolerance: config.tolerance,
     authorOpts: authorOpts, recDir: recDir, reportsDir: reportsDir,
     author: author, grade: grade, fixPass: fixPass, feels: feels, commit: commit,
-    onStage: function (s) { process.stdout.write('CONTENT_STAGE ' + JSON.stringify(s) + '\n'); }
+    onStage: function (s) {
+      if (s.failed) return void process.stdout.write('\n  ⚠️  iter ' + s.iter + ' FAILED at ' + s.stage + ' — ' + s.error + ' · recorded, advancing\n');
+      if (s.retry) return void process.stdout.write('\n  ↻ iter ' + s.iter + ' stumbled at ' + s.stage + ' (' + s.error + ') — retrying once\n');
+      if (s.stage === 'author') process.stdout.write('\n\n════════════ ITERATION ' + s.iter + ' ════════════\n');
+      if (s.stage) process.stdout.write('\n── iter ' + s.iter + ' · ' + (STAGE_ICON[s.stage] || s.stage) + ' ──\n');
+    },
+    onIteration: printIterationSummary
   }).then(function (res) {
-    console.log('\nCONTENT_RESULT ' + JSON.stringify({ runId: res.runId, iterations: res.iterations, record: res.recordFile }));
-    console.log('\n' + res.iterations + ' iteration(s). Run record: ' + res.recordFile);
+    console.log('\n════════════ DONE ════════════');
+    console.log(res.iterations + ' iteration(s) committed. Run record: ' + res.recordFile);
+    console.log('CONTENT_RESULT ' + JSON.stringify({ runId: res.runId, iterations: res.iterations, record: res.recordFile }));
   }).catch(function (e) { console.error(e); process.exit(1); });
+}
+
+// A plain-English recap the terminal watcher reads after each iteration commits — the batch's
+// authored cards with their balance columns + Tolerance flags, the fresh-grade aims, the feels
+// non-selection findings, and the commit sha. (The dashboard renders the same from the record.)
+function printIterationSummary(it) {
+  if (!it) return;
+  const L = [];
+  (it.authored || []).forEach(function (c) {
+    if (c.legal === false) { L.push('   ⛔ `' + c.id + '` illegal — never swept: ' + (c.problems || []).join('; ')); return; }
+    const b = c.balance || {}, col = b.columns || {};
+    L.push('   • `' + c.id + '` ' + (c.name ? '"' + c.name + '" ' : '') + (c.points != null ? '(' + c.points + ' pts) ' : '') +
+      (col.plays != null ? '— ' + col.plays + ' plays · win ' + (col.win == null ? '—' : col.win + '%') + ' · Simple ' + (col.simple == null ? '—' : col.simple + '%') + ' · 1stSight ' + (col.sight == null ? '—' : col.sight + '%') : '— (not swept)'));
+    if (b.flags && b.flags.length) L.push('       ⚑ ' + b.flags.join(' · ') + '  (a flag, never a reject)');
+    const axes = (c.findings && c.findings.axes) || [];
+    axes.forEach(function (a) { L.push('       ◇ ' + (a.title || a.axis) + ': ' + a.velocity); });
+  });
+  if (it.feels && it.feels.nothingWanted && it.feels.nothingWanted.length) L.push('   🃏 feels — nothing wanted: ' + it.feels.nothingWanted.join(', ') + ' (kept as a finding)');
+  if (it.failure) L.push('   ⚠️  failed at ' + it.failure.stage + ': ' + it.failure.message);
+  L.push('   💾 ' + (it.commit ? it.commit.slice(0, 9) + ' committed' : 'nothing to commit this iteration'));
+  process.stdout.write('\n  ── iter ' + it.iter + ' recap ──\n' + L.join('\n') + '\n');
 }
 
 function readMaybe(f) { try { return require('fs').readFileSync(f, 'utf8'); } catch (e) { return ''; } }

@@ -118,4 +118,69 @@ function send(request) {
   });
 }
 
-module.exports = { buildPrompt, parseEnvelope, send, resolveBinary };
+// Streaming sibling of send(): identical fail-open contract, but asks the CLI to emit
+// NDJSON events (`--output-format stream-json --verbose --include-partial-messages`) and
+// calls onDelta(textChunk) for each token as it is generated — so a terminal watcher sees
+// the author write the card / the grader write its findings LIVE, instead of a silent wait
+// then a dump (the reason `--output-format json` looks unwatchable). The final `result`
+// event still yields the full text + usage for parsing. Prompt on STDIN (assembled context
+// blows the argv cap), reads wired before the write (pipe-buffer deadlock otherwise).
+function sendStreamed(request, onDelta) {
+  return new Promise(function (resolve) {
+    if (!request) return resolve(errored());
+    let bin;
+    try { bin = resolveBinary(request.binaryPath); } catch (e) { return resolve(errored()); }
+    const args = bin.extraArgs.concat([
+      '-p',
+      '--no-session-persistence',
+      '--model', request.model || '',
+      '--system-prompt', request.systemPrompt || '',
+      '--output-format', 'stream-json',
+      '--verbose',                        // mandatory with stream-json output
+      '--include-partial-messages'        // token-by-token deltas as they arrive
+    ]);
+    if (request.effort) args.push('--effort', request.effort);
+    let proc;
+    try { proc = spawn(bin.cmd, args, { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] }); }
+    catch (e) { return resolve(errored()); }
+
+    let carry = '', result = null, done = false;
+    function finish(res) { if (done) return; done = true; clearTimeout(timer); resolve(res); }
+    const timer = setTimeout(function () {
+      try { proc.kill(); } catch (e) { /* already gone */ }
+      finish(result || errored());
+    }, request.timeoutMs || DEFAULT_TIMEOUT_MS);
+
+    proc.on('error', function () { finish(errored()); });
+    proc.stdout.setEncoding('utf8');
+    proc.stdout.on('data', function (chunk) {
+      const parts = (carry + chunk).split('\n');
+      carry = parts.pop();
+      for (let i = 0; i < parts.length; i++) {
+        const line = parts[i];
+        if (!line.trim()) continue;
+        let o; try { o = JSON.parse(line); } catch (e) { continue; }  // skip stray verbose noise
+        if (o.type === 'stream_event' && o.event && o.event.type === 'content_block_delta') {
+          const t = o.event.delta && o.event.delta.text;              // text_delta chunk
+          if (t && onDelta) { try { onDelta(t); } catch (e) { /* echo must never break the read */ } }
+          continue;
+        }
+        if (o.type === 'result') {                                    // terminal event: full text + usage
+          if (o.is_error === true || typeof o.result !== 'string') { result = errored(); }
+          else {
+            const usage = o.usage || {};
+            result = { text: o.result, inputTokens: Number(usage.input_tokens) || 0,
+              outputTokens: Number(usage.output_tokens) || 0,
+              finishReason: o.stop_reason === 'max_tokens' ? 'max_tokens' : 'stop' };
+          }
+        }
+      }
+    });
+    proc.stderr.on('data', function () { });                          // drain
+    proc.on('close', function () { finish(result || errored()); });
+    proc.stdin.on('error', function () { });                          // ignore EPIPE
+    try { proc.stdin.write(buildPrompt(request)); proc.stdin.end(); } catch (e) { /* close fails open */ }
+  });
+}
+
+module.exports = { buildPrompt, parseEnvelope, send, sendStreamed, resolveBinary };
