@@ -31,7 +31,7 @@ function runCli(specRel, extraEnv) {
   const shotsDir = tmp('woa-uiv-shots-');
   const args = [CLI, path.join(ROOT, specRel), '--out', outDir, '--shots', shotsDir, '--no-stage'];
   const env = Object.assign({}, process.env, {
-    WOA_UI_REVIEW_CAPTURE: FAKE, WOA_UI_REVIEW_ASK: FAKE
+    WOA_UI_REVIEW_CAPTURE: FAKE, WOA_UI_REVIEW_ASK: FAKE, WOA_UI_REVIEW_DRIVE: FAKE
   }, extraEnv || {});
   let code = 0, out = '';
   try { out = execFileSync('node', args, { cwd: ROOT, env: env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }); }
@@ -139,6 +139,81 @@ test('CLI exits NON-ZERO when the TARGET capture is empty/absent (no vacuous pas
   const r = runCli(FIX + '/spec-no-target.json');
   assert.notEqual(r.code, 0, 'a null target must red — the comparator cannot verify fidelity against nothing');
   assert.ok(r.verdict.bounces.some(b => b.kind === 'no-target'));
+});
+
+/* ---------------- Phase 2 — THE AIM (rubric findings; never a gate) ---------------- */
+
+test('normalizeRubricFindings: a verdict-shaped output THROWS (a rubric never gates)', () => {
+  assert.throws(() => U.normalizeRubricFindings({ verdict: 'PASS', axes: [] }), /verdict/i, 'a top-level verdict key must red');
+  assert.throws(() => U.normalizeRubricFindings({ score: 9, axes: [] }), /verdict|score/i, 'a score key must red');
+  assert.throws(() => U.normalizeRubricFindings({ axes: [{ axis: 'x', band: 'green', position: 'p', velocity: 'v' }] }),
+    /verdict|unexpected/i, 'a per-axis band key must red');
+  assert.throws(() => U.normalizeRubricFindings({ axes: [{ axis: 'x', position: 'B+', velocity: 'meh' }] }),
+    /verdict|prose|grade/i, 'a bare grade as a value must red');
+  assert.throws(() => U.normalizeRubricFindings({ axes: [{ axis: 'x', position: '7', velocity: 'meh' }] }),
+    /number|band|score/i, 'a bare number as a value must red');
+});
+
+test('normalizeRubricFindings: a findings-only output is accepted and normalized', () => {
+  const r = U.normalizeRubricFindings({ reviewer: 'fresh-rubric', axes: [
+    { axis: 'Blur it — is it one place?', source: 'rubric', position: 'reads as one place under one light', velocity: 'add grain to the frame' },
+    { axis: 'a ticket goal', source: 'goal', position: 'we approach it partway', velocity: 'tighten toward it' } ] });
+  assert.equal(r.axes.length, 2);
+  assert.equal(r.axes[0].source, 'rubric');
+  assert.equal(r.axes[1].source, 'goal');
+});
+
+test('rubricAxisTitles: extracts the ui-rubric axes from the rubric file', () => {
+  const txt = fs.readFileSync(path.join(ROOT, 'docs/rubrics/ui-rubric.md'), 'utf8');
+  const axes = U.rubricAxisTitles(txt);
+  assert.ok(axes.length >= 5, 'the five ui-rubric axes should be extracted; got ' + axes.length);
+});
+
+test('Phase 2 runs ONLY when Phase 1 passed — a bounced review records no rubric block', () => {
+  const r = runCli(FIX + '/spec-bad.json');
+  assert.notEqual(r.code, 0, 'the bad fixture bounces Phase 1');
+  assert.ok(!r.verdict.rubric, 'Phase 2 must not run when Phase 1 bounced');
+});
+
+test('Phase 2 findings-only leaves the Phase-1 exit code untouched (an aim, not a gate)', () => {
+  const r = runCli(FIX + '/spec-good.json');
+  assert.equal(r.code, 0, 'a findings-only rubric read must not change the pass; got: ' + r.out);
+  assert.equal(r.verdict.pass, true);
+  assert.ok(r.verdict.rubric && Array.isArray(r.verdict.rubric.axes) && r.verdict.rubric.axes.length,
+    'the rubric aim recorded findings');
+});
+
+test('Phase 2 reads the ui-rubric axes AND the ticket goals ("do we approach it?")', () => {
+  const r = runCli(FIX + '/spec-good.json');
+  const ri = JSON.parse(fs.readFileSync(path.join(r.outDir, 'rubric-input.json'), 'utf8'));
+  assert.equal(ri.rubric, 'docs/rubrics/ui-rubric.md');
+  assert.ok(ri.axesRead && ri.axesRead.length >= 5, 'Phase 2 read the ui-rubric axes');
+  assert.ok(ri.goals && ri.goals.length >= 1, 'Phase 2 read the ticket goals');
+  const srcs = r.verdict.rubric.axes.map(a => a.source);
+  assert.ok(srcs.indexOf('rubric') >= 0 && srcs.indexOf('goal') >= 0,
+    'findings must cover ui-rubric axes AND ticket goals');
+});
+
+test('the harness reds (exit 2) on a verdict-shaped Phase-2 output — the guard, on a Phase-1-PASSING review', () => {
+  const clean = runCli(FIX + '/spec-good.json');
+  assert.equal(clean.code, 0, 'baseline: findings-only passes');
+  const guarded = runCli(FIX + '/spec-good.json', { WOA_UI_REVIEW_FAKE_RUBRIC: 'verdict' });
+  assert.equal(guarded.code, 2, 'a verdict-shaped rubric output must make the command red via the guard');
+  assert.equal(guarded.verdict.pass, true, 'Phase 1 still passed — the red came from the Phase-2 guard, not a bounce');
+  assert.match(guarded.out, /verdict/i, 'the guard names why it refused');
+});
+
+test('Phase 2 drives the running UI with Playwright and captures interaction stills', async (t) => {
+  // Real pixels via Playwright (jsdom renders none). Skip only if the browser is genuinely absent.
+  let ok = true;
+  try { await U.defaultCapture(path.join(ROOT, FIX, 'before.html')).then(b => { ok = !!(b && b.length); }); }
+  catch (e) { ok = false; }
+  if (!ok) { await U.closeBrowser(); return t.skip('Playwright chromium not installed'); }
+  const stills = await U.defaultDrive(path.join(ROOT, FIX, 'after-good.html'));   // has an actionable <button>
+  await U.closeBrowser();
+  assert.ok(Array.isArray(stills));
+  assert.ok(stills.length >= 1, 'driving an actionable screen should capture at least one interaction still');
+  assert.equal(stills[0].buf.slice(1, 4).toString(), 'PNG', 'an interaction still is a real PNG');
 });
 
 /* ---------------- AC: screenshots go to a shots-branch, never the working tree ---------------- */

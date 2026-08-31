@@ -50,7 +50,30 @@ function ask(request) {
     });
     return Promise.resolve({ text: JSON.stringify({ bounces: bounces }), finishReason: 'stop' });
   }
+  if (request.phase === 'rubric') {
+    // Phase 2 is the AIM. Stand in for the rubric grader's judgment: emit FINDINGS ONLY, one per
+    // ui-rubric axis Phase 2 read and one per ticket goal (source-tagged), so the good fixture drives
+    // the real findings-only branch. Set WOA_UI_REVIEW_FAKE_RUBRIC=verdict to stand in for a grader
+    // that tried to GATE (a score/band/pass-fail) — the guard in ui-review.js must reject that.
+    if (process.env.WOA_UI_REVIEW_FAKE_RUBRIC === 'verdict') {
+      return Promise.resolve({ text: JSON.stringify({ verdict: 'PASS', score: 9, axes: [] }), finishReason: 'stop' });
+    }
+    const axes = (request.axesRead || []).map(function (a) {
+      return { axis: a, source: 'rubric', position: 'observed: "' + a + '" reads coherently across the stills',
+        velocity: 'sign the live control louder and quiet the inert marks' };
+    });
+    (request.goals || []).forEach(function (g) {
+      axes.push({ axis: g, source: 'goal', position: 'we approach "' + g + '" only partway',
+        velocity: 'tighten the screen toward that goal' });
+    });
+    return Promise.resolve({ text: JSON.stringify({ reviewer: 'fresh-rubric', axes: axes }), finishReason: 'stop' });
+  }
   return Promise.resolve({ text: '', finishReason: 'error' });
 }
 
-module.exports = { capture: capture, ask: ask };
+// Fake drive: a deterministic, browserless stand-in for Phase 2's Playwright interaction capture —
+// no interaction stills, so the CLI seam runs without a browser. The real drive is exercised by the
+// Playwright-gated test against defaultDrive.
+function drive() { return Promise.resolve([]); }
+
+module.exports = { capture: capture, ask: ask, drive: drive };
