@@ -474,15 +474,22 @@ module.exports = { runContentLoop, pinSweep, nonSelection, resolveTolerance, bal
 
 /* ============================ CLI ============================
    One launch drives the whole headless cycle. The real transports wire the LLM brains
-   (create-card as the Author's brain, a FRESH grade-card call, claude-plays --draft for
-   feels); --mock swaps them for deterministic offline brains so the DETERMINISTIC machine
-   can be run end to end without an API key. The deterministic machinery (pin sweep, run
-   record, Tolerance flag, legality guard, non-selection, stop wall, per-iteration commit)
-   is identical on both paths.
+   over the Claude Code subscription CLI (`claude -p`, via dev/llm-client.js) — the same
+   login the terminal already carries, so there is NO API key to set: run it from a
+   logged-in terminal and the author/grade/feels brains just work. The real transports are
+   create-card as the Author's brain, a FRESH grade-card call, and claude-plays --draft for
+   feels; --mock swaps them for deterministic offline brains so the DETERMINISTIC machinery
+   (pin sweep, run record, Tolerance flag, legality guard, non-selection, stop wall,
+   per-iteration commit — identical on both paths) can run with no CLI and no network at all
+   (CI). A "few minutes out" short-cutoff proof run (#167 AC1) needs the slow FEELS match
+   bounded, or one first-to-3 at the 60-turn cap outlasts the whole window: --feels-turns
+   caps each game's turns and --feels-match lowers the first-to-N. Both default to the full
+   real feel (60-turn cap, first-to-3) so Bill's overnight runs are untouched.
 
      node dev/content-loop.js --nudge "build out toward 30 cards" --temperature standard \
        --tolerance card --stop +45m [--panel easy,normal,hard] [--n 6] [--maps 2] \
-       [--mapset core7] [--feels-model haiku] [--branch content-run-<ts>] [--mock]
+       [--mapset core7] [--feels-model haiku] [--feels-turns 60] [--feels-match 3] \
+       [--branch content-run-<ts>] [--mock]
 */
 if (require.main === module) {
   const cp = require('child_process');
@@ -520,6 +527,8 @@ if (require.main === module) {
   const authorOpts = {}; if (cardsDir) authorOpts.cardsDir = cardsDir; if (feedFile) authorOpts.feedFile = feedFile;
 
   const feelsModel = flag('feels-model', 'haiku');
+  const feelsTurns = +flag('feels-turns', 0) | 0;   // >0 bounds the real feels match (proof runs); 0 = claude-plays' own default cap
+  const feelsMatch = Math.max(1, +flag('feels-match', 3) | 0);   // first-to-N; default 3 (Bill's real runs). Lower it only to bound a short-cutoff proof run
   const authorModel = flag('author-model', 'sonnet');
   const gradeModel = flag('grade-model', 'sonnet');
   const effort = flag('effort', '');
@@ -540,8 +549,9 @@ if (require.main === module) {
 
   // ---- FEELS transport: spawn claude-plays --draft (real) / --mock (offline) ----
   const feels = async function () {
-    const args = ['dev/claude-plays.js', '--match', '3', '--red', feelsModel, '--blue', feelsModel,
+    const args = ['dev/claude-plays.js', '--match', String(feelsMatch), '--red', feelsModel, '--blue', feelsModel,
       '--draft', '--seed', '1001'];
+    if (feelsTurns > 0) args.push('--max-turns', String(feelsTurns));
     if (effort) args.push('--effort', effort);
     if (mapset) args.push('--mapset', mapset);
     if (mock) args.push('--mock', '--map', maps[0].name);
