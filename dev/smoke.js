@@ -351,6 +351,13 @@ realSetTimeout(function () {
   assert.ok(setfit && /name filed off/i.test(setfit.textContent), 'the set-fit (catalog-fit) finding is a distinct labelled block');
   assert.ok(/set-fit/i.test(setfit.querySelector('.wb-fx-tag').textContent), 'the set-fit finding carries its own tag');
   assert.strictEqual(findings.querySelector('.wb-finding'), setfit, 'set-fit is rendered first, not buried under the per-card axes');
+  // Scannable, not a transcript (spec §1): the set-fit headline shows up front, OUTSIDE the
+  // collapsible; the per-card axes are tucked behind a <details> the reviewer expands to inspect.
+  var more = findings.querySelector('details.wb-fx-more');
+  assert.ok(more, 'the per-card axes collapse behind a <details> so the feed reads at a glance');
+  assert.ok(!more.contains(setfit), 'the set-fit finding stays up front, not hidden inside the collapsible');
+  assert.ok(more.querySelector('.wb-finding') && /board had to be there/i.test(more.textContent),
+    'the per-card axis lives inside the collapsible (expand to inspect)');
   // the one-fix-pass outcome shows AND says the card proceeds regardless (it cannot be bounced).
   assert.ok(/one fix pass/i.test(findings.textContent) && /Deploy now lands anywhere/.test(findings.textContent),
     "the Author's one-fix-pass outcome renders under the findings");
