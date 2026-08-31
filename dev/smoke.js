@@ -287,6 +287,37 @@ realSetTimeout(function () {
     'Run-phase anomaly flags carry forward into Results');
   win.WB_RESULTS = null; // leave idle for a clean re-open
 
+  console.log('== Authored-this-run feed: add/edit/remove render as cards (#165) ==');
+  // Idle before the Author runs.
+  assert.ok(/No authored content yet/i.test(doc.getElementById('wbAuthored').textContent), 'Authored feed idle until the card Author runs');
+  // AC8: feed the Author's this-run record (the shape /api/authored serves) and assert
+  // each add/edit/remove renders as a CARD (name + text), visibly distinguished, not JSON.
+  win.wbSetAuthored({
+    nudge: 'build out toward 30 cards', temperature: 'bold',
+    cards: [
+      { action: 'add', card: { id: 'reserve_line', name: 'Reserve Line', points: 4, text: 'Dig in, then deploy an infantry.', steps: [{ type: 'trench' }, { type: 'deploy', unit: 'infantry' }] }, note: 'fills a dig-then-push gap' },
+      { action: 'edit', card: { id: 'attack_plus1', name: 'Attack +1', points: 3, text: 'Order an attack with +1 support.', steps: [{ type: 'attack', mod: 1 }] }, note: 'reworded' },
+      { action: 'remove', card: { id: 'mass_assault', name: 'Mass Assault', points: 4, text: 'All-in.', steps: [{ type: 'attack', mod: 2 }] }, note: 'shadowed by conscription' }
+    ]
+  });
+  var authPane = doc.getElementById('wbAuthored');
+  var acts = Array.prototype.map.call(authPane.querySelectorAll('.wb-act'), function (a) { return a.textContent; });
+  assert.deepStrictEqual(acts, ['added', 'edited', 'removed'], 'add/edit/remove each render a distinct action badge (got ' + acts.join(',') + ')');
+  assert.ok(/Reserve Line/.test(authPane.textContent) && /Dig in, then deploy an infantry/.test(authPane.textContent),
+    'an authored card renders as a card (name + player text), not JSON');
+  assert.ok(!/"steps"|\{"type"/.test(authPane.textContent), 'the feed shows content, never raw JSON');
+  assert.ok(/trench &middot; deploy infantry/.test(authPane.innerHTML) || /trench.*deploy infantry/.test(authPane.textContent),
+    'steps render human-readable (unit named), not a JSON blob');
+  assert.ok(authPane.querySelector('.wb-authored.remove'), 'a removed card is visibly distinguished (its own class)');
+  // The feed reuses the REAL game card face (app.js cardFace), not a bespoke one: a proper
+  // `.card` with a name `.banner`, and an art `.placeholder` slot for cards with no art yet.
+  var face = authPane.querySelector('.wb-authored .card');
+  assert.ok(face && /Reserve Line/.test(face.querySelector('.banner').textContent), 'authored card uses the real .card face with a name banner');
+  assert.ok(authPane.querySelector('.wb-authored .card .art.placeholder'), 'an authored card (no art file yet) shows the art placeholder slot');
+  assert.ok(/build out toward 30 cards/.test(authPane.textContent) && /bold/.test(authPane.textContent),
+    'the run nudge + temperature that drove the Author are shown');
+  win.WB_AUTHORED = null; // leave idle for a clean re-open
+
   doc.getElementById('wbBack').click();
   assert.ok(doc.getElementById('menu').classList.contains('active'), 'workbench Back returns to the menu');
 

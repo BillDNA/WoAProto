@@ -316,6 +316,18 @@ var ROUTES = {
       json(res, r.status, r.out);
     } catch (e) { json(res, 500, { error: e.message }); }
   },
+  'GET /api/authored': function (req, res) {
+    // #165: the Workbench "Authored this run" feed — the card-Author's renderable
+    // record of what it add/edit/removed this run (logs/authored/latest.json, written by
+    // dev/author-card.js). A pure read; the Author owns the write. Absent file (no run
+    // yet) answers a clean empty feed rather than 404, so the pane shows an idle note.
+    var f = path.join(ROOT, '..', 'logs', 'authored', 'latest.json');
+    fs.readFile(f, 'utf8', function (err, src) {
+      if (err) return json(res, 200, { cards: [] });
+      try { json(res, 200, JSON.parse(src)); }
+      catch (e) { json(res, 200, { cards: [] }); }
+    });
+  },
   'GET /api/runs': function (req, res) {
     // WOA-034: the dashboard header's run-A/B pickers. Guarded like recordSkirmish
     // above — a zipped game/ without dev/ (or a db that's never been opened)

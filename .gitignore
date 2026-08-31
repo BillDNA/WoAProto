@@ -30,6 +30,11 @@ logs/woa.db
 logs/woa.db-wal
 logs/woa.db-shm
 
+# Author feed (#165): the card Author's per-run record of what it add/edit/removed,
+# regenerated every run (like woa.db). The committed content/cards files + markdown
+# reports are the durable artifacts; the Workbench reads this live from the last run.
+logs/authored/
+
 # DynamicScrum — per-machine/ephemeral (statusLine readout, local settings, hub mutation log)
 .claude-status
 .claude/settings.local.json
