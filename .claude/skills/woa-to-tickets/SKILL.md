@@ -110,6 +110,9 @@ Write each acceptance criterion in the **Claim / (Falsifier | Goal) / Target** s
 publish with the issue template (step 5 of `to-tickets`: one issue per ticket, dependency
 order, `ready-for-agent` label, native blocking links). Do not close or modify the parent.
 
+Tag every published ticket with a **source label shared with the parent spec** (e.g.
+`content-loop`) so the spec and all tickets cut from it carry one grep-able tag.
+
 <ac-template>
 
 A **criterion** (existence / interaction / logic / invariant):
