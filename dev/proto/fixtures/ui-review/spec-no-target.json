@@ -1,0 +1,10 @@
+{
+  "ticket": "fixture-no-target",
+  "acs": [
+    "The dashboard shows a live match feed [feed]",
+    "A Run button starts the sweep [runbtn]"
+  ],
+  "before": "dev/proto/fixtures/ui-review/before.html",
+  "after": "dev/proto/fixtures/ui-review/after-good.html",
+  "target": "dev/proto/fixtures/ui-review/does-not-exist.html"
+}

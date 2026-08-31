@@ -1,0 +1,11 @@
+{
+  "ticket": "fixture-bad",
+  "acs": [
+    "The dashboard shows a live match feed [feed]",
+    "A Run button starts the sweep [runbtn]",
+    "Anomaly signals surface during the run [anomaly]"
+  ],
+  "before": "dev/proto/fixtures/ui-review/before.html",
+  "after": "dev/proto/fixtures/ui-review/after-bad.html",
+  "target": "dev/proto/fixtures/ui-review/target.html"
+}
