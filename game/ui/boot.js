@@ -364,25 +364,26 @@ E.hooks.onSkirmishEnd.push(function (st) {
 $('btnDash').onclick = openDash;
 $('btnWorkbench').onclick = function(){ show('wbScr'); renderWorkbench(); };
 
-// #154 loop bridge (server-served build): the Workbench's Launch/pause/stop hooks,
-// inert by default (workbench.js just toasts), are wired here to the real node loop
-// process. Launch POSTs the assembled config to /api/runloop (server spawns
-// dev/loop.js), flips to the Run phase, and polls /api/runloop for the folded status
-// wbSetRunStatus renders — the same poll pattern net.js uses for /api/poll.
+// #167 content-loop bridge (server-served build): the Workbench's Launch/pause/stop hooks,
+// inert by default (workbench.js just toasts), are wired here to the real content loop.
+// Launch POSTs the assembled config to /api/contentloop — the server opens a WATCHABLE
+// Terminal running the loop in its own worktree (spec §3) — then flips to the Run phase and
+// polls /api/contentrun for the per-iteration run record the feed renders (the same story
+// the terminal is playing, mirrored). One window to watch, one to review.
 var WB_POLL = null;
-function wbPollRunStatus(){
-  api2('GET', 'runloop').then(function(s){
+function wbPollContentRun(){
+  api2('GET', 'contentrun').then(function(s){
     if (!s) return;
-    wbSetRunStatus(s);
+    if (typeof wbSetContentRun === 'function') wbSetContentRun(s);
     if (s.state === 'done' || s.state === 'stopped') { clearInterval(WB_POLL); WB_POLL = null; }
   }).catch(function(){ /* transient — the next tick retries */ });
 }
 WB_ON_LAUNCH = function(cfg){
   if (WB_POLL) { clearInterval(WB_POLL); WB_POLL = null; }
-  api('runloop', cfg).then(function(){
+  api('contentloop', cfg).then(function(){
     wbGoPhase('run');
-    wbPollRunStatus();
-    WB_POLL = setInterval(wbPollRunStatus, 1000);
+    wbPollContentRun();
+    WB_POLL = setInterval(wbPollContentRun, 1500);
   }).catch(function(e){ if (typeof toast === 'function') toast('Launch failed: ' + e.message, 3500); });
 };
 WB_ON_CONTROL = function(action){

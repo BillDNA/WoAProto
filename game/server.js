@@ -111,6 +111,61 @@ function controlLoop(action) {
   return { status: 200, out: { ok: true, state: loopStatus.state } };
 }
 
+// --- #167 content loop: the Workbench Run button launches the content loop as a
+// WATCHABLE terminal — a visible Terminal.app window Bill alt-tabs to and watches play out,
+// zero interaction (spec §3/§11.2). The run is isolated in its own git worktree on a
+// content-run-<ts> branch (main untouched); its run-record + author feed are mirrored into
+// THIS server's logs so the dashboard feed (GET /api/contentrun) shows the same story live.
+var execFile = require('child_process');
+var REPO = path.join(ROOT, '..');          // server.js is in game/; the repo root is one up
+var contentRun = null;                     // { runId, branch, worktree, startedAt }
+function shq(s) { return "'" + String(s).replace(/'/g, "'\\''") + "'"; }  // POSIX single-quote one arg
+function startContentLoop(cfg) {
+  cfg = cfg || {};
+  var ts = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, 19);
+  var runId = 'content-run-' + ts;
+  var wt = path.join(REPO, '.claude', 'worktrees', runId);
+  // 1) isolate the run in a fresh worktree on a new branch off the server's current HEAD.
+  execFile.execFileSync('git', ['worktree', 'add', '-b', runId, wt, 'HEAD'], { cwd: REPO, stdio: 'pipe' });
+  // 2) assemble the content-loop args from the Plan config (defaults keep a first-run watch quick).
+  var args = ['dev/content-loop.js', '--run-id', runId];
+  if (cfg.nudge) args.push('--nudge', String(cfg.nudge));
+  if (cfg.temperature) args.push('--temperature', String(cfg.temperature));
+  var tolName = cfg.profile && typeof cfg.profile === 'object' ? cfg.profile.name : (cfg.profile || cfg.tolerance);
+  if (tolName) args.push('--tolerance', String(tolName));
+  args.push('--stop', String(cfg.stop || '+45m'));
+  if (cfg.panel && cfg.panel.length) args.push('--panel', cfg.panel.join(','));
+  if (cfg.n) args.push('--n', String(cfg.n | 0));
+  if (cfg.maps) args.push('--maps', String(cfg.maps | 0));
+  if (cfg.iters) args.push('--iters', String(cfg.iters | 0));
+  if (cfg.feelsMatch) args.push('--feels-match', String(cfg.feelsMatch | 0));
+  if (cfg.feelsTurns) args.push('--feels-turns', String(cfg.feelsTurns | 0));
+  if (cfg.db) args.push('--db', String(cfg.db));     // isolate a test run from the shared woa.db
+  if (cfg.mock) args.push('--mock');                 // offline launch (mechanism/CI test)
+  // mirror the machine-readable record + author feed back into THIS server's logs, so the
+  // dashboard renders the same run the terminal is playing (one run, two windows on it).
+  args.push('--rec-dir', path.join(REPO, 'logs', 'content-runs'));
+  args.push('--feed-file', path.join(REPO, 'logs', 'authored', 'latest.json'));
+  // 3) write a .command launch script and open it in a visible Terminal (macOS). Off-mac,
+  // fall back to a detached headless child (the dashboard mirror still works; no window).
+  var cmd = 'cd ' + shq(wt) + ' && node ' + args.map(shq).join(' ');
+  var script = '#!/bin/bash\n' +
+    'echo "════════ War of Attrition · content loop — watch it happen ════════"\n' +
+    'echo "run ' + runId + '   ·   own worktree/branch, main untouched   ·   Ctrl-C stops early"\n' +
+    'echo ""\n' + cmd + '\n' +
+    'echo ""; echo "── content loop finished. Press any key to close this window. ──"; read -n 1\n';
+  var scriptPath = path.join(os.tmpdir(), runId + '.command');
+  fs.writeFileSync(scriptPath, script, { mode: 0o755 });
+  // Open a visible Terminal (macOS) so Bill watches it play; headless off-mac or when asked
+  // (cfg.headless / WOA_NO_TERMINAL — tests, CI, and remote sessions with no desktop). The
+  // dashboard mirror is identical either way; only the window differs.
+  var headless = cfg.headless || process.env.WOA_NO_TERMINAL || process.platform !== 'darwin';
+  if (headless) spawn(process.execPath, args, { cwd: wt, detached: true, stdio: 'ignore' }).unref();
+  else spawn('open', ['-a', 'Terminal', scriptPath], { detached: true, stdio: 'ignore' }).unref();
+  contentRun = { runId: runId, branch: runId, worktree: wt, startedAt: new Date().toISOString() };
+  return contentRun;
+}
+
 var VERSION = (function () { // engine's rules version, for LAN mismatch warnings
   try { return require(path.join(ROOT, 'engine.js')).VERSION; } catch (e) { return null; }
 })();
@@ -402,6 +457,12 @@ var ROUTES = {
     // #144 pause/stop, now live: signal the spawned loop process.
     var r = controlLoop((body && body.action) || '');
     json(res, r.status, r.out);
+  },
+  'POST /api/contentloop': function (req, res, body) {
+    // #167: the Workbench Run button — launch the content loop as a WATCHABLE terminal
+    // (its own worktree/branch; run-record mirrored to logs/content-runs for the dashboard).
+    try { var r = startContentLoop(body || {}); json(res, 200, { ok: true, runId: r.runId, worktree: r.worktree }); }
+    catch (e) { json(res, 500, { error: 'content-loop launch failed: ' + e.message }); }
   },
   'GET /api/poll': function (req, res, body, u) {
     var r = rooms[(u.searchParams.get('room') || '').toUpperCase()];

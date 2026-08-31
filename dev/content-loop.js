@@ -212,7 +212,7 @@ async function runContentLoop(opts) {
     ? (function () { const c = opts.catalog; return function () { return typeof c === 'function' ? c() : c; }; })()
     : function () { return deckbuild.buildPool(); };
 
-  const dbh = opts.dbh || db.open();
+  const dbh = opts.dbh || db.open(opts.dbPath);   // opts.dbPath isolates a test/CI run from the shared woa.db
   const ownsDb = !opts.dbh;
   let dbRunId = null;
   try {
@@ -525,6 +525,7 @@ if (require.main === module) {
   const ROOT = path.join(__dirname, '..');
   const cardsDir = flag('cards-dir', null);           // temp override for a safe dry run
   const feedFile = flag('feed-file', null);
+  const dbPath = flag('db', null);                    // isolate a test/CI run from the shared woa.db
   const recDir = flag('rec-dir', null);
   const reportsDir = flag('reports-dir', null);
   const authorOpts = {}; if (cardsDir) authorOpts.cardsDir = cardsDir; if (feedFile) authorOpts.feedFile = feedFile;
@@ -659,7 +660,7 @@ if (require.main === module) {
   runContentLoop({
     runId: runId, config: config, stopAt: stopAtMs, maxIters: maxIters,
     panel: panel, maps: maps, n: n, tolerance: config.tolerance,
-    authorOpts: authorOpts, recDir: recDir, reportsDir: reportsDir,
+    authorOpts: authorOpts, recDir: recDir, reportsDir: reportsDir, dbPath: dbPath,
     author: author, grade: grade, fixPass: fixPass, feels: feels, commit: commit,
     onStage: function (s) {
       if (s.failed) return void process.stdout.write('\n  ⚠️  iter ' + s.iter + ' FAILED at ' + s.stage + ' — ' + s.error + ' · recorded, advancing\n');
