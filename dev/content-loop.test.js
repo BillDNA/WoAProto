@@ -153,6 +153,33 @@ test('a full iteration: author batch -> grade -> balance columns -> feels non-se
   db.close(dbh);
 });
 
+test('the one fix pass is recorded, and the card is NOT double-graded on the feed', async function () {
+  const A = require(path.join(__dirname, 'author-card.js'));
+  const rec = scratch();
+  const feedFile = path.join(rec, 'authored.json');
+  const cardsDir = path.join(rec, 'cards');
+  const res = await CL.runContentLoop({
+    runId: 'run-fix', maxIters: 1, recDir: rec, reportsDir: path.join(rec, 'reports'),
+    config: { nudge: 'x', temperature: 'standard', tolerance: 'card' },
+    catalog: catalogWith(GOOD), panel: ['normal'], maps: [E.mapPool()[0]], n: 2, dbh: db.open(path.join(rec, 'f.db')),
+    authorOpts: { cardsDir: cardsDir, feedFile: feedFile, regen: false },
+    author: async () => [{ action: 'add', card: GOOD, note: 'seed' }],
+    grade: async (ids) => { const o = {}; ids.forEach(id => { o[id] = FINDINGS; }); return o; },
+    // the Author's one fix pass EDITS the card toward the aim
+    fixPass: async (id) => ({ card: Object.assign({}, GOOD, { text: 'Hold a trench — revised toward the aim.' }), note: 'sharpened the trigger' }),
+    pinSweep: () => ({ legal: true, problems: [], swept: 4, columns: {}, flags: [] }),
+    feels: async () => ({ redPicks: [], bluePicks: [] }), commit: async () => 'fx'
+  });
+  const record = RR.read(res.recordFile);
+  const card = record.iterations[0].authored.find(c => c.id === GOOD.id);
+  assert.ok(card.findings && card.findings.fixPass, 'the fix-pass outcome is recorded on the run-record grade');
+  assert.ok(/sharpened/.test(card.findings.fixPass.note), 'the fix-pass note is captured');
+  // the /api/authored feed must not carry findings on TWO records for the same id (no double-graded card)
+  const feed = A.readFeed(feedFile);
+  const gradedForId = feed.cards.filter(c => c.card && c.card.id === GOOD.id && c.findings);
+  assert.strictEqual(gradedForId.length, 1, 'exactly one feed record carries the findings (the card is not graded twice)');
+});
+
 test('the stop-datetime is the only hard wall — no NEW iteration starts past it', async function () {
   const rec = scratch();
   // a clock that jumps past stopAt after the first read used by the while-guard

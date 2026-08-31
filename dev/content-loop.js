@@ -315,12 +315,15 @@ async function runContentLoop(opts) {
         try { recorded = G.recordFindings(id, f, Object.assign({}, authorOpts)); }   // re-validates: refuses anything verdict-like
         catch (e) { RR.recordGrade(rec, iter, id, { error: String(e.message || e) }); continue; }
         RR.recordGrade(rec, iter, id, recorded.findings);
-        // the Author's single fix pass toward the aim (optional); the card proceeds either way
+        // the Author's single fix pass toward the aim (optional); the card proceeds either way.
         if (fixPass) {
           try {
             const fp = await fixPass(id, recorded.findings, ctx);
-            if (fp && fp.card) { A.editCard(fp.card, { note: fp.note || 'fix pass', nudge: config.nudge, temperature: config.temperature }, authorOpts); }
-            if (fp) G.recordFindings(id, f, Object.assign({ fixPass: (fp.note || 'fix pass applied') }, authorOpts));
+            if (fp && fp.card) A.editCard(fp.card, { note: 'fix pass toward the aim' + (fp.note ? ': ' + fp.note : ''), nudge: config.nudge, temperature: config.temperature }, authorOpts);
+            // Stamp the fix-pass outcome onto the RUN-RECORD's grade only — NOT a second feed
+            // recordFindings, which (after the edit above appended a new feed record) would leave
+            // the SAME card graded on two feed records in one run. The card proceeds regardless.
+            if (fp) RR.recordGrade(rec, iter, id, Object.assign({}, recorded.findings, { fixPass: { applied: !!(fp && fp.card), note: (fp && fp.note) || (fp && fp.card ? 'revised toward the aim' : 'reviewed the aim; no change') } }));
           } catch (e) { /* the fix pass is best-effort; the card proceeds regardless */ }
         }
       }
@@ -548,8 +551,8 @@ if (require.main === module) {
     return parseFeelsOutput(stdout);
   };
 
-  // ---- AUTHOR / GRADE: real LLM brains, or deterministic mock brains ----
-  let author, grade;
+  // ---- AUTHOR / GRADE / one-FIX-PASS: real LLM brains, or deterministic mock brains ----
+  let author, grade, fixPass;
   if (mock) {
     let seqn = 0;
     author = async function (ctx) {
@@ -565,6 +568,8 @@ if (require.main === module) {
         { axis: 'board-had-to-be-there', position: 'trivially playable, no real board decision yet', velocity: 'add a trigger that ties it to the board' } ] }; });
       return o;
     };
+    // the one fix pass: the mock Author reviews the aim and (deterministically) keeps the card
+    fixPass = async function () { return { note: 'mock: reviewed the aim; no change this pass' }; };
   } else {
     const llm = require(path.join(__dirname, 'llm-client.js'));
     const skillText = readMaybe(path.join(ROOT, '.claude', 'skills', 'create-card', 'SKILL.md'));
@@ -580,10 +585,30 @@ if (require.main === module) {
         const brief = G.briefFor('game/content/cards/' + id + '.js', require(path.join(ROOT, 'game', 'card-rubric-axes.js')).CARD_RUBRIC_AXES.map(function (a) { return a.id; }))
           + '\n\nIMPORTANT: do NOT run any command. Return ONLY the findings JSON object.';
         const res = await llm.send({ systemPrompt: 'You are a FRESH card grader (never the author). Findings are an aim, not a gate — no score/band/pass-fail.', userMessage: brief, model: gradeModel, effort: effort, timeoutMs: 600000 });
-        const f = extractJson(res.text);
-        if (f) out[id] = f;
+        // Build a CLEAN findings object from the LLM reply — keep only axis/position/velocity per
+        // axis — so a benign extra key an LLM tends to add (a `summary`, a `gradedAt`) can't trip
+        // grade-card's strict verdict-guard whitelist and lose the whole grade.
+        const raw = extractJson(res.text);
+        const axesIn = raw && (raw.axes || raw.findings);
+        if (Array.isArray(axesIn) && axesIn.length) {
+          out[id] = { grader: 'fresh-subagent', axes: axesIn.filter(function (a) { return a && a.axis; })
+            .map(function (a) { return { axis: a.axis, position: a.position, velocity: a.velocity }; }) };
+        }
       }
       return out;
+    };
+    // the one fix pass: the Author (create-card brain) revises the card ONCE toward the aim, or
+    // keeps it. Returns { card } to revise, or { note } for a no-change pass — either way the
+    // card proceeds. A revision goes through the same legality-guarded editCard as any authoring.
+    fixPass = async function (id, findings, ctx) {
+      const aim = (findings.axes || []).map(function (a) { return '- ' + (a.title || a.axis) + ': ' + a.velocity; }).join('\n');
+      const um = 'The fresh grader read your card `' + id + '` and named these aims (velocity = the fix toward good):\n' + aim +
+        '\n\nTake ONE fix pass toward the aim. If a revision helps, return ONLY the full revised card JSON ' +
+        '{"id":"' + id + '","name":"...","text":"...","steps":[...]} (keep the id). If the card is fine as is, return exactly {"noChange":true}.';
+      const res = await llm.send({ systemPrompt: skillText, userMessage: um, model: authorModel, effort: effort, timeoutMs: 600000 });
+      const j = extractJson(res.text);
+      if (j && j.id === id && Array.isArray(j.steps)) return { card: j, note: 'revised toward the aim' };
+      return { note: 'reviewed the aim; no change this pass' };
     };
   }
 
@@ -594,7 +619,7 @@ if (require.main === module) {
     runId: runId, config: config, stopAt: stopAtMs, maxIters: maxIters,
     panel: panel, maps: maps, n: n, tolerance: config.tolerance,
     authorOpts: authorOpts, recDir: recDir, reportsDir: reportsDir,
-    author: author, grade: grade, feels: feels, commit: commit,
+    author: author, grade: grade, fixPass: fixPass, feels: feels, commit: commit,
     onStage: function (s) { process.stdout.write('CONTENT_STAGE ' + JSON.stringify(s) + '\n'); }
   }).then(function (res) {
     console.log('\nCONTENT_RESULT ' + JSON.stringify({ runId: res.runId, iterations: res.iterations, record: res.recordFile }));
