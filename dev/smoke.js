@@ -36,6 +36,75 @@ if (/<script [^>]*src=/.test(html)) {
   throw new Error('un-inlined <script src> tag survived (inliner regex mismatch)');
 }
 
+// ── Interaction seam (#191): falsifier home for existence + interaction ACs ──
+// assertPresent — existence path; throws when the element is absent.
+function assertPresent(root, sel, label) {
+  var el = root.querySelector(sel);
+  assert.ok(el, (label || sel) + ': element present (' + sel + ')');
+  return el;
+}
+// driveInteraction(root, spec) — spec: { sel, key?, assertAfter(el), label }.
+// Dispatches a real click (default) or keydown (spec.key), then runs assertAfter.
+// assertAfter must check an AUTHOR-observable consequence (state a handler sets) —
+// not a native side effect like checkbox.checked or Enter-submits-the-form, which
+// synthetic dispatch either fakes-green or can't fire. An unwired control leaves
+// that state unmoved, so assertAfter throws — the interaction red.
+function driveInteraction(root, spec) {
+  var el = assertPresent(root, spec.sel, spec.label);
+  var win = root.defaultView || (root.ownerDocument && root.ownerDocument.defaultView);
+  var ev = spec.key
+    ? new win.KeyboardEvent('keydown', { key: spec.key, bubbles: true, cancelable: true })
+    : new win.MouseEvent('click', { bubbles: true, cancelable: true });
+  el.dispatchEvent(ev);
+  spec.assertAfter(el); // throws -> red
+  return el;
+}
+
+// Seam self-test: the seam reds on an unwired interaction and on an absent
+// element, and is green when wired. Kept green overall by asserting each broken
+// fixture *throws* — call the seam directly on one and `node dev/smoke.js` reds.
+test('interaction seam reds on unwired / absent, green on wired (#191)', () => {
+  function fixture(wired) {
+    var doc = new JSDOM('<!doctype html><body><button id="go">Go</button><output id="out">idle</output></body>').window.document;
+    if (wired) doc.getElementById('go').addEventListener('click', function () {
+      doc.getElementById('out').textContent = 'fired';
+    });
+    return doc;
+  }
+  function movedState(doc) {
+    return function () { assert.strictEqual(doc.getElementById('out').textContent, 'fired', 'interaction moved state'); };
+  }
+
+  // GREEN — wired button: real click, handler-set state moves.
+  var okDoc = fixture(true);
+  driveInteraction(okDoc, { sel: '#go', assertAfter: movedState(okDoc), label: 'wired button' });
+
+  // RED 1 — interaction unwired: same button, no handler.
+  var noDoc = fixture(false);
+  assert.throws(function () {
+    driveInteraction(noDoc, { sel: '#go', assertAfter: movedState(noDoc), label: 'unwired button' });
+  }, /interaction moved state/, 'seam reds when the interaction is unwired');
+
+  // RED 2 — required element absent: existence path reds before any dispatch.
+  var absDoc = fixture(true);
+  absDoc.getElementById('go').remove();
+  assert.throws(function () {
+    driveInteraction(absDoc, { sel: '#go', assertAfter: movedState(absDoc), label: 'absent button' });
+  }, /element present/, 'seam reds when the required element is absent');
+  assert.throws(function () { assertPresent(absDoc, '#go', 'absent button'); }, /element present/,
+    'assertPresent reds on an absent element (existence path usable on its own)');
+
+  // A handler-wired keypress is a first-class interaction too.
+  var kDoc = new JSDOM('<!doctype html><body><input id="inp"><output id="kout">idle</output></body>').window.document;
+  kDoc.getElementById('inp').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') kDoc.getElementById('kout').textContent = 'submitted';
+  });
+  driveInteraction(kDoc, {
+    sel: '#inp', key: 'Enter', label: 'keydown-wired input',
+    assertAfter: function () { assert.strictEqual(kDoc.getElementById('kout').textContent, 'submitted', 'Enter key drove state'); }
+  });
+});
+
 // One async node:test: the whole play-through is a single linear flow, so any
 // failed assertion (or app error) thrown in a scheduled callback rejects this
 // promise and fails the test. 180s covers the dashboard's real balance runs.
@@ -73,8 +142,11 @@ realSetTimeout(function () {
     'editor shape dropdown = maps.js shapes + the Custom entry');
 
   console.log('== iteration workbench shell (#139) ==');
-  doc.getElementById('btnWorkbench').click();
-  assert.ok(doc.getElementById('wbScr').classList.contains('active'), 'workbench screen shown');
+  // Real menu button driven through the interaction seam (#191).
+  driveInteraction(doc, {
+    sel: '#btnWorkbench', label: 'open workbench',
+    assertAfter: function () { assert.ok(doc.getElementById('wbScr').classList.contains('active'), 'workbench screen shown'); }
+  });
   var wbTabs = doc.querySelectorAll('#wbNav .wb-tab');
   var wbPhases = Array.prototype.map.call(wbTabs, function (b) { return b.getAttribute('data-phase'); });
   assert.deepStrictEqual(wbPhases, ['plan', 'run', 'results', 'trajectory'],
