@@ -163,6 +163,20 @@ test('normalizeRubricFindings: a findings-only output is accepted and normalized
   assert.equal(r.axes[1].source, 'goal');
 });
 
+test('normalizeRubricFindings: a benign extra key is tolerated and dropped (the aim gates on verdicts, not shape)', () => {
+  // 'summary'/'evidence' are not verdict words — an aim must NOT red just because a field is unfamiliar.
+  const r = U.normalizeRubricFindings({ reviewer: 'fresh-rubric', summary: 'reads well overall', axes: [
+    { axis: 'Cover the labels', source: 'rubric', position: 'legible wordless', velocity: 'rank louder', evidence: 'the hover still' } ] });
+  assert.equal(r.axes.length, 1);
+  assert.deepEqual(Object.keys(r.axes[0]).sort(), ['axis', 'position', 'source', 'velocity'], 'extras are dropped, not carried');
+});
+
+test('normalizeRubricFindings: an empty axes array records a note, not a red (fail-open aim)', () => {
+  const r = U.normalizeRubricFindings({ reviewer: 'fresh-rubric', axes: [] });
+  assert.deepEqual(r.axes, []);
+  assert.ok(r.note && /nothing|no structured/i.test(r.note), 'an aim with nothing to say records a note, never throws');
+});
+
 test('rubricAxisTitles: extracts the ui-rubric axes from the rubric file', () => {
   const txt = fs.readFileSync(path.join(ROOT, 'docs/rubrics/ui-rubric.md'), 'utf8');
   const axes = U.rubricAxisTitles(txt);
@@ -216,6 +230,18 @@ test('Phase 2 drives the running UI with Playwright and captures interaction sti
   assert.equal(stills[0].buf.slice(1, 4).toString(), 'PNG', 'an interaction still is a real PNG');
 });
 
+test('Phase 2 drive discards the after-click still when the click navigated away (no false observation)', async (t) => {
+  let ok = true;
+  try { await U.defaultCapture(path.join(ROOT, FIX, 'before.html')).then(b => { ok = !!(b && b.length); }); }
+  catch (e) { ok = false; }
+  if (!ok) { await U.closeBrowser(); return t.skip('Playwright chromium not installed'); }
+  const stills = await U.defaultDrive(path.join(ROOT, FIX, 'nav.html'));   // its only control navigates on click
+  await U.closeBrowser();
+  const roles = stills.map(s => s.role);
+  assert.ok(roles.indexOf('hover') >= 0, 'hover is side-effect-free and still captured');
+  assert.ok(roles.indexOf('after-click') < 0, 'a click that navigated away must NOT yield an after-click still');
+});
+
 /* ---------------- AC: screenshots go to a shots-branch, never the working tree ---------------- */
 
 test('shots are staged onto a pr-shots branch and NO screenshot lands in the working tree', async () => {
@@ -240,6 +266,26 @@ test('shots are staged onto a pr-shots branch and NO screenshot lands in the wor
   const ls = execFileSync('git', ['ls-tree', '--name-only', 'refs/heads/pr-shots/shots-1'], { cwd: repo, encoding: 'utf8' });
   assert.ok(/before\.png/.test(ls) && /after\.png/.test(ls) && /target\.png/.test(ls),
     'pr-shots branch is missing the shots: ' + ls);
+});
+
+test('Phase 2 interaction stills are staged onto the pr-shots branch (durable drive evidence)', async () => {
+  const repo = tmp('woa-uiv-repo-');
+  execFileSync('git', ['init', '-q'], { cwd: repo });
+  execFileSync('git', ['config', 'user.email', 't@t'], { cwd: repo });
+  execFileSync('git', ['config', 'user.name', 't'], { cwd: repo });
+  const PNG = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
+  // fake.capture (real HTML text) so Phase 1 PASSES and Phase 2 runs; inject a deterministic drive that
+  // yields a hover still so staging is exercised without a browser.
+  const spec = U.loadSpec(path.join(ROOT, FIX, 'spec-good.json'));
+  spec.ticket = 'drive-1';
+  await U.review(spec, {
+    capture: fake.capture, ask: fake.ask,
+    drive: () => Promise.resolve([{ role: 'hover', buf: PNG }]),
+    outDir: tmp('woa-uiv-out-'), shotsDir: tmp('woa-uiv-shots-'), repoRoot: repo
+  });
+  const ls = execFileSync('git', ['ls-tree', '--name-only', 'refs/heads/pr-shots/drive-1'], { cwd: repo, encoding: 'utf8' });
+  assert.ok(/hover\.png/.test(ls), 'the Phase-2 hover still must reach the shots branch, not vanish with the temp dir: ' + ls);
+  assert.ok(/after\.png/.test(ls) && /target\.png/.test(ls), 'the Phase-1 shots stay on the branch tip too: ' + ls);
 });
 
 test('a reused shots dir does not stage a stale screenshot from a prior run', async () => {

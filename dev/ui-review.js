@@ -111,12 +111,11 @@ const RUBRIC_SCHEMA = JSON.stringify({
     position: 'where the screen sits on this axis', velocity: 'the fix that moves it toward the aim' }]
 }, null, 2);
 
-// The guard's vocabulary. A rubric read is FINDINGS; a verdict word at any level (or a bare
-// verdict/number value) is refused, so a gate can't slip in under a generic name. Same doctrine as
-// grade-card.js — kept local so ui-review stays self-contained.
+// The guard's vocabulary. A rubric read is FINDINGS; a verdict word as a KEY at any level (or a bare
+// verdict/number VALUE in a finding) is refused, so a gate can't slip in. Benign extra keys are NOT
+// verdict-shaped and are tolerated — the aim never gates on mere shape. Same verdict doctrine as
+// grade-card.js, kept local so ui-review stays self-contained.
 const RUBRIC_VERDICT_KEYS = ['score', 'band', 'verdict', 'grade', 'rating', 'pass', 'fail', 'enum', 'points', 'value', 'tier'];
-const RUBRIC_TOP_KEYS = ['reviewer', 'grader', 'axes', 'findings'];
-const RUBRIC_AXIS_KEYS = ['axis', 'source', 'title', 'position', 'velocity'];
 
 // ---------------------------------------------------------------- pure helpers
 function present(buf) { return !!(buf && buf.length > 0); }
@@ -266,15 +265,13 @@ function parseRubricFindings(text) {
   return { obj: o };
 }
 
-// Refuse any key outside `allowed`, naming the gate when the stray key is a known verdict word.
-function refuseRubricStrayKeys(obj, allowed, where) {
-  const stray = Object.keys(obj).filter(function (k) { return allowed.indexOf(k) < 0; });
-  if (!stray.length) return;
-  const verdicts = stray.filter(function (k) { return RUBRIC_VERDICT_KEYS.indexOf(k) >= 0; });
+// The guard: red ONLY on a verdict-shaped key (score/band/verdict/pass-fail…). A benign extra key
+// ('summary', 'evidence', …) is NOT a smuggled gate, so it is tolerated and dropped during
+// normalization — the aim never gates on mere shape. Only the verdict vocabulary reds.
+function refuseVerdictKeys(obj, where) {
+  const verdicts = Object.keys(obj).filter(function (k) { return RUBRIC_VERDICT_KEYS.indexOf(k) >= 0; });
   if (verdicts.length) throw new Error(where + ' carries verdict field(s) [' + verdicts.join(', ') +
     '] — a ui-rubric read is FINDINGS, never a score/band/pass-fail (Phase 2 is an aim, not a gate). Recast it as prose.');
-  throw new Error(where + ' has unexpected field(s) [' + stray.join(', ') +
-    '] — a finding is prose only (' + allowed.join(', ') + '); an extra field reads like a smuggled verdict.');
 }
 
 // A finding coordinate must be a described sentence, never a verdict masquerading as prose (a bare
@@ -293,12 +290,18 @@ function rubricProse(v, axis, which) {
 // gates": a verdict-shaped output throws here, and the CLI turns the throw into a harness red (exit 2).
 function normalizeRubricFindings(raw) {
   if (!raw || typeof raw !== 'object') throw new Error('rubric findings must be a JSON object');
-  refuseRubricStrayKeys(raw, RUBRIC_TOP_KEYS, 'the rubric findings object');
+  refuseVerdictKeys(raw, 'the rubric findings object');   // a top-level verdict/score/band -> red
+  const reviewer = raw.reviewer || raw.grader || 'fresh-rubric';
   const axesIn = raw.axes || raw.findings;
-  if (!Array.isArray(axesIn) || !axesIn.length) throw new Error('rubric findings.axes must be a non-empty array of per-axis findings');
+  // Fail-OPEN, not a gate: a parseable object with nothing to say (no/empty axes) records a note and
+  // passes — an aim never reds for silence. Only a verdict-shaped output (caught above / below) reds.
+  if (!Array.isArray(axesIn) || !axesIn.length) {
+    return { readAt: new Date().toISOString(), reviewer: reviewer, axes: [],
+      note: 'no structured findings (an aim, not a gate — nothing to record)' };
+  }
   const axes = axesIn.map(function (f, i) {
     if (!f || typeof f !== 'object') throw new Error('rubric axis finding #' + (i + 1) + ' must be an object');
-    refuseRubricStrayKeys(f, RUBRIC_AXIS_KEYS, 'rubric axis finding "' + (f.axis || i) + '"');
+    refuseVerdictKeys(f, 'rubric axis finding "' + (f.axis || i) + '"');   // a per-axis verdict key -> red
     const axis = (typeof f.axis === 'string' && f.axis.trim()) ? f.axis.trim() : String(i + 1);
     return {
       axis: axis,
@@ -307,7 +310,7 @@ function normalizeRubricFindings(raw) {
       velocity: rubricProse(f.velocity, axis, 'velocity')
     };
   });
-  return { readAt: new Date().toISOString(), reviewer: raw.reviewer || raw.grader || 'fresh-rubric', axes: axes };
+  return { readAt: new Date().toISOString(), reviewer: reviewer, axes: axes };
 }
 
 // ---------------------------------------------------------------- spec loading
@@ -376,13 +379,26 @@ async function defaultDrive(htmlPathAbs) {
     await page.setViewportSize({ width: 1200, height: 900 });
     await page.goto('file://' + htmlPathAbs, { waitUntil: 'load', timeout: 15000 });
     await page.waitForTimeout(300);
-    const sel = 'button, [role="button"], a[href], input, select, textarea, [data-el], [onclick], .btn';
+    const startUrl = page.url();
+    // Prefer in-page controls (buttons, form fields, the rig's [data-el] game marks). Deliberately
+    // EXCLUDE a[href] and [onclick]: a click there can navigate away or fire a destructive action, and
+    // the 'after-click' still would then show an unrelated page — a false observation for the grader.
+    const sel = 'button, [role="button"], input[type="button"], input[type="submit"], [data-el], .btn';
     const el = await page.$(sel);
     if (el) {
+      // Hover is side-effect-free: always safe to capture (the affordance/response answer).
       try { await el.hover({ timeout: 2000 }); await page.waitForTimeout(150);
         stills.push({ role: 'hover', buf: await page.screenshot({ fullPage: true }) }); } catch (e) {}
-      try { await el.click({ timeout: 2000, force: true }); await page.waitForTimeout(300);
-        stills.push({ role: 'after-click', buf: await page.screenshot({ fullPage: true }) }); } catch (e) {}
+      // Click WITHOUT force (force bypasses actionability and can hit an overlapped/off-screen control).
+      // Then guard against navigation: if the URL changed, the surface under review is gone — discard the
+      // still rather than feed the grader a screenshot of somewhere else.
+      try {
+        await el.click({ timeout: 2000 });
+        await page.waitForTimeout(300);
+        if (page.url() === startUrl) {
+          stills.push({ role: 'after-click', buf: await page.screenshot({ fullPage: true }) });
+        }
+      } catch (e) {}
     }
   } catch (e) { /* aim: a partial/failed drive yields fewer stills, never a red */ }
   finally { try { await page.close(); } catch (e) {} }
@@ -569,12 +585,22 @@ async function review(spec, opts) {
     const stills = [];
     if (afterPresent) stills.push({ role: 'after', path: path.join(shotsDir, 'after.png') });
     if (targetPresent) stills.push({ role: 'target', path: path.join(shotsDir, 'target.png') });
+    const driveFiles = [];
     (driveStills || []).forEach(function (s, i) {
       if (!present(s && s.buf)) return;
       const role = s.role || ('drive-' + i);
-      fs.writeFileSync(path.join(shotsDir, role + '.png'), s.buf);
-      stills.push({ role: role, path: path.join(shotsDir, role + '.png') });
+      const fn = role + '.png';
+      fs.writeFileSync(path.join(shotsDir, fn), s.buf);
+      stills.push({ role: role, path: path.join(shotsDir, fn) });
+      driveFiles.push(fn);
     });
+    // Stage the Phase-2 interaction stills onto the SAME pr-shots branch (a second commit on top of the
+    // Phase-1 one) so the affordance/response/motion evidence Phase 2 exists to produce is durable proof,
+    // not discarded with the temp dir. Re-stage the full set so the branch tip's tree carries every shot.
+    if (opts.stageShots !== false && driveFiles.length) {
+      const restaged = stageShots(shotsDir, spec.ticket, { repoRoot: opts.repoRoot, only: written.concat(driveFiles) });
+      if (restaged.staged) verdict.shots = { staged: true, branch: restaged.branch };
+    }
     const rubReq = buildRubricRequest(shotsDir, stills, spec.goals, readRubric());
     // rubric-input.json records what Phase 2 READ — the ui-rubric axes AND the ticket goals — observable
     // at the boundary (the AC1 seam), just like describe-input.json is for Phase 1's blindness.
