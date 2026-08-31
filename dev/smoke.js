@@ -208,8 +208,9 @@ realSetTimeout(function () {
 
   console.log('== Run phase: live loop monitor + Worth-a-look anomaly panel (#144) ==');
   doc.querySelector('#wbNav .wb-tab[data-phase="run"]').click();
-  // Idle before any loop reports: no progress, just the "no loop running" note.
-  assert.ok(/No loop running/i.test(doc.getElementById('wbRun').textContent), 'Run phase idle until the loop reports');
+  // Idle before any run reports: the Run pane now LEADS with the #167 content-loop feed
+  // (its idle note), and the legacy deck-loop monitor only appears once WB_RUN_STATUS reports.
+  assert.ok(/No content run yet/i.test(doc.getElementById('wbRun').textContent), 'Run phase idle until a loop reports');
   // AC1: feed a mock #138 loop status (LOOP_STEP shape) and assert progress renders.
   win.wbSetRunStatus({
     loopType: 'card', state: 'running', iter: 3, iters: 6, swept: 1200,
@@ -249,6 +250,62 @@ realSetTimeout(function () {
   win.wbSetRunStatus({ loopType: 'card', state: 'done', iter: 6, iters: 6, swept: 2400 });
   assert.ok(doc.getElementById('wbStop').disabled && doc.getElementById('wbPause').disabled, 'a finished loop disables pause/stop');
   win.WB_RUN_STATUS = null; // leave the pane idle for a clean re-open
+
+  console.log('== Run phase: content-loop per-iteration feed (#167) ==');
+  // The content loop writes a structured run record (dev/run-record.js -> logs/content-runs/
+  // latest.json, served by GET /api/contentrun). Feed a mock record and assert the WHOLE
+  // night's story renders on screen: every stage in order, authored cards as real faces, the
+  // fresh grade findings, the balance-pin columns + Tolerance flags, feels non-selection, a
+  // failed-iteration finding, and the LIVE in-flight stage before a commit.
+  win.wbSetContentRun({
+    runId: 'content-run-9999', kind: 'card', state: 'running',
+    config: { nudge: 'build out toward 30 cards', temperature: 'bold', tolerance: 'card', stopAt: '2026-08-31T23:59:00.000Z', questionnaire: 'default' },
+    stage: { iter: 3, name: 'balance' },
+    iterations: [
+      { iter: 1, stages: ['author', 'grade', 'balance', 'feels', 'commit'], commit: 'deadbeefcafebabe',
+        authored: [
+          { action: 'add', id: 'trench_hold', name: 'Dig In', points: 4, note: 'rewards holding a trench under pressure',
+            card: { id: 'trench_hold', name: 'Dig In', text: 'Hold a trench under fire.', points: 4, steps: [{ type: 'trench' }] },
+            legal: true, problems: [],
+            findings: { grader: 'fresh', axes: [
+              { axis: 'set-fit', title: 'Across the set', setFit: true, position: 'fills the hold-under-pressure gap the catalog lacks', velocity: 'sharpen the trigger so it is not always-good-on-sight' },
+              { axis: 'board-had-to-be-there', title: 'The board had to be there', setFit: false, position: 'a real board decision', velocity: 'keep the cost lever visible' } ] },
+            balance: { legal: true, problems: [], swept: 60, columns: { plays: 40, win: 52, simple: 20, sight: 33, points: 4 }, flags: ['1st% 71% on hard (band 45-55)'] } },
+          { action: 'add', id: 'bad_teleport', name: 'Bad Teleport', points: null, note: 'illegal on purpose',
+            card: { id: 'bad_teleport', name: 'Bad Teleport', text: '', steps: [{ type: 'teleport' }] },
+            legal: false, problems: ['bad_teleport step 1: unknown type "teleport"'], findings: null, balance: null } ],
+        feels: { reportPath: 'logs/reports/skirmish/1.2/run-match.md', redPicks: ['trench_hold'], bluePicks: ['cav_charge'], nothingWanted: ['lonely_forgotten_card'], findings: ['nothing wanted "lonely_forgotten_card" — neither free draft picked it'] },
+        balanceReportPath: 'logs/reports/balance/1.2/run-iter1-balance.md', feelsReportPath: 'logs/reports/skirmish/1.2/run-match.md', failure: null },
+      { iter: 2, stages: ['author', 'grade', 'balance', 'feels'], commit: null,
+        authored: [{ action: 'add', id: 'mid_card', name: 'Mid', points: 3, card: { id: 'mid_card', name: 'Mid', text: 't', points: 3, steps: [{ type: 'attack', mod: 1 }] }, legal: true, problems: [], findings: null, balance: { legal: true, problems: [], swept: 40, columns: { plays: 22, win: 48, simple: 10, sight: 25, points: 3 }, flags: [] } }],
+        feels: null, failure: { stage: 'feels', message: 'claude-plays timed out twice', at: 'now' }, balanceReportPath: null, feelsReportPath: null },
+      { iter: 3, stages: ['author', 'grade', 'balance'], commit: null,
+        authored: [{ action: 'add', id: 'wip_card', name: 'WIP', points: 2, card: { id: 'wip_card', name: 'WIP', text: 't', points: 2, steps: [{ type: 'deploy', unit: 'infantry' }] }, legal: true, problems: [], findings: null, balance: null }],
+        feels: null, failure: null, balanceReportPath: null, feelsReportPath: null }
+    ]
+  });
+  var crPane = doc.getElementById('wbContentRun').textContent;
+  // config knobs read back (the run-config block #164/#169/#171 consume)
+  assert.ok(/build out toward 30 cards/.test(crPane) && /bold/.test(crPane) && /tolerance/i.test(crPane), 'content-run feed shows the run-config knobs (nudge/temperature/tolerance)');
+  // every iteration in order
+  assert.ok(/Iteration 1/.test(crPane) && /Iteration 2/.test(crPane) && /Iteration 3/.test(crPane), 'every iteration appears');
+  // stages in order + a LIVE in-flight stage before commit (iteration 3 balance running)
+  assert.ok(/now: iteration/i.test(crPane) && /balance/i.test(crPane) && /running/i.test(crPane), 'the live in-flight stage shows before the iteration commits');
+  // authored card renders as a real card FACE (name + step), reusing cardFace
+  assert.ok(/Dig In/.test(crPane) && /trench/i.test(crPane), 'an authored card renders as a card (name + steps), not JSON');
+  // fresh-grade rubric findings (set-fit) render as an aim
+  assert.ok(/set-fit/i.test(crPane) && /fills the hold-under-pressure gap/.test(crPane), 'the fresh grader findings render (set-fit position)');
+  // balance-pin columns + a Tolerance FLAG (never a reject)
+  assert.ok(/Simple/.test(crPane) && /1stSight/.test(crPane) && /1st% 71%/.test(crPane) && /never a reject/i.test(crPane), 'balance-pin columns + the Tolerance flag (a flag, never a reject) render');
+  // the legality guard: an illegal card is a finding, never swept
+  assert.ok(/illegal/i.test(crPane) && /teleport/.test(crPane), 'the illegal authored card is shown as a caught finding, not swept');
+  // feels non-selection is kept, not dropped
+  assert.ok(/lonely_forgotten_card/.test(crPane) && /neither free draft wanted/i.test(crPane), 'a card neither free draft wanted is kept as a feels finding');
+  // a failed iteration is a finding and the loop advanced past it
+  assert.ok(/failed at/i.test(crPane) && /claude-plays timed out/.test(crPane), 'a failed-iteration finding renders and the loop advanced');
+  // the batch is the commit (short sha)
+  assert.ok(/deadbee/.test(crPane), 'the iteration commit sha renders (the batch is the commit)');
+  win.wbSetContentRun({ state: 'idle', iterations: [] }); // leave idle for a clean re-open
 
   console.log('== Results phase: content-first review (#145) ==');
   doc.querySelector('#wbNav .wb-tab[data-phase="results"]').click();

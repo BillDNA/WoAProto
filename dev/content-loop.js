@@ -253,19 +253,19 @@ async function runContentLoop(opts) {
         if (move.action === 'remove') {
           const id = move.id || (move.card && move.card.id);
           A.removeCard(id, meta, authorOpts);
-          authored.push({ action: 'remove', id: id, name: id, points: null, note: meta.note, legal: true, problems: [] });
+          authored.push({ action: 'remove', id: id, name: (move.card && move.card.name) || id, points: null, note: meta.note, legal: true, problems: [], card: { id: id, name: (move.card && move.card.name) || id, text: '', steps: [] } });
         } else {
-          const card = A.withPoints ? move.card : move.card;
           const action = move.action === 'edit' ? 'edit' : 'add';
           const id = (action === 'edit' ? A.editCard : A.addCard)(move.card, meta, authorOpts);
           const pts = (function () { try { return E.cardPoints(move.card); } catch (e) { return null; } })();
-          authored.push({ action: action, id: id, name: move.card.name || id, points: pts, note: meta.note, legal: true, problems: [] });
+          // carry the full card object so the Workbench renders the real card FACE (not JSON)
+          authored.push({ action: action, id: id, name: move.card.name || id, points: pts, note: meta.note, legal: true, problems: [], card: Object.assign({ points: pts }, move.card) });
         }
       } catch (e) {
         // The Author's hands REFUSED an illegal/over-budget card — caught and recorded as a
         // finding, never fed to the engine as a broken deck. The run does not bounce.
         const id = (move.card && move.card.id) || move.id || 'unknown';
-        authored.push({ action: move.action || 'add', id: id, name: (move.card && move.card.name) || id, points: null, note: move.note || '', legal: false, problems: [String(e.message || e)] });
+        authored.push({ action: move.action || 'add', id: id, name: (move.card && move.card.name) || id, points: null, note: move.note || '', legal: false, problems: [String(e.message || e)], card: move.card || { id: id, name: id, text: '', steps: [] } });
       }
     });
     RR.recordAuthored(rec, iter, authored);

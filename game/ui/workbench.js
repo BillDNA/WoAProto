@@ -324,6 +324,11 @@ function wbGoPhase(id) {
   });
   if (id === 'trajectory') wbLoadTrajectory();   // refresh the champion line from the db each open
   if (id === 'results') wbLoadAuthored();         // refresh the Author's this-run feed from logs/authored each open
+  // #167: the content-loop feed leads the Run pane — pull its run record each open (re-clicking
+  // the tab refreshes; the record already carries the live in-flight stage). A continuous
+  // auto-poll is a Wave-C nicety (#170) — deliberately NOT a persistent timer here, so the
+  // headless UI test can't be kept alive by a runaway interval.
+  if (id === 'run') wbLoadContentRun();
 }
 
 /* Authored feed (#165) — the card-Author's SHAPING of the catalog this run, rendered as
@@ -453,6 +458,124 @@ function wbLoadAuthored() {
     .catch(function () { /* keep whatever is shown */ });
 }
 
+/* ---------- the CONTENT LOOP feed (#167) — the per-iteration run record on screen ----------
+   The content loop (dev/content-loop.js) writes a structured per-iteration run record
+   (dev/run-record.js -> logs/content-runs/latest.json, served by GET /api/contentrun). This
+   renders it as the night's STORY: every iteration, every stage in order (author -> grade ->
+   balance -> feels -> commit), authored cards as real card FACES (reusing cardFace via
+   wbAuthoredCard), the fresh grader's findings, the per-card balance pin columns + Tolerance
+   FLAGS (never a reject), the feels non-selection findings, and any failed-iteration finding.
+   The live in-flight stage shows BEFORE the iteration commits ("author running now"). Pure
+   render of the record — the red-test (dev/smoke.js) feeds it a mock. */
+var WB_CONTENT_RUN = null;
+
+function wbCRpct(v) { return (v == null || v === '' || isNaN(v)) ? '&mdash;' : wbEsc(String(v)) + '%'; }
+
+var WB_CR_STAGE_ORDER = ['author', 'grade', 'balance', 'feels', 'commit'];
+function wbCRStages(it, liveStage) {
+  return '<span class="wb-cr-stages">' + WB_CR_STAGE_ORDER.map(function (nm) {
+    var done = (it.stages || []).indexOf(nm) >= 0;
+    var live = liveStage === nm;
+    var cls = live ? 'live' : done ? 'done' : 'pending';
+    return '<span class="wb-cr-stage ' + cls + '">' + nm + (live ? '&hellip;' : '') + '</span>';
+  }).join('') + '</span>';
+}
+
+// The card's balance-pin read (or the legality-guard finding). Distinct from the rubric
+// findings above it: this is the sweep's Simple%/1stSight% + the Tolerance flags.
+function wbCRBalance(a) {
+  if (a.legal === false) return '<div class="small wb-cr-illegal">&#9940; illegal &mdash; ' + wbEsc((a.problems || []).join('; ')) + ' <span class="wb-hint">(caught, never swept)</span></div>';
+  var b = a.balance;
+  if (!b) return '';
+  if (b.legal === false) return '<div class="small wb-cr-illegal">&#9940; ' + wbEsc((b.problems || []).join('; ')) + '</div>';
+  var c = b.columns || {};
+  var flags = (b.flags && b.flags.length)
+    ? '<div class="small wb-cr-flags">flags: ' + b.flags.map(wbEsc).join('; ') + ' <span class="wb-hint">(a flag, never a reject)</span></div>' : '';
+  return '<div class="small wb-cr-balance">Balance pin &mdash; ' + (c.plays || 0) + ' plays &middot; win ' + wbCRpct(c.win) +
+    ' &middot; Simple ' + wbCRpct(c.simple) + ' &middot; 1stSight ' + wbCRpct(c.sight) + ' &middot; ' + (b.swept || 0) + ' skirmishes</div>' + flags;
+}
+
+// One authored card in the content-run feed: the real card face + rubric findings (shared
+// wbAuthoredCard) with the balance-pin read tucked beneath.
+function wbCRCard(a) {
+  var rec = { action: a.action, card: a.card || { id: a.id, name: a.name, points: a.points, text: '', steps: [] }, note: a.note, findings: a.findings };
+  return '<div class="wb-cr-card">' + wbAuthoredCard(rec) + wbCRBalance(a) + '</div>';
+}
+
+function wbCRFeels(it) {
+  var f = it.feels;
+  if (!f) return '';
+  var nothing = f.nothingWanted || [];
+  var body = nothing.length
+    ? '<b>' + nothing.length + '</b> card(s) neither free draft wanted: ' +
+      nothing.slice(0, 12).map(function (id) { return '<code>' + wbEsc(id) + '</code>'; }).join(' ') +
+      (nothing.length > 12 ? ' &hellip;' : '') + ' <span class="wb-hint">(non-selection = signal, kept not dropped)</span>'
+    : 'every catalog card was drafted by at least one side';
+  return '<div class="wb-cr-feels"><label class="small wb-lbl">Feels <span class="wb-hint">&mdash; first-to-3, two free drafts</span></label>' +
+    '<div class="small">' + body + '</div></div>';
+}
+
+function wbContentRunIter(it, liveStage) {
+  var head = '<div class="wb-cr-ithead"><b>Iteration ' + wbEsc(String(it.iter)) + '</b> ' + wbCRStages(it, liveStage) +
+    (it.commit ? ' <code class="wb-cr-sha" title="' + wbEsc(it.commit) + '">' + wbEsc(String(it.commit).slice(0, 7)) + '</code>' : '') + '</div>';
+  var fail = it.failure
+    ? '<div class="wb-cr-fail">&#9888; failed at <b>' + wbEsc(it.failure.stage) + '</b>: ' + wbEsc(it.failure.message) +
+      ' <span class="wb-hint">&mdash; recorded, loop advanced</span></div>' : '';
+  var cards = (it.authored && it.authored.length)
+    ? '<div class="wb-auth-grid">' + it.authored.map(wbCRCard).join('') + '</div>'
+    : '<p class="small wb-hint">no cards authored this iteration</p>';
+  var reports = [];
+  if (it.balanceReportPath) reports.push('balance: <code>' + wbEsc(it.balanceReportPath) + '</code>');
+  if (it.feelsReportPath) reports.push('feels: <code>' + wbEsc(String(it.feelsReportPath).split('/').pop()) + '</code>');
+  var rep = reports.length ? '<div class="small wb-hint wb-cr-reports">' + reports.join(' &middot; ') + '</div>' : '';
+  return '<div class="wb-cr-iter">' + head + fail + cards + wbCRFeels(it) + rep + '</div>';
+}
+
+function wbContentRunBody() {
+  var r = WB_CONTENT_RUN;
+  if (!r || !r.iterations || (r.state === 'idle' && !r.iterations.length)) {
+    return '<label class="small wb-lbl">Content loop <span class="wb-hint">&mdash; the night\'s story, per iteration</span></label>' +
+      '<p class="small wb-hint">No content run yet &mdash; launch one (<code>node dev/content-loop.js</code>) and every stage ' +
+      '(author &rarr; grade &rarr; balance &rarr; feels) appears here in order, live, read from <code>logs/content-runs/latest.json</code>.</p>';
+  }
+  var cfg = r.config || {};
+  var knobs = [];
+  if (cfg.nudge) knobs.push('nudge <b>' + wbEsc(cfg.nudge) + '</b>');
+  if (cfg.temperature) knobs.push('temperature <b>' + wbEsc(cfg.temperature) + '</b>');
+  if (cfg.tolerance) knobs.push('tolerance <b>' + wbEsc(cfg.tolerance) + '</b>');
+  if (cfg.stopAt) knobs.push('stop <b>' + wbEsc(cfg.stopAt) + '</b>');
+  if (cfg.questionnaire) knobs.push('questionnaire <b>' + wbEsc(cfg.questionnaire) + '</b>');
+  var state = r.state || 'running';
+  var live = (state === 'running' && r.stage)
+    ? '<div class="small wb-cr-live">now: iteration <b>' + wbEsc(String(r.stage.iter)) + '</b> &mdash; <b>' + wbEsc(r.stage.name) + '</b> running&hellip;</div>' : '';
+  var header = '<div class="wb-cr-head">' +
+    '<label class="small wb-lbl">Content run <span class="wb-hint">&mdash; ' + wbEsc(r.runId || '') + '</span> ' +
+    '<span class="wb-run-state ' + wbEsc(state) + '">' + wbEsc(state) + '</span></label>' +
+    (knobs.length ? '<div class="small wb-hint wb-cr-knobs">' + knobs.join(' &middot; ') + '</div>' : '') + live + '</div>';
+  // newest iteration first so the live one is at the top while a run is going
+  var iters = (r.iterations || []).slice().sort(function (a, b) { return b.iter - a.iter; });
+  var liveIter = (state === 'running' && r.stage) ? r.stage.iter : null;
+  var body = iters.map(function (it) { return wbContentRunIter(it, it.iter === liveIter ? r.stage.name : null); }).join('');
+  return header + body;
+}
+
+// Inject a run record and re-render the content-loop feed in place. The live poller calls
+// this from a fetch; the red-test (dev/smoke.js) calls it with a mock record.
+function wbSetContentRun(rec) {
+  WB_CONTENT_RUN = rec;
+  var el = document.getElementById('wbContentRun');
+  if (el) el.innerHTML = wbContentRunBody();
+}
+
+// Poll the content-loop run record (used by the Run phase while a loop is live, and on
+// Results open). Fails open to whatever is shown if the read hiccups / no server.
+function wbLoadContentRun() {
+  if (typeof fetch !== 'function') return;
+  fetch('/api/contentrun').then(function (r) { return r.ok ? r.json() : { state: 'idle', iterations: [] }; })
+    .then(function (rec) { wbSetContentRun(rec); })
+    .catch(function () { /* keep whatever is shown */ });
+}
+
 /* Run phase (#144) — a live monitor for the running loop (#138). The browser has
    no bridge to the node loop process (mirrors the launch handoff, WB_ON_LAUNCH), so
    a follow-on server proxy tails the loop's LOOP_STEP/LOOP_RESULT stdout and calls
@@ -517,9 +640,12 @@ function wbAnomalyPanel(s) {
 // The Run pane body: progress (iteration / swept / running-best / state), pause+stop
 // controls, a tail of recent LOOP_STEP lines, and the Worth-a-look anomaly panel.
 function wbRunBody() {
+  // #167: the content-loop feed (author -> grade -> balance -> feels, per iteration, live)
+  // leads the Run pane — its own container so the poller re-renders it in place. The legacy
+  // deck-loop monitor (WB_RUN_STATUS, dev/loop.js) follows only when that older loop reports.
+  var contentFeed = '<div id="wbContentRun" class="wb-contentrun">' + wbContentRunBody() + '</div>';
   var s = WB_RUN_STATUS;
-  if (!s) return '<p class="small wb-hint">No loop running &mdash; assemble one in <b>Plan &rarr; Launch</b>. ' +
-    'Once the loop reports, this phase tracks iteration, skirmishes swept, and the running-best, live, and flags anything worth a look.</p>';
+  if (!s) return contentFeed;
   var stat = function (k, v) { return '<div class="wb-stat"><div class="wb-stat-k">' + k + '</div><div class="wb-stat-v">' + v + '</div></div>'; };
   var state = s.state || 'running';
   var best = s.best ? s.best.score + (s.best.candidate ? ' <span class="wb-hint">' + wbEsc(s.best.candidate) + '</span>' : '') : '&mdash;';
@@ -542,7 +668,7 @@ function wbRunBody() {
   }).join('');
   var log = '<label class="small wb-lbl">Log tail <span class="wb-hint">&mdash; latest iterations</span></label>' +
     '<div id="wbRunLog" class="wb-log">' + (steps || '<p class="small wb-hint">No iterations reported yet.</p>') + '</div>';
-  return stats + controls + wbAnomalyPanel(s) + log;
+  return contentFeed + stats + controls + wbAnomalyPanel(s) + log;
 }
 
 function wbWireRun() {

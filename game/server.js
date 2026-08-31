@@ -328,6 +328,19 @@ var ROUTES = {
       catch (e) { json(res, 200, { cards: [] }); }
     });
   },
+  'GET /api/contentrun': function (req, res) {
+    // #167: the content loop's structured per-iteration run record — the machine-
+    // readable feed the Workbench renders (author -> grade -> balance -> feels ->
+    // commit, in order, incl. failed-iteration findings). A pure read of
+    // logs/content-runs/latest.json (dev/run-record.js owns the write). Absent file
+    // (no run yet) answers a clean idle marker rather than 404.
+    var f = path.join(ROOT, '..', 'logs', 'content-runs', 'latest.json');
+    fs.readFile(f, 'utf8', function (err, src) {
+      if (err) return json(res, 200, { state: 'idle', iterations: [] });
+      try { json(res, 200, JSON.parse(src)); }
+      catch (e) { json(res, 200, { state: 'idle', iterations: [] }); }
+    });
+  },
   'GET /api/runs': function (req, res) {
     // WOA-034: the dashboard header's run-A/B pickers. Guarded like recordSkirmish
     // above — a zipped game/ without dev/ (or a db that's never been opened)

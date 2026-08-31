@@ -120,8 +120,8 @@ function recordAuthored(h, iter, cards) {
     // `legal`/`problems` carry the author-time legality guard onto the row itself — a card
     // the Author's hands refused (bad id/steps/over-budget) is a first-class finding here
     // (#167 AC "authored cards that fail deckProblems are caught and recorded as a finding").
-    if (!row) { row = { id: c.id, name: c.name || c.id, action: c.action || 'add', points: c.points != null ? c.points : null, note: c.note || '', legal: c.legal !== false, problems: c.problems || [], findings: null, balance: null }; it.authored.push(row); }
-    else { row.action = c.action || row.action; row.name = c.name || row.name; if (c.points != null) row.points = c.points; if (c.note) row.note = c.note; if (c.legal === false) { row.legal = false; row.problems = c.problems || row.problems; } }
+    if (!row) { row = { id: c.id, name: c.name || c.id, action: c.action || 'add', points: c.points != null ? c.points : null, note: c.note || '', legal: c.legal !== false, problems: c.problems || [], card: c.card || null, findings: null, balance: null }; it.authored.push(row); }
+    else { row.action = c.action || row.action; row.name = c.name || row.name; if (c.points != null) row.points = c.points; if (c.note) row.note = c.note; if (c.card) row.card = c.card; if (c.legal === false) { row.legal = false; row.problems = c.problems || row.problems; } }
   });
   return flush(h);
 }
