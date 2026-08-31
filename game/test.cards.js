@@ -4,7 +4,8 @@
 'use strict';
 const { test } = require('./test.helpers.js');
 const assert = require('node:assert');
-const { E, testSkirmish, fixtureCard } = require('./test.helpers.js');
+const { E, testSkirmish } = require('./test.helpers.js');
+const { fakeCard } = require('./test.fixtures.js'); // fake fixtures, never live content (no-live-content, #193)
 
 test('noOpener cards never in the opening hand (e.g. Airdrop)', () => {
 (function () {
@@ -32,7 +33,9 @@ test('house rule: play any card as basic attack/reposition', () => {
   var st = testSkirmish(21);
   st.units['0,0'] = { type: 'infantry', owner: 'red' };
   st.units['0,1'] = { type: 'cavalry', owner: 'blue' };
-  var cid = st.hands.red.filter(function (c) { return c !== 'attack_plus1'; })[0];
+  // A deploy fixture (no attack step of its own) proves ANY card replays as a basic attack.
+  fakeCard('fx_deploy_inf'); st.hands.red = ['fx_deploy_inf'];
+  var cid = st.hands.red[0];
   E.playCard(st, cid, 'attack');
   var o = E.stepOptions(st);
   assert.ok(o.type === 'attack' && (o.mod || 0) === 0, 'card resolves as plain attack step');
@@ -61,8 +64,8 @@ test('at least one step of a card must be played', () => {
   // Red inf at 0,0 can only strike blue inf at 0,1 (both far from either HQ).
   var st = testSkirmish(31);
   st.units = { '0,0': { type: 'infantry', owner: 'red' }, '0,1': { type: 'infantry', owner: 'blue' } };
-  st.hands.red = ['mass_assault']; // two attack steps
-  E.playCard(st, 'mass_assault');
+  fakeCard('fx_two_attacks'); st.hands.red = ['fx_two_attacks']; // two attack steps
+  E.playCard(st, 'fx_two_attacks');
   assert.ok(!E.mustPlayStep(st), 'step 1 is skippable — a later step can still act');
   E.applyStep(st, { skip: true }); // allowed: attack #2 remains
   assert.ok(E.mustPlayStep(st), 'the last playable step cannot be skipped while the card has done nothing');
@@ -75,16 +78,16 @@ test('at least one step of a card must be played', () => {
   // Once one action is done, remaining steps ARE skippable.
   var st2 = testSkirmish(32);
   st2.units = { '0,0': { type: 'infantry', owner: 'red' } }; // lone unit, room to march, no enemies
-  st2.hands.red = ['forced_march']; // three reposition steps
-  E.playCard(st2, 'forced_march');
+  fakeCard('fx_three_reposition'); st2.hands.red = ['fx_three_reposition']; // three reposition steps
+  E.playCard(st2, 'fx_three_reposition');
   E.applyStep(st2, { from: '0,0', to: E.listRepositions(st2, 'red').moves[0].to });
   assert.ok(st2.phase !== 'step' || !E.mustPlayStep(st2), 'after acting, later steps are skippable');
 
   // A card that genuinely cannot act anywhere still spends the turn (no-op).
   var st3 = testSkirmish(33);
   st3.units = {}; // no units -> no barrage targets, no attacks
-  st3.hands.red = ['naval_barrage']; // [barrage, attack]
-  E.playCard(st3, 'naval_barrage');
+  fakeCard('fx_barrage_attack'); st3.hands.red = ['fx_barrage_attack']; // [barrage, attack]
+  E.playCard(st3, 'fx_barrage_attack');
   assert.ok(st3.phase === 'choose-card' && st3.current === 'blue', 'a truly dead card still ends the turn');
   var le = st3.playLog[st3.playLog.length - 1];
   assert.ok(le && le.noop, 'the dead card is logged as a no-op');
@@ -112,8 +115,11 @@ test('army-points (WOA #54: computed from steps, weight table pinned)', () => {
     'deploy > attack > reposition base costs');
   // Representative card: Raiding Party exercises deploy + attack flags (tieSpare,
   // noAdvance). Pin it and the active deck's total so any weight change is reviewed.
-  assert.ok(E.cardPoints(E.CARD_BY_ID['raiding_party']) === 6.5, 'Raiding Party = 6.5 pts (deploy inf 3 + attack tieSpare/noAdvance 3.5)');
-  assert.ok(E.deckPoints(E.ACTIVE_DECK) === 67.5, 'active deck "' + E.ACTIVE_DECK.id + '" totals 67.5 army-points');
+  // LIVE_CONTENT_PIN: a deliberately-kept named-card-number pin on the shipped
+  // raiding_party card — exempt from the no-live-content gate because a weight change
+  // here MUST surface, not be hidden behind a fake fixture (spec #185; #193).
+  assert.ok(E.cardPoints(E.CARD_BY_ID['raiding_party']) === 6.5, 'Raiding Party = 6.5 pts (deploy inf 3 + attack tieSpare/noAdvance 3.5)'); // LIVE_CONTENT_PIN
+  assert.ok(E.deckPoints(E.ACTIVE_DECK) === 67.5, 'active deck "' + E.ACTIVE_DECK.id + '" totals 67.5 army-points'); // named-deck-number pin (no id literal)
   assert.ok(E.cardPoints({ steps: [] }) === 0 && E.deckPoints({ cards: [] }) === 0, 'empty card / empty deck = 0');
   assert.ok(E.cardPoints({ steps: 'oops' }) === 0, 'malformed (non-array) steps score 0, not a throw — deckProblems can still report the friendly error');
   // WOA #56 deck-value cap gate: every shipped deck sits under the budget (the
@@ -307,9 +313,15 @@ test('deploy step budget vs stock (no deploy fallback, oversubscription = broken
 test('turn flow / first hand', () => {
 (function () {
   var st = testSkirmish(11);
+  // Derive the active deck's starting card (a legitimate read of active content,
+  // NOT a borrowed fixture id): the mechanic is "the flagged starting card, whatever
+  // it is, is guaranteed in the opening hand."
+  var starters = E.CARDS.filter(function (c) { return c.starting; });
+  assert.ok(starters.length > 0, 'the active deck defines a starting card'); // clean failure, not a TypeError
+  var startId = starters[0].id;
   assert.ok(st.hands.red.length === 4, 'first hand has 4 cards');
-  assert.ok(st.hands.red.indexOf('deploy_inf_start') >= 0, 'starting card guaranteed in first hand');
-  E.playCard(st, 'deploy_inf_start');
+  assert.ok(st.hands.red.indexOf(startId) >= 0, 'starting card guaranteed in first hand');
+  E.playCard(st, startId);
   var o = E.stepOptions(st);
   assert.ok(o.type === 'deploy' && o.targets.length === 3, 'starting deploy offers 3 hexes');
   E.applyStep(st, { hex: o.targets[0] });
@@ -322,9 +334,12 @@ test('play metrics (seen / playLog for the card report)', () => {
 (function () {
   var st = testSkirmish(101);
   assert.ok(Object.keys(st.seen.red).length >= 3, 'opening hand counted as seen (' + Object.keys(st.seen.red).length + ' distinct cards)');
-  E.playCard(st, 'deploy_inf_start', 'normal');
+  // The playLog records whatever card was played — take one from the dealt hand
+  // (seen once on the deal) rather than borrow a live id.
+  var played = st.hands.red[0];
+  E.playCard(st, played, 'normal');
   var e = st.playLog[st.playLog.length - 1];
-  assert.ok(e.id === 'deploy_inf_start' && e.p === 'red' && e.mode === 'normal' && e.seen === 1,
+  assert.ok(e.id === played && e.p === 'red' && e.mode === 'normal' && e.seen === 1,
     'playLog records id/mode/first-sight: ' + JSON.stringify(e));
   var r = E.balanceMap(E.MAPS[4], 2, { seedBase: 5 });
   var anyCard = Object.keys(r.cards).filter(function (id) { return r.cards[id].plays > 0; })[0];
@@ -398,15 +413,17 @@ test('WOA-055 asymmetric deck binding', () => {
 
 test('noAdvance attacks (Ordered Withdraw holds its ground)', () => {
 (function () {
-  var card = fixtureCard('ordered_withdraw'); // fixture, not the active deck
+  // A fake fixture owns the tieSpare + noAdvance shape (the mechanic Ordered Withdraw
+  // embodies), so retuning the shipped card can never break this rules test.
+  var card = fakeCard('fx_noadvance_attack');
   assert.ok(card.steps[0].tieSpare === true && card.steps[0].noAdvance === true,
-    'Ordered Withdraw carries tieSpare + noAdvance');
+    'the noAdvance fixture carries tieSpare + noAdvance');
   // outright victory: cavalry (atk 3) vs lone infantry (def 1) — defender dies, attacker stays put
   var st = testSkirmish(70);
   st.units['0,0'] = { type: 'cavalry', owner: 'red' };
   st.units['1,0'] = { type: 'infantry', owner: 'blue' };
-  st.hands.red = ['ordered_withdraw'];
-  E.playCard(st, 'ordered_withdraw');
+  st.hands.red = ['fx_noadvance_attack'];
+  E.playCard(st, 'fx_noadvance_attack');
   E.applyStep(st, { from: '0,0', to: '1,0' });
   assert.ok(!st.units['1,0'], 'defender destroyed on a clear win');
   assert.ok(st.units['0,0'] && st.units['0,0'].type === 'cavalry', 'attacker did NOT take the hex');
@@ -415,15 +432,15 @@ test('noAdvance attacks (Ordered Withdraw holds its ground)', () => {
   var st2 = testSkirmish(71);
   st2.units['0,0'] = { type: 'infantry', owner: 'red' };
   st2.units['1,0'] = { type: 'infantry', owner: 'blue' };
-  st2.hands.red = ['ordered_withdraw'];
-  E.playCard(st2, 'ordered_withdraw');
+  st2.hands.red = ['fx_noadvance_attack'];
+  E.playCard(st2, 'fx_noadvance_attack');
   E.applyStep(st2, { from: '0,0', to: '1,0' });
   assert.ok(!st2.units['1,0'] && st2.units['0,0'], 'tie: defender destroyed, attacker survives in place');
   // HQ still falls to a noAdvance attack (capture does not require entering)
   var st3 = testSkirmish(72);
   st3.units['-2,2'] = { type: 'cavalry', owner: 'red' }; // adjacent to blue HQ at -3,2
-  st3.hands.red = ['ordered_withdraw'];
-  E.playCard(st3, 'ordered_withdraw');
+  st3.hands.red = ['fx_noadvance_attack'];
+  E.playCard(st3, 'fx_noadvance_attack');
   E.applyStep(st3, { from: '-2,2', to: '-3,2' });
   assert.ok(st3.phase === 'skirmish-over' && st3.skirmishWinner === 'red' && st3.winType === 'hq',
     'noAdvance attack still captures the HQ');
@@ -441,8 +458,8 @@ test('Barrage targets ANY trench or forest', () => {
   var b = E.listBarrageTargets(st, 'red');
   assert.ok(b.forestPieces.length === 1, 'forest far outside red lines is targetable (got ' + b.forestPieces.length + ')');
   assert.ok(b.trenches.length === 1 && b.trenches[0].hex === '-3,1', 'trench far outside red lines is targetable');
-  st.hands.red = ['naval_barrage'];
-  E.playCard(st, 'naval_barrage');
+  fakeCard('fx_barrage_attack'); st.hands.red = ['fx_barrage_attack'];
+  E.playCard(st, 'fx_barrage_attack');
   E.applyStep(st, { trenchHex: '-3,1', trenchIdx: 0 });
   assert.ok(!st.trenches['-3,1'], 'barrage destroys the distant trench');
 })();
@@ -451,14 +468,15 @@ test('Barrage targets ANY trench or forest', () => {
 test('no-op plays are logged and marked (skipped-turn report)', () => {
 (function () {
   var st = testSkirmish(77);
-  st.hands.red = ['attack_plus1']; // no units on the board: the attack cannot resolve
-  E.playCard(st, 'attack_plus1');
+  fakeCard('fx_plain_attack'); st.hands.red = ['fx_plain_attack']; // no units on the board: the attack cannot resolve
+  E.playCard(st, 'fx_plain_attack');
   assert.ok(st.current === 'blue', 'impossible card ends the turn immediately');
   var e = st.playLog[st.playLog.length - 1];
-  assert.ok(e.id === 'attack_plus1' && e.noop === true, 'playLog entry marked noop: ' + JSON.stringify(e));
+  assert.ok(e.id === 'fx_plain_attack' && e.noop === true, 'playLog entry marked noop: ' + JSON.stringify(e));
   assert.ok(st.log.some(function (l) { return l.msg.indexOf('no opening') >= 0; }), 'journal says the order was spent to no effect');
   var st2 = testSkirmish(78);
-  E.playCard(st2, 'deploy_inf_start');
+  fakeCard('fx_deploy_inf'); st2.hands.red = ['fx_deploy_inf'];
+  E.playCard(st2, 'fx_deploy_inf');
   E.applyStep(st2, { hex: E.stepOptions(st2).targets ? E.stepOptions(st2).targets[0] : null });
   assert.ok(!st2.playLog[st2.playLog.length - 1].noop, 'a play that acted is NOT marked noop');
   var r = E.balanceMap(E.MAPS[4], 2, { seedBase: 5 });
@@ -493,8 +511,12 @@ test('phase-0 LLM deckbuild (#116/#84, Track F): legal draft on the sideDecks pa
   assert.ok(!db.legality(over).ok && E.deckPoints(over) > E.DECK_POINTS_CAP, 'over-cap draft fails the one hard gate');
 
   // A mock draft produces a legal deck that seats sideDecks per side (WOA-055 path).
-  var red = await db.draftSide(pool, null, { opening: 'deploy_cavalry', filler: 'attack_plus1' });
-  var blue = await db.draftSide(pool, null, { opening: 'deploy_artillery', filler: 'forced_march' });
+  // opening/filler are just pool ids the mock upgrades toward — derive them from the
+  // live pool rather than borrow specific card ids (the assertion only gates the cap).
+  var poolIds = pool.map(function (c) { return c.id; });
+  assert.ok(poolIds.length >= 2, 'the pool has at least two cards to draft opening + filler from');
+  var red = await db.draftSide(pool, null, { opening: poolIds[0], filler: poolIds[1] || poolIds[0] });
+  var blue = await db.draftSide(pool, null, { opening: poolIds[2] || poolIds[0], filler: poolIds[3] || poolIds[1] || poolIds[0] });
   assert.ok(red.legality.ok && blue.legality.ok, 'both mock drafts are under the cap');
   var st = E.newSkirmish(E.newMatch({ seed: 7, firstPlayer: 'red', decks: { red: red.deck, blue: blue.deck } }));
   assert.ok(st.sideDecks && st.sideDecks.red && st.sideDecks.blue, 'drafted decks seat sideDecks');
@@ -607,5 +629,50 @@ test('route-through-base: card markup only via the shared cardFace (#190)', () =
   assert.deepStrictEqual(scan.offenders, [],
     'no browser file builds card-face markup outside cardFace(): ' + scan.offenders.join(', ') +
     ' — route it through the shared renderer (game/ui/app.js)');
+})();
+});
+
+// A rules test must take its numbers from a dedicated fake fixture, never from a
+// live game-content id (ADR-0004 "no-live-content"; spec #185; #193). This source-
+// scan reds when a rules-test file quotes a live catalog id, EXCEPT on a line
+// carrying the explicit LIVE_CONTENT_PIN label — a kept, surfaced named-card pin or
+// an engine-constant mirror. It must NOT red a test that legitimately DERIVES an
+// expectation from active content (E.CARDS.filter(...), st.hands.red[0]); the suite
+// does that deliberately and it must survive. The self-tests below build their
+// fixtures from a live id read at RUNTIME (F.liveCardIds()[0]) so this guard file
+// plants no static live literal of its own for the live-tree scan to trip on.
+test('no-live-content: rules tests use fake fixtures, not live content ids (#193)', () => {
+(function () {
+  var F = require('./test.fixtures.js');
+  var live = F.liveCardIds();
+  var liveId = live[0];        // runtime-computed — never a static literal in this file
+  var fakeId = F.FAKE_IDS[0];  // an fx_ id, deliberately outside the live catalog
+
+  // 1. RED-AT-BASE: the scanner flags a rules test that borrows a live content id.
+  var borrows = { 'game/test.fake.js': "st.hands.red = ['" + liveId + "']; E.playCard(st, '" + liveId + "');" };
+  var dirty = F.scanForLiveContent(borrows, live);
+  assert.ok(dirty.length === 2 && dirty.every(function (o) { return o.id === liveId && o.file === 'game/test.fake.js'; }),
+    'scanner reds on a rules test that quotes a live content id as a fixture (' + liveId + ')');
+
+  // 2. It leaves a fake-fixture (fx_) reference alone — the migrated shape.
+  var clean = { 'game/test.fake.js': "fakeCard('" + fakeId + "'); st.hands.red = ['" + fakeId + "'];" };
+  assert.deepStrictEqual(F.scanForLiveContent(clean, live), [],
+    'scanner leaves a fake-fixture (fx_) reference alone');
+
+  // 3. A LIVE_CONTENT_PIN-labelled line is exempt (kept named-card pin / engine mirror).
+  var pinned = { 'game/test.fake.js': "assert.ok(cardPoints(byId['" + liveId + "']) === 6.5); // " + F.LIVE_CONTENT_PIN };
+  assert.deepStrictEqual(F.scanForLiveContent(pinned, live), [],
+    'scanner exempts a LIVE_CONTENT_PIN-labelled live-content reference');
+
+  // 4. It does NOT red a test that DERIVES from active content (no literal id at all).
+  var derived = { 'game/test.fake.js': "var s = E.CARDS.filter(function (c) { return c.starting; })[0].id; E.playCard(st, s);" };
+  assert.deepStrictEqual(F.scanForLiveContent(derived, live), [],
+    'scanner does NOT red a legitimate derivation from active content');
+
+  // 5. GREEN ON THE MIGRATED TREE: no rules test borrows a live content id as a fixture.
+  var offenders = F.scanForLiveContent(F.rulesTestSources(), live);
+  assert.deepStrictEqual(offenders, [],
+    'no rules test borrows a live content id: ' +
+    offenders.map(function (o) { return o.file + ':' + o.line + ' ' + o.id; }).join(', '));
 })();
 });
