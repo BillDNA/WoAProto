@@ -349,21 +349,24 @@ function wbCardSteps(steps) {
   }).join(' &middot; ');
 }
 
-// One authored card face. `action` (add/edit/remove) drives a coloured badge + class so a
-// glance tells add from edit from remove; a removed card is rendered struck-through/dimmed
-// (it left the catalog). Evidence beneath the design: army-points cost + the note.
+// One authored card: the REAL game card face (app.js cardFace, the one shared renderer)
+// with an add/edit/remove badge + coloured frame so a glance tells the three moves apart;
+// a removed card is dimmed + struck (it left the catalog). Authored cards have no art file
+// yet, so the face shows the standard "art/<id>.jpg" placeholder. Evidence — army-points
+// cost, the step breakdown, and the note — sits beneath the card.
 function wbAuthoredCard(rec) {
   var act = { add: 1, edit: 1, remove: 1 }[rec && rec.action] ? rec.action : 'add';
   var badge = { add: 'added', edit: 'edited', remove: 'removed' }[act];
   var card = (rec && rec.card) || {};
   var steps = wbCardSteps(card.steps);
+  var meta = [];
+  if (card.points != null) meta.push(wbEsc(String(card.points)) + ' pts');
+  if (steps) meta.push(steps);
   return '<div class="wb-authored ' + act + '">' +
-    '<div class="wb-built-hd"><span class="wb-act ' + act + '">' + badge + '</span>' +
-      '<b class="wb-built-name">' + wbEsc(card.name || card.id || '?') + '</b>' +
-      (card.points != null ? '<span class="wb-hint">' + wbEsc(String(card.points)) + ' pts</span>' : '') + '</div>' +
-    (card.text ? '<div class="wb-built-text">' + wbEsc(card.text) + '</div>' : '') +
-    (steps ? '<div class="small wb-hint wb-built-steps">' + steps + '</div>' : '') +
-    (rec && rec.note ? '<div class="small wb-built-note">' + wbEsc(rec.note) + '</div>' : '') +
+    '<span class="wb-act ' + act + '">' + badge + '</span>' +
+    '<div class="card wb-auth-face">' + cardFace(card, { placeholder: true }) + '</div>' +
+    (meta.length ? '<div class="small wb-hint wb-auth-meta">' + meta.join(' &middot; ') + '</div>' : '') +
+    (rec && rec.note ? '<div class="small wb-built-note wb-auth-note">' + wbEsc(rec.note) + '</div>' : '') +
     '</div>';
 }
 
@@ -382,7 +385,7 @@ function wbAuthoredBody() {
   var summary = counts.add + ' added &middot; ' + counts.edit + ' edited &middot; ' + counts.remove + ' removed';
   return '<label class="small wb-lbl">Authored this run <span class="wb-hint">&mdash; ' + summary + '</span></label>' +
     (meta.length ? '<div class="small wb-hint" style="margin-bottom:6px">' + meta.join(' &middot; ') + '</div>' : '') +
-    '<div class="wb-built-grid">' + f.cards.map(wbAuthoredCard).join('') + '</div>';
+    '<div class="wb-auth-grid">' + f.cards.map(wbAuthoredCard).join('') + '</div>';
 }
 
 // Inject an authored feed and re-render the Authored pane in place. The live loader calls

@@ -309,6 +309,11 @@ realSetTimeout(function () {
   assert.ok(/trench &middot; deploy infantry/.test(authPane.innerHTML) || /trench.*deploy infantry/.test(authPane.textContent),
     'steps render human-readable (unit named), not a JSON blob');
   assert.ok(authPane.querySelector('.wb-authored.remove'), 'a removed card is visibly distinguished (its own class)');
+  // The feed reuses the REAL game card face (app.js cardFace), not a bespoke one: a proper
+  // `.card` with a name `.banner`, and an art `.placeholder` slot for cards with no art yet.
+  var face = authPane.querySelector('.wb-authored .card');
+  assert.ok(face && /Reserve Line/.test(face.querySelector('.banner').textContent), 'authored card uses the real .card face with a name banner');
+  assert.ok(authPane.querySelector('.wb-authored .card .art.placeholder'), 'an authored card (no art file yet) shows the art placeholder slot');
   assert.ok(/build out toward 30 cards/.test(authPane.textContent) && /bold/.test(authPane.textContent),
     'the run nudge + temperature that drove the Author are shown');
   win.WB_AUTHORED = null; // leave idle for a clean re-open

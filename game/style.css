@@ -733,17 +733,27 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
 .wb-tag.iterate { background:var(--copper); }
 .wb-tag.cut { background:var(--red); }
 .wb-change { font-size:11px; font-variant:small-caps; letter-spacing:.5px; opacity:.7; }
-/* Authored-this-run feed (#165): a card face per add/edit/remove, the action a coloured
-   badge + a left border so the three moves read apart at a glance; removed cards dim + strike. */
-.wb-authored { border:1px solid var(--brass-dark); border-left-width:4px; border-radius:8px; padding:8px 10px; background:rgba(255,255,255,.16); }
-.wb-authored.add { border-left-color:var(--forest); }
-.wb-authored.edit { border-left-color:var(--copper); }
-.wb-authored.remove { border-left-color:var(--red); opacity:.62; }
-.wb-authored.remove .wb-built-name { text-decoration:line-through; }
+/* Authored-this-run feed (#165): the REAL game card face (app.js cardFace) per
+   add/edit/remove, wrapped with a coloured badge + frame so the three moves read apart at a
+   glance; a removed card dims + strikes (it left the catalog). */
+.wb-auth-grid { display:flex; flex-wrap:wrap; gap:16px 14px; margin:2px 0 14px; align-items:flex-start; }
+.wb-authored { display:flex; flex-direction:column; align-items:center; gap:5px; width:128px; }
+.wb-authored .card { cursor:default; box-shadow:0 2px 5px rgba(0,0,0,.45); }
+.wb-authored .card:hover { transform:none; }
+.wb-authored.add .card { outline:3px solid var(--forest); outline-offset:2px; }
+.wb-authored.edit .card { outline:3px solid var(--copper); outline-offset:2px; }
+.wb-authored.remove .card { outline:3px solid var(--red); outline-offset:2px; opacity:.55; filter:grayscale(.5); }
+.wb-authored.remove .banner { text-decoration:line-through; }
+.wb-auth-meta, .wb-auth-note { text-align:center; max-width:128px; }
 .wb-act { font-size:10px; font-variant:small-caps; letter-spacing:.5px; padding:1px 8px; border-radius:10px; color:#fff; }
 .wb-act.add { background:var(--forest); }
 .wb-act.edit { background:var(--copper); }
 .wb-act.remove { background:var(--red); }
+/* Art placeholder for a card with no art/<id>.jpg yet (authored cards, deck-editor previews):
+   keep the art box visible with a filename hint that the loaded image covers when present. */
+.card .art.placeholder { position:relative; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.05); }
+.card .art.placeholder .art-ph { font-size:8px; color:var(--ink-soft); opacity:.7; padding:0 4px; text-align:center; line-height:1.2; }
+.card .art.placeholder img { position:absolute; inset:0; }
 .wb-band.ok { color:var(--forest); }
 .wb-band.warn { color:var(--copper); }
 .wb-band.bad { color:var(--red); }
