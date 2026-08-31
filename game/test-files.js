@@ -15,4 +15,5 @@ module.exports = [
   './test.ai.js',
   './test.reports.js',
   './test.commanders.js',
+  './test.ui.js',
 ];
