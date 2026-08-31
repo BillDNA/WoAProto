@@ -3,6 +3,50 @@
    in favour of node:test + node:assert. */
 'use strict';
 var E = require('./engine.js');
+var nodeTest = require('node:test');
+var REG = require('./test-registry.js');
+
+/* Invariant/pin labelling (ADR-0004, #189). Every test file imports `test` from
+   HERE instead of from node:test, so that registering a test also records its
+   name (and whether it is skipped) into a shared collection the suite-guards read.
+   The DEFAULT label is PIN: a bare `test('name', fn)` is a pin of this era's
+   behaviour, movable by the test-writer role atomically with a RULES_VERSION bump.
+   An INVARIANT — a property that must hold every rules era — must say so
+   explicitly with `invariant('<category>', 'name', fn)`; it may not hide behind
+   the default. The registry in test-registry.js is the exhaustive, audited list. */
+var _ALL_TESTS = [];        // [{name, skipped}] — every registered test
+var _INVARIANTS = [];       // [{category, name}] — the labelled invariant set
+
+function record(name, skipped) { _ALL_TESTS.push({ name: name, skipped: !!skipped }); }
+
+// Drop-in for node:test's `test`: same signature, records the name as an active
+// (non-skipped) pin, then delegates. `.skip`/`.todo` record as skipped so the
+// deletion guard treats a `.skip`-ed base test as removed.
+function test(name) {
+  record(name, false);
+  return nodeTest.test.apply(nodeTest, arguments);
+}
+test.skip = function (name) { record(name, true); return nodeTest.test.skip.apply(nodeTest.test, arguments); };
+test.todo = function (name) { record(name, true); return nodeTest.test.todo.apply(nodeTest.test, arguments); };
+test.only = function (name) { record(name, false); return nodeTest.test.only.apply(nodeTest.test, arguments); };
+
+// Explicit pin — identical to the default `test`, for a site that wants to say so.
+function pin(name, fn) { record(name, false); return nodeTest.test(name, fn); }
+
+// Label a test as an INVARIANT under one of the frozen categories. Records into
+// both collections; the registry guard reds if this set drifts from the registry.
+function invariant(category, name, fn) {
+  if (REG.CATEGORIES.indexOf(category) < 0) {
+    throw new Error('invariant(): unknown category "' + category + '" (frozen set: ' + REG.CATEGORIES.join(', ') + ')');
+  }
+  _INVARIANTS.push({ category: category, name: name });
+  record(name, false);
+  return nodeTest.test(name, fn);
+}
+
+function collectedInvariants() { return _INVARIANTS.slice(); }
+function activeTestNames() { return _ALL_TESTS.filter(function (t) { return !t.skipped; }).map(function (t) { return t.name; }); }
+function allTests() { return _ALL_TESTS.slice(); }
 
 // A bare classic-board map so rules tests are deterministic regardless of the
 // built-in roster. HQs in opposite corners, no terrain.
@@ -27,4 +71,7 @@ function fixtureCard(id) {
   return E.CARD_BY_ID[id];
 }
 
-module.exports = { E, TESTMAP, testSkirmish, fixtureCard, ALL_DECK_CARDS };
+module.exports = {
+  E, TESTMAP, testSkirmish, fixtureCard, ALL_DECK_CARDS,
+  test, pin, invariant, collectedInvariants, activeTestNames, allTests,
+};

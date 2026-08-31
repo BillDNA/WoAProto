@@ -10,3 +10,4 @@ require('./test.maps.js');
 require('./test.ai.js');
 require('./test.reports.js');
 require('./test.commanders.js');
+require('./test.invariants.js'); // invariant suite + registry/deletion guards (ADR-0004, #189)

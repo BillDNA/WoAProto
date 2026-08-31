@@ -2,7 +2,7 @@
    asserts the stub parses into WOA_CONTENT.commanders and every field is shaped
    right; NO rules effect is checked because the engine ignores commanders today. */
 'use strict';
-const { test } = require('node:test');
+const { test } = require('./test.helpers.js');
 const assert = require('node:assert');
 require('./test.helpers.js'); // requiring the engine populates global.WOA_CONTENT
 
