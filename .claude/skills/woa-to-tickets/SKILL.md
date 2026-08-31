@@ -95,26 +95,32 @@ half is **not a falsifier kind** — it is `woa-implement`'s fresh-grader rail (
 review), owned downstream. Drop it from the criterion; do not hunt for a home for "fresh
 session" — it has none here, and trying to encode it invents one.
 
-### A transport-bearing feature needs a **real-seam** falsifier
+### An interaction / fidelity / logic falsifier must be **integrated** — not a fifth kind
 
-The four falsifier kinds can each be satisfied by a **fake transport** — a fake capture, an
-injected `ask`, a stubbed network/subprocess. So a ticket whose feature has a **real
-transport** (a browser/Playwright, an LLM `claude -p`, a network call, a spawned process)
-can hold four green falsifiers while **the real seam has never run once end to end** — the
-80% problem wearing a green check. (Lesson from `dev/ui-review.js` Phase 2: every AC was
-red-at-base, yet every falsifier passed against a text fake standing in for the pixel
-pipeline, so real capture → Phase-1 → Phase-2 was never exercised together — the two real
-halves literally could not run in the same harness, and nothing forced them to.)
+This is **not a fifth falsifier kind.** The four kinds classify *what the falsifier
+observes*; "integrated vs faked" is a different axis — *whether the transport under that
+observation is real* — so it **qualifies** the kinds that carry a transport, it does not join
+them. A correctly-written **interaction** falsifier already *is* integrated: it drives the
+real action and asserts the real downstream outcome. The trap is that the kinds do not
+*force* the transport to be real — an interaction can drive a click whose handler calls an
+injected fake `ask`; a **fidelity** compare can run against a fake capture; a **logic** assert
+can run against a stubbed subprocess spawn (the #169/#173 "the picked kind reaches the
+*spawned* config" tested against a fake spawn). Each goes green while the real seam never
+runs — the 80% problem wearing a green check. (Lesson from `dev/ui-review.js` Phase 2: every
+AC was red-at-base, yet every falsifier passed against a **text** fake standing in for the
+**pixel** pipeline, so real capture → Phase-1 → Phase-2 was never exercised together — the
+two real halves literally could not run in the same harness, and nothing forced them to.)
 
-So for any transport-bearing ticket, **at least one criterion's falsifier must exercise the
-real components wired together** — one a fake transport cannot satisfy. A **faithful
-deterministic stand-in counts** (a pixel-aware fake that consumes the real capture *bytes*);
-a **text fake standing in for a pixel pipeline does not** — the tell is structural: if the
-real and fake halves cannot run in the same harness, the seam is untested. Its home is an
-**always-run integration test** (`game/test.js` / `dev/smoke.js`) that drives the real seam,
-**paired with** a committed **live smoke** that runs the whole pipeline against the real
-model/browser once and is pasted on the PR (not in `node game/test.js` — a "run it for real
-once" proof, per `dev/ui-review.smoke.js`).
+So for any feature with a **real transport** (a browser/Playwright, an LLM `claude -p`, a
+network call, a spawned process), the interaction/fidelity/logic falsifier that carries it
+must be **integrated**: its asserted outcome comes from the **real transport or a faithful
+deterministic stand-in** (a pixel-aware fake that consumes the real capture *bytes*), **never
+a fake that short-circuits the seam** (a text fake for a pixel pipeline). The tell is
+structural — if the real and fake halves cannot run in the same harness, the seam is
+untested. Home: an **always-run integration test** (`game/test.js` / `dev/smoke.js`) that
+drives the real seam, **paired with** a committed **live smoke** that runs the whole pipeline
+against the real model/browser once and is pasted on the PR (not in `node game/test.js` — a
+"run it for real once" proof, per `dev/ui-review.smoke.js`).
 
 A transport-bearing ticket whose criteria are **all fake-satisfiable** has, in effect, **no
 usable falsifier for the real seam** — treat it as the second rejection below (a criterion
