@@ -69,7 +69,9 @@ const COMPARATOR_SYSTEM =
   'TARGET screenshot that AFTER is meant to match, and a list of acceptance criteria. Your job ' +
   'is to BOUNCE: report every target element the description omits, and every acceptance ' +
   'criterion or human interaction the description does not evidence. Do not give the benefit of ' +
-  'the doubt — an item you cannot positively confirm from the description is a bounce.';
+  'the doubt — an item you cannot positively confirm from the description is a bounce. ' +
+  'Respond with ONLY a JSON object of the form {"bounces":[{"kind","ref","why"}]} and nothing ' +
+  'else — no prose before or after. When nothing is missing, return exactly {"bounces":[]}.';
 
 // The comparator's output shape. bounces:[] means the review found nothing missing.
 const VERDICT_SCHEMA = JSON.stringify({
@@ -103,9 +105,15 @@ function parseVerdict(text) {
   let s = text.trim();
   const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);   // tolerate a fenced block
   if (fence) s = fence[1].trim();
-  let o;
-  try { o = JSON.parse(s); } catch (e) { return { error: 'unparseable comparator output: ' + e.message }; }
-  if (!o || typeof o !== 'object' || !Array.isArray(o.bounces)) return { error: 'comparator output has no bounces[] array' };
+  let o = null;
+  try { o = JSON.parse(s); } catch (e) { o = null; }
+  // Tolerate a JSON object wrapped in prose: pull the widest {...} that actually has a bounces array.
+  if (!o || typeof o !== 'object' || !Array.isArray(o.bounces)) {
+    const m = s.match(/\{[\s\S]*\}/);
+    if (m) { try { o = JSON.parse(m[0]); } catch (e) { o = null; } }
+  }
+  if (!o || typeof o !== 'object') return { error: 'unparseable comparator output (no JSON object found)' };
+  if (!Array.isArray(o.bounces)) return { error: 'comparator output has no bounces[] array' };
   const bounces = o.bounces.map(function (b) {
     return { kind: String((b && b.kind) || 'bounce'), ref: String((b && b.ref) || ''), why: String((b && b.why) || '') };
   });
@@ -222,13 +230,13 @@ function defaultAsk(request) {
   return new Promise(function (resolve) {
     let bin;
     try { bin = LLM.resolveBinary(request.binaryPath); } catch (e) { return resolve(errored); }
-    const args = bin.extraArgs.concat([
-      '-p', '--no-session-persistence',
-      '--model', request.model || '',
+    const args = bin.extraArgs.concat(['-p', '--no-session-persistence']);
+    if (request.model) args.push('--model', request.model);   // else the CLI's default (vision-capable); '' reds as unrecognized_model
+    args.push(
       '--system-prompt', request.systemPrompt || '',   // full override: no ambient CLAUDE.md, pinned role
       '--allowedTools', 'Read',                          // the CLI needs Read to open the screenshots
       '--output-format', 'json'
-    ]);
+    );
     let proc;
     try { proc = spawn(bin.cmd, args, { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] }); }
     catch (e) { return resolve(errored); }
@@ -336,10 +344,12 @@ async function review(spec, opts) {
   // there is nothing to compare a null after against.
   let bounces = [];
   let compared = false;
+  let rawCompare = '';
   if (targetPresent && afterPresent) {
     const cmpReq = buildCompareRequest(shotsDir, description, targetBuf, spec.acs);
     const cmpRes = await ask(cmpReq);
-    const parsed = parseVerdict(cmpRes && cmpRes.text);
+    rawCompare = (cmpRes && cmpRes.text) || '';
+    const parsed = parseVerdict(rawCompare);
     if (parsed.error) {
       bounces = [{ kind: 'review-error', ref: 'comparator', why: 'failing closed — ' + parsed.error }];
     } else {
@@ -352,7 +362,7 @@ async function review(spec, opts) {
   const verdict = {
     ticket: spec.ticket, at: new Date().toISOString(),
     ranAgainstTarget: targetPresent, targetPresent: targetPresent, afterPresent: afterPresent,
-    compared: compared, description: description, bounces: d.bounces, pass: d.pass,
+    compared: compared, description: description, rawCompare: rawCompare, bounces: d.bounces, pass: d.pass,
     shots: { staged: shots.staged, branch: shots.branch || null }
   };
   fs.writeFileSync(path.join(outDir, 'verdict.json'), JSON.stringify(verdict, null, 2));
