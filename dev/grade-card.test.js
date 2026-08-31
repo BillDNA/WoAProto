@@ -74,6 +74,18 @@ test('normalizeFindings: refuses a bare number masquerading as a position (a ban
   assert.throws(() => G.normalizeFindings(bad), /prose/i);
 });
 
+test('normalizeFindings: refuses a TOP-LEVEL verdict field, not only a per-axis one', () => {
+  const bad = goodFindings();
+  bad.verdict = 'PASS';   // smuggled as a sibling of axes, not inside a finding
+  assert.throws(() => G.normalizeFindings(bad), /verdict field/i);
+});
+
+test('normalizeFindings: refuses an unexpected finding field (whitelist, not a token blacklist)', () => {
+  const bad = goodFindings();
+  bad.axes[0].summary = 'a stray field that is not prose position/velocity';
+  assert.throws(() => G.normalizeFindings(bad), /unexpected field/i);
+});
+
 /* ---------- shape floors: set-fit required, ≥2 axes, known ids, no dup ---------- */
 test('normalizeFindings: requires the set-fit axis (this rubric grades catalog-fit, #163)', () => {
   const noSetFit = { axes: [
@@ -120,12 +132,31 @@ test('recordFindings: attaches findings onto the card record in the feed', () =>
   assert.ok(feed.cards[0].findings, 'the feed record now carries findings');
   assert.strictEqual(feed.cards[0].findings.axes.find(a => a.setFit).axis, 'set-fit');
   assert.strictEqual(feed.cards[0].findings.fixPass.note, 'Deploy now lands anywhere.');
-  assert.strictEqual(feed.gradedAt, rec.findings.gradedAt, 'the feed stamps gradedAt');
+  assert.ok(feed.cards[0].findings.gradedAt, 'the graded card carries its own gradedAt');
 });
 
 test('recordFindings: refuses to grade a card the Author never wrote', () => {
   const file = seedFeed();
   assert.throws(() => G.recordFindings('no_such_card', goodFindings(), { feedFile: file }), /no authored card/i);
+});
+
+test('recordFindings: refuses a card whose latest move was a remove (it left the catalog)', () => {
+  const file = seedFeed();
+  const feed = JSON.parse(fs.readFileSync(file, 'utf8'));
+  feed.cards.push({ action: 'remove', card: { id: 'reserve_line', name: 'Reserve Line', points: 4, text: 'Dig in, then deploy.', steps: [{ type: 'trench' }] }, note: 'cut' });
+  fs.writeFileSync(file, JSON.stringify(feed));
+  assert.throws(() => G.recordFindings('reserve_line', goodFindings(), { feedFile: file }), /removed this run/i);
+});
+
+test('authoredIds: excludes an add-then-removed card (its file is gone)', () => {
+  const file = seedFeed();
+  const feed = JSON.parse(fs.readFileSync(file, 'utf8'));
+  feed.cards.push({ action: 'add', card: { id: 'scrapped', name: 'Scrapped', points: 3, text: 'x', steps: [{ type: 'trench' }] } });
+  feed.cards.push({ action: 'remove', card: { id: 'scrapped', name: 'Scrapped', points: 3, text: 'x', steps: [{ type: 'trench' }] } });
+  fs.writeFileSync(file, JSON.stringify(feed));
+  const ids = G.authoredIds({ feedFile: file });
+  assert.ok(ids.indexOf('reserve_line') >= 0, 'a live card is still a target');
+  assert.ok(ids.indexOf('scrapped') < 0, 'the add-then-removed card is not a grading target');
 });
 
 test('recordFindings: grades the latest non-remove record for the id', () => {

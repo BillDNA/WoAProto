@@ -38,9 +38,27 @@ const A = require(path.join(ROOT, 'dev', 'author-card.js'));   // one feed impl 
 const AX = require(path.join(ROOT, 'game', 'card-rubric-axes.js'));
 const RUBRIC = 'docs/rubrics/card-rubric.md';
 
-// Keys that would make a "finding" into a verdict — the exact shapes review-with-rubric forbids.
-// A grader that writes any of these is graded-its-homework-as-a-gate; we refuse to record it.
-const VERDICT_KEYS = ['score', 'band', 'verdict', 'grade', 'rating', 'pass', 'fail', 'enum', 'points', 'value'];
+// The findings shape is a WHITELIST, not a blacklist: an axis finding carries only its keyed
+// prose (axis + position + velocity; title/setFit are stamped by us and tolerated if echoed),
+// and the top-level object only wraps them. Any other key — at either level — is refused, so a
+// verdict can't slip in under a generic name and a benign field can't false-positive a blanket
+// token list. VERDICT_KEYS is kept ONLY to make the refusal message name the gate when the
+// stray key is a recognisable verdict word (score/band/pass/fail…), the shapes review-with-rubric
+// forbids; an unrecognised stray key is refused just the same, as "not a prose finding field".
+const VERDICT_KEYS = ['score', 'band', 'verdict', 'grade', 'rating', 'pass', 'fail', 'enum', 'points', 'value', 'tier'];
+const TOP_LEVEL_KEYS = ['grader', 'axes', 'findings', 'fixPass'];
+const AXIS_KEYS = ['axis', 'position', 'velocity', 'title', 'setFit'];
+
+// Refuse any key outside `allowed`, naming the gate when the stray key is a known verdict word.
+function refuseStrayKeys(obj, allowed, where) {
+  const stray = Object.keys(obj).filter(function (k) { return allowed.indexOf(k) < 0; });
+  if (!stray.length) return;
+  const verdicts = stray.filter(function (k) { return VERDICT_KEYS.indexOf(k) >= 0; });
+  if (verdicts.length) throw new Error(where + ' carries verdict field(s) [' + verdicts.join(', ') +
+    '] — a rubric read is findings, never a score/band/pass-fail (review-with-rubric). Recast it as prose.');
+  throw new Error(where + ' has unexpected field(s) [' + stray.join(', ') +
+    '] — a finding is prose only (' + allowed.join(', ') + '); an extra field reads like a smuggled verdict.');
+}
 
 /* Validate one grader's findings object into the recorded shape, or throw with why. Prose-only,
    keyed by known axis ids, set-fit present (the whole point of #163/#166 — a grade that skips
@@ -49,15 +67,16 @@ const VERDICT_KEYS = ['score', 'band', 'verdict', 'grade', 'rating', 'pass', 'fa
 function normalizeFindings(raw, opts) {
   opts = opts || {};
   if (!raw || typeof raw !== 'object') throw new Error('findings must be a JSON object');
+  // Scan the TOP-LEVEL object too — a verdict smuggled as e.g. {verdict:"PASS", axes:[...]} is
+  // refused loudly, not silently dropped (the "refuses anything verdict-like" contract).
+  refuseStrayKeys(raw, TOP_LEVEL_KEYS, 'the findings object');
   const axesIn = raw.axes || raw.findings;   // accept either key the subagent might use
   if (!Array.isArray(axesIn) || !axesIn.length) throw new Error('findings.axes must be a non-empty array of per-axis findings');
 
   const seen = {};
   const axes = axesIn.map(function (f, i) {
     if (!f || typeof f !== 'object') throw new Error('axis finding #' + (i + 1) + ' must be an object');
-    const bad = Object.keys(f).filter(function (k) { return VERDICT_KEYS.indexOf(k) >= 0; });
-    if (bad.length) throw new Error('axis finding "' + (f.axis || i) + '" carries verdict field(s) [' + bad.join(', ') +
-      '] — a rubric read is findings, never a score/band/pass-fail (review-with-rubric). Recast it as prose.');
+    refuseStrayKeys(f, AXIS_KEYS, 'axis finding "' + (f.axis || i) + '"');
     if (!AX.isAxisId(f.axis)) throw new Error('unknown axis id "' + f.axis + '" — one of: ' +
       AX.CARD_RUBRIC_AXES.map(function (a) { return a.id; }).join(', '));
     if (seen[f.axis]) throw new Error('axis "' + f.axis + '" appears twice — one finding per axis');
@@ -99,13 +118,16 @@ function recordFindings(id, findings, opts) {
   opts = opts || {};
   const feed = A.readFeed(opts.feedFile);
   const cards = feed.cards || [];
+  // The LATEST record for the id is the card as it now stands. Grade that — but if the latest
+  // move was a remove, the card left the catalog this run: there is no file to review, so refuse
+  // rather than attach findings to a stale add/edit record (a removed card is not gradeable).
   let idx = -1;
   for (let i = cards.length - 1; i >= 0; i--) {
-    if (cards[i] && cards[i].card && cards[i].card.id === id && cards[i].action !== 'remove') { idx = i; break; }
+    if (cards[i] && cards[i].card && cards[i].card.id === id) { idx = i; break; }
   }
   if (idx < 0) throw new Error('no authored card "' + id + '" in the feed — the grader grades what the Author wrote (run author-card.js first)');
+  if (cards[idx].action === 'remove') throw new Error('card "' + id + '" was removed this run — a removed card left the catalog, nothing to grade');
   cards[idx].findings = normalizeFindings(findings, opts);
-  feed.gradedAt = cards[idx].findings.gradedAt;
   A.writeFeed(feed, opts.feedFile);
   return cards[idx];
 }
@@ -140,11 +162,15 @@ function briefFor(target, ids) {
 // Which cards this run authored (last non-remove record per id) — the brief's default target.
 function authoredIds(opts) {
   const feed = A.readFeed((opts || {}).feedFile);
-  const ids = [];
+  // A card's gradeability is its LATEST action: add-then-removed is not a target (its file is
+  // gone), so track the last action per id and drop the ones whose run ended in a remove.
+  const order = [], lastAction = {};
   (feed.cards || []).forEach(function (r) {
-    if (r && r.card && r.action !== 'remove' && ids.indexOf(r.card.id) < 0) ids.push(r.card.id);
+    if (!r || !r.card) return;
+    if (order.indexOf(r.card.id) < 0) order.push(r.card.id);
+    lastAction[r.card.id] = r.action;
   });
-  return ids;
+  return order.filter(function (id) { return lastAction[id] !== 'remove'; });
 }
 
 module.exports = { normalizeFindings, recordFindings, briefFor, authoredIds, VERDICT_KEYS, RUBRIC };
