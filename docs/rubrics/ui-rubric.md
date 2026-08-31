@@ -16,23 +16,23 @@ head and look before you read a label.
 ## Goals
 
 * ==**one language**== — the whole interface is written in a single visual vocabulary; a player never re-learns a word the game already taught.
-* ==**flow**== — each state hands the player to the next; what to do, and where it leads, is legible without a stop to think.
-* ==**never lost**== — in a sea of information the player always knows where they are and what matters now; nothing makes them hunt or drown.
+* ==**flow**== — each state shows how it changed and where it leads, carrying the player to the next decision without a stop to think.
+* ==**never lost**== — however crowded the frame, the player can always find where they are and what matters now; nothing makes them hunt or drown.
 
 ## Axes of evaluation
 
 ### Per surface
 
-1. ==**The eye is led.**== Squint the screen down to blobs of light and dark — what pulls your eye first? Is it the decision this turn, or a secondary reading that merely sits there outranking the live choice? Weight, size, and space should rank the screen so attention lands where the turn is decided; when everything shouts equally nothing leads, and the player is left to search.
+1. ==**The eye is led.**== Squint the screen down to blobs of light and dark — what pulls your eye first? Is it the decision this turn, or a secondary reading that merely sits there outranking the live choice? Weight, size, and space should rank the frame so attention lands where the turn is decided; when everything shouts equally nothing leads, and the player is left to search a crowded field.
 
-2. ==**What belongs together sits together.**== Before you read a word, can you tell which marks are one group and which are apart — a piece and its strength, a card and its cost? Do the gaps inside a group read tighter than the gaps around it? Proximity, a shared panel, and a common edge should do the grouping for the player, or the layout dissolves into one undifferentiated field they have to sort by hand.
+2. ==**What belongs together sits together.**== Before you read a word, can you tell which marks are one group and which are apart — a piece and its strength, a card and its cost? Do the gaps inside a group read tighter than the gaps around it? Proximity, a shared panel, and a common edge should do the grouping for the player, or the frame dissolves into one undifferentiated field they have to sort by hand.
 
-3. ==**Every mark earns its ink.**== Go element by element — is this carrying information, or is it decoration? Take it away in your mind's eye: was any meaning lost? Content should out-weigh its chrome; borders, fills, and readouts that repeat what's already shown are the sea the player drowns in, and the move is to mute them or spend their weight on something that earned it.
+3. ==**Every mark earns its ink.**== Go element by element — is this carrying information, or is it decoration? Take it away in your mind's eye: was any meaning lost? Content should out-weigh its chrome; borders, fills, and readouts that repeat what's already shown are clutter that buries what matters, and the move is to mute them or spend their weight on something that earned it.
 
-4. ==**You read it without leaning in.**== Read the values a player consumes every turn at the size, contrast, and crowding they are really met with — do you take them in, or lean in to parse them? A cleared contrast floor is the minimum, never the aim; a number you have to squint at each turn charges a toll each turn.
+4. ==**You read it without leaning in.**== Read the values a player consumes every turn at the size, contrast, and crowding they are really met with — do you take them in, or lean in to parse them? A mark you can't read at real size is its own way of drowning; a cleared contrast floor is the minimum, never the aim, and the move is more contrast, size, or room until it is taken in at a glance.
 
-5. ==**Each state hands you to the next.**== When the player acts, does the screen show what changed and put the next decision in front of them? Can they always tell, without hunting, what just happened and what the game now waits on? A readable interface carries the player forward on the change; one that redraws in silence makes them re-orient from scratch every turn.
+5. ==**The change shows itself.**== When the player acts, can they *read* what just changed — the piece that fell, the turn that passed — without hunting for it? And does the new state put the next decision in front of them rather than leaving them to re-find their place? A readable interface carries the player forward on a change it makes legible; one that redraws in silence makes them re-derive the state from scratch every turn.
 
 ### Across the set
 
-6. ==**The whole game speaks one tongue.**== Can a fresh player name a control from its look and label alone — and does that same role wear the same clothes everywhere it appears? Do things that look alike truly share a role, or does a twin borrow a costume it hasn't earned? A vocabulary learned once and never contradicted lets new screens be read on sight; a role that has drifted, or a pattern reinvented where a known one would serve, sends the player back to decode it.
+6. ==**You've met this before.**== Point at any control or readout — can a fresh player name what it is and does from a convention the world already taught or a plain word on its face? And set it beside its kin elsewhere: does the same role wear the same clothes on every screen, or has a twin borrowed a costume it hasn't earned? A tongue the player learns once — recognizable on sight and never contradicted — lets new screens be read without translation; a cryptic control or a drifted role sends them back to decode it.
