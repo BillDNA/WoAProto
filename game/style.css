@@ -728,6 +728,20 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
 .wb-cr-fail { padding:6px 10px; border:1px solid var(--copper); border-radius:6px; background:rgba(200,120,40,.16); margin-bottom:8px; font-size:13px; }
 .wb-cr-feels { margin-top:8px; padding-top:6px; border-top:1px dashed var(--brass-dark); }
 .wb-cr-reports { margin-top:6px; }
+/* #167 readability: the run brief on its own clamped line (a wordy brief can't break the window),
+   short knobs as chips, the balance read as a compact stat-grid + one chip per Tolerance flag. */
+.wb-cr-brief { margin-top:6px; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.wb-cr-brief .wb-lbl { margin-right:5px; }
+.wb-cr-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.wb-cr-chip { font-size:12px; padding:2px 9px; border-radius:12px; border:1px solid var(--brass-dark); background:rgba(255,255,255,.16); white-space:nowrap; }
+.wb-stats.compact { gap:6px; margin-top:6px; }
+.wb-stats.compact .wb-stat { flex:1 1 58px; padding:4px 8px; }
+.wb-stats.compact .wb-stat-v { font-size:14px; }
+.wb-cr-baltitle { margin-bottom:2px; }
+.wb-cr-flags { margin-top:6px; }
+.wb-cr-flaglist { display:flex; flex-wrap:wrap; gap:5px; margin-top:4px; }
+.wb-cr-flag { font-size:11px; padding:2px 8px; border-radius:10px; color:var(--copper); background:rgba(200,140,40,.16); border:1px solid var(--copper); }
+.wb-cr-inband { margin-top:5px; color:var(--forest); }
 .wb-anoms { display:flex; flex-direction:column; gap:6px; margin:2px 0 14px; }
 .wb-anom { display:flex; align-items:baseline; gap:8px; font-size:13px; padding:6px 10px; border:1px solid var(--brass-dark); border-radius:6px; background:rgba(255,255,255,.14); }
 .wb-anom-dot { flex:0 0 8px; width:8px; height:8px; border-radius:50%; margin-top:4px; }
@@ -792,6 +806,9 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
 .wb-auth-col { flex:0 0 150px; display:flex; flex-direction:column; align-items:flex-start; gap:5px; }
 .wb-auth-col .wb-auth-face { width:150px; }
 .wb-authored.has-findings .wb-auth-meta, .wb-authored.has-findings .wb-auth-note { max-width:none; text-align:left; }
+/* the author's rationale is secondary to the grader's findings — clamp it so it can't tower in
+   the narrow left column (full text on hover via its title attribute). */
+.wb-authored.has-findings .wb-auth-note { display:-webkit-box; -webkit-line-clamp:6; -webkit-box-orient:vertical; overflow:hidden; line-height:1.35; }
 .wb-auth-grade { flex:1 1 360px; min-width:280px; }
 .wb-findings { text-align:left; }
 .wb-fx-head { margin:0 0 6px; }
@@ -806,9 +823,22 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
 .wb-fx-axis { font-weight:600; font-size:12px; margin-bottom:1px; }
 .wb-fx-tag { font-size:9px; font-variant:small-caps; letter-spacing:.5px; padding:1px 6px;
   border-radius:9px; background:var(--copper); color:#fff; }
-.wb-fx-pos, .wb-fx-vel { margin:1px 0; line-height:1.3; }
+.wb-fx-pos, .wb-fx-vel { margin:1px 0; line-height:1.35; }
 .wb-fx-vel { color:var(--ink-soft); }
 .wb-fixpass { margin-top:5px; padding-top:4px; border-top:1px dotted var(--brass-dark); }
+/* Each axis is a collapsed teaser (progressive disclosure) — summary is a single scannable line
+   (tag + title + the Position lead), the essay reveals on expand, so the feed reads at a glance
+   instead of stacking walls of prose. */
+.wb-finding > .wb-fx-sum { cursor:pointer; list-style:none; display:flex; flex-wrap:wrap;
+  align-items:baseline; gap:6px 8px; padding:3px 0; }
+.wb-finding > .wb-fx-sum::-webkit-details-marker { display:none; }
+.wb-finding > .wb-fx-sum::before { content:'\25B8'; color:var(--copper); font-size:10px; align-self:center; }
+.wb-finding[open] > .wb-fx-sum::before { content:'\25BE'; }
+.wb-fx-sum .wb-fx-axis { margin-bottom:0; }
+.wb-fx-lead { flex:1 1 220px; font-size:12px; font-style:italic; color:var(--ink-soft); }
+.wb-finding[open] .wb-fx-lead { display:none; }             /* the lead is the teaser; hide once the full read is open */
+.wb-fx-body { margin:3px 0 6px 16px; }
+.wb-fx-sum:hover .wb-fx-axis { text-decoration:underline; }
 .wb-map-thumb { margin:4px 0; }
 .wb-map-thumb svg { display:block; width:100%; max-height:120px; }
 .wb-wrow { display:flex; justify-content:space-between; gap:8px; font-size:12px; padding:2px 0; }
