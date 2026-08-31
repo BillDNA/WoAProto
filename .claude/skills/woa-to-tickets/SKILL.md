@@ -72,6 +72,29 @@ For every line you would have written as a bare `- [ ] Criterion`, decide what i
    route it to the review, where the rubric reads it as an axis and asks *"do we approach
    this goal?"* (an aim, never a bounce). A goal carries no falsifier and no Target.
 
+### One AC line may be more than one criterion
+
+A criterion carries **exactly one falsifier kind** — but a single natural-language AC line
+often makes **two claims**, and then it becomes **two criteria, one per home** (not one
+criterion with two falsifiers, which is forbidden). The common shape is an
+**existence + fidelity** line: *"authored cards render **as cards**, not a JSON dump"* is a
+cheap mechanical claim (is it a JSON dump? → a `dev/smoke.js` existence red) **and** a
+fidelity claim (does it match the target? → a `dev/ui-review.js` blind-describe). Split it —
+the smoke red is red-at-base and cheap; the fidelity compare catches the missing polish. A
+line spanning **two surfaces** splits the same way: *"the input value **reaches the launched
+loop's config**, not just the DOM"* is a `dev/smoke.js` interaction (the DOM half jsdom can
+drive) plus a `game/test.js`/server assert (the value lands in the spawned config, which
+jsdom cannot see) — one criterion per surface, because each home observes only its own.
+
+### Strip the "who reviews it" clause — it is a `woa-implement` rail, not a falsifier
+
+A spec AC often carries a *process* rider — *"a **fresh QA** session loads a real run and
+sees cards, never the mock."* The **observable** (renders from a real run, matches the
+target) classifies normally as fidelity + logic. The *"fresh QA / never the implementer"*
+half is **not a falsifier kind** — it is `woa-implement`'s fresh-grader rail (who runs the
+review), owned downstream. Drop it from the criterion; do not hunt for a home for "fresh
+session" — it has none here, and trying to encode it invents one.
+
 The **anti-enumeration principle** governs all four (`docs/adr/0004`, Further Notes): bind
 to an oracle or a label, never to an up-front complete list — you always miss one. Never
 hand smoke an interaction checklist, never enumerate licensed test changes, never replace a
@@ -146,8 +169,9 @@ layer-by-layer implementation list.
   suite (ADR-0004 rejected "teeth in the wrappers").
 - Do not reject a non-falsifiable line — route it to a **goal**. The only rejections are the
   three named above.
-- Do not give a criterion more than one falsifier kind, and do not invent a falsifier home
-  outside the four; a missing home is a blocking foundation ticket, not a new home here.
+- Do not give a *single* criterion more than one falsifier kind (a two-claim AC line splits
+  into two criteria instead — see above), and do not invent a falsifier home outside the
+  four; a missing home is a blocking foundation ticket, not a new home here.
 - Do not attach a Target to a non-fidelity criterion or to a goal.
 - Do not fork or edit the mattpocock `to-tickets` skill; this wrapper restates its flow and
   replaces only the acceptance-criteria step.
