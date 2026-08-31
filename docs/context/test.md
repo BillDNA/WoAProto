@@ -36,3 +36,19 @@ escalation (a genuine upstream gap, or an off-by-one the test-writer must fix) *
 red* and only reassigns **who** clears it — a re-spawned test-writer for a pin, Bill by
 exception for an invariant — never **whether** it must clear.
 _Avoid_: bail-out, skip, override.
+
+## Invariant vs pin
+
+Every test is labelled **invariant** or **pin** (ADR-0004). The label — not the
+implementer's judgment — decides whether a red is a contract to honour or this era's
+behaviour to supersede.
+
+**Pin**:
+A test of this rules era's specific output. The default — a bare `test(...)` is a pin. **A
+pin moves atomically with a `RULES_VERSION` bump**; the deletion guard in
+`game/test.invariants.js` reds if a pin is deleted or `.skip`-ed without one.
+
+**Invariant**:
+A property that must hold every rules era. Sacred — changing one is a PR callout, not
+routine work. Declared with `invariant(category, name, fn)` and enumerated in the registry
+`game/test-registry.js`, which is the authority on the category set.
