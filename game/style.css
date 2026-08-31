@@ -759,12 +759,20 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
 .wb-band.bad { color:var(--red); }
 /* Fresh grader's rubric findings under an authored card (#166) — the subjective read (position +
    velocity prose per axis), deliberately distinct from the balance numbers. A graded card carries
-   a findings essay, so it takes its OWN row (flex-basis:100% breaks the wrap) at a comfortable
-   reading width — never crowded beside a bare neighbouring card — with the findings left-aligned
-   under the centred card face. */
-.wb-authored.has-findings { flex-basis:100%; max-width:560px; }
-.wb-findings { align-self:stretch; margin-top:4px; border-top:1px dashed var(--brass-dark);
-  padding-top:6px; text-align:left; }
+   a findings essay, so it becomes its OWN bordered PANEL on its own row (flex-basis:100% breaks
+   the wrap) at a comfortable reading width — the border groups the card + its grade as one unit so
+   there's no doubt which card the findings belong to, and everything left-aligns (face, meta, note,
+   findings) at one margin instead of a centred face over a squished note. */
+.wb-authored.has-findings { flex-basis:100%; max-width:600px; align-items:stretch;
+  border:1px solid var(--brass-dark); border-radius:10px; padding:10px 14px 12px;
+  background:rgba(255,255,255,.12); gap:6px; }
+.wb-authored.has-findings > .wb-act { align-self:flex-start; }
+/* keep the card face at its natural card width (align-items:stretch would blow it wide + break
+   the art aspect ratio) so it renders identically to a bare authored card. */
+.wb-authored.has-findings > .wb-auth-face { align-self:flex-start; width:128px; }
+.wb-authored.has-findings .wb-auth-meta, .wb-authored.has-findings .wb-auth-note { max-width:none; text-align:left; }
+.wb-findings { align-self:stretch; margin-top:6px; border-top:1px dashed var(--brass-dark);
+  padding-top:8px; text-align:left; }
 .wb-fx-head { margin:0 0 4px; }
 .wb-finding { margin:0 0 7px; padding-left:8px; border-left:3px solid var(--brass-dark); }
 .wb-finding.wb-setfit { border-left-color:var(--copper); background:rgba(184,115,51,.10);
