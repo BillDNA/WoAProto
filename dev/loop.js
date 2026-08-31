@@ -6,9 +6,9 @@
  *   1. draft/mutate a candidate deck        (dev/deckbuild.js draftSide — LLM or mock)
  *   2. sweep it vs the incumbent            (E.balanceMap over the map roster × a
  *                                            personality panel, folded with R.addAgg)
- *   3. score it against a Temperature       (#109 profile: R.foldPanel gate + balanceScore)
+ *   3. score it against a Tolerance         (#109 profile: R.foldPanel flags + balanceScore)
  *   4. adopt or reject vs the incumbent      (soft velocity + direction; deckPoints>72 = the
- *                                            ONE hard reject; Red%/1st% fairness hard-gated)
+ *                                            ONE hard reject; Red%/1st% balance drift only FLAGS)
  *   5. write each skirmish row with its real parent_id = the incumbent it was measured
  *      against (#110), so a trajectory chain exists in logs/woa.db.
  *
@@ -29,7 +29,7 @@
 var path = require('path');
 var E = require(path.join(__dirname, '..', 'game', 'engine.js'));
 var R = require(path.join(__dirname, '..', 'game', 'report-model.js'));
-var TEMPS = require(path.join(__dirname, '..', 'game', 'content', 'temperatures.js'));
+var TOL = require(path.join(__dirname, '..', 'game', 'content', 'tolerances.js'));
 var deckbuild = require(path.join(__dirname, 'deckbuild.js'));
 var db = require(path.join(__dirname, 'db.js'));
 
@@ -38,7 +38,7 @@ var db = require(path.join(__dirname, 'db.js'));
 function mapSeedBase(mi) { return (mi + 1) * 7919; }
 
 // Mean ideal-range balance score across the panel rows (LOWER = healthier games;
-// the shared R.balanceScore, temperature-independent by design — the velocity signal).
+// the shared R.balanceScore, tolerance-independent by design — the velocity signal).
 function panelScore(rows) {
   var s = 0;
   rows.forEach(function (r) { s += R.balanceScore(r.agg, r.done); });
@@ -77,7 +77,8 @@ function defaultSpecs(pool, iters) {
      iters    number of candidates to draft (default 6)
      n        skirmishes per map per personality (default 20)
      panel    AI personality names to sweep across (default ['hard'])
-     profile  a Temperature (object) or a profiles key (default 'card')
+     profile  a Tolerance (object) or a profiles key (default 'card')
+     temperature  author-boldness passthrough (opaque here; handed to the Author subagent, #164)
      maps     map roster (default E.mapPool())
      dbh      an open db handle (default: db.open() — writes to logs/woa.db)
      ask      LLM transport (prompt)->Promise<string>; null => deterministic mock drafts
@@ -96,10 +97,14 @@ async function runDeckLoop(opts) {
   var ask = opts.ask || null;
   var specs = opts.specs || defaultSpecs(pool, iters);
   var onStep = opts.onStep || function (s) { process.stdout.write('LOOP_STEP ' + JSON.stringify(s) + '\n'); };
-  // Resolve + validate the Temperature (throws on a fairness-loosening profile).
-  var profile = (typeof opts.profile === 'object' && opts.profile) || TEMPS.profiles[opts.profile || 'card'];
-  if (!profile) throw new Error('loop: unknown profile "' + opts.profile + '" — known: ' + Object.keys(TEMPS.profiles).join(', '));
-  TEMPS.validate(profile, profile.name);
+  // Resolve + validate the Tolerance (throws on a balance-loosening profile — a load-time
+  // schema guard on the profile shape, NOT a per-run reject; a measured drift only flags).
+  var profile = (typeof opts.profile === 'object' && opts.profile) || TOL.profiles[opts.profile || 'card'];
+  if (!profile) throw new Error('loop: unknown profile "' + opts.profile + '" — known: ' + Object.keys(TOL.profiles).join(', '));
+  TOL.validate(profile, profile.name);
+  // Author-boldness Temperature (#164) — opaque passthrough here; the Author subagent reads
+  // it. Carried on the run so the launch config that set it is recoverable downstream.
+  var temperature = opts.temperature != null ? opts.temperature : null;
 
   var dbh = opts.dbh || db.open();
   var ownsDb = !opts.dbh;
@@ -107,7 +112,7 @@ async function runDeckLoop(opts) {
     version: E.VERSION, kind: 'balance', redAi: panel.join('+'), blueAi: panel.join('+'),
     n: n, tool: 'loop.js', deck: 'loop',
     mapset: (E.activeMapset() && E.activeMapset().id) || 'all', seedBase: 7919,
-    notes: 'deck loop, profile ' + profile.name
+    notes: 'deck loop, tolerance ' + profile.name + (temperature != null ? ', temperature ' + temperature : '')
   });
 
   // Incumbent 0 = the active deck; give it a stable id for the chain's root.
@@ -138,13 +143,15 @@ async function runDeckLoop(opts) {
     var fold = R.foldPanel(swept.rows, profile);
     var velocity = incumbentScore - swept.score;    // >0 = candidate makes games healthier
 
-    // Adopt/reject: 72-pt cap is the one hard reject; fairness (Red%/1st%) hard-gated;
-    // otherwise SOFT — adopt on positive velocity in the right direction.
+    // Adopt/reject: 72-pt cap is the one hard reject; otherwise SOFT — adopt on positive
+    // velocity in the right direction. A Red%/1st% balance drift is a LOUD FLAG on the
+    // numbers (balanceFlags below), never a reject (#164/#162 §4.4) — it does not bounce a run.
+    var balanceFlags = fold.flag.members.map(function (f) { return f.label; });
     var verdict, reason;
     if (overCap) { verdict = 'reject'; reason = 'over the ' + E.DECK_POINTS_CAP + '-pt cap (' + deckPoints + ')'; }
-    else if (!fold.gate.pass) { verdict = 'reject'; reason = 'fairness gate (' + fold.gate.failures.map(function (f) { return f.label; }).join(', ') + ')'; }
     else if (velocity > 0) { verdict = 'adopt'; reason = 'healthier by ' + velocity.toFixed(2); }
     else { verdict = 'reject'; reason = 'no improvement (' + velocity.toFixed(2) + ')'; }
+    if (balanceFlags.length) reason += ' · balance flag: ' + balanceFlags.join(', ');
 
     var step = {
       iter: i, candidate: candidate.id, parent: parentId, fromMock: drafted.fromMock,
@@ -152,7 +159,10 @@ async function runDeckLoop(opts) {
       swept: i * panel.length * maps.length * n,
       deckPoints: deckPoints, score: Math.round(swept.score * 100) / 100,
       velocity: Math.round(velocity * 100) / 100,
-      gatePass: fold.gate.pass, overfit: fold.overfit.map(function (o) { return o.key; }),
+      // balanceInBand + balanceFlags surface the balance drift as a flag on the numbers
+      // (never a reject); overfit is the exploratory-band spread finding.
+      balanceInBand: fold.flag.inBand, balanceFlags: balanceFlags,
+      overfit: fold.overfit.map(function (o) { return o.key; }),
       verdict: verdict, reason: reason
     };
     onStep(step);
@@ -181,10 +191,12 @@ if (require.main === module) {
   // skirmish chain at an alternate file (tests isolate off the real logs/woa.db).
   var cap = +opt('--maps', 0) | 0;
   if (cap > 0) maps = maps.slice(0, cap);
-  // --profile accepts a profiles key OR an inline JSON Temperature object (the loop
+  // --profile accepts a profiles key OR an inline JSON Tolerance object (the loop
   // bridge forwards the operator's per-axis-edited profile as JSON, #154).
   var profArg = opt('--profile', 'card');
   var profile = /^\s*\{/.test(profArg) ? JSON.parse(profArg) : profArg;
+  // --temperature: the author-boldness passthrough (#164). Opaque here — carried on the run.
+  var temperature = opt('--temperature', null);
   var dbArg = opt('--db', null);
   var cliDbh = dbArg ? db.open(dbArg) : undefined;  // we opened it -> we close it (below)
   // --llm [model]: draft candidates with the REAL LLM transport instead of the mock.
@@ -209,6 +221,7 @@ if (require.main === module) {
     n: Math.max(2, +opt('--n', 20) | 0),
     panel: opt('--ai', 'hard').split(','),
     profile: profile,
+    temperature: temperature,
     dbh: cliDbh,
     maps: maps,
     ask: ask

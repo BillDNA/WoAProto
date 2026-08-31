@@ -12,8 +12,8 @@ more should count for more.
 There are two ways such a score could be defined:
 
 - **Descriptive** — points measure *capability*, and balance is still proven by
-  measured win-rate. Points are a cheap, static, simulation-free fairness
-  constraint you build under.
+  measured win-rate. Points are a cheap, static, simulation-free army-points
+  budget ceiling you build under.
 - **Predictive** — points are calibrated to *correlate with win-rate*, so a
   higher-pointed Deck should measurably win more.
 

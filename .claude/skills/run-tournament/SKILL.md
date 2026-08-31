@@ -40,7 +40,8 @@ findings meant to feed `create-card`/`create-map`).
      the whole personality panel instead of one matchup: `node game/balance.js
      panel 60 [card|map|ai]`. Runs the symmetric sweep once per maps.js `ai`
      personality, then folds worst-case per metric (never a mean): `Red%`/`1st%`
-     are hard-gated (a fairness FAIL is a reject); the loop-config profile's
+     are hard-flagged (a balance out-of-band is a loud FLAG on the numbers, never a
+     reject — #164); the loop-config profile's
      loosened metrics surface a per-archetype **overfit finding** — the member the
      candidate breaks against, plus the spread. Read it against
      `docs/rubrics/personality-rubric.md` (a finding, not a score); a wide spread

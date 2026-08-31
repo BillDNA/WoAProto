@@ -204,10 +204,10 @@ const QUESTIONNAIRE=[
   {id:'reflex',text:'Where were your plays real choices vs. reflex / only-legal-move?'},
   {id:'arc',text:'Name the turn the game tipped, if it did.'},
   {id:'blind',text:'Anything the AI seemed to miss that you could see? (blind-spot flag)'}];
-/* The #94 default Temperature profiles, keyed by loop type — the Plan phase pre-loads
-   the one for the chosen loop (Track A of #108). SOT is game/content/temperatures.js;
+/* The #94 default Tolerance profiles, keyed by loop type — the Plan phase pre-loads
+   the one for the chosen loop (Track A of #108). SOT is game/content/tolerances.js;
    mirrored here because this proto is a classic-script mock with no require(). Red%/1st%
-   stay hold (hard-gated); loosened cells default nudge. */
+   stay hold (hard-flagged, a loud flag never a reject); loosened cells default nudge. */
 const LOOP_PROFILES={
   card:{hq:'nudge',zeroKill:'nudge',drag:'nudge',swings:'nudge'},
   map:{hq:'nudge',zeroKill:'nudge',tie:'nudge',drag:'nudge',control:'nudge'},

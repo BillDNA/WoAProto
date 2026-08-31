@@ -1,6 +1,6 @@
 /* War of Attrition — loop-config: the data-defined debrief questionnaire (#85, Track E
    of the #108 build order). Loop-config, NOT a content kind — it sits beside
-   content/kinds.js and content/temperatures.js but is not in the manifest (no skirmish
+   content/kinds.js and content/tolerances.js but is not in the manifest (no skirmish
    reads it). dev/claude-plays.js concatenates the active questions into the ONE
    journal-fed debrief it runs after every skirmish, in both single and match modes.
 

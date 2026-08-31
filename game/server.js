@@ -76,9 +76,11 @@ function startLoop(cfg) {
   var args = [path.join(ROOT, '..', 'dev', 'loop.js'),
     '--iters', String(iters), '--n', String(n),
     '--ai', (cfg.panel && cfg.panel.length ? cfg.panel : ['hard']).join(','),
-    // profile may be an edited Temperature object — forward it as inline JSON (loop.js parses it)
+    // profile may be an edited Tolerance object — forward it as inline JSON (loop.js parses it)
     '--profile', typeof cfg.profile === 'object' && cfg.profile ? JSON.stringify(cfg.profile) : String(cfg.profile || 'card'),
     '--mapset', String(cfg.mapset || 'all')];
+  // #164: forward the author-boldness Temperature (a plain passthrough) so the run records it.
+  if (cfg.temperature != null && cfg.temperature !== '') args.push('--temperature', String(cfg.temperature));
   if (cfg.maps) args.push('--maps', String(cfg.maps | 0));  // test lever: cap the roster
   if (cfg.db) args.push('--db', String(cfg.db));            // test lever: isolate the db
   loopStatus = { loopType: cfg.loopType || 'card', state: 'running', iter: 0, iters: iters, swept: 0, best: null, steps: [] };

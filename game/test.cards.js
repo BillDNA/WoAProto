@@ -221,14 +221,14 @@ test('army-points calibration pass (#82/#114: classify → class signal → cap-
   assert.ok(!domRes.moves.some(function (m) { return m.lever === 'step.barrage'; }),
     'Q drives ~98% of the w·resid signal (though only ~half the hqWins) → single-card domination, NO move (guard reads the signal, not head-count)');
 
-  // ---- accept gate: SOFT velocity + direction within the Temperature (#109) ----
-  var TEMP = require('./content/temperatures.js');
+  // ---- accept move: SOFT velocity + direction within the Tolerance (#109) ----
+  var TEMP = require('./content/tolerances.js');
   assert.ok(R.acceptMove(1, null) === 0.5 && R.acceptMove(-1, null) === -0.5,
-    'null temperature → one nudge (±0.5); sign = direction');
+    'null tolerance → one nudge (±0.5); sign = direction');
   // Profiles are SPARSE (holds omitted): heat = loosened / 8 loosenable axes, so velocity really varies.
   assert.ok(R.acceptMove(1, TEMP.profiles.card) === 0.75, 'Card profile (4/8 axes loosened → heat 0.5) → 0.75');
-  assert.ok(R.acceptMove(1, TEMP.profiles.map) === 0.8125, 'Map profile (5/8 loosened → heat 0.625) → 0.8125 (a broader temperature steps bigger)');
-  assert.ok(R.acceptMove(1, { name: 'Hold', step: 'x', tolerances: {} }) === 0.5, 'a hold-only profile → base nudge (0.5), no scale-up');
+  assert.ok(R.acceptMove(1, TEMP.profiles.map) === 0.8125, 'Map profile (5/8 loosened → heat 0.625) → 0.8125 (a broader tolerance steps bigger)');
+  assert.ok(R.acceptMove(1, { name: 'Hold', tolerances: {} }) === 0.5, 'a hold-only profile → base nudge (0.5), no scale-up');
 
   // ---- lower moves floor at weight 0 (a negative POINTS weight is nonsensical) ----
   // A lower move comes from Strictly-Dominated cards (negative resid AND shunned across phases).
@@ -241,14 +241,14 @@ test('army-points calibration pass (#82/#114: classify → class signal → cap-
   var lowRes = R.calibratePoints({ rows: lowRows,
     aggById: { L1: shunned, L2: shunned }, octilesById: { L1: lateOctile, L2: lateOctile },
     cardsById: { L1: { steps: [{ type: 'reposition' }] }, L2: { steps: [{ type: 'reposition' }] } },
-    temperature: TEMP.profiles.map, weightOf: function () { return 0.3; } });  // reposition-like weight 0.3
+    tolerance: TEMP.profiles.map, weightOf: function () { return 0.3; } });  // reposition-like weight 0.3
   var lower = lowRes.moves.filter(function (m) { return m.lever === 'step.reposition'; })[0];
   assert.ok(lower && lower.delta === -0.3, 'a lower move clamps to −weight (0.3) so the weight floors at 0, never negative');
 
   // ---- deckPoints ≤ cap is the ONE hard gate: positive moves clamp to headroom ----
   var capHeadroom = function (lever) { return R.pointsHeadroom(E.DECKS, lever, E.deckPoints, E.DECK_POINTS_CAP); };
   var capped = R.calibratePoints({ rows: rows, aggById: aggById, cardsById: cardsById,
-    temperature: TEMP.profiles.card, capHeadroom: capHeadroom });
+    tolerance: TEMP.profiles.card, capHeadroom: capHeadroom });
   capped.moves.forEach(function (m) {
     if (m.delta <= 0) return;
     E.DECKS.forEach(function (d) {

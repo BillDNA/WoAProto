@@ -249,14 +249,14 @@ function mapReport(n, diff, filter, maps, mapsetArg, decks) {
 /* ---------------- panel mode: score a candidate across the personality panel ----
    Runs the symmetric map sweep ONCE per personality (the maps.js "ai" rows), folds
    each personality's maps into one aggregate, and hands the set to R.foldPanel:
-   worst-case per metric, Red%/1st% hard-gated, the rest surfaced as an overfit
+   worst-case per metric, Red%/1st% hard-flagged, the rest surfaced as an overfit
    spread (no mean). Read-only — no DB write, no second fold. See #101/#115 and
    docs/rubrics/personality-rubric.md. `kind` (card|map|ai) picks the loop-config
-   Temperature profile that says which metrics are exploratory. */
+   Tolerance profile that says which metrics are exploratory. */
 function panelReport(n, kind, maps, mapsetArg, decks) {
   var probs = E.validateMaps(maps);
   if (probs.length) { console.log('Fix these first:\n  ' + probs.join('\n  ')); return; }
-  var TEMPS = require('./content/temperatures.js');
+  var TEMPS = require('./content/tolerances.js');
   var profile = TEMPS.profiles[kind];
   if (!profile) { console.log('Unknown loop kind "' + kind + '". Known: ' + Object.keys(TEMPS.profiles).join(', ')); process.exit(1); }
   // The panel = every maps.js "ai" personality (built-in easy/normal/hard excluded).
@@ -280,7 +280,7 @@ function panelReport(n, kind, maps, mapsetArg, decks) {
   var M = panelFold.metrics;
 
   // Per-archetype profile: every metric read per personality, worst-case marked (*),
-  // never averaged. Exploratory metrics carry their loosened band; fairness the ruler.
+  // never averaged. Exploratory metrics carry their loosened band; balance the ruler.
   var LW = 16;   // widest BANDS label ('First-blood→win') so long guard rows align
   var header = pad('Metric', LW, true) + pad('band', 12, true) +
     panel.map(function (name) { return pad(name.slice(0, 8), 9); }).join('') + pad('spread', 8) + '  ';
@@ -290,11 +290,11 @@ function panelReport(n, kind, maps, mapsetArg, decks) {
   R.BANDS.forEach(function (b) {
     var m = M[b.key];
     if (!m) return;
-    // Only gated (fairness) and exploratory (loosened) metrics can '*' a member —
+    // Only flagged (balance) and exploratory (loosened) metrics can '*' a member —
     // a held/guard metric being out of band is often the personality's intended
     // character (a brawler SHOULD run high Attack%), so starring it would warn on
     // exactly what the panel wants distinct.
-    var actionable = m.gated || m.grace !== 'hold';
+    var actionable = m.flagged || m.grace !== 'hold';
     var band = edge(m.lo) + '–' + edge(m.hi);
     var line = pad(b.label, LW, true) + pad(band, 12, true);
     panel.forEach(function (name) {
@@ -303,18 +303,18 @@ function panelReport(n, kind, maps, mapsetArg, decks) {
       line += pad(cell, 9);
     });
     line += pad(Math.round(m.spread * 10) / 10, 8) + '  ' +
-      (m.gated ? 'GATE' : m.grace !== 'hold' ? m.grace : '');
+      (m.flagged ? 'FLAG' : m.grace !== 'hold' ? m.grace : '');
     console.log(line);
   });
-  console.log('\n(* = worst-case member, out of a GATED or EXPLORATORY band. Mean is never');
+  console.log('\n(* = worst-case member, out of a FLAGGED or EXPLORATORY band. Mean is never');
   console.log(' taken — a candidate that beats the panel on average can still fall to one');
   console.log(' personality. Held/guard rows are shown for the full profile, never starred.)');
 
-  // Fairness hard-gate (Red%/1st%): the only reject.
-  console.log('\nFairness gate (Red%/1st%, hard): ' + (panelFold.gate.pass ? 'PASS' : 'FAIL'));
-  panelFold.gate.failures.forEach(function (f) {
-    console.log('  ✗ ' + f.label + ' hits ' + (Math.round(f.val * 10) / 10) + ' vs ' + f.name +
-      ' (band ' + f.lo + '–' + f.hi + ') — side/first-player fairness broken, not exploration.');
+  // Balance flag (Red%/1st%): a loud flag on the numbers, never a reject.
+  console.log('\nBalance (Red%/1st%): ' + (panelFold.flag.inBand ? 'IN BAND' : 'FLAGGED'));
+  panelFold.flag.members.forEach(function (f) {
+    console.log('  ⚑ ' + f.label + ' hits ' + (Math.round(f.val * 10) / 10) + ' vs ' + f.name +
+      ' (band ' + f.lo + '–' + f.hi + ') — side/first-player balance broken, not exploration.');
   });
 
   // Overfit finding (read-only, no pin): exploratory metrics the panel punishes.

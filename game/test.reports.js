@@ -593,23 +593,24 @@ test('chart-model: buildUnitsModel + unLinearDomain/unPos (Units pane)', () => {
 })();
 });
 
-test('loop-config: temperature profiles parse + hard-gate Red%/1st%', () => {
+test('loop-config: tolerance profiles parse + hard-flag Red%/1st%', () => {
 (function () {
   var R = require('./report-model.js');
-  var T = require('./content/temperatures.js');   // load asserts on its own; requiring proves it parses
+  var T = require('./content/tolerances.js');   // load asserts on its own; requiring proves it parses
 
-  // the three #94 default profiles exist, each a { name, step, tolerances } object
+  // the three #94 default profiles exist, each a { name, tolerances } object (no dead step field)
   ['card', 'map', 'ai'].forEach(function (k) {
     var p = T.profiles[k];
-    assert.ok(p && p.name && p.step && p.tolerances, 'profile "' + k + '" is a {name, step, tolerances} object');
+    assert.ok(p && p.name && p.tolerances, 'profile "' + k + '" is a {name, tolerances} object');
+    assert.ok(!('step' in p), 'profile "' + k + '" carries no dead step field (#164)');
     // every loosened key is a real BANDS metric with a valid grace class
     Object.keys(p.tolerances).forEach(function (m) {
       assert.ok(R.BANDS.some(function (b) { return b.key === m; }), k + '.tolerances.' + m + ' is a BANDS key');
       assert.ok(T.GRACE.indexOf(p.tolerances[m]) >= 0, k + '.tolerances.' + m + ' has a valid grace');
     });
-    // Red%/1st% are hard-gated: absent (⇒ hold) or explicitly hold, never loosened
-    T.HARD_GATED.forEach(function (g) {
-      assert.ok(!(g in p.tolerances) || p.tolerances[g] === 'hold', k + ' does not loosen hard-gated ' + g + '%');
+    // Red%/1st% are always locked flags: absent (⇒ hold) or explicitly hold, never loosened
+    T.HARD_FLAGGED.forEach(function (g) {
+      assert.ok(!(g in p.tolerances) || p.tolerances[g] === 'hold', k + ' does not loosen locked-flag ' + g + '%');
     });
   });
   // #94 mapping spot-checks (loosened cells default nudge)
@@ -617,27 +618,27 @@ test('loop-config: temperature profiles parse + hard-gate Red%/1st%', () => {
   assert.ok(T.profiles.map.tolerances.tie === 'nudge' && !('swings' in T.profiles.map.tolerances), 'Map loosens Tie%, not Swings');
   assert.ok(T.profiles.ai.tolerances.control === 'nudge' && !('zeroKill' in T.profiles.ai.tolerances), 'AI loosens Control%, not 0kill%');
 
-  // the exported load gate (same code the defaults pass) rejects loosening a hard-gated metric
-  assert.throws(function () { T.validate({ name: 'X', step: 'card', tolerances: { first: 'nudge' } }); },
-    /hard-gated/, 'the schema gate rejects loosening 1st% (default mode)');
-  assert.throws(function () { T.validate({ name: 'X', step: 'card', tolerances: { red: 'nudge' } }); },
-    /hard-gated/, 'the schema gate rejects loosening Red% in default mode');
-  assert.throws(function () { T.validate({ name: 'X', step: 'card', tolerances: { hq: 'wat' } }); },
+  // the exported load gate (same code the defaults pass) rejects loosening a locked-flag metric
+  assert.throws(function () { T.validate({ name: 'X', tolerances: { first: 'nudge' } }); },
+    /locked flag/, 'the schema gate rejects loosening 1st% (default mode)');
+  assert.throws(function () { T.validate({ name: 'X', tolerances: { red: 'nudge' } }); },
+    /locked flag/, 'the schema gate rejects loosening Red% in default mode');
+  assert.throws(function () { T.validate({ name: 'X', tolerances: { hq: 'wat' } }); },
     /unknown grace/, 'the schema gate rejects an unknown grace class');
-  assert.throws(function () { T.validate({ name: 'X', step: 'card', tolerances: { hqq: 'nudge' } }); },
+  assert.throws(function () { T.validate({ name: 'X', tolerances: { hqq: 'nudge' } }); },
     /not a band metric key/, 'the schema gate rejects a typo\'d metric key');
-  assert.ok(T.validate({ name: 'Asym', step: 'card', tolerances: { red: 'hold', hq: 'nudge' } }), 'a valid custom profile passes the gate');
+  assert.ok(T.validate({ name: 'Asym', tolerances: { red: 'hold', hq: 'nudge' } }), 'a valid custom profile passes the gate');
   // Red% is the ONE manual-loosen for asymmetric runs; 1st% is never loosenable
-  assert.ok(T.validate({ name: 'Asym', step: 'card', tolerances: { red: 'nudge' } }, null, { asymmetric: true }), 'opts.asymmetric permits the manual Red% loosen');
-  assert.throws(function () { T.validate({ name: 'Asym', step: 'card', tolerances: { first: 'nudge' } }, null, { asymmetric: true }); },
-    /hard-gated/, '1st% stays gated even in asymmetric mode');
+  assert.ok(T.validate({ name: 'Asym', tolerances: { red: 'nudge' } }, null, { asymmetric: true }), 'opts.asymmetric permits the manual Red% loosen');
+  assert.throws(function () { T.validate({ name: 'Asym', tolerances: { first: 'nudge' } }, null, { asymmetric: true }); },
+    /locked flag/, '1st% stays a locked flag even in asymmetric mode');
 })();
 });
 
-test('report-model: foldPanel takes worst-case per metric (never a mean), fairness hard-gated', () => {
+test('report-model: foldPanel takes worst-case per metric (never a mean), balance hard-flagged', () => {
 (function () {
   var R = require('./report-model.js');
-  var TEMPS = require('./content/temperatures.js');
+  var TEMPS = require('./content/tolerances.js');
   // Synthetic panel — three "personalities", done=100 so redWins etc. read as %.
   // attritionEndings/controlGames left 0 so tie/drag/control fall out (null) — a
   // smoke-check of the fold, not a pinned sweep.
@@ -650,32 +651,32 @@ test('report-model: foldPanel takes worst-case per metric (never a mean), fairne
   var rows = [row('A', 30, 50, 5), row('B', 55, 50, 60), row('C', 50, 50, 20)];
   var pf = R.foldPanel(rows, TEMPS.profiles.card);   // card loosens hq → nudge
 
-  assert.ok(!pf.gate.pass, 'fairness gate FAILS on the worst member even though the Red% mean is in band');
-  var redFail = pf.gate.failures.filter(function (f) { return f.key === 'red'; })[0];
-  assert.ok(redFail && redFail.name === 'A' && redFail.val === 30, 'the gate names member A (Red% 30), the worst case — not the 45 mean');
-  assert.ok(!pf.gate.failures.some(function (f) { return f.key === 'first'; }), '1st% (all 50, in band) does not fail');
+  assert.ok(!pf.flag.inBand, 'balance flag raised on the worst member even though the Red% mean is in band');
+  var redFail = pf.flag.members.filter(function (f) { return f.key === 'red'; })[0];
+  assert.ok(redFail && redFail.name === 'A' && redFail.val === 30, 'the flag names member A (Red% 30), the worst case — not the 45 mean');
+  assert.ok(!pf.flag.members.some(function (f) { return f.key === 'first'; }), '1st% (all 50, in band) does not flag');
 
-  assert.ok(pf.metrics.red.gated && !pf.metrics.hq.gated, 'red/first are gated; hq is exploratory');
+  assert.ok(pf.metrics.red.flagged && !pf.metrics.hq.flagged, 'red/first are hard-flagged; hq is exploratory');
   assert.strictEqual(pf.metrics.hq.grace, 'nudge', 'hq carries the loosened (nudge) grace from the card profile');
   // hq nudge band = 10±? → 4–46 (0.2 × 30 width); member B at 60 breaks it.
   var hqOver = pf.overfit.filter(function (o) { return o.key === 'hq'; })[0];
   assert.ok(hqOver && hqOver.name === 'B', 'overfit finding surfaces hq breaking against member B');
   assert.strictEqual(pf.metrics.hq.spread, 55, 'hq spread is max−min (60−5), the "no two members share a read" signal');
-  assert.ok(!pf.overfit.some(function (o) { return o.key === 'red' || o.key === 'first'; }), 'fairness never appears as an overfit finding (it is a gate, not a spread)');
+  assert.ok(!pf.overfit.some(function (o) { return o.key === 'red' || o.key === 'first'; }), 'balance never appears as an overfit finding (it is a flag, not a spread)');
 
   // An all-fair panel with hq in its loosened band passes clean.
   var clean = R.foldPanel([row('A', 50, 50, 20), row('B', 48, 52, 25), row('C', 52, 49, 15)], TEMPS.profiles.card);
-  assert.ok(clean.gate.pass && !clean.overfit.length, 'a fair, in-band panel passes with no overfit finding');
+  assert.ok(clean.flag.inBand && !clean.overfit.length, 'a fair, in-band panel passes with no overfit finding');
 
   // Two-sided break: A below the floor (30), B above the ceiling (72). BOTH named —
-  // reporting only the single worst would hide half the fairness break.
+  // reporting only the single worst would hide half the balance break.
   var twoSided = R.foldPanel([row('A', 30, 50, 20), row('B', 72, 50, 20)], TEMPS.profiles.card);
-  var redFails = twoSided.gate.failures.filter(function (f) { return f.key === 'red'; }).map(function (f) { return f.name; });
+  var redFails = twoSided.flag.members.filter(function (f) { return f.key === 'red'; }).map(function (f) { return f.name; });
   assert.ok(redFails.indexOf('A') >= 0 && redFails.indexOf('B') >= 0, 'both opposite-direction Red% breaks (A low, B high) are named');
 
   // A personality with no finished games (done=0) is dropped, not read as a real 0%.
   var withDead = R.foldPanel([row('A', 50, 50, 20), { name: 'dead', done: 0, agg: {} }], TEMPS.profiles.card);
-  assert.ok(withDead.gate.pass, 'a done=0 personality is dropped (no data), not a fabricated 0% fairness FAIL');
+  assert.ok(withDead.flag.inBand, 'a done=0 personality is dropped (no data), not a fabricated 0% balance flag');
   assert.ok(!withDead.metrics.red.samples.some(function (s) { return s.name === 'dead'; }), 'the no-data personality contributes no samples');
 })();
 });

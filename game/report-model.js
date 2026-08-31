@@ -11,8 +11,8 @@
                                T0/T1/T2 alias hold/nudge/bold). RANGES = per-axis ±.
    - balanceScore(agg, done)   balance-quality score, LOWER = better (folds BANDS)
    - foldPanel(rows, profile)  score a candidate across the personality panel —
-                               worst-case per metric, fairness hard-gated, overfit
-                               spread (no mean); one level above foldGlobal
+                               worst-case per metric, balance (Red%/1st%) hard-flagged,
+                               overfit spread (no mean); one level above foldGlobal
    - mapNotes(agg, done)       health-flag strings for one map's aggregate
    - addAgg(dst, src)          fold one balanceMap aggregate into another
    - foldGlobal(rows)          [{agg, done}] -> G totals (incl. G.cards)
@@ -137,7 +137,7 @@ var WOA_REPORT = (function () {
   /* Balance-quality score (LOWER = better, 0 = ideal) — the "best map" ideal-range
      rubric (SOT: docs/balance/best-map-score.md). Sums the feedsScore rows of the
      ONE band table above; attrition-only maps (HQ% < 10) are penalised. T0 bands
-     only — the score is temperature-independent by design. */
+     only — the score is tolerance-independent by design. */
   function balanceScore(agg, done) {
     var s = 0;
     BANDS.forEach(function (b) { if (b.feedsScore) s += outBand(b.val(agg, done), b.lo, b.hi, b.weight); });
@@ -147,24 +147,24 @@ var WOA_REPORT = (function () {
   /* Panel fold — score ONE content candidate across the whole personality panel
      (#101/#115). `rows` = [{name, agg, done}], one per personality (each agg the
      addAgg fold of that personality's symmetric mapReport sweep — no second fold,
-     one nesting level above foldGlobal). `profile` = a loop-config Temperature
+     one nesting level above foldGlobal). `profile` = a loop-config Tolerance
      ({tolerances:{key:grace}}); loosened cells (grace ≠ hold) are EXPLORATORY,
      read-only. Rule: WORST-CASE per metric (the panel leaves nowhere to hide) —
-     a mean would hide overfit, so it is never taken. Fairness (Red%/1st%) is the
-     ONLY hard gate, always at the fixed `hold` ruler; every other metric is
+     a mean would hide overfit, so it is never taken. Balance (Red%/1st%) is the
+     ONLY hard flag, always at the fixed `hold` ruler; every other metric is
      surfaced (worst member + spread) as the per-archetype overfit finding, never
      rejected. See docs/rubrics/personality-rubric.md. */
-  var PANEL_GATE = ['red', 'first'];
+  var PANEL_FLAG = ['red', 'first'];
   function foldPanel(rows, profile) {
     var tol = (profile && profile.tolerances) || {};
     var metrics = {};
     BANDS.forEach(function (b) {
-      var gated = PANEL_GATE.indexOf(b.key) >= 0;
-      var grace = gated ? 'hold' : (tol[b.key] || 'hold');   // fairness never loosens
+      var flagged = PANEL_FLAG.indexOf(b.key) >= 0;
+      var grace = flagged ? 'hold' : (tol[b.key] || 'hold');   // balance never loosens
       var eff = bands(b.key, grace);
       var samples = rows.map(function (r) {
           // done=0 = a personality with no finished games — no data, not a real 0%
-          // (pct's 0-denominator returns 0). Drop it to null so it can't trip a gate.
+          // (pct's 0-denominator returns 0). Drop it to null so it can't trip a flag.
           var v = r.done ? b.val(r.agg, r.done) : null;
           return { name: r.name, val: v, out: v == null ? 0 : outBand(v, eff.lo, eff.hi, 1) };
         }).filter(function (s) { return s.val != null; });
@@ -175,32 +175,34 @@ var WOA_REPORT = (function () {
         return (s.out > m.out || (s.out === m.out && s.val > m.val)) ? s : m; }, samples[0]);
       var vals = samples.map(function (s) { return s.val; });
       var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
-      metrics[b.key] = { key: b.key, label: b.label, grace: grace, gated: gated,
+      metrics[b.key] = { key: b.key, label: b.label, grace: grace, flagged: flagged,
         lo: eff.lo, hi: eff.hi, feedsScore: b.feedsScore,
         samples: samples, worst: worst, min: min, max: max, spread: max - min };
     });
-    // Hard gate: fairness only. Names EVERY out-of-band member, not just the worst —
+    // Balance flag: Red%/1st% only. Names EVERY out-of-band member, not just the worst —
     // a candidate can break the two-sided band on opposite sides against two
     // personalities (one below the floor, one above the ceiling), and both matter.
-    var failures = [];
-    PANEL_GATE.forEach(function (k) {
+    // A loud flag on the numbers, never a reject (#164).
+    var members = [];
+    PANEL_FLAG.forEach(function (k) {
       var m = metrics[k];
       if (!m) return;
       m.samples.forEach(function (s) {
-        if (s.out > 0) failures.push({ key: k, label: m.label, name: s.name, val: s.val, lo: m.lo, hi: m.hi });
+        if (s.out > 0) members.push({ key: k, label: m.label, name: s.name, val: s.val, lo: m.lo, hi: m.hi });
       });
     });
     // Overfit lens: the EXPLORATORY (loosened) Tolerances only — the axes the loop
     // is iterating — whose worst member breaks its loosened band. That is the style
     // the candidate does not survive; spread rides along as the "no two members fall
     // to the same read" signal. Held/guard metrics stay off it (they aren't being
-    // explored), fairness stays off it (it's a gate). Read-only, never a gate.
+    // explored), balance stays off it (it's a flag). Read-only, never a gate.
     var overfit = [];
     Object.keys(tol).forEach(function (k) {
       var m = metrics[k];
-      if (m && !m.gated && m.worst.out > 0) overfit.push({ key: k, label: m.label, name: m.worst.name, val: m.worst.val, lo: m.lo, hi: m.hi, spread: m.spread });
+      if (m && !m.flagged && m.worst.out > 0) overfit.push({ key: k, label: m.label, name: m.worst.name, val: m.worst.val, lo: m.lo, hi: m.hi, spread: m.spread });
     });
-    return { metrics: metrics, gate: { pass: failures.length === 0, failures: failures }, overfit: overfit };
+    // `flag.inBand` = no balance member out of band; `flag.members` names each that is.
+    return { metrics: metrics, flag: { inBand: members.length === 0, members: members }, overfit: overfit };
   }
 
   /* Per-map health flags — the 62/38/8/55/20 thresholds every report quotes.
@@ -524,7 +526,7 @@ var WOA_REPORT = (function () {
          dominating the class's contribution); SINGLE-card domination is a REDESIGN flag,
          never a weight move (prune the card, don't distort the price table);
        • `deckPoints ≤ cap` is the one HARD gate — positive moves clamp to cap headroom;
-         the Temperature (#109) supplies only SOFT velocity + direction, never a reject.
+         the Tolerance (#109) supplies only SOFT velocity + direction, never a reject.
      Engine-global-free like cardRows: the caller passes cardPoints/deckPoints facts in. */
   var CALIB = {
     resid: MISPRICE_RESID_PTS,   // |resid| (pts) for a Card to read mispriced (reuse the #57 anchor)
@@ -532,10 +534,10 @@ var WOA_REPORT = (function () {
     classSignal: MISPRICE_RESID_PTS, // contribution-weighted |resid| (pts) a class needs to justify a move
     minClassCards: 2,            // a class needs ≥ this many classified cards to move (else single-card ⇒ flag)
     soloShare: 0.6,              // one card > this share of a class's contribution ⇒ single-card domination (flag, no move)
-    stepPts: 0.5                 // base weight-move magnitude (one nudge); Temperature scales it up
+    stepPts: 0.5                 // base weight-move magnitude (one nudge); Tolerance scales it up
   };
-  // The loosenable axes a Temperature can widen (the scored feedsScore bands; Red%/1st% are
-  // among them but hard-gated). The accept-gate "heat" is the fraction of THESE a profile
+  // The loosenable axes a Tolerance can widen (the scored feedsScore bands; Red%/1st% are
+  // among them but locked flags). The accept "heat" is the fraction of THESE a profile
   // loosens — the denominator must be the full set, not the profile's own (sparse) key list.
   var LOOSENABLE_AXES = BANDS.filter(function (b) { return b.feedsScore; }).length;
 
@@ -635,13 +637,13 @@ var WOA_REPORT = (function () {
     return h === Infinity ? Infinity : Math.max(0, h);
   }
 
-  /* Accept gate — SOFT velocity + direction within a Temperature (#109). Direction is the
+  /* Accept move — SOFT velocity + direction within a Tolerance (#109). Direction is the
      signal's sign; magnitude is one nudge (CALIB.stepPts) scaled up by the profile's "heat"
-     (fraction of loosened, non-hold tolerances) — a broadly-loosened Exploration temperature
+     (fraction of loosened, non-hold tolerances) — a broadly-loosened Exploration tolerance
      steps bigger. Soft by construction: it only sizes a move, it never rejects (the cap does
-     that). null temperature ⇒ heat 0 ⇒ one nudge. Returns the signed magnitude. */
-  function acceptMove(dir, temperature) {
-    var tol = (temperature && temperature.tolerances) || {};
+     that). null tolerance ⇒ heat 0 ⇒ one nudge. Returns the signed magnitude. */
+  function acceptMove(dir, tolerance) {
+    var tol = (tolerance && tolerance.tolerances) || {};
     // Profiles are SPARSE (holds omitted), so "heat" = loosened axes / all loosenable axes,
     // NOT / the profile's own key count (that would read 1.0 for every real profile).
     var loosened = Object.keys(tol).filter(function (k) { return tol[k] && tol[k] !== 'hold'; }).length;
@@ -655,7 +657,7 @@ var WOA_REPORT = (function () {
        aggById     — cardAggFromEnvelopes(...) (carries declines / appears per card)
        octilesById — {cardId: 8-count phase array} (folded cardDeclineByOctile), optional
        cardsById   — {cardId: card} (for cardLevers); defaults to deriving from rows if absent
-       temperature — a #109 profile (soft velocity + direction), optional
+       tolerance   — a #109 profile (soft velocity + direction), optional
        capHeadroom — fn(lever) → max positive Δ before the cap (from pointsHeadroom), optional
        weightOf    — fn(lever) → the lever's current POINTS weight, so a `lower` move floors at
                      weight 0 (a negative weight is nonsensical); optional
@@ -686,7 +688,7 @@ var WOA_REPORT = (function () {
       if (Math.abs(s.weightedResid) < CALIB.classSignal) return;      // not a strong enough class lean
       if (s.cards < CALIB.minClassCards || s.topShare > CALIB.soloShare) return; // single-card domination ⇒ flag only
       // resid > 0 = class UNDER-priced (out-wins its price) ⇒ raise the weight; resid < 0 ⇒ lower it.
-      var delta = acceptMove(s.weightedResid > 0 ? 1 : -1, opts.temperature);
+      var delta = acceptMove(s.weightedResid > 0 ? 1 : -1, opts.tolerance);
       if (delta > 0 && opts.capHeadroom) {
         var room = opts.capHeadroom(lever);
         if (room <= 0) return;                                        // no cap headroom ⇒ no move (hard gate)
