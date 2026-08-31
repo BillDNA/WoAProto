@@ -2,35 +2,30 @@
    game/test.js delegates here; run alone with `node game/test.ui.js` or the whole
    gate with `node game/test.js`.
 
-   Proves the role-keyed roster in docs/context/ui.md is a COMPLETE census of the
+   Proves the role-keyed ROSTER in game/ui-glossary.js is a COMPLETE census of the
    front-end's rendering primitives (green today) AND that the scan that guards it is
    not a hollow oracle: it detects an unregistered factory of EVERY definitional form
-   the codebase uses, not just the one the happy path matches. */
+   the codebase uses, not just the one the happy path matches. A last test keeps the
+   shared vocabulary in docs/context/ui.md from drifting off the code it names. */
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
 const glossary = require('./ui-glossary.js');
 const fs = require('fs');
-const path = require('path');
-
-const rosterText = fs.readFileSync(path.join(__dirname, '..', 'docs', 'context', 'ui.md'), 'utf8');
 
 test('ui-glossary: the four base primitives are each a registered role', () => {
-  const { roles } = glossary.parseRoster(rosterText);
-  const ids = new Set(roles.map(r => r.id));
-  // AC1: the one card face, the chart-primitive builders + shared design-token object,
-  // and the SVG element factory each appear as a registered role.
+  const ids = new Set(glossary.ROSTER.roles.map(r => r.id));
   for (const id of ['card-face', 'chart-builders', 'design-tokens', 'svg-factory']) {
-    assert.ok(ids.has(id), 'roster registers the "' + id + '" role');
+    assert.ok(ids.has(id), 'ROSTER registers the "' + id + '" role');
   }
-  assert.ok(roles.some(r => r.id === 'design-tokens' && r.form === 'obj'),
+  assert.ok(glossary.ROSTER.roles.some(r => r.id === 'design-tokens' && r.form === 'obj'),
     'the design-token object is registered as the obj form');
 });
 
 test('ui-glossary: roster is complete — no unregistered primitive on the current tree', () => {
   // AC2: the scan enumerates every element-factory / modifier-class definition and is
   // green on the current tree (every detected primitive is claimed by a role).
-  const { violations, defs } = glossary.scan({ rosterText });
+  const { violations, defs } = glossary.scan();
   assert.ok(defs.length > 40, 'the scan actually enumerates the UI primitives (found ' + defs.length + ')');
   assert.deepStrictEqual(violations, [],
     'every detected primitive is registered; unregistered: ' +
@@ -85,9 +80,22 @@ test('ui-glossary: the scan detects an unregistered factory of EVERY definitiona
     },
   };
   for (const [form, fx] of Object.entries(forms)) {
-    const { violations } = glossary.scan({ rosterText, extra: [{ rel: fx.rel, type: fx.type, src: fx.src }] });
+    const { violations } = glossary.scan({ extra: [{ rel: fx.rel, type: fx.type, src: fx.src }] });
     assert.ok(violations.some(v => v.name === fx.expect),
       'scan reds on the unregistered ' + form + ' fixture (' + fx.expect + '); ' +
-      'detected violations: ' + violations.map(v => v.name).join(', ') || '(none)');
+      'detected violations: ' + (violations.map(v => v.name).join(', ') || '(none)'));
+  }
+});
+
+test('ui-glossary: the shared vocabulary doc still names each base-primitive home', () => {
+  // Keep docs/context/ui.md (the vocabulary) from drifting off ROSTER (the authority):
+  // every base-primitive role must still be locatable from the doc, so the glossary a
+  // reader learns can't silently stop pointing at where the primitive lives.
+  const doc = fs.readFileSync(glossary.UI_VOCAB_DOC, 'utf8');
+  const baseIds = new Set(['card-face', 'chart-builders', 'design-tokens', 'svg-factory']);
+  for (const r of glossary.ROSTER.roles) {
+    if (!baseIds.has(r.id)) continue;
+    assert.ok(doc.includes(r.home),
+      'ui.md names the ' + r.id + ' home (' + r.home + ')');
   }
 });

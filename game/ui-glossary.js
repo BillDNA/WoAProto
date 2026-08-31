@@ -2,10 +2,15 @@
 
    Node-only helper (never in the browser script chain — like game/test.helpers.js).
    It enumerates every UI *rendering primitive* the front-end defines and checks each
-   against the role-keyed roster carved in docs/context/ui.md, so the roster stays a
-   COMPLETE census: an unregistered primitive reds. #190 (route-through-base) and #194
-   (register-or-extend) build their asserts on this same enumeration — one definition
-   of "what a primitive is", reused, per the one-fact-one-file rule.
+   against ROSTER below, so the roster stays a COMPLETE census: an unregistered
+   primitive reds. #190 (route-through-base) and #194 (register-or-extend) build their
+   asserts on this same enumeration — one definition of "what a primitive is", reused,
+   per the one-fact-one-file rule.
+
+   ROSTER (the machine-checkable catalog of role -> home/form/matcher) is the AUTHORITY
+   and lives here with the code, not in the doc. docs/context/ui.md carries the shared
+   *vocabulary* (what a base primitive / role is) and points here; test.ui.js keeps the
+   two from drifting by asserting the doc names every home ROSTER registers.
 
    A primitive is detected by its DEFINITIONAL FORM, not by a hand-maintained list, so
    the scan cannot be a hollow oracle that only finds what the happy path matches:
@@ -23,12 +28,12 @@
                                             modifier on a base is the register-or-extend
                                             event #194 wants visible.
 
-   The roster (docs/context/ui.md, fenced ```ui-roster block) keys each role by the
-   role it fills and where it lives: `id | home | form | match`, where `match` is a
-   regex over the definition's name (or the `base.mod` token for a modifier), plus a
-   `bases:` line naming the base-primitive css classes whose modifiers are in scope. A
-   role's regex claims a family (`^(ch|ov)` = every chart builder), so adding a sibling
-   under an existing role EXTENDS it (stays green); a definition no role claims REDS. */
+   Each role names where it lives and how it is matched: `{ id, home, form, match }`,
+   where `match` is a regex over the definition's name (or the base-first `base.mod`
+   token for a modifier). A role's regex claims a family (`^(ch|ov)` = every chart
+   builder; `.` = every markup primitive in a composite's home file), so adding a
+   sibling under an existing role EXTENDS it (stays green); a primitive no role claims
+   REDS. `bases` names the base-primitive css classes whose modifiers are in scope. */
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -36,7 +41,28 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');            // repo root (game/..)
 const UI_DIR = path.join(__dirname, 'ui');
 const CSS_FILE = path.join(__dirname, 'style.css');
-const ROSTER_MD = path.join(ROOT, 'docs', 'context', 'ui.md');
+const UI_VOCAB_DOC = path.join(ROOT, 'docs', 'context', 'ui.md');
+
+// The authoritative role-keyed roster the scan enforces. Base primitives are matched
+// precisely so each stays a distinct role; each composite renderer owns every markup
+// primitive in its home file (match `.`), so a sibling extends it while a primitive in
+// a new home — or a new class / design-token object / base modifier — is unclaimed and
+// reds. Register a genuinely new role by adding a line here AND naming it in ui.md.
+const COMPOSITE_HOMES = [
+  'dashboard.js', 'deck-editor.js', 'map-editor.js', 'maps-screen.js', 'manual.js',
+  'pane-cards.js', 'pane-maps.js', 'pane-overview.js', 'pane-units.js', 'skirmish.js', 'workbench.js',
+];
+const ROSTER = {
+  bases: ['card', 'art'],
+  roles: [
+    { id: 'card-face',      home: 'game/ui/app.js',              form: 'fn',       match: /^(cardFace|artImg)$/ },
+    { id: 'card-face-mods', home: 'game/style.css',              form: 'modifier', match: /^(card\.(deal|disabled)|art\.placeholder)$/ },
+    { id: 'chart-builders', home: 'game/ui/chart-primitives.js', form: 'fn',       match: /^(ch|ov)/ },
+    { id: 'design-tokens',  home: 'game/ui/chart-primitives.js', form: 'obj',      match: /^CHART$/ },
+    { id: 'svg-factory',    home: 'game/ui/board.js',            form: 'fn',       match: /^svgEl$/ },
+    ...COMPOSITE_HOMES.map(f => ({ id: f.replace('.js', ''), home: 'game/ui/' + f, form: 'fn', match: /./ })),
+  ],
+};
 
 // ---- source set the scan enumerates over -------------------------------------------
 // Returns [{ rel, type:'js'|'css', src }]. `extra` lets a test inject fixture files
@@ -131,38 +157,12 @@ function definitionsIn(entry) {
   return defs;
 }
 
-// ---- roster parsing (docs/context/ui.md, fenced ```ui-roster block) ----------------
-function parseRoster(md) {
-  const block = (md.match(/```ui-roster\n([\s\S]*?)```/) || [])[1];
-  if (!block) throw new Error('ui.md: no ```ui-roster``` block found (the roster the scan diffs against)');
-  const roles = [];
-  let bases = [];
-  for (let line of block.split('\n')) {
-    line = line.trim();
-    if (!line || line.startsWith('#')) continue;     // blank or full-line comment only
-                                                     // (never strip an inline `#`, which
-                                                     // a match regex may legitimately use)
-    const mb = line.match(/^bases:\s*(.+)$/);
-    if (mb) { bases = mb[1].split(/[\s,]+/).filter(Boolean); continue; }
-    // `match` is the 4th column and may itself contain `|` (regex alternation),
-    // so only the first three pipes delimit; everything after is the pattern.
-    const cols = line.split('|');
-    if (cols.length < 4) throw new Error('ui.md roster: malformed line "' + line + '"');
-    const pattern = cols.slice(3).join('|').trim();
-    if (!pattern || /(^\||\|\||\|$)/.test(pattern)) {
-      throw new Error('ui.md roster: empty match alternative in "' + line + '" (would claim everything)');
-    }
-    roles.push({ id: cols[0].trim(), home: cols[1].trim(), form: cols[2].trim(), match: new RegExp(pattern) });
-  }
-  return { bases, roles };
-}
-
 // ---- the scan ----------------------------------------------------------------------
 // Returns { violations, defs }. A violation is a detected primitive no role claims.
 function scan(opts) {
   opts = opts || {};
   const sources = opts.sources || defaultSources(opts.extra);
-  const roster = parseRoster(opts.rosterText != null ? opts.rosterText : fs.readFileSync(ROSTER_MD, 'utf8'));
+  const roster = opts.roster || ROSTER;
   const baseSet = new Set(roster.bases);
   const violations = [];
   const allDefs = [];
@@ -185,4 +185,4 @@ function scan(opts) {
   return { violations, defs: allDefs, roster };
 }
 
-module.exports = { scan, parseRoster, definitionsIn, defaultSources, buildsMarkup };
+module.exports = { scan, ROSTER, UI_VOCAB_DOC, definitionsIn, defaultSources, buildsMarkup };
