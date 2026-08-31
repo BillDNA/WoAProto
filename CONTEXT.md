@@ -145,8 +145,8 @@ _Avoid_: Cost (a step has a cost; the Card's total is its army-points), Power le
 The shared army-points budget every Deck is built under. Two Decks at the same cap are "matched" in capability, which is what lets a Skirmish be asymmetric yet fair.
 
 **Tolerance**:
-One knob in a balance report — a single metric's accept/reject band (Red%, Drag, Swings, …). The report's job: one Tolerance per scored metric. _Was_ "Tolerance temperature"; "temperature" now names a distinct, larger thing (below).
-_Avoid_: calling one band a "temperature."
+The balance band for a content-iteration loop — per scored metric (Red%, Drag, Swings, …), how far a candidate may drift from baseline and still be kept. It **shapes and flags, it never rejects** (#164/#162 §4.2): a Red%/1st% drift is a *loud flag on the numbers*, not a bounce to empty. A loop's Tolerance is a named profile assigning each metric a Grace class (`game/content/tolerances.js`); the former global T0/T1/T2 are three *uniform* Tolerances (all-`hold` / all-`nudge` / all-`bold`). _Was_ split from "temperature" (#164): the profile concept once called a Temperature is now a Tolerance — the word "temperature" was reassigned to author-boldness (below).
+_Avoid_: calling a Tolerance a "temperature" or a "gate" — it neither is that scalar knob nor rejects a run.
 
 **Grace class**:
 How much slack a single Tolerance (or a Step) is granted for one iteration loop: `hold` (baseline band, strict — the held/cold knobs), `nudge` (small grace), `bold` (large grace), `bypass` (band not enforced — don't-care this loop). Ranges are *per-Tolerance*: a `nudge` on Red% is a different width than a `nudge` on Drag.
@@ -155,7 +155,8 @@ How much slack a single Tolerance (or a Step) is granted for one iteration loop:
 The input-side facet of an iteration (a.k.a. *exploration*) — how far a candidate Deck jumps from the loop's **incumbent** (the previously-*adopted* Deck; the opening fixture at iteration 0), measured in *army-points re-allocated*, classed `nudge`/`bold` with its own points range. A bold Step can still land in-band; Grace governs when it doesn't. The incumbent *is* the reference — there is no separate "champion" pointer (it would differ only under uphill-accept annealing, out of scope; the loop is a hill-climb). Army-points price cards, so Step is a **card/deck-loop** measure; map-loop (hex) and AI-loop (weight) distance are a different metric. The parent `id` is persisted as a `woa.db` column (the single source; #95). _Was_ "Exploration temperature."
 
 **Temperature**:
-A *named profile over Tolerances* for one content-iteration loop — which knobs loosen and which stay tight — assigning each Tolerance a Grace class (and the Step its class for the iterated axis). A **vector, not a scalar**, and the iteration loop's job, not the report's: a card loop sets card-relevant Tolerances to `nudge`/`bold` while map Tolerances stay `hold`. The former global T0/T1/T2 are the three *uniform* Temperatures (all-`hold` / all-`nudge` / all-`bold`); non-uniform profiles are the generalization.
+**Author boldness** — the input-side knob handed to the Author subagent: how far from proven patterns it may stray when it proposes content (safe reskin ↔ novel mechanic). Higher → weirder candidates reach playtest. A **plain scalar passthrough**, set at Plan time and carried straight into the Author's prompt; it gates nothing, folds into no report, and is not the balance band (#164/#162 §4.2). Redefined by #164: the word used to name a *profile over Tolerances* — that is now a **Tolerance** (above). A third, unrelated use survives on the analysis surface: the grading-pass regression tier (`docs/balance/README.md` §Temperature, the dashboard T0/T1/T2 dial), which is a *reviewer's* dial for how much regression to accept when grading, not this authoring knob.
+_Avoid_: using "temperature" for the balance band (that is a Tolerance) or for the grading regression tier (name that the grading tier / T0-T2) — reserve the bare word for author boldness.
 
 **Mispricing residual**:
 The gap between a Card's *measured* win-contribution and its *army-points* cost. A large gap flags an over- or under-priced Card — the anti-slop signal. Advisory only, because of the Timing blind spot.
@@ -182,9 +183,9 @@ _Avoid_: Fun score (it is a judgment, not a number on the balance ledger).
 **Blind-spot flag**:
 A free-prose observation from the Feels loop that the tooling itself is missing something — either the heuristic AI can't *see* a consideration a strong player would weigh (a missing eval *input*, not just a re-weighting of the existing knobs), or a balance *number* you'd want to judge the match by is absent. Deliberately unstructured to catch unknown-unknowns; accumulates across an overnight loop into the review-reports analysis artifact for a human morning-review, who gates every one (a new AI eval term or balance metric is human-implemented code, never auto-wired). The anti-bloat test is a goal — *reject a proposed knob that's just a wrapper/combination of existing knobs* — stated with a couple of examples, never an enumerated checklist (enumerating it would train future sessions to answer the list and miss the unknown-unknowns).
 
-**Fairness sweep**:
-An on-demand run asking "is this *content* fair?" — distinct from the every-commit test sweep asking "does the *code* still function." The two never merge (ADR-0003): fairness is a property of the build, function a property of the code.
-_Avoid_: Test (the test sweep is the functional gate; the fairness sweep is the balance oracle).
+**Balance sweep**:
+An on-demand run asking "is this *content* balanced?" — distinct from the every-commit test sweep asking "does the *code* still function." The two never merge (ADR-0003): balance is a property of the build, function a property of the code.
+_Avoid_: Test (the test sweep is the functional gate; the balance sweep is the balance oracle). "Fairness sweep" is the retired name — "fairness" collapsed into "balance" (#164) so the word no longer collides with the army-points budget ceiling.
 
 **AI personality**:
 A named heuristic weight-set that gives the bot a *character* — a playstyle that is fun to beat and fun to lose to — rather than maximal strength. A personality is one row of data. Distinct from a Commander trait. "Fun to play against" is two tests it must pass, graded in `docs/rubrics/personality-rubric.md`: **Stronghold** — is it a distinct, in-theme character? — and **Punch-Out** — is it a legible, learnable puzzle you can read and beat on purpose?

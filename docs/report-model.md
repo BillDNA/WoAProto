@@ -79,7 +79,7 @@ fleet-wide, `SMALL_N`) renders greyed, `(n=N)`, and is excluded from the verdict
 banner. The report can't grey a table row, so it annotates with `(n=…, small-n)`
 instead; the dashboard band board does the greying.
 
-**Grace classes (Temperature/Tolerance, #93):** `bands(metric, grace)` widens each
+**Grace classes (Tolerance bands, #93):** `bands(metric, grace)` widens each
 CLOSED edge outward by the Tolerance's authored ± from the `RANGES` table; OPEN edges
 stay open. `grace ∈ hold | nudge | bold | bypass`: `hold` = stored edges (±0),
 `bypass` = both edges opened so the Tolerance never rejects (a shaded warning row
@@ -88,9 +88,9 @@ only). Legacy report-wide tiers alias the per-axis classes on the SAME code path
 own-band-width` (`nudge` = 0.2×width, `bold` = 0.4×width; a half-open band — only
 Swings among the scored eight — uses `|edge|` as its width), so the shipped grader is
 byte-identical (golden); edit a `RANGES` cell to widen ONE axis's grace independently.
-The default per-loop-type profiles (Card/Map/AI) live in `game/content/temperatures.js`,
-not here — Red%/1st% are hard-gated there. `balanceScore` never calls `bands()` (folds
-stored edges directly) — the score is temperature-independent by design.
+The default per-loop-type Tolerance profiles (Card/Map/AI) live in `game/content/tolerances.js`,
+not here — Red%/1st% are hard-flagged (a loud flag, never a reject) there. `balanceScore`
+never calls `bands()` (folds stored edges directly) — the score is tolerance-independent by design.
 
 ## Reporting doctrine — deliberate omissions
 

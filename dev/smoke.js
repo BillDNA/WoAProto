@@ -109,17 +109,17 @@ realSetTimeout(function () {
     'the two unpicked loop types are visibly marked held');
   assert.ok(!doc.querySelector('#wbLoopTypes .wb-ltype[data-loop="map"]').classList.contains('held'), 'the picked loop type is not held');
 
-  console.log('== Plan phase: accept-settings Temperature slot (#141) ==');
+  console.log('== Plan phase: Tolerance + author-boldness Temperature (#141/#164) ==');
   // AC1: switching loop type re-loads the accept-settings default. Map loosens `control`
   // (Card does not) and drops Card's `swings`.
   var acc = doc.getElementById('wbAccept');
   assert.ok(acc.querySelector('button.wb-tol[data-metric="control"]') && !acc.querySelector('button.wb-tol[data-metric="swings"]'),
     'picking Map re-loads its default profile (control in, swings out)');
-  // AC2: Red% / 1st% shown hard-gated — locked at hold, never a clickable escalation.
-  var gatedRows = acc.querySelectorAll('.wb-tol.gated');
-  assert.ok(gatedRows.length === 2, 'two hard-gated fairness rows shown (got ' + gatedRows.length + ')');
-  Array.prototype.forEach.call(gatedRows, function (r) {
-    assert.ok(/hard-gated/.test(r.textContent) && r.tagName !== 'BUTTON', 'fairness row is locked (' + r.textContent.trim() + ')');
+  // AC2: Red% / 1st% shown hard-flagged — locked at hold, a loud flag never a clickable escalation.
+  var flaggedRows = acc.querySelectorAll('.wb-tol.flagged');
+  assert.ok(flaggedRows.length === 2, 'two hard-flagged balance rows shown (got ' + flaggedRows.length + ')');
+  Array.prototype.forEach.call(flaggedRows, function (r) {
+    assert.ok(/hard-flagged/.test(r.textContent) && r.tagName !== 'BUTTON', 'balance row is locked (' + r.textContent.trim() + ')');
   });
   assert.ok(!acc.querySelector('button.wb-tol[data-metric="red"]') && !acc.querySelector('button.wb-tol[data-metric="first"]'),
     'Red% / 1st% are never rendered as loosenable buttons');
@@ -134,6 +134,17 @@ realSetTimeout(function () {
   hq.click();
   assert.ok(/bold/.test(doc.getElementById('wbAccept').querySelector('button.wb-tol[data-metric="hq"]').textContent),
     'clicking a Tolerance escalates its grace one step (nudge -> bold)');
+
+  // #164: the author-boldness Temperature picker — a separate knob from the Tolerance band.
+  var temps = doc.querySelectorAll('#wbTemp .wb-temp');
+  assert.ok(temps.length >= 2, 'author-boldness Temperature pills rendered (got ' + temps.length + ')');
+  var selTemp = doc.querySelector('#wbTemp .wb-temp.sel');
+  assert.ok(selTemp && selTemp.getAttribute('data-temp') === win.WB_PLAN.temperature, 'a Temperature is pre-selected (' + (selTemp && selTemp.textContent) + ')');
+  var boldTemp = doc.querySelector('#wbTemp .wb-temp[data-temp="bold"]');
+  assert.ok(boldTemp, 'a bolder Temperature level is offered');
+  boldTemp.click();
+  assert.ok(win.WB_PLAN.temperature === 'bold' && doc.querySelector('#wbTemp .wb-temp.sel').getAttribute('data-temp') === 'bold',
+    'clicking a Temperature pill picks it (author-boldness = bold)');
 
   // nudge free-text + quick-chips (taste); a chip appends to the nudge.
   var nudge = doc.getElementById('wbNudge');
@@ -157,17 +168,21 @@ realSetTimeout(function () {
   doc.getElementById('wbLaunch').click();
   assert.ok(launched && typeof launched === 'object', 'Launch hands a config object to the launch hook');
   assert.ok(launched === win.WB_LAST_CONFIG, 'the handed config is also exposed as WB_LAST_CONFIG');
-  assert.ok(launched.loopType === 'map' && launched.profile && launched.profile.step === 'map',
-    'config carries the picked loop type (loopType string + the profile Temperature, #138)');
+  assert.ok(launched.loopType === 'map' && launched.profile && launched.profile.name === 'Map',
+    'config carries the picked loop type (loopType string + the Tolerance profile, #138)');
+  assert.ok(!('step' in launched.profile), 'the dead step field is gone from the run config (#164)');
   assert.ok(launched.nudge === nudge.value, 'config carries the opening nudge');
   assert.ok(launched.mapset === msId && Array.isArray(launched.panel) && launched.panel.length >= 1,
     'config carries the Fixtures (mapset id + personality panel) runDeckLoop consumes');
-  // #141: the edited grace classes flow into the run config's Temperature (profile is
-  // the edited object runDeckLoop consumes), and fairness axes never loosen into it.
-  assert.ok(launched.profile && launched.profile.tolerances, 'config profile is the edited Temperature object');
+  // #141: the edited grace classes flow into the run config's Tolerance (profile is
+  // the edited object runDeckLoop consumes), and balance axes never loosen into it.
+  assert.ok(launched.profile && launched.profile.tolerances, 'config profile is the edited Tolerance object');
   assert.ok(launched.profile.tolerances.hq === 'bold', 'the per-axis escalation (HQ -> bold) flows into the run config');
   assert.ok(!('red' in launched.profile.tolerances) && !('first' in launched.profile.tolerances),
-    'fairness axes (Red%/1st%) never loosen into the config');
+    'balance axes (Red%/1st%) never loosen into the config');
+  // #164: the author-boldness Temperature is a separate passthrough scalar in the config.
+  assert.ok(win.WB_TEMPERATURES && win.WB_TEMPERATURES.indexOf(launched.temperature) >= 0,
+    'config carries the author-boldness Temperature (' + launched.temperature + ')');
 
   console.log('== Plan phase: debrief questionnaire editor (#142) ==');
   // AC1/2: the #111 questionnaire's entries (feel + reflex) render as editable

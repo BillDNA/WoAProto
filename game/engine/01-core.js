@@ -217,8 +217,9 @@
     var cards = (deck && deck.cards) || [];
     return cards.reduce(function (s, c) { return s + cardPoints(c) * (c.count == null ? 1 : c.count); }, 0);
   }
-  // Army-points budget ceiling (WOA #56): the fairness constraint that lets two
-  // asymmetric decks be called "matched". Seeded above where the shipped roster
+  // Army-points budget ceiling (WOA #56): the pre-game legality budget that lets two
+  // asymmetric decks be called "matched" — NOT the post-game balance band (that is the
+  // Tolerance in report-model), a distinct concept. Seeded above where the shipped roster
   // sits today (max iter3 = 70.5); the deck editor's sum(count) band guardrail
   // rejects an over-budget deck the same way it rejects an oversized one.
   var DECK_POINTS_CAP = 72;
@@ -264,7 +265,7 @@
     // WOA-036: the physical guardrail is a design band, not one exact count — every
     // shipped deck totals 16 or 17. A custom deck must land in that same band.
     if (total < 16 || total > 17) probs.push('the deck must total 16-17 cards (got ' + total + ') — hand-edit the deck file if you really want an exotic size');
-    // WOA #56: army-points budget ceiling — the fairness constraint. Same reject-on-validate as the size band.
+    // WOA #56: army-points budget ceiling — the pre-game legality budget. Same reject-on-validate as the size band.
     var pts = deckPoints({ cards: cards });
     if (pts > DECK_POINTS_CAP) probs.push('the deck is over the army-points budget (' + pts + ' > ' + DECK_POINTS_CAP + ') — cut a card or a step');
     return probs;
