@@ -115,11 +115,22 @@ test('register-or-extend: registering the new role in ui.md greens the same chan
     'the same change is green once it registers the role in ui.md (names zzMedalRow)');
 });
 
-test('register-or-extend: a modifier on a registered base is an extend, not a red (AC3)', () => {
-  const after = [{ rel: 'game/style.css', type: 'css', src: '.card.zzHighlight { outline: 2px solid gold; }\n' }];
+test('register-or-extend: extending a registered modifier does not red (AC3)', () => {
+  // .card.deal is a modifier the card-face-mods role already claims; a new rule for it is
+  // a variant of the registered base — an extend, not a new unregistered primitive.
+  const after = [{ rel: 'game/style.css', type: 'css', src: '.card.deal:hover { outline: 2px solid gold; }\n' }];
   const { violations } = glossary.registerOrExtend({ before: [], after, uiDocBefore: '', uiDocAfter: '' });
   assert.deepStrictEqual(violations, [],
-    'a new .card.<mod> extends the registered card base — a legal extend, not a fork');
+    'a rule on the registered .card.deal modifier extends the base — no red');
+});
+
+test('register-or-extend: a new unregistered modifier reds, matching the whole-tree census', () => {
+  // consistency with scan()/#187: a brand-new .card.<mod> the role does not claim is NOT
+  // a free extend — it must widen the role's match (register), exactly as the census demands.
+  const after = [{ rel: 'game/style.css', type: 'css', src: '.card.zzHighlight { outline: 2px solid gold; }\n' }];
+  const { violations } = glossary.registerOrExtend({ before: [], after, uiDocBefore: '', uiDocAfter: '' });
+  assert.ok(violations.some(v => v.def.name === 'card.zzHighlight' && v.why === 'unregistered'),
+    'an unregistered new card modifier reds — the diff gate holds the same bar as the census');
 });
 
 test('register-or-extend: an opts-flag variant introduces no primitive, so nothing reds (AC3)', () => {
@@ -154,4 +165,50 @@ test('register-or-extend: the fork check spans base roles, not just the card fac
   assert.ok(violations.some(v => v.def.name === 'makeNode' && v.why === 'fork' && v.role === 'svg-factory'),
     'a second createElementNS factory outside board.js reds as an svg-factory fork; violations: ' +
     violations.map(v => v.def.name + '/' + v.why).join(', '));
+});
+
+test('register-or-extend: fork detection tolerates other classes before `corner`', () => {
+  // a fork that lists a class before `corner` (class="cell corner c1") must still red —
+  // the signature can't demand `corner` be the first token or forks slip through.
+  const after = [{ rel: 'game/ui/evil.js', type: 'js',
+    src: 'function cardFace3(c){ return \'<div class="cell corner c1"></div>\'; }\n' }];
+  const { violations } = glossary.registerOrExtend({ before: [], after, uiDocBefore: '', uiDocAfter: '' });
+  assert.ok(violations.some(v => v.def.name === 'cardFace3' && v.why === 'fork'),
+    'a card-face fork with a class before `corner` is still detected; violations: ' +
+    violations.map(v => v.def.name + '/' + v.why).join(', '));
+});
+
+test('register-or-extend: an existing def mutated into a fork is caught', () => {
+  // the gate can\'t only look at brand-new defs: editing an existing markup builder to add
+  // a base role\'s signature (same key, new body) is a fork introduced by the diff.
+  const before = [{ rel: 'game/ui/evil.js', type: 'js',
+    src: 'function widget(c){ return \'<span>\' + c.name + \'</span>\'; }\n' }];
+  const after = [{ rel: 'game/ui/evil.js', type: 'js',
+    src: 'function widget(c){ return \'<div class="corner c1"></div>\' + c.name; }\n' }];
+  const { violations } = glossary.registerOrExtend({ before, after, uiDocBefore: '', uiDocAfter: '' });
+  assert.ok(violations.some(v => v.def.name === 'widget' && v.why === 'fork'),
+    'a same-key def edited to add fork markup is flagged; violations: ' +
+    violations.map(v => v.def.name + '/' + v.why).join(', '));
+});
+
+test('register-or-extend: the register escape is word-bounded, not a loose substring', () => {
+  // a short factory name (`art`) must not be greened by an incidental substring of
+  // unrelated ui.md prose (`chart`, `artboard`); registration is a real word match.
+  const after = [{ rel: 'game/ui/zz.js', type: 'js',
+    src: 'function art(x){ return \'<b>\' + x + \'</b>\'; }\n' }];
+  const uiDocAfter = 'The chart builders and the artboard live in game/ui/chart-primitives.js.';
+  const { violations } = glossary.registerOrExtend({ before: [], after, uiDocBefore: '', uiDocAfter });
+  assert.ok(violations.some(v => v.def.name === 'art' && v.why === 'unregistered'),
+    'a name that is only an incidental substring of ui.md prose does not count as registered');
+});
+
+test('register-or-extend: a role documented ahead of the code is not falsely flagged', () => {
+  // the register check keys on ui.md AFTER the change, not on the same diff editing it —
+  // a role named in ui.md before its factory lands is genuinely registered, not a red.
+  const uiDoc = '- **podium row** — podiumRow, the podium primitive. Lives in game/ui/zz.js.';
+  const after = [{ rel: 'game/ui/zz.js', type: 'js',
+    src: 'function podiumRow(x){ return \'<b>\' + x + \'</b>\'; }\n' }];
+  const { violations } = glossary.registerOrExtend({ before: [], after, uiDocBefore: uiDoc, uiDocAfter: uiDoc });
+  assert.deepStrictEqual(violations, [],
+    'a factory whose role ui.md already documents is registered, even without re-editing ui.md');
 });

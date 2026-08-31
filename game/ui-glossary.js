@@ -142,42 +142,54 @@ function scan(opts) {
 // new definition carrying it, outside the role's home, is a FORK — a red even when the
 // diff adds a glossary entry, because the role is already served (extend, don't re-mint).
 const FORK_SIGNATURES = [
-  { id: 'card-face',   home: 'game/ui/app.js',   sig: /class=["'`]corner c[1-4][\s"'`]/ }, // #190 brass corners
-  { id: 'svg-factory', home: 'game/ui/board.js', sig: /createElementNS\(/ },               // mints raw SVG nodes
+  // `corner` need not be the first class token — a fork can list other classes first.
+  { id: 'card-face',   home: 'game/ui/app.js',   sig: /class=["'`][^"'`]*\bcorner c[1-4]\b/ }, // #190 brass corners
+  { id: 'svg-factory', home: 'game/ui/board.js', sig: /createElementNS\(/ },                    // mints raw SVG nodes
 ];
 function defKey(d) { return d.form + ':' + d.name + '@' + d.rel; }
+function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
 // Classify the primitives a change adds. Returns { added, violations } where each
 // violation is { def, why:'fork'|'unregistered' }. Pure — the diff is the two source
 // lists, so the gate exercises it on fixtures exactly as a PR-callout tool would on a
-// real diff.
+// real diff. "Extend" means a variant a registered role's match already claims — the
+// same bar the whole-tree census in scan() holds, so the two gates never disagree.
 function registerOrExtend(opts) {
   opts = opts || {};
   const roster = opts.roster || ROSTER;
   const before = opts.before || [];
   const after = opts.after || [];
-  const uiBefore = opts.uiDocBefore || '';
   const uiAfter = opts.uiDocAfter || '';
-  const baseSet = new Set(roster.bases);
 
-  const beforeKeys = new Set(scan({ sources: before, roster }).defs.map(defKey));
-  const added = scan({ sources: after, roster }).defs.filter(d => !beforeKeys.has(defKey(d)));
+  const beforeByKey = new Map(scan({ sources: before, roster }).defs.map(d => [defKey(d), d]));
+  const afterDefs = scan({ sources: after, roster }).defs;
 
   const violations = [];
-  for (const def of added) {
-    // FORK — the def re-implements a base role's markup outside that role's home.
+  const forked = new Set();
+  // FORK — a base role's markup signature outside that role's home, INTRODUCED this diff:
+  // a brand-new def, or an existing def mutated to add the signature (same key, new body).
+  // A fork reds even when ui.md registers it — the role is served, so extend, don't re-mint.
+  for (const def of afterDefs) {
     const fork = FORK_SIGNATURES.find(f => f.home !== def.rel && f.sig.test(def.body || ''));
-    if (fork) { violations.push({ def, why: 'fork', role: fork.id }); continue; }
-    // EXTEND — a modifier on a registered base, or a variant a registered role's match
-    // already claims (an opts-driven variant adds no def at all, so never reaches here).
-    const extendsBase = def.form === 'modifier' && (def.classes || []).some(c => baseSet.has(c));
-    const extendsRole = roster.roles.some(r => r.form === def.form && r.home === def.rel && r.match.test(def.name));
-    if (extendsBase || extendsRole) continue;
-    // REGISTER — the diff names this new role in ui.md (present after, absent before).
-    if (uiAfter.includes(def.name) && !uiBefore.includes(def.name)) continue;
+    if (!fork) continue;
+    const prev = beforeByKey.get(defKey(def));
+    if (prev && fork.sig.test(prev.body || '')) continue; // already a fork before this diff — not introduced here
+    forked.add(defKey(def));
+    violations.push({ def, why: 'fork', role: fork.id });
+  }
+  // Everything the diff ADDS that isn't a fork must extend a registered role or register.
+  for (const def of afterDefs) {
+    if (beforeByKey.has(defKey(def)) || forked.has(defKey(def))) continue;
+    // EXTEND — a variant a registered role's match already claims (an opts-driven variant
+    // adds no def at all, so never reaches here). Same rule as the census: a genuinely new
+    // modifier must widen its role's match, which is the register path, not a free pass.
+    if (roster.roles.some(r => r.form === def.form && r.home === def.rel && r.match.test(def.name))) continue;
+    // REGISTER — the new role is named in ui.md (word-bounded, so a short name can't ride
+    // an incidental substring of unrelated prose; a role documented ahead of code is fine).
+    if (new RegExp('\\b' + escRe(def.name) + '\\b').test(uiAfter)) continue;
     violations.push({ def, why: 'unregistered' });
   }
-  return { added, violations };
+  return { added: afterDefs.filter(d => !beforeByKey.has(defKey(d))), violations };
 }
 
 module.exports = { scan, registerOrExtend, FORK_SIGNATURES, ROSTER, UI_VOCAB_DOC, definitionsIn, defaultSources, buildsMarkup };
