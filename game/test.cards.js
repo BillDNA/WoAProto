@@ -549,28 +549,17 @@ test('card catalog (#159): decks are refs, catalog is the one definition site', 
 })();
 });
 
-// The card-face markup is single-source: it may be constructed only inside cardFace()
-// (game/ui/app.js, the ONE shared card renderer, #165). Every other browser file draws
-// a card by WRAPPING cardFace, never by hand-building the face. A file that emits that
-// face markup itself has forked the renderer, so a later base change (a bg colour, a
-// corner texture) would move every card but the fork. This source-scan reds on that
-// fork. (#190; spec #185; ADR-0004 "route-through-base"; #8 generalizes it to
-// register-or-extend beyond cards.)
-//
-// The anchor is the four brass CORNER divs — chrome cardFace emits in EVERY branch
-// (even a face-down back), unique to the card face, and not a generic class name the
-// way "banner"/"body"/"art" are (so it will not false-positive on an unrelated element).
-// The class attribute may carry extra classes after the corner token (`corner c1 hot`);
-// a static scan cannot see a fork whose classes are fully computed at runtime, which is
-// an accepted blind spot — the realistic hand-built-HTML fork is what this catches.
+// Card-face markup is single-source: only cardFace() (game/ui/app.js, #165) may build
+// it; every other browser file wraps cardFace. This source-scan reds on a fork.
+// (#190; spec #185; ADR-0004 "route-through-base".) The anchor is the brass corner
+// divs — emitted in every cardFace branch, and card-specific unlike banner/body/art.
+// Static-only: a fork whose classes are computed at runtime is not caught.
 var routeThroughBase = (function () {
-  var FACE_MARKUP = /class=["']corner c[1-4][\s"']/;  // a brass corner div, any quote, extra classes ok
+  var FACE_MARKUP = /class=["']corner c[1-4][\s"']/;  // a corner div, any quote, extra classes ok
   var DEFINES_RENDERER = /function\s+cardFace\s*\(/;  // the renderer's home, exempt
 
-  // Pure scanner over { relPath: sourceText }: returns the files that build face markup
-  // outside the renderer's home. Kept pure so the gate can exercise it on BOTH the live
-  // tree and a deliberately-violating fixture (the seam is its result — the suite's exit
-  // code — not any file on disk).
+  // Pure scanner over { relPath: sourceText }: the files that build face markup outside
+  // the renderer's home. Pure so the gate can run it on the tree and on a fixture alike.
   function bespokeCardFaces(sources) {
     var homes = Object.keys(sources).filter(function (rel) { return DEFINES_RENDERER.test(sources[rel]); });
     var offenders = Object.keys(sources).filter(function (rel) {
@@ -579,9 +568,7 @@ var routeThroughBase = (function () {
     return { homes: homes, offenders: offenders };
   }
 
-  // The browser presentation layer where a card face could be forged: index.html's
-  // inline scripts plus every .js under game/ui/ (recursively, so a future subdir is
-  // covered too). The engine layer builds no DOM; dev/ tooling never ships to the browser.
+  // Browser source that could forge a face: index.html + game/ui/**.js (recursive).
   function browserSources() {
     var fs = require('fs'), path = require('path');
     var gameDir = __dirname, out = {};
@@ -601,10 +588,7 @@ var routeThroughBase = (function () {
 
 test('route-through-base: card markup only via the shared cardFace (#190)', () => {
 (function () {
-  // 1. Teeth: the scanner MUST flag a card face built outside the renderer, and MUST
-  //    leave clean source alone. Without this a toothless scanner would pass the tree
-  //    scan below vacuously. This is the AC-#1 red — a fixture that builds card markup
-  //    outside the one shared renderer makes the suite non-zero.
+  // 1. The scanner flags a face built outside the renderer and leaves a wrapper alone.
   var renderer = 'function cardFace(card, opts){ return \'<div class="corner c1"></div>\' + card.name; }';
   var forged = '<div class="card"><div class="corner c1 hot"></div><div class="banner">Airdrop</div></div>';
   var wrapper = 'el.className = "card"; el.innerHTML = cardFace(c, {});'; // wraps, does not forge
@@ -616,7 +600,7 @@ test('route-through-base: card markup only via the shared cardFace (#190)', () =
   assert.deepStrictEqual(clean.offenders, [],
     'scanner leaves a file that WRAPS cardFace() alone');
 
-  // 2. The live browser layer must be clean: every file routes through the one renderer.
+  // 2. The live browser layer is clean.
   var scan = routeThroughBase.bespokeCardFaces(routeThroughBase.browserSources());
   assert.strictEqual(scan.homes.length, 1,
     'exactly one file defines cardFace() — the single shared renderer (found: ' + scan.homes.join(', ') + ')');
