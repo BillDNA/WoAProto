@@ -68,3 +68,38 @@ test('#168 AC7: buildLoopArgs is non-interactive and forwards the stop value', (
   assert.ok(i >= 0 && String(argv[i + 1]) === '+45m',
     'the Plan stop value is forwarded through to --stop (got ' + (i >= 0 ? JSON.stringify(argv[i + 1]) : 'no --stop') + ')');
 });
+
+// Regression: the Plan phase sends `profile` as the EDITED Tolerance OBJECT
+// ({name:'Card', tolerances:{...}}). Flattening it to its display name ('Card')
+// passes --tolerance Card, which the content loop can't resolve (profile KEYS are
+// lowercase card/map/ai) — the run threw "unknown tolerance Card" and stuck at
+// "starting". buildLoopArgs must forward the whole object as inline JSON.
+test('#168 AC: buildLoopArgs forwards the Tolerance object as resolvable JSON, not its display name', () => {
+  assert.strictEqual(typeof SERVER.buildLoopArgs, 'function', 'server exports buildLoopArgs');
+  var argv = SERVER.buildLoopArgs({ stop: '+5m', profile: { name: 'Card', tolerances: { hq: 'nudge' } } });
+  var i = argv.indexOf('--tolerance');
+  assert.ok(i >= 0, 'buildLoopArgs carries a --tolerance arg');
+  var val = argv[i + 1];
+  assert.notStrictEqual(val, 'Card',
+    'the --tolerance arg is NOT the bare display name "Card" (the profile map keys are lowercase, so it would not resolve)');
+  var parsed = null;
+  assert.doesNotThrow(function () { parsed = JSON.parse(val); }, 'the --tolerance arg JSON-parses to the whole Tolerance object');
+  assert.ok(parsed && typeof parsed === 'object', 'the forwarded Tolerance is an object');
+  assert.strictEqual(parsed.name, 'Card', 'the object round-trips its display name');
+  assert.ok(parsed.tolerances && parsed.tolerances.hq === 'nudge', 'the object carries the edited per-axis tolerances');
+
+  // A plain profile-key STRING still passes through verbatim (the loop resolves it directly).
+  var strArgv = SERVER.buildLoopArgs({ stop: '+5m', profile: 'card' });
+  var si = strArgv.indexOf('--tolerance');
+  assert.ok(si >= 0 && strArgv[si + 1] === 'card', 'a string profile passes through as the key string "card"');
+});
+
+// Regression: buildLoopArgs used to drop cfg.mapset — the run swept the whole
+// roster instead of the picked map-set.
+test('#168 AC: buildLoopArgs forwards the picked mapset', () => {
+  assert.strictEqual(typeof SERVER.buildLoopArgs, 'function', 'server exports buildLoopArgs');
+  var argv = SERVER.buildLoopArgs({ stop: '+5m', mapset: 'core7' });
+  var i = argv.indexOf('--mapset');
+  assert.ok(i >= 0 && argv[i + 1] === 'core7',
+    'the argv carries --mapset core7 (got ' + (i >= 0 ? JSON.stringify(argv[i + 1]) : 'no --mapset') + ')');
+});
