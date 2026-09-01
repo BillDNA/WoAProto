@@ -67,8 +67,11 @@ function fail(msg) { console.error('\n✖ LIVE SMOKE FAILED: ' + msg + '\n'); pr
   try {
     console.log('== #168 live smoke: real content loop through POST /api/runloop ==');
     // Real loop, offline brains, tiny + bounded so one iteration lands fast; its OWN worktree.
+    // `profile` is the EDITED Tolerance OBJECT the browser Plan actually sends (not a bare key
+    // string) — so the run-once proof exercises the real config shape end to end.
     const launch = await req(srv, 'POST', '/api/runloop', {
-      nudge: 'live smoke', temperature: 'standard', profile: 'card', stop: '+3m',
+      nudge: 'live smoke', temperature: 'standard',
+      profile: { name: 'Card', tolerances: { hq: 'nudge', drag: 'nudge' } }, stop: '+3m',
       iters: 1, n: 2, maps: 1, feelsMatch: 1, feelsTurns: 4, mock: true, headless: true,
       recDir: recDir, db: tmpDb, feedFile: path.join(recDir, 'authored.json')
     });
