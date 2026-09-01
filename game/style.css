@@ -48,6 +48,8 @@
 
   /* menu — never centre-clip: shrink to fit short screens, scroll only as a last resort */
   #menu{justify-content:flex-start; overflow-y:auto; padding:18px 12px;}
+  /* workbench — same: a tall content-run feed must scroll, not centre-clip off both ends */
+  #wbScr{justify-content:flex-start; overflow-y:auto; padding:18px 12px;}
   /* min-width:0 stops the nowrap title from forcing the flex panel wider than 92vw on narrow screens */
   #menu .panel{width:min(480px, 92vw); min-width:0; padding:34px 30px; text-align:center; margin:auto; overflow:hidden;}
   #menu h1{
@@ -772,7 +774,9 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
    add/edit/remove, wrapped with a coloured badge + frame so the three moves read apart at a
    glance; a removed card dims + strikes (it left the catalog). */
 .wb-auth-grid { display:flex; flex-wrap:wrap; gap:16px 14px; margin:2px 0 14px; align-items:flex-start; }
-.wb-authored { display:flex; flex-direction:column; align-items:center; gap:5px; width:128px; }
+.wb-authored { display:flex; flex-direction:column; align-items:center; gap:5px; width:128px; text-align:left; }
+/* the author note reads left-to-right, never centre-justified (legibility) */
+.wb-authored .wb-auth-note { text-align:left; }
 .wb-authored .card { cursor:default; box-shadow:0 2px 5px rgba(0,0,0,.45); }
 .wb-authored .card:hover { transform:none; }
 .wb-authored.add .card { outline:3px solid var(--forest); outline-offset:2px; }
