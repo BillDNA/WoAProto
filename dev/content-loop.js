@@ -693,7 +693,7 @@ if (require.main === module) {
   }
 
   console.log('content-loop: ' + (mock ? 'MOCK brains' : 'real LLM brains') + ' · nudge "' + config.nudge + '" · temperature ' + config.temperature +
-    ' · tolerance ' + config.tolerance + ' · stop ' + (config.stopAt || 'none') + ' · panel [' + panel.join(',') + '] · ' + maps.length + ' maps' + (noCommit ? ' · NO-COMMIT' : ''));
+    ' · tolerance ' + ((config.tolerance && config.tolerance.name) || config.tolerance) + ' · stop ' + (config.stopAt || 'none') + ' · panel [' + panel.join(',') + '] · ' + maps.length + ' maps' + (noCommit ? ' · NO-COMMIT' : ''));
 
   // Readable, watchable stdout: a labelled banner as each stage BEGINS (the machine
   // surface is the run-record + dashboard, not this stream — so the terminal can be plain
