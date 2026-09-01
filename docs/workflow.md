@@ -13,7 +13,7 @@ hook. This doc is the game-side build workflow only.)*
 - After changing `AI_WEIGHTS`, AI personalities, or `game/content/`: `node dev/gen-docs.js` regenerates the doc tables between the `<!-- GEN:x -->` markers (ai-heuristic-model.md, code-architecture.md). New weights need a description in its map or they render "TODO — describe me".
 - Content lives in per-item files under `game/content/` — the kinds are `decks`, `maps`, and (V1) `mapsets` (named map rosters, one active = the match pool); `content/kinds.js` is the one list. Add/edit/delete through the app while the server runs — it rewrites the files AND regenerates `content/manifest.js`. If you hand-add a content file with the server down, the file:// browser won't see it until the manifest is refreshed (start the server once, or it's picked up on the next save). Node tools read the `content/` dirs directly, so they see hand-added files immediately.
 - **Refactors ride the golden-diff oracle** (decision record: the retired `v1-architecture` spec, git history): capture `node game/balance.js 24 normal` AND `24 easy` output before moving code; every refactor commit must reproduce both byte-identically, on top of test.js + smoke.js green. A change that legitimately moves the numbers is a rules/AI-strength change, not a refactor — bump `RULES_VERSION` in `game/engine/01-core.js` atomically with the rule-book header and the test-pin updates.
-- **Acceptance criteria are gates, not wishes** — applies to any ticket regardless of which skill generated it:
+- **Acceptance criteria are gates, not wishes** — applies to any ticket regardless of which skill generated it. The order-of-operations that keeps them teeth (fresh TestWriter → frozen Implementer → separate Reviewer, plus the completion gates) is [[woa-implement]]:
   - **Dependency closure (at ticket authoring):** every surface an AC names must already be on `main` or be built by a *named blocking ticket*. An AC that references a surface no ticket stands up (e.g. "fills the workbench slot" with no ticket that builds the workbench in `game/ui/`) is not buildable — create the foundation ticket and block on it first.
   - **Red-test rule (at close):** no AC is "done" until a test fails without it. A UI AC guarded only by the golden-diff can't close (the diff passes whether or not the screen exists) — it needs its own `dev/smoke.js` assertion that fails when the screen is absent.
   - **Screenshot rule (in the PR):** any ticket carrying a UI acceptance criterion includes a screenshot of that UI in its PR (`chrome --headless --screenshot=...`, per the headless line below). No screenshot ⇒ the UI half is visibly unbuilt.
@@ -43,4 +43,4 @@ Rules:
 
 ## Related
 
-[[code-architecture]] · [[card-cheatsheet]]
+[[code-architecture]] · [[card-cheatsheet]] · [[woa-implement]]
