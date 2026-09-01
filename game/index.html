@@ -39,7 +39,6 @@
       <button id="btnWatch" class="ghost btn-ghost-dark">Watch: AI vs AI</button>
       <button id="btnMaps" class="ghost btn-ghost-dark">Maps &amp; Map Editor</button>
       <button id="btnDash" class="ghost btn-ghost-dark">Balance Dashboard</button>
-      <button id="btnWorkbench" class="ghost btn-ghost-dark">Iteration Workbench</button>
       <button id="btnDeck" class="ghost btn-ghost-dark">Deck Editor</button>
       <button id="btnManual" class="ghost btn-ghost-dark">Field Manual (rules)</button>
       <button id="btnCardsMenu" class="ghost btn-ghost-dark">Card Glossary</button>
@@ -219,20 +218,6 @@
   </div>
 </div>
 
-<!-- ============ ITERATION WORKBENCH (#139: shell only — the Plan/Run/Results/
-     Trajectory phase switcher + one labeled placeholder panel per phase. Each
-     phase's real content is filled by its own follow-on ticket; wired in
-     ui/workbench.js.) ============ -->
-<div id="wbScr" class="screen">
-  <div class="panel parchment">
-    <h2 style="font-variant:small-caps;text-align:center;">Iteration Workbench</h2>
-    <p class="small" style="text-align:center;">Plan a balance-iteration loop, watch it run, review the results, and track progress over time. Each phase is a placeholder its own ticket fills.</p>
-    <div id="wbNav" class="wb-nav"></div>
-    <div id="wbPanes"></div>
-    <div class="ovr-btns"><button id="wbBack" class="ghost btn-ghost-dark">Back</button></div>
-  </div>
-</div>
-
 <!-- overlays -->
 <div class="overlay" id="playOvr"><div class="panel parchment" id="playPanel"></div></div>
 <div class="overlay" id="confirmOvr"><div class="panel parchment" id="confirmPanel"></div></div>
@@ -300,7 +285,6 @@
 
 <script src="maps.js"></script>
 <script src="custom-deck.js"></script>
-<script src="content/questionnaire.js"></script>
 <script src="content/manifest.js"></script>
 <script>
 // The map roster + card decks are per-item files under content/ (Feedback
@@ -336,7 +320,6 @@ try {
 <script src="engine/06-sim.js"></script>
 <script src="engine/07-export.js"></script>
 <script src="report-model.js"></script>
-<script src="content/tolerances.js"></script>
 <script src="ui/chart-model.js"></script>
 <script src="ui/app.js"></script>
 <script src="ui/board.js"></script>
@@ -352,7 +335,6 @@ try {
 <script src="ui/pane-cards.js"></script>
 <script src="ui/pane-units.js"></script>
 <script src="ui/dashboard.js"></script>
-<script src="ui/workbench.js"></script>
 <script src="ui/manual.js"></script>
 <script src="ui/boot.js"></script>
 </body>

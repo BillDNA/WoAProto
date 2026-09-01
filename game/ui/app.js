@@ -59,40 +59,6 @@ function artErr(img, id){
   }
 }
 
-/* The ONE card face (#165): the parchment/brass card inner markup — corners, art
-   box, name banner, body text — shared by the in-game hand (skirmish.js renderHand)
-   and any dashboard that shows a card (the Workbench authored feed). Returns the
-   inner HTML of a `.card` element; the caller owns the `.card` div, its extra classes,
-   and any click handler. Takes a card OBJECT (id/name/text), not a CARD_BY_ID id
-   lookup, so it can render a card the engine no longer knows (an authored card not yet
-   loaded this session, or a REMOVED one). opts:
-     faceDown    — the hotseat cog back (hides name/text/art)
-     art:false   — no art slot at all
-     placeholder — keep the art box with an "art/<id>.jpg" placeholder when the card
-                   has no art file yet (authored cards) instead of collapsing it. */
-function cardFaceEsc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function cardFace(card, opts){
-  card = card || {}; opts = opts || {};
-  var corners = '<div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>';
-  if (opts.faceDown){
-    return corners + '<div class="body" style="display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--brass-dark);">&#9881;</div>';
-  }
-  var art = '';
-  if (opts.art !== false){
-    var img = card.id ? artImg(card.id, '') : '';
-    if (opts.placeholder){
-      // className is "art placeholder" (not exactly "art"), so artErr hides only the
-      // <img> on a missing file and the placeholder shows through (see artErr).
-      art = '<div class="art placeholder"><span class="art-ph">art/' + cardFaceEsc(card.id || 'id') + '.jpg</span>' + img + '</div>';
-    } else if (img){
-      art = '<div class="art">' + img + '</div>';
-    }
-  }
-  return corners + art +
-    '<div class="banner">' + cardFaceEsc(card.name || card.id || '?') + '</div>' +
-    '<div class="body">' + cardFaceEsc(card.text || '') + '</div>';
-}
-
 /* =================== toasts & overlays =================== */
 var toastTimer = null;
 function toast(html, ms){

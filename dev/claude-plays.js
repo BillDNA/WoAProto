@@ -26,10 +26,6 @@
      --cold             one claude -p process per decision (the V0 transport)
                         instead of one persistent session per side per match
      --max-turns <n>    per-skirmish turn cap (default 60)
-     --draft            phase-0 LLM deckbuild (#116): each side drafts a deck from
-                        the deduped card pool under the 72-pt cap, onto the sideDecks
-                        path (overrides the symmetric --deck; heuristic/mock sides
-                        get a deterministic mock draft)
      --mock             deterministic fake transport (offline loop test)
      --out <file>       JSONL master log (default logs/reports/skirmish/claude-plays-log.jsonl)
      --typical-n <n>    baseline skirmishes for the typicality footer (default 40;
@@ -57,7 +53,7 @@ const path = require('path');
 function parseArgs(argv) {
   const a = { map: '', red: 'haiku', blue: 'normal', seed: 1234, maxTurns: 60, mock: false, typicalN: 40,
     effort: '', redEffort: '', blueEffort: '', deck: '', units: '', mapset: '', k: 15, fullOptions: false,
-    cold: false, matchWins: 0, out: '', draft: false };
+    cold: false, matchWins: 0, out: '' };
   for (let i = 2; i < argv.length; i++) {
     const k = argv[i];
     if (k === '--map') a.map = argv[++i] || '';
@@ -77,7 +73,6 @@ function parseArgs(argv) {
     else if (k === '--cold') a.cold = true;
     else if (k === '--match') a.matchWins = /^\d+$/.test(argv[i + 1] || '') ? +argv[++i] : 3;
     else if (k === '--mock') a.mock = true;
-    else if (k === '--draft') a.draft = true;
     else if (k === '--out') a.out = path.resolve(argv[++i]);
     else { console.error('unknown option: ' + k); process.exit(1); }
   }
@@ -97,9 +92,7 @@ function parseArgs(argv) {
 // flag first.
 function preloadContent(deckId, unitsId) {
   global.WOA_CONTENT = { maps: [], cards: [], decks: [], mapsets: [], units: [] };
-  // load every content kind (cards catalog included, #159) from the single
-  // kind-list source so the engine's deck-ref hydration finds the catalog.
-  require(path.join(__dirname, '..', 'game', 'content', 'kinds.js')).forEach(function (kind) {
+  ['decks', 'maps', 'mapsets', 'units'].forEach(function (kind) {
     const dir = path.join(__dirname, '..', 'game', 'content', kind);
     let files = [];
     try { files = fs.readdirSync(dir).filter(function (f) { return /\.js$/.test(f); }).sort(); } catch (e) { return; }
@@ -125,13 +118,9 @@ function preloadContent(deckId, unitsId) {
   }
 }
 
-// Parsed only when run as the CLI. When required as a module (dev/loop.js --llm
-// reuses makeSideTransport/draftAsk), argv is the requiring script's — parsing it
-// would reject its flags and exit — so ARGS stays empty and preload is skipped.
-const ARGS = require.main === module ? parseArgs(process.argv) : {};
+const ARGS = parseArgs(process.argv);
 if (ARGS.deck || ARGS.units || ARGS.mapset) preloadContent(ARGS.deck, ARGS.units);
 const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
-const QUESTIONNAIRE = require(path.join(__dirname, '..', 'game', 'content', 'questionnaire.js')).questions;
 const llm = require(path.join(__dirname, 'llm-client.js'));
 const { LlmSession } = require(path.join(__dirname, 'llm-session.js'));
 
@@ -142,22 +131,6 @@ if (!ARGS.out) ARGS.out = path.join(LOG_DIR, 'claude-plays-log.jsonl');
 
 const HEURISTIC = {};
 Object.keys(E.AI_PRESETS).forEach(function (k) { HEURISTIC[k] = true; });
-
-// Card metadata lookup. E.CARD_BY_ID is only the ACTIVE deck's cards; under --draft each
-// side draws from the FULL catalog (dev/deckbuild.buildPool), so a drafted catalog-only
-// card is absent from E.CARD_BY_ID and reading its .name/.text would crash the render.
-// setCardsInPlay() merges the drafted decks' card objects over the active lookup once the
-// match's sideDecks are known; cardMeta() falls back safely so an unknown id never throws.
-var CARDS_IN_PLAY = null;
-function setCardsInPlay(draftInfo) {
-  if (!draftInfo) return;
-  const merged = Object.assign({}, E.CARD_BY_ID);
-  ['red', 'blue'].forEach(function (s) {
-    (draftInfo.decks[s].cards || []).forEach(function (c) { if (c && c.id) merged[c.id] = c; });
-  });
-  CARDS_IN_PLAY = merged;
-}
-function cardMeta(id) { return (CARDS_IN_PLAY && CARDS_IN_PLAY[id]) || E.CARD_BY_ID[id] || { id: id, name: id, text: '' }; }
 const DIRN = ['E', 'NE', 'NW', 'W', 'SW', 'SE'];
 
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
@@ -240,7 +213,7 @@ function reservesStr(st, p) {
     ', ' + r.trench + ' trenches';
 }
 function spentStr(st, p) {
-  return st.removed[p].map(function (id) { return cardMeta(id).name; }).join(', ') || 'none yet';
+  return st.removed[p].map(function (id) { return E.CARD_BY_ID[id].name; }).join(', ') || 'none yet';
 }
 function rowsStr(st) {
   const s = E.SHAPES[st.boardShape];
@@ -291,7 +264,7 @@ function stateView(st, p, withHand, match) {
   if (withHand) {
     L.push('Your hand:');
     st.hands[p].forEach(function (id) {
-      L.push('- ' + cardMeta(id).name + ': ' + cardMeta(id).text);
+      L.push('- ' + E.CARD_BY_ID[id].name + ': ' + E.CARD_BY_ID[id].text);
     });
   }
   return L.join('\n');
@@ -304,12 +277,12 @@ function cardOptions(st, p) {
   hand.forEach(function (id) { counts[id] = (counts[id] || 0) + 1; });
   const opts = [];
   Object.keys(counts).forEach(function (id) {
-    const c = cardMeta(id);
+    const c = E.CARD_BY_ID[id];
     opts.push({ cardId: id, mode: 'normal',
       desc: 'Play "' + c.name + '"' + (counts[id] > 1 ? ' (' + counts[id] + ' copies in hand)' : '') + ' — ' + c.text });
   });
   const burn = hand.slice().sort(function (a, b) { return (E.CARD_KEEP[a] || 5) - (E.CARD_KEEP[b] || 5); })[0];
-  const bn = cardMeta(burn).name;
+  const bn = E.CARD_BY_ID[burn].name;
   opts.push({ cardId: burn, mode: 'attack',
     desc: 'Basic Attack — burn "' + bn + '" to order one ordinary attack instead of its printed action.' });
   // House rule (engine): a basic reposition is only legal when no basic attack exists.
@@ -437,18 +410,6 @@ function makeSideTransport(args, side, matchWins) {
   };
 }
 
-/* Adapt a side transport into the ask(prompt)->Promise<string|null> that
-   deckbuild.draftSide wants (prose reply, null on error -> mock fallback). The
-   ONE draft-transport wiring, reused by draftDecks and dev/loop.js --llm. usage
-   optional — pass the accumulator to bill draft tokens, omit it in the loop. */
-function draftAsk(transport, usage) {
-  return async function (prompt) {
-    const res = await transport.send(prompt, false);
-    if (usage) { usage.inputTokens += res.inputTokens; usage.outputTokens += res.outputTokens; }
-    return res.finishReason !== 'error' ? res.text : null;
-  };
-}
-
 /* ---------- typicality (cached per map+version+n) ---------- */
 function typicalityBaseline(map, n) {
   const key = map.name + '|' + E.VERSION + '|' + n;
@@ -539,7 +500,7 @@ async function playSkirmish(st, args, transports, matchInfo, usage) {
     const turn = st.turnNumber;
     const mode = plan.mode || 'normal';
     E.playCard(st, plan.cardId, mode);
-    const desc = '"' + cardMeta(plan.cardId).name + '"' + (mode !== 'normal' ? ' as basic ' + mode : '');
+    const desc = '"' + E.CARD_BY_ID[plan.cardId].name + '"' + (mode !== 'normal' ? ' as basic ' + mode : '');
     say('T' + turn + ' ' + side + ' [' + diff + ']: plays ' + desc);
     decisions.push({ turn: turn, side: side, kind: 'card', choice: desc, why: '', fallback: false });
     let g = 0;
@@ -575,7 +536,7 @@ async function playSkirmish(st, args, transports, matchInfo, usage) {
       why = '(fallback: illegal pick — ' + e.message + ')'; fb = true;
       E.playCard(st, pick.cardId, pick.mode);
     }
-    const desc = '"' + cardMeta(pick.cardId).name + '"' + (pick.mode !== 'normal' ? ' as basic ' + pick.mode : '');
+    const desc = '"' + E.CARD_BY_ID[pick.cardId].name + '"' + (pick.mode !== 'normal' ? ' as basic ' + pick.mode : '');
     say('T' + turn + ' ' + side + ' [' + model + ']: plays ' + desc +
       (why ? ' — "' + why + '"' : '') + (fb ? '  (fallback)' : ''));
     record(turn, 'card', side, desc, why, fb);
@@ -626,63 +587,12 @@ async function playSkirmish(st, args, transports, matchInfo, usage) {
 }
 
 /* ---------- felt-notes ---------- */
-// The journal-fed debrief prompt: the campaign journal + the active data-defined
-// questionnaire (game/content/questionnaire.js) concatenated into one prose ask. Run
-// after every skirmish in both modes; output is prose for the judge, no scores.
-function journalLine(e) { return 'T' + e.turn + ' ' + e.msg; }  // one place: journal render, shared with the transcript
-function debriefPrompt(side, st, resultLine) {
-  const journal = st.log.map(journalLine).join('\n');
-  const qs = QUESTIONNAIRE.map(function (q, i) { return (i + 1) + '. ' + q.text; }).join('\n\n');
-  return 'You just played a full skirmish of War of Attrition as ' + side.toUpperCase() +
-    ' (' + resultLine + '). The final campaign journal:\n\n' + journal +
-    '\n\nYou are the playtester in the room. Answer each question below in prose — ' +
-    'no scores, ratios, or numbers, just your read:\n\n' + qs;
-}
 async function feltNotes(args, transports, side, prompt, usage) {
   const spec = side === 'red' ? args.red : args.blue;
   if (HEURISTIC[spec]) return null;
   const res = await transports[side].send(prompt, false);
   usage.inputTokens += res.inputTokens; usage.outputTokens += res.outputTokens;
   return (res.finishReason !== 'error' && res.text.trim()) ? res.text.trim() : null;
-}
-
-/* ---------- phase-0 LLM deckbuild (#116/#84, Track F) ----------
-   Each side drafts a deck from the deduped card pool under the 72-pt cap, routed
-   onto the WOA-055 sideDecks path (match.decks). LLM sides draft through their own
-   transport (prose -> JSON); heuristic/mock sides get a deterministic mock draft.
-   draftSide guarantees a legal (<= cap) deck per side. Then the pre-match
-   deck-construction questionnaire (game/content/questionnaire.js deckConstruction,
-   riding #111's table) — prose for the judge, no pin. */
-async function draftDecks(args, transports, usage) {
-  const db = require(path.join(__dirname, 'deckbuild.js'));
-  const pool = db.buildPool();
-  const mockSpecs = {
-    red:  { opening: 'deploy_cavalry',   filler: 'attack_plus1' },
-    blue: { opening: 'deploy_artillery', filler: 'forced_march' }
-  };
-  const decks = {}, construct = {}, picks = {};
-  for (const side of ['red', 'blue']) {
-    const spec = side === 'red' ? args.red : args.blue;
-    const useLlm = !args.mock && !HEURISTIC[spec];
-    const ask = useLlm ? draftAsk(transports[side], usage) : null;
-    const r = await db.draftSide(pool, ask, mockSpecs[side]);
-    decks[side] = r.deck;
-    // The FEELS pass reads which cards each FREE draft actually picked, so the content
-    // loop can flag a card NEITHER side wanted ("nothing wanted this" — non-selection is
-    // a first-class finding, #167). Unique ids: presence is the signal, not the count.
-    picks[side] = Array.from(new Set(r.deck.cards.map(function (c) { return c.id; })));
-    say(side + ' draft: ' + r.deck.cards.reduce(function (s, c) { return s + c.count; }, 0) + ' cards, ' +
-      r.legality.pts + '/' + E.DECK_POINTS_CAP + ' pts' + (r.fromMock ? ' [mock]' : '') + ' — ' + r.draft.why +
-      (r.legality.advisories.length ? '  (advisory: ' + r.legality.advisories.join('; ') + ')' : ''));
-    if (useLlm) {
-      const qs = db.CONSTRUCTION_QUESTIONS.map(function (q, i) { return (i + 1) + '. ' + q.text; }).join('\n');
-      const deckList = r.deck.cards.map(function (c) { return c.count + '× ' + c.name; }).join(', ');
-      const res = await transports[side].send('You drafted: ' + deckList + '.\nAnswer briefly in prose (no scores or numbers):\n' + qs, false);
-      usage.inputTokens += res.inputTokens; usage.outputTokens += res.outputTokens;
-      if (res.finishReason !== 'error' && res.text.trim()) { construct[side] = res.text.trim(); say(side + ' deck notes: ' + construct[side]); }
-    }
-  }
-  return { decks, construct, picks };
 }
 
 /* ---------- the run ---------- */
@@ -715,20 +625,13 @@ async function main() {
     (args.deck ? ' — deck "' + args.deck + '"' : '') +
     (args.mock ? '  [MOCK]' : args.cold ? '  [cold transport]' : '  [persistent sessions]'));
 
+  const match = E.newMatch({ maps: pool, seed: args.seed, firstPlayer: 'red' });
+  const matchInfo = { targetWins: target, wins: match.wins, skirmishesPlayed: 0 };
   const transports = {
     red: makeSideTransport(args, 'red', target),
     blue: makeSideTransport(args, 'blue', target)
   };
   const usage = { inputTokens: 0, outputTokens: 0 };
-  // phase-0 deckbuild (#116): draft before the match so the drafted decks ride the
-  // sideDecks path; without --draft, decks stay undefined (symmetric golden path).
-  const draftInfo = args.draft ? await draftDecks(args, transports, usage) : null;
-  setCardsInPlay(draftInfo);   // so the render resolves drafted catalog-only cards, not just the active deck
-  // Machine-readable draft line for the content loop's FEELS pass (spec §11.5). Distinct
-  // prefix (like LOOP_STEP) so a driver parses it without scraping the timestamped prose.
-  if (draftInfo) process.stdout.write('FEELS_DRAFT ' + JSON.stringify({ red: draftInfo.picks.red, blue: draftInfo.picks.blue }) + '\n');
-  const match = E.newMatch({ maps: pool, seed: args.seed, firstPlayer: 'red', decks: draftInfo ? draftInfo.decks : undefined });
-  const matchInfo = { targetWins: target, wins: match.wins, skirmishesPlayed: 0 };
 
   // per-skirmish DB rows (guarded — the transcript never depends on it).
   // Mock runs are loop tests, not data — they stay out of the DB.
@@ -756,13 +659,13 @@ async function main() {
         (target ? '  (match R ' + match.wins.red + '-' + match.wins.blue + ' B)' : '')
       : '== skirmish unfinished at the --max-turns cap (' + args.maxTurns + ') ==');
 
-    // one journal-fed debrief per side after every skirmish (both modes) — the
-    // data-defined questionnaire concatenated into a single prose ask (#85/#111).
-    const resultLine = finished ? cap(st.skirmishWinner) + ' won by ' + st.winType + ' after ' + st.turnNumber + ' turns' : 'unfinished at the turn cap';
+    // short per-skirmish notes from each LLM player (Bill: per-skirmish AND per-match)
     const notes = {};
     for (const side of ['red', 'blue']) {
-      const n = await feltNotes(args, transports, side, debriefPrompt(side, st, resultLine), usage);
-      if (n) { notes[side] = n; say(side + ' debrief: ' + n); }
+      const n = await feltNotes(args, transports, side,
+        'Skirmish ' + (skirmishes.length + 1) + ' just ended: ' + (finished ? cap(st.skirmishWinner) + ' won by ' + st.winType : 'unfinished') +
+        ' after ' + st.turnNumber + ' turns. In ONE or TWO sentences: how did that skirmish feel from your side?', usage);
+      if (n) { notes[side] = n; say(side + ' notes: ' + n); }
     }
 
     const rec = {
@@ -809,9 +712,18 @@ async function main() {
         'and ONE suggested change to the game.', usage);
       if (n) { matchNotes[side] = n; console.log('\n-- ' + side + ' match felt-notes --\n' + n); }
     }
+  } else if (!target) {
+    for (const side of ['red', 'blue']) {
+      const st = skirmishes[0].st;
+      const journal = st.log.map(function (e) { return 'T' + e.turn + ' ' + e.msg; }).join('\n');
+      const n = await feltNotes(args, transports, side,
+        'You just played a full skirmish of War of Attrition as ' + side.toUpperCase() +
+        '. The final campaign journal:\n\n' + journal +
+        '\n\nGive short notes (under 150 words) on how the game FELT to play: what felt strong, ' +
+        'what felt weak, what felt luck-driven, and ONE suggested change to the game.', usage);
+      if (n) { matchNotes[side] = n; console.log('\n-- ' + side + ' felt-notes --\n' + n); }
+    }
   }
-  // single-skirmish mode has no separate arc note — its per-skirmish debrief (above) is
-  // the journal-fed read, now unified across both modes (#111).
   transports.red.close(); transports.blue.close();
   if (dbm) try { dbm.close(dbh); } catch (e) {}
 
@@ -856,16 +768,16 @@ async function main() {
     });
     if (Object.keys(b.notes).length) {
       md.push('');
-      md.push('### Debrief');
+      md.push('### Skirmish notes');
       Object.keys(b.notes).forEach(function (side) { md.push('- **' + side + '**: ' + b.notes[side]); });
     }
     md.push('');
     md.push('### Campaign journal');
-    b.st.log.forEach(function (e) { md.push('- ' + journalLine(e)); });
+    b.st.log.forEach(function (e) { md.push('- T' + e.turn + ' ' + e.msg); });
   });
   if (Object.keys(matchNotes).length) {
     md.push('');
-    md.push('## Match felt-notes');
+    md.push('## ' + (target ? 'Match felt-notes' : 'Felt-notes'));
     Object.keys(matchNotes).forEach(function (side) {
       md.push('');
       md.push('### ' + side + ' (' + (side === 'red' ? args.red : args.blue) + ')');
@@ -895,22 +807,17 @@ async function main() {
       target: target, wins: { red: match.wins.red, blue: match.wins.blue },
       winner: matchWinner, skirmishes: skirmishes.length,
       game1Winner: skirmishes[0].winner, seriesFlipped: !!(matchWinner && skirmishes[0].winner && matchWinner !== skirmishes[0].winner),
-      // the FREE drafts each side played (#167 FEELS non-selection is derived from these)
-      draftRed: draftInfo ? draftInfo.picks.red : null, draftBlue: draftInfo ? draftInfo.picks.blue : null,
       fallbacks: totalFallbacks, decisions: totalDecisions, usage: usage
     }) + '\n');
   }
 
   say('record(s) appended to ' + args.out);
   say('transcript written to ' + tPath);
-  // Machine-readable report path for the content loop (the committed feels artifact).
-  process.stdout.write('FEELS_REPORT ' + tPath + '\n');
 }
 
 /* exported for dev/claude-plays.test.js (honesty sentinel etc.) */
 module.exports = { stateView: stateView, cardOptions: cardOptions, describeChoice: describeChoice,
-  stepHeader: stepHeader, stepChoiceList: stepChoiceList, RULES: RULES, sysPrompt: sysPrompt,
-  makeSideTransport: makeSideTransport, draftAsk: draftAsk };
+  stepHeader: stepHeader, stepChoiceList: stepChoiceList, RULES: RULES, sysPrompt: sysPrompt };
 
 if (require.main === module) {
   main().catch(function (e) { console.error(e); process.exit(1); });

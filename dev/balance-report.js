@@ -21,9 +21,6 @@
      --mapset <id>  run a specific map-set (default: the ACTIVE set's pool;
                'all' = every map on disk)
      --deck <id>    report on content/decks/<id>.js instead of the ACTIVE deck
-     --pin-card <id>  seat one catalog card into a legal harness deck (dev/harness-
-               deck.js) and report on THAT — the content loop's BALANCE pin (#167),
-               automating the create-card swap. Implies --once (never accumulated).
      --units <id>   report with content/units/<id>.js unit stats (composition +
                atk/def/sup/vp) instead of the maps.js default
      --parallel [k]  simulate maps in k parallel worker processes (default:
@@ -47,7 +44,7 @@ var path = require('path');
 // time, so pre-populate WOA_CONTENT with the flipped content FIRST (same trick,
 // same file order as dev/claude-plays.js preloadContent — node's require cache
 // makes the engine's own loader a no-op afterwards).
-var DECK = '', UNITSET = '', PIN = '';
+var DECK = '', UNITSET = '';
 (function () {
   function take(flag) {
     var i = process.argv.indexOf(flag);
@@ -59,16 +56,9 @@ var DECK = '', UNITSET = '', PIN = '';
   }
   DECK = take('--deck');
   UNITSET = take('--units');
-  // --pin-card <id>: the content loop's BALANCE pin, automated (#167). Seats one catalog
-  // card into a legal harness deck (dev/harness-deck.js) and reports on THAT, so the manual
-  // create-card "swap the card into a deck and watch its Simple%/1stSight%" recipe is a flag,
-  // not a hand-edit. Rides the same active-deck injection --deck uses — zero pipeline change.
-  PIN = take('--pin-card');
-  if (!DECK && !UNITSET && !PIN) return;
+  if (!DECK && !UNITSET) return;
   global.WOA_CONTENT = { maps: [], cards: [], decks: [], mapsets: [], units: [] };
-  // load every content kind (cards catalog included, #159) from the single
-  // kind-list source so the engine's deck-ref hydration finds the catalog.
-  require(path.join(__dirname, '..', 'game', 'content', 'kinds.js')).forEach(function (kind) {
+  ['decks', 'maps', 'mapsets', 'units'].forEach(function (kind) {
     var dir = path.join(__dirname, '..', 'game', 'content', kind);
     var files = [];
     try { files = fs.readdirSync(dir).filter(function (f) { return /\.js$/.test(f); }).sort(); } catch (e) { return; }
@@ -89,19 +79,6 @@ var DECK = '', UNITSET = '', PIN = '';
       process.exit(1);
     }
     us.forEach(function (u) { u.active = (u.id === UNITSET); });
-  }
-  if (PIN) {
-    var harness = require(path.join(__dirname, 'harness-deck.js'));
-    var cat = global.WOA_CONTENT.cards || [];
-    var card = cat.filter(function (c) { return c.id === PIN; })[0];
-    if (!card) { console.error('--pin-card "' + PIN + '" not in the catalog. Available: ' + cat.map(function (c) { return c.id; }).join(', ')); process.exit(1); }
-    var seated = harness.seatCard(card, { catalog: cat });
-    if (!seated.deck || seated.problems.length) { console.error('--pin-card "' + PIN + '" cannot be seated in a legal harness:\n  - ' + seated.problems.join('\n  - ')); process.exit(1); }
-    // Inject the harness as the ACTIVE deck (the engine snapshots active at require time,
-    // just below), then deactivate every real deck so only the pin is measured.
-    global.WOA_CONTENT.decks.forEach(function (d) { d.active = false; });
-    seated.deck.active = true;
-    global.WOA_CONTENT.decks.push(seated.deck);
   }
 })();
 
@@ -139,7 +116,6 @@ async function run() {
   });
   var dr = diffs[0] || 'hard', db = diffs[1] || dr, diffLabel = dr === db ? dr + ' vs ' + dr : dr + ' vs ' + db;
   var ver = E.VERSION;
-  if (PIN) flags.once = true;   // a harness pin is a one-shot read, never folded into the deck accumulator
 
   var maps = E.mapPool(); // the ACTIVE map-set's roster (V1)
   if (flags.mapset === 'all') maps = E.MAPS;

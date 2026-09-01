@@ -64,7 +64,7 @@ var SCHEMA = [
   '  kill_tail INTEGER, zero_kill INTEGER, tiebreak INTEGER,',
   '  attacks INTEGER, swaps INTEGER, marches INTEGER, deploys INTEGER,',
   '  res_end_red INTEGER, res_end_blue INTEGER, trace TEXT,',
-  '  hexes_red INTEGER, hexes_blue INTEGER, parent_id TEXT',
+  '  hexes_red INTEGER, hexes_blue INTEGER',
   ');',
   'CREATE TABLE IF NOT EXISTS card_plays (',
   '  id INTEGER PRIMARY KEY, skirmish_id INTEGER, side TEXT, card_id TEXT,',
@@ -143,7 +143,6 @@ function open(dbPath) {
   ensureColumn(db, 'skirmishes', 'trace', 'TEXT');       // WOA-032 (SPEC §4): per-skirmish trace JSON
   ensureColumn(db, 'skirmishes', 'hexes_red', 'INTEGER'); // WOA-038: hex-ownership tally at skirmish end
   ensureColumn(db, 'skirmishes', 'hexes_blue', 'INTEGER');
-  ensureColumn(db, 'skirmishes', 'parent_id', 'TEXT');   // WOA-110 (#95): incumbent deck id — Step's single source
   ensureColumn(db, 'runs', 'deck', 'TEXT');           // WOA-032 (SPEC §7): run identity for the A/B picker
   ensureColumn(db, 'runs', 'mapset', 'TEXT');
   ensureColumn(db, 'runs', 'seed_base', 'INTEGER');
@@ -175,13 +174,13 @@ function open(dbPath) {
       ' fs_red AS fsRed, fs_blue AS fsBlue, first_blood AS firstBlood, lead_changes AS leadChanges,' +
       ' kill_tail AS killTail, zero_kill AS zeroKill, tiebreak, attacks, swaps, marches, deploys,' +
       ' res_end_red AS resEndRed, res_end_blue AS resEndBlue, trace,' +
-      ' hexes_red AS hexesRed, hexes_blue AS hexesBlue, parent_id AS parentId' +
+      ' hexes_red AS hexesRed, hexes_blue AS hexesBlue' +
       ' FROM skirmishes WHERE run_id = ? ORDER BY id'),
     insertSkirmish: db.prepare(
       'INSERT INTO skirmishes (run_id, version, map, seed, first_player, winner, win_type, turns,' +
       ' fs_red, fs_blue, first_blood, lead_changes, kill_tail, zero_kill, tiebreak,' +
-      ' attacks, swaps, marches, deploys, res_end_red, res_end_blue, trace, hexes_red, hexes_blue, parent_id)' +
-      ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'),
+      ' attacks, swaps, marches, deploys, res_end_red, res_end_blue, trace, hexes_red, hexes_blue)' +
+      ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'),
     insertCardPlay: db.prepare(
       'INSERT INTO card_plays (skirmish_id, side, card_id, mode, turn, seen, noop, won) VALUES (?,?,?,?,?,?,?,?)'),
     insertTimeline: db.prepare(
@@ -244,12 +243,10 @@ function setBaseline(h, runId) {
    of summed away. Inserts the skirmishes row + its card_plays (+ timeline rows
    when st.fsTimeline exists) in ONE transaction. Returns skirmishId.
      firstPlayer: 'red'|'blue' — who moved first (balanceFP schedule etc.)
-     extra: { version?, seed?, parentId? } — version falls back to st.version,
-       then the run's version. seed falls back to st.seed, which by skirmish end
-       is the EVOLVED rng state, not the starting seed — callers who know the
-       original seed (simSkirmish callers do) should pass extra.seed. parentId
-       (#110) is the loop's incumbent deck id — the Deck this candidate was
-       measured against; NULL off-loop and at iteration 0. */
+     extra: { version?, seed? } — version falls back to st.version, then the
+       run's version. seed falls back to st.seed, which by skirmish end is the
+       EVOLVED rng state, not the starting seed — callers who know the
+       original seed (simSkirmish callers do) should pass extra.seed. */
 function insertSkirmish(h, runId, st, firstPlayer, extra) {
   extra = extra || {};
   if (!st || st.phase !== 'skirmish-over')
@@ -285,8 +282,7 @@ function insertSkirmish(h, runId, st, firstPlayer, extra) {
       f.tiebreak,                                         // decided only by tie-goes-to-2nd
       f.attacks, f.swaps, f.marches, f.deploys,
       f.resEndRed, f.resEndBlue,                          // WOA-016: pieces left in reserve at skirmish end
-      trace, f.hexesRed, f.hexesBlue,
-      nz(extra.parentId));                                // WOA-110 (#95): incumbent deck id; NULL off-loop / iteration 0
+      trace, f.hexesRed, f.hexesBlue);
     var skirmishId = Number(res.lastInsertRowid);
     (st.playLog || []).forEach(function (e) {
       h.stmts.insertCardPlay.run(skirmishId, e.p, e.id, nz(e.mode), nz(e.turn),

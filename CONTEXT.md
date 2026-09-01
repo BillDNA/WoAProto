@@ -1,20 +1,13 @@
-# War of Attrition — context map
+# War of Attrition
 
 The domain language of War of Attrition — a two-player hex-and-card wargame, originally a physical board-game prototype, now a browser rig for rapid balance iteration on the way to a Steam roguelite deck-builder.
 
-This root file is the **map**, read for alignment. It holds two things and nothing else:
+This file is a **glossary of concepts** — what each term *is*. It deliberately holds **no tunable values and no rules resolution**: unit stats, terrain bonuses, deck sizes, win thresholds, and combat outcomes all change as the game is balanced, so they live in exactly one place — the content, the code, and the rule book — never here. If a definition below would drift when you retune the game, it has been left out on purpose.
 
-1. **Cross-cutting anchors** — the handful of terms that surface across every concern (a **Skirmish** is a game concept *and* an engine row *and* a test fixture *and* the atom the balance layer folds). Each anchor is defined **once, here**; the concern files elaborate its facets without redefining it.
-2. **Category files** — the full vocabulary, split by concern under `docs/context/` and disclosed when you work that area.
-
-Like every glossary here it holds **no tunable values and no rules resolution**: unit stats, terrain bonuses, deck sizes, win thresholds, and combat outcomes change as the game is balanced, so they live in the content, the code, the rule book, and `docs/balance-baselines.md` — never here. One term, one canonical home; if a definition would drift when you retune the game, it has been left out on purpose.
-
-## Cross-cutting anchors
-
-*(The big ones — defined once here, faceted in the concern files.)*
+## Match structure
 
 **Skirmish**:
-One fight on a single Map, played to a victor. The atomic unit of play and the thing every report logs. Its persisted per-fight record is the **Skirmish fact** ([balance](docs/context/balance.md)).
+One fight on a single Map, played to a victor. The atomic unit of play and the thing every report logs.
 _Avoid_: Round, match.
 
 **Battle**:
@@ -25,23 +18,145 @@ _Avoid_: Game, match, series.
 The larger roguelite arc across Battles — the deck-building, Commander, progression layer. The nebulous destination, not yet in code.
 _Avoid_: Run, meta, mode.
 
+**First mover**:
+The side taking the first turn of a Skirmish. Named because a first-mover win-rate skew is a core balance signal.
+
+**Red / Blue**:
+The two sides. A side win-rate skew (independent of first mover) is a balance signal.
+
+## The board
+
 **Map**:
-One battlefield — a hex layout with terrain and the two HQ start positions. Drawn from the active **Mapset** ([game](docs/context/game.md)).
+One battlefield — a hex layout with terrain and the two HQ start positions.
 _Avoid_: Board, level, battlefield, Map Card.
 
+**Mapset**:
+A named roster of Maps; exactly one is *active* at a time and is the draw pool for every play mode and tool.
+_Avoid_: Map-set, map pool, roster.
+
+**Hex**:
+One cell of the board; a piece occupies at most one.
+
+**Control**:
+The reach a side may Deploy adjacent to — extends by adjacency, and is stopped by a River.
+
+**Terrain**:
+A board feature on a hex or its border. **Mountain** favors the defender attacked across it; **Forest** favors the attacker striking across it; **River** blocks Control and Support from crossing while letting movement and attacks through.
+
+## Pieces
+
+**Unit**:
+A mobile combat piece. Three roles: **Infantry** (the common line piece), **Cavalry** (the fragile hard-hitting striker), **Artillery** (the support piece).
+_Avoid_: Token.
+
+**HQ (Headquarters)**:
+A side's home piece — lends Support to its neighbours and is the piece whose capture ends a Skirmish. Pieces may pass through its hex.
+_Avoid_: Base.
+
+**Trench**:
+A structure that denies attacking Support across the edges it covers — and nothing else. Serves whichever side holds its hex.
+_Avoid_: Fortification.
+
+**Reserve**:
+Pieces a side owns but has not placed. Deploying is one-way, and reserve pieces score nothing at Attrition.
+
+## Actions
+
+**Deploy**:
+Place a piece from Reserve onto the board within Control. Called **Build** for a structure.
+_Avoid_: Summon, spawn.
+
+**Attack**:
+Order one unit to strike an adjacent occupied hex, resolved by comparing combat power.
+
+**Support**:
+What adjacent allied pieces contribute to a combat — subject to Trench and River blocking.
+
+**Reposition**:
+Reposition a unit: **Move** it to an empty adjacent hex, or **Swap** it with an adjacent unit of a different type.
+_Avoid_: using "Move" for the whole action — Move is one kind of Reposition.
+
+**Swap**:
+The Reposition that exchanges two adjacent different-type units. Its share of all actions is a balance signal.
+
 **Card**:
-A one-shot order played from the hand and then spent; any Card may instead be spent as a basic Attack or Reposition. Defined once in the **Catalog** ([game](docs/context/game.md)), priced in **army-points** ([balance](docs/context/balance.md)), rendered by the one card face ([ui](docs/context/ui.md)).
+A one-shot order played from the hand and then spent. Any Card may instead be spent as a basic Attack or Reposition.
 _Avoid_: Order (a Card *is* the order; "order an attack" is the verb).
 
 **Deck**:
-A side's set of Cards for a Skirmish. Stored as refs (`{id, count, starting?}`) into the Catalog — a Deck names cards, it does not define them. Built under a shared army-points **Points cap** ([balance](docs/context/balance.md)).
+A side's set of Cards for a Skirmish.
 
-## Category files
+## Endings & scoring
 
-| Concern | File | Covers |
-| --- | --- | --- |
-| **Game** | [`docs/context/game.md`](docs/context/game.md) | the board, pieces, actions, endings, scoring, sides & AI — how the game plays |
-| **UI** | [`docs/context/ui.md`](docs/context/ui.md) | rendering primitives, the card face, screens |
-| **Engine** | [`docs/context/engine.md`](docs/context/engine.md) | rules version, traces, `balanceMap`, the golden-diff, determinism |
-| **Test** | [`docs/context/test.md`](docs/context/test.md) | invariant vs pin, the test-writer, falsifiers, the smoke gate |
-| **Balance** | [`docs/context/balance.md`](docs/context/balance.md) | metrics, the balance loop, army-points, tolerances, feels |
+**HQ capture**:
+Ending a Skirmish by successfully attacking into the enemy HQ.
+
+**Attrition**:
+The Skirmish ending reached when a side can no longer draw a Card; decided by Field score.
+
+**Field score**:
+The standing of a side at Attrition, from its surviving on-board units. Reserve counts nothing.
+_Avoid_: VP, points, victory points.
+
+## Balance & measurement
+
+*(The project's vocabulary for judging a build — concepts, not the numbers they currently sit at.)*
+
+**Balance loop**:
+The iterate cycle: run AI (and LLM) play over the active Mapset, fold the per-Skirmish results into aggregate metrics, grade them, adjust content, repeat.
+
+**Rules era**:
+A regime of rules-plus-AI-strength treated as internally comparable; data across eras is not apples-to-apples.
+_Avoid_: Version (reserve for the era's number).
+
+**Baselines to protect**:
+The healthy metric values for the current era; a sharp move away signals a regression even when win rates look fine.
+
+**Drag**:
+Trailing kill-less turns before a Skirmish ends — the "circling without resolving" signal.
+
+**Swings**:
+Lead changes within a Skirmish — the "back-and-forth" signal.
+
+**No-op**:
+A played Card that resolved zero actions — a dead turn.
+
+**Skirmish fact**:
+The flat record of everything the balance layer reads off one finished Skirmish
+— winner, win type, field scores, kill-tail, tiebreak, hexes held, reserves
+left, action counts. Derived in exactly one place (the engine's `skirmishFacts`),
+whether from a live end-state or a persisted row, so the live fold and the
+stored-data fold can never disagree.
+_Avoid_: battle fact, per-battle row (a row is the persisted form of the fact).
+
+## Content iteration & army-points
+
+*(The vocabulary for growing content without losing balance — concepts, not the weights they currently sit at.)*
+
+**Army-points**:
+A Card's *capability cost*, and a Deck's total value as the sum over its Cards. A descriptive yardstick Decks are built under — not a prediction of win-rate; measured balance always overrules it (ADR-0002). Computed additively from a Card's steps via a single weight table, never stored per Card, so a Card that does more counts for more.
+_Avoid_: Cost (a step has a cost; the Card's total is its army-points), Power level.
+
+**Points cap**:
+The shared army-points budget every Deck is built under. Two Decks at the same cap are "matched" in capability, which is what lets a Skirmish be asymmetric yet fair.
+
+**Tolerance temperature**:
+How far a *measured* metric may sit outside its band before a result is accepted — the existing band-widening dial (strict / explore / hot). A verdict on outputs.
+_Avoid_: bare "temperature" (say which one; the two are different concepts).
+
+**Exploration temperature**:
+How large a *step* content iteration takes through design space — the willingness to try a structurally different but budget-legal candidate to escape a local optimum. An input to the search, realized chiefly *through* the points cap. Distinct from Tolerance temperature.
+
+**Mispricing residual**:
+The gap between a Card's *measured* win-contribution and its *army-points* cost. A large gap flags an over- or under-priced Card — the anti-slop signal. Advisory only, because of the Timing blind spot.
+
+**Timing blind spot**:
+The balance scorer's known inability to value a Card whose worth is in *when* it is held or played (e.g. a saved attack buff). Such a Card can read as weak or mispriced without being either. Same class of gap as the AI eval not seeing reserve-hoarding.
+
+**AI personality**:
+A named heuristic weight-set that gives the bot a *character* — a playstyle that is fun to beat and fun to lose to — rather than maximal strength. A personality is one row of data. Distinct from a Commander trait.
+_Avoid_: Difficulty (a personality is a style, not a strength tier), Bot.
+
+**Commander trait**:
+A run-layer ability that *bends the rules* for a side (a guaranteed opening Card, altered stocks, a rules exception). Belongs to the Campaign layer, not yet in code. Distinct from an AI personality — a rule-bender, not a playstyle — though a Commander's theme may guide the personality of the AI that pilots it.
+_Avoid_: Perk, buff.

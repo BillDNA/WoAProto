@@ -6,13 +6,9 @@
 
    - pct(a, b)                 rounded percentage (0 when b is 0)
    - f1(x)                     one-decimal string, round-half-up
-   - BANDS / bands(m,grace)    per-metric band table as DATA + effective band under
-                               a grace class (hold|nudge|bold|bypass; legacy
-                               T0/T1/T2 alias hold/nudge/bold). RANGES = per-axis ±.
+   - BANDS / bands(m,temp)     per-metric band table as DATA + effective band at
+                               a temperature
    - balanceScore(agg, done)   balance-quality score, LOWER = better (folds BANDS)
-   - foldPanel(rows, profile)  score a candidate across the personality panel —
-                               worst-case per metric, balance (Red%/1st%) hard-flagged,
-                               overfit spread (no mean); one level above foldGlobal
    - mapNotes(agg, done)       health-flag strings for one map's aggregate
    - addAgg(dst, src)          fold one balanceMap aggregate into another
    - foldGlobal(rows)          [{agg, done}] -> G totals (incl. G.cards)
@@ -94,115 +90,27 @@ var WOA_REPORT = (function () {
     return 0;
   }
 
-  /* Own-band-width basis for a grace ± (closed: hi-lo; half-open: |edge|; fully
-     open: 0). The fraction each grace class widens by — hold=0, nudge=0.2,
-     bold=0.4 — matching the legacy T0/T1/T2 tiers exactly. */
-  function bandWidth(b) {
-    var loOpen = (b.lo == null), hiOpen = (b.hi == null);
-    return (!loOpen && !hiOpen) ? (b.hi - b.lo) : (!loOpen ? Math.abs(b.lo) : (!hiOpen ? Math.abs(b.hi) : 0));
-  }
-  var GRACE_FRAC = { hold: 0, nudge: 0.2, bold: 0.4 };   // bypass handled in bands()
-  // Legacy report-wide tiers alias the per-axis grace classes — one code path.
-  var GRACE_ALIAS = { T0: 'hold', T1: 'nudge', T2: 'bold' };
-
-  /* Per-Tolerance authored ± widths — the loop's tunable knobs (#93). SEEDED here
-     from today's GRACE_FRAC × own-band-width so the shipped grader is byte-identical
-     (golden); edit a cell to widen ONE axis's grace independent of the others (a
-     nudge on Red% need not equal a nudge on Drag). {key: {nudge, bold}} in points. */
-  var RANGES = {};
-  BANDS.forEach(function (b) {
-    var w = bandWidth(b);
-    RANGES[b.key] = Object.freeze({ nudge: GRACE_FRAC.nudge * w, bold: GRACE_FRAC.bold * w });
-  });
-  Object.freeze(RANGES);   // exported by reference — frozen so a consumer can't perturb band widths process-wide
-
-  /* Effective band under a grace class: widen each CLOSED edge outward by the
-     Tolerance's authored ± (RANGES); OPEN edges stay open. Grace ∈
-     hold|nudge|bold|bypass (legacy T0/T1/T2 route through GRACE_ALIAS to the same
-     path). `bypass` = never rejects → both edges open (outBand always 0), a shaded
-     warning row only. See docs/report-model.md#metric-bands. */
-  function bands(metric, grace) {
+  /* Effective band at a temperature: widen each CLOSED edge outward by 20% (T1) /
+     40% (T2) of band width; OPEN edges stay open; a half-open band (Swings) widens
+     by that fraction of |edge|. T0 = stored edges. See docs/report-model.md#metric-bands. */
+  function bands(metric, temperature) {
     var b = (typeof metric === 'string') ? BAND_BY_KEY[metric] : metric;
     if (!b) return null;
-    grace = GRACE_ALIAS[grace] || grace || 'hold';
-    var out = { key: b.key, label: b.label, weight: b.weight, feedsScore: b.feedsScore };
-    if (grace === 'bypass') { out.lo = null; out.hi = null; return out; }
-    var r = RANGES[b.key] || { nudge: 0, bold: 0 };
-    var delta = grace === 'bold' ? r.bold : grace === 'nudge' ? r.nudge : 0;   // hold / unknown → 0
-    out.lo = (b.lo == null) ? null : b.lo - delta;
-    out.hi = (b.hi == null) ? null : b.hi + delta;
-    return out;
+    var frac = temperature === 'T1' ? 0.2 : temperature === 'T2' ? 0.4 : 0;
+    var lo = b.lo, hi = b.hi, loOpen = (lo == null), hiOpen = (hi == null);
+    var w = (!loOpen && !hiOpen) ? (hi - lo) : (!loOpen ? Math.abs(lo) : (!hiOpen ? Math.abs(hi) : 0));
+    return { key: b.key, label: b.label, weight: b.weight, feedsScore: b.feedsScore,
+      lo: loOpen ? null : lo - frac * w, hi: hiOpen ? null : hi + frac * w };
   }
 
   /* Balance-quality score (LOWER = better, 0 = ideal) — the "best map" ideal-range
      rubric (SOT: docs/balance/best-map-score.md). Sums the feedsScore rows of the
      ONE band table above; attrition-only maps (HQ% < 10) are penalised. T0 bands
-     only — the score is tolerance-independent by design. */
+     only — the score is temperature-independent by design. */
   function balanceScore(agg, done) {
     var s = 0;
     BANDS.forEach(function (b) { if (b.feedsScore) s += outBand(b.val(agg, done), b.lo, b.hi, b.weight); });
     return s;
-  }
-
-  /* Panel fold — score ONE content candidate across the whole personality panel
-     (#101/#115). `rows` = [{name, agg, done}], one per personality (each agg the
-     addAgg fold of that personality's symmetric mapReport sweep — no second fold,
-     one nesting level above foldGlobal). `profile` = a loop-config Tolerance
-     ({tolerances:{key:grace}}); loosened cells (grace ≠ hold) are EXPLORATORY,
-     read-only. Rule: WORST-CASE per metric (the panel leaves nowhere to hide) —
-     a mean would hide overfit, so it is never taken. Balance (Red%/1st%) is the
-     ONLY hard flag, always at the fixed `hold` ruler; every other metric is
-     surfaced (worst member + spread) as the per-archetype overfit finding, never
-     rejected. See docs/rubrics/personality-rubric.md. */
-  var PANEL_FLAG = ['red', 'first'];
-  function foldPanel(rows, profile) {
-    var tol = (profile && profile.tolerances) || {};
-    var metrics = {};
-    BANDS.forEach(function (b) {
-      var flagged = PANEL_FLAG.indexOf(b.key) >= 0;
-      var grace = flagged ? 'hold' : (tol[b.key] || 'hold');   // balance never loosens
-      var eff = bands(b.key, grace);
-      var samples = rows.map(function (r) {
-          // done=0 = a personality with no finished games — no data, not a real 0%
-          // (pct's 0-denominator returns 0). Drop it to null so it can't trip a flag.
-          var v = r.done ? b.val(r.agg, r.done) : null;
-          return { name: r.name, val: v, out: v == null ? 0 : outBand(v, eff.lo, eff.hi, 1) };
-        }).filter(function (s) { return s.val != null; });
-      if (!samples.length) return;
-      // worst = the member the candidate fails hardest against (max out-of-band);
-      // ties fall to the largest raw value — the extreme member, not an average.
-      var worst = samples.reduce(function (m, s) {
-        return (s.out > m.out || (s.out === m.out && s.val > m.val)) ? s : m; }, samples[0]);
-      var vals = samples.map(function (s) { return s.val; });
-      var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
-      metrics[b.key] = { key: b.key, label: b.label, grace: grace, flagged: flagged,
-        lo: eff.lo, hi: eff.hi, feedsScore: b.feedsScore,
-        samples: samples, worst: worst, min: min, max: max, spread: max - min };
-    });
-    // Balance flag: Red%/1st% only. Names EVERY out-of-band member, not just the worst —
-    // a candidate can break the two-sided band on opposite sides against two
-    // personalities (one below the floor, one above the ceiling), and both matter.
-    // A loud flag on the numbers, never a reject (#164).
-    var members = [];
-    PANEL_FLAG.forEach(function (k) {
-      var m = metrics[k];
-      if (!m) return;
-      m.samples.forEach(function (s) {
-        if (s.out > 0) members.push({ key: k, label: m.label, name: s.name, val: s.val, lo: m.lo, hi: m.hi });
-      });
-    });
-    // Overfit lens: the EXPLORATORY (loosened) Tolerances only — the axes the loop
-    // is iterating — whose worst member breaks its loosened band. That is the style
-    // the candidate does not survive; spread rides along as the "no two members fall
-    // to the same read" signal. Held/guard metrics stay off it (they aren't being
-    // explored), balance stays off it (it's a flag). Read-only, never a gate.
-    var overfit = [];
-    Object.keys(tol).forEach(function (k) {
-      var m = metrics[k];
-      if (m && !m.flagged && m.worst.out > 0) overfit.push({ key: k, label: m.label, name: m.worst.name, val: m.worst.val, lo: m.lo, hi: m.hi, spread: m.spread });
-    });
-    // `flag.inBand` = no balance member out of band; `flag.members` names each that is.
-    return { metrics: metrics, flag: { inBand: members.length === 0, members: members }, overfit: overfit };
   }
 
   /* Per-map health flags — the 62/38/8/55/20 thresholds every report quotes.
@@ -480,239 +388,16 @@ var WOA_REPORT = (function () {
     (envs || []).forEach(function (env) {
       var winner = env && env.winner, tr = traceOf(env);
       tr.forEach(function (e) {
-        var c = cards[e.id] || (cards[e.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0, declines: 0 });
+        var c = cards[e.id] || (cards[e.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0 });
         c.plays++;
         if (e.p === winner) c.wins++;
         if (e.mode !== 'normal') c.simple++;       // resolved as a basic attack/reposition
         if ((e.seen || 1) <= 1) c.firstSight++;     // played the first time it was seen
         if (e.noop) c.noop++;                       // resolved ZERO actions
         c.seenSum += (e.seen || 1);
-        // #89 decline signal: every card held-but-passed-over this turn (older
-        // traces without `declined` contribute nothing). appears = plays +
-        // declines; decline-rate = declines / appears (per card).
-        (e.declined || []).forEach(function (did) {
-          var d = cards[did] || (cards[did] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0, declines: 0 });
-          d.declines++;
-        });
       });
     });
-    Object.keys(cards).forEach(function (id) { cards[id].appears = cards[id].plays + cards[id].declines; });
     return cards;
-  }
-
-  /* #89 phase-conditioned decline: per-card decline count in each of the 8
-     turn-octiles (reusing the octile index at actionOctileLanes). A card is
-     "declined" in a turn when it was in hand and a DIFFERENT card was played.
-     Returns { cardId: [8 counts] }; #82 slices decline-rate by phase from this
-     against the same-octile play counts. Empty for pre-#89 traces. */
-  function cardDeclineByOctile(env) {
-    var tr = traceOf(env), turns = turnsOf(env) || 1, out = {};
-    tr.forEach(function (e) {
-      var oi = Math.min(7, Math.max(0, Math.floor((e.turn - 1) * 8 / turns)));
-      (e.declined || []).forEach(function (did) {
-        (out[did] || (out[did] = [0, 0, 0, 0, 0, 0, 0, 0]))[oi]++;
-      });
-    });
-    return out;
-  }
-
-  /* ===== Army-points calibration pass (#82 / #114, Track C of the #108 build order) =====
-     A ONE-WAY ADVISORY pass (ADR-0002): points are a descriptive yardstick, never fitted
-     to win-rate. This reads the two measured signals already in report-model — the `resid`
-     from cardRows (measured contribution − price) and the #89 phase-conditioned decline —
-     classifies each Card, folds a CONTRIBUTION-WEIGHTED capability-class signal, and proposes
-     shared `POINTS` weight moves. Two guardrails are load-bearing:
-       • a SHARED weight moves only on a consistent class signal (≥2 cards, no single card
-         dominating the class's contribution); SINGLE-card domination is a REDESIGN flag,
-         never a weight move (prune the card, don't distort the price table);
-       • `deckPoints ≤ cap` is the one HARD gate — positive moves clamp to cap headroom;
-         the Tolerance (#109) supplies only SOFT velocity + direction, never a reject.
-     Engine-global-free like cardRows: the caller passes cardPoints/deckPoints facts in. */
-  var CALIB = {
-    resid: MISPRICE_RESID_PTS,   // |resid| (pts) for a Card to read mispriced (reuse the #57 anchor)
-    declineHigh: 0.6,            // decline-rate (declines/appears) at/above = heavily passed over
-    classSignal: MISPRICE_RESID_PTS, // contribution-weighted |resid| (pts) a class needs to justify a move
-    minClassCards: 2,            // a class needs ≥ this many classified cards to move (else single-card ⇒ flag)
-    soloShare: 0.6,              // one card > this share of a class's contribution ⇒ single-card domination (flag, no move)
-    stepPts: 0.5                 // base weight-move magnitude (one nudge); Tolerance scales it up
-  };
-  // The loosenable axes a Tolerance can widen (the scored feedsScore bands; Red%/1st% are
-  // among them but locked flags). The accept "heat" is the fraction of THESE a profile
-  // loosens — the denominator must be the full set, not the profile's own (sparse) key list.
-  var LOOSENABLE_AXES = BANDS.filter(function (b) { return b.feedsScore; }).length;
-
-  /* The POINTS levers a Card exercises, as a structural multiset {leverKey: count} —
-     the calibration's read of the pricing structure (mirrors the engine's stepPoints
-     shape: `step.<type>`, `tier.<unit>`, `mod` per |mod| point, `flag.<name>`). Counting
-     occurrences is a different fact from PRICING them (that stays the engine's one weight
-     table), so this is not a second copy of POINTS. capabilityClasses = its keys;
-     leverExposure = its count-weighted sum over a deck. */
-  function cardLevers(card) {
-    var out = {}, steps = (card && Array.isArray(card.steps)) ? card.steps : [];
-    steps.forEach(function (st) {
-      if (!st || !st.type) return;
-      out['step.' + st.type] = (out['step.' + st.type] || 0) + 1;
-      if (st.unit) out['tier.' + st.unit] = (out['tier.' + st.unit] || 0) + 1;
-      if (st.mod) out.mod = (out.mod || 0) + Math.abs(st.mod);
-      if (st.tieSpare) out['flag.tieSpare'] = (out['flag.tieSpare'] || 0) + 1;
-      if (st.noAdvance) out['flag.noAdvance'] = (out['flag.noAdvance'] || 0) + 1;
-      if (st.anywhere) out['flag.anywhere'] = (out['flag.anywhere'] || 0) + 1;
-    });
-    return out;
-  }
-
-  /* Classify ONE Card from its measured `resid` + phase-conditioned decline octiles.
-       Dominant          — out-wins its price share (resid ≥ +CALIB.resid) and players keep
-                           reaching for it (decline-rate < declineHigh).
-       Strictly-Dominated — under-delivers or unpriced-thin AND heavily declined EVEN in a
-                           LATE octile (passed over even when its timing should be right).
-       Weakly-Dominated  — under-delivers but declined only EARLY (held-value / timing —
-                           the ADR-0002 blind spot; correctly priced, just saved), or
-                           mispriced-negative without being shunned.
-       null              — no trustworthy signal.
-     octiles = the 8-count phase array (cardDeclineByOctile); absent ⇒ can't see "late",
-     so a resid-negative card is Weakly (conservative — never a redesign flag on thin data). */
-  function classifyCard(row, declineRate, octiles) {
-    declineRate = declineRate || 0;
-    var lateDeclined = !!(octiles && octiles.slice(4).some(function (n) { return n > 0; }));
-    var resid = row ? row.resid : null;
-    if (resid != null && resid >= CALIB.resid && declineRate < CALIB.declineHigh) return 'Dominant';
-    var shunned = declineRate >= CALIB.declineHigh;
-    if ((resid != null && resid <= -CALIB.resid) || shunned) {
-      return (shunned && lateDeclined) ? 'Strictly-Dominated' : 'Weakly-Dominated';
-    }
-    return null;
-  }
-
-  /* Contribution-weighted capability-class signal over the classified cards. ONLY the
-     trustworthy classes feed it — Dominant and Strictly-Dominated. Weakly-Dominated cards
-     are EXCLUDED: their negative resid is a known held-value / timing artifact (ADR-0002),
-     so folding it back into a shared move would reintroduce the very confound the class
-     quarantines. Each contributing card adds its `resid` to every POINTS lever it exercises,
-     weighted by its decisive-win contribution (hqWins, matching resid's basis; falls back to
-     plays). Returns {lever: {weightedResid, contrib, cards, topShare}} where topShare is one
-     card's share of the SIGNAL (Σ|w·resid|), not of head-count — a lone high-resid card
-     dominates the signal even with few decisive wins, and the single-card guard must see that. */
-  function capabilityClassSignal(classified) {
-    var acc = {};
-    (classified || []).forEach(function (c) {
-      if (c.class !== 'Dominant' && c.class !== 'Strictly-Dominated') return;   // Weakly excluded (timing artifact)
-      if (c.resid == null) return;
-      var w = c.hqWins || c.plays || 0; if (w <= 0) return;
-      Object.keys(c.levers).forEach(function (lever) {
-        var a = acc[lever] || (acc[lever] = { wResid: 0, contrib: 0, cards: 0, absSig: 0, topAbs: 0 });
-        var sig = Math.abs(w * c.resid);
-        a.wResid += w * c.resid; a.contrib += w; a.cards++;
-        a.absSig += sig; if (sig > a.topAbs) a.topAbs = sig;
-      });
-    });
-    var out = {};
-    Object.keys(acc).forEach(function (lever) {
-      var a = acc[lever];
-      out[lever] = { weightedResid: a.contrib ? a.wResid / a.contrib : 0, contrib: a.contrib,
-        cards: a.cards, topShare: a.absSig ? a.topAbs / a.absSig : 1 };
-    });
-    return out;
-  }
-
-  /* Count-weighted occurrences of a lever across a deck (deck.cards[].count × cardLevers). */
-  function leverExposure(deck, lever) {
-    return ((deck && deck.cards) || []).reduce(function (s, c) {
-      return s + (cardLevers(c)[lever] || 0) * (c.count == null ? 1 : c.count);
-    }, 0);
-  }
-  /* Max positive Δ a lever's weight can take before the TIGHTEST deck hits `cap` (the one
-     hard gate). deckPointsFn is the engine's E.deckPoints (kept engine-global-free). Infinity
-     when no deck exposes the lever; never negative (a maxed deck yields 0 headroom).
-     ponytail: exact only while POINTS.combo === 1.0 (deckPoints linear in each step weight).
-     A non-unit combo makes cardPoints = Σstep · nSteps^(combo−1) nonlinear in a lever's
-     weight — revisit this headroom (and the cap clamp it feeds) before tuning combo off 1.0. */
-  function pointsHeadroom(decks, lever, deckPointsFn, cap) {
-    var h = Infinity;
-    (decks || []).forEach(function (d) {
-      var ex = leverExposure(d, lever); if (!ex) return;
-      var room = (cap - deckPointsFn(d)) / ex;
-      if (room < h) h = room;
-    });
-    return h === Infinity ? Infinity : Math.max(0, h);
-  }
-
-  /* Accept move — SOFT velocity + direction within a Tolerance (#109). Direction is the
-     signal's sign; magnitude is one nudge (CALIB.stepPts) scaled up by the profile's "heat"
-     (fraction of loosened, non-hold tolerances) — a broadly-loosened Exploration tolerance
-     steps bigger. Soft by construction: it only sizes a move, it never rejects (the cap does
-     that). null tolerance ⇒ heat 0 ⇒ one nudge. Returns the signed magnitude. */
-  function acceptMove(dir, tolerance) {
-    var tol = (tolerance && tolerance.tolerances) || {};
-    // Profiles are SPARSE (holds omitted), so "heat" = loosened axes / all loosenable axes,
-    // NOT / the profile's own key count (that would read 1.0 for every real profile).
-    var loosened = Object.keys(tol).filter(function (k) { return tol[k] && tol[k] !== 'hold'; }).length;
-    var heat = LOOSENABLE_AXES ? loosened / LOOSENABLE_AXES : 0;
-    var mag = CALIB.stepPts * (1 + heat);
-    return (dir >= 0 ? 1 : -1) * mag;
-  }
-
-  /* The calibration pass. Inputs (all measured, engine-global-free):
-       rows        — cardRows(...) output (carries resid / hqWins / plays per card)
-       aggById     — cardAggFromEnvelopes(...) (carries declines / appears per card)
-       octilesById — {cardId: 8-count phase array} (folded cardDeclineByOctile), optional
-       cardsById   — {cardId: card} (for cardLevers); defaults to deriving from rows if absent
-       tolerance   — a #109 profile (soft velocity + direction), optional
-       capHeadroom — fn(lever) → max positive Δ before the cap (from pointsHeadroom), optional
-       weightOf    — fn(lever) → the lever's current POINTS weight, so a `lower` move floors at
-                     weight 0 (a negative weight is nonsensical); optional
-       veto        — fn(lever, move) → truthy DROPS the move (LLM feels-pass; applied AFTER
-                     the math so taste can stop a move but never feeds the signal)
-     Returns { classes, redesignFlags, signal, moves }. A move is proposed only for a lever
-     with a consistent shared signal (|weightedResid| ≥ CALIB.classSignal, ≥ minClassCards,
-     no single card > soloShare of the signal). A Dominant/Strictly-Dominated card raises a
-     REDESIGN flag ONLY when NO shared move covers it — single-card domination the class
-     signal can't move (prune the card); cards that co-drive a class move are handled by the
-     move, not flagged. Positive moves clamp to cap headroom; lower moves floor at weight 0. */
-  function calibratePoints(opts) {
-    opts = opts || {};
-    var rows = opts.rows || [], aggById = opts.aggById || {}, octilesById = opts.octilesById || {};
-    var cardsById = opts.cardsById || {};
-    var classes = rows.map(function (r) {
-      var a = aggById[r.id] || {};
-      var declineRate = a.appears ? a.declines / a.appears : 0;
-      var card = cardsById[r.id] || { steps: r.steps };
-      return { id: r.id, name: r.name, resid: r.resid, hqWins: r.hqWins, plays: r.plays,
-        declineRate: +declineRate.toFixed(3), levers: cardLevers(card),
-        class: classifyCard(r, declineRate, octilesById[r.id]) };
-    });
-    var signal = capabilityClassSignal(classes);
-    var moves = [];
-    Object.keys(signal).forEach(function (lever) {
-      var s = signal[lever];
-      if (Math.abs(s.weightedResid) < CALIB.classSignal) return;      // not a strong enough class lean
-      if (s.cards < CALIB.minClassCards || s.topShare > CALIB.soloShare) return; // single-card domination ⇒ flag only
-      // resid > 0 = class UNDER-priced (out-wins its price) ⇒ raise the weight; resid < 0 ⇒ lower it.
-      var delta = acceptMove(s.weightedResid > 0 ? 1 : -1, opts.tolerance);
-      if (delta > 0 && opts.capHeadroom) {
-        var room = opts.capHeadroom(lever);
-        if (room <= 0) return;                                        // no cap headroom ⇒ no move (hard gate)
-        if (delta > room) delta = room;                               // clamp positive move to the tightest deck (exact, never rounds over the cap)
-      }
-      if (delta < 0 && opts.weightOf) {
-        var floor = -opts.weightOf(lever);                            // most we can lower before weight hits 0
-        if (delta < floor) delta = floor;
-        if (delta >= 0) return;                                       // already at/over 0 ⇒ no lower move
-      }
-      moves.push({ lever: lever, delta: delta, weightedResid: +s.weightedResid.toFixed(2),
-        cards: s.cards, direction: delta >= 0 ? 'raise' : 'lower' });
-    });
-    if (opts.veto) moves = moves.filter(function (m) { return !opts.veto(m.lever, m); });
-    // Redesign flags: a Dominant/Strictly-Dominated card whose imbalance NO shared move covers.
-    var moved = {}; moves.forEach(function (m) { moved[m.lever] = true; });
-    var redesignFlags = classes.filter(function (c) {
-      if (c.class !== 'Dominant' && c.class !== 'Strictly-Dominated') return false;
-      return !Object.keys(c.levers).some(function (lever) { return moved[lever]; });   // uncovered by any class move
-    }).map(function (c) {
-      return { id: c.id, name: c.name, class: c.class, resid: c.resid, declineRate: c.declineRate,
-        reason: 'single-card ' + c.class.toLowerCase() + ', not covered by a shared class move — redesign the card, not the price' };
-    });
-    return { classes: classes, redesignFlags: redesignFlags, signal: signal, moves: moves };
   }
 
   /* The axis-worthy card Win%: sliced to HQ-capture endings × non-simple plays only
@@ -910,8 +595,7 @@ var WOA_REPORT = (function () {
     L.push('| Card | Simple% | Noop% | 1stSight% | AvgSeen | ' + (style === 'report' ? 'Plays' : 'plays') +
       (withPts ? ' | Pts | Resid' : '') + ' |');
     L.push('|---|--:|--:|--:|--:|--:|' + (withPts ? '--:|--:|' : ''));
-    var crows = cardRows(G.cards, model.cards, model.cardPoints);
-    crows.forEach(function (r) {
+    cardRows(G.cards, model.cards, model.cardPoints).forEach(function (r) {
       var tail = '';
       if (withPts) {
         var resid = r.resid == null ? '-' : (r.resid > 0 ? '+' : '') + f1(r.resid) + (r.mispriced ? ' ⚠' : '');
@@ -926,36 +610,6 @@ var WOA_REPORT = (function () {
         f1(MISPRICE_RESID_PTS) + ' — a **soft** mispricing flag, never a gate. Two confounds: a held-value Card (a saved attack buff) wins off-slice and can read − without being weak, and Resid is exposure-weighted so a draw-frequency gap can masquerade as price. Signal is the thin HQ-capture × printed-play slice (Cards under ' +
         MISPRICE_MIN_HQPLAYS + ' such plays show \'-\'); read at scale.' +
         (flagged ? '' : ' None flagged this run.') + '_');
-      L.push('');
-      // #156 — surface the Track-C calibratePoints suggestions (moves + redesign flags) for
-      // the same fold. Advisory only (ADR-0002): a POINTS move is a human decision, never
-      // auto-applied. Engine-global-free — resid/hqWins drive the class signal; the report
-      // fold carries no decline/octile data, so this is the raise-move + Dominant-flag view.
-      var cardsById = {};
-      (model.cards || []).forEach(function (c) { cardsById[c.id] = c; });
-      var calib = calibratePoints({ rows: crows, cardsById: cardsById });
-      L.push('## Calibration suggestions');
-      L.push('');
-      L.push('_Advisory (ADR-0002): a `POINTS` weight move is a human decision — bump the rules version atomically with its test pins, never auto-applied. Moves are directional only, NOT gated against the deck-points cap or current weight (this fold has no engine facts) — re-check headroom before applying. Source: report-model.js calibratePoints (#108 Track C)._');
-      L.push('');
-      if (!calib.moves.length && !calib.redesignFlags.length) {
-        L.push('_No calibration suggestions this run._');
-      } else {
-        if (calib.moves.length) {
-          L.push('**Weight moves** — a shared capability-class signal (≥2 cards, no single-card domination):');
-          calib.moves.forEach(function (m) {
-            L.push('- `' + m.lever + '` ' + m.direction + ' ' + (m.delta > 0 ? '+' : '') + m.delta +
-              ' (class weighted-resid ' + (m.weightedResid > 0 ? '+' : '') + m.weightedResid + ' pts over ' + m.cards + ' cards)');
-          });
-        }
-        if (calib.redesignFlags.length) {
-          if (calib.moves.length) L.push('');
-          L.push('**Redesign flags** — Dominant/Strictly-Dominated cards no shared move covers:');
-          calib.redesignFlags.forEach(function (f) {
-            L.push('- ' + f.name + ' (resid ' + (f.resid > 0 ? '+' : '') + f.resid + '): ' + f.reason);
-          });
-        }
-      }
       L.push('');
     }
     // Obsidian-style tag footer so reports are findable by kind + rules version
@@ -1111,11 +765,11 @@ var WOA_REPORT = (function () {
     return rows;
   }
 
-  return { pct: pct, f1: f1, actionTotal: actionTotal, balanceScore: balanceScore, foldPanel: foldPanel, mapNotes: mapNotes,
+  return { pct: pct, f1: f1, actionTotal: actionTotal, balanceScore: balanceScore, mapNotes: mapNotes,
     addAgg: addAgg, foldGlobal: foldGlobal, cardRows: cardRows, reportMarkdown: reportMarkdown,
     MISPRICE_RESID_PTS: MISPRICE_RESID_PTS, MISPRICE_MIN_HQPLAYS: MISPRICE_MIN_HQPLAYS,
     // bands-as-data + trace folds (node + browser both consume)
-    BANDS: BANDS, bands: bands, RANGES: RANGES, outBand: outBand, quantile: quantile,
+    BANDS: BANDS, bands: bands, outBand: outBand, quantile: quantile,
     firstContactTurn: firstContactTurn, deployInterleave: deployInterleave, settlePoint: settlePoint,
     actionOctileLanes: actionOctileLanes, vpDiffTrack: vpDiffTrack, cardPlayTurnQuartiles: cardPlayTurnQuartiles,
     // Maps pane: cross-skirmish drill-down folds (one map, many skirmishes)
@@ -1123,10 +777,7 @@ var WOA_REPORT = (function () {
     // Overview pane: per-map balance-score dumbbell fold (1f)
     mapScoreDumbbells: mapScoreDumbbells,
     // per-card DB-rows aggregate (cardRows-compatible) + the Win% doctrine slice
-    cardAggFromEnvelopes: cardAggFromEnvelopes, cardHqWinSlice: cardHqWinSlice, cardDeclineByOctile: cardDeclineByOctile,
-    // Army-points calibration pass (#82/#114): classify → contribution-weighted class signal → cap-safe shared-weight moves
-    CALIB: CALIB, cardLevers: cardLevers, classifyCard: classifyCard, capabilityClassSignal: capabilityClassSignal,
-    leverExposure: leverExposure, pointsHeadroom: pointsHeadroom, acceptMove: acceptMove, calibratePoints: calibratePoints,
+    cardAggFromEnvelopes: cardAggFromEnvelopes, cardHqWinSlice: cardHqWinSlice,
     // Cards pane: per-run per-card view + fleet-wide fire-time quartiles (many skirmishes)
     cardRunView: cardRunView, cardFleetFireTimes: cardFleetFireTimes,
     // per-unit-type aggregate (role map / breakthrough / lifespan / exchange)

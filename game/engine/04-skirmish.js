@@ -266,12 +266,8 @@
       throw new Error('cannot reposition while a basic attack is available');
     st.hands[p].splice(idx, 1);
     if (!st.playLog) st.playLog = []; // self-heal pre-metrics saves
-    // The played card was spliced out above, so st.hands[p] is now exactly the
-    // cards held-but-passed-over this turn (#89 decline signal, turn-stamped for
-    // phase-conditioning). Snapshot ids only; no RNG touch -> golden-diff neutral.
     st.playLog.push({ p: p, id: cardId, mode: mode, turn: st.turnNumber,
-      seen: (st.seen && st.seen[p] && st.seen[p][cardId]) || 1,
-      declined: st.hands[p].slice() });
+      seen: (st.seen && st.seen[p] && st.seen[p][cardId]) || 1 });
     var card = sideReg(st, p).byId[cardId];
     var steps;
     if (mode === 'attack') steps = [{ type: 'attack' }];

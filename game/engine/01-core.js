@@ -32,7 +32,7 @@
     global.WOA_CONTENT = { maps: [], cards: [], decks: [], mapsets: [], units: [] };
     try {
       var fs = require('fs'), path = require('path');
-      var kinds = ['cards', 'decks', 'maps', 'mapsets', 'units', 'commanders'];
+      var kinds = ['decks', 'maps', 'mapsets', 'units'];
       try { kinds = require('../content/kinds.js'); } catch (e2) { /* kinds.js is the source of truth when present */ }
       kinds.forEach(function (kind) {
         var dir = path.join(__dirname, '..', 'content', kind);
@@ -47,32 +47,6 @@
     }
   })();
   var CONTENT = global.WOA_CONTENT || { maps: [], cards: [], decks: [], mapsets: [], units: [] };
-  // Card catalog (#159): the single definition site for every card lives in
-  // content/cards/*.js (WOA_CONTENT.cards). Deck files carry only refs
-  // {id, count, starting?}; hydrate each ref into the full card def here, once,
-  // in place — so EVERY reader of WOA_CONTENT.decks (engine, deck editor, node
-  // tools) inherits fully-resolved cards without its own card-data path. An
-  // entry that already carries a def (the browser __applied override, or any
-  // hand-authored deck) passes through unchanged.
-  var CATALOG = {};
-  (CONTENT.cards || []).forEach(function (c) { if (c && c.id) CATALOG[c.id] = c; });
-  function hydrateDeck(deck) {
-    if (!deck || !Array.isArray(deck.cards)) return deck;
-    deck.cards = deck.cards.map(function (ref) {
-      var def = CATALOG[ref && ref.id];
-      var card = def ? Object.assign({}, def, ref) : ref;   // catalog def + count/starting
-      // A ref that resolved to no catalog def AND carries no inline steps is a
-      // dangling pointer — inlined defs made that impossible pre-#159; re-establish
-      // the invariant loudly instead of dealing a step-less card at play. (A full
-      // override entry — the browser __applied / custom deck — already has steps.)
-      if (!Array.isArray(card.steps))
-        throw new Error('War of Attrition: deck "' + (deck.id || '?') + '" references card "' +
-          (ref && ref.id) + '" with no catalog def (content/cards/' + (ref && ref.id) + '.js)');
-      return card;
-    });
-    return deck;
-  }
-  (CONTENT.decks || []).forEach(hydrateDeck);
   // the active deck decides the card list; fall back to any deck, then to any
   // loose WOA_CONTENT.cards (belt-and-braces for hand-authored content).
   var ACTIVE_DECK = (CONTENT.decks || []).filter(function (d) { return d && d.active; })[0] ||
@@ -217,59 +191,11 @@
     var cards = (deck && deck.cards) || [];
     return cards.reduce(function (s, c) { return s + cardPoints(c) * (c.count == null ? 1 : c.count); }, 0);
   }
-  // Army-points budget ceiling (WOA #56): the pre-game legality budget that lets two
-  // asymmetric decks be called "matched" — NOT the post-game balance band (that is the
-  // Tolerance in report-model), a distinct concept. Seeded above where the shipped roster
+  // Army-points budget ceiling (WOA #56): the fairness constraint that lets two
+  // asymmetric decks be called "matched". Seeded above where the shipped roster
   // sits today (max iter3 = 70.5); the deck editor's sum(count) band guardrail
   // rejects an over-budget deck the same way it rejects an oversized one.
   var DECK_POINTS_CAP = 72;
-  // Step (#110): signed deckPoints delta from incumbent to candidate. Null parent
-  // (iteration-0 fixture) → 0.
-  function deckStep(parent, candidate) {
-    if (!parent) return 0;
-    return deckPoints(candidate) - deckPoints(parent);
-  }
-
-  /* Deck legality (#116, lifted verbatim from the deck editor's deckProblems).
-     ONE implementation of "is this deck legal", shared by the browser deck editor
-     (game/ui/deck-editor.js aliases E.deckProblems) and the phase-0 drafter
-     (dev/deckbuild.js). Returns human-readable problem strings; empty = legal.
-     The army-points cap is the load-bearing gate the drafter hard-gates on; the
-     size band + starting-card rules are the editor's stricter guardrails (the
-     drafter treats them as advisory — size/starting are soft, only the cap fences). */
-  var STEP_FLAGS = { deploy: { unit: 1, anywhere: 1 }, trench: {}, attack: { mod: 1, tieSpare: 1, noAdvance: 1 }, reposition: {}, barrage: {} };
-  function deckProblems(cards) {
-    var probs = [], ids = {}, total = 0, starting = 0;
-    cards = (cards || []).filter(function (c) { return !c.out; }); // benched cards aren't shipped or validated
-    cards.forEach(function (c, i) {
-      var tag = c.name || c.id || ('card ' + (i + 1));
-      if (!c.id || !/^[a-z0-9_]+$/i.test(c.id)) probs.push(tag + ': id must be letters/digits/underscores');
-      else if (ids[c.id]) probs.push('duplicate id "' + c.id + '"');
-      ids[c.id] = 1;
-      if (!c.name) probs.push('card ' + (i + 1) + ' needs a name');
-      var n = +c.count;
-      if (!(n >= 1) || n !== Math.floor(n)) probs.push(tag + ': count must be a whole number ≥ 1');
-      else total += n;
-      if (c.starting && n !== 1) probs.push(tag + ': the starting card must have count 1 (the engine deals exactly one)');
-      if (c.starting) starting++;
-      if (!Array.isArray(c.steps) || !c.steps.length) probs.push(tag + ': needs at least one step');
-      else c.steps.forEach(function (s, si) {
-        var stp = tag + ' step ' + (si + 1);
-        if (!s || !STEP_FLAGS[s.type]) { probs.push(stp + ': unknown type "' + (s && s.type) + '" (deploy / trench / attack / reposition / barrage)'); return; }
-        Object.keys(s).forEach(function (k) { if (k !== 'type' && !STEP_FLAGS[s.type][k]) probs.push(stp + ': "' + k + '" is not a ' + s.type + ' option'); });
-        if (s.type === 'deploy' && !UNITS[s.unit]) probs.push(stp + ': unknown unit "' + s.unit + '" (' + Object.keys(UNITS).join(' / ') + ')');
-        if (s.type === 'attack' && s.mod !== undefined && typeof s.mod !== 'number') probs.push(stp + ': mod must be a number');
-      });
-    });
-    if (starting !== 1) probs.push('exactly ONE card must be marked starting (got ' + starting + ')');
-    // WOA-036: the physical guardrail is a design band, not one exact count — every
-    // shipped deck totals 16 or 17. A custom deck must land in that same band.
-    if (total < 16 || total > 17) probs.push('the deck must total 16-17 cards (got ' + total + ') — hand-edit the deck file if you really want an exotic size');
-    // WOA #56: army-points budget ceiling — the pre-game legality budget. Same reject-on-validate as the size band.
-    var pts = deckPoints({ cards: cards });
-    if (pts > DECK_POINTS_CAP) probs.push('the deck is over the army-points budget (' + pts + ' > ' + DECK_POINTS_CAP + ') — cut a card or a step');
-    return probs;
-  }
 
   // tiny pure helpers used by every layer
   function other(p) { return p === 'red' ? 'blue' : 'red'; }
@@ -299,9 +225,7 @@
   I.PIECE_TOTALS = PIECE_TOTALS;
   I.cardPoints = cardPoints;
   I.deckPoints = deckPoints;
-  I.deckStep = deckStep;
   I.DECK_POINTS_CAP = DECK_POINTS_CAP;
-  I.deckProblems = deckProblems;
   I.MAPS = MAPS;
   I.MAPSETS = MAPSETS;
   I.activeMapset = activeMapset;

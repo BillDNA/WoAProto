@@ -227,9 +227,12 @@ function renderHand(){
     var d = document.createElement('div');
     d.className = 'card' + (live ? '' : ' disabled') + (deal ? ' deal' : '');
     if (deal) d.style.animationDelay = (i*60)+'ms';
-    // The card face is the ONE shared renderer (app.js cardFace); the hand just owns
-    // the element, its live/disabled/deal classes, and the play-on-click handler.
-    d.innerHTML = cardFace(c, { faceDown: hideCards });
+    var art = hideCards ? '' : artImg(cid, '');
+    d.innerHTML = '<div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>' +
+      (hideCards
+        ? '<div class="body" style="display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--brass-dark);">&#9881;</div>'
+        : (art ? '<div class="art">'+art+'</div>' : '') +
+          '<div class="banner">'+c.name+'</div><div class="body">'+c.text+'</div>');
     if (live) d.onclick = function(){ playCardUI(cid); };
     el.appendChild(d);
   });

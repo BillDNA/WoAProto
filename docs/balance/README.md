@@ -23,9 +23,9 @@ criterion wins and this table gets fixed.
 
 | Report line / column | Good range | Full criterion |
 | --- | --- | --- |
-| Red% | 45–55 (marginal to 40–60; 62/38 = SIDE-BIASED) | best-map-score |
-| 1st% | 45–55 (marginal to 40–60) | best-map-score |
-| HQ% | 10–40 (≤8 attrition-only, ≥55 rushable) | best-map-score |
+| Red% | 45–55 (marginal to 40–60; 62/38 = SIDE-BIASED) | map-rubric §1 |
+| 1st% | 45–55 (marginal to 40–60) | map-rubric §2 |
+| HQ% | 10–40 (≤8 attrition-only, ≥55 rushable) | map-rubric §3 |
 | Turns | comfortably under the play cap (2× deck size) | Pacing |
 | Atk% / Swp% | share of all actions; near baseline; ±30% move = regression | Behaviour |
 | 0kill% | ≤5 — **hard floor** | North star 2 |
@@ -38,7 +38,6 @@ criterion wins and this table gets fixed.
 | Simple% | <40 good, 40–60 marginal, >60 failing | card evidence |
 | Noop% | ~0; >2% investigate — **hard floor ≈0** | North star 3 |
 | 1stSight% / AvgSeen | no band — **diagnostic of the AI** | card evidence |
-| Pts / Resid | `⚠` at \|Resid\| ≥ `MISPRICE_RESID_PTS`, `-` under `MISPRICE_MIN_HQPLAYS` — **soft flag, never a gate** (ADR-0002); arithmetic in `docs/report-model.md` | card-rubric §4 |
 | skill premium | adjacent tiers ≥60%, two apart ≥75% | North star 1 |
 
 **Small-n rule:** a conditioned metric (Tie%/Drag over attrition endings;
