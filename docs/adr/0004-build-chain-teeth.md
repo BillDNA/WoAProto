@@ -85,6 +85,26 @@ does not match the target", without anyone enumerating the polish item-by-item
 (enumeration is how you write create/update/move and silently drop delete). The
 `dev/proto` mock is the design *answer* the ticket must build a surface to match.
 
+**The transport under a falsifier must be real.** The four kinds classify *what*
+the falsifier observes; they do not by themselves force the *transport* beneath it
+to be real, and a criterion satisfied only by a fake or injected transport — a
+stubbed `ask`, a faked capture, a short-circuited spawn — proves the fake, not the
+seam. That is the same 80% gap one layer down: ui-review Phase 2 (#195) shipped
+with every criterion fake-satisfiable, so the real Phase-1→Phase-2 handoff never
+ran while the suite stayed green — the tell being that real capture yields *pixels*
+and the fake comparator read *text*, so the two real halves could not run together.
+So a **transport-bearing** criterion (interaction most visibly, but fidelity and
+logic too) must assert its outcome against the **real transport or a faithful
+deterministic stand-in** (e.g. a pixel-aware fake that consumes the real capture
+bytes), never a stub that skips the seam — and the wrapper **rejects** a
+transport-bearing ticket whose criteria are *all* fake-satisfiable. Its home is an
+**always-run integration test** plus a **committed live smoke** run for real once
+and pasted on the PR (`dev/ui-review.smoke.js` is the pattern). This is a
+*qualifier* on the kinds, not a fifth kind: whether the transport is real is an
+axis orthogonal to what the falsifier observes, applying across interaction,
+fidelity, and logic alike — a correctly-written interaction AC already *is* the
+integration.
+
 ### 2. `woa-implement` — fresh graders, no self-marking, a real completion gate
 
 Three deltas over vanilla `implement`; nothing else:
@@ -121,6 +141,7 @@ Gate-to-home map (all reds run on every commit / pre-PR):
 | Route-through-base (no bespoke `.card` outside the one renderer) | single-source assert in `game/test.js` | mechanical red |
 | Substance shipped (coverage vs target) | `dev/ui-review.js` Phase 1 (blind) | review bounce |
 | Reads well | `dev/ui-review.js` Phase 2 (ui-rubric) | review aim |
+| Real seam actually runs (transport-bearing AC) | always-run integration test (real transport / faithful stand-in) + a committed `*.smoke.js` live run | mechanical red + run-once |
 | New primitive · invariant changed · pinned test pruned · version bump | PR template callout | human, by exception |
 
 **Reuse is register-or-extend.** A new *variant* of an existing UI role must extend

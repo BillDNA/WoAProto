@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* dev/ui-review.js — Phase 1, THE GATE (spec #185, ADR-0004, ticket #192).
+/* dev/ui-review.js — Phase 1 THE GATE (#192) + Phase 2 THE AIM (#195). (spec #185, ADR-0004.)
  *
  * A zero-interaction Node CLI that runs the fresh blind UI review in place of the biased
  * inline code-review. Modeled on the `claude -p` transport used by dev/llm-client.js /
@@ -15,9 +15,17 @@
  *     on any target element the after-description omits — the anti-80% oracle) AND the
  *     ticket's acceptance criteria (bounce on any AC or human interaction not evidenced).
  *
- * Any bounce -> non-zero exit; the review stops here and never reaches a rubric (Phase 2 is
- * a later ticket). It writes a verdict artifact; screenshots go to a shots-branch (git ref
- * refs/heads/pr-shots/<ticket>, written via plumbing) and NEVER to the working tree.
+ * Any bounce -> non-zero exit; the review stops at the gate and never reaches the rubric. On a
+ * clean Phase 1 pass, PHASE 2 — the AIM (#195) — runs: a rubric read over after+target against
+ * `ui-rubric` AND the ticket's goals ("do we approach each?"), which may DRIVE the running UI with
+ * Playwright (hover/click) to judge the affordance/response/motion axes a frozen still can't show.
+ * Phase 2 emits FINDINGS ONLY and never changes Phase 1's exit code — a rubric never gates. That is
+ * ENFORCED, not asked: normalizeRubricFindings THROWS (harness error, exit 2) if the rubric output
+ * is shaped like a verdict (a score/band/verdict/pass-fail), mirroring grade-card's guard.
+ *
+ * It writes a verdict artifact (Phase 1) plus a rubric block + rubric-input.json (Phase 2);
+ * screenshots go to a shots-branch (git ref refs/heads/pr-shots/<ticket>, written via plumbing)
+ * and NEVER to the working tree.
  *
  * The GATE (spec vocabulary, docs/context/test.md) is the deterministic fact that THE REVIEW
  * RAN AGAINST THE TARGET AND EMITTED A VERDICT — decide() below is that gate: it is pure and
@@ -36,7 +44,8 @@
  *     "acs": ["The dashboard shows a live match feed", ...],   // the ticket's acceptance criteria
  *     "before": "path/to/before.html",   // rendered as BEFORE (repo-relative or absolute)
  *     "after":  "path/to/after.html",    // rendered as AFTER
- *     "target": "dev/proto/<x>.proto.html" }   // the fidelity oracle (a dev/proto mock)
+ *     "target": "dev/proto/<x>.proto.html",   // the fidelity oracle (a dev/proto mock)
+ *     "goals": ["A tester can start a sweep without the terminal", ...] }   // Phase-2 aim axes
  *
  * The pure pieces (decide / parseVerdict / buildDescribeRequest / buildCompareRequest) are
  * unit-tested; the exit-code seam is exercised against fixtures in dev/ui-review.test.js.
@@ -77,6 +86,36 @@ const COMPARATOR_SYSTEM =
 const VERDICT_SCHEMA = JSON.stringify({
   bounces: [{ kind: 'ac | target-element | interaction', ref: 'the AC text or element name', why: 'what is missing' }]
 }, null, 2);
+
+// ---------------------------------------------------------------- Phase 2 — THE AIM (rubric, findings-only)
+// Phase 2 runs ONLY on a clean Phase-1 pass. It is an AIM, not a gate: it reads the ui-rubric axes AND
+// the ticket's goals ("do we approach each?") and emits per-axis FINDINGS (position + velocity, prose).
+// It can NEVER bounce — a findings-only output leaves Phase 1's exit code untouched. The one thing that
+// DOES red is a mechanical guard (mirroring grade-card): if the rubric output is shaped like a verdict
+// (a score/band/verdict/pass-fail), normalizeRubricFindings THROWS and the CLI turns that into a harness
+// error (exit 2). So "a rubric never gates" is ENFORCED, not requested.
+const RUBRIC_PATH = 'docs/rubrics/ui-rubric.md';
+const RUBRIC_SYSTEM =
+  'You are a designer critiquing a RUNNING interface, not QA checking a slide. You are shown ' +
+  'screenshots of a screen — including states captured while it was driven (a hover, a click) — and ' +
+  'you read the ui-rubric and the ticket goals you are given. For each ui-rubric axis and each ticket ' +
+  'goal, ask "do we approach it?" and answer with an OBSERVATION (where the screen sits) and a ' +
+  'DIRECTION to move (the fix toward the aim). This is an AIM, not a gate: you do NOT pass, fail, ' +
+  'score, band, grade, or rank it, and you cannot reject the screen. Respond with ONLY the keyed JSON ' +
+  'findings object and nothing else — no prose before or after.';
+
+// The rubric read's output shape (findings only — position + velocity prose per axis/goal).
+const RUBRIC_SCHEMA = JSON.stringify({
+  reviewer: 'fresh-rubric',
+  axes: [{ axis: 'the ui-rubric axis or ticket goal, by its name', source: 'rubric | goal',
+    position: 'where the screen sits on this axis', velocity: 'the fix that moves it toward the aim' }]
+}, null, 2);
+
+// The guard's vocabulary. A rubric read is FINDINGS; a verdict word as a KEY at any level (or a bare
+// verdict/number VALUE in a finding) is refused, so a gate can't slip in. Benign extra keys are NOT
+// verdict-shaped and are tolerated — the aim never gates on mere shape. Same verdict doctrine as
+// grade-card.js, kept local so ui-review stays self-contained.
+const RUBRIC_VERDICT_KEYS = ['score', 'band', 'verdict', 'grade', 'rating', 'pass', 'fail', 'enum', 'points', 'value', 'tier'];
 
 // ---------------------------------------------------------------- pure helpers
 function present(buf) { return !!(buf && buf.length > 0); }
@@ -168,6 +207,112 @@ function buildCompareRequest(shotsDir, description, targetBuf, acs) {
   };
 }
 
+// ---------------------------------------------------------------- Phase 2 pure pieces
+// Pull the ui-rubric's axis prompts (the ==**…**== headers under "Axes of evaluation") so the request
+// can name them and rubric-input.json can record exactly which axes Phase 2 read — the AC1 boundary.
+function rubricAxisTitles(rubricText) {
+  if (typeof rubricText !== 'string') return [];
+  const body = rubricText.split(/##\s*Axes of evaluation/i)[1] || '';
+  const out = [];
+  const re = /==\*\*(.+?)\*\*==/g;
+  let m;
+  while ((m = re.exec(body))) out.push(m[1].trim());
+  return out;
+}
+
+// The rubric read request — the ui-rubric axes AND the ticket goals, over the after/target stills plus
+// any interaction stills Phase 2 drove. `axesRead`/`goals` are surfaced as fields so rubric-input.json
+// can record them (the AC1 boundary: Phase 2 demonstrably read both the rubric and the ticket goals).
+function buildRubricRequest(shotsDir, stills, goals, rubricText) {
+  const axes = rubricAxisTitles(rubricText);
+  const axisList = axes.map(function (a, i) { return (i + 1) + '. ' + a; }).join('\n');
+  const goalList = (goals || []).map(function (g, i) { return (i + 1) + '. ' + g; }).join('\n');
+  const userMessage =
+    'Read the ui-rubric in full: ' + RUBRIC_PATH + '.\n\n' +
+    'Walk EACH ui-rubric axis and EACH ticket goal below and ask "do we approach it?" — an observation ' +
+    '(where the screen sits) and a direction to move (the fix toward the aim). Findings only: no pass, ' +
+    'fail, score, band, grade, or ranking.\n\n' +
+    'ui-rubric axes:\n' + (axisList || '(load them from ' + RUBRIC_PATH + ')') +
+    '\n\nThe ticket\'s goals (read each as an axis — "do we approach it?"):\n' + (goalList || '(none stated)') +
+    '\n\nRespond with ONLY the keyed JSON findings object.' + imageBlock(stills);
+  return {
+    phase: 'rubric',
+    systemPrompt: RUBRIC_SYSTEM,
+    userMessage: userMessage,
+    axesRead: axes,
+    goals: (goals || []).slice(),
+    images: stills,
+    outputSchema: RUBRIC_SCHEMA
+  };
+}
+
+// Parse the rubric read's text -> { obj } (a JSON object to guard+normalize) or { empty } (no
+// structured findings). Fail-OPEN, unlike the Phase-1 comparator: Phase 2 is an aim, so an empty or
+// unparseable read records nothing and never reds. Only a positively verdict-shaped OBJECT reds — via
+// normalizeRubricFindings, on the object this returns.
+function parseRubricFindings(text) {
+  if (typeof text !== 'string' || !text.trim()) return { empty: true };
+  let s = text.trim();
+  const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence) s = fence[1].trim();
+  let o = null;
+  try { o = JSON.parse(s); } catch (e) { o = null; }
+  if (!o || typeof o !== 'object') {
+    const m = s.match(/\{[\s\S]*\}/);
+    if (m) { try { o = JSON.parse(m[0]); } catch (e) { o = null; } }
+  }
+  if (!o || typeof o !== 'object') return { empty: true };
+  return { obj: o };
+}
+
+// The guard: red ONLY on a verdict-shaped key (score/band/verdict/pass-fail…). A benign extra key
+// ('summary', 'evidence', …) is NOT a smuggled gate, so it is tolerated and dropped during
+// normalization — the aim never gates on mere shape. Only the verdict vocabulary reds.
+function refuseVerdictKeys(obj, where) {
+  const verdicts = Object.keys(obj).filter(function (k) { return RUBRIC_VERDICT_KEYS.indexOf(k) >= 0; });
+  if (verdicts.length) throw new Error(where + ' carries verdict field(s) [' + verdicts.join(', ') +
+    '] — a ui-rubric read is FINDINGS, never a score/band/pass-fail (Phase 2 is an aim, not a gate). Recast it as prose.');
+}
+
+// A finding coordinate must be a described sentence, never a verdict masquerading as prose (a bare
+// number, a band, or a pass/fail/grade word).
+function rubricProse(v, axis, which) {
+  if (typeof v !== 'string' || !v.trim()) throw new Error('axis "' + axis + '" needs a ' + which + ' (a described sentence)');
+  const t = v.trim();
+  if (/^\s*[-+]?\d+(\.\d+)?\s*(\/\s*\d+)?\s*$/.test(t)) throw new Error('axis "' + axis + '" ' + which + ' is a bare number — findings are prose, not a score/band');
+  if (/^(pass|fail|good|bad|ok|okay|yes|no|strong|weak|green|amber|red|[a-df][+-]?)$/i.test(t))
+    throw new Error('axis "' + axis + '" ' + which + ' is a bare verdict word ("' + t + '") — findings are prose, not a pass/fail/grade');
+  return t;
+}
+
+// Validate the rubric read into the recorded shape, or THROW (the guard). Prose-only, per-axis, no
+// verdict-shaped key or value at any level. THIS is the mechanical enforcement of "a rubric never
+// gates": a verdict-shaped output throws here, and the CLI turns the throw into a harness red (exit 2).
+function normalizeRubricFindings(raw) {
+  if (!raw || typeof raw !== 'object') throw new Error('rubric findings must be a JSON object');
+  refuseVerdictKeys(raw, 'the rubric findings object');   // a top-level verdict/score/band -> red
+  const reviewer = raw.reviewer || raw.grader || 'fresh-rubric';
+  const axesIn = raw.axes || raw.findings;
+  // Fail-OPEN, not a gate: a parseable object with nothing to say (no/empty axes) records a note and
+  // passes — an aim never reds for silence. Only a verdict-shaped output (caught above / below) reds.
+  if (!Array.isArray(axesIn) || !axesIn.length) {
+    return { readAt: new Date().toISOString(), reviewer: reviewer, axes: [],
+      note: 'no structured findings (an aim, not a gate — nothing to record)' };
+  }
+  const axes = axesIn.map(function (f, i) {
+    if (!f || typeof f !== 'object') throw new Error('rubric axis finding #' + (i + 1) + ' must be an object');
+    refuseVerdictKeys(f, 'rubric axis finding "' + (f.axis || i) + '"');   // a per-axis verdict key -> red
+    const axis = (typeof f.axis === 'string' && f.axis.trim()) ? f.axis.trim() : String(i + 1);
+    return {
+      axis: axis,
+      source: f.source === 'goal' ? 'goal' : 'rubric',
+      position: rubricProse(f.position, axis, 'position'),
+      velocity: rubricProse(f.velocity, axis, 'velocity')
+    };
+  });
+  return { readAt: new Date().toISOString(), reviewer: reviewer, axes: axes };
+}
+
 // ---------------------------------------------------------------- spec loading
 function loadSpec(ref) {
   if (!ref) throw new Error('a ticket reference is required: node dev/ui-review.js <review-spec.json>');
@@ -180,6 +325,7 @@ function loadSpec(ref) {
   if (spec.ticket == null) spec.ticket = path.basename(file).replace(/\.json$/, '');
   spec.ticket = String(spec.ticket);
   if (!Array.isArray(spec.acs)) spec.acs = [];
+  if (!Array.isArray(spec.goals)) spec.goals = [];   // Phase-2 aim axes ("do we approach each?")
   return spec;
 }
 
@@ -215,6 +361,54 @@ async function defaultCapture(htmlPathAbs) {
   } finally { await page.close(); }
 }
 async function closeBrowser() { if (BROWSER) { try { await BROWSER.close(); } catch (e) {} BROWSER = null; } }
+
+// Phase-2 DRIVE: the same Playwright driver Phase 1 uses to capture, but now ACTING on the running
+// interface — hover the first actionable mark, then click it — and screenshotting the states a frozen
+// still can't show (affordance, response/feel, motion). Fail-SOFT to [] at every step: Phase 2 is an
+// aim, so a missing browser or a drive that can't complete just yields fewer interaction stills, never
+// a red. Returns an array of { role, buf }.
+async function defaultDrive(htmlPathAbs) {
+  if (!htmlPathAbs || !fs.existsSync(htmlPathAbs)) return [];
+  let pw;
+  try { pw = loadPlaywright(); } catch (e) { return []; }
+  if (!BROWSER) { try { BROWSER = await pw.chromium.launch(); } catch (e) { return []; } }
+  let page;
+  try { page = await BROWSER.newPage(); } catch (e) { return []; }
+  const stills = [];
+  try {
+    await page.setViewportSize({ width: 1200, height: 900 });
+    await page.goto('file://' + htmlPathAbs, { waitUntil: 'load', timeout: 15000 });
+    await page.waitForTimeout(300);
+    const startUrl = page.url();
+    // Prefer in-page controls (buttons, form fields, the rig's [data-el] game marks). Deliberately
+    // EXCLUDE a[href] and [onclick]: a click there can navigate away or fire a destructive action, and
+    // the 'after-click' still would then show an unrelated page — a false observation for the grader.
+    const sel = 'button, [role="button"], input[type="button"], input[type="submit"], [data-el], .btn';
+    const el = await page.$(sel);
+    if (el) {
+      // Hover is side-effect-free: always safe to capture (the affordance/response answer).
+      try { await el.hover({ timeout: 2000 }); await page.waitForTimeout(150);
+        stills.push({ role: 'hover', buf: await page.screenshot({ fullPage: true }) }); } catch (e) {}
+      // Click WITHOUT force (force bypasses actionability and can hit an overlapped/off-screen control).
+      // Then guard against navigation: if the URL changed, the surface under review is gone — discard the
+      // still rather than feed the grader a screenshot of somewhere else.
+      try {
+        await el.click({ timeout: 2000 });
+        await page.waitForTimeout(300);
+        if (page.url() === startUrl) {
+          stills.push({ role: 'after-click', buf: await page.screenshot({ fullPage: true }) });
+        }
+      } catch (e) {}
+    }
+  } catch (e) { /* aim: a partial/failed drive yields fewer stills, never a red */ }
+  finally { try { await page.close(); } catch (e) {} }
+  return stills;
+}
+
+// The ui-rubric text (fail-soft to '' — Phase 2 is an aim; a missing rubric just narrows the read).
+function readRubric() {
+  try { return fs.readFileSync(path.join(ROOT, RUBRIC_PATH), 'utf8'); } catch (e) { return ''; }
+}
 
 // ---------------------------------------------------------------- LLM transport (vision, fail-closed)
 // Real ask: `claude -p` reads the referenced image files (the request's userMessage already lists
@@ -298,6 +492,19 @@ function writeVerdictMd(outDir, v) {
     lines.push('');
   }
   lines.push('## Blind description (describer never saw the ticket)', '', (v.description || '(none)'), '');
+  if (v.rubric) {
+    lines.push('## Phase 2 — the aim (ui-rubric + ticket goals; findings only, never a gate)', '');
+    if (v.rubric.axes && v.rubric.axes.length) {
+      v.rubric.axes.forEach(function (a) {
+        lines.push('- **' + a.axis + '** _(' + a.source + ')_');
+        lines.push('  - position: ' + a.position);
+        lines.push('  - velocity: ' + a.velocity);
+      });
+    } else {
+      lines.push('_' + (v.rubric.note || 'no findings recorded') + '_');
+    }
+    lines.push('');
+  }
   fs.writeFileSync(path.join(outDir, 'verdict.md'), lines.join('\n'));
 }
 
@@ -365,15 +572,64 @@ async function review(spec, opts) {
     compared: compared, description: description, rawCompare: rawCompare, bounces: d.bounces, pass: d.pass,
     shots: { staged: shots.staged, branch: shots.branch || null }
   };
+  // Write the Phase-1 verdict FIRST — it is the gate's record, and it must stand even if Phase 2's
+  // guard later throws (the artifact then shows Phase 1 passed; the exit-2 red is the guard, not a bounce).
   fs.writeFileSync(path.join(outDir, 'verdict.json'), JSON.stringify(verdict, null, 2));
   writeVerdictMd(outDir, verdict);
+
+  // 4. Phase 2 — THE AIM. ONLY on a clean Phase-1 pass. Findings only; never changes d.code. The one
+  // red path is the guard inside normalizeRubricFindings (a verdict-shaped output) -> throw -> CLI exit 2.
+  if (d.pass) {
+    const drive = opts.drive || defaultDrive;
+    const driveStills = spec.after ? await drive(absPath(spec.after)) : [];
+    const stills = [];
+    if (afterPresent) stills.push({ role: 'after', path: path.join(shotsDir, 'after.png') });
+    if (targetPresent) stills.push({ role: 'target', path: path.join(shotsDir, 'target.png') });
+    const driveFiles = [];
+    (driveStills || []).forEach(function (s, i) {
+      if (!present(s && s.buf)) return;
+      const role = s.role || ('drive-' + i);
+      const fn = role + '.png';
+      fs.writeFileSync(path.join(shotsDir, fn), s.buf);
+      stills.push({ role: role, path: path.join(shotsDir, fn) });
+      driveFiles.push(fn);
+    });
+    // Stage the Phase-2 interaction stills onto the SAME pr-shots branch (a second commit on top of the
+    // Phase-1 one) so the affordance/response/motion evidence Phase 2 exists to produce is durable proof,
+    // not discarded with the temp dir. Re-stage the full set so the branch tip's tree carries every shot.
+    if (opts.stageShots !== false && driveFiles.length) {
+      const restaged = stageShots(shotsDir, spec.ticket, { repoRoot: opts.repoRoot, only: written.concat(driveFiles) });
+      if (restaged.staged) verdict.shots = { staged: true, branch: restaged.branch };
+    }
+    const rubReq = buildRubricRequest(shotsDir, stills, spec.goals, readRubric());
+    // rubric-input.json records what Phase 2 READ — the ui-rubric axes AND the ticket goals — observable
+    // at the boundary (the AC1 seam), just like describe-input.json is for Phase 1's blindness.
+    fs.writeFileSync(path.join(outDir, 'rubric-input.json'), JSON.stringify({
+      phase: 'rubric', systemPrompt: rubReq.systemPrompt, prompt: rubReq.userMessage,
+      rubric: RUBRIC_PATH, axesRead: rubReq.axesRead, goals: rubReq.goals,
+      images: stills.map(function (s) { return s.role; })
+    }, null, 2));
+    const rubRes = await ask(rubReq);
+    const parsed = parseRubricFindings((rubRes && rubRes.text) || '');
+    const rubric = parsed.obj
+      ? normalizeRubricFindings(parsed.obj)   // THROWS on a verdict-shaped output -> CLI exit 2 (the guard)
+      : { readAt: new Date().toISOString(), reviewer: 'fresh-rubric', axes: [],
+          note: 'no structured findings (an aim, not a gate — nothing to record)' };
+    verdict.rubric = rubric;
+    fs.writeFileSync(path.join(outDir, 'verdict.json'), JSON.stringify(verdict, null, 2));
+    writeVerdictMd(outDir, verdict);
+  }
+
   return { code: d.code, verdict: verdict, describeInput: describeInput, outDir: outDir, shotsDir: shotsDir, shots: shots };
 }
 
 module.exports = {
   review, decide, parseVerdict, loadSpec, stageShots,
   buildDescribeRequest, buildCompareRequest, defaultCapture, defaultAsk, closeBrowser,
-  DESCRIBER_SYSTEM, BLIND_PROMPT, COMPARATOR_SYSTEM
+  DESCRIBER_SYSTEM, BLIND_PROMPT, COMPARATOR_SYSTEM,
+  // Phase 2 — the aim
+  buildRubricRequest, parseRubricFindings, normalizeRubricFindings, rubricAxisTitles, defaultDrive,
+  RUBRIC_SYSTEM, RUBRIC_PATH
 };
 
 // ---------------------------------------------------------------- CLI
@@ -392,11 +648,15 @@ if (require.main === module) {
       // against fixtures without a browser or a live model. Unset in production -> real transports.
       if (process.env.WOA_UI_REVIEW_CAPTURE) opts.capture = require(absPath(process.env.WOA_UI_REVIEW_CAPTURE)).capture;
       if (process.env.WOA_UI_REVIEW_ASK) opts.ask = require(absPath(process.env.WOA_UI_REVIEW_ASK)).ask;
+      if (process.env.WOA_UI_REVIEW_DRIVE) opts.drive = require(absPath(process.env.WOA_UI_REVIEW_DRIVE)).drive;
       const res = await review(spec, opts);
       await closeBrowser();
       const v = res.verdict;
       if (v.pass) {
         console.error('UI-REVIEW PASS  ticket ' + v.ticket + '  (ran against target, no bounces)  -> ' + res.outDir + '/verdict.json');
+        if (v.rubric && v.rubric.axes && v.rubric.axes.length) {
+          console.error('  Phase 2 (aim): ' + v.rubric.axes.length + ' rubric/goal finding(s) — findings only, no gate');
+        }
       } else {
         console.error('UI-REVIEW BOUNCE  ticket ' + v.ticket + '  (' + v.bounces.length + ')');
         v.bounces.forEach(function (b) { console.error('  - [' + b.kind + '] ' + b.ref + ' — ' + b.why); });

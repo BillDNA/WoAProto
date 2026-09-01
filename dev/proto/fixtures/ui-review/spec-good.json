@@ -5,6 +5,10 @@
     "A Run button starts the sweep [runbtn]",
     "Anomaly signals surface during the run [anomaly]"
   ],
+  "goals": [
+    "A tester can start a sweep and watch it stream without touching the terminal",
+    "Anomalies are legible at a glance, not buried in the feed"
+  ],
   "before": "dev/proto/fixtures/ui-review/before.html",
   "after": "dev/proto/fixtures/ui-review/after-good.html",
   "target": "dev/proto/fixtures/ui-review/target.html"

@@ -42,6 +42,11 @@ logs/authored/
 # machine state (points at the committed reports + commits by sha) — like woa.db.
 logs/content-runs/
 
+# ui-review (#192/#195): per-run verdict/describe/rubric artifacts the tool writes
+# each invocation. Regenerable tool output (like woa.db); screenshots go to a
+# pr-shots branch, never here — nothing under this dir is a tracked corpus.
+logs/reports/ui-review/
+
 # DynamicScrum — per-machine/ephemeral (statusLine readout, local settings, hub mutation log)
 .claude-status
 .claude/settings.local.json
