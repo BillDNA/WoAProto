@@ -57,3 +57,4 @@ logs/reports/ui-review/
 # no LLM; community label names via `graphify label`). Kept fresh by the post-commit hook;
 # not tracked, to keep the multi-MB wholesale rebuild churn out of history.
 graphify-out/
+.claude/impl-phase
