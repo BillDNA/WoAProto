@@ -130,13 +130,13 @@ var rawSetTimeout = win.setTimeout;
 function realSetTimeout(fn, ms) { return rawSetTimeout(function () { try { return fn(); } catch (e) { reject(e); } }, ms); }
 win.setTimeout = function (fn, ms) { return realSetTimeout(fn, Math.min(ms || 0, 5)); };
 
-// The real server-served launch/control hooks (boot.js) — captured before the
-// #144 section overrides them with capture stubs, so the #154 loop-bridge section
-// can drive the genuine POST-to-/api/runloop flow.
-var wbRealLaunch, wbRealControl;
+// The real server-served launch hook (boot.js WB_ON_LAUNCH) — captured before the
+// #144 section overrides it with a capture stub, so the #168 loop-bridge section
+// can drive the genuine Launch flow (api('runloop', cfg) -> wbGoPhase + poll).
+var wbRealLaunch;
 realSetTimeout(function () {
   console.log('== boot ==');
-  wbRealLaunch = win.WB_ON_LAUNCH; wbRealControl = win.WB_ON_CONTROL;
+  wbRealLaunch = win.WB_ON_LAUNCH;
   assert.ok(win.Engine && win.Engine.MAPS.length >= 5, 'engine loaded the map roster (' + (win.Engine && win.Engine.MAPS.length) + ' maps)');
   assert.ok(doc.querySelectorAll('#edShape option').length === Object.keys(win.Engine.SHAPES).length + 1,
     'editor shape dropdown = maps.js shapes + the Custom entry');
@@ -324,8 +324,8 @@ realSetTimeout(function () {
   win.WB_RUN_STATUS = null; // leave the pane idle for a clean re-open
 
   console.log('== Run phase: content-loop per-iteration feed (#167) ==');
-  // The content loop writes a structured run record (dev/run-record.js -> logs/content-runs/
-  // latest.json, served by GET /api/contentrun). Feed a mock record and assert the WHOLE
+  // The content loop writes a structured run record (dev/run-record.js -> the run-record dir's
+  // latest.json, served by GET /api/runloop). Feed a mock record and assert the WHOLE
   // night's story renders on screen: every stage in order, authored cards as real faces, the
   // fresh grade findings, the balance-pin columns + Tolerance flags, feels non-selection, a
   // failed-iteration finding, and the LIVE in-flight stage before a commit.
@@ -1120,38 +1120,42 @@ realSetTimeout(function () {
           else rest();
         }
 
-        // Open the workbench Run phase, then launch the stand-in through the REAL product route.
+        // Open the workbench and fire the REAL Launch hook (boot.js WB_ON_LAUNCH), which does
+        // api('runloop', cfg) -> wbGoPhase('run') -> wbPollContentRun + WB_POLL. Driving the
+        // genuine button hook (not a hand-rolled fetch) is the point: it exercises the actual
+        // config->POST wiring that let the tolerance-object crash slip past a hand-rolled path.
         // The recDir/entry/iter-ms are test levers the server threads into the spawn; at the base
         // commit POST /api/runloop ignores cfg.entry and spawns dev/loop.js (kept tiny + db-isolated),
         // which writes no author->grade->balance run record — so the Workbench feed never advances.
         doc.getElementById('btnWorkbench').click();
-        doc.querySelector('#wbNav .wb-tab[data-phase="run"]').click();
-        win.fetch('/api/runloop', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ entry: standIn, recDir: recDir, stop: '+6s', iterMs: '40', n: 2, maps: 1, db: tmpDb }) })
-          .then(function () {
-            if (win.WB_POLL) { win.clearInterval(win.WB_POLL); win.WB_POLL = null; } // drive polling ourselves
-            var samples = [], ticks = 0;
-            function readTick() {
-              win.wbPollContentRun();          // the genuine Workbench poll -> renders wbContentRun
-              // read AFTER the poll's fetch has had time to resolve + render.
-              realSetTimeout(function () {
-                samples.push(doc.getElementById('wbContentRun').textContent);
-                if (++ticks < 6) { realSetTimeout(readTick, 120); return; }
-                // Settle teardown (stop child, close server) FIRST, then assert + resolve in a
-                // wrapped tick so a failed assertion rejects the test rather than throwing loose.
-                teardown(function () {
-                  realSetTimeout(function () {
-                    var first = samples[0];
-                    var changed = samples.some(function (s) { return s !== first; });
-                    assert.ok(changed, 'the Workbench run-feed DOM advanced between reads (live, not canned) — samples: '
-                      + JSON.stringify(samples.map(function (s) { return (s || '').replace(/\s+/g, ' ').trim().slice(0, 50); })));
-                    return done();
-                  }, 0);
-                });
-              }, 220);
-            }
-            readTick();
-          });
+        win.WB_ON_LAUNCH = wbRealLaunch;
+        win.WB_ON_LAUNCH({ entry: standIn, recDir: recDir, stop: '+6s', iterMs: '40', n: 2, maps: 1, db: tmpDb });
+        // WB_ON_LAUNCH's launch POST + poll setup are async; give them a beat to land, then take
+        // over the polling ourselves (clear WB_POLL) so the reads are paced for the DOM diff.
+        realSetTimeout(function () {
+          if (win.WB_POLL) { win.clearInterval(win.WB_POLL); win.WB_POLL = null; } // drive polling ourselves
+          var samples = [], ticks = 0;
+          function readTick() {
+            win.wbPollContentRun();          // the genuine Workbench poll -> renders wbContentRun
+            // read AFTER the poll's fetch has had time to resolve + render.
+            realSetTimeout(function () {
+              samples.push(doc.getElementById('wbContentRun').textContent);
+              if (++ticks < 6) { realSetTimeout(readTick, 120); return; }
+              // Settle teardown (stop child, close server) FIRST, then assert + resolve in a
+              // wrapped tick so a failed assertion rejects the test rather than throwing loose.
+              teardown(function () {
+                realSetTimeout(function () {
+                  var first = samples[0];
+                  var changed = samples.some(function (s) { return s !== first; });
+                  assert.ok(changed, 'the Workbench run-feed DOM advanced between reads (live, not canned) — samples: '
+                    + JSON.stringify(samples.map(function (s) { return (s || '').replace(/\s+/g, ' ').trim().slice(0, 50); })));
+                  return done();
+                }, 0);
+              });
+            }, 220);
+          }
+          readTick();
+        }, 300);
       });
     }
   }
