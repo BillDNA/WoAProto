@@ -44,6 +44,17 @@ test('classifier: the three test-file homes match, product files do not', () => 
   for (const p of NON_TEST_PATHS) assert.ok(!hook.isTestFile(p), 'not a test file: ' + p);
 });
 
+test('the phase marker is not editable through Edit/Write, in any phase', () => {
+  // The implementer must not lift its own freeze by rewriting .claude/impl-phase.
+  for (const phase of ['implement', 'testwriter', '']) {
+    const d = hook.decide(write('.claude/impl-phase'), phase);
+    assert.strictEqual(d.deny, true, 'marker Edit/Write denied at phase "' + phase + '"');
+    assert.ok(/impl-phase\.js/.test(d.reason), 'reason points to the sanctioned setter');
+  }
+  assert.ok(hook.isMarkerFile('/abs/repo/.claude/impl-phase'), 'absolute marker path detected');
+  assert.ok(!hook.isMarkerFile('.claude/hooks/impl-phase.js'), 'the setter script is not the marker');
+});
+
 test('RED: a test-file Edit/Write is DENIED when phase != testwriter', () => {
   for (const phase of ['implement', '', 'review', 'anything']) {
     for (const p of TEST_PATHS) {

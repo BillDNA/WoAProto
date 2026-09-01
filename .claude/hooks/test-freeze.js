@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 /* Test-freeze PreToolUse hook (ADR-0004 §2, #198). DENIES an Edit/Write to a test file
    (*.test.js, game/test*.js, dev/smoke.js) unless the phase marker `.claude/impl-phase`
-   reads `testwriter`; an absent or other marker is frozen (fail-closed). The woa-implement
-   flow flips the marker: `testwriter` while the fresh test-writer works, `implement` after.
-   Wired in .claude/settings.json under hooks.PreToolUse (matcher Edit|Write|MultiEdit).
-   dev/test-freeze.test.js is the gate. */
+   reads `testwriter`; an absent or other marker is frozen (fail-closed). It also denies an
+   Edit/Write to the marker itself, so the implementer cannot lift its own freeze — a phase
+   change goes only through `node .claude/hooks/impl-phase.js` (a loud, greppable act).
+   Wired in .claude/settings.json under hooks.PreToolUse (matcher Edit|Write|MultiEdit); the
+   companion Bash guard (guard-bash.js) closes the shell-redirect path. dev/test-freeze.test.js
+   is the gate. */
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -28,6 +30,12 @@ function isTestFile(filePath) {
   return TEST_PATTERNS.some(re => re.test(norm));
 }
 
+// The phase marker itself — never editable through the Edit/Write tools (only impl-phase.js).
+function isMarkerFile(filePath) {
+  if (!filePath || typeof filePath !== 'string') return false;
+  return filePath.replace(/\\/g, '/').endsWith('.claude/impl-phase');
+}
+
 // The current phase, trimmed; '' when the marker is absent or unreadable.
 function readPhase(file) {
   try { return fs.readFileSync(file || PHASE_FILE, 'utf8').trim(); }
@@ -41,18 +49,29 @@ function readPhase(file) {
 function decide(payload, phase) {
   const p = phase !== undefined ? phase : readPhase();
   const filePath = payload && payload.tool_input && payload.tool_input.file_path;
+  if (isMarkerFile(filePath)) {
+    return {
+      deny: true,
+      reason:
+        'test-freeze: the phase marker .claude/impl-phase is not editable through Edit/Write. ' +
+        'Change phase only via `node .claude/hooks/impl-phase.js <phase>` — the implementer must ' +
+        'not lift its own freeze. See docs/woa-implement.md.',
+    };
+  }
   if (!isTestFile(filePath)) return { deny: false, reason: '' };
   if (p === TESTWRITER) return { deny: false, reason: '' };
   return {
     deny: true,
     reason:
       'test-freeze: editing a test file (' + filePath + ') is blocked while ' +
-      '.claude/impl-phase is "' + (p || '<unset>') + '" (needs "' + TESTWRITER + '"). ' +
-      'The implementer cannot edit tests — escalate a blocking test to the test-writer phase.',
+      '.claude/impl-phase is "' + (p || '<unset>') + '" (needs "' + TESTWRITER + '"). Do NOT flip ' +
+      'the marker to edit this test — the implementer has zero test-editing power. A blocking or ' +
+      'missing test is authored by a FRESH test-writer subagent (marker `testwriter`), never by you. ' +
+      'See the woa-implement protocol in docs/woa-implement.md.',
   };
 }
 
-module.exports = { decide, isTestFile, readPhase, TEST_PATTERNS, PHASE_FILE, TESTWRITER };
+module.exports = { decide, isTestFile, isMarkerFile, readPhase, TEST_PATTERNS, PHASE_FILE, TESTWRITER };
 
 // CLI: read the PreToolUse payload on stdin, deny a frozen test-file write via the
 // structured contract — exit 0 with a JSON permissionDecision on stdout (the current
