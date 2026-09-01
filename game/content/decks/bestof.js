@@ -6,52 +6,89 @@
  "cards": [
   {
    "id": "vanguard",
+   "name": "Vanguard",
    "count": 1,
-   "starting": true
+   "starting": true,
+   "text": "Place an Infantry unit adjacent to any controlled hex. Then reposition a unit.",
+   "steps": [ { "type": "deploy", "unit": "infantry" }, { "type": "reposition" } ]
   },
   {
    "id": "deploy_artillery",
-   "count": 1
+   "name": "Deploy Artillery",
+   "count": 1,
+   "text": "Place an Artillery unit adjacent to any controlled hex.",
+   "steps": [ { "type": "deploy", "unit": "artillery" } ]
   },
   {
    "id": "deploy_inf_trench",
-   "count": 3
+   "name": "Entrench",
+   "count": 3,
+   "text": "Place an Infantry unit adjacent to any controlled hex. Then build a trench on any controlled hex.",
+   "steps": [ { "type": "deploy", "unit": "infantry" }, { "type": "trench" } ]
   },
   {
    "id": "airdrop",
-   "count": 1
+   "name": "Airdrop",
+   "count": 1,
+   "noOpener": true,
+   "text": "Place an Infantry unit on any empty hex. (Never in your opening hand.)",
+   "steps": [ { "type": "deploy", "unit": "infantry", "anywhere": true } ]
   },
   {
    "id": "deploy_cavalry",
-   "count": 1
+   "name": "Deploy Cavalry",
+   "count": 1,
+   "text": "Place two Cavalry units adjacent to any controlled hex, in sequence.",
+   "steps": [ { "type": "deploy", "unit": "cavalry" }, { "type": "deploy", "unit": "cavalry" } ]
   },
   {
    "id": "attack_plus1",
-   "count": 2
+   "name": "Attack +1",
+   "count": 2,
+   "text": "Order an attack with +1 support.",
+   "steps": [ { "type": "attack", "mod": 1 } ]
   },
   {
    "id": "reckless_maneuvers",
-   "count": 1
+   "name": "Reckless Maneuvers",
+   "count": 1,
+   "text": "Order an attack. Then reposition a unit.",
+   "steps": [ { "type": "attack" }, { "type": "reposition" } ]
   },
   {
    "id": "naval_barrage",
-   "count": 1
+   "name": "Naval Barrage",
+   "count": 1,
+   "text": "Remove any trench or forest on the board (optional). Then order an attack.",
+   "steps": [ { "type": "barrage" }, { "type": "attack" } ]
   },
   {
    "id": "shock_troops",
-   "count": 2
+   "name": "Shock Troops",
+   "count": 2,
+   "text": "Place an Infantry unit adjacent to any controlled hex. Then order an attack.",
+   "steps": [ { "type": "deploy", "unit": "infantry" }, { "type": "attack" } ]
   },
   {
    "id": "storm_and_hold",
-   "count": 1
+   "name": "Storm and Hold",
+   "count": 1,
+   "text": "Order an attack with +1 support. Then build a trench on any controlled hex.",
+   "steps": [ { "type": "attack", "mod": 1 }, { "type": "trench" } ]
   },
   {
    "id": "over_the_top",
-   "count": 1
+   "name": "Over the Top",
+   "count": 1,
+   "text": "Reposition a unit. Then order an attack; your attacker survives a tie.",
+   "steps": [ { "type": "reposition" }, { "type": "attack", "tieSpare": true } ]
   },
   {
    "id": "creeping_barrage",
-   "count": 1
+   "name": "Creeping Barrage",
+   "count": 1,
+   "text": "Remove any trench or forest on the board (optional). Then order an attack with +1 support; your attacker holds its ground.",
+   "steps": [ { "type": "barrage" }, { "type": "attack", "mod": 1, "noAdvance": true } ]
   }
  ]
 }

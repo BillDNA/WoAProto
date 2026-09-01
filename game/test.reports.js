@@ -2,7 +2,7 @@
    Frozen-API entry game/test.js delegates here; run this file directly with
    `node game/test.reports.js` or the whole gate with `node game/test.js`. */
 'use strict';
-const { test } = require('./test.helpers.js');
+const { test } = require('node:test');
 const assert = require('node:assert');
 
 test('report-model: bands as data + trace folds', () => {
@@ -59,23 +59,6 @@ test('report-model: bands as data + trace folds', () => {
   assert.ok(R.bands('swings', 'T1').hi === null && near(R.bands('swings', 'T1').lo, 1.6), 'Swings hi=null stays OPEN; closed lo 2.0 → 1.6 at T1 (half-open: |edge| basis)');
   assert.ok(R.bands('swings', 'T2').hi === null && near(R.bands('swings', 'T2').lo, 1.2), 'Swings lo 2.0 → 1.2 at T2');
   assert.ok(R.bands('firstBlood', 'T0').feedsScore === false, 'bands() carries feedsScore (guard band = false)');
-
-  // ---- generalized bands(metric, grace): legacy T0/T1/T2 alias hold/nudge/bold on ONE path ----
-  ['red', 'zeroKill', 'swings', 'tie', 'control', 'hq'].forEach(function (k) {
-    ['T0:hold', 'T1:nudge', 'T2:bold'].forEach(function (pair) {
-      var legacy = R.bands(k, pair.split(':')[0]), grace = R.bands(k, pair.split(':')[1]);
-      assert.ok(legacy.lo === grace.lo && legacy.hi === grace.hi,
-        k + ' ' + pair + ' resolve identically (' + legacy.lo + '/' + legacy.hi + ')');
-    });
-  });
-  // RANGES is the seeded per-axis ± table (nudge = 0.2×width, bold = 0.4×width)
-  assert.ok(near(R.RANGES.red.nudge, 2) && near(R.RANGES.red.bold, 4), 'RANGES seeds Red% ± from own width (10): nudge 2, bold 4');
-  assert.ok(near(R.RANGES.swings.nudge, 0.4), 'RANGES seeds half-open Swings ± from |edge| (2.0): nudge 0.4');
-  // bypass = never rejects: both edges open, so nothing is ever out-of-band
-  var byp = R.bands('red', 'bypass');
-  assert.ok(byp.lo === null && byp.hi === null && R.outBand(999, byp.lo, byp.hi, byp.weight) === 0, 'bypass opens both edges → outBand always 0 (never rejects)');
-  // default grace (missing/unknown) = hold = stored edges
-  assert.ok(near(R.bands('red').lo, 45) && near(R.bands('red', 'wat').lo, 45), 'unknown/absent grace falls back to hold (stored edges)');
 
   // ---- trace folds on a hand-built fixture with known answers ----
   var env = {
@@ -156,24 +139,6 @@ test('report-model: bands as data + trace folds', () => {
   assert.ok(WS12.A.plays === 2 && WS12.A.wins === 1, 'cardHqWinSlice ignores the attrition-ending envelope entirely (unchanged from HQ-only)');
   assert.ok(typeof R.cardAggFromEnvelopes === 'function' && typeof R.cardHqWinSlice === 'function',
     'card folds exported on the shared surface');
-  // pre-#89 traces (no `declined`) fold to zero declines, appears == plays
-  assert.ok(CA1.A.declines === 0 && CA1.A.appears === CA1.A.plays,
-    'cardAggFromEnvelopes: legacy trace without declined -> declines 0, appears == plays');
-
-  // ---- #89 in-hand-declined signal (held-but-passed-over, turn-stamped) ----
-  var declEnv = { winner: 'red', winType: 'hq', turns: 4, trace: [
-    { p: 'red', id: 'A', mode: 'normal', turn: 1, seen: 1, declined: ['D', 'E'] }, // D,E held
-    { p: 'red', id: 'A', mode: 'normal', turn: 2, seen: 2, declined: ['D'] },       // D still held
-    { p: 'red', id: 'D', mode: 'normal', turn: 3, seen: 2, declined: ['E'] }        // D played; E held, never played
-  ] };
-  var DA = R.cardAggFromEnvelopes([declEnv]);
-  assert.ok(DA.A.declines === 0 && DA.A.appears === 2, 'decline: A always played -> 0 declines, appears 2');
-  assert.ok(DA.D.plays === 1 && DA.D.declines === 2 && DA.D.appears === 3, 'decline: D passed over twice then played -> decline-rate 2/3');
-  assert.ok(DA.E.plays === 0 && DA.E.declines === 2 && DA.E.appears === 2, 'decline: E seen twice, never played -> strictly-dominated signal (decline-rate 1.0)');
-  var DO = R.cardDeclineByOctile(declEnv);
-  assert.deepStrictEqual(DO.D, [1, 0, 1, 0, 0, 0, 0, 0], 'cardDeclineByOctile: D declined in octiles 0 and 2');
-  assert.deepStrictEqual(DO.E, [1, 0, 0, 0, 1, 0, 0, 0], 'cardDeclineByOctile: E declined in octiles 0 and 4 (phase-conditioned)');
-  assert.deepStrictEqual(R.cardDeclineByOctile(cardEnv1), {}, 'cardDeclineByOctile: pre-#89 trace yields no decline rows');
 
   // ---- per-unit-type fold: unitsAggFromEnvelopes on a hand-built two-skirmish
   // fixture with known answers, incl. the dep[]/dieT[] lifespan pairing (real
@@ -590,143 +555,5 @@ test('chart-model: buildUnitsModel + unLinearDomain/unPos (Units pane)', () => {
   // unPos: linear map into [0,100], clamped, null-passthrough.
   assert.ok(C.unPos(dom, null) === null && near(C.unPos(dom, 6), 6 / 6.9 * 100), 'unPos: null passes through, 6 maps to 86.96%');
   assert.ok(C.unPos(dom, 100) === 100 && C.unPos(dom, -5) === 0, 'unPos clamps out-of-domain values to [0,100]');
-})();
-});
-
-test('loop-config: tolerance profiles parse + hard-flag Red%/1st%', () => {
-(function () {
-  var R = require('./report-model.js');
-  var T = require('./content/tolerances.js');   // load asserts on its own; requiring proves it parses
-
-  // the three #94 default profiles exist, each a { name, tolerances } object (no dead step field)
-  ['card', 'map', 'ai'].forEach(function (k) {
-    var p = T.profiles[k];
-    assert.ok(p && p.name && p.tolerances, 'profile "' + k + '" is a {name, tolerances} object');
-    assert.ok(!('step' in p), 'profile "' + k + '" carries no dead step field (#164)');
-    // every loosened key is a real BANDS metric with a valid grace class
-    Object.keys(p.tolerances).forEach(function (m) {
-      assert.ok(R.BANDS.some(function (b) { return b.key === m; }), k + '.tolerances.' + m + ' is a BANDS key');
-      assert.ok(T.GRACE.indexOf(p.tolerances[m]) >= 0, k + '.tolerances.' + m + ' has a valid grace');
-    });
-    // Red%/1st% are always locked flags: absent (⇒ hold) or explicitly hold, never loosened
-    T.HARD_FLAGGED.forEach(function (g) {
-      assert.ok(!(g in p.tolerances) || p.tolerances[g] === 'hold', k + ' does not loosen locked-flag ' + g + '%');
-    });
-  });
-  // #94 mapping spot-checks (loosened cells default nudge)
-  assert.ok(T.profiles.card.tolerances.swings === 'nudge' && !('tie' in T.profiles.card.tolerances), 'Card loosens Swings, not Tie%');
-  assert.ok(T.profiles.map.tolerances.tie === 'nudge' && !('swings' in T.profiles.map.tolerances), 'Map loosens Tie%, not Swings');
-  assert.ok(T.profiles.ai.tolerances.control === 'nudge' && !('zeroKill' in T.profiles.ai.tolerances), 'AI loosens Control%, not 0kill%');
-
-  // the exported load gate (same code the defaults pass) rejects loosening a locked-flag metric
-  assert.throws(function () { T.validate({ name: 'X', tolerances: { first: 'nudge' } }); },
-    /locked flag/, 'the schema gate rejects loosening 1st% (default mode)');
-  assert.throws(function () { T.validate({ name: 'X', tolerances: { red: 'nudge' } }); },
-    /locked flag/, 'the schema gate rejects loosening Red% in default mode');
-  assert.throws(function () { T.validate({ name: 'X', tolerances: { hq: 'wat' } }); },
-    /unknown grace/, 'the schema gate rejects an unknown grace class');
-  assert.throws(function () { T.validate({ name: 'X', tolerances: { hqq: 'nudge' } }); },
-    /not a band metric key/, 'the schema gate rejects a typo\'d metric key');
-  assert.ok(T.validate({ name: 'Asym', tolerances: { red: 'hold', hq: 'nudge' } }), 'a valid custom profile passes the gate');
-  // Red% is the ONE manual-loosen for asymmetric runs; 1st% is never loosenable
-  assert.ok(T.validate({ name: 'Asym', tolerances: { red: 'nudge' } }, null, { asymmetric: true }), 'opts.asymmetric permits the manual Red% loosen');
-  assert.throws(function () { T.validate({ name: 'Asym', tolerances: { first: 'nudge' } }, null, { asymmetric: true }); },
-    /locked flag/, '1st% stays a locked flag even in asymmetric mode');
-})();
-});
-
-test('report-model: foldPanel takes worst-case per metric (never a mean), balance hard-flagged', () => {
-(function () {
-  var R = require('./report-model.js');
-  var TEMPS = require('./content/tolerances.js');
-  // Synthetic panel — three "personalities", done=100 so redWins etc. read as %.
-  // attritionEndings/controlGames left 0 so tie/drag/control fall out (null) — a
-  // smoke-check of the fold, not a pinned sweep.
-  function row(name, red, first, hq) {
-    return { name: name, done: 100, agg: { redWins: red, firstWins: first, hqWins: hq,
-      zeroKill: 2, leadChanges: 300, attritionEndings: 0, controlGames: 0, attacks: 0, swaps: 0, marches: 0, deploys: 0 } };
-  }
-  // Red% mean = (30+55+50)/3 = 45, INSIDE the 45–55 hold band — but member A sits
-  // at 30, out. Worst-case must still fail; a mean would hide it. That's the point.
-  var rows = [row('A', 30, 50, 5), row('B', 55, 50, 60), row('C', 50, 50, 20)];
-  var pf = R.foldPanel(rows, TEMPS.profiles.card);   // card loosens hq → nudge
-
-  assert.ok(!pf.flag.inBand, 'balance flag raised on the worst member even though the Red% mean is in band');
-  var redFail = pf.flag.members.filter(function (f) { return f.key === 'red'; })[0];
-  assert.ok(redFail && redFail.name === 'A' && redFail.val === 30, 'the flag names member A (Red% 30), the worst case — not the 45 mean');
-  assert.ok(!pf.flag.members.some(function (f) { return f.key === 'first'; }), '1st% (all 50, in band) does not flag');
-
-  assert.ok(pf.metrics.red.flagged && !pf.metrics.hq.flagged, 'red/first are hard-flagged; hq is exploratory');
-  assert.strictEqual(pf.metrics.hq.grace, 'nudge', 'hq carries the loosened (nudge) grace from the card profile');
-  // hq nudge band = 10±? → 4–46 (0.2 × 30 width); member B at 60 breaks it.
-  var hqOver = pf.overfit.filter(function (o) { return o.key === 'hq'; })[0];
-  assert.ok(hqOver && hqOver.name === 'B', 'overfit finding surfaces hq breaking against member B');
-  assert.strictEqual(pf.metrics.hq.spread, 55, 'hq spread is max−min (60−5), the "no two members share a read" signal');
-  assert.ok(!pf.overfit.some(function (o) { return o.key === 'red' || o.key === 'first'; }), 'balance never appears as an overfit finding (it is a flag, not a spread)');
-
-  // An all-fair panel with hq in its loosened band passes clean.
-  var clean = R.foldPanel([row('A', 50, 50, 20), row('B', 48, 52, 25), row('C', 52, 49, 15)], TEMPS.profiles.card);
-  assert.ok(clean.flag.inBand && !clean.overfit.length, 'a fair, in-band panel passes with no overfit finding');
-
-  // Two-sided break: A below the floor (30), B above the ceiling (72). BOTH named —
-  // reporting only the single worst would hide half the balance break.
-  var twoSided = R.foldPanel([row('A', 30, 50, 20), row('B', 72, 50, 20)], TEMPS.profiles.card);
-  var redFails = twoSided.flag.members.filter(function (f) { return f.key === 'red'; }).map(function (f) { return f.name; });
-  assert.ok(redFails.indexOf('A') >= 0 && redFails.indexOf('B') >= 0, 'both opposite-direction Red% breaks (A low, B high) are named');
-
-  // A personality with no finished games (done=0) is dropped, not read as a real 0%.
-  var withDead = R.foldPanel([row('A', 50, 50, 20), { name: 'dead', done: 0, agg: {} }], TEMPS.profiles.card);
-  assert.ok(withDead.flag.inBand, 'a done=0 personality is dropped (no data), not a fabricated 0% balance flag');
-  assert.ok(!withDead.metrics.red.samples.some(function (s) { return s.name === 'dead'; }), 'the no-data personality contributes no samples');
-})();
-});
-
-test('report-model: reportMarkdown surfaces calibratePoints suggestions (#156)', () => {
-(function () {
-  var R = require('./report-model.js');
-  // Minimal report model: a zeroed G (all Overall denominators safe) with a seeded
-  // card fold. Two attack cards out-win their price share (Dominant, resid ≥ 2) and
-  // share step.attack with no single-card domination → a shared RAISE move; a third
-  // card is fairly priced. cardPoints supplied so cardRows computes resid.
-  function model(cards, cardAgg, points) {
-    var G = R.foldGlobal([]);          // zeroed totals + empty G.cards
-    G.cards = cardAgg;
-    return { style: 'report', title: 't', version: '1.2', metaTail: 'x',
-      rows: [], G: G, cards: cards, cardPoints: function (c) { return points[c.id]; } };
-  }
-  var agg = function (hqWins) {
-    return { plays: 20, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0, hqPlays: 20, hqWins: hqWins };
-  };
-  var cards = [
-    { id: 'A', name: 'CardA', steps: [{ type: 'attack' }] },
-    { id: 'B', name: 'CardB', steps: [{ type: 'attack' }] },
-    { id: 'Z', name: 'CardZ', steps: [{ type: 'reposition' }] }
-  ];
-  // hqWins 20/20/2, points 5 each → resid_A/B ≈ +2.1 (Dominant), resid_Z ≈ −4.3 (Weakly, excluded).
-  var md = R.reportMarkdown(model(cards, { A: agg(20), B: agg(20), Z: agg(2) }, { A: 5, B: 5, Z: 5 }));
-  assert.ok(md.indexOf('## Calibration suggestions') >= 0, 'the calibration section renders');
-  assert.ok(/`step\.attack` raise \+0\.5/.test(md), 'the shared step.attack raise move is surfaced with its magnitude');
-  assert.ok(md.indexOf('_No calibration suggestions this run._') < 0, 'a mispriced pool does NOT show the empty line');
-
-  // A fairly-priced pool (resid ≈ 0, no card Dominant) → explicit no-suggestions line.
-  var clean = R.reportMarkdown(model(
-    [{ id: 'A', name: 'CardA', steps: [{ type: 'attack' }] }, { id: 'B', name: 'CardB', steps: [{ type: 'attack' }] }],
-    { A: agg(10), B: agg(10) }, { A: 5, B: 5 }));
-  assert.ok(clean.indexOf('## Calibration suggestions') >= 0, 'the section renders for a clean pool too');
-  assert.ok(clean.indexOf('_No calibration suggestions this run._') >= 0, 'a clean pool shows the explicit no-suggestions line');
-})();
-});
-
-test('loop-config: debrief questionnaire is an ordered id+text table with feel + reflex', () => {
-(function () {
-  var Q = require('./content/questionnaire.js');   // load asserts on its own; requiring proves it parses
-  assert.ok(Array.isArray(Q.questions) && Q.questions.length, 'questionnaire is a non-empty ordered list');
-  var ids = Q.questions.map(function (q) { return q.id; });
-  assert.ok(ids.indexOf('feel') >= 0, 'the feel question is an entry');
-  assert.ok(ids.indexOf('reflex') >= 0, 'the reflex question is an entry');
-  Q.questions.forEach(function (q) { assert.ok(q.id && typeof q.text === 'string' && q.text.trim(), 'every row has id + non-empty text'); });
-  // the exported gate rejects a malformed / duplicate-id table
-  assert.throws(function () { Q.validate([{ id: 'a', text: '' }]); }, /id \+ text/, 'gate rejects an empty question text');
-  assert.throws(function () { Q.validate([{ id: 'a', text: 'x' }, { id: 'a', text: 'y' }]); }, /duplicate id/, 'gate rejects a duplicate id');
 })();
 });

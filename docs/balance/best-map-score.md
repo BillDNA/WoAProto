@@ -51,4 +51,4 @@ change is a regression even when win rates look fine (the swap-dance detector).
 
 Attrition-only maps ARE penalised — HQ% below 10 costs points, because both win
 paths should live on every map (2026-07-10, Bill). Swings at or above 2.0 score
-clean; they no longer buy back a balance failure.
+clean; they no longer buy back a fairness failure.

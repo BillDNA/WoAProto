@@ -65,10 +65,10 @@ lands in the same commit as the split.
 
 The golden-balance-diff is **not** promoted to a first-class test here. Tests
 answer *"does it function"*; balance answers *"is this fair"*. Content and
-functional work does not care whether the meta is fair, so the balance oracle
+functional work does not care whether the meta is fair, so the fairness oracle
 does not belong in the functional gate — coupling it would add a slow test and
 conflate two separate concerns. It stays the manual `node game/balance.js`
-byte-identical discipline. A dedicated balance-check *suite* (a sweep sibling
+byte-identical discipline. A dedicated fairness-check *suite* (a sweep sibling
 to the test suite) is a parked idea, not this work.
 
 ## Consequences
@@ -85,5 +85,5 @@ to the test suite) is a parked idea, not this work.
 - Conversion is file-by-file, each riding its own green gate; a temporary mixed
   state (some files converted, some not) is harmless because a plain `ok()`
   file still runs under `node --test` as one implicit test.
-- If a predictive balance suite is ever wanted, it is a *separate* harness
+- If a predictive fairness suite is ever wanted, it is a *separate* harness
   layered alongside — never folded into this functional gate.

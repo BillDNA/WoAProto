@@ -1,9 +1,7 @@
 # Obsidian workspace (local editor state)
 .obsidian/
 
-# dev harness dependencies (jsdom for dev/smoke.js) and scratch screenshots.
-# No trailing slash: a worktree may wire this as a symlink to the main checkout's
-# install, and a dir-only pattern (node_modules/) would leave that symlink tracked.
+# dev harness dependencies (jsdom for dev/smoke.js) and scratch screenshots
 dev/node_modules
 dev/package*.json
 dev/*.png
@@ -32,29 +30,11 @@ logs/woa.db
 logs/woa.db-wal
 logs/woa.db-shm
 
-# Author feed (#165): the card Author's per-run record of what it add/edit/removed,
-# regenerated every run (like woa.db). The committed content/cards files + markdown
-# reports are the durable artifacts; the Workbench reads this live from the last run.
-logs/authored/
-
-# Content-loop run record (#167): the structured per-iteration machine-readable
-# contract the dashboard (#170) + "Review with Claude" (#171) read live. Regenerable
-# machine state (points at the committed reports + commits by sha) — like woa.db.
-logs/content-runs/
-
-# ui-review (#192/#195): per-run verdict/describe/rubric artifacts the tool writes
-# each invocation. Regenerable tool output (like woa.db); screenshots go to a
-# pr-shots branch, never here — nothing under this dir is a tracked corpus.
-logs/reports/ui-review/
-
 # DynamicScrum — per-machine/ephemeral (statusLine readout, local settings, hub mutation log)
 .claude-status
 .claude/settings.local.json
 .board-log.jsonl
 
 
-# graphify knowledge graph — regenerable local index (nodes/edges via `graphify update .`,
-# no LLM; community label names via `graphify label`). Kept fresh by the post-commit hook;
-# not tracked, to keep the multi-MB wholesale rebuild churn out of history.
+# graphify knowledge graph — regenerable local index (`graphify update .`); not tracked.
 graphify-out/
-.claude/impl-phase

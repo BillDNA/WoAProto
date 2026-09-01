@@ -78,10 +78,43 @@ function renderSlots(){
     loadSlotIntoEditor(DK.slot);
   };
 }
-// #116: deck legality lifted into the engine — ONE implementation shared by this
-// editor and the phase-0 drafter (dev/deckbuild.js). The Save button, the active-
-// deck badge, and dev/smoke.js all keep calling the global deckProblems(cards).
-var deckProblems = E.deckProblems;
+var DK_STEP_FLAGS = { deploy:{unit:1,anywhere:1}, trench:{}, attack:{mod:1,tieSpare:1,noAdvance:1}, reposition:{}, barrage:{} };
+
+function deckProblems(cards){
+  var probs = [], ids = {}, total = 0, starting = 0;
+  cards = cards.filter(function(c){ return !c.out; }); // benched cards aren't shipped or validated
+  cards.forEach(function(c, i){
+    var tag = c.name || c.id || ('card ' + (i+1));
+    if (!c.id || !/^[a-z0-9_]+$/i.test(c.id)) probs.push(tag + ': id must be letters/digits/underscores');
+    else if (ids[c.id]) probs.push('duplicate id "' + c.id + '"');
+    ids[c.id] = 1;
+    if (!c.name) probs.push('card ' + (i+1) + ' needs a name');
+    var n = +c.count;
+    if (!(n >= 1) || n !== Math.floor(n)) probs.push(tag + ': count must be a whole number ≥ 1');
+    else total += n;
+    if (c.starting && n !== 1) probs.push(tag + ': the starting card must have count 1 (the engine deals exactly one)');
+    if (c.starting) starting++;
+    if (!Array.isArray(c.steps) || !c.steps.length) probs.push(tag + ': needs at least one step');
+    else c.steps.forEach(function(s, si){
+      var st = tag + ' step ' + (si+1);
+      if (!s || !DK_STEP_FLAGS[s.type]){ probs.push(st + ': unknown type "' + (s && s.type) + '" (deploy / trench / attack / reposition / barrage)'); return; }
+      Object.keys(s).forEach(function(k){ if (k !== 'type' && !DK_STEP_FLAGS[s.type][k]) probs.push(st + ': "' + k + '" is not a ' + s.type + ' option'); });
+      if (s.type === 'deploy' && !E.UNITS[s.unit]) probs.push(st + ': unknown unit "' + s.unit + '" (' + Object.keys(E.UNITS).join(' / ') + ')');
+      if (s.type === 'attack' && s.mod !== undefined && typeof s.mod !== 'number') probs.push(st + ': mod must be a number');
+    });
+  });
+  if (starting !== 1) probs.push('exactly ONE card must be marked starting (got ' + starting + ')');
+  // WOA-036: the physical guardrail is a design band, not one exact count —
+  // every shipped content/decks/*.js deck totals 16 or 17 (the 17-card
+  // cavsplit17-raid-paid adopted 2026-07-18, WOA-030); a custom deck must
+  // land in that same band.
+  if (total < 16 || total > 17) probs.push('the deck must total 16-17 cards (got ' + total + ') — hand-edit the deck file if you really want an exotic size');
+  // WOA #56: army-points budget ceiling — the fairness constraint that lets two
+  // asymmetric decks be called "matched". Same reject-on-validate as the size band.
+  var pts = E.deckPoints({ cards: cards });
+  if (pts > E.DECK_POINTS_CAP) probs.push('the deck is over the army-points budget (' + pts + ' > ' + E.DECK_POINTS_CAP + ') — cut a card or a step');
+  return probs;
+}
 
 function openDeck(){
   var d = loadDecks();
