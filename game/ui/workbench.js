@@ -22,10 +22,11 @@ var WB_PHASE = 'plan';
 // tolerances.js is node-only (not loaded here), so this list can't derive from it;
 // if a profile is renamed there, launch throws a loud `unknown profile` at the loop
 // engine rather than corrupting silently.
+// #169 nothing-dead bar: offer ONLY kinds with a real engine behind them. `card` is the
+// one shipped slice; `map`/`ai` return here once #173/#174 land their engines (a dead
+// picker entry that launches nothing fails the bar, so they are simply not listed yet).
 var WB_LOOP_TYPES = [
-  { id: 'card', label: 'Card', iterates: 'the deck' },
-  { id: 'map',  label: 'Map',  iterates: 'the map' },
-  { id: 'ai',   label: 'AI',   iterates: 'the AI weights' }
+  { id: 'card', label: 'Card', iterates: 'the deck' }
 ];
 // Opening-nudge quick-chips — taste presets that append to the free-text nudge.
 var WB_CHIPS = ['shorten games', 'punish turtling', 'reward aggression', 'make cavalry matter', 'tighten first-mover edge'];
@@ -38,7 +39,7 @@ var WB_TEMPERATURES = ['safe', 'standard', 'bold', 'wild'];
 // by wbLoadProfile on render and on every loop-type switch. Sparse {key: grace};
 // an omitted key ⇒ hold, the fixed ruler. The Tolerance shapes/flags balance drift;
 // it never rejects a run.
-var WB_PLAN = { loopType: 'card', panel: ['hard'], iters: 6, n: 20, tolerance: null, temperature: 'standard' };
+var WB_PLAN = { loopType: 'card', panel: ['hard'], iters: 6, n: 20, tolerance: null, temperature: 'standard', stopAt: '' };
 var WB_LAST_CONFIG = null;
 // Launch handoff hook — the browser has no bridge to the node loop engine, so the
 // real, testable handoff is the assembled run-config object. A follow-on server
@@ -101,10 +102,19 @@ function wbPlanBody() {
     '<div id="wbTemp" class="wb-temps">' + wbTempBody() + '</div>' +
     '<label class="small wb-lbl">Tolerance <span class="wb-hint">&mdash; balance band, grace per axis (click to escalate; Red%/1st% hard-flagged, always a loud flag never a reject)</span></label>' +
     '<div id="wbAccept" class="wb-accept">' + wbAcceptBody() + '</div>' +
+    '<label class="small wb-lbl" for="wbStopAt">Stop by <span class="wb-hint">&mdash; the hard cutoff; the loop stops after this wall-clock time</span></label>' +
+    '<input id="wbStopAt" type="datetime-local" class="wb-stopat"' + (WB_PLAN.stopAt ? ' value="' + wbAttr(WB_PLAN.stopAt) + '"' : '') + '>' +
     '<label class="small wb-lbl">Debrief questionnaire <span class="wb-hint">&mdash; asked after every skirmish (#111)</span></label>' +
     '<div id="wbQz" class="wb-qz">' + wbQzRows() + '</div>' +
     '<div id="wbFixtures" class="wb-fixtures small">' + wbFixturesText() + '</div>' +
-    '<div class="ovr-btns"><button id="wbLaunch" type="button">Assemble &rarr; Launch</button></div>';
+    '<div class="ovr-btns">' +
+      '<button id="wbLaunch" type="button">Assemble &rarr; Launch</button>' +
+      // #169 meta-loop seam: documents the repricing / yardstick loop (spec §5/§7, C5) — inert
+      // for now; points stay frozen during content runs. Grayed + disabled until that ships.
+      '<button id="wbMetaLoop" type="button" class="ghost wb-metaloop" disabled ' +
+        'title="Meta-loop (repricing / yardstick) — not yet wired; points stay frozen during content runs">' +
+        'Meta-loop <span class="wb-hint">&mdash; seam, disabled</span></button>' +
+    '</div>';
 }
 
 // The debrief questionnaire (game/content/questionnaire.js, #111) is editable
@@ -128,6 +138,7 @@ function wbQzRows() {
     return '<div class="wb-qrow" data-i="' + i + '">' +
       '<code class="wb-qid">' + wbEsc(q.id) + '</code>' +
       '<textarea class="wb-qtext" data-i="' + i + '" rows="2">' + wbEsc(q.text) + '</textarea>' +
+      '<button type="button" class="wb-qdel" data-i="' + i + '" title="Delete this question" aria-label="Delete question ' + wbEsc(q.id) + '">&times;</button>' +
       '</div>';
   }).join('');
   return rows +
@@ -235,6 +246,8 @@ function wbWirePlan() {
   });
   wbWireTemp();
   wbWireAccept();
+  var stop = document.getElementById('wbStopAt');
+  if (stop) stop.oninput = function () { WB_PLAN.stopAt = stop.value; };
   document.getElementById('wbLaunch').onclick = wbLaunch;
   wbWireQz();
 }
@@ -243,6 +256,14 @@ function wbWirePlan() {
 function wbWireQz() {
   document.querySelectorAll('#wbQz .wb-qtext').forEach(function (ta) {
     ta.oninput = function () { wbQuestions()[+ta.getAttribute('data-i')].text = ta.value; };
+  });
+  // Per-row delete (#169): drop the question at this index, re-render + re-wire the rows.
+  document.querySelectorAll('#wbQz .wb-qrow .wb-qdel').forEach(function (b) {
+    b.onclick = function () {
+      wbQuestions().splice(+b.getAttribute('data-i'), 1);
+      document.getElementById('wbQz').innerHTML = wbQzRows();
+      wbWireQz();
+    };
   });
   document.getElementById('wbQAdd').onclick = function () {
     var qs = wbQuestions();
@@ -302,6 +323,14 @@ function wbBuildConfig() {
     // `temperature` — author-boldness, a plain passthrough value (Plan → Author prompt, #164).
     temperature: WB_PLAN.temperature,
     nudge: (document.getElementById('wbNudge').value || '').trim(),
+    // `stop` — the hard cutoff the operator set (#wbStopAt, a datetime-local); read straight
+    // off the input so the value the user typed reaches the launched run (server --stop / the
+    // run-record's config.stopAt). Empty ⇒ the loop's own +45m default applies.
+    stop: (function () { var el = document.getElementById('wbStopAt'); return (el && el.value) || WB_PLAN.stopAt || ''; })(),
+    // `questionnaire` — the debrief set the loop asks after every skirmish. Today there is one
+    // in-place questionnaire (content/questionnaire.js); load-a-saved awaits a store ticket, so
+    // this carries the single `default` set (the loop's --questionnaire flag).
+    questionnaire: 'default',
     deck: (E.ACTIVE_DECK && E.ACTIVE_DECK.id) || 'seed',
     mapset: ms.id || 'all',
     panel: WB_PLAN.panel.slice(),

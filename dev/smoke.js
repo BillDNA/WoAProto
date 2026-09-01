@@ -169,24 +169,20 @@ realSetTimeout(function () {
   var acc0 = doc.getElementById('wbAccept');
   assert.ok(acc0 && acc0.querySelectorAll('.wb-tol').length > 0, 'accept-settings panel is populated on the Plan phase');
   assert.ok(acc0.querySelector('button.wb-tol[data-metric="swings"]'), 'Card profile pre-loaded (its swings Tolerance is present)');
-  // AC1: three loop types (card/map/ai); one selected, the other two shown held.
+  // #169 AC1: the Plan kind picker is card-only (map/ai return with #173/#174); the
+  // sole entry is the selected loop type — no held siblings to click.
   var ltypes = doc.querySelectorAll('#wbLoopTypes .wb-ltype');
   var ltIds = Array.prototype.map.call(ltypes, function (b) { return b.getAttribute('data-loop'); });
-  assert.deepStrictEqual(ltIds, ['card', 'map', 'ai'], 'three loop types offered in order (got ' + ltIds.join(',') + ')');
+  assert.deepStrictEqual(ltIds, ['card'], 'only the card loop type is offered (got ' + ltIds.join(',') + ')');
   assert.ok(doc.querySelectorAll('#wbLoopTypes .wb-ltype.sel').length === 1, 'exactly one loop type selected');
-  doc.querySelector('#wbLoopTypes .wb-ltype[data-loop="map"]').click();
-  assert.ok(doc.querySelector('#wbLoopTypes .wb-ltype[data-loop="map"]').classList.contains('sel'), 'clicking Map selects it');
-  assert.ok(doc.querySelector('#wbLoopTypes .wb-ltype[data-loop="card"]').classList.contains('held') &&
-    doc.querySelector('#wbLoopTypes .wb-ltype[data-loop="ai"]').classList.contains('held'),
-    'the two unpicked loop types are visibly marked held');
-  assert.ok(!doc.querySelector('#wbLoopTypes .wb-ltype[data-loop="map"]').classList.contains('held'), 'the picked loop type is not held');
+  assert.ok(doc.querySelector('#wbLoopTypes .wb-ltype[data-loop="card"]').classList.contains('sel'), 'card is the selected loop type');
 
   console.log('== Plan phase: Tolerance + author-boldness Temperature (#141/#164) ==');
-  // AC1: switching loop type re-loads the accept-settings default. Map loosens `control`
-  // (Card does not) and drops Card's `swings`.
+  // #169 AC1: card is the only loop type, so the accept panel carries the Card default
+  // profile — swings loosened, control not (Card omits control).
   var acc = doc.getElementById('wbAccept');
-  assert.ok(acc.querySelector('button.wb-tol[data-metric="control"]') && !acc.querySelector('button.wb-tol[data-metric="swings"]'),
-    'picking Map re-loads its default profile (control in, swings out)');
+  assert.ok(acc.querySelector('button.wb-tol[data-metric="swings"]') && !acc.querySelector('button.wb-tol[data-metric="control"]'),
+    'the Card default profile is loaded (swings in, control out)');
   // AC2: Red% / 1st% shown hard-flagged — locked at hold, a loud flag never a clickable escalation.
   var flaggedRows = acc.querySelectorAll('.wb-tol.flagged');
   assert.ok(flaggedRows.length === 2, 'two hard-flagged balance rows shown (got ' + flaggedRows.length + ')');
@@ -240,7 +236,7 @@ realSetTimeout(function () {
   doc.getElementById('wbLaunch').click();
   assert.ok(launched && typeof launched === 'object', 'Launch hands a config object to the launch hook');
   assert.ok(launched === win.WB_LAST_CONFIG, 'the handed config is also exposed as WB_LAST_CONFIG');
-  assert.ok(launched.loopType === 'map' && launched.profile && launched.profile.name === 'Map',
+  assert.ok(launched.loopType === 'card' && launched.profile && launched.profile.name === 'Card',
     'config carries the picked loop type (loopType string + the Tolerance profile, #138)');
   assert.ok(!('step' in launched.profile), 'the dead step field is gone from the run config (#164)');
   assert.ok(launched.nudge === nudge.value, 'config carries the opening nudge');

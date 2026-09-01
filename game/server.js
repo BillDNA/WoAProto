@@ -134,6 +134,7 @@ function startContentLoop(cfg) {
   var tolName = cfg.profile && typeof cfg.profile === 'object' ? cfg.profile.name : (cfg.profile || cfg.tolerance);
   if (tolName) args.push('--tolerance', String(tolName));
   args.push('--stop', String(cfg.stop || '+45m'));
+  if (cfg.questionnaire) args.push('--questionnaire', String(cfg.questionnaire));
   if (cfg.panel && cfg.panel.length) args.push('--panel', cfg.panel.join(','));
   if (cfg.n) args.push('--n', String(cfg.n | 0));
   if (cfg.maps) args.push('--maps', String(cfg.maps | 0));
@@ -152,7 +153,7 @@ function startContentLoop(cfg) {
   // after this returns) reads a PRIOR run's stale state:'done' and stops polling the new run.
   try {
     fs.mkdirSync(recDir, { recursive: true });
-    fs.writeFileSync(path.join(recDir, 'latest.json'), JSON.stringify({ runId: runId, state: 'starting', startedAt: new Date().toISOString(), config: { nudge: cfg.nudge || '', temperature: cfg.temperature || '', tolerance: tolName || '', stopAt: '', questionnaire: cfg.questionnaire || '' }, stage: null, iterations: [] }, null, 2) + '\n');
+    fs.writeFileSync(path.join(recDir, 'latest.json'), JSON.stringify({ runId: runId, state: 'starting', startedAt: new Date().toISOString(), config: { nudge: cfg.nudge || '', temperature: cfg.temperature || '', tolerance: tolName || '', stopAt: (cfg.stop && cfg.stop !== '+45m') ? String(cfg.stop) : '', questionnaire: cfg.questionnaire || '' }, stage: null, iterations: [] }, null, 2) + '\n');
   } catch (e) { /* the child will write the real record shortly regardless */ }
   // 3) write a .command launch script and open it in a visible Terminal (macOS). Off-mac,
   // fall back to a detached headless child (the dashboard mirror still works; no window).
