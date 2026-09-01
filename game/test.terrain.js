@@ -4,7 +4,8 @@
 'use strict';
 const { test } = require('./test.helpers.js');
 const assert = require('node:assert');
-const { E, testSkirmish, fixtureCard } = require('./test.helpers.js');
+const { E, testSkirmish } = require('./test.helpers.js');
+const { fakeCard } = require('./test.fixtures.js'); // fake fixtures, never live content (no-live-content, #193)
 
 test('terrain pieces live inside ONE hex', () => {
 (function () {
@@ -30,8 +31,8 @@ test('trench/terrain edge exclusivity', () => {
   st.terrainEdges[E.sideKey('1,-1', 4)] = 'M'; // the NEIGHBOR's side of that border
   assert.ok(E.trenchOrientations(st, '0,0').length === 4, "neighbor-owned terrain across the border doesn't block");
   var thrown = false;
-  st.hands.red = ['deploy_inf_trench'];
-  E.playCard(st, 'deploy_inf_trench');
+  fakeCard('fx_deploy_inf_trench'); st.hands.red = ['fx_deploy_inf_trench'];
+  E.playCard(st, 'fx_deploy_inf_trench');
   E.applyStep(st, { skip: true }); // skip the deploy
   try { E.applyStep(st, { hex: '0,0', dirs: [1, 2] }); } catch (e) { thrown = true; }
   assert.ok(thrown, 'engine rejects trench over a terrain edge');
@@ -47,8 +48,8 @@ test('multiple trenches per hex', () => {
   var ors = E.trenchOrientations(st, '-1,1');
   assert.ok(ors.some(function (pr) { return pr[0] === 1 && pr[1] === 2; }), 'orientation toward C3/C4 (dirs 1-2) offered');
   assert.ok(!ors.some(function (pr) { return pr.indexOf(3) >= 0 || pr.indexOf(4) >= 0; }), 'already-covered edges excluded');
-  st.hands.red = ['deploy_inf_trench'];
-  E.playCard(st, 'deploy_inf_trench');
+  fakeCard('fx_deploy_inf_trench'); st.hands.red = ['fx_deploy_inf_trench'];
+  E.playCard(st, 'fx_deploy_inf_trench');
   E.applyStep(st, { skip: true }); // skip the deploy
   E.applyStep(st, { hex: '-1,1', dirs: [1, 2] });
   assert.ok(st.trenches['-1,1'].length === 2, 'second trench dug on the same hex');
@@ -66,8 +67,8 @@ test('multiple trenches per hex', () => {
   st2.units['0,0'] = { type: 'infantry', owner: 'red' };
   st2.trenches['0,0'] = [{ dirs: [1, 2], owner: 'red' }];
   var thrown = false;
-  st2.hands.red = ['deploy_inf_trench'];
-  E.playCard(st2, 'deploy_inf_trench');
+  fakeCard('fx_deploy_inf_trench'); st2.hands.red = ['fx_deploy_inf_trench'];
+  E.playCard(st2, 'fx_deploy_inf_trench');
   E.applyStep(st2, { skip: true });
   try { E.applyStep(st2, { hex: '0,0', dirs: [2, 3] }); } catch (e) { thrown = true; }
   assert.ok(thrown, 'overlapping trench edges rejected');
@@ -264,7 +265,9 @@ test('deploy / control rules', () => {
 
 test('rules 1.1: a trench lets the defender survive a combat tie', () => {
 (function () {
-  fixtureCard('ordered_withdraw'); // fixture, not the active deck (used in (b) below)
+  // Fake fixtures own the shapes this block needs: a plain two-attack card (basic
+  // attack), a tieSpare+noAdvance attack, and a reposition+(-1 attack). No live content.
+  fakeCard('fx_two_attacks'); fakeCard('fx_noadvance_attack'); fakeCard('fx_reposition_attack_m1');
   // dirs of a trench covering the attacked border of `defHex` (the side facing
   // `fromHex`), plus its clockwise neighbour so it's a legal 2-edge orientation.
   function coverDir(defHex, fromHex) { var d = E.dirBetween(defHex, fromHex); return [d, (d + 1) % 6]; }
@@ -275,8 +278,8 @@ test('rules 1.1: a trench lets the defender survive a combat tie', () => {
   st.units['1,0'] = { type: 'infantry', owner: 'blue' };
   st.trenches['1,0'] = [{ dirs: coverDir('1,0', '0,0'), owner: 'blue' }];
   assert.ok(E.computeAttack(st, { from: '0,0', to: '1,0' }).outcome === 'tie', 'setup: 1v1 is still a tie across the trench');
-  st.hands.red = ['mass_assault'];
-  E.playCard(st, 'mass_assault', 'attack'); // basic attack: plain, no mod/tieSpare
+  st.hands.red = ['fx_two_attacks'];
+  E.playCard(st, 'fx_two_attacks', 'attack'); // basic attack: plain, no mod/tieSpare
   E.applyStep(st, { from: '0,0', to: '1,0' });
   assert.ok(st.units['1,0'] && st.units['1,0'].owner === 'blue', 'tie vs trenched defender: the defender survives');
   assert.ok(!st.units['0,0'], 'tie vs trenched defender: the attacker is destroyed');
@@ -287,8 +290,8 @@ test('rules 1.1: a trench lets the defender survive a combat tie', () => {
   st2.units['0,0'] = { type: 'infantry', owner: 'red' };
   st2.units['1,0'] = { type: 'infantry', owner: 'blue' };
   st2.trenches['1,0'] = [{ dirs: coverDir('1,0', '0,0'), owner: 'blue' }];
-  st2.hands.red = ['ordered_withdraw'];
-  E.playCard(st2, 'ordered_withdraw');
+  st2.hands.red = ['fx_noadvance_attack'];
+  E.playCard(st2, 'fx_noadvance_attack');
   E.applyStep(st2, { from: '0,0', to: '1,0' });
   assert.ok(st2.units['1,0'] && st2.units['0,0'], 'tieSpare tie vs trenched defender: nobody dies (whiff)');
 
@@ -296,8 +299,8 @@ test('rules 1.1: a trench lets the defender survive a combat tie', () => {
   var st3 = testSkirmish(203);
   st3.units['0,0'] = { type: 'infantry', owner: 'red' };
   st3.units['1,0'] = { type: 'infantry', owner: 'blue' };
-  st3.hands.red = ['mass_assault'];
-  E.playCard(st3, 'mass_assault', 'attack');
+  st3.hands.red = ['fx_two_attacks'];
+  E.playCard(st3, 'fx_two_attacks', 'attack');
   E.applyStep(st3, { from: '0,0', to: '1,0' });
   assert.ok(!st3.units['0,0'] && !st3.units['1,0'], 'untrenched plain tie: both units destroyed (unchanged)');
 
@@ -307,8 +310,8 @@ test('rules 1.1: a trench lets the defender survive a combat tie', () => {
   st4.units['-2,2'] = { type: 'infantry', owner: 'red' }; // adjacent to blue HQ at -3,2
   st4.trenches['-3,2'] = [{ dirs: coverDir('-3,2', '-2,2'), owner: 'blue' }];
   assert.ok(E.computeAttack(st4, { from: '-2,2', to: '-3,2', mod: -1 }).outcome === 'tie', 'setup: infantry(-1) vs HQ is a 0v0 tie');
-  st4.hands.red = ['careful_maneuvers']; // [reposition, attack mod -1]
-  E.playCard(st4, 'careful_maneuvers');
+  st4.hands.red = ['fx_reposition_attack_m1']; // [reposition, attack mod -1]
+  E.playCard(st4, 'fx_reposition_attack_m1');
   if (E.currentStep(st4).type === 'reposition') E.applyStep(st4, { skip: true });
   E.applyStep(st4, { from: '-2,2', to: '-3,2' });
   assert.ok(st4.hqAlive.blue && st4.phase !== 'skirmish-over', 'tie at a trenched HQ does NOT capture it');
@@ -317,8 +320,8 @@ test('rules 1.1: a trench lets the defender survive a combat tie', () => {
   // (d) REGRESSION — a tie at an UNtrenched HQ still captures it exactly as before.
   var st5 = testSkirmish(205);
   st5.units['-2,2'] = { type: 'infantry', owner: 'red' };
-  st5.hands.red = ['careful_maneuvers'];
-  E.playCard(st5, 'careful_maneuvers');
+  st5.hands.red = ['fx_reposition_attack_m1'];
+  E.playCard(st5, 'fx_reposition_attack_m1');
   if (E.currentStep(st5).type === 'reposition') E.applyStep(st5, { skip: true });
   E.applyStep(st5, { from: '-2,2', to: '-3,2' });
   assert.ok(st5.phase === 'skirmish-over' && st5.skirmishWinner === 'red' && st5.winType === 'hq',

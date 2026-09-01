@@ -5,6 +5,7 @@
 const { test } = require('./test.helpers.js');
 const assert = require('node:assert');
 const { E, testSkirmish } = require('./test.helpers.js');
+const { fakeCard } = require('./test.fixtures.js'); // fake fixtures, never live content (no-live-content, #193)
 
 test('Field Marshal AI & skirmish sim', () => {
 (function () {
@@ -33,8 +34,8 @@ test('attrition victory (surviving units on the board)', () => {
   st.units['-3,1'] = { type: 'infantry', owner: 'blue' };  // blue fields 1 VP
   st.vp.blue = 5;
   drainBlue(st);
-  st.hands.red = ['attack_plus1']; // no legal attack: resolves to nothing, ends the turn
-  E.playCard(st, 'attack_plus1');
+  fakeCard('fx_plain_attack'); st.hands.red = ['fx_plain_attack']; // no legal attack: resolves to nothing, ends the turn
+  E.playCard(st, 'fx_plain_attack');
   assert.ok(st.phase === 'skirmish-over' && st.skirmishWinner === 'red' && st.winType === 'attrition',
     'attrition counts surviving units, not kills (red wins 3-1 despite 0-5 in kills)');
   assert.ok(st.log.some(function (l) { return l.msg.indexOf('3 VP vs 1 VP of surviving units') >= 0; }),
@@ -45,15 +46,15 @@ test('attrition victory (surviving units on the board)', () => {
   var st2 = testSkirmish(112);
   st2.units['2,-1'] = { type: 'infantry', owner: 'red' };
   drainBlue(st2);
-  st2.hands.red = ['attack_plus1'];
-  E.playCard(st2, 'attack_plus1');
+  st2.hands.red = ['fx_plain_attack'];
+  E.playCard(st2, 'fx_plain_attack');
   assert.ok(st2.skirmishWinner === 'red', 'undeployed reserves count for nothing');
 
   // Bare-board tie still goes to the second player.
   var st3 = testSkirmish(113);
   drainBlue(st3);
-  st3.hands.red = ['attack_plus1'];
-  E.playCard(st3, 'attack_plus1');
+  st3.hands.red = ['fx_plain_attack'];
+  E.playCard(st3, 'fx_plain_attack');
   assert.ok(st3.skirmishWinner === st3.second && st3.skirmishWinner === 'blue', '0-0 tie goes to the second player');
 })();
 });
@@ -61,7 +62,8 @@ test('attrition victory (surviving units on the board)', () => {
 test('behaviour counters (balance-lab metrics)', () => {
 (function () {
   var st = testSkirmish(120);
-  E.playCard(st, 'deploy_inf_start');
+  fakeCard('fx_deploy_inf'); st.hands.red = ['fx_deploy_inf'];
+  E.playCard(st, 'fx_deploy_inf');
   E.applyStep(st, { hex: E.stepOptions(st).targets[0] });
   assert.ok(st.stats.deploys === 1, 'deploy increments stats.deploys');
   var r = E.balanceMap(E.MAPS[0], 2, { seedBase: 5 });
@@ -205,8 +207,12 @@ test('concede advisory (foregone-conclusion heuristic)', () => {
   // hopeless for red: 1 turn left, blue has 5 VP of units on the field vs red's
   // none (need 6 incl. the tie that goes to blue), best-case swing is 3/turn,
   // airdrop already spent, nothing within marching range of the blue HQ
-  st.decks.red = []; st.discards.red = []; st.hands.red = ['attack_plus1'];
-  st.removed.red.push('airdrop');
+  fakeCard('fx_plain_attack');
+  st.decks.red = []; st.discards.red = []; st.hands.red = ['fx_plain_attack'];
+  // The engine's concedeAdvised heuristic itself keys off the airdrop id
+  // (game/engine/04-skirmish.js) — this is an engine-constant mirror, not a borrowed
+  // fixture, so the test must name it to exercise "the snipe is spent".
+  st.removed.red.push('airdrop'); // LIVE_CONTENT_PIN: engine-constant mirror (concedeAdvised)
   st.units['-3,1'] = { type: 'artillery', owner: 'blue' };
   st.units['-2,1'] = { type: 'cavalry', owner: 'blue' };
   var adv = E.concedeAdvised(st, 'red');

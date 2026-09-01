@@ -52,3 +52,29 @@ pin moves atomically with a `RULES_VERSION` bump**; the deletion guard in
 A property that must hold every rules era. Sacred — changing one is a PR callout, not
 routine work. Declared with `invariant(category, name, fn)` and enumerated in the registry
 `game/test-registry.js`, which is the authority on the category set.
+
+## No live content in rules tests
+
+A rules (mechanic) test must take its numbers from a **fake fixture** — a synthetic card
+def in the dedicated module `game/test.fixtures.js`, whose ids live in the `fx_` namespace,
+outside the live catalog — **never from a live game-content id**. Authoring or retuning a
+card can then never break a mechanic test spuriously. (`test.reports.js` already feeds
+synthetic report fixtures; this generalizes the pattern to the rules tests. ADR-0004; #193.)
+
+**No-live-content gate**:
+A deterministic source-scan (the guard test lives in `game/test.cards.js`, the scanner in
+`game/test.fixtures.js`) that **reds when a rules-test file quotes a live catalog card id**.
+It scans the rules-test files listed in `game/test-files.js` (minus `test.reports.js`, the
+synthetic-fixture home). It reds **only** on a *borrowed fixture* — a live id written as a
+literal for a test's own numbers — never on a test that legitimately **derives** an
+expectation from active content (`E.CARDS.filter(...)`, `st.hands.red[0]`), which writes no
+literal id and which the suite does deliberately and must survive.
+
+**LIVE_CONTENT_PIN**:
+The label that exempts a *deliberate, reviewed* live-content reference from the gate — a
+comment tag on the same line as the literal. Two legitimate uses, both surfaced in the diff:
+a **named-card pin** (a mechanic test that intentionally pins a shipped card's number, e.g.
+Raiding Party = 6.5 army-points — kept and labelled, never deleted), and an **engine-constant
+mirror** (the engine itself keys off a card id, e.g. `concedeAdvised` reads `airdrop`, so the
+test must name it). The tag is a surfaced act, not an escape valve: it shows in the diff for
+review, exactly like a pin-prune record or a new-primitive callout.
