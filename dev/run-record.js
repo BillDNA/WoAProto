@@ -11,7 +11,7 @@
  *
  * Paths (opts.dir default logs/content-runs):
  *   <dir>/<runId>/run.json   the durable per-run record
- *   <dir>/latest.json        a mirror of the active run — what GET /api/contentrun and
+ *   <dir>/latest.json        a mirror of the active run — what GET /api/runloop and
  *                            the Workbench feed read (so the render never needs the runId)
  * Every mutation flushes both, so a reader (the dashboard poller) always sees the live
  * in-flight stage. The committed markdown reports stay the human-readable artifact; this

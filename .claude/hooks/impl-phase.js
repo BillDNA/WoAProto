@@ -10,13 +10,16 @@
 const fs = require('fs');
 const path = require('path');
 
-const MARKER = path.resolve(__dirname, '..', 'impl-phase');
+// The marker path — env-overridable (WOA_IMPL_PHASE_FILE) so parallel test files can each
+// isolate their own marker instead of racing the one real file; defaults to the real
+// .claude/impl-phase the freeze hook gates (unset env = unchanged behavior).
+function markerPath() { return process.env.WOA_IMPL_PHASE_FILE || path.resolve(__dirname, '..', 'impl-phase'); }
 const PHASES = ['testwriter', 'implement'];
 
-function get() { try { return fs.readFileSync(MARKER, 'utf8').trim(); } catch { return ''; } }
-function set(phase) { fs.writeFileSync(MARKER, phase + '\n'); }
+function get() { try { return fs.readFileSync(markerPath(), 'utf8').trim(); } catch { return ''; } }
+function set(phase) { fs.writeFileSync(markerPath(), phase + '\n'); }
 
-module.exports = { get, set, MARKER, PHASES };
+module.exports = { get, set, markerPath, get MARKER() { return markerPath(); }, PHASES };
 
 if (require.main === module) {
   const arg = process.argv[2];

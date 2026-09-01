@@ -538,11 +538,19 @@ if (require.main === module) {
   const runId = flag('run-id', 'content-run-' + Date.now());
   const mock = has('mock');
   const noCommit = has('no-commit');
+  // Unattended posture (#168 AC7): run to the stop-datetime with zero interactive prompts.
+  // The whole pipeline already drives the brains over `claude -p` print mode (dev/llm-client.js)
+  // and headless claude-plays, so this is inherently non-interactive; the flag makes it a
+  // stated contract the launch bridge forwards, and would refuse any prompt path if added.
+  const nonInteractive = has('non-interactive');
+  if (nonInteractive) console.log('content-loop: non-interactive — unattended to the stop-datetime, no prompts.');
   const branch = flag('branch', null);
   const config = {
     nudge: flag('nudge', 'build out toward 30 cards'),
     temperature: flag('temperature', 'standard'),
-    tolerance: flag('tolerance', 'card'),
+    // --tolerance is a profile-key string ('card') OR the EDITED Tolerance object forwarded as
+    // inline JSON by the launch bridge (server.js buildLoopArgs); resolveTolerance takes either.
+    tolerance: (function () { var t = flag('tolerance', 'card'); if (typeof t === 'string' && t.charAt(0) === '{') { try { return JSON.parse(t); } catch (e) {} } return t; })(),
     questionnaire: flag('questionnaire', 'default'),
     stopAt: null
   };
@@ -685,7 +693,7 @@ if (require.main === module) {
   }
 
   console.log('content-loop: ' + (mock ? 'MOCK brains' : 'real LLM brains') + ' · nudge "' + config.nudge + '" · temperature ' + config.temperature +
-    ' · tolerance ' + config.tolerance + ' · stop ' + (config.stopAt || 'none') + ' · panel [' + panel.join(',') + '] · ' + maps.length + ' maps' + (noCommit ? ' · NO-COMMIT' : ''));
+    ' · tolerance ' + ((config.tolerance && config.tolerance.name) || config.tolerance) + ' · stop ' + (config.stopAt || 'none') + ' · panel [' + panel.join(',') + '] · ' + maps.length + ' maps' + (noCommit ? ' · NO-COMMIT' : ''));
 
   // Readable, watchable stdout: a labelled banner as each stage BEGINS (the machine
   // surface is the run-record + dashboard, not this stream — so the terminal can be plain

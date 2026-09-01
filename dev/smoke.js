@@ -130,13 +130,13 @@ var rawSetTimeout = win.setTimeout;
 function realSetTimeout(fn, ms) { return rawSetTimeout(function () { try { return fn(); } catch (e) { reject(e); } }, ms); }
 win.setTimeout = function (fn, ms) { return realSetTimeout(fn, Math.min(ms || 0, 5)); };
 
-// The real server-served launch/control hooks (boot.js) — captured before the
-// #144 section overrides them with capture stubs, so the #154 loop-bridge section
-// can drive the genuine POST-to-/api/runloop flow.
-var wbRealLaunch, wbRealControl;
+// The real server-served launch hook (boot.js WB_ON_LAUNCH) — captured before the
+// #144 section overrides it with a capture stub, so the #168 loop-bridge section
+// can drive the genuine Launch flow (api('runloop', cfg) -> wbGoPhase + poll).
+var wbRealLaunch;
 realSetTimeout(function () {
   console.log('== boot ==');
-  wbRealLaunch = win.WB_ON_LAUNCH; wbRealControl = win.WB_ON_CONTROL;
+  wbRealLaunch = win.WB_ON_LAUNCH;
   assert.ok(win.Engine && win.Engine.MAPS.length >= 5, 'engine loaded the map roster (' + (win.Engine && win.Engine.MAPS.length) + ' maps)');
   assert.ok(doc.querySelectorAll('#edShape option').length === Object.keys(win.Engine.SHAPES).length + 1,
     'editor shape dropdown = maps.js shapes + the Custom entry');
@@ -324,8 +324,8 @@ realSetTimeout(function () {
   win.WB_RUN_STATUS = null; // leave the pane idle for a clean re-open
 
   console.log('== Run phase: content-loop per-iteration feed (#167) ==');
-  // The content loop writes a structured run record (dev/run-record.js -> logs/content-runs/
-  // latest.json, served by GET /api/contentrun). Feed a mock record and assert the WHOLE
+  // The content loop writes a structured run record (dev/run-record.js -> the run-record dir's
+  // latest.json, served by GET /api/runloop). Feed a mock record and assert the WHOLE
   // night's story renders on screen: every stage in order, authored cards as real faces, the
   // fresh grade findings, the balance-pin columns + Tolerance flags, feels non-selection, a
   // failed-iteration finding, and the LIVE in-flight stage before a commit.
@@ -1068,24 +1068,22 @@ realSetTimeout(function () {
       });
     }
 
-    // #167 content-loop bridge — the ONE seam crossing game/<->dev/: clicking Launch in the
-    // Plan phase must spawn the REAL content loop and the Run phase advance through the
-    // per-iteration run record it mirrors back. Drive it through the REAL route: stand up a
-    // throwaway server on server.js's exported handler, point the browser's fetch at it, then
-    // fire the genuine WB_ON_LAUNCH (boot.js -> POST /api/contentloop) + wbPollContentRun.
-    // headless:true keeps the Terminal window closed; mock:true keeps the brains offline; the
-    // run still authors a real card, sweeps a real (tiny) AI balance, runs a real claude-plays
-    // feels, and commits — no mocked STAGE, only offline brains — in its own worktree/branch.
+    // #168 AC6 — Launching from the Workbench shows the run advancing LIVE: the run-feed DOM
+    // updates as the run advances, not a canned status. Drive the REAL product route
+    // POST /api/runloop against the faithful deterministic stand-in
+    // (dev/fixtures/fake-loop-session.js), which speaks the REAL transport — it writes
+    // dev/run-record.js records to --rec-dir, the file the server tails and GET /api/runloop
+    // reads. Then read the Workbench run-feed DOM (wbContentRun) TWICE (through the Workbench's
+    // own poll) with a delay between reads, and RED if the rendered text does not change
+    // between reads (static == canned). Stand up a throwaway server on server.js's exported
+    // handler and point the browser's fetch at it, exactly the seam the real bridge crosses.
     function loopBridge(done) {
-      console.log('== Run phase: real content-loop launch through /api/contentloop (#167) ==');
-      var http = require('http'), cp = require('child_process'), os = require('os');
+      console.log('== Run phase: live run-feed through the real /api/runloop bridge (#168) ==');
+      var http = require('http'), os = require('os');
       var srvMod = require(path.join(GAME, 'server.js'));
-      var repoRoot = path.join(GAME, '..');
-      var tmpDb = path.join(os.tmpdir(), 'woa-smoke-contentloop-' + process.pid + '.db');
-      // Back up any pre-existing run-record so this test never clobbers a real overnight run's
-      // logs/content-runs on a dev box (the test shares the fixed path the dashboard reads).
-      var latestFile = path.join(repoRoot, 'logs', 'content-runs', 'latest.json');
-      var latestBackup = null; try { latestBackup = fs.readFileSync(latestFile, 'utf8'); } catch (e) {}
+      var standIn = path.join(__dirname, 'fixtures', 'fake-loop-session.js');
+      var recDir = fs.mkdtempSync(path.join(os.tmpdir(), 'woa-smoke-runloop-'));
+      var tmpDb = path.join(os.tmpdir(), 'woa-smoke-runloop-' + process.pid + '.db');
       var srv = http.createServer(srvMod.handler).listen(0, function () {
         var port = srv.address().port;
         // Proxy the browser's relative /api/* fetches to the throwaway server.
@@ -1105,45 +1103,59 @@ realSetTimeout(function () {
             r.end();
           });
         };
-        function teardown(runId) {
-          try { srv.close(); } catch (e) {}
-          if (runId) {
-            try { cp.execFileSync('git', ['worktree', 'remove', '--force', path.join(repoRoot, '.claude', 'worktrees', runId)], { cwd: repoRoot, stdio: 'pipe' }); } catch (e) {}
-            try { cp.execFileSync('git', ['branch', '-D', runId], { cwd: repoRoot, stdio: 'pipe' }); } catch (e) {}
-          }
-          // remove only THIS test's run dir; restore the pre-existing latest.json (or clear it)
-          if (runId) { try { fs.rmSync(path.join(repoRoot, 'logs', 'content-runs', runId), { recursive: true, force: true }); } catch (e) {} }
-          try { if (latestBackup != null) fs.writeFileSync(latestFile, latestBackup); else fs.rmSync(latestFile, { force: true }); } catch (e) {}
-          try { fs.unlinkSync(tmpDb); } catch (e) {}
-        }
-
-        // Re-open the workbench and restore the genuine (server-served) launch hook, then fire
-        // it with a tiny, offline, headless config so the whole seam runs in a few seconds.
-        doc.getElementById('btnWorkbench').click();
-        win.WB_ON_LAUNCH = wbRealLaunch; win.WB_ON_CONTROL = wbRealControl;
-        win.WB_ON_LAUNCH({ nudge: 'smoke', temperature: 'standard', profile: 'card', stop: '+3m',
-          iters: 1, n: 2, maps: 1, feelsMatch: 1, feelsTurns: 4, mock: true, headless: true, db: tmpDb });
-        if (win.WB_POLL) { win.clearInterval(win.WB_POLL); win.WB_POLL = null; } // drive polling ourselves
-
-        var waited = 0;
-        function poll() {
-          win.wbPollContentRun();          // the genuine bridge poll: GET /api/contentrun -> wbSetContentRun
-          var r = win.WB_CONTENT_RUN || {};
-          var it = (r.iterations || [])[0];
-          if (r.state === 'done' || r.state === 'stopped') {
-            assert.strictEqual(r.state, 'done', 'the content loop reached state:done');
-            assert.ok(it, 'the run record carries iteration 1');
-            assert.ok(it && it.stages && it.stages.indexOf('author') >= 0 && it.stages.indexOf('feels') >= 0 && it.stages.indexOf('commit') >= 0, 'iteration ran author..feels..commit (' + (it && it.stages || []).join(',') + ')');
-            assert.ok(it && it.authored && it.authored.length >= 1, 'the batch authored a card, mirrored to the feed');
-            assert.ok(/Iteration 1/i.test(doc.getElementById('wbContentRun').textContent), 'the Run feed rendered the real run record');
-            teardown(r.runId);
+        function teardown(cb) {
+          // Stop the spawned child (stand-in post-impl, dev/loop.js at base), then SETTLE that
+          // POST before closing the server — closing mid-flight resets the socket and leaks an
+          // unhandled rejection that fails `node --test`. The stop fetch's rejection is swallowed
+          // (then(rest, rest)); the server closes only once the stop request has resolved/failed.
+          var stop; try { stop = win.fetch('/api/runloopctl', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'stop' }) }); } catch (e) {}
+          function rest() {
+            try { srv.close(); } catch (e) {}
+            try { fs.rmSync(recDir, { recursive: true, force: true }); } catch (e) {}
+            try { fs.unlinkSync(tmpDb); } catch (e) {}
             win.fetch = function () { return Promise.resolve({ ok: true, json: function () { return Promise.resolve([]); } }); }; // restore no-op
-            return done();
+            cb && cb();
           }
-          if ((waited += 300) > 120000) { teardown(r.runId); assert.ok(false, 'content loop never reached done (last state ' + r.state + ')'); }
-          realSetTimeout(poll, 300);
+          if (stop && typeof stop.then === 'function') stop.then(rest, rest);
+          else rest();
         }
-        realSetTimeout(poll, 300);
+
+        // Open the workbench and fire the REAL Launch hook (boot.js WB_ON_LAUNCH), which does
+        // api('runloop', cfg) -> wbGoPhase('run') -> wbPollContentRun + WB_POLL. Driving the
+        // genuine button hook (not a hand-rolled fetch) is the point: it exercises the actual
+        // config->POST wiring that let the tolerance-object crash slip past a hand-rolled path.
+        // The recDir/entry/iter-ms are test levers the server threads into the spawn; at the base
+        // commit POST /api/runloop ignores cfg.entry and spawns dev/loop.js (kept tiny + db-isolated),
+        // which writes no author->grade->balance run record — so the Workbench feed never advances.
+        doc.getElementById('btnWorkbench').click();
+        win.WB_ON_LAUNCH = wbRealLaunch;
+        win.WB_ON_LAUNCH({ entry: standIn, recDir: recDir, stop: '+6s', iterMs: '40', n: 2, maps: 1, db: tmpDb });
+        // WB_ON_LAUNCH's launch POST + poll setup are async; give them a beat to land, then take
+        // over the polling ourselves (clear WB_POLL) so the reads are paced for the DOM diff.
+        realSetTimeout(function () {
+          if (win.WB_POLL) { win.clearInterval(win.WB_POLL); win.WB_POLL = null; } // drive polling ourselves
+          var samples = [], ticks = 0;
+          function readTick() {
+            win.wbPollContentRun();          // the genuine Workbench poll -> renders wbContentRun
+            // read AFTER the poll's fetch has had time to resolve + render.
+            realSetTimeout(function () {
+              samples.push(doc.getElementById('wbContentRun').textContent);
+              if (++ticks < 6) { realSetTimeout(readTick, 120); return; }
+              // Settle teardown (stop child, close server) FIRST, then assert + resolve in a
+              // wrapped tick so a failed assertion rejects the test rather than throwing loose.
+              teardown(function () {
+                realSetTimeout(function () {
+                  var first = samples[0];
+                  var changed = samples.some(function (s) { return s !== first; });
+                  assert.ok(changed, 'the Workbench run-feed DOM advanced between reads (live, not canned) — samples: '
+                    + JSON.stringify(samples.map(function (s) { return (s || '').replace(/\s+/g, ' ').trim().slice(0, 50); })));
+                  return done();
+                }, 0);
+              });
+            }, 220);
+          }
+          readTick();
+        }, 300);
       });
     }
   }

@@ -11,6 +11,12 @@ const fs = require('fs');
 const os = require('os');
 const { execFileSync } = require('child_process');
 
+// Isolate the marker to a unique per-file temp path so parallel `node --test` files
+// (this one + test-freeze.test.js) never race the single real .claude/impl-phase.
+// Set BEFORE require so the hook's env-aware path resolves here; the spawned CLI
+// inherits this env, so in-process `mod` and the child agree on the same marker.
+process.env.WOA_IMPL_PHASE_FILE = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'woa-impl-phase-')), 'impl-phase');
+
 const CLI = path.join(__dirname, '..', '.claude', 'hooks', 'impl-phase.js');
 const mod = require(CLI);
 
