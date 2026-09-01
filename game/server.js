@@ -85,8 +85,15 @@ function buildLoopArgs(cfg) {
     '--stop', String(cfg.stop || '+45m')];
   if (cfg.nudge) args.push('--nudge', String(cfg.nudge));
   if (cfg.temperature) args.push('--temperature', String(cfg.temperature));
-  var tolName = cfg.profile && typeof cfg.profile === 'object' ? cfg.profile.name : (cfg.profile || cfg.tolerance);
-  if (tolName) args.push('--tolerance', String(tolName));
+  // Tolerance: the Plan sends the EDITED Tolerance OBJECT ({name:'Card', tolerances}) so its
+  // per-axis escalations flow into the run — forward it as inline JSON (content-loop resolves an
+  // object OR a profile-key string). Passing just the display name ('Card') would not resolve
+  // (the profile KEYS are lowercase: card/map/ai).
+  var tol = (cfg.profile && typeof cfg.profile === 'object') ? cfg.profile
+    : (cfg.tolerance && typeof cfg.tolerance === 'object') ? cfg.tolerance
+      : (cfg.profile || cfg.tolerance);
+  if (tol) args.push('--tolerance', typeof tol === 'object' ? JSON.stringify(tol) : String(tol));
+  if (cfg.mapset) args.push('--mapset', String(cfg.mapset));
   if (cfg.panel && cfg.panel.length) args.push('--panel', cfg.panel.join(','));
   if (cfg.n) args.push('--n', String(cfg.n | 0));
   if (cfg.maps) args.push('--maps', String(cfg.maps | 0));
@@ -104,6 +111,10 @@ function buildLoopArgs(cfg) {
 function startLoop(cfg) {
   cfg = cfg || {};
   if (loop && loop.child) { try { loop.child.kill('SIGKILL'); } catch (e) {} loop.child = null; }
+  // Remove the PRIOR run's stale worktree dir on relaunch — its branch + commits stay for
+  // Bill's morning review (`git worktree remove` keeps the branch); otherwise the dirs pile up
+  // and a stale one can later make `git worktree add` fail (a 500 on the next Launch).
+  if (loop && loop.worktree) { try { execFile.execFileSync('git', ['worktree', 'remove', '--force', loop.worktree], { cwd: REPO, stdio: 'pipe' }); } catch (e) {} }
   var runId = loopRunId();
   var recDir = cfg.recDir || path.join(REPO, 'logs', 'content-runs');
   // Isolate a REAL run in its own worktree/branch off HEAD (main untouched). A test run
@@ -122,16 +133,17 @@ function startLoop(cfg) {
     fs.mkdirSync(recDir, { recursive: true });
     fs.writeFileSync(path.join(recDir, 'latest.json'), JSON.stringify({ runId: runId, state: 'starting', startedAt: new Date().toISOString(), config: { nudge: cfg.nudge || '', temperature: cfg.temperature || '', tolerance: tolName || '', stopAt: '', questionnaire: cfg.questionnaire || '' }, stage: null, iterations: [] }, null, 2) + '\n');
   } catch (e) { /* the child writes the real record shortly regardless */ }
-  // TEE transport: keep a controllable (non-detached) child and pipe its stdout+stderr to a
-  // log file — the attach-able terminal a `tail -f` window (below) or `tail -f <log>` reads.
-  // Status is NEVER read from this pipe; it is file-tailed off the run-record (GET /api/runloop).
+  // TEE transport (no server-side stdout fold): the child's stdout+stderr are written by the
+  // OS straight to one log-file fd — the attach-able terminal a `tail -f` window (below) reads.
+  // Status is NEVER read from this stream; it is file-tailed off the run-record (GET /api/runloop).
+  // detached + unref so an unattended run survives a server restart to its stop-datetime (AC7),
+  // while the pid stays signal-controllable for as long as the server lives.
   var logFile = path.join(os.tmpdir(), runId + '.log');
-  var child = spawn(process.execPath, args, { cwd: cwd });
-  try {
-    var out = fs.createWriteStream(logFile);
-    child.stdout.pipe(out); child.stderr.pipe(out);
-  } catch (e) { /* tee is best-effort; file-tail status still works */ }
+  var logFd = null; try { logFd = fs.openSync(logFile, 'a'); } catch (e) { /* a missing log is fine */ }
+  var stdio = ['ignore', logFd != null ? logFd : 'ignore', logFd != null ? logFd : 'ignore'];
+  var child = spawn(process.execPath, args, { cwd: cwd, detached: true, stdio: stdio });
   child.on('close', function () { if (loop && loop.child === child) loop.child = null; });
+  child.unref();
   loop = { child: child, runId: runId, branch: wt ? runId : null, worktree: wt, recDir: recDir, log: logFile, controlState: null, startedAt: new Date().toISOString() };
   // Watchable: open a visible Terminal that tails the tee log so Bill alt-tabs and watches
   // it play out (spec §3). The child stays controllable via signals; this window is a viewer.

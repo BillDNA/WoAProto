@@ -13,7 +13,9 @@ const path = require('path');
 
 // Repo root, resolved from this file's location so cwd never matters.
 const ROOT = path.resolve(__dirname, '..', '..');
-const PHASE_FILE = path.join(ROOT, '.claude', 'impl-phase');
+// env-overridable (WOA_IMPL_PHASE_FILE) so parallel test files isolate their own marker
+// instead of racing the one real file; defaults to the real marker (unset env = unchanged).
+function phaseFile() { return process.env.WOA_IMPL_PHASE_FILE || path.join(ROOT, '.claude', 'impl-phase'); }
 const TESTWRITER = 'testwriter';
 
 // A path is a test file when it matches one of ADR-0004's three homes. Checked on the
@@ -38,7 +40,7 @@ function isMarkerFile(filePath) {
 
 // The current phase, trimmed; '' when the marker is absent or unreadable.
 function readPhase(file) {
-  try { return fs.readFileSync(file || PHASE_FILE, 'utf8').trim(); }
+  try { return fs.readFileSync(file || phaseFile(), 'utf8').trim(); }
   catch { return ''; }
 }
 
@@ -71,7 +73,7 @@ function decide(payload, phase) {
   };
 }
 
-module.exports = { decide, isTestFile, isMarkerFile, readPhase, TEST_PATTERNS, PHASE_FILE, TESTWRITER };
+module.exports = { decide, isTestFile, isMarkerFile, readPhase, TEST_PATTERNS, get PHASE_FILE() { return phaseFile(); }, phaseFile, TESTWRITER };
 
 // CLI: read the PreToolUse payload on stdin, deny a frozen test-file write via the
 // structured contract — exit 0 with a JSON permissionDecision on stdout (the current

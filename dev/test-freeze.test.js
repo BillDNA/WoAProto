@@ -11,7 +11,13 @@ const { test } = require('node:test');
 const assert = require('node:assert');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const { execFileSync } = require('child_process');
+
+// Isolate the marker to a unique per-file temp path so parallel `node --test` files
+// (this one + impl-phase.test.js) never race the single real .claude/impl-phase.
+// Set BEFORE require so the hook's env-aware phaseFile()/PHASE_FILE resolve here.
+process.env.WOA_IMPL_PHASE_FILE = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'woa-test-freeze-')), 'impl-phase');
 
 const HOOK = path.join(__dirname, '..', '.claude', 'hooks', 'test-freeze.js');
 const SETTINGS = path.join(__dirname, '..', '.claude', 'settings.json');

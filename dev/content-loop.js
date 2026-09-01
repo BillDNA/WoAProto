@@ -548,7 +548,9 @@ if (require.main === module) {
   const config = {
     nudge: flag('nudge', 'build out toward 30 cards'),
     temperature: flag('temperature', 'standard'),
-    tolerance: flag('tolerance', 'card'),
+    // --tolerance is a profile-key string ('card') OR the EDITED Tolerance object forwarded as
+    // inline JSON by the launch bridge (server.js buildLoopArgs); resolveTolerance takes either.
+    tolerance: (function () { var t = flag('tolerance', 'card'); if (typeof t === 'string' && t.charAt(0) === '{') { try { return JSON.parse(t); } catch (e) {} } return t; })(),
     questionnaire: flag('questionnaire', 'default'),
     stopAt: null
   };
