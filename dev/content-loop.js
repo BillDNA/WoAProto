@@ -538,6 +538,12 @@ if (require.main === module) {
   const runId = flag('run-id', 'content-run-' + Date.now());
   const mock = has('mock');
   const noCommit = has('no-commit');
+  // Unattended posture (#168 AC7): run to the stop-datetime with zero interactive prompts.
+  // The whole pipeline already drives the brains over `claude -p` print mode (dev/llm-client.js)
+  // and headless claude-plays, so this is inherently non-interactive; the flag makes it a
+  // stated contract the launch bridge forwards, and would refuse any prompt path if added.
+  const nonInteractive = has('non-interactive');
+  if (nonInteractive) console.log('content-loop: non-interactive — unattended to the stop-datetime, no prompts.');
   const branch = flag('branch', null);
   const config = {
     nudge: flag('nudge', 'build out toward 30 cards'),

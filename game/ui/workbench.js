@@ -485,7 +485,7 @@ function wbLoadAuthored() {
 
 /* ---------- the CONTENT LOOP feed (#167) — the per-iteration run record on screen ----------
    The content loop (dev/content-loop.js) writes a structured per-iteration run record
-   (dev/run-record.js -> logs/content-runs/latest.json, served by GET /api/contentrun). This
+   (dev/run-record.js -> logs/content-runs/latest.json, served by GET /api/runloop). This
    renders it as the night's STORY: every iteration, every stage in order (author -> grade ->
    balance -> feels -> commit), authored cards as real card FACES (reusing cardFace via
    wbAuthoredCard), the fresh grader's findings, the per-card balance pin columns + Tolerance
@@ -626,7 +626,7 @@ function wbSetContentRun(rec) {
 // Results open). Fails open to whatever is shown if the read hiccups / no server.
 function wbLoadContentRun() {
   if (typeof fetch !== 'function') return;
-  fetch('/api/contentrun').then(function (r) { return r.ok ? r.json() : { state: 'idle', iterations: [] }; })
+  fetch('/api/runloop').then(function (r) { return r.ok ? r.json() : { state: 'idle', iterations: [] }; })
     .then(function (rec) { wbSetContentRun(rec); })
     .catch(function () { /* keep whatever is shown */ });
 }

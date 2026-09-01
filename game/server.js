@@ -48,130 +48,135 @@ function recordSkirmish(body) {
   return { status: 200, out: { ok: true, runId: dbRuns[runKey], skirmishId: skirmishId } };
 }
 
-// --- #154 loop bridge: the browser Workbench's Launch spawns dev/loop.js here and
-// the Run phase polls GET /api/runloop for a folded status. One run at a time — a
-// new Launch replaces the old process. loopStatus is the exact shape wbSetRunStatus
-// renders ({ loopType, state, iter, iters, swept, best, steps }); we fold each
-// LOOP_STEP stdout line into it (same stdout-line contract balance-report.js uses).
-var loopProc = null, loopStatus = null, loopBuf = '';
-function foldLoopLine(line) {
-  var m = /^(LOOP_STEP|LOOP_RESULT) (.*)$/.exec(line);
-  if (!m || !loopStatus) return;
-  var obj; try { obj = JSON.parse(m[2]); } catch (e) { return; }
-  if (m[1] === 'LOOP_STEP') {
-    loopStatus.iter = obj.iter;
-    loopStatus.steps.push(obj);
-    loopStatus.swept = obj.swept != null ? obj.swept : loopStatus.swept;
-    if (obj.score != null && (!loopStatus.best || obj.score < loopStatus.best.score))
-      loopStatus.best = { candidate: obj.candidate, score: obj.score };  // lower score = healthier
-  } else { // LOOP_RESULT — the run finished cleanly
-    loopStatus.result = obj;
-    loopStatus.state = 'done';
-  }
-}
-function startLoop(cfg) {
-  if (loopProc) { try { loopProc.kill('SIGKILL'); } catch (e) {} loopProc = null; }
-  var iters = Math.max(1, (cfg.iters | 0) || 6);   // missing/0 -> 6, then floor at 1
-  var n = Math.max(2, (cfg.n | 0) || 20);          // missing/0 -> 20, then floor at 2
-  var args = [path.join(ROOT, '..', 'dev', 'loop.js'),
-    '--iters', String(iters), '--n', String(n),
-    '--ai', (cfg.panel && cfg.panel.length ? cfg.panel : ['hard']).join(','),
-    // profile may be an edited Tolerance object — forward it as inline JSON (loop.js parses it)
-    '--profile', typeof cfg.profile === 'object' && cfg.profile ? JSON.stringify(cfg.profile) : String(cfg.profile || 'card'),
-    '--mapset', String(cfg.mapset || 'all')];
-  // #164: forward the author-boldness Temperature (a plain passthrough) so the run records it.
-  if (cfg.temperature != null && cfg.temperature !== '') args.push('--temperature', String(cfg.temperature));
-  if (cfg.maps) args.push('--maps', String(cfg.maps | 0));  // test lever: cap the roster
-  if (cfg.db) args.push('--db', String(cfg.db));            // test lever: isolate the db
-  loopStatus = { loopType: cfg.loopType || 'card', state: 'running', iter: 0, iters: iters, swept: 0, best: null, steps: [] };
-  loopBuf = '';
-  var p = loopProc = spawn(process.execPath, args, { cwd: path.join(ROOT, '..') });
-  p.stdout.on('data', function (d) {
-    loopBuf += d.toString('utf8');
-    var lines = loopBuf.split('\n'); loopBuf = lines.pop();
-    lines.forEach(foldLoopLine);
-  });
-  p.stderr.on('data', function () {});  // loop's own warnings — surfaced in its process, not fatal here
-  p.on('close', function () {
-    if (loopProc !== p) return;  // a newer launch already replaced us — don't clobber its status
-    if (loopStatus && loopStatus.state !== 'done' && loopStatus.state !== 'stopped') loopStatus.state = 'stopped';
-    loopProc = null;
-  });
-}
-function controlLoop(action) {
-  if (!loopProc) return { status: 409, out: { error: 'no loop running' } };
-  // ponytail: POSIX SIGSTOP/SIGCONT pause/resume, SIGTERM stop — dev tooling on
-  // darwin/linux; no Windows pause (would need a stop-flag file the loop polls).
-  try {
-    if (action === 'pause') { loopProc.kill('SIGSTOP'); loopStatus.state = 'paused'; }
-    else if (action === 'resume') { loopProc.kill('SIGCONT'); loopStatus.state = 'running'; }
-    else if (action === 'stop') { loopProc.kill('SIGTERM'); loopStatus.state = 'stopped'; }
-    else return { status: 400, out: { error: 'unknown action "' + action + '"' } };
-  } catch (e) { return { status: 500, out: { error: e.message } }; }
-  return { status: 200, out: { ok: true, state: loopStatus.state } };
-}
-
-// --- #167 content loop: the Workbench Run button launches the content loop as a
-// WATCHABLE terminal — a visible Terminal.app window Bill alt-tabs to and watches play out,
-// zero interaction (spec §3/§11.2). The run is isolated in its own git worktree on a
-// content-run-<ts> branch (main untouched); its run-record + author feed are mirrored into
-// THIS server's logs so the dashboard feed (GET /api/contentrun) shows the same story live.
+// --- #168 launch bridge: the ONE Workbench Launch path. POST /api/runloop spawns the
+// #167 CONTENT loop (dev/content-loop.js: author -> grade -> balance -> feels -> commit) —
+// NOT the condemned deck-drafter (dev/loop.js / runDeckLoop). The run is isolated in its
+// own git worktree on a content-run-<ts> branch (main untouched); the child is controllable
+// (SIGSTOP/SIGCONT/SIGTERM via /api/runloopctl) and watchable (its stdout tees to a log a
+// visible Terminal tails). ONE run at a time — a new Launch replaces the old process.
+//
+// TRANSPORT (spec: pty/tee/file-tail, never a captured-stdout fold): status is derived by
+// FILE-TAIL of the child's run-record (dev/run-record.js -> recDir/latest.json), read on
+// each GET /api/runloop. The child's stdout is TEE'd to a log file for the terminal window —
+// it is NOT folded into status. A paused child cannot write its own 'paused' state (SIGSTOP
+// froze it), so /api/runloopctl overlays the control state onto the tailed record.
 var execFile = require('child_process');
 var REPO = path.join(ROOT, '..');          // server.js is in game/; the repo root is one up
-var contentRun = null;                     // { runId, branch, worktree, startedAt }
 function shq(s) { return "'" + String(s).replace(/'/g, "'\\''") + "'"; }  // POSIX single-quote one arg
-function startContentLoop(cfg) {
-  cfg = cfg || {};
+var loop = null;   // { child, runId, branch, worktree, recDir, log, controlState, startedAt }
+
+function loopRunId() {
   var ts = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, 19);
-  var runId = 'content-run-' + ts;
-  var wt = path.join(REPO, '.claude', 'worktrees', runId);
-  // 1) isolate the run in a fresh worktree on a new branch off the server's current HEAD.
-  execFile.execFileSync('git', ['worktree', 'add', '-b', runId, wt, 'HEAD'], { cwd: REPO, stdio: 'pipe' });
-  // 2) assemble the content-loop args from the Plan config (defaults keep a first-run watch quick).
-  var args = ['dev/content-loop.js', '--run-id', runId];
+  return 'content-run-' + ts;
+}
+
+// Pure arg-assembler for the content-loop session (the AC1/AC2/AC7 falsifiers read this).
+// Default entry is dev/content-loop.js (RELATIVE — resolved against the spawn cwd, so a
+// worktree run runs the worktree's own copy and commits there); cfg.entry / cfg.recDir are
+// test levers (like cfg.db / cfg.maps) that point the spawn at the faithful stand-in.
+function buildLoopArgs(cfg) {
+  cfg = cfg || {};
+  var runId = cfg.runId || loopRunId();
+  var entry = cfg.entry || path.join('dev', 'content-loop.js');
+  var recDir = cfg.recDir || path.join(REPO, 'logs', 'content-runs');
+  // --non-interactive: unattended auto-approve posture (no prompt ever). --stop: the
+  // stop-datetime wall forwarded from the Plan config. Both are AC7's contract.
+  var args = [entry, '--run-id', runId, '--rec-dir', recDir, '--non-interactive',
+    '--stop', String(cfg.stop || '+45m')];
   if (cfg.nudge) args.push('--nudge', String(cfg.nudge));
   if (cfg.temperature) args.push('--temperature', String(cfg.temperature));
   var tolName = cfg.profile && typeof cfg.profile === 'object' ? cfg.profile.name : (cfg.profile || cfg.tolerance);
   if (tolName) args.push('--tolerance', String(tolName));
-  args.push('--stop', String(cfg.stop || '+45m'));
   if (cfg.panel && cfg.panel.length) args.push('--panel', cfg.panel.join(','));
   if (cfg.n) args.push('--n', String(cfg.n | 0));
   if (cfg.maps) args.push('--maps', String(cfg.maps | 0));
   if (cfg.iters) args.push('--iters', String(cfg.iters | 0));
+  if (cfg.iterMs) args.push('--iter-ms', String(cfg.iterMs | 0));   // stand-in tick lever (tests)
   if (cfg.feelsMatch) args.push('--feels-match', String(cfg.feelsMatch | 0));
   if (cfg.feelsTurns) args.push('--feels-turns', String(cfg.feelsTurns | 0));
   if (cfg.db) args.push('--db', String(cfg.db));     // isolate a test run from the shared woa.db
   if (cfg.mock) args.push('--mock');                 // offline launch (mechanism/CI test)
-  // mirror the machine-readable record + author feed back into THIS server's logs, so the
-  // dashboard renders the same run the terminal is playing (one run, two windows on it).
-  var recDir = path.join(REPO, 'logs', 'content-runs');
-  args.push('--rec-dir', recDir);
-  args.push('--feed-file', path.join(REPO, 'logs', 'authored', 'latest.json'));
-  // Overwrite latest.json with a 'starting' placeholder SYNCHRONOUSLY, before the detached
-  // child boots and RR.open() rewrites it: otherwise the Workbench's first poll (fired right
-  // after this returns) reads a PRIOR run's stale state:'done' and stops polling the new run.
+  // The Author feed the morning review reads (cfg.feedFile isolates a test/proof run from it).
+  args.push('--feed-file', cfg.feedFile || path.join(REPO, 'logs', 'authored', 'latest.json'));
+  return args;
+}
+
+function startLoop(cfg) {
+  cfg = cfg || {};
+  if (loop && loop.child) { try { loop.child.kill('SIGKILL'); } catch (e) {} loop.child = null; }
+  var runId = loopRunId();
+  var recDir = cfg.recDir || path.join(REPO, 'logs', 'content-runs');
+  // Isolate a REAL run in its own worktree/branch off HEAD (main untouched). A test run
+  // (cfg.entry = the stand-in) needs no git and runs in-place.
+  var wt = null, cwd = REPO;
+  if (!cfg.entry && !cfg.noWorktree) {
+    wt = path.join(REPO, '.claude', 'worktrees', runId);
+    execFile.execFileSync('git', ['worktree', 'add', '-b', runId, wt, 'HEAD'], { cwd: REPO, stdio: 'pipe' });
+    cwd = wt;
+  }
+  var args = buildLoopArgs(Object.assign({}, cfg, { runId: runId, recDir: recDir }));
+  var tolName = cfg.profile && typeof cfg.profile === 'object' ? cfg.profile.name : (cfg.profile || cfg.tolerance);
+  // Seed latest.json SYNCHRONOUSLY before the child boots + RR.open() rewrites it, so the
+  // Workbench's first poll doesn't read a prior run's stale done-state and stop polling.
   try {
     fs.mkdirSync(recDir, { recursive: true });
     fs.writeFileSync(path.join(recDir, 'latest.json'), JSON.stringify({ runId: runId, state: 'starting', startedAt: new Date().toISOString(), config: { nudge: cfg.nudge || '', temperature: cfg.temperature || '', tolerance: tolName || '', stopAt: '', questionnaire: cfg.questionnaire || '' }, stage: null, iterations: [] }, null, 2) + '\n');
-  } catch (e) { /* the child will write the real record shortly regardless */ }
-  // 3) write a .command launch script and open it in a visible Terminal (macOS). Off-mac,
-  // fall back to a detached headless child (the dashboard mirror still works; no window).
-  var cmd = 'cd ' + shq(wt) + ' && node ' + args.map(shq).join(' ');
-  var script = '#!/bin/bash\n' +
-    'echo "════════ War of Attrition · content loop — watch it happen ════════"\n' +
-    'echo "run ' + runId + '   ·   own worktree/branch, main untouched   ·   Ctrl-C stops early"\n' +
-    'echo ""\n' + cmd + '\n' +
-    'echo ""; echo "── content loop finished. Press any key to close this window. ──"; read -n 1\n';
-  var scriptPath = path.join(os.tmpdir(), runId + '.command');
-  fs.writeFileSync(scriptPath, script, { mode: 0o755 });
-  // Open a visible Terminal (macOS) so Bill watches it play; headless off-mac or when asked
-  // (cfg.headless / WOA_NO_TERMINAL — tests, CI, and remote sessions with no desktop). The
-  // dashboard mirror is identical either way; only the window differs.
-  var headless = cfg.headless || process.env.WOA_NO_TERMINAL || process.platform !== 'darwin';
-  if (headless) spawn(process.execPath, args, { cwd: wt, detached: true, stdio: 'ignore' }).unref();
-  else spawn('open', ['-a', 'Terminal', scriptPath], { detached: true, stdio: 'ignore' }).unref();
-  contentRun = { runId: runId, branch: runId, worktree: wt, startedAt: new Date().toISOString() };
-  return contentRun;
+  } catch (e) { /* the child writes the real record shortly regardless */ }
+  // TEE transport: keep a controllable (non-detached) child and pipe its stdout+stderr to a
+  // log file — the attach-able terminal a `tail -f` window (below) or `tail -f <log>` reads.
+  // Status is NEVER read from this pipe; it is file-tailed off the run-record (GET /api/runloop).
+  var logFile = path.join(os.tmpdir(), runId + '.log');
+  var child = spawn(process.execPath, args, { cwd: cwd });
+  try {
+    var out = fs.createWriteStream(logFile);
+    child.stdout.pipe(out); child.stderr.pipe(out);
+  } catch (e) { /* tee is best-effort; file-tail status still works */ }
+  child.on('close', function () { if (loop && loop.child === child) loop.child = null; });
+  loop = { child: child, runId: runId, branch: wt ? runId : null, worktree: wt, recDir: recDir, log: logFile, controlState: null, startedAt: new Date().toISOString() };
+  // Watchable: open a visible Terminal that tails the tee log so Bill alt-tabs and watches
+  // it play out (spec §3). The child stays controllable via signals; this window is a viewer.
+  // Headless off-mac, in tests/CI, or for a stand-in run (cfg.headless / cfg.entry / WOA_NO_TERMINAL).
+  var headless = cfg.headless || cfg.entry || process.env.WOA_NO_TERMINAL || process.platform !== 'darwin';
+  if (!headless) {
+    try {
+      var script = '#!/bin/bash\n' +
+        'echo "════════ War of Attrition · content loop — watch it happen ════════"\n' +
+        'echo "run ' + runId + '   ·   own worktree/branch, main untouched   ·   pause/stop from the dashboard ──"\n' +
+        'echo ""\n' + 'tail -f ' + shq(logFile) + '\n';
+      var scriptPath = path.join(os.tmpdir(), runId + '.command');
+      fs.writeFileSync(scriptPath, script, { mode: 0o755 });
+      spawn('open', ['-a', 'Terminal', scriptPath], { detached: true, stdio: 'ignore' }).unref();
+    } catch (e) { /* no window is fine — the dashboard mirror is the primary surface */ }
+  }
+  return loop;
+}
+
+function controlLoop(action) {
+  if (!loop || !loop.child) return { status: 409, out: { error: 'no loop running' } };
+  // POSIX SIGSTOP/SIGCONT pause/resume, SIGTERM stop — dev tooling on darwin/linux; no
+  // Windows pause (would need a stop-flag file the loop polls). controlState is overlaid on
+  // the file-tailed record by GET /api/runloop: a SIGSTOP'd child can't write 'paused' itself,
+  // and resume clears the overlay so the live file state ('running') wins again.
+  try {
+    if (action === 'pause') { loop.child.kill('SIGSTOP'); loop.controlState = 'paused'; }
+    else if (action === 'resume') { loop.child.kill('SIGCONT'); loop.controlState = null; }
+    else if (action === 'stop') { loop.child.kill('SIGTERM'); loop.controlState = 'stopped'; }
+    else return { status: 400, out: { error: 'unknown action "' + action + '"' } };
+  } catch (e) { return { status: 500, out: { error: e.message } }; }
+  return { status: 200, out: { ok: true, state: loop.controlState || 'running' } };
+}
+
+// GET /api/runloop's status surface: the file-tailed run-record with the control state
+// overlaid. Idle marker before any launch / if the record isn't written yet.
+function loopStatus(cb) {
+  if (!loop) return cb({ state: 'idle', iterations: [] });
+  fs.readFile(path.join(loop.recDir, 'latest.json'), 'utf8', function (err, src) {
+    var rec = null;
+    if (!err) { try { rec = JSON.parse(src); } catch (e) { rec = null; } }
+    if (!rec) rec = { state: 'idle', iterations: [] };
+    if (loop.controlState) rec.state = loop.controlState;   // paused/stopped overlay
+    cb(rec);
+  });
 }
 
 var VERSION = (function () { // engine's rules version, for LAN mismatch warnings
@@ -391,19 +396,6 @@ var ROUTES = {
       catch (e) { json(res, 200, { cards: [] }); }
     });
   },
-  'GET /api/contentrun': function (req, res) {
-    // #167: the content loop's structured per-iteration run record — the machine-
-    // readable feed the Workbench renders (author -> grade -> balance -> feels ->
-    // commit, in order, incl. failed-iteration findings). A pure read of
-    // logs/content-runs/latest.json (dev/run-record.js owns the write). Absent file
-    // (no run yet) answers a clean idle marker rather than 404.
-    var f = path.join(ROOT, '..', 'logs', 'content-runs', 'latest.json');
-    fs.readFile(f, 'utf8', function (err, src) {
-      if (err) return json(res, 200, { state: 'idle', iterations: [] });
-      try { json(res, 200, JSON.parse(src)); }
-      catch (e) { json(res, 200, { state: 'idle', iterations: [] }); }
-    });
-  },
   'GET /api/runs': function (req, res) {
     // WOA-034: the dashboard header's run-A/B pickers. Guarded like recordSkirmish
     // above — a zipped game/ without dev/ (or a db that's never been opened)
@@ -452,25 +444,20 @@ var ROUTES = {
     } catch (e) { json(res, 500, { error: e.message }); }
   },
   'POST /api/runloop': function (req, res, body) {
-    // #154: the Workbench Launch — spawn dev/loop.js from the assembled run-config.
-    try { startLoop(body || {}); json(res, 200, { ok: true, state: loopStatus.state }); }
-    catch (e) { json(res, 500, { error: e.message }); }
+    // #168: the Workbench Launch — spawn the #167 CONTENT loop (author->grade->balance->
+    // feels->commit) in its own worktree/branch, controllable + watchable. NOT dev/loop.js.
+    try { var r = startLoop(body || {}); json(res, 200, { ok: true, runId: r.runId, worktree: r.worktree }); }
+    catch (e) { json(res, 500, { error: 'content-loop launch failed: ' + e.message }); }
   },
   'GET /api/runloop': function (req, res) {
-    // The Run phase's status feed (poll pattern, like /api/poll) — the folded status
-    // object wbSetRunStatus renders, or a null-ish idle marker before any launch.
-    json(res, 200, loopStatus || { state: 'idle' });
+    // The Run phase's status feed (poll pattern, like /api/poll): the file-tailed run
+    // record (dev/run-record.js) with the control state overlaid, or an idle marker.
+    loopStatus(function (rec) { json(res, 200, rec); });
   },
   'POST /api/runloopctl': function (req, res, body) {
-    // #144 pause/stop, now live: signal the spawned loop process.
+    // pause/resume/stop, live: signal the spawned content-loop child.
     var r = controlLoop((body && body.action) || '');
     json(res, r.status, r.out);
-  },
-  'POST /api/contentloop': function (req, res, body) {
-    // #167: the Workbench Run button — launch the content loop as a WATCHABLE terminal
-    // (its own worktree/branch; run-record mirrored to logs/content-runs for the dashboard).
-    try { var r = startContentLoop(body || {}); json(res, 200, { ok: true, runId: r.runId, worktree: r.worktree }); }
-    catch (e) { json(res, 500, { error: 'content-loop launch failed: ' + e.message }); }
   },
   'GET /api/poll': function (req, res, body, u) {
     var r = rooms[(u.searchParams.get('room') || '').toUpperCase()];
@@ -506,7 +493,7 @@ function handler(req, res) {
     res.end(data);
   });
 }
-module.exports = { handler: handler, ROUTES: ROUTES };
+module.exports = { handler: handler, ROUTES: ROUTES, startLoop: startLoop, controlLoop: controlLoop, buildLoopArgs: buildLoopArgs };
 
 if (require.main !== module) return;  // required for its handler (tests) — don't bind a port
 

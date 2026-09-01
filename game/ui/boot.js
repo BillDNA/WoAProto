@@ -364,15 +364,16 @@ E.hooks.onSkirmishEnd.push(function (st) {
 $('btnDash').onclick = openDash;
 $('btnWorkbench').onclick = function(){ show('wbScr'); renderWorkbench(); };
 
-// #167 content-loop bridge (server-served build): the Workbench's Launch/pause/stop hooks,
+// #168 launch bridge (server-served build): the Workbench's Launch/pause/stop hooks,
 // inert by default (workbench.js just toasts), are wired here to the real content loop.
-// Launch POSTs the assembled config to /api/contentloop — the server opens a WATCHABLE
-// Terminal running the loop in its own worktree (spec §3) — then flips to the Run phase and
-// polls /api/contentrun for the per-iteration run record the feed renders (the same story
-// the terminal is playing, mirrored). One window to watch, one to review.
+// Launch POSTs the assembled config to /api/runloop — the server spawns the CONTENT loop in
+// its own worktree (controllable + watchable, spec §3) — then flips to the Run phase and
+// polls /api/runloop for the per-iteration run record the feed renders (the same story the
+// terminal is playing, file-tailed). One window to watch, one to review; pause/stop/resume
+// via /api/runloopctl drive the same child.
 var WB_POLL = null;
 function wbPollContentRun(){
-  api2('GET', 'contentrun').then(function(s){
+  api2('GET', 'runloop').then(function(s){
     if (!s) return;
     if (typeof wbSetContentRun === 'function') wbSetContentRun(s);
     if (s.state === 'done' || s.state === 'stopped') { clearInterval(WB_POLL); WB_POLL = null; }
@@ -380,14 +381,14 @@ function wbPollContentRun(){
 }
 WB_ON_LAUNCH = function(cfg){
   if (WB_POLL) { clearInterval(WB_POLL); WB_POLL = null; }
-  api('contentloop', cfg).then(function(){
+  api('runloop', cfg).then(function(){
     wbGoPhase('run');
     wbPollContentRun();
     WB_POLL = setInterval(wbPollContentRun, 1500);
   }).catch(function(e){ if (typeof toast === 'function') toast('Launch failed: ' + e.message, 3500); });
 };
 WB_ON_CONTROL = function(action){
-  api('runloopctl', { action: action }).then(function(){ wbPollRunStatus(); })
+  api('runloopctl', { action: action }).then(function(){ wbPollContentRun(); })
     .catch(function(e){ if (typeof toast === 'function') toast('Control failed: ' + e.message, 3000); });
 };
 // GET twin of api() (app.js's api() is POST-only) — the status feed is a plain read.
