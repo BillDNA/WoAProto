@@ -64,10 +64,14 @@ have read its own "after" as progress and shipped the 80%.
 
 ## Step 4 — Completion
 
-Shots staged to a shots-branch (`pr-shots-169`, never committed to the tree); the PR opened
+Shots staged to the local ref `refs/heads/pr-shots/169` (what `dev/ui-review.js` produces) and
+pushed to the remote as **`pr-shots-169`** — the slashed name collided with the repo's existing
+plain `pr-shots` branch (a git ref directory/file conflict), so it went to the repo's flat
+convention; never committed to the tree. The PR opened
 ([#211](https://github.com/BillDNA/WoAProto/pull/211)) with the **callout block** filled and
-passing `dev/pr-lint.js`. The fidelity **bounce and the AC↔target tension are recorded in the
-callout for Bill by exception** — not silently resolved mid-flow, not self-certified as done.
+green against the gate `dev/pr-lint.test.js` (pre-checked with `dev/pr-lint.js`'s `lint()`). The
+fidelity **bounce and the AC↔target tension are recorded in the callout for Bill by exception** —
+not silently resolved mid-flow, not self-certified as done.
 
 ## Both hard branches shown
 

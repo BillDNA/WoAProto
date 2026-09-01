@@ -61,16 +61,19 @@ session from the one that will implement — the author≠grader separation poin
   real transport or a **faithful deterministic stand-in** (a pixel-aware fake that consumes
   the real capture *bytes*), never a stub that short-circuits the seam. Pair it with a
   committed live `*.smoke.js` run pasted on the PR (the `dev/ui-review.smoke.js` pattern).
-- **Prune superseded pins** — freely, as routine work, **atomically with a `RULES_VERSION`
-  bump** (in `game/engine/01-core.js`, with the manifest regenerated:
-  `node dev/gen-test-manifest.js`). The default label is **pin**; the test-writer owns pin
-  moves because it has no implementation to protect. See [Invariant vs pin](#invariant-vs-pin).
+- **Prune superseded pins** — freely, as routine work. The default label is **pin**; the
+  test-writer owns pin moves because it has no implementation to protect. **Only a rules-era
+  pin — one enumerated in the deletion-guard manifest (`game/test-manifest.json`, i.e. a
+  `game/test*.js` pin over a rules number) — moves atomically with a `RULES_VERSION` bump**
+  (in `game/engine/01-core.js`, then regenerate the manifest: `node dev/gen-test-manifest.js`).
+  A **UI / smoke pin** (a `dev/smoke.js` assertion) is **not** in that manifest, so it moves
+  **without** a bump or a manifest regen. See [Invariant vs pin](#invariant-vs-pin).
 - **Never edit an invariant to make room** — an invariant change is Bill's by exception,
   surfaced in the PR callout, not decided here. If a criterion seems to require changing an
   invariant, stop and flag it for the callout; do not change it.
 
-The test-writer commits the reds (and any pin-prune + `RULES_VERSION` bump) before the
-implementer touches anything.
+The test-writer commits the reds (and any pin-prune, plus a `RULES_VERSION` bump **only** when
+a rules-era manifest pin moved) before the implementer touches anything.
 
 ### Step 2 — Implementer (zero test-editing power)
 
@@ -83,8 +86,9 @@ Spawn (or continue as) the implementer with a hard constraint stated in its char
   (`node game/test.js`, `node dev/smoke.js`) and the full suite once at the end.
 - **A blocking test you did not anticipate is escalated, never edited.** If a test blocks you
   and you believe it is a superseded **pin** (or encodes a genuine upstream gap), **escalate
-  it back to a re-spawned test-writer** — which owns pin pruning and the `RULES_VERSION`
-  bump. This **keeps the red**: it only reassigns *who* clears it, never *whether* it must
+  it back to a re-spawned test-writer** — which owns pin pruning (and a `RULES_VERSION` bump
+  when a rules-era manifest pin is involved). This **keeps the red**: it only reassigns *who*
+  clears it, never *whether* it must
   clear (`docs/context/test.md`, escape valve). You do not edit it, and you do not take it to
   Bill mid-flow.
 - If the blocking test is an **invariant**, that is a Bill-by-exception decision — surface it
@@ -111,24 +115,32 @@ test away, and the person who prunes has no implementation to protect.
 ### Step 4 — Completion (the step vanilla `implement` lacks)
 
 1. **Push screenshots to a shots-branch, never committed to the tree.** `dev/ui-review.js`
-   stages them to `refs/heads/pr-shots/<ticket>` via git plumbing (screenshots-are-proof-not-committed).
-2. **Open the PR.** Commit the work to the branch and open the PR with the GitHub plugin.
-3. **Emit the callout block** from `.github/pull_request_template.md`, every field filled
-   (`none`/`n/a` are valid) and every `<!-- FILL: … -->` sentinel replaced — a leftover
-   sentinel or a dropped field reds `dev/pr-lint.test.js`. The callout is the
-   **by-exception dashboard**: new UI primitives + roles, invariants changed, pins pruned,
+   stages them to the local ref `refs/heads/pr-shots/<ticket>` via git plumbing
+   (screenshots-are-proof-not-committed). Push that ref to the remote so the PR can link it —
+   if the remote already carries a plain `pr-shots` branch, the slashed name collides
+   (git ref directory/file conflict), so push to the repo's flat convention instead
+   (`pr-shots/<ticket>:refs/heads/pr-shots-<ticket>`).
+2. **Compose the callout block** from `.github/pull_request_template.md`, every field filled
+   (`none`/`n/a` are valid) and every `<!-- FILL: … -->` sentinel replaced — the callout is
+   the **by-exception dashboard**: new UI primitives + roles, invariants changed, pins pruned,
    `RULES_VERSION` bump, and the `dev/ui-review.js` result + shots link. This is where Bill
    approves the few real decisions — an invariant change, a new primitive — **by exception**,
    never mid-flow.
+3. **Open the PR with that callout in its body.** Commit the work to the branch and open the PR
+   (GitHub plugin) — the callout must be present *at creation*, because a submitted body
+   missing the block or carrying a leftover sentinel reds `dev/pr-lint.test.js` (the gate; the
+   CLI helper `dev/pr-lint.js` exposes the same `lint()` for a local pre-check).
 
 ## Invariant vs pin
 
 The **label decides the bucket** — the implementer judges neither (`docs/context/test.md`).
 
 - **Pin** — this era's specific output (mat-slot counts, golden aggregates). Movable by the
-  **test-writer** as routine work, **atomically with a `RULES_VERSION` bump** (the deletion
-  guard in `game/test.invariants.js` reds on a pin deleted/`.skip`-ed without one). Default:
-  a bare `test(...)` is a pin.
+  **test-writer** as routine work. A **rules-era pin** (a `game/test*.js` pin enumerated in
+  the deletion-guard manifest) moves **atomically with a `RULES_VERSION` bump** — the deletion
+  guard in `game/test.invariants.js` reds on such a pin deleted/`.skip`-ed without one. A
+  **UI / smoke pin** (`dev/smoke.js`) is not in that manifest and moves without a bump.
+  Default: a bare `test(...)` is a pin.
 - **Invariant** — a property that must hold every rules era (determinism, GUI==CLI parity,
   legal-move generation, terminal state). Sacred. Changing one is **approved by Bill by
   exception through the PR callout — never a mid-flow gate**. Declared with `invariant(...)`
@@ -146,8 +158,8 @@ the human is never a mid-flow gate and never the "are you sure?" question.
   session that never implements, so it cannot write tests it can trivially pass.
 - Do not escalate a blocking test **to Bill mid-flow** — an invariant change waits for the PR
   callout (by exception); a pin move is routine test-writer work.
-- Do not move a pin without a `RULES_VERSION` bump, and do not change an invariant without a
-  callout entry.
+- Do not move a **rules-era manifest pin** without a `RULES_VERSION` bump (a UI/smoke pin needs
+  none), and do not change an invariant without a callout entry.
 - Do not put a gate or exit code in this skill — teeth live in the suite (ADR-0004 rejected
   "teeth in the wrappers").
 - Do not run the inline `code-review` **in place of** `dev/ui-review.js` on a UI ticket — the
