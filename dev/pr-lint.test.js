@@ -55,6 +55,18 @@ test('GREEN: a fully-filled PR body passes', () => {
   assert.strictEqual(res.ok, true, 'filled fixture greens');
 });
 
+test('GREEN: the real prefilled template greens once each field sentinel is replaced', () => {
+  // Faithful to what GitHub prefills: replace ONLY the field-bullet sentinels, and
+  // leave the instructional prose — which references the FILL token verbatim — untouched.
+  const submitted = templateBody.split('\n').map(l =>
+    /^\s*[-*]\s*\*\*(.+?):\*\*/.test(l) ? l.replace(/<!--\s*FILL:[^]*?-->/, 'done') : l
+  ).join('\n');
+  assert.ok(/replace each `<!-- FILL/.test(submitted), 'intro token left literally in place');
+  const res = lint.lint(submitted);
+  assert.deepStrictEqual(res.violations, [], 'a kept-instructions, all-fields-filled body greens');
+  assert.strictEqual(res.ok, true);
+});
+
 test('RED: dropping the callout block entirely fails', () => {
   const res = lint.lint('Just a description, no callout.\n');
   assert.strictEqual(res.ok, false, 'a body with no callout block reds');

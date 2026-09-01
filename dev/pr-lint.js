@@ -48,12 +48,27 @@ function lint(body, required) {
   for (const f of fields) {
     if (!present.has(f.toLowerCase())) violations.push('missing callout field: "' + f + '"');
   }
+  // Only a FIELD bullet's own sentinel counts — instructional prose inside the fence
+  // may reference the FILL token verbatim without being an "unreplaced" field.
   for (const line of block.split('\n')) {
-    if (!SENTINEL_RE.test(line)) continue;
     const m = line.match(FIELD_RE);
-    violations.push('unreplaced FILL sentinel' + (m ? ' in field "' + m[1].trim() + '"' : ''));
+    if (m && SENTINEL_RE.test(line)) {
+      violations.push('unreplaced FILL sentinel in field "' + m[1].trim() + '"');
+    }
   }
   return { ok: violations.length === 0, violations };
 }
 
 module.exports = { lint, templateFields, calloutBlock, MARKERS, SENTINEL_RE, TEMPLATE };
+
+// CLI: `node dev/pr-lint.js <pr-body-file>` — lint a real PR body, exit non-zero on
+// any violation. The suite (dev/pr-lint.test.js) is the always-run tooth; this makes
+// the same check runnable against an actual submission (e.g. from a completion step).
+if (require.main === module) {
+  const file = process.argv[2];
+  if (!file) { console.error('usage: node dev/pr-lint.js <pr-body-file>'); process.exit(2); }
+  const res = lint(fs.readFileSync(file, 'utf8'));
+  if (res.ok) { console.log('pr-lint: OK — callout block complete'); process.exit(0); }
+  console.error('pr-lint: FAIL\n  - ' + res.violations.join('\n  - '));
+  process.exit(1);
+}
