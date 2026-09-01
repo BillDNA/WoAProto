@@ -29,6 +29,15 @@
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-bash.js\""
           }
         ]
+      },
+      {
+        "matcher": "Task|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/spawn-brief.js\""
+          }
+        ]
       }
     ]
   }
