@@ -1150,3 +1150,137 @@ realSetTimeout(function () {
   realSetTimeout(tick, 30);
 }, 50);
 }));
+
+/* ============================================================================
+   #169 — Plan panel rebuild: red-at-base falsifiers (existence + interaction).
+   Each AC is its OWN node:test so each reds independently at the base commit.
+   The old all-three-loop-types Plan pin (the boot block above, ~L172-182) is a
+   superseded pin left UNTOUCHED — AC1's new red is a fresh assertion here.
+   ============================================================================ */
+
+// Boot a fresh jsdom, open the workbench and land on the Plan phase, then hand
+// {win, doc} to the test. Timers are capped so no app schedule keeps jsdom alive.
+function newPlan() {
+  return new Promise(function (resolve, reject) {
+    var dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true, url: 'http://localhost/game/index.html' });
+    var win = dom.window, doc = win.document;
+    win.confirm = function () { return true; };
+    win.fetch = function () { return Promise.resolve({ ok: true, json: function () { return Promise.resolve([]); } }); };
+    var raw = win.setTimeout;
+    win.setTimeout = function (fn, ms) { return raw(fn, Math.min(ms || 0, 5)); };
+    setTimeout(function () {
+      try {
+        doc.getElementById('btnWorkbench').click();
+        var pt = doc.querySelector('#wbNav .wb-tab[data-phase="plan"]');
+        if (pt) pt.click();
+        resolve({ win: win, doc: doc });
+      } catch (e) { reject(e); }
+    }, 60);
+  });
+}
+
+// AC1 (existence): the Plan kind picker offers ONLY `card` — no map/ai until their engines ship.
+test('#169 AC1: Plan kind picker offers only card (no map/ai)', async () => {
+  var { doc } = await newPlan();
+  var ltIds = Array.prototype.map.call(doc.querySelectorAll('#wbLoopTypes .wb-ltype'),
+    function (b) { return b.getAttribute('data-loop'); });
+  assert.deepStrictEqual(ltIds, ['card'],
+    'the Plan kind picker offers ONLY card (map/ai do not appear until #173/#174); got ' + ltIds.join(','));
+  assert.ok(!doc.querySelector('#wbLoopTypes .wb-ltype[data-loop="map"]') &&
+    !doc.querySelector('#wbLoopTypes .wb-ltype[data-loop="ai"]'),
+    'neither a map nor an ai kind entry is present (nothing-dead bar)');
+});
+
+// AC2 (interaction): stop-datetime is a real editable input that reads back and lands in the config.
+test('#169 AC2: stop-datetime is a real editable input that reads back into the config', async () => {
+  var { win, doc } = await newPlan();
+  var stopEl = assertPresent(doc, '#wbStopAt', 'Plan stop-datetime input');
+  assert.strictEqual(stopEl.tagName, 'INPUT', 'the stop-datetime control is an <input>');
+  assert.strictEqual(stopEl.getAttribute('type'), 'datetime-local', 'the stop-datetime input is type=datetime-local');
+  stopEl.value = '2026-09-15T18:30';
+  stopEl.dispatchEvent(new win.Event('input', { bubbles: true }));
+  assert.strictEqual(doc.getElementById('wbStopAt').value, '2026-09-15T18:30',
+    'the stop-datetime input reads back the value the user set');
+  var cfg = win.wbBuildConfig();
+  assert.ok(cfg.stop === '2026-09-15T18:30' || cfg.stopAt === '2026-09-15T18:30',
+    'the stop-datetime the user set lands in the assembled config, not just the DOM (cfg.stop/stopAt)');
+});
+
+// AC5 (interaction): the questionnaire editor supports add AND delete.
+test('#169 AC5: the questionnaire editor supports add and delete', async () => {
+  var { doc } = await newPlan();
+  var n0 = doc.querySelectorAll('#wbQz .wb-qrow').length;
+  assert.ok(n0 >= 1, 'the questionnaire editor lists its entries (' + n0 + ' rows)');
+  doc.getElementById('wbQAdd').click();
+  assert.strictEqual(doc.querySelectorAll('#wbQz .wb-qrow').length, n0 + 1, '+ add appends a questionnaire row');
+  var delBtn = assertPresent(doc, '#wbQz .wb-qrow .wb-qdel', 'per-row delete control');
+  delBtn.click();
+  assert.strictEqual(doc.querySelectorAll('#wbQz .wb-qrow').length, n0,
+    'delete removes the row (the list gains then loses the entry)');
+});
+
+// AC6 (existence): the meta-loop button is present but inert (grayed/disabled), documenting the seam.
+test('#169 AC6: the meta-loop button is present but grayed-out / inert', async () => {
+  var { doc } = await newPlan();
+  var meta = assertPresent(doc, '#wbMetaLoop', 'meta-loop button');
+  assert.ok(meta.disabled || /\b(disabled|gray|grey|greyed|grayed|inert)\b/i.test(meta.className),
+    'the meta-loop button is grayed-out / disabled (documents the repricing/yardstick seam without acting)');
+});
+
+// AC7 (interaction, transport-bearing): launching the Plan panel spawns a REAL content-loop run
+// carrying the Plan settings. Driven through the REAL transport — the browser's Launch button ->
+// boot.js WB_ON_LAUNCH -> POST /api/contentloop -> the real game/server.js startContentLoop, which
+// assembles the run config and spawns dev/content-loop.js. Only the OS syscalls (worktree-add, the
+// child spawn) are captured, so no 45-minute process actually runs; the generic "a real child truly
+// spawns" is separately proven live by the loop-bridge inside the main smoke test above. Here we
+// assert the launched run's config carries the Plan-set stop-datetime.
+test('#169 AC7: launching the Plan panel spawns a real run carrying the Plan settings', { timeout: 60000 }, async () => {
+  var { win, doc } = await newPlan();
+  var http = require('http'), cp = require('child_process'), os = require('os');
+  var serverPath = require.resolve(path.join(GAME, 'server.js'));
+  var repoRoot = path.join(GAME, '..');
+  var latestFile = path.join(repoRoot, 'logs', 'content-runs', 'latest.json');
+  var latestBackup = null; try { latestBackup = fs.readFileSync(latestFile, 'utf8'); } catch (e) {}
+  var origSpawn = cp.spawn, origExecFileSync = cp.execFileSync, origEnv = process.env.WOA_NO_TERMINAL;
+  var captured = null;
+  cp.execFileSync = function () { return Buffer.from(''); };                                  // no-op the worktree-add syscall
+  cp.spawn = function (cmd, args, opts) { captured = { cmd: cmd, args: args, opts: opts }; return { unref: function () {}, on: function () {} }; };
+  process.env.WOA_NO_TERMINAL = '1';                                                          // force headless => spawn the node loop (capturable), not `open`
+  delete require.cache[serverPath];
+  var srvMod = require(serverPath);
+  var srv = http.createServer(srvMod.handler);
+  await new Promise(function (r) { srv.listen(0, r); });
+  var port = srv.address().port;
+  win.fetch = function (url, opts) {
+    opts = opts || {};
+    return new Promise(function (res, rej) {
+      var rq = http.request({ host: '127.0.0.1', port: port, path: url, method: opts.method || 'GET', headers: opts.headers || {} }, function (resp) {
+        var chunks = []; resp.on('data', function (d) { chunks.push(d); });
+        resp.on('end', function () {
+          var t = Buffer.concat(chunks).toString('utf8');
+          res({ ok: resp.statusCode >= 200 && resp.statusCode < 300, status: resp.statusCode, json: function () { return Promise.resolve(t ? JSON.parse(t) : null); } });
+        });
+      });
+      rq.on('error', rej); if (opts.body) rq.write(opts.body); rq.end();
+    });
+  };
+  try {
+    var stopEl = doc.getElementById('wbStopAt');
+    assert.ok(stopEl, 'the Plan stop-datetime input exists to launch with');
+    stopEl.value = '2026-09-15T18:30';
+    stopEl.dispatchEvent(new win.Event('input', { bubbles: true }));
+    doc.getElementById('wbLaunch').click(); // real WB_ON_LAUNCH -> POST /api/contentloop -> startContentLoop
+    for (var i = 0; i < 400 && !captured; i++) { await new Promise(function (r) { setTimeout(r, 25); }); }
+    assert.ok(captured && /content-loop\.js/.test((captured.args || []).join(' ')),
+      'clicking Launch spawned a real dev/content-loop.js run via /api/contentloop (args: ' + (captured && (captured.args || []).join(' ')) + ')');
+    assert.ok((captured.args || []).join(' ').indexOf('2026-09-15T18:30') >= 0,
+      'the spawned run carries the Plan-set stop-datetime (--stop <datetime>); got: ' + (captured.args || []).join(' '));
+  } finally {
+    try { if (win.WB_POLL) win.clearInterval(win.WB_POLL); } catch (e) {}
+    try { srv.close(); } catch (e) {}
+    cp.spawn = origSpawn; cp.execFileSync = origExecFileSync;
+    if (origEnv === undefined) delete process.env.WOA_NO_TERMINAL; else process.env.WOA_NO_TERMINAL = origEnv;
+    delete require.cache[serverPath];
+    try { if (latestBackup != null) fs.writeFileSync(latestFile, latestBackup); else fs.rmSync(latestFile, { force: true }); } catch (e) {}
+  }
+});

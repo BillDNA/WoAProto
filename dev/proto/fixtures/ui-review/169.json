@@ -1,0 +1,22 @@
+{
+  "ticket": "169",
+  "acs": [
+    "The kind picker offers only card; no map/ai entries appear until their engines ship [kind]",
+    "Nudge, Temperature, Tolerance, and stop-datetime are real editable inputs a user can set in the Plan panel [inputs]",
+    "Every Plan knob (nudge, Temperature, Tolerance, stop-datetime, chosen questionnaire) reaches the launched loop's config, not just the DOM [config]",
+    "Temperature and Tolerance default loose enough that a normal run keeps something [defaults]",
+    "The questionnaire editor supports add and delete [questionnaire]",
+    "The meta-loop button is present but inert (grayed-out), documenting the repricing/yardstick seam without acting [metaloop]",
+    "Launch starts a real content-loop run with the Plan settings, not a mock [launch]",
+    "The rebuilt Plan panel reads as a real wired launch panel matching the calibration-dashboard Plan design [fidelity]"
+  ],
+  "goals": [
+    "The Plan panel reads as one wired launch surface: kind picker, opening nudge, Temperature/Tolerance, stop-datetime, questionnaire editor, and the grayed meta-loop seam, in the calibration-dashboard's Plan rhythm",
+    "A tester can point and launch a content run entirely from this panel without touching the terminal",
+    "The grayed meta-loop button documents the repricing/yardstick seam legibly as coming-not-yet"
+  ],
+  "before": "game/index.html",
+  "after": "game/index.html",
+  "target": "dev/proto/calibration-dashboard.proto.html",
+  "note": "before/after both point at the served app; the rebuilt Plan panel is JS-rendered (open the Workbench, Plan phase) so the ui-review capture must drive to the Plan pane. Authored by the fresh test-writer as the AC8 fidelity oracle; the LLM blind-describe/compare (Phase 1) and rubric (Phase 2) are run by the implementer's dev/ui-review.js pass, not here."
+}
