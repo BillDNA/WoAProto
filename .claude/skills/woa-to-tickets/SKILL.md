@@ -97,10 +97,10 @@ session" — it has none here, and trying to encode it invents one.
 
 ### An interaction / fidelity / logic falsifier must be **integrated** — not a fifth kind
 
-This is **not a fifth falsifier kind.** The four kinds classify *what the falsifier
-observes*; "integrated vs faked" is a different axis — *whether the transport under that
-observation is real* — so it **qualifies** the kinds that carry a transport, it does not join
-them. A correctly-written **interaction** falsifier already *is* integrated: it drives the
+This is **not a fifth falsifier kind** (the qualifier is carved in `docs/adr/0004` §1). The
+four kinds classify *what the falsifier observes*; "integrated vs faked" is a different axis
+— *whether the transport under that observation is real* — so it **qualifies** the kinds that
+carry a transport, it does not join them. A correctly-written **interaction** falsifier already *is* integrated: it drives the
 real action and asserts the real downstream outcome. The trap is that the kinds do not
 *force* the transport to be real — an interaction can drive a click whose handler calls an
 injected fake `ask`; a **fidelity** compare can run against a fake capture; a **logic** assert
