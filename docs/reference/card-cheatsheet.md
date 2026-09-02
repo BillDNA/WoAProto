@@ -1,9 +1,13 @@
 #game-rules #human-instructions #code-architecture
 # Card editing cheat sheet
 
-Everything here lives in the active battalion file, `game/content/battalions/<slug>.js`
-(`default.js` as shipped; the Battalion Editor's applied override is
-`game/custom-battalion.js`). The card list is **pure JSON**: double-quoted keys, no
+Cards live once in a shared **pool**, one file per card:
+`game/content/cards/<id>.js`. A **battalion** (`game/content/battalions/<slug>.js`)
+references pool cards by id and sets each **count** — only `count` is
+battalion-scoped; every other card property lives on the pool card (one
+implementation per fact, mirroring how a mapset references maps). The Battalion
+Editor's applied override is `game/custom-battalion.js`. Both card files and
+battalion files are **pure JSON** inside the wrapper: double-quoted keys, no
 trailing commas, no comments inside the data. Edit, save, refresh the browser.
 Then:
 
@@ -12,23 +16,32 @@ node game/test/test.js      # validates the deck; points at exactly what's wrong
 node dev/balance.js   # shows what your change did to win rates + the card report
 ```
 
-## Card fields
+## Pool-card fields (`content/cards/<id>.js`)
 
 | Field      | Type   | What it does |
 |------------|--------|--------------|
-| `id`       | string | Unique handle. Used for art lookup (`game/art/<id>.jpg` or `.png`), the AI's burn priorities, and the play metrics. Two ids are special — see below. |
+| `id`       | string | Unique handle across the whole pool. Used for art lookup (`game/art/<id>.jpg` or `.png`), the AI's burn priorities, the play metrics, and the battalion `cardId` reference. |
 | `name`     | string | Shown on the card banner, in the journal ("Red plays …"), and the glossary. |
-| `count`    | number | Copies in the deck. **The sum of all counts is the deck size = your total plays per skirmish** (the physical game is 16). Changing it moves the attrition clock. |
+| `faction`  | null   | Reserved stub for future faction/commander gating — `null` today, the engine ignores it. |
 | `text`     | string | Card body and glossary entry. Cosmetic only — the engine never reads it, so keep it honest when you change `steps`. |
-| `starting` | bool   | `true` on exactly ONE card: it is guaranteed in each player's opening hand (drawn as 1 + 3 random). |
+| `starting` | bool   | `true` on an opener card: it is guaranteed in each player's opening hand (drawn as 1 + 3 random). A battalion must contain **exactly one** starting card. |
+| `noOpener` | bool   | `true` = never dealt into the opening hand (what makes Airdrop an airdrop). |
 | `steps`    | array  | The printed action, resolved in order. Each entry is `{ "type": ..., ...options }` — see below. |
 
-### Special ids the engine knows by name
+## Battalion reference (`content/battalions/<slug>.js`)
 
-- `"airdrop"` — never dealt into an opening hand (house rule).
-- The `"starting": true` card's id — guaranteed first-hand card.
-- Renaming any OTHER id is safe, but you lose its art file link and its entry in
-  the AI's `CARD_KEEP` table (engine/05-ai.js) until you update those too.
+A battalion is `{ id, name, active?, cards: [ { cardId, count }, … ] }`.
+
+| Field    | Type   | What it does |
+|----------|--------|--------------|
+| `cardId` | string | The pool card's `id`. |
+| `count`  | number | Copies of that card in the deck. **The sum of all counts is the deck size = total plays per skirmish** (the physical game is 16; the band is 16–17). The only battalion-scoped field. |
+
+### Notes
+
+- Renaming a pool `id` is safe, but you lose its art file link and its entry in
+  the AI's `CARD_KEEP` table (engine/05-ai.js) until you update those too — and every
+  battalion `cardId` that referenced it.
 
 ## Step types and their options
 
@@ -124,12 +137,15 @@ barrage:    —
 
 "Bombardment: remove a terrain feature, then attack twice at −1, standing off."
 
+Pool card — `content/cards/bombardment.js`:
+
 ```json
-{ "id": "bombardment", "name": "Bombardment", "count": 1,
+{ "id": "bombardment", "name": "Bombardment", "faction": null,
   "text": "Remove any trench or forest. Then order up to two attacks with −1 support; your attackers hold their ground.",
   "steps": [{ "type": "barrage" },
             { "type": "attack", "mod": -1, "noAdvance": true },
             { "type": "attack", "mod": -1, "noAdvance": true }] }
 ```
 
-Remember to take its `count` out of another card (or accept a 17-play skirmish).
+Then reference it from a battalion — `{ "cardId": "bombardment", "count": 1 }` — and
+take that `count` out of another card (or accept a 17-play skirmish).

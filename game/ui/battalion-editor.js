@@ -73,7 +73,9 @@ function renderSlots(){
     if (!d) return;
     var cur = DK.slots[DK.slot];
     if (cur && !confirm('Replace battalion slot "'+(cur.name||('Battalion '+(DK.slot+1)))+'" with "'+(d.name||d.id)+'"?')) return;
-    DK.slots[DK.slot] = { name: String(d.name||d.id).slice(0,20), cards: JSON.parse(JSON.stringify(d.cards)) };
+    // content battalions reference the pool by id ({cardId,count}); hydrate to full
+    // cards so the editor (which works in — and ships — full cards) can edit them.
+    DK.slots[DK.slot] = { name: String(d.name||d.id).slice(0,20), cards: JSON.parse(JSON.stringify(E.hydrateBattalionCards(d.cards))) };
     persistBattalions();
     loadSlotIntoEditor(DK.slot);
   };
@@ -120,7 +122,27 @@ function openBattalion(){
   DK.slots = d.slots;
   DK.active = Math.min(DK_SLOTS-1, Math.max(0, d.active|0));
   loadSlotIntoEditor(DK.active);
+  renderAddPool();
   show('battalionScr');
+}
+
+// The shared card pool (content/cards/) is the catalog the battalion assembler picks
+// from. The editor ships full cards via the browser override, so a pool pick inserts a
+// hydrated COPY (count 1); the pool itself is never mutated here.
+function dkPool(){ return (typeof WOA_CONTENT !== 'undefined' && WOA_CONTENT.cards) || (E.CARD_POOL || []); }
+function renderAddPool(){
+  var sel = $('dkAddPool'); if (!sel) return;
+  sel.innerHTML = '<option value="">+ From pool&hellip;</option>' +
+    dkPool().slice().sort(function(a,b){ return String(a.name||a.id).localeCompare(String(b.name||b.id)); })
+      .map(function(c){ return '<option value="'+dkEsc(c.id)+'">'+dkEsc(c.name||c.id)+'</option>'; }).join('');
+}
+function addPoolCard(id){
+  var def = dkPool().filter(function(c){ return c.id === id; })[0];
+  if (!def) return;
+  var existing = DK.cards.filter(function(c){ return c.id === id; })[0];
+  if (existing){ existing.out = false; existing.count = (+existing.count || 0) + 1; DK.sel = DK.cards.indexOf(existing); }
+  else { var card = {}; for (var k in def) card[k] = def[k]; card.count = 1; DK.cards.push(card); DK.sel = DK.cards.length - 1; }
+  renderBattalion();
 }
 
 function dkEsc(s){ return uiEsc(s); } // one html-escape lives in ui-primitives.js

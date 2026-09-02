@@ -30,11 +30,13 @@
     global.WOA_CONTENT = { maps: [], cards: [], battalions: [], mapsets: [], units: [] };
     try {
       var fs = require('fs'), path = require('path');
-      var kinds = ['battalions', 'maps', 'mapsets', 'units'];
+      var kinds = ['cards', 'battalions', 'maps', 'mapsets', 'units'];
       try { kinds = require('../content/kinds.js'); } catch (e2) { /* kinds.js is the source of truth when present */ }
       kinds.forEach(function (kind) {
         var dir = path.join(__dirname, '..', 'content', kind);
-        fs.readdirSync(dir).filter(function (f) { return /\.js$/.test(f); }).sort().forEach(function (f) {
+        var files;
+        try { files = fs.readdirSync(dir); } catch (e3) { return; } // an absent kind dir skips itself, not the rest
+        files.filter(function (f) { return /\.js$/.test(f); }).sort().forEach(function (f) {
           require(path.join(dir, f));                // side effect: pushes into WOA_CONTENT
         });
       });
@@ -45,11 +47,33 @@
     }
   })();
   var CONTENT = global.WOA_CONTENT || { maps: [], cards: [], battalions: [], mapsets: [], units: [] };
-  // the active battalion decides the card list; fall back to any battalion, then to any
-  // loose WOA_CONTENT.cards (belt-and-braces for hand-authored content).
+  // Shared card pool: content/cards/*.js each push one card def (id -> intrinsics:
+  // name, text, steps, opener behaviour, a reserved `faction` stub). A battalion
+  // references pool cards by id and carries only the battalion-scoped `count`, so the
+  // card def lives once (one implementation per fact), mirroring mapset -> map.
+  var CARD_POOL = (CONTENT.cards || []);
+  var CARD_POOL_BY_ID = {};
+  CARD_POOL.forEach(function (c) { CARD_POOL_BY_ID[c.id] = c; });
+  // Hydrate a battalion card entry into the full card the skirmish layer consumes: a
+  // {cardId,count} reference is filled from the pool (count is the ONE battalion-scoped
+  // field); an already-full card (the localStorage/custom-battalion override and inline
+  // test battalions) passes through unchanged, so both authoring paths coexist.
+  function hydrateCardRef(ref) {
+    if (ref && ref.cardId != null) {
+      var def = CARD_POOL_BY_ID[ref.cardId];
+      if (!def) throw new Error('War of Attrition: battalion references unknown card "' + ref.cardId + '" (not in content/cards/)');
+      var out = {}; for (var k in def) out[k] = def[k];
+      out.count = ref.count;
+      return out;
+    }
+    return ref;
+  }
+  function hydrateBattalionCards(cards) { return (cards || []).map(hydrateCardRef); }
+  // the active battalion decides the card list; fall back to the loose pool
+  // (belt-and-braces for hand-authored content).
   var ACTIVE_BATTALION = (CONTENT.battalions || []).filter(function (d) { return d && d.active; })[0] ||
     (CONTENT.battalions || [])[0] || null;
-  var CARD_LIST = (ACTIVE_BATTALION && ACTIVE_BATTALION.cards && ACTIVE_BATTALION.cards.length) ? ACTIVE_BATTALION.cards : (CONTENT.cards || []);
+  var CARD_LIST = (ACTIVE_BATTALION && ACTIVE_BATTALION.cards && ACTIVE_BATTALION.cards.length) ? hydrateBattalionCards(ACTIVE_BATTALION.cards) : (CONTENT.cards || []);
   // Unit composition & values as a content lever: a units variant in
   // content/units/*.js (exactly one flagged active — the battalion/mapset pattern)
   // fully REPLACES the default unit block, so composition (counts), worth, and
@@ -142,10 +166,10 @@
       if (!found) throw new Error('War of Attrition: no battalion "' + sel + '" (known: ' +
         ((CONTENT.battalions || []).map(function (d) { return d.id; }).join(', ') || 'none') + ')');
       if (!found.cards || !found.cards.length) throw new Error('War of Attrition: battalion "' + found.id + '" has no cards');
-      return (REG_CACHE[sel] = battalionRegistry(found.cards));
+      return (REG_CACHE[sel] = battalionRegistry(hydrateBattalionCards(found.cards)));
     }
     if (!sel.cards || !sel.cards.length) throw new Error('War of Attrition: battalion "' + (sel.id || sel) + '" has no cards');
-    return battalionRegistry(sel.cards);
+    return battalionRegistry(hydrateBattalionCards(sel.cards));
   }
   // one slot per physical piece on the player mat
   var PIECE_TOTALS = { trench: TRENCH_COUNT };
@@ -184,7 +208,7 @@
     return sum * Math.pow(steps.length, POINTS.combo - 1);
   }
   function battalionPoints(battalion) {
-    var cards = (battalion && battalion.cards) || [];
+    var cards = hydrateBattalionCards((battalion && battalion.cards) || []);
     return cards.reduce(function (s, c) { return s + cardPoints(c) * (c.count == null ? 1 : c.count); }, 0);
   }
   // Army-points budget ceiling: the fairness constraint that lets two
@@ -207,6 +231,8 @@
   // from content/battalions/'s active flag.
   I.ACTIVE_BATTALION = ACTIVE_BATTALION;
   I.BATTALIONS = CONTENT.battalions || [];
+  I.CARD_POOL = CARD_POOL;
+  I.hydrateBattalionCards = hydrateBattalionCards;
   I.DEFAULT_REG = DEFAULT_REG;
   I.battalionRegistry = battalionRegistry;
   I.resolveBattalion = resolveBattalion;

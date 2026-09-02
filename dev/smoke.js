@@ -15,7 +15,7 @@ function read(f) { return fs.readFileSync(path.join(GAME, f), 'utf8'); }
 // window.WOA_CONTENT the same way) plus the core scripts.
 function readContent() {
   var out = '';
-  ['battalions', 'maps'].forEach(function (kind) {
+  ['cards', 'battalions', 'maps'].forEach(function (kind) {
     var d = path.join(GAME, 'content', kind);
     fs.readdirSync(d).filter(function (f) { return /\.js$/.test(f); }).sort().forEach(function (f) {
       out += fs.readFileSync(path.join(d, f), 'utf8') + '\n';
@@ -518,6 +518,20 @@ realSetTimeout(function () {
       assert.ok(doc.querySelector('#dkSlots .dkslot[data-slot="2"]').classList.contains('open') &&
          doc.querySelectorAll('#dkList .dkli').length === win.Engine.CARDS.length,
         'switching to an empty slot clones the open battalion for editing');
+      // battalion assembler: the pool picker lists the shared pool (content/cards/) and
+      // adds a card from it (fresh slot 2 is disposable, so mutating it is safe here).
+      var poolSel = doc.getElementById('dkAddPool');
+      assert.ok(poolSel && poolSel.options.length === win.Engine.CARD_POOL.length + 1,
+        'pool picker lists every pool card + the placeholder (' + (poolSel && poolSel.options.length) + ')');
+      var absent = win.Engine.CARD_POOL.filter(function (c) { return win.Engine.CARDS.every(function (x) { return x.id !== c.id; }); })[0];
+      if (absent) {
+        var rows0 = doc.querySelectorAll('#dkList .dkli').length;
+        poolSel.value = absent.id;
+        poolSel.dispatchEvent(new win.Event('change', { bubbles: true }));
+        assert.ok(doc.querySelectorAll('#dkList .dkli').length === rows0 + 1 &&
+          doc.querySelector('#dkDetail .dkd-id').value === absent.id,
+          'picking a pool card adds it to the battalion and selects it (' + absent.id + ')');
+      }
       doc.getElementById('dkBack').click();
 
       console.log('== watch mode (AI vs AI spectate) ==');
