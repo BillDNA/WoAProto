@@ -11,8 +11,10 @@ or custom-battalion.js.**
 
 ## Read first
 
-- `game/content/battalions/default.js` — the active battalion's card list (and
-  `game/maps.js` `"units"` for legal deploy targets).
+- `game/content/cards/` — the shared **card pool** (one file per card). A battalion
+  (`game/content/battalions/*.js`) references pool cards by id + `count`; read the
+  active battalion (`content/battalions/` `active:true`) for the current card list, and
+  `game/maps.js` `"units"` for legal deploy targets.
 - `docs/reference/card-cheatsheet.md` — the FULL step vocabulary. It is small on
   purpose: `deploy(unit, anywhere)`, `trench`, `attack(mod, tieSpare, noAdvance)`,
   `reposition`, `barrage`. **A card needing a step type that doesn't exist is an
@@ -21,20 +23,25 @@ or custom-battalion.js.**
 - Latest card report (`node dev/balance.js 40` or Bill's Balance Dashboard) —
   where the current deck is weak (dead cards, hoarded cards, auto-plays).
 
-## Shape of a proposal (the battalion-editor data shape, verbatim)
+## Shape of a proposal (pool card + battalion reference)
+
+A card is a **pool** entry (`content/cards/<id>.js`); a battalion **references** it by
+id and sets `count` (the only battalion-scoped field). Propose both:
 
 ```json
-{ "id": "snake_case_id", "name": "Name", "count": 1,
+// pool card
+{ "id": "snake_case_id", "name": "Name", "faction": null,
   "text": "What the player reads.",
   "steps": [{ "type": "attack", "mod": 1 }] }
+// battalion reference
+{ "cardId": "snake_case_id", "count": 1 }
 ```
 
 Rules the Battalion Editor enforces (match them or the proposal is dead on arrival):
-16 total copies per deck (so say which existing card's copies to cut), exactly
-one `starting:true` card at count 1 (never propose a second), unique ids,
-known step types/flags/units only. `airdrop` as an id is engine-special
-(kept out of opening hands). Art is by id — `game/art/<id>.jpg` optional,
-text-only renders clean.
+16 total copies per battalion (so say which existing card's copies to cut), exactly
+one `starting:true` card at count 1 (never propose a second), unique pool ids,
+known step types/flags/units only. `noOpener:true` keeps a card out of opening hands
+(Airdrop). Art is by id — `game/art/<id>.jpg` optional, text-only renders clean.
 
 ## Steps
 
@@ -46,8 +53,8 @@ text-only renders clean.
    skeptic pass against the card rubric (loop v2, B.5.1.1: down from two per
    candidate; the 2-checker delta wasn't significant).
 3. State the swap: which copies leave the 16 to make room, and why.
-4. Tell Bill how to test: import via Battalion Editor (or hand-edit
-   `game/content/battalions/default.js`), then
+4. Tell Bill how to test: import via Battalion Editor (or add the pool card under
+   `game/content/cards/` and reference it from a battalion), then
    `node game/test/test.js` + a Balance Dashboard run; watch the new card's Simple% /
    1stSight% columns.
 5. **Offer art (only if Bill approves the card first).** If the `dig-mcp` MCP

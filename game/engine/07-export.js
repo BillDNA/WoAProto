@@ -10,6 +10,7 @@
     DIRS: I.DIRS, UNITS: I.UNITS, CARDS: I.CARDS, CARD_BY_ID: I.CARD_BY_ID, MAPS: I.MAPS,
     MAPSETS: I.MAPSETS, activeMapset: I.activeMapset, activeMaps: I.activeMaps, ACTIVE_BATTALION: I.ACTIVE_BATTALION,
     BATTALIONS: I.BATTALIONS, resolveBattalion: I.resolveBattalion,
+    CARD_POOL: I.CARD_POOL, hydrateBattalionCards: I.hydrateBattalionCards,
     cardPoints: I.cardPoints, battalionPoints: I.battalionPoints, BATTALION_POINTS_CAP: I.BATTALION_POINTS_CAP,
     PIECE_TOTALS: I.PIECE_TOTALS, TERRAIN_STOCK: I.TERRAIN_STOCK,
     SHAPES: I.SHAPES, DEFAULT_SHAPE: I.DEFAULT_SHAPE, boardHexes: I.boardHexes, setBoard: I.setBoard, hexes: I.hexes,

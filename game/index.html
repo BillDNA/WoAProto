@@ -220,7 +220,7 @@
 <div id="battalionScr" class="screen">
   <div class="panel parchment">
     <h2 style="font-variant:small-caps;text-align:center;">Quartermaster's Ledger &mdash; Battalion Editor</h2>
-    <p class="small" style="text-align:center;">The battalion is data (<code>content/battalions/*.js</code>). 16&ndash;17 copies per battalion, exactly one <b>starting</b> card (guaranteed in the opening hand; count 1). <b>Five battalion slots</b> live in this browser &mdash; pick one to edit, name it, and mark the &#9733; one you want the game to use. Tick a card off to bench it. Pick a card on the left to edit it on the right; build its steps with the dropdowns. Card art is looked up by id (<code>art/&lt;id&gt;.jpg</code>) &mdash; a new id simply renders as a clean text card.</p>
+    <p class="small" style="text-align:center;">Cards live in a shared pool (<code>content/cards/*.js</code>); a battalion (<code>content/battalions/*.js</code>) references them by id and sets each <b>count</b>. Assemble one here: <b>+ From pool</b> pulls an existing card, <b>Add Card</b> authors a fresh one. 16&ndash;17 copies per battalion, exactly one <b>starting</b> card (guaranteed in the opening hand; count 1). <b>Five battalion slots</b> live in this browser &mdash; pick one to edit, name it, and mark the &#9733; one you want the game to use. Tick a card off to bench it. Pick a card on the left to edit it on the right; build its steps with the dropdowns. Card art is looked up by id (<code>art/&lt;id&gt;.jpg</code>) &mdash; a new id simply renders as a clean text card.</p>
     <p class="small" id="battalionHdr" style="text-align:center;font-weight:bold;"></p>
     <div id="dkSlots" title="Five battalion slots — pick one to edit; the ★ battalion is the one the game uses"></div>
     <div id="dkWrap">
@@ -233,6 +233,7 @@
     <div id="dkWarn" class="warn" style="text-align:left;"></div>
     <div class="ovr-btns">
       <button id="dkAdd">Add Card</button>
+      <select id="dkAddPool" title="add a card from the shared pool (content/cards/)"></select>
       <button id="dkSave" title="Stores the battalion in this browser (and custom-battalion.js when running via the server), then reloads">Save &amp; Reload</button>
       <button id="dkExport" class="ghost btn-ghost-dark">Export battalion file</button>
       <button id="dkImport" class="ghost btn-ghost-dark">Import</button>

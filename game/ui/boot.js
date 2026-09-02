@@ -278,6 +278,8 @@ $('dkAdd').onclick = function(){
   DK.sel = DK.cards.length - 1;
   renderBattalion();
 };
+// battalion assembler: pull an existing card from the shared pool (content/cards/)
+$('dkAddPool').onchange = function(){ if (this.value) addPoolCard(this.value); this.value = ''; };
 
 // browser-only battalion-override badge — visible in normal play chrome
 // (fixed, not buried in the editor), shown only when WOA_APPLIED_BATTALION is

@@ -16,7 +16,7 @@ const GAME = path.join(__dirname, '..', 'game');
 function read(f) { return fs.readFileSync(path.join(GAME, f), 'utf8'); }
 function readContent() {
   let out = '';
-  ['battalions', 'maps'].forEach(function (kind) {
+  ['cards', 'battalions', 'maps'].forEach(function (kind) {
     const d = path.join(GAME, 'content', kind);
     fs.readdirSync(d).filter(function (f) { return /\.js$/.test(f); }).sort().forEach(function (f) {
       out += fs.readFileSync(path.join(d, f), 'utf8') + '\n';

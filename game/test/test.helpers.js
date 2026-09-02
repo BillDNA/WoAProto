@@ -15,17 +15,15 @@ function testSkirmish(seed) {
   return E.newSkirmish(m);
 }
 
-// Card-behaviour fixtures: pin a card's DEF from the full content catalog (every
-// battalion loaded from content/battalions/, not just the active battalion's resolved
-// list) so a test can exercise a card the active battalion cut. Registers into
-// E.CARD_BY_ID without touching E.CARDS, so the fixture never leaks into a shuffled
-// draw pile.
-var ALL_BATTALION_CARDS = [].concat.apply([], ((typeof global !== 'undefined' && global.WOA_CONTENT && global.WOA_CONTENT.battalions) || [])
-  .map(function (d) { return d.cards || []; }));
+// Card-behaviour fixtures: pin a card's DEF from the shared pool (content/cards/ — the
+// full catalog, not just the active battalion's resolved list) so a test can exercise a
+// card the active battalion cut. Registers into E.CARD_BY_ID without touching E.CARDS,
+// so the fixture never leaks into a shuffled draw pile.
+var ALL_BATTALION_CARDS = (E.CARD_POOL || []).slice();
 function fixtureCard(id) {
   if (!E.CARD_BY_ID[id]) {
     var def = ALL_BATTALION_CARDS.filter(function (c) { return c.id === id; })[0];
-    if (!def) throw new Error('fixtureCard: "' + id + '" not found in any loaded battalion');
+    if (!def) throw new Error('fixtureCard: "' + id + '" not found in the card pool');
     E.CARD_BY_ID[id] = def;
   }
   return E.CARD_BY_ID[id];

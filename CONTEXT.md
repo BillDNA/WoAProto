@@ -29,7 +29,7 @@ _Home_: `game/engine/04-skirmish.js:24` — `firstPlayer`
 
 **Red / Blue**:
 The two sides. A side win-rate skew (independent of first mover) is a balance signal.
-_Home_: `game/engine/01-core.js:197` — `other(p)`
+_Home_: `game/engine/01-core.js:221` — `other(p)`
 
 ## The board
 
@@ -41,7 +41,7 @@ _Home_: `game/content/maps/causeway.js:3` — `"name"`
 **Mapset**:
 A named, curated list of Maps; exactly one is *active* at a time and is the draw pool for every play mode and tool. Distinct from the **map library** — the full set of content Maps (`E.MAPS`) the sets are drawn from.
 _Avoid_: Map-set, map pool, roster (for the active set — the whole collection is the *map library*, the player's pieces are the *mats*).
-_Home_: `game/engine/01-core.js:78` — `activeMaps`
+_Home_: `game/engine/01-core.js:102` — `activeMaps`
 
 **Hex**:
 One cell of the board; a piece occupies at most one.
@@ -112,7 +112,7 @@ _Home_: `game/engine/04-skirmish.js:42` — `buildDeck`
 **Battalion**:
 The player-facing, curated set of Cards taken into a Battle — the roguelite successor to the raw dev Deck, built from the Card catalog. The build layer: the content kind (`content/battalions/*.js`), the editor screen, and the army-points budget are all Battalion. The in-skirmish draw pile it instantiates is still the Deck.
 _Avoid_: using Deck for the player's build layer (Deck is the in-skirmish draw pile). A stray build-layer "deck" in code fails `dev/check-deck-scope.js`.
-_Home_: `game/engine/01-core.js:50` — `ACTIVE_BATTALION`
+_Home_: `game/engine/01-core.js:74` — `ACTIVE_BATTALION`
 
 **Card catalog**:
 The full pool of Cards a Battalion may draw from — the owned collection, distinct from the in-run *draft* that picks from it between Battles.
@@ -200,11 +200,11 @@ _Home_: `game/sim.js:73` — `skirmishFacts`
 **Army-points**:
 A Card's *capability cost*, and a Battalion's total value as the sum over its Cards. A descriptive yardstick Battalions are built under — not a prediction of win-rate; measured balance always overrules it (ADR-0002). Computed additively from a Card's steps via a single weight table, never stored per Card, so a Card that does more counts for more.
 _Avoid_: Cost (a step has a cost; the Card's total is its army-points), Power level.
-_Home_: `game/engine/01-core.js:163` — `POINTS`
+_Home_: `game/engine/01-core.js:187` — `POINTS`
 
 **Points cap**:
 The shared army-points budget every Battalion is built under. Two Battalions at the same cap are "matched" in capability, which is what lets a Skirmish be asymmetric yet fair.
-_Home_: `game/engine/01-core.js:194` — `BATTALION_POINTS_CAP`
+_Home_: `game/engine/01-core.js:218` — `BATTALION_POINTS_CAP`
 
 **Tolerance temperature**:
 How far a *measured* metric may sit outside its band before a result is accepted — the existing band-widening dial (strict / explore / hot). A verdict on outputs.

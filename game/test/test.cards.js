@@ -245,7 +245,9 @@ test('asymmetric deck binding', () => {
     'balanceMap with decks={active,active} is identical to no decks (default unchanged)');
 
   // (b) find two decks with DIFFERENT non-starting composition, seat one per side.
-  var decks = E.BATTALIONS || [];
+  //     Battalions reference the pool by id — resolve each to its hydrated full-card
+  //     list (E.resolveBattalion(id).cards) before fingerprinting.
+  var decks = (E.BATTALIONS || []).map(function (d) { return { id: d.id, cards: E.resolveBattalion(d.id).cards }; });
   var two = null;
   for (var i = 0; i < decks.length && !two; i++)
     for (var j = 0; j < decks.length; j++)

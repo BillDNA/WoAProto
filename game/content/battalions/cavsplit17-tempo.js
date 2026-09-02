@@ -2,188 +2,58 @@
 {
  "id": "cavsplit17-tempo",
  "name": "Cav Split 17 + Conscription opener",
- "active": false,
  "cards": [
   {
-   "id": "deploy_inf_start",
-   "name": "Deploy Infantry",
-   "count": 1,
-   "text": "Place an Infantry unit adjacent to any controlled hex.",
-   "steps": [
-    {
-     "type": "deploy",
-     "unit": "infantry"
-    }
-   ]
+   "cardId": "deploy_inf_start",
+   "count": 1
   },
   {
-   "id": "deploy_artillery",
-   "name": "Deploy Artillery",
-   "count": 1,
-   "text": "Place an Artillery unit adjacent to any controlled hex.",
-   "steps": [
-    {
-     "type": "deploy",
-     "unit": "artillery"
-    }
-   ]
+   "cardId": "deploy_artillery",
+   "count": 1
   },
   {
-   "id": "deploy_inf_trench",
-   "name": "Entrench",
-   "count": 3,
-   "text": "Place an Infantry unit adjacent to any controlled hex. Then build a trench on any controlled hex.",
-   "steps": [
-    {
-     "type": "deploy",
-     "unit": "infantry"
-    },
-    {
-     "type": "trench"
-    }
-   ]
+   "cardId": "deploy_inf_trench",
+   "count": 3
   },
   {
-   "id": "airdrop",
-   "name": "Airdrop",
-   "count": 1,
-   "noOpener": true,
-   "text": "Place an Infantry unit on any empty hex. (Never in your opening hand.)",
-   "steps": [
-    {
-     "type": "deploy",
-     "unit": "infantry",
-     "anywhere": true
-    }
-   ]
+   "cardId": "airdrop",
+   "count": 1
   },
   {
-   "id": "conscription",
-   "name": "Conscription",
-   "count": 1,
-   "text": "Place two Infantry units adjacent to any controlled hex, in sequence.",
-   "steps": [
-    {
-     "type": "deploy",
-     "unit": "infantry"
-    },
-    {
-     "type": "deploy",
-     "unit": "infantry"
-    }
-   ],
-   "starting": true
+   "cardId": "conscription",
+   "count": 1
   },
   {
-   "id": "deploy_cavalry",
-   "name": "Deploy Cavalry",
-   "count": 2,
-   "text": "Place a Cavalry unit adjacent to any controlled hex.",
-   "steps": [
-    {
-     "type": "deploy",
-     "unit": "cavalry"
-    }
-   ]
+   "cardId": "deploy_cavalry",
+   "count": 2
   },
   {
-   "id": "attack_plus1",
-   "name": "Attack +1",
-   "count": 2,
-   "text": "Order an attack with +1 support.",
-   "steps": [
-    {
-     "type": "attack",
-     "mod": 1
-    }
-   ]
+   "cardId": "attack_plus1",
+   "count": 2
   },
   {
-   "id": "mass_assault",
-   "name": "Mass Assault",
-   "count": 1,
-   "text": "Order an attack. Then order another attack.",
-   "steps": [
-    {
-     "type": "attack"
-    },
-    {
-     "type": "attack"
-    }
-   ]
+   "cardId": "mass_assault",
+   "count": 1
   },
   {
-   "id": "careful_maneuvers",
-   "name": "Careful Maneuvers",
-   "count": 1,
-   "text": "Reposition a unit. Then order an attack with −1 support.",
-   "steps": [
-    {
-     "type": "reposition"
-    },
-    {
-     "type": "attack",
-     "mod": -1
-    }
-   ]
+   "cardId": "careful_maneuvers",
+   "count": 1
   },
   {
-   "id": "reckless_maneuvers",
-   "name": "Reckless Maneuvers",
-   "count": 1,
-   "text": "Order an attack. Then reposition a unit.",
-   "steps": [
-    {
-     "type": "attack"
-    },
-    {
-     "type": "reposition"
-    }
-   ]
+   "cardId": "reckless_maneuvers",
+   "count": 1
   },
   {
-   "id": "ordered_withdraw",
-   "name": "Ordered Withdraw",
-   "count": 1,
-   "text": "Order an attack. Your attacker survives a tie, and never advances into the hex.",
-   "steps": [
-    {
-     "type": "attack",
-     "tieSpare": true,
-     "noAdvance": true
-    }
-   ]
+   "cardId": "ordered_withdraw",
+   "count": 1
   },
   {
-   "id": "naval_barrage",
-   "name": "Naval Barrage",
-   "count": 1,
-   "text": "Remove any trench or forest on the board (optional). Then order an attack.",
-   "steps": [
-    {
-     "type": "barrage"
-    },
-    {
-     "type": "attack"
-    }
-   ]
+   "cardId": "naval_barrage",
+   "count": 1
   },
   {
-   "id": "forced_march",
-   "name": "Forced March",
-   "count": 1,
-   "text": "Reposition up to three times, in sequence.",
-   "steps": [
-    {
-     "type": "reposition"
-    },
-    {
-     "type": "reposition"
-    },
-    {
-     "type": "reposition"
-    }
-   ]
+   "cardId": "forced_march",
+   "count": 1
   }
  ]
 }

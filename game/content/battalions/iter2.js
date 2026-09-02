@@ -2,100 +2,58 @@
 {
  "id": "iter2",
  "name": "Iter 2 - Tempo",
- "active": false,
  "cards": [
   {
-   "id": "deploy_inf_start",
-   "name": "Deploy Infantry",
-   "count": 1,
-   "starting": true,
-   "text": "Place an Infantry unit adjacent to any controlled hex.",
-   "steps": [ { "type": "deploy", "unit": "infantry" } ]
+   "cardId": "deploy_inf_start",
+   "count": 1
   },
   {
-   "id": "deploy_artillery",
-   "name": "Deploy Artillery",
-   "count": 1,
-   "text": "Place an Artillery unit adjacent to any controlled hex.",
-   "steps": [ { "type": "deploy", "unit": "artillery" } ]
+   "cardId": "deploy_artillery",
+   "count": 1
   },
   {
-   "id": "deploy_inf_trench",
-   "name": "Entrench",
-   "count": 3,
-   "text": "Place an Infantry unit adjacent to any controlled hex. Then build a trench on any controlled hex.",
-   "steps": [ { "type": "deploy", "unit": "infantry" }, { "type": "trench" } ]
+   "cardId": "deploy_inf_trench",
+   "count": 3
   },
   {
-   "id": "airdrop",
-   "name": "Airdrop",
-   "count": 1,
-   "noOpener": true,
-   "text": "Place an Infantry unit on any empty hex. (Never in your opening hand.)",
-   "steps": [ { "type": "deploy", "unit": "infantry", "anywhere": true } ]
+   "cardId": "airdrop",
+   "count": 1
   },
   {
-   "id": "conscription",
-   "name": "Conscription",
-   "count": 1,
-   "text": "Place two Infantry units adjacent to any controlled hex, in sequence.",
-   "steps": [ { "type": "deploy", "unit": "infantry" }, { "type": "deploy", "unit": "infantry" } ]
+   "cardId": "conscription",
+   "count": 1
   },
   {
-   "id": "deploy_cavalry",
-   "name": "Deploy Cavalry",
-   "count": 1,
-   "text": "Place two Cavalry units adjacent to any controlled hex, in sequence.",
-   "steps": [ { "type": "deploy", "unit": "cavalry" }, { "type": "deploy", "unit": "cavalry" } ]
+   "cardId": "cavalry_muster",
+   "count": 1
   },
   {
-   "id": "careful_maneuvers",
-   "name": "Careful Maneuvers",
-   "count": 1,
-   "text": "Reposition a unit. Then order an attack with −1 support.",
-   "steps": [ { "type": "reposition" }, { "type": "attack", "mod": -1 } ]
+   "cardId": "careful_maneuvers",
+   "count": 1
   },
   {
-   "id": "reckless_maneuvers",
-   "name": "Reckless Maneuvers",
-   "count": 1,
-   "text": "Order an attack. Then reposition a unit.",
-   "steps": [ { "type": "attack" }, { "type": "reposition" } ]
+   "cardId": "reckless_maneuvers",
+   "count": 1
   },
   {
-   "id": "naval_barrage",
-   "name": "Naval Barrage",
-   "count": 1,
-   "text": "Remove any trench or forest on the board (optional). Then order an attack.",
-   "steps": [ { "type": "barrage" }, { "type": "attack" } ]
+   "cardId": "naval_barrage",
+   "count": 1
   },
   {
-   "id": "forced_march",
-   "name": "Forced March",
-   "count": 1,
-   "text": "Reposition up to three times, in sequence.",
-   "steps": [ { "type": "reposition" }, { "type": "reposition" }, { "type": "reposition" } ]
+   "cardId": "forced_march",
+   "count": 1
   },
   {
-   "id": "shock_troops",
-   "name": "Shock Troops",
-   "count": 2,
-   "text": "Place an Infantry unit adjacent to any controlled hex. Then order an attack.",
-   "steps": [ { "type": "deploy", "unit": "infantry" }, { "type": "attack" } ]
+   "cardId": "shock_troops",
+   "count": 2
   },
   {
-   "id": "storm_and_hold",
-   "name": "Storm and Hold",
-   "count": 1,
-   "text": "Order an attack with +1 support. Then build a trench on any controlled hex.",
-   "steps": [ { "type": "attack", "mod": 1 }, { "type": "trench" } ]
+   "cardId": "storm_and_hold",
+   "count": 1
   },
   {
-   "id": "sappers",
-   "name": "Sappers",
-   "count": 1,
-   "text": "Remove any trench or forest on the board (optional). Then build a trench on any controlled hex.",
-   "steps": [ { "type": "barrage" }, { "type": "trench" } ]
+   "cardId": "sappers",
+   "count": 1
   }
  ]
 }
