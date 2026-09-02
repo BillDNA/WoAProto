@@ -55,8 +55,11 @@ var st  = mpState(def, { '0,0':['infantry','blue'], '-1,0':['infantry','red'] },
 - `mpDef` builds a tiny inline map on the shared 9-hex outline `MP_HEXES`
   (labels A1–A3 / B1–B3 / C1–C3). `mpState` runs the REAL
   `E.newBattle({maps:[def], seed:7, firstPlayer:'red'})` + `E.newSkirmish`, then
-  overwrites `st.units` / `st.trenches` with the fixture's pieces and sets
-  `st.__sim = true` (never fire real-skirmish hooks).
+  overwrites `st.pieces.units` / `st.pieces.trenches` with the fixture's pieces
+  and sets `st.__sim = true` (never fire real-skirmish hooks). The state is
+  block-shaped (WoAProto#221: `board`/`pieces`/`cards`/`flow`/`result`/`journal`);
+  the manual authors it directly because it constructs and drives engine states,
+  rather than through the read-only `Engine.view` play surface.
 - Terrain goes in the **map def** (`pieces`) so `buildTerrain` validates it;
   trenches go straight into the state. Every terrain side needs its neighbor
   hex ON the outline (`buildTerrain` throws "side off board" otherwise).
@@ -74,7 +77,7 @@ so an in-progress skirmish is never corrupted — **keep all fixture building an
 engine reads inside `scene()`**, and within a scene **build a state, read its
 numbers immediately, then build the next** (reads use whatever board is
 current). If you ever author a different outline than `MP_HEXES`, call
-`E.setBoard(st.boardShape)` before reading that state.
+`E.setBoard(st.board.boardShape)` before reading that state.
 
 ## The beat schema
 
