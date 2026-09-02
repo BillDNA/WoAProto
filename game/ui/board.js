@@ -7,31 +7,31 @@
 
 /* =================== board rendering =================== */
 function renderBoard(){
-  var st = APP.st, svg = $('board');
+  var st = APP.st, v = E.view(st), svg = $('board');
   var L = bpBeginBoard(svg);
 
   E.hexes().forEach(function(k){ bpHexTile(L.hex, k); });
 
   // terrain sides (hex-owned: drawn inset inside the owning hex)
-  for (var ek in st.terrainEdges) bpTerrainEdge(L.ter, ek, st.terrainEdges[ek]);
+  for (var ek in v.terrainEdges) bpTerrainEdge(L.ter, ek, v.terrainEdges[ek]);
 
   // trenches (a hex may hold several)
-  for (var th in st.trenches){
-    st.trenches[th].forEach(function(t){
+  for (var th in v.trenches){
+    v.trenches[th].forEach(function(t){
       t.dirs.forEach(function(d){ bpTrenchLine(L.tr, th, d); });
     });
   }
 
   // HQs
   ['red','blue'].forEach(function(p){
-    if (st.hqAlive[p]) bpHQ(L.pc, st.hq[p], p);
+    if (v.hqAlive(p)) bpHQ(L.pc, v.hq(p), p);
   });
 
   // units — the primitive draws the token, this file wires the attack-math
   // hover (works when idle in choose-card; during the attack step the highlight
   // layer carries the same hover)
-  for (var uh in st.units){
-    var g = bpUnit(L.pc, uh, st.units[uh]);
+  for (var uh in v.units){
+    var g = bpUnit(L.pc, uh, v.units[uh]);
     (function(fromHex){
       g.addEventListener('mouseenter', function(){ showAttackHints(fromHex); });
       g.addEventListener('mouseleave', hideAttackHints);
@@ -52,10 +52,11 @@ function hl(g, k, cls, handler){
    confirm dialog and resolution use, so they can never disagree. Hover-only,
    so it costs no screen space when unwanted. */
 function attackPreviewsFor(st, fromHex){
-  var o = st.phase === 'step' ? E.stepOptions(st) : null;
+  var v = E.view(st);
+  var o = v.phase === 'step' ? E.stepOptions(st) : null;
   var list;
   if (o && o.type === 'attack') list = o.attacks.filter(function(a){ return a.from === fromHex; });
-  else list = E.listAttacks(st, st.current).filter(function(a){ return a.from === fromHex; })
+  else list = E.listAttacks(st, v.current).filter(function(a){ return a.from === fromHex; })
     .map(function(a){ return Object.assign({}, a, { preview: E.computeAttack(st, a) }); });
   var best = {};
   list.forEach(function(a){
@@ -66,14 +67,14 @@ function attackPreviewsFor(st, fromHex){
 }
 function showAttackHints(fromHex){
   hideAttackHints();
-  var st = APP.st;
+  var st = APP.st, v = E.view(st);
   if (!st || !inputLive()) return;
-  if (st.phase === 'step'){
+  if (v.phase === 'step'){
     var o = E.stepOptions(st);
     if (!o || o.type !== 'attack') return;
-  } else if (st.phase !== 'choose-card') return;
-  var u = st.units[fromHex];
-  if (!u || u.owner !== st.current) return;
+  } else if (v.phase !== 'choose-card') return;
+  var u = v.units[fromHex];
+  if (!u || u.owner !== v.current) return;
   var g = bpAttackLayer();
   attackPreviewsFor(st, fromHex).forEach(function(a){
     var pv = a.preview;
@@ -87,8 +88,8 @@ function hideAttackHints(){
 
 /* highlights depend on UI stage */
 function renderHighlights(g){
-  var st = APP.st;
-  if (!inputLive() || st.phase !== 'step') return;
+  var st = APP.st, v = E.view(st);
+  if (!inputLive() || v.phase !== 'step') return;
   var o = E.stepOptions(st);
   if (!o) return;
   var ui = APP.ui;

@@ -90,12 +90,12 @@ realSetTimeout(function () {
   var steps = 0;
   function tick() {
     var APP = win.APP, E = win.Engine;
-    if (!APP.st || APP.st.phase === 'skirmish-over' || steps++ > 4000) return done();
+    if (!APP.st || APP.st.flow.phase === 'skirmish-over' || steps++ > 4000) return done();
     if (APP.ui.busy) return realSetTimeout(tick, 8); // AI is animating
-    if (APP.st.current !== APP.mySide) return realSetTimeout(tick, 8);
+    if (APP.st.flow.current !== APP.mySide) return realSetTimeout(tick, 8);
     try {
-      if (APP.st.phase === 'choose-card') {
-        var cid = APP.st.hands[APP.mySide][0];
+      if (APP.st.flow.phase === 'choose-card') {
+        var cid = APP.st.cards.hands[APP.mySide][0];
         E.playCard(APP.st, cid, 'normal');
         win.renderAll();
       } else {
@@ -124,7 +124,7 @@ realSetTimeout(function () {
   }
   function done() {
     var st = win.APP.st;
-    assert.ok(st && (st.phase === 'skirmish-over' || st.turnNumber > 3), 'skirmish progressed (phase=' + (st && st.phase) + ', turn=' + (st && st.turnNumber) + ')');
+    assert.ok(st && (st.flow.phase === 'skirmish-over' || st.flow.turnNumber > 3), 'skirmish progressed (phase=' + (st && st.flow.phase) + ', turn=' + (st && st.flow.turnNumber) + ')');
     var logTxt = doc.getElementById('log').textContent;
     assert.ok(/at [A-G][0-9]/.test(logTxt), 'journal uses grid references (sample: "' + (logTxt.match(/[A-Z][a-z]+ deploys [^.]+\./) || ['?'])[0] + '")');
     assert.ok(doc.querySelectorAll('#log .entry.hdr').length >= 1, 'journal skirmish header styled');
@@ -506,11 +506,11 @@ realSetTimeout(function () {
       var w0 = 0;
       (function waitWatch() {
         var st = win.APP.st;
-        if (st && (st.turnNumber >= 3 || st.phase === 'skirmish-over')) {
-          assert.ok(true, 'both generals played without input (turn ' + st.turnNumber + ')');
+        if (st && (st.flow.turnNumber >= 3 || st.flow.phase === 'skirmish-over')) {
+          assert.ok(true, 'both generals played without input (turn ' + st.flow.turnNumber + ')');
           return manualPlayer();
         }
-        if ((w0 += 100) > 30000) { assert.ok(false, 'watch mode stalled at turn ' + (st && st.turnNumber)); return manualPlayer(); }
+        if ((w0 += 100) > 30000) { assert.ok(false, 'watch mode stalled at turn ' + (st && st.flow.turnNumber)); return manualPlayer(); }
         realSetTimeout(waitWatch, 100);
       })();
     }
@@ -535,9 +535,9 @@ realSetTimeout(function () {
       // run fresh on the EXACT fixture state being shown (window.MANUAL.state/atk)
       var E2 = win.Engine, M = win.MANUAL;
       var prevShape = E2.currentShape();
-      E2.setBoard(M.state.boardShape);
+      E2.setBoard(M.state.board.boardShape);
       var asup = E2.supportFor(M.state, 'red', M.atk.to, M.atk.from, true);
-      var base = E2.UNITS[M.state.units[M.atk.from].type].atk;
+      var base = E2.UNITS[M.state.pieces.units[M.atk.from].type].atk;
       var res = E2.computeAttack(M.state, M.atk);
       E2.setBoard(prevShape);
       var pill3 = doc.querySelector('#mpBoard .mpill-t').textContent;

@@ -204,7 +204,7 @@
   // for stats/journal, but victory reads the board.)
   function fieldScore(st, p) {
     var s = 0;
-    for (var h in st.pieces.units) { var u = st.pieces.units[h]; if (u.owner === p) s += I.UNITS[u.type].worth; }
+    I.Pieces.eachUnit(st, function (h, u) { if (u.owner === p) s += I.UNITS[u.type].worth; });
     return s;
   }
 
@@ -437,21 +437,21 @@
     }
     if (step.type === 'deploy') {
       var targets = I.deployTargets(st, p, step.anywhere);
-      if (st.pieces.reserves[p][step.unit] <= 0 || targets.indexOf(choice.hex) < 0) throw new Error('invalid deploy');
-      st.pieces.reserves[p][step.unit]--;
-      st.pieces.units[choice.hex] = { type: step.unit, owner: p };
+      if (I.Pieces.reserve(st, p, step.unit) <= 0 || targets.indexOf(choice.hex) < 0) throw new Error('invalid deploy');
+      I.Pieces.spendReserve(st, p, step.unit);
+      I.Pieces.place(st, choice.hex, step.unit, p);
       st.journal.stats.deploys++;
       recordPlay(st, 'deploy', choice.hex, step.unit);
       ensureUnitMetrics(st)[step.unit].dep.push(st.flow.turnNumber);
       log(st, I.cap(p) + ' deploys ' + I.UNITS[step.unit].name + ' at ' + I.hexLabel(choice.hex) + '.');
     } else if (step.type === 'trench') {
-      if (st.pieces.reserves[p].trench <= 0 || I.trenchTargets(st, p).indexOf(choice.hex) < 0) throw new Error('invalid trench hex');
+      if (I.Pieces.reserve(st, p, 'trench') <= 0 || I.trenchTargets(st, p).indexOf(choice.hex) < 0) throw new Error('invalid trench hex');
       var dirs = choice.dirs;
       var pairOk = dirs && dirs.length === 2 && I.trenchOrientations(st, choice.hex).some(function (pr) {
         return (pr[0] === dirs[0] && pr[1] === dirs[1]) || (pr[0] === dirs[1] && pr[1] === dirs[0]);
       });
       if (!pairOk) throw new Error('invalid trench orientation');
-      st.pieces.reserves[p].trench--;
+      I.Pieces.spendReserve(st, p, 'trench');
       if (!st.pieces.trenches[choice.hex]) st.pieces.trenches[choice.hex] = [];
       st.pieces.trenches[choice.hex].push({ dirs: dirs.slice(), owner: p }); // owner is UI-only info; trenches aid any defender
       log(st, I.cap(p) + ' digs a trench at ' + I.hexLabel(choice.hex) +
@@ -468,8 +468,7 @@
       if (choice.swap) {
         var ok = r.swaps.some(function (s) { return (s.a === choice.a && s.b === choice.b) || (s.a === choice.b && s.b === choice.a); });
         if (!ok) throw new Error('invalid swap');
-        var ua = st.pieces.units[choice.a], ub = st.pieces.units[choice.b];
-        st.pieces.units[choice.a] = ub; st.pieces.units[choice.b] = ua;
+        I.Pieces.swap(st, choice.a, choice.b);
         st.journal.lastSwap[p] = swapKey(choice.a, choice.b);
         st.journal.stats.swaps++;
         recordPlay(st, 'swap', choice.a);
@@ -477,11 +476,10 @@
       } else {
         var okm = r.moves.some(function (m) { return m.from === choice.from && m.to === choice.to; });
         if (!okm) throw new Error('invalid move');
-        st.pieces.units[choice.to] = st.pieces.units[choice.from];
-        delete st.pieces.units[choice.from];
+        I.Pieces.advance(st, choice.from, choice.to);
         st.journal.stats.marches++;
         recordPlay(st, 'march', choice.to);
-        log(st, I.cap(p) + ' marches ' + I.UNITS[st.pieces.units[choice.to].type].name + ' from ' + I.hexLabel(choice.from) + ' to ' + I.hexLabel(choice.to) + '.');
+        log(st, I.cap(p) + ' marches ' + I.UNITS[I.Pieces.unitAt(st, choice.to).type].name + ' from ' + I.hexLabel(choice.from) + ' to ' + I.hexLabel(choice.to) + '.');
       }
     } else if (step.type === 'barrage') {
       var b = I.listBarrageTargets(st, p);
@@ -536,7 +534,44 @@
     drawHand(st, st.flow.current); // may end skirmish by attrition
   }
 
+  /* ---------- play surface (WoAProto#221) ----------
+     The read boundary the UI consumes instead of poking the skirmish state's
+     internals. The UI depends on THIS stable surface, not on the block layout
+     underneath it — so re-shaping st is a one-place edit here, and grepping the
+     UI for state reach-through stays clean. Actions still go through the engine
+     API (playCard/applyStep/…) with the raw handle at v.st; serialization reads
+     v.st too. Getters return live references, so a view built once per render
+     reflects the current state. */
+  function view(st) {
+    return {
+      st: st, // the raw handle — for E.* action calls and (de)serialization only
+      get phase() { return st.flow.phase; },
+      get current() { return st.flow.current; },
+      get second() { return st.flow.second; },
+      get turnNumber() { return st.flow.turnNumber; },
+      get pending() { return st.flow.pending; },
+      get seed() { return st.seed; },
+      get mapName() { return st.mapName; },
+      get mapIndex() { return st.mapIndex; },
+      get boardShape() { return st.board.boardShape; },
+      get terrainEdges() { return st.board.terrainEdges; },
+      get terrainPieces() { return st.board.terrainPieces; },
+      get units() { return st.pieces.units; },
+      get trenches() { return st.pieces.trenches; },
+      get log() { return st.journal.log; },
+      get battle() { return st.battle; },
+      get skirmishWinner() { return st.result.skirmishWinner; },
+      get winType() { return st.result.winType; },
+      hq: function (p) { return st.board.hq[p]; },
+      hqAlive: function (p) { return st.board.hqAlive[p]; },
+      reserves: function (p) { return st.pieces.reserves[p]; },
+      hand: function (p) { return st.cards.hands[p]; },
+      removed: function (p) { return st.cards.removed[p]; }
+    };
+  }
+
   /* shared-namespace exports */
+  I.view = view;
   I.newBattle = newBattle;
   I.buildDeck = buildDeck;
   I.newSkirmish = newSkirmish;

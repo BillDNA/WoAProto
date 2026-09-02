@@ -70,13 +70,14 @@ function shakeBoard(){
 }
 // snapshot what is about to happen so we can animate the aftermath
 function capturePre(st, choice){
-  if (!choice || choice.skip || st.phase!=='step') return null;
+  var v = E.view(st);
+  if (!choice || choice.skip || v.phase!=='step') return null;
   var o = E.stepOptions(st);
   if (!o) return null;
   var pre = { type:o.type, choice:choice };
   if (o.type==='attack' && choice.to){
-    pre.attacker = st.units[choice.from];
-    pre.defender = st.units[choice.to] || null;
+    pre.attacker = v.units[choice.from];
+    pre.defender = v.units[choice.to] || null;
     pre.defenderHQ = E.isHQ(st, choice.to);
     // who actually contributes (engine truth incl. trench/river blocking) —
     // captured BEFORE resolution so the FX can point at them afterwards
@@ -89,7 +90,7 @@ function capturePre(st, choice){
 }
 function playFX(pre){
   if (!pre) return;
-  var st = APP.st, c = pre.choice;
+  var st = APP.st, v = E.view(st), c = pre.choice;
   if (pre.type==='deploy' && c.hex){ popUnit(c.hex); }
   else if (pre.type==='trench' && c.hex){ ringAt(c.hex, BOARD.trench); }
   else if (pre.type==='barrage'){ ringAt(c.trenchHex || fxPieceHex(c.pieceId), BOARD.barrage); }
@@ -106,15 +107,15 @@ function playFX(pre){
       (pre.defSupporters || []).forEach(function(h){ ringAt(h, BOARD.supportEnemy); });
     }
     ringAt(c.to, BOARD.barrage);
-    var now = st.units[c.to];
-    var advanced = now && pre.attacker && now.owner===pre.attacker.owner && !st.units[c.from];
+    var now = v.units[c.to];
+    var advanced = now && pre.attacker && now.owner===pre.attacker.owner && !v.units[c.from];
     if (advanced) slideUnit(c.from, c.to);
     if (pre.defender && (!now || advanced)) ghostUnit(c.to, pre.defender);            // defender fell
-    if (pre.attacker && !st.units[c.from] && !advanced) ghostUnit(c.from, pre.attacker); // attacker fell
+    if (pre.attacker && !v.units[c.from] && !advanced) ghostUnit(c.from, pre.attacker); // attacker fell
     if (pre.defenderHQ && !E.isHQ(st, c.to)) shakeBoard();                            // HQ captured!
   }
 }
 function fxPieceHex(pieceId){
-  var pc = (APP.st.terrainPieces||[]).filter(function(x){ return x.id===pieceId; })[0];
+  var pc = (E.view(APP.st).terrainPieces||[]).filter(function(x){ return x.id===pieceId; })[0];
   return pc ? pc.edgeKeys[0].split('>')[0] : null;
 }
