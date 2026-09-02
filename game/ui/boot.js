@@ -90,15 +90,15 @@ $('btnConcede').onclick = function(){
     '<h2 class="'+p+'">Concede the field?</h2>' +
     '<p>'+capName(E.other(p))+' takes this skirmish. Losing one skirmish does not lose the war — the campaign moves on.</p>' +
     '<div class="ovr-btns"><button id="cdYes">Concede</button><button id="cdNo" class="ghost btn-ghost-dark">Fight on</button></div>';
-  $('confirmOvr').classList.add('active');
+  openOverlay('confirmOvr');
   $('cdYes').onclick = function(){
-    $('confirmOvr').classList.remove('active');
+    closeOverlay('confirmOvr');
     E.concede(APP.st, p);
     renderAll(); saveLocal();
     if (APP.mode === 'net') pushState();
     clearIfBattleOver(); showSkirmishOver();
   };
-  $('cdNo').onclick = function(){ $('confirmOvr').classList.remove('active'); };
+  $('cdNo').onclick = function(){ closeOverlay('confirmOvr'); };
 };
 // Debug snapshot (Feedback Round 4): dump this exact game state to logs/debug/
 // so Bill can hand Claude the situation without pasting a screenshot. The state
@@ -130,7 +130,7 @@ $('btnDebug').onclick = function(){
 
 $('fabJournal').onclick = function(){
   syncJournalOverlay();
-  $('journalOvr').classList.add('active');
+  openOverlay('journalOvr');
 };
 // innerHTML mirroring drops click handlers — delegate turn expand/collapse in the overlay
 $('journalBody').onclick = function(ev){
@@ -141,7 +141,7 @@ $('journalBody').onclick = function(ev){
 
 $('fabRosters').onclick = function(){
   syncRostersOverlay();
-  $('rostersOvr').classList.add('active');
+  openOverlay('rostersOvr');
 };
 $('btnQuit').onclick = function(){
   if (APP.net.poller) clearInterval(APP.net.poller);

@@ -60,6 +60,12 @@ function artErr(img, id){
 }
 
 /* =================== toasts & overlays =================== */
+// ONE place to open/close a modal overlay — every overlay is
+// `<div class="overlay" id="…Ovr">` toggled by the `active` class (index.html
+// + .overlay CSS). Change how overlays behave (a fade, an Esc handler) here.
+function openOverlay(id){ $(id).classList.add('active'); }
+function closeOverlay(id){ $(id).classList.remove('active'); }
+
 var toastTimer = null;
 function toast(html, ms){
   var t = $('toast');

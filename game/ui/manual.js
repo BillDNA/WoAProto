@@ -459,7 +459,7 @@ function openManual(){
     MANUAL.built = true;
   }
   renderManual();
-  $('manualOvr').classList.add('active');
+  openOverlay('manualOvr');
 }
 function manualStep(delta){
   MANUAL.beat += delta;
