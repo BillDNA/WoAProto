@@ -46,9 +46,7 @@ var CHART = {
 // no new colour is introduced, so a future repalette of one still drags both.
 CHART.lane = { deploy: CHART.seq[0], attack: CHART.divRed[1], swap: CHART.divBlue[1], march: CHART.divMid };
 
-function chEsc(s){
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function chEsc(s){ return uiEsc(s); } // one html-escape lives in ui-primitives.js
 function chDivFill(dev){ // dev = win% - 50
   var arm = dev >= 0 ? CHART.divRed : CHART.divBlue, a = Math.abs(dev);
   if (a < CHART.divStops[0]) return CHART.divMid;

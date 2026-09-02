@@ -274,22 +274,21 @@ function renderPrompt(){
   if (canSkip){
     var sk = document.createElement('button');
     sk.textContent = 'Skip step';
-    sk.style.cssText = 'padding:3px 12px;font-size:13px;';
+    sk.className = 'btn-sm';
     sk.onclick = function(){ APP.ui.sel=null; act({skip:true}); };
     el.appendChild(sk);
   }
   if (canReset()){
     var rs = document.createElement('button');
     rs.textContent = 'Reset turn';
-    rs.className = 'ghost';
-    rs.style.cssText = 'padding:3px 12px;font-size:13px;';
+    rs.className = 'ghost btn-sm';
     rs.onclick = resetTurn;
     el.appendChild(rs);
   }
   if (APP.ui.sel){
     var back = document.createElement('button');
     back.textContent = 'Back';
-    back.className='ghost'; back.style.cssText='padding:3px 12px;font-size:13px;';
+    back.className='ghost btn-sm';
     back.onclick = function(){ APP.ui.sel=null; renderAll(); };
     el.appendChild(back);
   }
@@ -378,22 +377,18 @@ function confirmAttack(a){
   var outcomeTxt = { attacker: 'Attack succeeds — defender destroyed' + (pv.defenderIsHQ ? '. <b>HEADQUARTERS FALLS!</b>' : (a.noAdvance ? ', your unit holds its ground.' : ', your unit advances.')),
                      defender: '<b>Attack fails — your unit is destroyed.</b>',
                      tie: a.tieSpare ? 'Tie — defender destroyed, your unit withdraws safely.' + (pv.defenderIsHQ?' <b>HEADQUARTERS FALLS!</b>':'') : 'Tie — <b>both units destroyed.</b>' + (pv.defenderIsHQ?' <b>HEADQUARTERS FALLS!</b>':'') }[pv.outcome];
-  $('confirmPanel').innerHTML =
-    '<h2>Order of Skirmish</h2>' +
-    '<p>'+capName(st.current)+' '+E.UNITS[au.type].name+' attacks '+tgt+(a.via?' <i>(through the HQ)</i>':'')+'</p>' +
-    '<div class="skirmish-calc">' +
-      '<div class="side"><h4 style="color:var(--'+st.current+'-dark)">Attacker</h4>'+pv.attackerParts.join('<br>')+'<div class="total">'+pv.attackerPower+'</div></div>' +
-      '<div class="side"><h4 style="color:var(--'+E.other(st.current)+'-dark)">Defender</h4>'+pv.defenderParts.join('<br>')+'<div class="total">'+pv.defenderPower+'</div></div>' +
-    '</div>' +
-    '<p style="font-size:14.5px;">'+outcomeTxt+'</p>' +
-    '<div class="ovr-btns"><button id="cfYes">Attack!</button><button id="cfNo" class="ghost btn-ghost-dark">Stand Down</button></div>';
-  openOverlay('confirmOvr');
-  $('cfYes').onclick = function(){
-    closeOverlay('confirmOvr');
-    APP.ui.sel = null;
-    act({from:a.from, to:a.to, via:a.via});
-  };
-  $('cfNo').onclick = function(){ closeOverlay('confirmOvr'); };
+  confirmDialog({
+    title: 'Order of Skirmish',
+    body:
+      '<p>'+capName(st.current)+' '+E.UNITS[au.type].name+' attacks '+tgt+(a.via?' <i>(through the HQ)</i>':'')+'</p>' +
+      '<div class="skirmish-calc">' +
+        '<div class="side"><h4 style="color:var(--'+st.current+'-dark)">Attacker</h4>'+pv.attackerParts.join('<br>')+'<div class="total">'+pv.attackerPower+'</div></div>' +
+        '<div class="side"><h4 style="color:var(--'+E.other(st.current)+'-dark)">Defender</h4>'+pv.defenderParts.join('<br>')+'<div class="total">'+pv.defenderPower+'</div></div>' +
+      '</div>' +
+      '<p style="font-size:14.5px;">'+outcomeTxt+'</p>',
+    yesLabel: 'Attack!', noLabel: 'Stand Down',
+    onYes: function(){ APP.ui.sel = null; act({from:a.from, to:a.to, via:a.via}); }
+  });
 }
 
 function showSkirmishOver(){

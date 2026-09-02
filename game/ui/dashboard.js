@@ -262,7 +262,7 @@ function renderDashTables(el){
   h += '<table><tr>';
   cols.forEach(function(c){
     if (!c[0]){ h += '<th title="Automated flags derived from the thresholds in this table">'+c[1]+'</th>'; return; }
-    h += '<th class="sortable'+(key===c[0]?' sorted':'')+'" data-key="'+c[0]+'" title="'+(MAP_TIPS[c[0]]||'')+' &middot; click to sort">'+c[1]+(key===c[0]?(dir>0?' &#9650;':' &#9660;'):'')+'</th>';
+    h += uiSortableTh(c, key, dir, MAP_TIPS[c[0]], 'data-key');
   });
   h += '<th title="red vs blue win share">R/B</th></tr>';
   rows.forEach(function(r){
@@ -311,7 +311,7 @@ function renderDashTables(el){
   var ccols = [['name','Card'], ['winPct','Win%'], ['simplePct','Simple%'], ['noopPct','Noop%'], ['sightPct','1stSight%'], ['avgSeen','AvgSeen'], ['plays','plays']];
   h += '<h3>Card report <span class="small">('+G.games+' skirmishes of AI play)</span></h3><table><tr>';
   ccols.forEach(function(c){
-    h += '<th class="sortable'+(DASH.cardSort.key===c[0]?' sorted':'')+'" data-ckey="'+c[0]+'" title="'+(CARD_TIPS[c[0]]||'')+' &middot; click to sort">'+c[1]+(DASH.cardSort.key===c[0]?(DASH.cardSort.dir>0?' &#9650;':' &#9660;'):'')+'</th>';
+    h += uiSortableTh(c, DASH.cardSort.key, DASH.cardSort.dir, CARD_TIPS[c[0]], 'data-ckey');
   });
   h += '<th title="share of plays by the eventual winner">Win share</th></tr>';
   crows.forEach(function(r){

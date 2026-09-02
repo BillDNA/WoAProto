@@ -60,11 +60,11 @@
     <div class="topright">
       <span id="roomchip" style="display:none; padding:3px 10px; border:1px dashed var(--brass); border-radius:5px; font-size:13px; letter-spacing:2px;"></span>
       <span id="turnbadge">RED</span>
-      <button class="ghost" id="btnConcede" style="padding:3px 10px;font-size:13px;" title="Give up this skirmish; the campaign moves on">Concede</button>
-      <button class="ghost" id="btnDebug" style="padding:3px 10px;font-size:13px;" title="Save this exact game state to logs/debug/ for a bug report (downloads a copy if the server isn't running)">Debug</button>
-      <button class="ghost" id="btnCards" style="padding:3px 10px;font-size:13px;">Cards</button>
-      <button class="ghost" id="btnManual2" style="padding:3px 10px;font-size:13px;">Manual</button>
-      <button class="ghost" id="btnQuit" style="padding:3px 10px;font-size:13px;">Menu</button>
+      <button class="ghost btn-sm" id="btnConcede" title="Give up this skirmish; the campaign moves on">Concede</button>
+      <button class="ghost btn-sm" id="btnDebug" title="Save this exact game state to logs/debug/ for a bug report (downloads a copy if the server isn't running)">Debug</button>
+      <button class="ghost btn-sm" id="btnCards">Cards</button>
+      <button class="ghost btn-sm" id="btnManual2">Manual</button>
+      <button class="ghost btn-sm" id="btnQuit">Menu</button>
     </div>
   </div>
   <div id="main">
@@ -226,17 +226,17 @@
 <div class="overlay" id="cardsOvr"><div class="panel parchment">
   <h2>Card Glossary</h2>
   <div class="manual" id="cardsBody"></div>
-  <div class="ovr-btns"><button onclick="document.getElementById('cardsOvr').classList.remove('active')">Close</button></div>
+  <div class="ovr-btns"><button onclick="closeOverlay('cardsOvr')">Close</button></div>
 </div></div>
 <div class="overlay" id="journalOvr"><div class="panel parchment" style="max-width:min(560px,94vw);">
   <h2>Campaign Journal</h2>
   <div class="journal-feed" id="journalBody"></div>
-  <div class="ovr-btns"><button onclick="document.getElementById('journalOvr').classList.remove('active')">Close</button></div>
+  <div class="ovr-btns"><button onclick="closeOverlay('journalOvr')">Close</button></div>
 </div></div>
 <div class="overlay" id="rostersOvr"><div class="panel parchment" style="max-width:min(420px,94vw);">
   <h2>Rosters</h2>
   <div id="rostersBody" style="display:flex; flex-direction:column; gap:8px;"></div>
-  <div class="ovr-btns"><button onclick="document.getElementById('rostersOvr').classList.remove('active')">Close</button></div>
+  <div class="ovr-btns"><button onclick="closeOverlay('rostersOvr')">Close</button></div>
 </div></div>
 <div class="overlay" id="manualOvr"><div class="panel parchment">
   <h2>Field Manual</h2>
@@ -271,7 +271,7 @@
     <h3>Control</h3>
     <p>You control the hexes your units and HQ occupy. Deployments must be adjacent to a controlled hex (Airdrop excepted). Trenches are built on a controlled hex.</p>
   </div>
-  <div class="ovr-btns"><button onclick="document.getElementById('manualOvr').classList.remove('active')">Close</button></div>
+  <div class="ovr-btns"><button onclick="closeOverlay('manualOvr')">Close</button></div>
 </div></div>
 
 <div id="toast" class="parchment"></div>
@@ -322,6 +322,7 @@ try {
 <script src="report-model.js"></script>
 <script src="ui/chart-model.js"></script>
 <script src="ui/app.js"></script>
+<script src="ui/ui-primitives.js"></script>
 <script src="ui/board-primitives.js"></script>
 <script src="ui/board.js"></script>
 <script src="ui/fx.js"></script>

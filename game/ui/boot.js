@@ -86,19 +86,17 @@ $('btnConcede').onclick = function(){
   if (!st || st.phase === 'skirmish-over' || APP.mode === 'watch') return;
   if (!inputLive() || st.phase !== 'choose-card'){ toast('You can concede at the start of your own turn.'); return; }
   var p = viewSide();
-  $('confirmPanel').innerHTML =
-    '<h2 class="'+p+'">Concede the field?</h2>' +
-    '<p>'+capName(E.other(p))+' takes this skirmish. Losing one skirmish does not lose the war — the campaign moves on.</p>' +
-    '<div class="ovr-btns"><button id="cdYes">Concede</button><button id="cdNo" class="ghost btn-ghost-dark">Fight on</button></div>';
-  openOverlay('confirmOvr');
-  $('cdYes').onclick = function(){
-    closeOverlay('confirmOvr');
-    E.concede(APP.st, p);
-    renderAll(); saveLocal();
-    if (APP.mode === 'net') pushState();
-    clearIfBattleOver(); showSkirmishOver();
-  };
-  $('cdNo').onclick = function(){ closeOverlay('confirmOvr'); };
+  confirmDialog({
+    title: 'Concede the field?', titleClass: p,
+    body: '<p>'+capName(E.other(p))+' takes this skirmish. Losing one skirmish does not lose the war — the campaign moves on.</p>',
+    yesLabel: 'Concede', noLabel: 'Fight on',
+    onYes: function(){
+      E.concede(APP.st, p);
+      renderAll(); saveLocal();
+      if (APP.mode === 'net') pushState();
+      clearIfBattleOver(); showSkirmishOver();
+    }
+  });
 };
 // Debug snapshot (Feedback Round 4): dump this exact game state to logs/debug/
 // so Bill can hand Claude the situation without pasting a screenshot. The state

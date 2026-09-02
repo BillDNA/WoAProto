@@ -285,7 +285,7 @@ function mdHexLensSection(mapName, hex) {
   // self-styled legend (the .chkey/.sw CSS is scoped under .chcard; the drill-down
   // lives in .mapd-wrap, so inline every swatch here — the drill-down convention)
   var hatchSw = 'repeating-linear-gradient(45deg,transparent,transparent 2px,' + CHART.muted + ' 2px,' + CHART.muted + ' 3px)';
-  function mdSw(css) { return '<span style="display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:4px;box-sizing:border-box;' + css + '"></span>'; }
+  function mdSw(css) { return uiSwatch(css); } // one swatch lives in ui-primitives.js
   var key = '<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12px;color:' + CHART.inkSoft + ';margin-top:10px;">' +
     '<span>fill&nbsp;' + CHART.seq.map(function (c) { return mdSw('background:' + c + ';margin-right:0;'); }).join('') + '&nbsp;low&rarr;high</span>' +
     '<span>' + mdSw('background:' + CHART.surface + ';border:1px solid ' + CHART.axis + ';') + '0 (this lens)</span>' +
