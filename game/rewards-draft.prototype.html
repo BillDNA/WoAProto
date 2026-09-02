@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WoA · Rewards/Draft prototype (#248)</title>
+<!--
+  NAPKIN PROTOTYPE — issue #248. THROWAWAY, do not ship.
+  Question: what should the post-battle rewards / card-draft screen look like?
+  (The run-flow slot from the partition spec #238; card source is the shared
+  pool owned by Content model & catalog #240.)
+
+  Three structurally-different variants of the SAME screen, switchable via
+  ?variant=A|B|C and the floating bar at the bottom. Real WoA cards, real
+  palette. No persistence, no engine wiring — react to the shape, not the code.
+-->
+<style>
+  :root{
+    --parch:#e8dcc0; --parch2:#dccfae; --parch3:#cfc09a; --parch-deep:#d8caa2;
+    --ink:#3a2f1d; --ink-soft:#5a4c33;
+    --brass:#b08d57; --brass-dark:#8a6c3c; --copper:#9c5f3a;
+    --red:#9e2b25; --red-dark:#6f1d19; --blue:#28527a;
+    --gold:#d4af37; --felt:#2e3a2e; --parch-panel:#efe6cd;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family:Georgia,'Times New Roman',serif; color:var(--ink);
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #3d3424, #241d10 70%),
+      #201a0e;
+    min-height:100%;
+  }
+  .screen{max-width:1180px;margin:0 auto;padding:26px 22px 120px;}
+  .hidden{display:none;}
+
+  /* shared header ribbon: the battle result banner */
+  .resultbar{
+    display:flex;align-items:center;gap:16px;
+    background:linear-gradient(180deg, rgba(232,220,192,.16), rgba(232,220,192,.05));
+    border:1px solid var(--brass-dark);border-radius:8px;
+    padding:12px 18px;color:var(--parch);
+  }
+  .resultbar .verdict{
+    font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);
+  }
+  .resultbar h1{margin:2px 0 0;font-size:26px;color:#fff;font-weight:normal;letter-spacing:1px;}
+  .resultbar .node{margin-left:auto;text-align:right;color:var(--parch3);font-size:13px;}
+  .resultbar .node b{color:var(--parch);font-size:15px;}
+
+  /* card face */
+  .card{
+    position:relative;border-radius:9px;overflow:hidden;
+    background:linear-gradient(175deg,var(--parch-panel),var(--parch3));
+    border:1px solid var(--brass-dark);
+    box-shadow:0 6px 16px rgba(0,0,0,.45);
+    display:flex;flex-direction:column;
+  }
+  .card .banner{
+    background:linear-gradient(180deg,#c8a368,var(--brass),var(--brass-dark));
+    color:#241d10;padding:8px 10px;font-weight:bold;letter-spacing:.3px;
+    display:flex;justify-content:space-between;align-items:center;gap:8px;
+    border-bottom:1px solid var(--brass-dark);
+  }
+  .card .banner .nm{font-size:15px;}
+  .card .art{
+    height:118px;display:flex;align-items:center;justify-content:center;
+    background:
+      repeating-linear-gradient(45deg, rgba(120,90,40,.10) 0 8px, transparent 8px 16px),
+      linear-gradient(160deg,#b7a674,#9c8a5c);
+    color:#5a4c33;font-size:34px;
+  }
+  .card .body{padding:10px 12px;flex:1;}
+  .card .text{font-size:13px;line-height:1.45;color:var(--ink-soft);}
+  .card .foot{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:8px 12px;border-top:1px dashed var(--brass-dark);font-size:12px;color:var(--ink-soft);
+  }
+  .ap{
+    display:inline-flex;align-items:center;gap:5px;
+    background:rgba(158,43,37,.10);border:1px solid var(--copper);
+    color:var(--copper);border-radius:12px;padding:2px 9px;font-weight:bold;font-size:12px;
+  }
+  .rar{font-size:11px;letter-spacing:2px;text-transform:uppercase;}
+  .rar.common{color:#7a6c4c;} .rar.rare{color:#2f6ea0;} .rar.elite{color:#9c5f3a;}
+
+  .btn{
+    font-family:inherit;cursor:pointer;border:none;border-radius:7px;
+    padding:9px 16px;font-size:15px;color:#241d10;
+    background:linear-gradient(180deg,#c8a368,var(--brass),var(--brass-dark));
+    box-shadow:0 3px 8px rgba(0,0,0,.35);
+  }
+  .btn.ghost{background:transparent;color:var(--parch);border:1px solid var(--brass);box-shadow:none;}
+  .btn:disabled{opacity:.45;cursor:default;}
+  .lead{color:var(--parch2);font-size:15px;margin:18px 2px 8px;letter-spacing:.3px;}
+  .muted{color:var(--parch3);}
+
+  /* ===== Variant A: Spoils fan — pick one of three ===== */
+  #A .fan{display:flex;gap:22px;justify-content:center;margin-top:22px;flex-wrap:wrap;}
+  #A .card{width:250px;cursor:pointer;transition:transform .12s, box-shadow .12s;}
+  #A .card:hover{transform:translateY(-8px);box-shadow:0 14px 30px rgba(0,0,0,.55);}
+  #A .card.picked{outline:3px solid var(--gold);transform:translateY(-8px);}
+  #A .tray{display:flex;justify-content:center;gap:14px;margin-top:30px;align-items:center;}
+  #A .skip{color:var(--parch3);text-decoration:underline;cursor:pointer;font-size:14px;background:none;border:none;font-family:inherit;}
+  #A .catbadge{color:var(--parch3);font-size:13px;text-align:center;margin-top:12px;}
+
+  /* ===== Variant B: War-table draft ledger — two panels + budget ===== */
+  #B .grid{display:grid;grid-template-columns:1fr 360px;gap:22px;margin-top:18px;align-items:start;}
+  #B .panel{background:linear-gradient(170deg,rgba(232,220,192,.14),rgba(232,220,192,.05));
+    border:1px solid var(--brass-dark);border-radius:9px;padding:14px;}
+  #B .panel h2{margin:0 0 10px;color:var(--parch);font-weight:normal;font-size:16px;letter-spacing:1px;
+    text-transform:uppercase;border-bottom:1px solid var(--brass-dark);padding-bottom:8px;}
+  #B .row{
+    display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:7px;cursor:pointer;
+    background:rgba(239,230,205,.85);border:1px solid var(--brass-dark);margin-bottom:9px;
+  }
+  #B .row:hover{background:#fff;}
+  #B .row .icon{width:34px;height:34px;border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(160deg,#b7a674,#9c8a5c);color:#5a4c33;font-size:18px;}
+  #B .row .nm{font-weight:bold;font-size:14px;}
+  #B .row .tx{font-size:11.5px;color:var(--ink-soft);}
+  #B .row .act{margin-left:auto;font-size:20px;color:var(--copper);}
+  #B .budget{margin-bottom:14px;}
+  #B .meter{height:16px;border-radius:9px;background:rgba(0,0,0,.30);border:1px solid var(--brass-dark);overflow:hidden;}
+  #B .meter > span{display:block;height:100%;background:linear-gradient(90deg,var(--brass),var(--copper));transition:width .18s;}
+  #B .over{color:var(--red);}
+  #B .picklist .row{background:rgba(158,43,37,.08);}
+  #B .empty{color:var(--parch3);font-size:13px;font-style:italic;padding:8px 2px;}
+
+  /* ===== Variant C: Field commission — single narrative fork ===== */
+  #C .stage{max-width:560px;margin:26px auto 0;text-align:center;}
+  #C .feature{margin:0 auto;width:300px;}
+  #C .feature .card{width:300px;box-shadow:0 0 0 2px var(--gold),0 14px 40px rgba(212,175,55,.35),0 18px 40px rgba(0,0,0,.5);}
+  #C .flavor{color:var(--parch2);font-style:italic;font-size:15px;line-height:1.6;margin:18px auto;max-width:460px;}
+  #C .rec{color:var(--gold);font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-top:6px;}
+  #C .forks{display:flex;flex-direction:column;gap:12px;margin:26px auto 0;max-width:460px;}
+  #C .fork{
+    display:flex;align-items:center;gap:14px;text-align:left;cursor:pointer;
+    background:linear-gradient(170deg,rgba(232,220,192,.14),rgba(232,220,192,.05));
+    border:1px solid var(--brass-dark);border-radius:9px;padding:14px 16px;color:var(--parch);
+    font-family:inherit;font-size:15px;
+  }
+  #C .fork:hover{background:rgba(232,220,192,.20);}
+  #C .fork.sel{outline:2px solid var(--gold);}
+  #C .fork .k{width:40px;height:40px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:rgba(212,175,55,.15);border:1px solid var(--gold);color:var(--gold);font-size:20px;}
+  #C .fork small{display:block;color:var(--parch3);font-size:12.5px;margin-top:2px;}
+  #C .confirm{margin-top:22px;}
+
+  .chosen-toast{
+    position:fixed;left:50%;transform:translateX(-50%);bottom:74px;
+    background:var(--felt);color:var(--parch);border:1px solid var(--gold);
+    padding:10px 18px;border-radius:8px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.5);
+    opacity:0;transition:opacity .2s;pointer-events:none;z-index:40;
+  }
+  .chosen-toast.show{opacity:1;}
+
+  /* floating switcher */
+  #switcher{
+    position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
+    display:flex;align-items:center;gap:10px;z-index:50;
+    background:#17130a;border:1px solid var(--gold);border-radius:30px;
+    padding:8px 12px;box-shadow:0 8px 24px rgba(0,0,0,.6);color:var(--parch);
+  }
+  #switcher button{background:var(--brass);border:none;color:#241d10;width:30px;height:30px;border-radius:50%;
+    cursor:pointer;font-size:16px;font-family:inherit;}
+  #switcher .lbl{min-width:230px;text-align:center;font-size:13px;letter-spacing:.5px;}
+  #switcher .lbl b{color:var(--gold);}
+  #switcher .tag{font-size:10px;letter-spacing:2px;color:var(--copper);text-transform:uppercase;}
+</style>
+</head>
+<body>
+
+<!-- ============ VARIANT A: SPOILS FAN ============ -->
+<section id="A" class="screen hidden">
+  <div class="resultbar">
+    <div>
+      <div class="verdict">Victory · Skirmish won</div>
+      <h1>Spoils of War</h1>
+    </div>
+    <div class="node">Cleared node <b>The Redoubt</b><br>Run 1 · Battle 3 of 8</div>
+  </div>
+  <div class="lead">Choose <b>one</b> card to add to your catalog.</div>
+  <div class="fan" id="A-fan"></div>
+  <div class="catbadge" id="A-cat">Catalog: 18 cards · Battalion: 16/16</div>
+  <div class="tray">
+    <button class="skip" id="A-skip">Skip — take 25 supply instead</button>
+    <button class="btn" id="A-confirm" disabled>Add to catalog</button>
+  </div>
+</section>
+
+<!-- ============ VARIANT B: WAR-TABLE DRAFT LEDGER ============ -->
+<section id="B" class="screen hidden">
+  <div class="resultbar">
+    <div>
+      <div class="verdict">Victory · Requisition</div>
+      <h1>Field Requisition</h1>
+    </div>
+    <div class="node">Cleared node <b>The Redoubt</b><br>Run 1 · Battle 3 of 8</div>
+  </div>
+  <div class="grid">
+    <div class="panel">
+      <h2>Reward pool — claim as many as your budget allows</h2>
+      <div id="B-pool"></div>
+    </div>
+    <div class="panel">
+      <h2>Your battalion</h2>
+      <div class="budget">
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--parch2);margin-bottom:6px;">
+          <span>Army points</span><span id="B-apnum">42 / 60</span>
+        </div>
+        <div class="meter"><span id="B-bar" style="width:70%"></span></div>
+      </div>
+      <div id="B-picks"><div class="empty">No cards claimed yet.</div></div>
+      <button class="btn" id="B-confirm" style="width:100%;margin-top:10px">Confirm requisition</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VARIANT C: FIELD COMMISSION (single fork) ============ -->
+<section id="C" class="screen hidden">
+  <div class="resultbar">
+    <div>
+      <div class="verdict">Victory · A courier arrives</div>
+      <h1>Field Commission</h1>
+    </div>
+    <div class="node">Cleared node <b>The Redoubt</b><br>Run 1 · Battle 3 of 8</div>
+  </div>
+  <div class="stage">
+    <div class="feature" id="C-feature"></div>
+    <div class="rec">Quartermaster recommends</div>
+    <p class="flavor" id="C-flavor"></p>
+    <div class="forks" id="C-forks"></div>
+    <div class="confirm">
+      <button class="btn" id="C-confirm" disabled>Take this</button>
+    </div>
+  </div>
+</section>
+
+<div class="chosen-toast" id="toast"></div>
+
+<div id="switcher">
+  <button id="prev">‹</button>
+  <div class="lbl"><span class="tag">Rewards / draft #248</span><br><b id="sw-key">A</b> — <span id="sw-name"></span></div>
+  <button id="next">›</button>
+</div>
+
+<script>
+// ---- real WoA cards (name/text from content/decks/default.js). AP cost is an
+// illustrative yardstick per ADR-0002 — not the real weights. ----
+const CARDS = {
+  conscription:   {name:'Conscription',      icon:'⚔', ap:12, rar:'rare',   text:'Place two Infantry adjacent to a controlled hex, in sequence.'},
+  mass_assault:   {name:'Mass Assault',      icon:'💥', ap:14, rar:'elite',  text:'Order an attack. Then order another attack.'},
+  airdrop:        {name:'Airdrop',           icon:'🪂', ap:11, rar:'rare',   text:'Place an Infantry on ANY empty hex. Never in your opening hand.'},
+  ordered_withdraw:{name:'Ordered Withdraw', icon:'🛡', ap:9,  rar:'common', text:'Attack; your attacker survives a tie and never advances.'},
+  naval_barrage:  {name:'Naval Barrage',     icon:'🌊', ap:13, rar:'elite',  text:'Remove any trench or forest (optional). Then order an attack.'},
+  forced_march:   {name:'Forced March',      icon:'🥾', ap:8,  rar:'common', text:'Reposition up to three times, in sequence.'},
+  attack_plus1:   {name:'Attack +1',         icon:'➕', ap:7,  rar:'common', text:'Order an attack with +1 support.'},
+  deploy_cavalry: {name:'Deploy Cavalry',    icon:'🐎', ap:10, rar:'rare',   text:'Place two Cavalry adjacent to a controlled hex, in sequence.'},
+};
+const el = (t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+function cardFace(id, opts={}){
+  const c=CARDS[id];
+  const div=el('div','card');
+  div.innerHTML =
+    `<div class="banner"><span class="nm">${c.name}</span><span class="ap">◈ ${c.ap} AP</span></div>`+
+    `<div class="art">${c.icon}</div>`+
+    `<div class="body"><div class="text">${c.text}</div></div>`+
+    `<div class="foot"><span class="rar ${c.rar}">${c.rar}</span>${opts.footRight||''}</div>`;
+  return div;
+}
+function toast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1900);
+}
+
+// ---------- Variant A ----------
+(function(){
+  const offer=['conscription','naval_barrage','forced_march'];
+  const fan=document.getElementById('A-fan');let picked=null;
+  offer.forEach(id=>{
+    const c=cardFace(id);c.dataset.id=id;
+    c.onclick=()=>{picked=id;[...fan.children].forEach(x=>x.classList.toggle('picked',x===c));
+      document.getElementById('A-confirm').disabled=false;};
+    fan.appendChild(c);
+  });
+  document.getElementById('A-confirm').onclick=()=>picked&&toast(`Added ${CARDS[picked].name} to your catalog (19 cards).`);
+  document.getElementById('A-skip').onclick=()=>toast('Skipped the draft — +25 supply banked.');
+})();
+
+// ---------- Variant B ----------
+(function(){
+  const pool=['conscription','mass_assault','airdrop','ordered_withdraw','attack_plus1','deploy_cavalry'];
+  const BUDGET=60; let spent=42; let claimed=[];
+  const poolEl=document.getElementById('B-pool'),picksEl=document.getElementById('B-picks');
+  function render(){
+    poolEl.innerHTML='';
+    pool.filter(id=>!claimed.includes(id)).forEach(id=>{
+      const c=CARDS[id];const r=el('div','row');
+      r.innerHTML=`<div class="icon">${c.icon}</div><div><div class="nm">${c.name} <span class="ap">◈${c.ap}</span></div><div class="tx">${c.text}</div></div><div class="act">＋</div>`;
+      r.onclick=()=>{ if(spent+c.ap>BUDGET){toast('Over budget — drop something first.');return;} claimed.push(id);spent+=c.ap;render(); };
+      poolEl.appendChild(r);
+    });
+    picksEl.innerHTML='';
+    if(!claimed.length) picksEl.innerHTML='<div class="empty">No cards claimed yet.</div>';
+    picksEl.classList.add('picklist');
+    claimed.forEach(id=>{
+      const c=CARDS[id];const r=el('div','row');
+      r.innerHTML=`<div class="icon">${c.icon}</div><div><div class="nm">${c.name} <span class="ap">◈${c.ap}</span></div></div><div class="act">✕</div>`;
+      r.onclick=()=>{claimed=claimed.filter(x=>x!==id);spent-=c.ap;render();};
+      picksEl.appendChild(r);
+    });
+    const pct=Math.min(100,spent/BUDGET*100);
+    document.getElementById('B-bar').style.width=pct+'%';
+    const num=document.getElementById('B-apnum');num.textContent=`${spent} / ${BUDGET}`;
+    num.className=spent>BUDGET?'over':'';
+  }
+  document.getElementById('B-confirm').onclick=()=>toast(`Requisitioned ${claimed.length} card(s) · ${spent}/${BUDGET} AP committed.`);
+  render();
+})();
+
+// ---------- Variant C ----------
+(function(){
+  const featId='mass_assault';
+  document.getElementById('C-feature').appendChild(cardFace(featId));
+  document.getElementById('C-flavor').textContent =
+    '"The line broke at dawn. Command offers you a veteran assault doctrine — or the supplies to keep the men fed. One or the other; the wagons leave at noon."';
+  const forks=[
+    {k:'⚔', id:'card',   t:`Take ${CARDS[featId].name}`, s:`Add this elite card to your catalog · costs ◈${CARDS[featId].ap} AP to field`},
+    {k:'🌾', id:'supply', t:'Take 40 supply',            s:'Heal your battalion + bank resources for the shop'},
+    {k:'◈',  id:'bank',   t:'Bank 15 army points',       s:'Raise your battalion budget for future battles'},
+  ];
+  const wrap=document.getElementById('C-forks');let sel=null;
+  forks.forEach(f=>{
+    const b=el('button','fork');b.innerHTML=`<span class="k">${f.k}</span><span>${f.t}<small>${f.s}</small></span>`;
+    b.onclick=()=>{sel=f;[...wrap.children].forEach(x=>x.classList.toggle('sel',x===b));
+      document.getElementById('C-confirm').disabled=false;
+      document.getElementById('C-confirm').textContent = f.id==='card'?'Take this card':'Take this';};
+    wrap.appendChild(b);
+  });
+  document.getElementById('C-confirm').onclick=()=>sel&&toast(sel.id==='card'?`Added ${CARDS[featId].name} to your catalog.`:`Chose: ${sel.t}.`);
+})();
+
+// ---------- switcher ----------
+const VARIANTS=[
+  {key:'A',name:'Spoils fan — pick 1 of 3'},
+  {key:'B',name:'War-table ledger — draft to budget'},
+  {key:'C',name:'Field commission — single fork'},
+];
+function show(key){
+  VARIANTS.forEach(v=>document.getElementById(v.key).classList.toggle('hidden',v.key!==key));
+  const v=VARIANTS.find(x=>x.key===key)||VARIANTS[0];
+  document.getElementById('sw-key').textContent=v.key;
+  document.getElementById('sw-name').textContent=v.name;
+  const u=new URL(location);u.searchParams.set('variant',v.key);history.replaceState(null,'',u);
+}
+function cycle(d){
+  const cur=new URL(location).searchParams.get('variant')||'A';
+  let i=VARIANTS.findIndex(v=>v.key===cur);if(i<0)i=0;
+  show(VARIANTS[(i+d+VARIANTS.length)%VARIANTS.length].key);
+}
+document.getElementById('prev').onclick=()=>cycle(-1);
+document.getElementById('next').onclick=()=>cycle(1);
+addEventListener('keydown',e=>{
+  const t=e.target.tagName;if(t==='INPUT'||t==='TEXTAREA'||e.target.isContentEditable)return;
+  if(e.key==='ArrowLeft')cycle(-1);if(e.key==='ArrowRight')cycle(1);
+});
+show(new URL(location).searchParams.get('variant')||'A');
+</script>
+</body>
+</html>
