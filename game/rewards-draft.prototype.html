@@ -6,233 +6,178 @@
 <title>WoA · Rewards/Draft prototype (#248)</title>
 <!--
   NAPKIN PROTOTYPE — issue #248. THROWAWAY, do not ship.
-  Question: what should the post-battle rewards / card-draft screen look like?
-  (The run-flow slot from the partition spec #238; card source is the shared
-  pool owned by Content model & catalog #240.)
+  Question: what should the post-battle reward / card-upgrade screen look like?
 
-  Three structurally-different variants of the SAME screen, switchable via
-  ?variant=A|B|C and the floating bar at the bottom. Real WoA cards, real
-  palette. No persistence, no engine wiring — react to the shape, not the code.
+  Confirmed model (grilling on #248, feeds #240):
+    Catalog  ⊇ Battalion ⊇ Deck(fielded)
+    - Reward (phase ①, THIS ticket) draws from the Catalog and UPGRADES-IN-PLACE
+      your Battalion (occasionally ADDS a card). Never blocks on the AP budget.
+    - Build phase (phase ③, → #240 battalion builder) gates Battalion→Deck by an
+      army-points cap (~17) with room for ~20 owned; over-cap is reconciled by
+      BENCHING. Two screens / two actions so the reward never gridlocks.
+    - Story/narrative framing: PUNTED (old variant C dropped, out of scope).
+
+  Variant A = phase ① (this ticket). Variant B = phase ③ (shown for the handoff;
+  its real home is #240). Real WoA cards + palette. AP points are ILLUSTRATIVE
+  (ADR-0002 is a descriptive yardstick — not refit here). No engine wiring.
+  Switch: floating bar, ←/→ keys, or ?variant=A|B.
 -->
 <style>
   :root{
-    --parch:#e8dcc0; --parch2:#dccfae; --parch3:#cfc09a; --parch-deep:#d8caa2;
+    --parch:#e8dcc0; --parch2:#dccfae; --parch3:#cfc09a;
     --ink:#3a2f1d; --ink-soft:#5a4c33;
     --brass:#b08d57; --brass-dark:#8a6c3c; --copper:#9c5f3a;
-    --red:#9e2b25; --red-dark:#6f1d19; --blue:#28527a;
-    --gold:#d4af37; --felt:#2e3a2e; --parch-panel:#efe6cd;
+    --red:#9e2b25; --blue:#28527a; --gold:#d4af37; --felt:#2e3a2e;
+    --parch-panel:#efe6cd; --green:#4a7c3a;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;height:100%;}
   body{
     font-family:Georgia,'Times New Roman',serif; color:var(--ink);
-    background:
-      radial-gradient(1200px 700px at 50% -10%, #3d3424, #241d10 70%),
-      #201a0e;
+    background:radial-gradient(1200px 700px at 50% -10%, #3d3424, #241d10 70%), #201a0e;
     min-height:100%;
   }
   .screen{max-width:1180px;margin:0 auto;padding:26px 22px 120px;}
   .hidden{display:none;}
 
-  /* shared header ribbon: the battle result banner */
   .resultbar{
     display:flex;align-items:center;gap:16px;
     background:linear-gradient(180deg, rgba(232,220,192,.16), rgba(232,220,192,.05));
-    border:1px solid var(--brass-dark);border-radius:8px;
-    padding:12px 18px;color:var(--parch);
+    border:1px solid var(--brass-dark);border-radius:8px;padding:12px 18px;color:var(--parch);
   }
-  .resultbar .verdict{
-    font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);
-  }
+  .resultbar .verdict{font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);}
   .resultbar h1{margin:2px 0 0;font-size:26px;color:#fff;font-weight:normal;letter-spacing:1px;}
   .resultbar .node{margin-left:auto;text-align:right;color:var(--parch3);font-size:13px;}
   .resultbar .node b{color:var(--parch);font-size:15px;}
 
   /* card face */
-  .card{
-    position:relative;border-radius:9px;overflow:hidden;
+  .card{position:relative;border-radius:9px;overflow:hidden;
     background:linear-gradient(175deg,var(--parch-panel),var(--parch3));
-    border:1px solid var(--brass-dark);
-    box-shadow:0 6px 16px rgba(0,0,0,.45);
-    display:flex;flex-direction:column;
-  }
-  .card .banner{
-    background:linear-gradient(180deg,#c8a368,var(--brass),var(--brass-dark));
-    color:#241d10;padding:8px 10px;font-weight:bold;letter-spacing:.3px;
-    display:flex;justify-content:space-between;align-items:center;gap:8px;
-    border-bottom:1px solid var(--brass-dark);
-  }
+    border:1px solid var(--brass-dark);box-shadow:0 6px 16px rgba(0,0,0,.45);
+    display:flex;flex-direction:column;}
+  .card .banner{background:linear-gradient(180deg,#c8a368,var(--brass),var(--brass-dark));
+    color:#241d10;padding:8px 10px;font-weight:bold;display:flex;justify-content:space-between;
+    align-items:center;gap:8px;border-bottom:1px solid var(--brass-dark);}
   .card .banner .nm{font-size:15px;}
-  .card .art{
-    height:118px;display:flex;align-items:center;justify-content:center;
-    background:
-      repeating-linear-gradient(45deg, rgba(120,90,40,.10) 0 8px, transparent 8px 16px),
-      linear-gradient(160deg,#b7a674,#9c8a5c);
-    color:#5a4c33;font-size:34px;
-  }
+  .card .art{height:104px;display:flex;align-items:center;justify-content:center;
+    background:repeating-linear-gradient(45deg, rgba(120,90,40,.10) 0 8px, transparent 8px 16px),
+      linear-gradient(160deg,#b7a674,#9c8a5c);color:#5a4c33;font-size:32px;}
   .card .body{padding:10px 12px;flex:1;}
   .card .text{font-size:13px;line-height:1.45;color:var(--ink-soft);}
-  .card .foot{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:8px 12px;border-top:1px dashed var(--brass-dark);font-size:12px;color:var(--ink-soft);
-  }
-  .ap{
-    display:inline-flex;align-items:center;gap:5px;
-    background:rgba(158,43,37,.10);border:1px solid var(--copper);
-    color:var(--copper);border-radius:12px;padding:2px 9px;font-weight:bold;font-size:12px;
-  }
-  .rar{font-size:11px;letter-spacing:2px;text-transform:uppercase;}
-  .rar.common{color:#7a6c4c;} .rar.rare{color:#2f6ea0;} .rar.elite{color:#9c5f3a;}
+  .card .foot{display:flex;justify-content:space-between;align-items:center;
+    padding:8px 12px;border-top:1px dashed var(--brass-dark);font-size:12px;color:var(--ink-soft);}
+  .ap{display:inline-flex;align-items:center;gap:4px;background:rgba(158,43,37,.10);
+    border:1px solid var(--copper);color:var(--copper);border-radius:12px;padding:2px 8px;font-weight:bold;font-size:12px;}
+  .apdelta{color:var(--red);font-weight:bold;}
 
-  .btn{
-    font-family:inherit;cursor:pointer;border:none;border-radius:7px;
-    padding:9px 16px;font-size:15px;color:#241d10;
-    background:linear-gradient(180deg,#c8a368,var(--brass),var(--brass-dark));
-    box-shadow:0 3px 8px rgba(0,0,0,.35);
-  }
+  .btn{font-family:inherit;cursor:pointer;border:none;border-radius:7px;padding:9px 16px;font-size:15px;
+    color:#241d10;background:linear-gradient(180deg,#c8a368,var(--brass),var(--brass-dark));box-shadow:0 3px 8px rgba(0,0,0,.35);}
   .btn.ghost{background:transparent;color:var(--parch);border:1px solid var(--brass);box-shadow:none;}
   .btn:disabled{opacity:.45;cursor:default;}
   .lead{color:var(--parch2);font-size:15px;margin:18px 2px 8px;letter-spacing:.3px;}
-  .muted{color:var(--parch3);}
 
-  /* ===== Variant A: Spoils fan — pick one of three ===== */
-  #A .fan{display:flex;gap:22px;justify-content:center;margin-top:22px;flex-wrap:wrap;}
-  #A .card{width:250px;cursor:pointer;transition:transform .12s, box-shadow .12s;}
-  #A .card:hover{transform:translateY(-8px);box-shadow:0 14px 30px rgba(0,0,0,.55);}
-  #A .card.picked{outline:3px solid var(--gold);transform:translateY(-8px);}
-  #A .tray{display:flex;justify-content:center;gap:14px;margin-top:30px;align-items:center;}
-  #A .skip{color:var(--parch3);text-decoration:underline;cursor:pointer;font-size:14px;background:none;border:none;font-family:inherit;}
-  #A .catbadge{color:var(--parch3);font-size:13px;text-align:center;margin-top:12px;}
+  /* ===== Variant A: Field Promotion — pick one upgrade ===== */
+  #A .fan{display:flex;gap:22px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+  #A .offer{width:250px;cursor:pointer;transition:transform .12s, box-shadow .12s;position:relative;}
+  #A .offer:hover{transform:translateY(-8px);}
+  #A .offer.picked .card{outline:3px solid var(--gold);}
+  #A .offer.picked{transform:translateY(-8px);}
+  #A .kindtag{position:absolute;top:-11px;left:50%;transform:translateX(-50%);z-index:2;
+    font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:12px;white-space:nowrap;
+    box-shadow:0 2px 6px rgba(0,0,0,.4);}
+  #A .kindtag.up{background:var(--green);color:#eaf4e2;border:1px solid #2f5a22;}
+  #A .kindtag.add{background:var(--blue);color:#e2ecf6;border:1px solid #1b3a59;}
+  #A .replaces{margin-top:8px;font-size:12px;color:var(--parch3);text-align:center;}
+  #A .replaces b{color:var(--parch);}
+  #A .tray{display:flex;justify-content:center;gap:16px;margin-top:26px;align-items:center;}
+  #A .decline{color:var(--parch3);text-decoration:underline;cursor:pointer;font-size:14px;background:none;border:none;font-family:inherit;}
+  #A .status{color:var(--parch3);font-size:13px;text-align:center;margin-top:14px;}
+  #A .status b{color:var(--parch);}
+  #A .status .warn{color:var(--gold);}
 
-  /* ===== Variant B: War-table draft ledger — two panels + budget ===== */
-  #B .grid{display:grid;grid-template-columns:1fr 360px;gap:22px;margin-top:18px;align-items:start;}
+  /* ===== Variant B: Battalion finalize — field to the cap ===== */
+  #B .subhead{color:var(--parch3);font-size:13px;margin:4px 2px 0;}
+  #B .grid{display:grid;grid-template-columns:1fr 320px;gap:22px;margin-top:16px;align-items:start;}
   #B .panel{background:linear-gradient(170deg,rgba(232,220,192,.14),rgba(232,220,192,.05));
     border:1px solid var(--brass-dark);border-radius:9px;padding:14px;}
-  #B .panel h2{margin:0 0 10px;color:var(--parch);font-weight:normal;font-size:16px;letter-spacing:1px;
-    text-transform:uppercase;border-bottom:1px solid var(--brass-dark);padding-bottom:8px;}
-  #B .row{
-    display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:7px;cursor:pointer;
-    background:rgba(239,230,205,.85);border:1px solid var(--brass-dark);margin-bottom:9px;
-  }
-  #B .row:hover{background:#fff;}
-  #B .row .icon{width:34px;height:34px;border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;
-    background:linear-gradient(160deg,#b7a674,#9c8a5c);color:#5a4c33;font-size:18px;}
+  #B .panel h2{margin:0 0 4px;color:var(--parch);font-weight:normal;font-size:15px;letter-spacing:1px;
+    text-transform:uppercase;}
+  #B .hint{color:var(--parch3);font-size:12px;margin-bottom:10px;}
+  #B .row{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:7px;cursor:pointer;
+    background:rgba(239,230,205,.9);border:1px solid var(--brass-dark);margin-bottom:8px;}
+  #B .row.benched{background:rgba(120,90,40,.14);opacity:.72;}
+  #B .row .icon{width:30px;height:30px;border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(160deg,#b7a674,#9c8a5c);color:#5a4c33;font-size:16px;}
   #B .row .nm{font-weight:bold;font-size:14px;}
-  #B .row .tx{font-size:11.5px;color:var(--ink-soft);}
-  #B .row .act{margin-left:auto;font-size:20px;color:var(--copper);}
-  #B .budget{margin-bottom:14px;}
-  #B .meter{height:16px;border-radius:9px;background:rgba(0,0,0,.30);border:1px solid var(--brass-dark);overflow:hidden;}
+  #B .row .pts{font-size:11px;color:var(--copper);font-weight:bold;}
+  #B .row .toggle{margin-left:auto;font-size:12px;padding:3px 9px;border-radius:11px;border:1px solid var(--brass-dark);}
+  #B .row.fielded .toggle{background:var(--green);color:#eaf4e2;border-color:#2f5a22;}
+  #B .row.benched .toggle{background:transparent;color:var(--parch3);}
+  #B .meterwrap{margin-bottom:12px;}
+  #B .meter{height:18px;border-radius:9px;background:rgba(0,0,0,.30);border:1px solid var(--brass-dark);overflow:hidden;position:relative;}
   #B .meter > span{display:block;height:100%;background:linear-gradient(90deg,var(--brass),var(--copper));transition:width .18s;}
-  #B .over{color:var(--red);}
-  #B .picklist .row{background:rgba(158,43,37,.08);}
-  #B .empty{color:var(--parch3);font-size:13px;font-style:italic;padding:8px 2px;}
+  #B .meter.over > span{background:linear-gradient(90deg,var(--copper),var(--red));}
+  #B .apline{display:flex;justify-content:space-between;font-size:13px;color:var(--parch2);margin-bottom:6px;}
+  #B .apline .over{color:var(--red);font-weight:bold;}
+  #B .counts{color:var(--parch3);font-size:12px;margin:2px 0 12px;}
 
-  /* ===== Variant C: Field commission — single narrative fork ===== */
-  #C .stage{max-width:560px;margin:26px auto 0;text-align:center;}
-  #C .feature{margin:0 auto;width:300px;}
-  #C .feature .card{width:300px;box-shadow:0 0 0 2px var(--gold),0 14px 40px rgba(212,175,55,.35),0 18px 40px rgba(0,0,0,.5);}
-  #C .flavor{color:var(--parch2);font-style:italic;font-size:15px;line-height:1.6;margin:18px auto;max-width:460px;}
-  #C .rec{color:var(--gold);font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-top:6px;}
-  #C .forks{display:flex;flex-direction:column;gap:12px;margin:26px auto 0;max-width:460px;}
-  #C .fork{
-    display:flex;align-items:center;gap:14px;text-align:left;cursor:pointer;
-    background:linear-gradient(170deg,rgba(232,220,192,.14),rgba(232,220,192,.05));
-    border:1px solid var(--brass-dark);border-radius:9px;padding:14px 16px;color:var(--parch);
-    font-family:inherit;font-size:15px;
-  }
-  #C .fork:hover{background:rgba(232,220,192,.20);}
-  #C .fork.sel{outline:2px solid var(--gold);}
-  #C .fork .k{width:40px;height:40px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;
-    background:rgba(212,175,55,.15);border:1px solid var(--gold);color:var(--gold);font-size:20px;}
-  #C .fork small{display:block;color:var(--parch3);font-size:12.5px;margin-top:2px;}
-  #C .confirm{margin-top:22px;}
-
-  .chosen-toast{
-    position:fixed;left:50%;transform:translateX(-50%);bottom:74px;
-    background:var(--felt);color:var(--parch);border:1px solid var(--gold);
-    padding:10px 18px;border-radius:8px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.5);
-    opacity:0;transition:opacity .2s;pointer-events:none;z-index:40;
-  }
+  .chosen-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:74px;background:var(--felt);color:var(--parch);
+    border:1px solid var(--gold);padding:10px 18px;border-radius:8px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.5);
+    opacity:0;transition:opacity .2s;pointer-events:none;z-index:40;}
   .chosen-toast.show{opacity:1;}
 
-  /* floating switcher */
-  #switcher{
-    position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
-    display:flex;align-items:center;gap:10px;z-index:50;
-    background:#17130a;border:1px solid var(--gold);border-radius:30px;
-    padding:8px 12px;box-shadow:0 8px 24px rgba(0,0,0,.6);color:var(--parch);
-  }
-  #switcher button{background:var(--brass);border:none;color:#241d10;width:30px;height:30px;border-radius:50%;
-    cursor:pointer;font-size:16px;font-family:inherit;}
-  #switcher .lbl{min-width:230px;text-align:center;font-size:13px;letter-spacing:.5px;}
+  #switcher{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;z-index:50;
+    background:#17130a;border:1px solid var(--gold);border-radius:30px;padding:8px 12px;box-shadow:0 8px 24px rgba(0,0,0,.6);color:var(--parch);}
+  #switcher button{background:var(--brass);border:none;color:#241d10;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;font-family:inherit;}
+  #switcher .lbl{min-width:250px;text-align:center;font-size:13px;letter-spacing:.5px;}
   #switcher .lbl b{color:var(--gold);}
   #switcher .tag{font-size:10px;letter-spacing:2px;color:var(--copper);text-transform:uppercase;}
 </style>
 </head>
 <body>
 
-<!-- ============ VARIANT A: SPOILS FAN ============ -->
+<!-- ============ VARIANT A: FIELD PROMOTION (phase ① reward) ============ -->
 <section id="A" class="screen hidden">
   <div class="resultbar">
     <div>
-      <div class="verdict">Victory · Skirmish won</div>
-      <h1>Spoils of War</h1>
+      <div class="verdict">Battle won · The line advances</div>
+      <h1>Field Promotion</h1>
     </div>
-    <div class="node">Cleared node <b>The Redoubt</b><br>Run 1 · Battle 3 of 8</div>
+    <div class="node">Cleared node <b>The Redoubt</b><br>Campaign · Battle 3 of 8</div>
   </div>
-  <div class="lead">Choose <b>one</b> card to add to your catalog.</div>
+  <div class="lead">Choose <b>one</b> promotion — it upgrades a card in your battalion (or adds a new one).</div>
   <div class="fan" id="A-fan"></div>
-  <div class="catbadge" id="A-cat">Catalog: 18 cards · Battalion: 16/16</div>
   <div class="tray">
-    <button class="skip" id="A-skip">Skip — take 25 supply instead</button>
-    <button class="btn" id="A-confirm" disabled>Add to catalog</button>
+    <button class="decline" id="A-decline">Decline — keep your battalion as-is</button>
+    <button class="btn" id="A-confirm" disabled>Confirm promotion</button>
   </div>
+  <div class="status" id="A-status"></div>
 </section>
 
-<!-- ============ VARIANT B: WAR-TABLE DRAFT LEDGER ============ -->
+<!-- ============ VARIANT B: BATTALION FINALIZE (phase ③ — home is #240) ============ -->
 <section id="B" class="screen hidden">
   <div class="resultbar">
     <div>
-      <div class="verdict">Victory · Requisition</div>
-      <h1>Field Requisition</h1>
+      <div class="verdict">Before the next Battle · Muster</div>
+      <h1>Finalize Battalion</h1>
     </div>
-    <div class="node">Cleared node <b>The Redoubt</b><br>Run 1 · Battle 3 of 8</div>
+    <div class="node">Marching to <b>The Causeway</b><br>Campaign · Battle 4 of 8</div>
   </div>
+  <div class="subhead">Field cards up to the army-points cap; bench the rest. (This screen's real home is the #240 battalion builder — shown here for the ①→③ handoff.)</div>
   <div class="grid">
     <div class="panel">
-      <h2>Reward pool — claim as many as your budget allows</h2>
-      <div id="B-pool"></div>
+      <h2>Your battalion</h2>
+      <div class="hint">Tap a card to field or bench it. You own more than you can field — that's the choice.</div>
+      <div id="B-list"></div>
     </div>
     <div class="panel">
-      <h2>Your battalion</h2>
-      <div class="budget">
-        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--parch2);margin-bottom:6px;">
-          <span>Army points</span><span id="B-apnum">42 / 60</span>
-        </div>
-        <div class="meter"><span id="B-bar" style="width:70%"></span></div>
+      <h2>Muster</h2>
+      <div class="meterwrap">
+        <div class="apline"><span>Army points fielded</span><span id="B-apnum">— / 17</span></div>
+        <div class="meter" id="B-meter"><span id="B-bar" style="width:0%"></span></div>
       </div>
-      <div id="B-picks"><div class="empty">No cards claimed yet.</div></div>
-      <button class="btn" id="B-confirm" style="width:100%;margin-top:10px">Confirm requisition</button>
-    </div>
-  </div>
-</section>
-
-<!-- ============ VARIANT C: FIELD COMMISSION (single fork) ============ -->
-<section id="C" class="screen hidden">
-  <div class="resultbar">
-    <div>
-      <div class="verdict">Victory · A courier arrives</div>
-      <h1>Field Commission</h1>
-    </div>
-    <div class="node">Cleared node <b>The Redoubt</b><br>Run 1 · Battle 3 of 8</div>
-  </div>
-  <div class="stage">
-    <div class="feature" id="C-feature"></div>
-    <div class="rec">Quartermaster recommends</div>
-    <p class="flavor" id="C-flavor"></p>
-    <div class="forks" id="C-forks"></div>
-    <div class="confirm">
-      <button class="btn" id="C-confirm" disabled>Take this</button>
+      <div class="counts" id="B-counts"></div>
+      <button class="btn" id="B-confirm" style="width:100%">March out</button>
     </div>
   </div>
 </section>
@@ -246,106 +191,109 @@
 </div>
 
 <script>
-// ---- real WoA cards (name/text from content/decks/default.js). AP cost is an
-// illustrative yardstick per ADR-0002 — not the real weights. ----
+// real WoA card names/text (content/decks/default.js). Points ILLUSTRATIVE (ADR-0002).
 const CARDS = {
-  conscription:   {name:'Conscription',      icon:'⚔', ap:12, rar:'rare',   text:'Place two Infantry adjacent to a controlled hex, in sequence.'},
-  mass_assault:   {name:'Mass Assault',      icon:'💥', ap:14, rar:'elite',  text:'Order an attack. Then order another attack.'},
-  airdrop:        {name:'Airdrop',           icon:'🪂', ap:11, rar:'rare',   text:'Place an Infantry on ANY empty hex. Never in your opening hand.'},
-  ordered_withdraw:{name:'Ordered Withdraw', icon:'🛡', ap:9,  rar:'common', text:'Attack; your attacker survives a tie and never advances.'},
-  naval_barrage:  {name:'Naval Barrage',     icon:'🌊', ap:13, rar:'elite',  text:'Remove any trench or forest (optional). Then order an attack.'},
-  forced_march:   {name:'Forced March',      icon:'🥾', ap:8,  rar:'common', text:'Reposition up to three times, in sequence.'},
-  attack_plus1:   {name:'Attack +1',         icon:'➕', ap:7,  rar:'common', text:'Order an attack with +1 support.'},
-  deploy_cavalry: {name:'Deploy Cavalry',    icon:'🐎', ap:10, rar:'rare',   text:'Place two Cavalry adjacent to a controlled hex, in sequence.'},
+  mass_assault:   {name:'Mass Assault',     icon:'💥', pts:3, text:'Order an attack. Then order another attack.'},
+  attack_plus1:   {name:'Attack +1',        icon:'➕', pts:2, text:'Order an attack with +1 support.'},
+  entrench:       {name:'Entrench',         icon:'⛏', pts:2, text:'Deploy an Infantry, then build a trench.'},
+  forced_march:   {name:'Forced March',     icon:'🥾', pts:2, text:'Reposition up to three times, in sequence.'},
+  conscription:   {name:'Conscription',     icon:'⚔', pts:2, text:'Place two Infantry adjacent to a controlled hex.'},
+  ordered_withdraw:{name:'Ordered Withdraw',icon:'🛡', pts:2, text:'Attack; your attacker survives a tie and never advances.'},
+  deploy_cavalry: {name:'Deploy Cavalry',   icon:'🐎', pts:3, text:'Place two Cavalry adjacent to a controlled hex.'},
+  deploy_inf:     {name:'Deploy Infantry',  icon:'🚶', pts:1, text:'Place an Infantry adjacent to a controlled hex.'},
+  // upgrade + add targets offered by the reward
+  creeping_barrage:{name:'Creeping Barrage',icon:'🎯', pts:5, text:'Remove a trench or forest, then order TWO attacks. (Upgrades Mass Assault.)'},
+  shock_troops:   {name:'Shock Troops',     icon:'⚡', pts:3, text:'Order an attack with +2 support. (Upgrades Attack +1.)'},
+  airdrop:        {name:'Airdrop',          icon:'🪂', pts:3, text:'Place an Infantry on ANY empty hex. Never in your opening hand.'},
 };
 const el = (t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
-function cardFace(id, opts={}){
-  const c=CARDS[id];
-  const div=el('div','card');
-  div.innerHTML =
-    `<div class="banner"><span class="nm">${c.name}</span><span class="ap">◈ ${c.ap} AP</span></div>`+
-    `<div class="art">${c.icon}</div>`+
-    `<div class="body"><div class="text">${c.text}</div></div>`+
-    `<div class="foot"><span class="rar ${c.rar}">${c.rar}</span>${opts.footRight||''}</div>`;
-  return div;
-}
-function toast(msg){
-  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
-  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1900);
-}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);}
 
-// ---------- Variant A ----------
+// ---------- Variant A: reward = pick one promotion ----------
 (function(){
-  const offer=['conscription','naval_barrage','forced_march'];
-  const fan=document.getElementById('A-fan');let picked=null;
-  offer.forEach(id=>{
-    const c=cardFace(id);c.dataset.id=id;
-    c.onclick=()=>{picked=id;[...fan.children].forEach(x=>x.classList.toggle('picked',x===c));
-      document.getElementById('A-confirm').disabled=false;};
-    fan.appendChild(c);
-  });
-  document.getElementById('A-confirm').onclick=()=>picked&&toast(`Added ${CARDS[picked].name} to your catalog (19 cards).`);
-  document.getElementById('A-skip').onclick=()=>toast('Skipped the draft — +25 supply banked.');
-})();
-
-// ---------- Variant B ----------
-(function(){
-  const pool=['conscription','mass_assault','airdrop','ordered_withdraw','attack_plus1','deploy_cavalry'];
-  const BUDGET=60; let spent=42; let claimed=[];
-  const poolEl=document.getElementById('B-pool'),picksEl=document.getElementById('B-picks');
-  function render(){
-    poolEl.innerHTML='';
-    pool.filter(id=>!claimed.includes(id)).forEach(id=>{
-      const c=CARDS[id];const r=el('div','row');
-      r.innerHTML=`<div class="icon">${c.icon}</div><div><div class="nm">${c.name} <span class="ap">◈${c.ap}</span></div><div class="tx">${c.text}</div></div><div class="act">＋</div>`;
-      r.onclick=()=>{ if(spent+c.ap>BUDGET){toast('Over budget — drop something first.');return;} claimed.push(id);spent+=c.ap;render(); };
-      poolEl.appendChild(r);
-    });
-    picksEl.innerHTML='';
-    if(!claimed.length) picksEl.innerHTML='<div class="empty">No cards claimed yet.</div>';
-    picksEl.classList.add('picklist');
-    claimed.forEach(id=>{
-      const c=CARDS[id];const r=el('div','row');
-      r.innerHTML=`<div class="icon">${c.icon}</div><div><div class="nm">${c.name} <span class="ap">◈${c.ap}</span></div></div><div class="act">✕</div>`;
-      r.onclick=()=>{claimed=claimed.filter(x=>x!==id);spent-=c.ap;render();};
-      picksEl.appendChild(r);
-    });
-    const pct=Math.min(100,spent/BUDGET*100);
-    document.getElementById('B-bar').style.width=pct+'%';
-    const num=document.getElementById('B-apnum');num.textContent=`${spent} / ${BUDGET}`;
-    num.className=spent>BUDGET?'over':'';
-  }
-  document.getElementById('B-confirm').onclick=()=>toast(`Requisitioned ${claimed.length} card(s) · ${spent}/${BUDGET} AP committed.`);
-  render();
-})();
-
-// ---------- Variant C ----------
-(function(){
-  const featId='mass_assault';
-  document.getElementById('C-feature').appendChild(cardFace(featId));
-  document.getElementById('C-flavor').textContent =
-    '"The line broke at dawn. Command offers you a veteran assault doctrine — or the supplies to keep the men fed. One or the other; the wagons leave at noon."';
-  const forks=[
-    {k:'⚔', id:'card',   t:`Take ${CARDS[featId].name}`, s:`Add this elite card to your catalog · costs ◈${CARDS[featId].ap} AP to field`},
-    {k:'🌾', id:'supply', t:'Take 40 supply',            s:'Heal your battalion + bank resources for the shop'},
-    {k:'◈',  id:'bank',   t:'Bank 15 army points',       s:'Raise your battalion budget for future battles'},
+  // two upgrades (know their base) + one net-add
+  const OFFERS = [
+    {id:'creeping_barrage', kind:'upgrade', base:'mass_assault'},
+    {id:'shock_troops',     kind:'upgrade', base:'attack_plus1'},
+    {id:'airdrop',          kind:'add'},
   ];
-  const wrap=document.getElementById('C-forks');let sel=null;
-  forks.forEach(f=>{
-    const b=el('button','fork');b.innerHTML=`<span class="k">${f.k}</span><span>${f.t}<small>${f.s}</small></span>`;
-    b.onclick=()=>{sel=f;[...wrap.children].forEach(x=>x.classList.toggle('sel',x===b));
-      document.getElementById('C-confirm').disabled=false;
-      document.getElementById('C-confirm').textContent = f.id==='card'?'Take this card':'Take this';};
-    wrap.appendChild(b);
+  const fan=document.getElementById('A-fan');let picked=null;
+  OFFERS.forEach(o=>{
+    const c=CARDS[o.id];const base=o.base?CARDS[o.base]:null;
+    const delta=base?c.pts-base.pts:c.pts;
+    const wrap=el('div','offer');wrap.dataset.k=o.kind;
+    wrap.innerHTML =
+      `<div class="kindtag ${o.kind==='upgrade'?'up':'add'}">${o.kind==='upgrade'?'▲ Upgrade':'✦ New card'}</div>`+
+      `<div class="card">`+
+        `<div class="banner"><span class="nm">${c.name}</span><span class="ap">◈ ${c.pts}</span></div>`+
+        `<div class="art">${c.icon}</div>`+
+        `<div class="body"><div class="text">${c.text}</div></div>`+
+        `<div class="foot"><span>${o.kind==='upgrade'?'replaces a card':'+1 to battalion'}</span>`+
+          `<span class="apdelta">◈ ${delta>=0?'+':''}${delta} AP</span></div>`+
+      `</div>`+
+      (base?`<div class="replaces">was <b>${base.name}</b> ◈${base.pts}</div>`:`<div class="replaces">adds to your battalion (now 17 cards)</div>`);
+    wrap.onclick=()=>{picked=o;[...fan.children].forEach(x=>x.classList.toggle('picked',x===wrap));
+      document.getElementById('A-confirm').disabled=false;renderStatus();};
+    fan.appendChild(wrap);
   });
-  document.getElementById('C-confirm').onclick=()=>sel&&toast(sel.id==='card'?`Added ${CARDS[featId].name} to your catalog.`:`Chose: ${sel.t}.`);
+  function renderStatus(){
+    const s=document.getElementById('A-status');
+    if(!picked){s.innerHTML='Battalion: <b>16 cards</b> · fielding <b>15 / 17 ◈</b> next Battle';return;}
+    const c=CARDS[picked.id];const base=picked.base?CARDS[picked.base]:null;
+    const newFielded = 15 + (base? (c.pts-base.pts) : c.pts);
+    const over = newFielded>17;
+    s.innerHTML = picked.kind==='upgrade'
+      ? `<b>${base.name}</b> → <b>${c.name}</b>. Fielded cost would be <b>${newFielded} ◈</b>`+
+        (over?` — <span class="warn">over the 17 cap; you'll bench something in Finalize (▶ B).</span>`:`, still under the 17 cap.`)
+      : `Adds <b>${c.name}</b> (battalion → 17 cards). `+
+        (over?`<span class="warn">Over the 17 cap — bench a card in Finalize (▶ B).</span>`:`Under the cap.`);
+  }
+  document.getElementById('A-confirm').onclick=()=>picked&&toast(
+    picked.kind==='upgrade'?`Promoted ${CARDS[picked.base].name} → ${CARDS[picked.id].name}.`:`Added ${CARDS[picked.id].name} to your battalion.`);
+  document.getElementById('A-decline').onclick=()=>toast('Declined — battalion unchanged.');
+  renderStatus();
+})();
+
+// ---------- Variant B: battalion finalize (field to cap ~17, room ~20) ----------
+(function(){
+  const CAP=17;
+  // ~20-card battalion; each entry can be fielded or benched
+  const battalion=[
+    {id:'creeping_barrage',f:true},{id:'mass_assault',f:false},{id:'shock_troops',f:true},
+    {id:'conscription',f:true},{id:'conscription',f:true},{id:'entrench',f:true},
+    {id:'entrench',f:true},{id:'deploy_cavalry',f:true},{id:'ordered_withdraw',f:true},
+    {id:'forced_march',f:true},{id:'attack_plus1',f:true},{id:'deploy_inf',f:true},
+    {id:'deploy_inf',f:true},{id:'airdrop',f:false},{id:'entrench',f:false},
+  ];
+  const listEl=document.getElementById('B-list');
+  function render(){
+    listEl.innerHTML='';
+    battalion.forEach((b,i)=>{
+      const c=CARDS[b.id];const r=el('div','row '+(b.f?'fielded':'benched'));
+      r.innerHTML=`<div class="icon">${c.icon}</div><div><div class="nm">${c.name} <span class="pts">◈${c.pts}</span></div></div>`+
+        `<div class="toggle">${b.f?'Fielded':'Benched'}</div>`;
+      r.onclick=()=>{b.f=!b.f;render();};
+      listEl.appendChild(r);
+    });
+    const fielded=battalion.filter(b=>b.f);
+    const spent=fielded.reduce((s,b)=>s+CARDS[b.id].pts,0);
+    const over=spent>CAP;
+    document.getElementById('B-bar').style.width=Math.min(100,spent/CAP*100)+'%';
+    document.getElementById('B-meter').classList.toggle('over',over);
+    const num=document.getElementById('B-apnum');num.innerHTML=`<span class="${over?'over':''}">${spent}</span> / ${CAP}`;
+    document.getElementById('B-counts').textContent=
+      `Battalion: ${battalion.length} owned · ${fielded.length} fielded · ${battalion.length-fielded.length} benched`;
+    const btn=document.getElementById('B-confirm');btn.disabled=over;btn.textContent=over?'Over cap — bench a card':'March out';
+  }
+  document.getElementById('B-confirm').onclick=()=>toast('Battalion mustered — marching to the next Battle.');
+  render();
 })();
 
 // ---------- switcher ----------
 const VARIANTS=[
-  {key:'A',name:'Spoils fan — pick 1 of 3'},
-  {key:'B',name:'War-table ledger — draft to budget'},
-  {key:'C',name:'Field commission — single fork'},
+  {key:'A',name:'Field Promotion — pick 1 upgrade (phase ①)'},
+  {key:'B',name:'Finalize Battalion — field to cap (phase ③ · #240)'},
 ];
 function show(key){
   VARIANTS.forEach(v=>document.getElementById(v.key).classList.toggle('hidden',v.key!==key));
