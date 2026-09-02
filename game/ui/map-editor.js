@@ -131,14 +131,11 @@ function renderEditor(){
       p.addEventListener('click', function(){ edRemoveHex(k); renderEditor(); });
     }
     gHex.appendChild(p);
-    var lbl = svgEl('text', { x: xy[0], y: xy[1]-S*0.58, 'text-anchor':'middle', 'class':'coordlbl', 'pointer-events':'none' });
-    lbl.textContent = E.hexLabel(k);
-    gHex.appendChild(lbl);
+    bpCoordLabel(gHex, xy[0], xy[1], E.hexLabel(k), S, 'none');
   });
   ghosts.forEach(function(k){
     var xy = hexXY(k);
-    var p = svgEl('polygon', { points: hexPoints(xy[0], xy[1], S-4),
-      fill:'rgba(255,255,255,.10)', stroke:'rgba(74,61,38,.5)', 'stroke-width':1.4, 'stroke-dasharray':'6 5' });
+    var p = bpGhostHex(gHex, xy[0], xy[1], S-4);
     p.style.cursor = 'pointer';
     p.addEventListener('click', function(){
       if (hexList.length >= 24){ toast('24 hexes is the ceiling (laser-cutter max — and big empty maps are not fun).', 3600); return; }
@@ -147,7 +144,6 @@ function renderEditor(){
     });
     p.addEventListener('mouseenter', function(){ p.setAttribute('fill','rgba(212,175,55,.28)'); });
     p.addEventListener('mouseleave', function(){ p.setAttribute('fill','rgba(255,255,255,.10)'); });
-    gHex.appendChild(p);
   });
   ['red','blue'].forEach(function(side){
     var hq = ED[side];
@@ -158,16 +154,12 @@ function renderEditor(){
   });
   edInternalSides().forEach(function(e){
     var ek = e[0] + '>' + e[1];
-    var c = hexXY(e[0]);
-    var aa = cornerAngles(e[1]);
-    var p1 = cornerPt(c[0],c[1],aa[0],S*0.8), p2 = cornerPt(c[0],c[1],aa[1],S*0.8);
     var t = ED.edges[ek];
-    if (t){
-      gTer.appendChild(svgEl('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
-        stroke: BOARD.terrainStroke(t), 'stroke-width':8, 'stroke-linecap':'round','pointer-events':'none'}));
-    }
+    // the editor draws the bare terrain STROKE (no glyph) at inset S*0.8; the
+    // shared mark owns colour/width/linecap. Empty sides get only the hit line.
+    if (t) bpTerrainStroke(gTer, e[0], e[1], t, { rad: S*0.8, pe: 'none', edgeData: false });
     if (ED.tool==='terrain'){
-      var hit = svgEl('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],'class':'edge-hit'});
+      var hit = bpEdgeHitLine(gHit, e[0], e[1], S*0.8);
       hit.addEventListener('click', function(){
         var cur = ED.edges[ek];
         if (!cur) ED.edges[ek] = 'F';
@@ -176,7 +168,6 @@ function renderEditor(){
         else delete ED.edges[ek];
         renderEditor();
       });
-      gHit.appendChild(hit);
     }
   });
   renderEdStock();

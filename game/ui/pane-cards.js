@@ -13,13 +13,10 @@
    Mirrors the Overview/Maps dual-run idiom throughout: A ghost/hollow, B
    solid/filled. */
 'use strict';
-// self-styled swatch for panes NOT wrapped in .chcard — the .chkey/.sw CSS is
-// scoped under .chcard (GOTCHA, WOA-042 mdHexLensSection); its own mdSw
-// helper is function-scoped there, so this is a top-level twin for the
-// dumbbell/strip sections below (which sit in plain .ov-grid, not .chcard).
-function crdSw(css) {
-  return '<span style="display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:4px;box-sizing:border-box;' + css + '"></span>';
-}
+// the Cards strip's swatch — the shared uiSwatch at its 11px size (the .chkey/.sw
+// CSS is scoped under .chcard, GOTCHA WOA-042, and these strips sit in plain
+// .ov-grid, so they need the inline-styled swatch, not the class).
+function crdSw(css) { return uiSwatch(css, { size: 11, valign: -1 }); }
 
 /* The Cards pane's data-shaping — per-run card view (cardRunView), fleet-wide
    fire-time quartiles (cardFleetFireTimes), and the whole-pane display model
@@ -51,8 +48,8 @@ function chartCardSightQuadrant(rows, maxPlays) {
   var pw = W - L - R, ph = H - T - B;
   function sx(v) { return L + v / 100 * pw; }
   function sy(v) { return T + (100 - v) / 100 * ph; }
-  var s = '<svg id="chCardQuad" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Card sight quadrant">';
-  s += '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="' + CHART.surface + '" rx="6"/>';
+  var s = chSvgOpen({ id: 'chCardQuad', vb: '0 0 ' + W + ' ' + H, role: 'img', aria: 'Card sight quadrant' });
+  s += chRect(0, 0, W, H, { fill: CHART.surface, rx: 6 });
   [0, 25, 75, 100].forEach(function (v) {
     s += chLine(sx(v), T, sx(v), T + ph, CHART.grid, 1);
     s += chLine(L, sy(v), L + pw, sy(v), CHART.grid, 1);
@@ -90,30 +87,30 @@ function chartCardSightQuadrant(rows, maxPlays) {
   pts.forEach(function (p, i) {
     var r = p.r, idA = 'chCq' + i + 'a', idB = 'chCq' + i + 'b', markIds = [];
     if (p.a && p.b) {
-      marks += '<line x1="' + p.a.x.toFixed(1) + '" y1="' + p.a.y.toFixed(1) + '" x2="' + p.b.x.toFixed(1) + '" y2="' + p.b.y.toFixed(1) +
-        '" stroke="' + CHART.axis + '" stroke-width="1.3"' + ((p.a.small || p.b.small) ? ' opacity="0.5"' : '') + '/>';
+      marks += chLine(p.a.x.toFixed(1), p.a.y.toFixed(1), p.b.x.toFixed(1), p.b.y.toFixed(1),
+        CHART.axis, 1.3, null, (p.a.small || p.b.small) ? '0.5' : null);
     }
     if (p.a) {
       markIds.push(idA);
-      marks += '<circle id="' + idA + '" cx="' + p.a.x.toFixed(1) + '" cy="' + p.a.y.toFixed(1) + '" r="' + p.rad.toFixed(1) +
-        '" fill="' + CHART.runADot + '" stroke="' + CHART.ink + '" stroke-width="2"' + (p.a.small ? ' opacity="0.5"' : '') + ' data-ring="' + CHART.ink + '"/>';
+      marks += chCircle({ id: idA, cx: p.a.x.toFixed(1), cy: p.a.y.toFixed(1), r: p.rad.toFixed(1),
+        fill: CHART.runADot, stroke: CHART.ink, sw: 2, opacity: p.a.small ? '0.5' : null, ring: CHART.ink });
     }
     if (p.b) {
       markIds.push(idB);
       var bRad = Math.max(4, p.rad - 1.5);
-      marks += '<circle id="' + idB + '" cx="' + p.b.x.toFixed(1) + '" cy="' + p.b.y.toFixed(1) + '" r="' + bRad.toFixed(1) +
-        '" fill="' + chDivFill(r.b.winHq - 50) + '" stroke="' + CHART.surface + '" stroke-width="2"' + (p.b.small ? ' opacity="0.5"' : '') + ' data-ring="' + CHART.surface + '"/>';
+      marks += chCircle({ id: idB, cx: p.b.x.toFixed(1), cy: p.b.y.toFixed(1), r: bRad.toFixed(1),
+        fill: chDivFill(r.b.winHq - 50), stroke: CHART.surface, sw: 2, opacity: p.b.small ? '0.5' : null, ring: CHART.surface });
     }
     var anchor = p.b || p.a;
     var pl = placer.place(anchor.x, anchor.y, p.rad, r.name, 10.5) || { x: anchor.x + p.rad + 4, y: anchor.y + 3.5 };
     labels += chText(pl.x, pl.y, r.name, { fs: 10.5, fill: CHART.ink });
-    hits += '<circle class="ch-hit" cx="' + anchor.x.toFixed(1) + '" cy="' + anchor.y.toFixed(1) + '" r="' + Math.max(p.rad + 6, 14) +
-      '" fill="transparent"' + chTipAttrs(r.name, [
+    hits += chCircle({ cls: 'ch-hit', cx: anchor.x.toFixed(1), cy: anchor.y.toFixed(1), r: Math.max(p.rad + 6, 14),
+      fill: 'transparent', extra: chTipAttrs(r.name, [
         ['win % A (HQ × non-simple)', r.a && r.a.winHq != null ? r.a.winHq + '% (n=' + r.a.winHqN + ')' : 'n/a'],
         ['win % B (HQ × non-simple)', r.b && r.b.winHq != null ? r.b.winHq + '% (n=' + r.b.winHqN + ')' : 'n/a'],
         ['1st-sight % A → B', (r.a ? r.a.sight : '—') + '% → ' + (r.b ? r.b.sight : '—') + '%'],
         ['plays A → B', (r.a ? r.a.plays : 0) + ' → ' + (r.b ? r.b.plays : 0)]
-      ], markIds.join(',')) + '/>';
+      ], markIds.join(',')) });
   });
   s += marks + chrome + labels + hits + '</svg>';
   return s;

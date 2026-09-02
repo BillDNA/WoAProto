@@ -98,9 +98,7 @@ function mpDrawFrame(f){
   list.forEach(function(k){
     var xy = mpXY(k), p = E.parseKey(k);
     svg.appendChild(bpHexPoly(xy[0], xy[1], MP_S-1, ((p[0]-p[1])%2+2)%2));
-    var lbl = svgEl('text', { x: xy[0], y: xy[1]-MP_S*0.58, 'text-anchor':'middle', 'class':'coordlbl' });
-    lbl.textContent = E.hexLabel(k);
-    svg.appendChild(lbl);
+    bpCoordLabel(svg, xy[0], xy[1], E.hexLabel(k), MP_S);
   });
 
   // attention halos go UNDER the terrain/trench lines they highlight
@@ -120,39 +118,17 @@ function mpDrawFrame(f){
     });
   }
 
-  // terrain sides (hex-owned, inset — the live board's drawing at MP_S scale)
+  // terrain sides — the live board's terrain mark (bpTerrainEdge) at MP_S scale,
+  // its glyph sizes/line widths tuned for the mini board (no data-edge hover).
   for (var ek in st.terrainEdges){
-    var parts = ek.split('>'), d = +parts[1], c = mpXY(parts[0]);
-    var aa = cornerAngles(d);
-    var p1 = cornerPt(c[0],c[1],aa[0],MP_S*0.85), p2 = cornerPt(c[0],c[1],aa[1],MP_S*0.85);
-    var t = st.terrainEdges[ek];
-    svg.appendChild(svgEl('line', { x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
-      stroke: BOARD.terrainStroke(t), 'stroke-width': 6, 'stroke-linecap':'round' }));
-    var mx=(p1[0]+p2[0])/2, my=(p1[1]+p2[1])/2;
-    if (t==='R'){
-      svg.appendChild(svgEl('line',{x1:(p1[0]*0.7+mx*0.3), y1:(p1[1]*0.7+my*0.3), x2:(p2[0]*0.7+mx*0.3), y2:(p2[1]*0.7+my*0.3),
-        stroke:BOARD.riverCurrent,'stroke-width':1.8,'stroke-linecap':'round','stroke-dasharray':'5 4'}));
-    } else if (t==='F'){
-      svg.appendChild(svgEl('circle',{cx:mx, cy:my, r:3.4, fill:BOARD.forestGlyph}));
-      svg.appendChild(svgEl('circle',{cx:(p1[0]+mx)/2, cy:(p1[1]+my)/2, r:2.6, fill:BOARD.forestGlyph}));
-      svg.appendChild(svgEl('circle',{cx:(p2[0]+mx)/2, cy:(p2[1]+my)/2, r:2.6, fill:BOARD.forestGlyph}));
-    } else {
-      var ex = (p2[0]-p1[0]), eyy = (p2[1]-p1[1]);
-      var tri = [ [mx-ex*0.14, my-eyy*0.14], [mx+ex*0.14, my+eyy*0.14], [mx-(my-c[1])*0.18, my+(mx-c[0])*0.18] ];
-      svg.appendChild(svgEl('polygon',{points: tri.map(function(q){return q[0].toFixed(1)+','+q[1].toFixed(1);}).join(' '), fill:BOARD.mountainPeak}));
-    }
+    bpTerrainEdge(svg, ek, st.terrainEdges[ek],
+      { s:MP_S, sw:6, riverSW:1.8, riverDash:'5 4', forestR:3.4, forestR2:2.6, edgeData:false });
   }
 
-  // trenches
+  // trenches — the live board's trench mark (bpTrenchLine) at MP_S scale
   for (var th in st.trenches){
-    var tc = mpXY(th);
     st.trenches[th].forEach(function(tr){
-      tr.dirs.forEach(function(d2){
-        var aa2 = cornerAngles(d2);
-        var q1 = cornerPt(tc[0],tc[1],aa2[0],MP_S*0.74), q2 = cornerPt(tc[0],tc[1],aa2[1],MP_S*0.74);
-        svg.appendChild(svgEl('line',{x1:q1[0],y1:q1[1],x2:q2[0],y2:q2[1],
-          stroke:BOARD.trench,'stroke-width':5,'stroke-linecap':'round','stroke-dasharray':'5.5 3'}));
-      });
+      tr.dirs.forEach(function(d2){ bpTrenchLine(svg, th, d2, { s:MP_S, sw:5, dash:'5.5 3' }); });
     });
   }
 

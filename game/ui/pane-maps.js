@@ -59,9 +59,9 @@ function mdFsDiffTrackHtml(vd, ghostVd, solidLabel) {
   function poly(pts) {
     return pts.map(function (v, i) { return (i / (pts.length - 1) * W).toFixed(1) + ',' + (H - Math.max(0, v) / maxV * H).toFixed(1); }).join(' ');
   }
-  var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="display:block;width:100%;height:' + H + 'px;">' + chLine(0, H, W, H, CHART.axis, 1);
-  if (ghostVd) svg += '<polyline points="' + poly(ghostVd.points) + '" fill="none" stroke="' + CHART.ink + '" stroke-width="1.5" stroke-dasharray="4 2"/>';
-  svg += '<polyline points="' + poly(vd.points) + '" fill="none" stroke="' + CHART.ink + '" stroke-width="2"/></svg>';
+  var svg = chSvgOpen({ vb: '0 0 ' + W + ' ' + H, style: 'display:block;width:100%;height:' + H + 'px;' }) + chLine(0, H, W, H, CHART.axis, 1);
+  if (ghostVd) svg += chPolyline(poly(ghostVd.points), { stroke: CHART.ink, sw: 1.5, dash: '4 2' });
+  svg += chPolyline(poly(vd.points), { stroke: CHART.ink, sw: 2 }) + '</svg>';
   var note = vd.n < vd.total ? ' (n=' + vd.n + '/' + vd.total + ' skirmishes carry fs data)' : '';
   return '<div style="display:flex;gap:8px;align-items:flex-end;">' +
     '<div style="flex:none;width:' + LABEL_W + 'px;text-align:right;font-size:9.5px;font-style:italic;color:' + CHART.muted + ';padding-bottom:2px;">avg<br>|FS diff|' + note + '</div>' +
@@ -231,9 +231,9 @@ function mdHexLensSection(mapName, hex) {
 
   var vb = viewBoxFor(hexList);
   // dead-hex hatch: one <pattern>, defined once, referenced by url() doc-wide
-  var defs = '<svg width="0" height="0" style="position:absolute;" aria-hidden="true"><defs>' +
+  var defs = chSvgOpen({ w: 0, h: 0, hidden: true, style: 'position:absolute;' }) + '<defs>' +
     '<pattern id="mdHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">' +
-    '<line x1="0" y1="0" x2="0" y2="6" stroke="' + CHART.muted + '" stroke-width="1.5"/></pattern></defs></svg>';
+    chLine(0, 0, 0, 6, CHART.muted, 1.5) + '</pattern></defs></svg>';
 
   var boards = MD_HEX_LENSES.map(function (lens) {
     // display max over BOTH runs' hexes for this lens, so ghost + solid compare
@@ -250,20 +250,20 @@ function mdHexLensSection(mapName, hex) {
       // trace never logs an HQ hex unless it's attacked). Occupancy-based, so a
       // hex reads dead-or-not identically across all three lenses.
       var dead = !isHQ && (d ? d.dead : true);
-      cells += '<polygon points="' + pts + '" fill="' + mdLensFill(d ? d[lens.key] : 0, max) + '" stroke="' + CHART.axis + '" stroke-width="1"/>';
-      if (dead) overlays += '<polygon points="' + pts + '" fill="url(#mdHatch)" stroke="none"/>';
+      cells += chPolygon(pts, { fill: mdLensFill(d ? d[lens.key] : 0, max), stroke: CHART.axis, sw: 1 });
+      if (dead) overlays += chPolygon(pts, { fill: 'url(#mdHatch)', stroke: 'none' });
       // avenue of attack: a NESTED hex red ring (real polygon stroke, never a css outline on a clip — AC2)
-      if (d && d.avenue) overlays += '<polygon points="' + hexPoints(xy[0], xy[1], MDHEX_R * 0.62) + '" fill="none" stroke="' + CHART.breach + '" stroke-width="2.5"/>';
+      if (d && d.avenue) overlays += chPolygon(hexPoints(xy[0], xy[1], MDHEX_R * 0.62), { stroke: CHART.breach, sw: 2.5 });
       // A/B ghost: dashed inner hex sized by run A's value on the shared max
       if (g && g[lens.key] > 0 && max > 0) {
         var gr = MDHEX_R * (0.16 + 0.74 * Math.min(1, g[lens.key] / max));
-        overlays += '<polygon points="' + hexPoints(xy[0], xy[1], gr) + '" fill="none" stroke="' + CHART.ink + '" stroke-width="1.3" stroke-dasharray="3 2"/>';
+        overlays += chPolygon(hexPoints(xy[0], xy[1], gr), { stroke: CHART.ink, sw: 1.3, dash: '3 2' });
       }
       // HQ marker: thick side-coloured border + star
       if (isHQ) {
         var hc = (k === hqRed) ? CHART.divRed[2] : CHART.divBlue[2];
-        overlays += '<polygon points="' + hexPoints(xy[0], xy[1], MDHEX_R - 2) + '" fill="none" stroke="' + hc + '" stroke-width="3"/>' +
-          '<text x="' + xy[0].toFixed(1) + '" y="' + (xy[1] + 5.5).toFixed(1) + '" text-anchor="middle" font-size="16" fill="' + hc + '">★</text>';
+        overlays += chPolygon(hexPoints(xy[0], xy[1], MDHEX_R - 2), { stroke: hc, sw: 3 }) +
+          chText(xy[0].toFixed(1), (xy[1] + 5.5).toFixed(1), '★', { fs: 16, fill: hc, anchor: 'middle' });
       }
       // hover: per-hex values for BOTH runs (A -> B), plus the classification tags
       var lbl = mdHexLabelFor(shape, k) + (isHQ ? (k === hqRed ? ' · red HQ' : ' · blue HQ') : '');
@@ -273,10 +273,11 @@ function mdHexLensSection(mapName, hex) {
       });
       if (dead) rows.push(['flag', 'dead hex (<5% held)']);
       if (d && d.avenue) rows.push(['flag', 'avenue of attack']);
-      hits += '<polygon class="ch-hit" points="' + pts + '" fill="transparent"' + chTipAttrs(lbl, rows) + '/>';
+      hits += chPolygon(pts, { cls: 'ch-hit', fill: 'transparent', extra: chTipAttrs(lbl, rows) });
     });
-    var svg = '<svg viewBox="' + vb + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + chEsc(lens.title + ' on ' + mapName) +
-      '" style="display:block;width:100%;height:auto;background:' + CHART.surface + ';border-radius:6px;">' + cells + overlays + hits + '</svg>';
+    var svg = chSvgOpen({ vb: vb, role: 'img', aria: lens.title + ' on ' + mapName,
+      style: 'display:block;width:100%;height:auto;background:' + CHART.surface + ';border-radius:6px;' }) +
+      cells + overlays + hits + '</svg>';
     return '<div style="flex:1 1 220px;min-width:200px;max-width:330px;">' +
       '<div style="font-size:11.5px;font-weight:bold;color:' + CHART.ink + ';margin-bottom:2px;">' + lens.title +
       ' <span class="small" style="font-weight:normal;font-style:italic;color:' + CHART.muted + ';">(' + lens.sub + ', max ' + lens.fmt(max) + ')</span></div>' + svg + '</div>';
