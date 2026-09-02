@@ -19,27 +19,17 @@
    in ui/boot.js; this file only declares. */
 'use strict';
 
-/* ============ mini-board geometry (board.js vocabulary at MP_S scale) ============
-   The live board.js is welded to #board / APP.st / S=44, so the manual keeps
-   its own tiny renderer — but it reuses board.js's pure helpers (svgEl,
-   hexPoints, cornerPt, cornerAngles) and the same CSS classes/vars, so the
-   two boards look like the same physical thing. */
+/* ============ mini-board geometry (the live board's vocabulary at MP_S) ============
+   The manual draws its own tiny board, but through board-primitives' shared
+   helpers at MP_S scale — hexXY(k,MP_S) for position, bpUnitToken / bpHQMarker
+   for the pieces, and the BOARD palette for every colour — so the two boards
+   are literally the same marks, one implementation, just smaller. Only the
+   scale-tuned line widths + the manual's own overlays (glow halos, ghost ✕,
+   support rings, A-vs-D pill) stay local. */
 var MP_S = 34; // mini hex radius (live board: S = 44)
 
-function mpXY(k){
-  var qr = E.parseKey(k);
-  return [ MP_S*SQ3*(qr[0] + qr[1]/2), MP_S*1.5*qr[1] ];
-}
-function mpViewBox(hexList){
-  var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
-  hexList.forEach(function(k){
-    var xy = mpXY(k);
-    minX=Math.min(minX,xy[0]); maxX=Math.max(maxX,xy[0]);
-    minY=Math.min(minY,xy[1]); maxY=Math.max(maxY,xy[1]);
-  });
-  var m = MP_S*1.3;
-  return (minX-m).toFixed(0)+' '+(minY-m).toFixed(0)+' '+(maxX-minX+2*m).toFixed(0)+' '+(maxY-minY+2*m).toFixed(0);
-}
+function mpXY(k){ return hexXY(k, MP_S); }
+function mpViewBox(hexList){ return viewBoxFor(hexList, MP_S); }
 
 /* ============ fixture states (real engine states, tiny inline maps) ============ */
 // One 9-hex outline shared by every example: labels A1-A3 / B1-B3 / C1-C3.
@@ -107,8 +97,7 @@ function mpDrawFrame(f){
   // hexes + grid labels (same classes as the live board)
   list.forEach(function(k){
     var xy = mpXY(k), p = E.parseKey(k);
-    svg.appendChild(svgEl('polygon', { points: hexPoints(xy[0], xy[1], MP_S-1),
-      'class': 'hex'+(((p[0]-p[1])%2+2)%2 ? ' dark' : '') }));
+    svg.appendChild(bpHexPoly(xy[0], xy[1], MP_S-1, ((p[0]-p[1])%2+2)%2));
     var lbl = svgEl('text', { x: xy[0], y: xy[1]-MP_S*0.58, 'text-anchor':'middle', 'class':'coordlbl' });
     lbl.textContent = E.hexLabel(k);
     svg.appendChild(lbl);
@@ -138,20 +127,19 @@ function mpDrawFrame(f){
     var p1 = cornerPt(c[0],c[1],aa[0],MP_S*0.85), p2 = cornerPt(c[0],c[1],aa[1],MP_S*0.85);
     var t = st.terrainEdges[ek];
     svg.appendChild(svgEl('line', { x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
-      stroke: t==='F' ? 'var(--forest)' : t==='R' ? 'var(--river)' : 'var(--mountain)',
-      'stroke-width': 6, 'stroke-linecap':'round' }));
+      stroke: BOARD.terrainStroke(t), 'stroke-width': 6, 'stroke-linecap':'round' }));
     var mx=(p1[0]+p2[0])/2, my=(p1[1]+p2[1])/2;
     if (t==='R'){
       svg.appendChild(svgEl('line',{x1:(p1[0]*0.7+mx*0.3), y1:(p1[1]*0.7+my*0.3), x2:(p2[0]*0.7+mx*0.3), y2:(p2[1]*0.7+my*0.3),
-        stroke:'#a9c6dd','stroke-width':1.8,'stroke-linecap':'round','stroke-dasharray':'5 4'}));
+        stroke:BOARD.riverCurrent,'stroke-width':1.8,'stroke-linecap':'round','stroke-dasharray':'5 4'}));
     } else if (t==='F'){
-      svg.appendChild(svgEl('circle',{cx:mx, cy:my, r:3.4, fill:'#3a6330'}));
-      svg.appendChild(svgEl('circle',{cx:(p1[0]+mx)/2, cy:(p1[1]+my)/2, r:2.6, fill:'#3a6330'}));
-      svg.appendChild(svgEl('circle',{cx:(p2[0]+mx)/2, cy:(p2[1]+my)/2, r:2.6, fill:'#3a6330'}));
+      svg.appendChild(svgEl('circle',{cx:mx, cy:my, r:3.4, fill:BOARD.forestGlyph}));
+      svg.appendChild(svgEl('circle',{cx:(p1[0]+mx)/2, cy:(p1[1]+my)/2, r:2.6, fill:BOARD.forestGlyph}));
+      svg.appendChild(svgEl('circle',{cx:(p2[0]+mx)/2, cy:(p2[1]+my)/2, r:2.6, fill:BOARD.forestGlyph}));
     } else {
       var ex = (p2[0]-p1[0]), eyy = (p2[1]-p1[1]);
       var tri = [ [mx-ex*0.14, my-eyy*0.14], [mx+ex*0.14, my+eyy*0.14], [mx-(my-c[1])*0.18, my+(mx-c[0])*0.18] ];
-      svg.appendChild(svgEl('polygon',{points: tri.map(function(q){return q[0].toFixed(1)+','+q[1].toFixed(1);}).join(' '), fill:'#5d5a52'}));
+      svg.appendChild(svgEl('polygon',{points: tri.map(function(q){return q[0].toFixed(1)+','+q[1].toFixed(1);}).join(' '), fill:BOARD.mountainPeak}));
     }
   }
 
@@ -163,7 +151,7 @@ function mpDrawFrame(f){
         var aa2 = cornerAngles(d2);
         var q1 = cornerPt(tc[0],tc[1],aa2[0],MP_S*0.74), q2 = cornerPt(tc[0],tc[1],aa2[1],MP_S*0.74);
         svg.appendChild(svgEl('line',{x1:q1[0],y1:q1[1],x2:q2[0],y2:q2[1],
-          stroke:'#5a4326','stroke-width':5,'stroke-linecap':'round','stroke-dasharray':'5.5 3'}));
+          stroke:BOARD.trench,'stroke-width':5,'stroke-linecap':'round','stroke-dasharray':'5.5 3'}));
       });
     });
   }
@@ -190,8 +178,8 @@ function mpDrawFrame(f){
   // "unit fell here but the hex is re-occupied" badge (advance-into-kill)
   (f.badges||[]).forEach(function(h){
     var xy = mpXY(h);
-    svg.appendChild(svgEl('circle',{cx:xy[0]+MP_S*0.55, cy:xy[1]-MP_S*0.6, r:7.5, fill:'#6f1d19', stroke:'#2b2113','stroke-width':1}));
-    var x = svgEl('text',{x:xy[0]+MP_S*0.55, y:xy[1]-MP_S*0.6+3.5,'text-anchor':'middle','font-size':10,'font-weight':'bold',fill:'#f0e6cc'});
+    svg.appendChild(svgEl('circle',{cx:xy[0]+MP_S*0.55, cy:xy[1]-MP_S*0.6, r:7.5, fill:BOARD.redDark, stroke:BOARD.outline,'stroke-width':1}));
+    var x = svgEl('text',{x:xy[0]+MP_S*0.55, y:xy[1]-MP_S*0.6+3.5,'text-anchor':'middle','font-size':10,'font-weight':'bold',fill:BOARD.star});
     x.textContent = '✕';
     svg.appendChild(x);
   });
@@ -199,51 +187,34 @@ function mpDrawFrame(f){
   // the A-vs-D pill (same maths pills the live board hovers)
   if (f.pill){
     var pxy = mpXY(f.pill.at);
-    var fill = f.pill.tone==='attacker' ? 'rgba(58,99,48,.92)' :
-               f.pill.tone==='tie' ? 'rgba(138,108,60,.94)' :
-               f.pill.tone==='defender' ? 'rgba(111,29,25,.92)' : 'rgba(74,61,38,.92)';
+    var fill = BOARD.hint[f.pill.tone] || BOARD.hint.neutral;
     var w = f.pill.text.length*6.4 + 14;
     svg.appendChild(svgEl('rect',{x:pxy[0]-w/2, y:pxy[1]+MP_S*0.52, width:w, height:16, rx:8,
-      fill:fill, stroke:'#2b2113','stroke-width':1, 'class':'mpill'}));
+      fill:fill, stroke:BOARD.outline,'stroke-width':1, 'class':'mpill'}));
     var pt = svgEl('text',{x:pxy[0], y:pxy[1]+MP_S*0.52+11.5, 'text-anchor':'middle',
-      'font-size':10.5, 'font-weight':'bold', fill:'#f0e6cc', 'class':'mpill-t'});
+      'font-size':10.5, 'font-weight':'bold', fill:BOARD.star, 'class':'mpill-t'});
     pt.textContent = f.pill.text;
     svg.appendChild(pt);
   }
 }
 function mpDrawUnit(svg, hex, u, ghost){
   var xy = mpXY(hex);
-  var col = u.owner==='red' ? 'var(--red)' : 'var(--blue)';
-  var colD = u.owner==='red' ? 'var(--red-dark)' : 'var(--blue-dark)';
   var g = svgEl('g', ghost ? {'class':'mghost'} : {});
-  g.appendChild(svgEl('circle',{cx:xy[0], cy:xy[1], r:MP_S*0.5, fill:col, stroke:colD,'stroke-width':2}));
-  g.appendChild(svgEl('rect',{x:xy[0]-10, y:xy[1]-7, width:20, height:14, fill:'#ece1c4', stroke:colD,'stroke-width':1.2, rx:1.5}));
-  if (u.type==='infantry'){
-    g.appendChild(svgEl('line',{x1:xy[0]-10,y1:xy[1]-7,x2:xy[0]+10,y2:xy[1]+7,stroke:colD,'stroke-width':1.7}));
-    g.appendChild(svgEl('line',{x1:xy[0]-10,y1:xy[1]+7,x2:xy[0]+10,y2:xy[1]-7,stroke:colD,'stroke-width':1.7}));
-  } else if (u.type==='cavalry'){
-    g.appendChild(svgEl('line',{x1:xy[0]-10,y1:xy[1]+7,x2:xy[0]+10,y2:xy[1]-7,stroke:colD,'stroke-width':1.7}));
-  } else {
-    g.appendChild(svgEl('circle',{cx:xy[0],cy:xy[1],r:3.6,fill:colD}));
-  }
+  // same token as the live board, at MP_S sizes (see bpUnitToken)
+  bpUnitToken(g, xy[0], xy[1], u.owner, u.type, { r:MP_S*0.5, circSW:2, chitHW:10, chitHH:7, chitSW:1.2, glyphSW:1.7, artR:3.6 });
   if (ghost){ // fallen: the ✕ over the counter
-    g.appendChild(svgEl('line',{x1:xy[0]-12,y1:xy[1]-12,x2:xy[0]+12,y2:xy[1]+12,stroke:'#2b2113','stroke-width':2.5}));
-    g.appendChild(svgEl('line',{x1:xy[0]-12,y1:xy[1]+12,x2:xy[0]+12,y2:xy[1]-12,stroke:'#2b2113','stroke-width':2.5}));
+    g.appendChild(svgEl('line',{x1:xy[0]-12,y1:xy[1]-12,x2:xy[0]+12,y2:xy[1]+12,stroke:BOARD.outline,'stroke-width':2.5}));
+    g.appendChild(svgEl('line',{x1:xy[0]-12,y1:xy[1]+12,x2:xy[0]+12,y2:xy[1]-12,stroke:BOARD.outline,'stroke-width':2.5}));
   }
   svg.appendChild(g);
 }
 function mpDrawHQ(svg, hex, p, ghost){
   var xy = mpXY(hex);
-  var col = p==='red' ? 'var(--red)' : 'var(--blue)';
   var g = svgEl('g', ghost ? {'class':'mghost'} : {});
-  g.appendChild(svgEl('polygon',{points: hexPoints(xy[0], xy[1], MP_S*0.62), fill:col, stroke:'#2b2113','stroke-width':1.6, opacity:.92}));
-  g.appendChild(svgEl('polygon',{points: hexPoints(xy[0], xy[1], MP_S*0.5), fill:'none', stroke:'var(--brass)','stroke-width':1.3}));
-  var star = svgEl('text',{x:xy[0], y:xy[1]+5.5, 'text-anchor':'middle','font-size':15, fill:'#f0e6cc'});
-  star.textContent = '★';
-  g.appendChild(star);
+  bpHQMarker(g, xy[0], xy[1], p, { rOuter:MP_S*0.62, outerSW:1.6, rInner:MP_S*0.5, brassSW:1.3, starFS:15, starDY:5.5 });
   if (ghost){
-    g.appendChild(svgEl('line',{x1:xy[0]-13,y1:xy[1]-13,x2:xy[0]+13,y2:xy[1]+13,stroke:'#2b2113','stroke-width':2.5}));
-    g.appendChild(svgEl('line',{x1:xy[0]-13,y1:xy[1]+13,x2:xy[0]+13,y2:xy[1]-13,stroke:'#2b2113','stroke-width':2.5}));
+    g.appendChild(svgEl('line',{x1:xy[0]-13,y1:xy[1]-13,x2:xy[0]+13,y2:xy[1]+13,stroke:BOARD.outline,'stroke-width':2.5}));
+    g.appendChild(svgEl('line',{x1:xy[0]-13,y1:xy[1]+13,x2:xy[0]+13,y2:xy[1]-13,stroke:BOARD.outline,'stroke-width':2.5}));
   }
   svg.appendChild(g);
 }
@@ -262,7 +233,7 @@ function mpDrawStrike(svg, s){
   var p1 = [tip[0]-Math.cos(ang)*l+Math.sin(ang)*wdt, tip[1]-Math.sin(ang)*l-Math.cos(ang)*wdt];
   var p2 = [tip[0]-Math.cos(ang)*l-Math.sin(ang)*wdt, tip[1]-Math.sin(ang)*l+Math.cos(ang)*wdt];
   g.appendChild(svgEl('polygon', { points: [tip, p1, p2].map(function(p){ return p[0].toFixed(1)+','+p[1].toFixed(1); }).join(' '),
-    fill: s.color, stroke:'#2b2113', 'stroke-width':1 }));
+    fill: s.color, stroke:BOARD.outline, 'stroke-width':1 }));
   svg.appendChild(g);
 }
 
@@ -487,7 +458,7 @@ function openManual(){
     MANUAL.built = true;
   }
   renderManual();
-  $('manualOvr').classList.add('active');
+  openOverlay('manualOvr');
 }
 function manualStep(delta){
   MANUAL.beat += delta;

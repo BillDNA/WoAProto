@@ -84,11 +84,11 @@ function clearSave(){ try{ localStorage.removeItem('woa-save'); }catch(e){} }
 function glyphSVG(type, col, colD){
   var pre = '<svg viewBox="0 0 20 20">';
   if (type==='trench')
-    return pre+'<path d="M3 13 Q10 5 17 13" stroke="#5a4326" stroke-width="2.6" stroke-dasharray="3.4 2.4" fill="none" stroke-linecap="round"/></svg>';
+    return pre+'<path d="M3 13 Q10 5 17 13" stroke="'+BOARD.trench+'" stroke-width="2.6" stroke-dasharray="3.4 2.4" fill="none" stroke-linecap="round"/></svg>';
   var s = pre+'<circle cx="10" cy="10" r="8.4" fill="'+col+'" stroke="'+colD+'" stroke-width="1.6"/>';
-  if (type==='infantry') s += '<path d="M5.5 13.5 L14.5 6.5 M5.5 6.5 L14.5 13.5" stroke="#ece1c4" stroke-width="2" stroke-linecap="round"/>';
-  else if (type==='cavalry') s += '<path d="M5.5 14 L14.5 6" stroke="#ece1c4" stroke-width="2.3" stroke-linecap="round"/>';
-  else s += '<circle cx="10" cy="10" r="3.4" fill="#ece1c4"/>';
+  if (type==='infantry') s += '<path d="M5.5 13.5 L14.5 6.5 M5.5 6.5 L14.5 13.5" stroke="'+BOARD.chit+'" stroke-width="2" stroke-linecap="round"/>';
+  else if (type==='cavalry') s += '<path d="M5.5 14 L14.5 6" stroke="'+BOARD.chit+'" stroke-width="2.3" stroke-linecap="round"/>';
+  else s += '<circle cx="10" cy="10" r="3.4" fill="'+BOARD.chit+'"/>';
   return s+'</svg>';
 }
 function statTip(type){
@@ -274,22 +274,21 @@ function renderPrompt(){
   if (canSkip){
     var sk = document.createElement('button');
     sk.textContent = 'Skip step';
-    sk.style.cssText = 'padding:3px 12px;font-size:13px;';
+    sk.className = 'btn-sm';
     sk.onclick = function(){ APP.ui.sel=null; act({skip:true}); };
     el.appendChild(sk);
   }
   if (canReset()){
     var rs = document.createElement('button');
     rs.textContent = 'Reset turn';
-    rs.className = 'ghost';
-    rs.style.cssText = 'padding:3px 12px;font-size:13px;';
+    rs.className = 'ghost btn-sm';
     rs.onclick = resetTurn;
     el.appendChild(rs);
   }
   if (APP.ui.sel){
     var back = document.createElement('button');
     back.textContent = 'Back';
-    back.className='ghost'; back.style.cssText='padding:3px 12px;font-size:13px;';
+    back.className='ghost btn-sm';
     back.onclick = function(){ APP.ui.sel=null; renderAll(); };
     el.appendChild(back);
   }
@@ -378,22 +377,18 @@ function confirmAttack(a){
   var outcomeTxt = { attacker: 'Attack succeeds — defender destroyed' + (pv.defenderIsHQ ? '. <b>HEADQUARTERS FALLS!</b>' : (a.noAdvance ? ', your unit holds its ground.' : ', your unit advances.')),
                      defender: '<b>Attack fails — your unit is destroyed.</b>',
                      tie: a.tieSpare ? 'Tie — defender destroyed, your unit withdraws safely.' + (pv.defenderIsHQ?' <b>HEADQUARTERS FALLS!</b>':'') : 'Tie — <b>both units destroyed.</b>' + (pv.defenderIsHQ?' <b>HEADQUARTERS FALLS!</b>':'') }[pv.outcome];
-  $('confirmPanel').innerHTML =
-    '<h2>Order of Skirmish</h2>' +
-    '<p>'+capName(st.current)+' '+E.UNITS[au.type].name+' attacks '+tgt+(a.via?' <i>(through the HQ)</i>':'')+'</p>' +
-    '<div class="skirmish-calc">' +
-      '<div class="side"><h4 style="color:var(--'+st.current+'-dark)">Attacker</h4>'+pv.attackerParts.join('<br>')+'<div class="total">'+pv.attackerPower+'</div></div>' +
-      '<div class="side"><h4 style="color:var(--'+E.other(st.current)+'-dark)">Defender</h4>'+pv.defenderParts.join('<br>')+'<div class="total">'+pv.defenderPower+'</div></div>' +
-    '</div>' +
-    '<p style="font-size:14.5px;">'+outcomeTxt+'</p>' +
-    '<div class="ovr-btns"><button id="cfYes">Attack!</button><button id="cfNo" class="ghost btn-ghost-dark">Stand Down</button></div>';
-  $('confirmOvr').classList.add('active');
-  $('cfYes').onclick = function(){
-    $('confirmOvr').classList.remove('active');
-    APP.ui.sel = null;
-    act({from:a.from, to:a.to, via:a.via});
-  };
-  $('cfNo').onclick = function(){ $('confirmOvr').classList.remove('active'); };
+  confirmDialog({
+    title: 'Order of Skirmish',
+    body:
+      '<p>'+capName(st.current)+' '+E.UNITS[au.type].name+' attacks '+tgt+(a.via?' <i>(through the HQ)</i>':'')+'</p>' +
+      '<div class="skirmish-calc">' +
+        '<div class="side"><h4 style="color:var(--'+st.current+'-dark)">Attacker</h4>'+pv.attackerParts.join('<br>')+'<div class="total">'+pv.attackerPower+'</div></div>' +
+        '<div class="side"><h4 style="color:var(--'+E.other(st.current)+'-dark)">Defender</h4>'+pv.defenderParts.join('<br>')+'<div class="total">'+pv.defenderPower+'</div></div>' +
+      '</div>' +
+      '<p style="font-size:14.5px;">'+outcomeTxt+'</p>',
+    yesLabel: 'Attack!', noLabel: 'Stand Down',
+    onYes: function(){ APP.ui.sel = null; act({from:a.from, to:a.to, via:a.via}); }
+  });
 }
 
 function showSkirmishOver(){
@@ -416,13 +411,13 @@ function showSkirmishOver(){
       '<div class="ovr-btns"><button id="boNext">Next Skirmish</button>'+rematch+copyBtn+'<button id="boMenu" class="ghost btn-ghost-dark">Main Menu</button></div>';
   }
   $('skirmishPanel').innerHTML = html;
-  $('skirmishOvr').classList.add('active');
+  openOverlay('skirmishOvr');
   if ($('boRematch')) $('boRematch').onclick = function(){
-    $('skirmishOvr').classList.remove('active');
+    closeOverlay('skirmishOvr');
     startLocal(APP.mode, [m.maps[st.mapIndex]]);
   };
   if ($('boNext')) $('boNext').onclick = function(){
-    $('skirmishOvr').classList.remove('active');
+    closeOverlay('skirmishOvr');
     APP.st = E.newSkirmish(m);
     APP.ui = { sel:null, stage:null, busy:false, handoffPending: APP.mode==='hotseat' };
     renderAll(); saveLocal();
@@ -430,7 +425,7 @@ function showSkirmishOver(){
     if (APP.mode==='hotseat') showHandoff(); else maybeAI();
   };
   if ($('boNew')) $('boNew').onclick = function(){
-    $('skirmishOvr').classList.remove('active');
+    closeOverlay('skirmishOvr');
     clearSave();
     if (APP.mode==='net'){
       var pool = getActiveMaps() || E.MAPS;
@@ -441,7 +436,7 @@ function showSkirmishOver(){
   };
   if ($('boCopy')) $('boCopy').onclick = function(){ copyText(journalText(st), $('boCopy')); };
   $('boMenu').onclick = function(){
-    $('skirmishOvr').classList.remove('active');
+    closeOverlay('skirmishOvr');
     if (APP.net.poller) clearInterval(APP.net.poller);
     APP.net.poller=null; APP.mode=null;
     show('menu'); checkResume();
@@ -472,10 +467,10 @@ function showHandoff(){
     '<h2 class="'+p+'">'+capName(p)+'&rsquo;s turn</h2>' +
     '<p>Pass the device to the '+capName(p)+' commander.</p>' +
     '<div class="ovr-btns"><button id="hoGo">Take Command</button></div>';
-  $('handoffOvr').classList.add('active');
+  openOverlay('handoffOvr');
   renderHand();
   $('hoGo').onclick = function(){
-    $('handoffOvr').classList.remove('active');
+    closeOverlay('handoffOvr');
     APP.ui.handoffPending = false;
     renderHand(); renderPrompt();
   };
@@ -501,9 +496,9 @@ function playCardUI(cid){
       '<button id="pcCancel" class="ghost btn-ghost-dark">Keep it in hand</button>' +
     '</div>' +
     '<p class="small" style="margin-top:10px;">However it is resolved, the card is removed from the game.</p>';
-  $('playOvr').classList.add('active');
+  openOverlay('playOvr');
   function go(mode){
-    $('playOvr').classList.remove('active');
+    closeOverlay('playOvr');
     try { E.playCard(st, cid, mode); } catch(e){ return; }
     APP.ui.sel = null;
     afterChange();
@@ -511,7 +506,7 @@ function playCardUI(cid){
   $('pcNormal').onclick = function(){ go('normal'); };
   if (canAtk) $('pcAttack').onclick = function(){ go('attack'); };
   if (canRp && !canAtk) $('pcRepos').onclick = function(){ go('reposition'); };
-  $('pcCancel').onclick = function(){ $('playOvr').classList.remove('active'); };
+  $('pcCancel').onclick = function(){ closeOverlay('playOvr'); };
 }
 function act(choice){
   var st = APP.st;
@@ -560,7 +555,7 @@ function showCards(){
   rows += '</table>';
   if (inGame) rows += '<p class="small" style="margin-top:8px;">&#10006; = that copy has been resolved this skirmish and is gone from the game; &#9675; = still in deck, hand, or discard. Shaded cell = every copy spent.</p>';
   $('cardsBody').innerHTML = rows;
-  $('cardsOvr').classList.add('active');
+  openOverlay('cardsOvr');
 }
 
 /* =================== AI driver =================== */

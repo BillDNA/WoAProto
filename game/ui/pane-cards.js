@@ -144,15 +144,7 @@ function crdSimpleDumbbells(rows) {
     var improved = av != null && bv != null && bv < av;
     var connColor = regressed ? CHART.regress : (improved ? CHART.improve : '#d8caa2');
     var bFill = regressed ? CHART.breach : (improved ? CHART.improveDot : CHART.ink);
-    var connLeft = 0, connWidth = 0;
-    if (av != null && bv != null) { connLeft = Math.min(av, bv); connWidth = Math.abs(bv - av); }
-    var inner = '<div style="position:absolute;top:8px;left:0;right:0;height:2px;background:#d8caa2;"></div>' +
-      (av != null && bv != null ? '<div style="position:absolute;top:8px;height:2px;left:' + connLeft.toFixed(1) +
-        '%;width:' + connWidth.toFixed(1) + '%;background:' + connColor + ';"></div>' : '') +
-      (av != null ? '<div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid ' +
-        CHART.ink + ';background:' + CHART.runADot + ';left:calc(' + av.toFixed(1) + '% - 6px);"></div>' : '') +
-      (bv != null ? '<div style="position:absolute;top:4px;width:11px;height:11px;border-radius:50%;background:' +
-        bFill + ';left:calc(' + bv.toFixed(1) + '% - 5px);"></div>' : '');
+    var inner = chDumbbell(av, bv, CHART.ink, bFill, connColor);
     var noopV = r.b ? r.b.noop : (r.a ? r.a.noop : 0);
     var warn = noopV > 2;
     var valText = (av == null ? '—' : av + '%') + ' → ' + (bv == null ? '—' : bv + '%') + (warn ? ' ⚠' : '');

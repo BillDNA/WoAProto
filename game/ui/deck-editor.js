@@ -124,7 +124,7 @@ function openDeck(){
   show('deckScr');
 }
 
-function dkEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function dkEsc(s){ return uiEsc(s); } // one html-escape lives in ui-primitives.js
 function deckToShip(){ return shipCards(DK.cards); } // the open deck, benched cards stripped
 // LEFT: the selectable card list with in/out (bench) checkboxes
 function renderDeck(){
