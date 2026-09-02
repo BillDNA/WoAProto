@@ -342,7 +342,7 @@ test('unit composition & values as content data', () => {
   assert.ok(base.totals.infantry === 7 && base.totals.cavalry === 2 && base.totals.artillery === 1,
     'PIECE_TOTALS track the default composition');
 
-  // 2) An active variant fully overrides composition + atk/def/sup + vp.
+  // 2) An active variant fully overrides composition + atk/def/sup + worth.
   var variant = { id: '__test_units', name: 'Test', active: true, units: {
     infantry:  { name: 'Infantry',  atk: 2, def: 1, sup: 1, worth: 1, count: 8 },
     cavalry:   { name: 'Cavalry',   atk: 3, def: 0, sup: 0, worth: 2, count: 1 },
@@ -352,7 +352,7 @@ test('unit composition & values as content data', () => {
   assert.ok(v.units.infantry.count === 8 && v.units.cavalry.count === 1 && total(v.units) === 10,
     'variant composition overrides the default and still totals 10 (8/1/1)');
   assert.ok(v.units.infantry.atk === 2 && v.units.artillery.def === 2 && v.units.artillery.worth === 5,
-    'variant atk/def/vp values override the default');
+    'variant atk/def/worth values override the default');
   assert.ok(v.totals.infantry === 8 && v.totals.cavalry === 1, 'PIECE_TOTALS follow the variant composition');
 
   // 3) Total-10 is enforced at load: a variant summing to 11 throws loudly.

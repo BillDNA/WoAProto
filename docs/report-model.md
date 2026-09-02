@@ -25,7 +25,7 @@ wrapper) produce the same shape:
 { v, map, seed, fp, winner, winType, turns,
   trace: [ {p,id,mode,turn,seen, a?,h?,k?,ld?,u?,noop?} ... ],   // st.playLog
   units: { infantry:{dep:[..],atk,abs,kill,die,dieT:[..]}, cavalry:{..}, artillery:{..} },  // st.unitMetrics
-  fs?:  [ [redFieldScore, blueFieldScore] ... ] }                // per turn; only vpDiffTrack needs it
+  fs?:  [ [redFieldScore, blueFieldScore] ... ] }                // per turn; only fsDiffTrack needs it
 ```
 
 - **Absent fields are omitted**, not nulled — every reader guards.
@@ -36,7 +36,7 @@ wrapper) produce the same shape:
   drawing a fabricated zero).
 - **`fs`** never rides in the trace blob (`insertSkirmish` doesn't store it there).
   `GET /api/skirmishes` attaches it as a sibling `row.fs` from the `timeline` table;
-  `envelopeFromRow` folds it back in, so every consumer (`vpDiffTrack`) sees it
+  `envelopeFromRow` folds it back in, so every consumer (`fsDiffTrack`) sees it
   whether the source was a DB row or a live wrapper.
 - **Fidelity:** a mixed deploy+attack play is tagged `a:'attack'` (attack is
   sticky), so deploy TIMING is read from `units.*.dep` (exact per-type deploy

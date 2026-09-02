@@ -255,7 +255,7 @@ function renderDashTables(el){
   if (key) rows = dashSort(rows, key, dir);
   var cols = [
     ['name','Map'], ['shape','Shape'], ['red','Red%'], ['first','1st%'], ['hq','HQ%'],
-    ['turns','Turns'], ['fsdiff','VPdiff'], ['atk','Atk'], ['swp','Swp'], ['zk','0kill%'], ['tie','Tie%'],
+    ['turns','Turns'], ['fsdiff','FSdiff'], ['atk','Atk'], ['swp','Swp'], ['zk','0kill%'], ['tie','Tie%'],
     ['drag','Drag'], ['swing','Swings'], [null,'notes']
   ];
   var h = '<h3>Maps &mdash; '+n+' skirmishes each, '+aiLabel+' <span class="small">(&plusmn;'+noise+' points at this n)</span></h3>';

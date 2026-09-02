@@ -155,7 +155,7 @@ function renderMat(p){
     '<div class="row" style="margin-top:2px;"><span>Orders left</span><b>'+E.cardsRemaining(st,p)+'</b></div>' +
     '<div class="spentlbl">orders spent &mdash; gone from the game</div>' +
     '<div class="spent" title="Click for the full card glossary">'+spent+'</div>' +
-    '<div class="vp">'+E.fieldScore(st,p)+' pts</div>' +
+    '<div class="fs">'+E.fieldScore(st,p)+' pts</div>' +
     '<div class="small" style="text-align:center;">surviving units on the field</div>';
   el.querySelector('.spent').onclick = showCards;
 }
@@ -176,7 +176,7 @@ function renderTop(){
   pips($('pipsRed'), m.wins.red);
   pips($('pipsBlue'), m.wins.blue);
   // field-score tug-bar: solid = fieldScore now; hatched = ceiling if every reserve
-  // deploys (fieldScore + reserves x vp); the seam marks the projected front
+  // deploys (fieldScore + reserves x worth); the seam marks the projected front
   function ceiling(side){
     var cur = E.fieldScore(st, side), extra = 0, res = st.reserves[side];
     Object.keys(E.UNITS).forEach(function(t){ extra += (res[t]||0) * E.UNITS[t].worth; });
@@ -191,7 +191,7 @@ function renderTop(){
     '<div class="seam"></div>' +
     '<div class="hatch blue" style="width:'+pct(B.max - B.cur)+'"></div>' +
     '<div class="solid blue" style="flex:1"></div>' +
-    '<span class="vp" style="left:5px;">'+R.cur+'</span><span class="vp" style="right:5px;">'+B.cur+'</span>';
+    '<span class="fs" style="left:5px;">'+R.cur+'</span><span class="fs" style="right:5px;">'+B.cur+'</span>';
   // opponent mat on top, yours at the bottom next to the hand (hotseat/watch: red top, blue bottom)
   var bottom = youSide || 'blue';
   $('matRed').style.order  = bottom === 'red'  ? 3 : 1;

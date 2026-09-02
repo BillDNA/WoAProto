@@ -48,7 +48,7 @@ function mdLaneBars(vals, ghostVals, laneMax, color, barH) {
    skirmish for this map/run predates the fs capture, WOA-037) — never a
    fabricated flat line. solidLabel names which run is drawing solid (A or
    B) for the "predates" note. */
-function mdVpDiffTrackHtml(vd, ghostVd, solidLabel) {
+function mdFsDiffTrackHtml(vd, ghostVd, solidLabel) {
   var LABEL_W = 56, W = 400, H = 30;
   if (!vd) {
     return '<div style="display:flex;gap:8px;opacity:.55;"><div style="flex:none;width:' + LABEL_W + 'px;"></div>' +
@@ -84,7 +84,7 @@ function mdTempoSection(mapName, tempo) {
     return h + '<p class="small">No skirmishes on ' + chEsc(mapName) + ' for run ' + solidLabel + ' yet.</p>';
   }
   var BAR_H = 46, LABEL_W = 56;
-  h += mdVpDiffTrackHtml(vdSolid, vdGhost, solidLabel);
+  h += mdFsDiffTrackHtml(vdSolid, vdGhost, solidLabel);
   h += '<div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">';
   MD_LANES.forEach(function (a) {
     var vals = laneSolid[a], gvals = laneGhost ? laneGhost[a] : null;

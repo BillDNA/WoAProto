@@ -118,7 +118,7 @@
   .tug .hatch.red { background:repeating-linear-gradient(45deg, rgba(158,43,37,.6) 0 4px, rgba(158,43,37,.12) 4px 8px); }
   .tug .hatch.blue{ background:repeating-linear-gradient(45deg, rgba(40,82,122,.6) 0 4px, rgba(40,82,122,.12) 4px 8px); }
   .tug .seam{ flex:0 0 2px; background:var(--parch); }
-  .tug .vp{ position:absolute; top:50%; transform:translateY(-50%); font-size:10px; font-weight:bold; color:#fff; text-shadow:0 1px 1px rgba(0,0,0,.6); }
+  .tug .fs{ position:absolute; top:50%; transform:translateY(-50%); font-size:10px; font-weight:bold; color:#fff; text-shadow:0 1px 1px rgba(0,0,0,.6); }
   #turnbadge{
     padding:4px 14px; border-radius:14px; font-weight:bold; letter-spacing:1px;
     border:1px solid rgba(255,255,255,.3);
@@ -148,7 +148,7 @@
   .mat h3{font-variant:small-caps; letter-spacing:1px; text-align:center; border-bottom:1px solid var(--brass-dark); padding-bottom:4px; font-size:16px;}
   .mat.red h3{color:var(--red-dark);} .mat.blue h3{color:var(--blue-dark);}
   .mat .row{display:flex; justify-content:space-between;}
-  .mat .vp{font-size:20px; font-weight:bold; text-align:center; border-top:1px solid var(--brass-dark); padding-top:4px; margin-top:2px;}
+  .mat .fs{font-size:20px; font-weight:bold; text-align:center; border-top:1px solid var(--brass-dark); padding-top:4px; margin-top:2px;}
   .srow{display:flex; align-items:center; gap:5px; min-height:24px;}
   .slbl{flex:0 0 58px; font-size:11px; font-variant:small-caps; letter-spacing:.4px; color:var(--ink-soft); line-height:1.05; cursor:help;}
   .sboxes{display:flex; gap:3px; flex-wrap:wrap;}

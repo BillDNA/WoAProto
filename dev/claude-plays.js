@@ -18,7 +18,7 @@
      --seed <n>         match seed (default 1234)
      --deck <id>        play with content/decks/<id>.js instead of the active deck
      --units <id>       play with content/units/<id>.js unit stats (composition +
-                        atk/def/sup/vp) instead of the maps.js default
+                        atk/def/sup/worth) instead of the maps.js default
      --mapset <id>      restrict to a content/mapsets/<id>.js set
      --k <n>            step options shown to the LLM: the n most promising of
                         the full legal list, engine-ranked (default 15; attack
@@ -412,7 +412,7 @@ function makeSideTransport(args, side, matchWins) {
 
 /* ---------- typicality (cached per map+version+n) ---------- */
 function typicalityBaseline(map, n) {
-  const key = map.name + '|' + E.VERSION + '|' + n;
+  const key = map.name + '|' + E.VERSION + '|fs|' + n;
   let cache = {};
   try { cache = JSON.parse(fs.readFileSync(TYP_CACHE, 'utf8')); } catch (e) {}
   if (cache[key]) return cache[key];
@@ -460,7 +460,7 @@ function typicalitySection(map, st, n) {
     '| Winner side | ' + cap(st.skirmishWinner) + ' | red ' + redPct + '% | map leans ' + (redPct >= 50 ? 'red' : 'blue') + ' ' + Math.max(redPct, 100 - redPct) + '% |',
     '| Kills (units lost) | ' + kills + ' | ' + zeroPct + '% zero-kill | ' + killRead + ' |',
     '| Attacks resolved | ' + gAtk + ' | ~' + avgAtk.toFixed(1) + ' avg | ' + cmp(gAtk, avgAtk) + ' |',
-    '| Final FS gap | ' + gVP + ' | ~' + avgFS.toFixed(1) + ' avg | ' + cmp(gVP, avgVP) + ' |',
+    '| Final FS gap | ' + gVP + ' | ~' + avgFS.toFixed(1) + ' avg | ' + cmp(gVP, avgFS) + ' |',
     '', verdict];
 }
 

@@ -22,7 +22,7 @@
                'all' = every map on disk)
      --deck <id>    report on content/decks/<id>.js instead of the ACTIVE deck
      --units <id>   report with content/units/<id>.js unit stats (composition +
-               atk/def/sup/vp) instead of the maps.js default
+               atk/def/sup/worth) instead of the maps.js default
      --parallel [k]  simulate maps in k parallel worker processes (default:
                cores-1). The engine's board state is process-global, so
                parallelism is process-per-map — each worker require()s its own

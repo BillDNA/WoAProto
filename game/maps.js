@@ -13,7 +13,7 @@
    plus WOA_CONTENT (maps + the active deck's cards). See content/manifest.js.
 
    UNITS — stats per unit type: atk/def/sup (support given to adjacent
-   fights), vp (bounty the enemy scores for killing it), count (pieces per
+   fights), worth (bounty the enemy scores for killing it), count (pieces per
    player). "trenchCount" is trenches per player. "terrainStock" caps the
    physical terrain pieces per type+length (the editor warns past it).
 

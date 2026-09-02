@@ -140,7 +140,7 @@ function mapReport(n, diff, filter, maps, mapsetArg, decks) {
     (dbh ? '  [persisting to logs/woa.db]' : '') + '\n');
   var header = pad('Map', 16, true) + pad('Shape', 11, true) +
     pad('Red%', 6) + pad('Blue%', 7) + pad('1st%', 6) + pad('2nd%', 6) +
-    pad('HQ%', 6) + pad('Turns', 7) + pad('VPdiff', 8) +
+    pad('HQ%', 6) + pad('Turns', 7) + pad('FSdiff', 8) +
     pad('Atk%', 6) + pad('Swp%', 6) + pad('0kill%', 8) +
     pad('Drag', 7) + pad('Swings', 8) + '  notes';
   console.log(header);

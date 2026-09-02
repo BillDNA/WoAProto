@@ -89,8 +89,8 @@ test('report-model: bands as data + trace folds', () => {
   assert.ok(near(lanes[0].deploy, 1) && near(lanes[2].attack, 1) && near(lanes[4].swap, 1) && near(lanes[6].march, 1),
     'octile lanes place each action in its turn-octile at 1 play/turn');
   assert.ok(near(lanes[2].deploy, 0) && near(lanes[2].swap, 0), 'non-firing lanes read 0 in that octile');
-  var vp = R.fsDiffTrack(env);
-  assert.ok(JSON.stringify(vp.track) === JSON.stringify([0, 1, 3, 1, 3, 2, 1, 0]) && vp.peak === 3 && vp.final === 0,
+  var fs = R.fsDiffTrack(env);
+  assert.ok(JSON.stringify(fs.track) === JSON.stringify([0, 1, 3, 1, 3, 2, 1, 0]) && fs.peak === 3 && fs.final === 0,
     '|FS-diff| track = |red-blue| per turn (peak 3, final 0)');
   assert.ok(R.fsDiffTrack({ turns: 3, trace: [] }) === null, 'fsDiffTrack = null when env.fs is absent (caller greys it)');
 
