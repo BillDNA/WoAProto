@@ -33,10 +33,10 @@
 
   // WOA-055: the card registry for one side — the skirmish's per-side deck if it
   // seats them, else the active-deck default. Self-heals pre-055 saves/sims that
-  // have no st.sideDecks. Every per-side card lookup (buildDeck, drawHand,
+  // have no st.cards.sideDecks. Every per-side card lookup (buildDeck, drawHand,
   // playCard, stepOptions) routes through here so a side always reads ITS deck.
   function sideReg(st, p) {
-    return (st.sideDecks && st.sideDecks[p]) || I.DEFAULT_REG;
+    return (st.cards.sideDecks && st.cards.sideDecks[p]) || I.DEFAULT_REG;
   }
 
   function buildDeck(s, player) {
@@ -55,52 +55,77 @@
     var shapeName = I.ensureMapShape(map);
     I.setBoard(shapeName);
     var terrain = I.buildTerrain(map);
+    // De-flattened skirmish state (WoAProto#221): the ~30 top-level keys are
+    // grouped into composable blocks so a change to one seam does not ripple
+    // across unrelated ones. Blocks mirror the CONTEXT.md sections —
+    // board / pieces / cards / flow (turn) / result / journal. Identity keys
+    // (seed, battle, mapIndex, mapName) stay top-level. Piece storage is
+    // reached only through the I.Pieces accessors, never poked directly, so its
+    // shape is a one-place seam.
     var st = {
-      boardShape: shapeName,
       seed: battle.seed,
       battle: battle,
       mapIndex: mapIdx,
       mapName: map.name,
-      terrainEdges: terrain.edges,
-      terrainPieces: terrain.pieces,
-      hq: { red: I.key(map.redHQ[0], map.redHQ[1]), blue: I.key(map.blueHQ[0], map.blueHQ[1]) },
-      hqAlive: { red: true, blue: true },
-      units: {},      // hexKey -> {type, owner}
-      trenches: {},   // hexKey -> {dirs:[d1,d2]}
-      reserves: { red: copyReserves(), blue: copyReserves() },
-      kills: { red: 0, blue: 0 },
-      decks: {}, discards: { red: [], blue: [] }, removed: { red: [], blue: [] }, hands: { red: [], blue: [] },
-      seen: { red: {}, blue: {} },  // cardId -> times it has appeared in p's hand
-      playLog: [],                  // {p, id, mode, turn, seen-at-play} per card played
-      unitMetrics: initUnitMetrics(), // WOA-031 (SPEC §4 "units"): per-unit-type {dep,atk,abs,kill,die} fold
-      lastSwap: { red: null, blue: null }, // p's most recent swap pair (AI anti-I.shuffle)
-      stats: { attacks: 0, swaps: 0, marches: 0, deploys: 0, firstBlood: null }, // behaviour counters for the balance lab
-      firstTurnDone: { red: false, blue: false },
-      current: battle.skirmishIndex === 0 ? battle.firstPlayer : battle.lastLoser,
-      second: null,
-      phase: 'choose-card', // choose-card | step | skirmish-over
-      pending: null,
-      skirmishWinner: null,
-      winType: null,
-      log: [],
-      turnNumber: 1,
-      lastKillTurn: 0,   // turn of the most recent kill/HQ fall — kill-less-tail metric
-      leadChanges: 0,    // times the field-score leader flipped to the OTHER side
-      lastLeader: null,  // last definite (non-tie) field-score leader
-      fsTimeline: []     // [fsRed, fsBlue] per completed turn (V1 DB timeline; absent on sims + old saves)
+      // the map + terrain layer the skirmish is fought on
+      board: {
+        boardShape: shapeName,
+        terrainEdges: terrain.edges,
+        terrainPieces: terrain.pieces,
+        hq: { red: I.key(map.redHQ[0], map.redHQ[1]), blue: I.key(map.blueHQ[0], map.blueHQ[1]) },
+        hqAlive: { red: true, blue: true }
+      },
+      // every physical piece a side has placed or can place
+      pieces: {
+        units: {},      // hexKey -> {type, owner}
+        trenches: {},   // hexKey -> [{dirs:[d1,d2], owner}]
+        reserves: { red: copyReserves(), blue: copyReserves() }
+      },
+      // the per-side card machinery (deck / hand / discard / spent)
+      cards: {
+        decks: {}, discards: { red: [], blue: [] }, removed: { red: [], blue: [] }, hands: { red: [], blue: [] },
+        seen: { red: {}, blue: {} }  // cardId -> times it has appeared in p's hand
+      },
+      // whose turn it is and the card currently resolving
+      flow: {
+        current: battle.skirmishIndex === 0 ? battle.firstPlayer : battle.lastLoser,
+        second: null,
+        phase: 'choose-card', // choose-card | step | skirmish-over
+        pending: null,
+        turnNumber: 1,
+        firstTurnDone: { red: false, blue: false }
+      },
+      // how the skirmish ended
+      result: {
+        kills: { red: 0, blue: 0 },
+        skirmishWinner: null,
+        winType: null
+      },
+      // the balance-lab / report fold + human journal (capture only)
+      journal: {
+        log: [],
+        playLog: [],                  // {p, id, mode, turn, seen-at-play} per card played
+        unitMetrics: initUnitMetrics(), // WOA-031 (SPEC §4 "units"): per-unit-type {dep,atk,abs,kill,die} fold
+        lastSwap: { red: null, blue: null }, // p's most recent swap pair (AI anti-shuffle)
+        stats: { attacks: 0, swaps: 0, marches: 0, deploys: 0, firstBlood: null }, // behaviour counters for the balance lab
+        lastKillTurn: 0,   // turn of the most recent kill/HQ fall — kill-less-tail metric
+        leadChanges: 0,    // times the field-score leader flipped to the OTHER side
+        lastLeader: null,  // last definite (non-tie) field-score leader
+        fsTimeline: []     // [fsRed, fsBlue] per completed turn (V1 DB timeline; absent on sims + old saves)
+      }
     };
-    st.second = I.other(st.current);
+    st.flow.second = I.other(st.flow.current);
     // WOA-055: only seat per-side registries when a non-default deck is actually
-    // chosen. The default (symmetric) path leaves st.sideDecks absent — sideReg
+    // chosen. The default (symmetric) path leaves st.cards.sideDecks absent — sideReg
     // falls back to DEFAULT_REG — so live/synced/persisted state never carries a
     // redundant card catalog on the hot path.
     var dsel = battle.decks;
     if (dsel && (dsel.red || dsel.blue))
-      st.sideDecks = { red: I.resolveDeck(dsel.red), blue: I.resolveDeck(dsel.blue) };
-    st.decks.red = buildDeck(st, 'red');
-    st.decks.blue = buildDeck(st, 'blue');
-    log(st, 'Skirmish ' + (battle.skirmishIndex + 1) + ' — "' + map.name + '". ' + I.cap(st.current) + ' moves first.');
-    drawHand(st, st.current);
+      st.cards.sideDecks = { red: I.resolveDeck(dsel.red), blue: I.resolveDeck(dsel.blue) };
+    st.cards.decks.red = buildDeck(st, 'red');
+    st.cards.decks.blue = buildDeck(st, 'blue');
+    log(st, 'Skirmish ' + (battle.skirmishIndex + 1) + ' — "' + map.name + '". ' + I.cap(st.flow.current) + ' moves first.');
+    drawHand(st, st.flow.current);
     return st;
   }
   function copyReserves() {
@@ -110,7 +135,7 @@
   }
   // WOA-031 (SPEC §4): per-skirmish, per-unit-type fold — keyed by I.UNITS' own
   // type keys (infantry/cavalry/artillery), not the spec doc's shorthand.
-  // Named unitMetrics (not "units") because st.units already means the
+  // Named unitMetrics (not "units") because st.pieces.units already means the
   // hexKey->{type,owner} board map.
   // WOA-044: dieT is a death-TURN list, symmetric to dep[] — pushed wherever
   // die++ is tallied (engine/03-rules.js killDefender/killAttacker). Capture
@@ -123,63 +148,63 @@
     return u;
   }
   function ensureUnitMetrics(st) { // self-heal pre-metrics saves/sims
-    if (!st.unitMetrics) { st.unitMetrics = initUnitMetrics(); return st.unitMetrics; }
+    if (!st.journal.unitMetrics) { st.journal.unitMetrics = initUnitMetrics(); return st.journal.unitMetrics; }
     // WOA-044: a save resumed from just before dieT existed has per-type
     // {dep,atk,abs,kill,die} but no dieT array — heal it in place so
     // killDefender/killAttacker's dieT.push never hits undefined.
     Object.keys(I.UNITS).forEach(function (t) {
-      var u = st.unitMetrics[t];
+      var u = st.journal.unitMetrics[t];
       if (u && !Array.isArray(u.dieT)) u.dieT = [];
     });
-    return st.unitMetrics;
+    return st.journal.unitMetrics;
   }
-  function log(st, msg) { st.log.push({ turn: st.turnNumber, player: st.current, msg: msg }); }
+  function log(st, msg) { st.journal.log.push({ turn: st.flow.turnNumber, player: st.flow.current, msg: msg }); }
 
   function cardsRemaining(st, p) {
-    return st.decks[p].length + st.discards[p].length + st.hands[p].length;
+    return st.cards.decks[p].length + st.cards.discards[p].length + st.cards.hands[p].length;
   }
 
   function drawHand(st, p) {
-    var hand = st.hands[p];
-    var first = !st.firstTurnDone[p];
+    var hand = st.cards.hands[p];
+    var first = !st.flow.firstTurnDone[p];
     if (first) {
-      st.firstTurnDone[p] = true;
+      st.flow.firstTurnDone[p] = true;
       hand.push(sideReg(st, p).starting);
     }
     var want = first ? 3 : 4;
-    var total = st.decks[p].length + st.discards[p].length;
+    var total = st.cards.decks[p].length + st.cards.discards[p].length;
     if (total <= (first ? 4 : 5)) want = total; // 5 or fewer remain: draw all
     var held = [];
     if (first) { // house rule: cards flagged noOpener (e.g. Airdrop) never open
-      for (var hi = st.decks[p].length - 1; hi >= 0; hi--) {
-        var cid = st.decks[p][hi];
-        if (sideReg(st, p).byId[cid] && sideReg(st, p).byId[cid].noOpener) held.push(st.decks[p].splice(hi, 1)[0]);
+      for (var hi = st.cards.decks[p].length - 1; hi >= 0; hi--) {
+        var cid = st.cards.decks[p][hi];
+        if (sideReg(st, p).byId[cid] && sideReg(st, p).byId[cid].noOpener) held.push(st.cards.decks[p].splice(hi, 1)[0]);
       }
     }
     for (var i = 0; i < want; i++) {
-      if (st.decks[p].length === 0 && st.discards[p].length > 0) {
-        st.decks[p] = I.shuffle(st, st.discards[p]);
-        st.discards[p] = [];
+      if (st.cards.decks[p].length === 0 && st.cards.discards[p].length > 0) {
+        st.cards.decks[p] = I.shuffle(st, st.cards.discards[p]);
+        st.cards.discards[p] = [];
       }
-      if (st.decks[p].length === 0) break;
-      hand.push(st.decks[p].pop());
+      if (st.cards.decks[p].length === 0) break;
+      hand.push(st.cards.decks[p].pop());
     }
     held.forEach(function (cid) {
-      var pos = Math.floor(I.rnd(st) * (st.decks[p].length + 1));
-      st.decks[p].splice(pos, 0, cid);
+      var pos = Math.floor(I.rnd(st) * (st.cards.decks[p].length + 1));
+      st.cards.decks[p].splice(pos, 0, cid);
     });
-    if (!st.seen) st.seen = { red: {}, blue: {} }; // self-heal pre-metrics saves
-    hand.forEach(function (id) { st.seen[p][id] = (st.seen[p][id] || 0) + 1; });
+    if (!st.cards.seen) st.cards.seen = { red: {}, blue: {} }; // self-heal pre-metrics saves
+    hand.forEach(function (id) { st.cards.seen[p][id] = (st.cards.seen[p][id] || 0) + 1; });
     if (hand.length === 0) endByAttrition(st);
   }
 
   // Attrition score (June 2026 rules revision): field score of a player's SURVIVING units
   // on the board. Reserves never deployed count for nothing; kills only matter
-  // because they remove enemy units from the field. (st.kills still tracks kills
+  // because they remove enemy units from the field. (st.result.kills still tracks kills
   // for stats/journal, but victory reads the board.)
   function fieldScore(st, p) {
     var s = 0;
-    for (var h in st.units) { var u = st.units[h]; if (u.owner === p) s += I.UNITS[u.type].worth; }
+    for (var h in st.pieces.units) { var u = st.pieces.units[h]; if (u.owner === p) s += I.UNITS[u.type].worth; }
     return s;
   }
 
@@ -188,7 +213,7 @@
     var winner;
     if (fr > fb) winner = 'red';
     else if (fb > fr) winner = 'blue';
-    else winner = st.second; // tie: player who went 2nd wins
+    else winner = st.flow.second; // tie: player who went 2nd wins
     finishSkirmish(st, winner, 'attrition');
   }
 
@@ -198,10 +223,10 @@
   // break the game.
   var HOOKS = { onSkirmishEnd: [] };
   function finishSkirmish(st, winner, how) {
-    st.phase = 'skirmish-over';
-    st.skirmishWinner = winner;
-    st.winType = how;
-    st.pending = null;
+    st.flow.phase = 'skirmish-over';
+    st.result.skirmishWinner = winner;
+    st.result.winType = how;
+    st.flow.pending = null;
     var m = st.battle;
     m.wins[winner]++;
     m.lastLoser = I.other(winner);
@@ -218,7 +243,7 @@
 
   // A player throws in the towel; the skirmish (not the battle) goes to the enemy.
   function concede(st, p) {
-    if (st.phase === 'skirmish-over') throw new Error('skirmish already over');
+    if (st.flow.phase === 'skirmish-over') throw new Error('skirmish already over');
     log(st, I.cap(p) + ' concedes the field.');
     finishSkirmish(st, I.other(p), 'concession');
     return st;
@@ -233,18 +258,18 @@
   //  - HQ capture: no unit (fielded, or deployed then marched) can reach the
   //    enemy HQ within the turns p has left; a live Airdrop keeps hope alive.
   function concedeAdvised(st, p) {
-    if (st.phase !== 'choose-card') return null;
+    if (st.flow.phase !== 'choose-card') return null;
     var e = I.other(p);
     var turnsLeft = cardsRemaining(st, p); // each turn removes exactly 1 card from p's pool
-    var need = (fieldScore(st, e) - fieldScore(st, p)) + (st.second === p ? 0 : 1); // second player wins ties
+    var need = (fieldScore(st, e) - fieldScore(st, p)) + (st.flow.second === p ? 0 : 1); // second player wins ties
     if (need <= 0) return null;            // p still ahead (or tied as second player)
     var gain = 3 * turnsLeft;              // best case: a 3-point swing every remaining turn
     if (gain >= need) return null;         // the gap can still be closed in principle
-    if (st.hqAlive[e] && turnsLeft > 0) {
-      var hasReserve = Object.keys(I.UNITS).some(function (t) { return st.reserves[p][t] > 0; });
-      if (hasReserve && turnsLeft >= 2 && st.removed[p].indexOf('airdrop') < 0) return null; // Airdrop snipe still possible
-      var hq = st.hq[e], reach = Infinity;
-      for (var h2 in st.units) if (st.units[h2].owner === p) reach = Math.min(reach, I.dist(h2, hq));
+    if (st.board.hqAlive[e] && turnsLeft > 0) {
+      var hasReserve = Object.keys(I.UNITS).some(function (t) { return st.pieces.reserves[p][t] > 0; });
+      if (hasReserve && turnsLeft >= 2 && st.cards.removed[p].indexOf('airdrop') < 0) return null; // Airdrop snipe still possible
+      var hq = st.board.hq[e], reach = Infinity;
+      for (var h2 in st.pieces.units) if (st.pieces.units[h2].owner === p) reach = Math.min(reach, I.dist(h2, hq));
       if (hasReserve) I.deployTargets(st, p, false).forEach(function (d) { reach = Math.min(reach, I.dist(d, hq) + 1); });
       if (reach <= turnsLeft) return null; // a march on the HQ is still conceivable
     }
@@ -255,33 +280,33 @@
   // mode: 'normal' (the card's printed actions) | 'attack' | 'reposition'
   // House rule: any card may always be resolved as a simple attack or reposition instead.
   function playCard(st, cardId, mode) {
-    if (st.phase !== 'choose-card') throw new Error('not in choose-card phase');
+    if (st.flow.phase !== 'choose-card') throw new Error('not in choose-card phase');
     mode = mode || 'normal';
-    var p = st.current;
-    var idx = st.hands[p].indexOf(cardId);
+    var p = st.flow.current;
+    var idx = st.cards.hands[p].indexOf(cardId);
     if (idx < 0) throw new Error('card not in hand');
     // House rule (Feedback Round 1): a basic reposition is only allowed when no
     // basic attack is possible — you can't I.shuffle pieces to dodge a fight.
     if (mode === 'reposition' && I.listAttacks(st, p).length > 0)
       throw new Error('cannot reposition while a basic attack is available');
-    st.hands[p].splice(idx, 1);
-    if (!st.playLog) st.playLog = []; // self-heal pre-metrics saves
-    st.playLog.push({ p: p, id: cardId, mode: mode, turn: st.turnNumber,
-      seen: (st.seen && st.seen[p] && st.seen[p][cardId]) || 1 });
+    st.cards.hands[p].splice(idx, 1);
+    if (!st.journal.playLog) st.journal.playLog = []; // self-heal pre-metrics saves
+    st.journal.playLog.push({ p: p, id: cardId, mode: mode, turn: st.flow.turnNumber,
+      seen: (st.cards.seen && st.cards.seen[p] && st.cards.seen[p][cardId]) || 1 });
     var card = sideReg(st, p).byId[cardId];
     var steps;
     if (mode === 'attack') steps = [{ type: 'attack' }];
     else if (mode === 'reposition') steps = [{ type: 'reposition' }];
     else steps = card.steps.map(function (s) { return Object.assign({}, s); });
-    st.pending = {
+    st.flow.pending = {
       cardId: cardId,
       mode: mode,
       steps: steps,
       idx: 0,
       acted: 0,                      // actions actually resolved (0 at endTurn = the play did nothing)
-      logIdx: st.playLog.length - 1  // back-pointer so endTurn can mark the entry noop
+      logIdx: st.journal.playLog.length - 1  // back-pointer so endTurn can mark the entry noop
     };
-    st.phase = 'step';
+    st.flow.phase = 'step';
     log(st, I.cap(p) + ' plays "' + card.name + '"' +
       (mode === 'attack' ? ' as a direct attack order.' : mode === 'reposition' ? ' as a simple maneuver.' : '.'));
     skipImpossible(st);
@@ -289,8 +314,8 @@
   }
 
   function currentStep(st) {
-    if (st.phase !== 'step' || !st.pending) return null;
-    return st.pending.steps[st.pending.idx] || null;
+    if (st.flow.phase !== 'step' || !st.flow.pending) return null;
+    return st.flow.pending.steps[st.flow.pending.idx] || null;
   }
 
   // opts.previews === false skips the per-attack I.computeAttack preview — the
@@ -299,15 +324,15 @@
   function stepOptions(st, opts) {
     var step = currentStep(st);
     if (!step) return null;
-    var p = st.current;
-    var card = sideReg(st, p).byId[st.pending.cardId];
-    var o = { type: step.type, cardName: card.name, stepIndex: st.pending.idx, stepCount: st.pending.steps.length };
+    var p = st.flow.current;
+    var card = sideReg(st, p).byId[st.flow.pending.cardId];
+    var o = { type: step.type, cardName: card.name, stepIndex: st.flow.pending.idx, stepCount: st.flow.pending.steps.length };
     if (step.type === 'deploy') {
       o.unit = step.unit;
-      o.available = st.reserves[p][step.unit] > 0;
+      o.available = st.pieces.reserves[p][step.unit] > 0;
       o.targets = o.available ? I.deployTargets(st, p, step.anywhere) : [];
     } else if (step.type === 'trench') {
-      o.available = st.reserves[p].trench > 0;
+      o.available = st.pieces.reserves[p].trench > 0;
       o.targets = o.available ? I.trenchTargets(st, p) : [];
     } else if (step.type === 'attack') {
       o.mod = step.mod || 0;
@@ -340,15 +365,15 @@
   }
 
   function skipImpossible(st) {
-    while (st.phase === 'step' && currentStep(st) && !stepHasOptions(st)) {
+    while (st.flow.phase === 'step' && currentStep(st) && !stepHasOptions(st)) {
       advanceStep(st);
     }
   }
 
   function advanceStep(st) {
-    if (st.phase !== 'step') return;
-    st.pending.idx++;
-    if (st.pending.idx >= st.pending.steps.length) endTurn(st);
+    if (st.flow.phase !== 'step') return;
+    st.flow.pending.idx++;
+    if (st.flow.pending.idx >= st.flow.pending.steps.length) endTurn(st);
   }
 
   // Feedback Round 2: a card must accomplish at least one action if it can — you
@@ -358,23 +383,23 @@
   // legal option are still auto-skipped by skipImpossible, and a card where no
   // step can act at all still legitimately no-ops.
   function laterStepPlayable(st) {
-    var save = st.pending.idx, found = false;
-    for (var i = save + 1; i < st.pending.steps.length && !found; i++) {
-      st.pending.idx = i;
+    var save = st.flow.pending.idx, found = false;
+    for (var i = save + 1; i < st.flow.pending.steps.length && !found; i++) {
+      st.flow.pending.idx = i;
       if (stepHasOptions(st)) found = true;
     }
-    st.pending.idx = save;
+    st.flow.pending.idx = save;
     return found;
   }
   function mustPlayStep(st) {
-    return st.phase === 'step' && !!st.pending && st.pending.acted === 0 &&
+    return st.flow.phase === 'step' && !!st.flow.pending && st.flow.pending.acted === 0 &&
       stepHasOptions(st) && !laterStepPlayable(st);
   }
 
   function ensureStats(st) { // self-heal saves from before the behaviour counters
-    if (!st.stats) st.stats = { attacks: 0, swaps: 0, marches: 0, deploys: 0, firstBlood: null };
-    if (!st.lastSwap) st.lastSwap = { red: null, blue: null };
-    return st.stats;
+    if (!st.journal.stats) st.journal.stats = { attacks: 0, swaps: 0, marches: 0, deploys: 0, firstBlood: null };
+    if (!st.journal.lastSwap) st.journal.lastSwap = { red: null, blue: null };
+    return st.journal.stats;
   }
   function swapKey(a, b) { return a < b ? a + '|' + b : b + '|' + a; }
 
@@ -384,8 +409,8 @@
   // not steal the tag and strand that attack's kill off an 'attack' entry.
   // Terse — omit absent fields rather than writing null (cost ~40B/play).
   function recordPlay(st, action, hex, unit) {
-    if (!st.pending) return;
-    var entry = st.playLog[st.pending.logIdx];
+    if (!st.flow.pending) return;
+    var entry = st.journal.playLog[st.flow.pending.logIdx];
     if (!entry) return;
     if (action === 'attack' || entry.a !== 'attack') {
       entry.a = action;
@@ -394,69 +419,69 @@
     if (unit) entry.u = unit; // deploys always record their unit, even under a later attack tag
   }
   function recordKill(st, n) {
-    if (!st.pending || !n) return;
-    var entry = st.playLog[st.pending.logIdx];
+    if (!st.flow.pending || !n) return;
+    var entry = st.journal.playLog[st.flow.pending.logIdx];
     if (entry) entry.k = (entry.k || 0) + n;
   }
 
   function applyStep(st, choice) {
-    if (st.phase !== 'step') throw new Error('no step pending');
-    var p = st.current;
+    if (st.flow.phase !== 'step') throw new Error('no step pending');
+    var p = st.flow.current;
     ensureStats(st);
     var step = currentStep(st);
     if (choice && choice.skip) {
       if (mustPlayStep(st)) throw new Error('at least one step of a card must be played');
       advanceStep(st);
-      if (st.phase === 'step') skipImpossible(st);
+      if (st.flow.phase === 'step') skipImpossible(st);
       return st;
     }
     if (step.type === 'deploy') {
       var targets = I.deployTargets(st, p, step.anywhere);
-      if (st.reserves[p][step.unit] <= 0 || targets.indexOf(choice.hex) < 0) throw new Error('invalid deploy');
-      st.reserves[p][step.unit]--;
-      st.units[choice.hex] = { type: step.unit, owner: p };
-      st.stats.deploys++;
+      if (st.pieces.reserves[p][step.unit] <= 0 || targets.indexOf(choice.hex) < 0) throw new Error('invalid deploy');
+      st.pieces.reserves[p][step.unit]--;
+      st.pieces.units[choice.hex] = { type: step.unit, owner: p };
+      st.journal.stats.deploys++;
       recordPlay(st, 'deploy', choice.hex, step.unit);
-      ensureUnitMetrics(st)[step.unit].dep.push(st.turnNumber);
+      ensureUnitMetrics(st)[step.unit].dep.push(st.flow.turnNumber);
       log(st, I.cap(p) + ' deploys ' + I.UNITS[step.unit].name + ' at ' + I.hexLabel(choice.hex) + '.');
     } else if (step.type === 'trench') {
-      if (st.reserves[p].trench <= 0 || I.trenchTargets(st, p).indexOf(choice.hex) < 0) throw new Error('invalid trench hex');
+      if (st.pieces.reserves[p].trench <= 0 || I.trenchTargets(st, p).indexOf(choice.hex) < 0) throw new Error('invalid trench hex');
       var dirs = choice.dirs;
       var pairOk = dirs && dirs.length === 2 && I.trenchOrientations(st, choice.hex).some(function (pr) {
         return (pr[0] === dirs[0] && pr[1] === dirs[1]) || (pr[0] === dirs[1] && pr[1] === dirs[0]);
       });
       if (!pairOk) throw new Error('invalid trench orientation');
-      st.reserves[p].trench--;
-      if (!st.trenches[choice.hex]) st.trenches[choice.hex] = [];
-      st.trenches[choice.hex].push({ dirs: dirs.slice(), owner: p }); // owner is UI-only info; trenches aid any defender
+      st.pieces.reserves[p].trench--;
+      if (!st.pieces.trenches[choice.hex]) st.pieces.trenches[choice.hex] = [];
+      st.pieces.trenches[choice.hex].push({ dirs: dirs.slice(), owner: p }); // owner is UI-only info; trenches aid any defender
       log(st, I.cap(p) + ' digs a trench at ' + I.hexLabel(choice.hex) +
-        (st.trenches[choice.hex].length > 1 ? ' — the hex is now double-trenched.' : '.'));
+        (st.pieces.trenches[choice.hex].length > 1 ? ' — the hex is now double-trenched.' : '.'));
     } else if (step.type === 'attack') {
       var legal = I.listAttacks(st, p).some(function (a) {
         return a.from === choice.from && a.to === choice.to && (a.via || null) === (choice.via || null);
       });
       if (!legal) throw new Error('invalid attack');
       I.resolveAttack(st, { from: choice.from, to: choice.to, via: choice.via || null, mod: step.mod || 0, tieSpare: !!step.tieSpare, noAdvance: !!step.noAdvance });
-      if (st.phase === 'skirmish-over') return st;
+      if (st.flow.phase === 'skirmish-over') return st;
     } else if (step.type === 'reposition') {
       var r = I.listRepositions(st, p);
       if (choice.swap) {
         var ok = r.swaps.some(function (s) { return (s.a === choice.a && s.b === choice.b) || (s.a === choice.b && s.b === choice.a); });
         if (!ok) throw new Error('invalid swap');
-        var ua = st.units[choice.a], ub = st.units[choice.b];
-        st.units[choice.a] = ub; st.units[choice.b] = ua;
-        st.lastSwap[p] = swapKey(choice.a, choice.b);
-        st.stats.swaps++;
+        var ua = st.pieces.units[choice.a], ub = st.pieces.units[choice.b];
+        st.pieces.units[choice.a] = ub; st.pieces.units[choice.b] = ua;
+        st.journal.lastSwap[p] = swapKey(choice.a, choice.b);
+        st.journal.stats.swaps++;
         recordPlay(st, 'swap', choice.a);
         log(st, I.cap(p) + ' swaps the units at ' + I.hexLabel(choice.a) + ' and ' + I.hexLabel(choice.b) + '.');
       } else {
         var okm = r.moves.some(function (m) { return m.from === choice.from && m.to === choice.to; });
         if (!okm) throw new Error('invalid move');
-        st.units[choice.to] = st.units[choice.from];
-        delete st.units[choice.from];
-        st.stats.marches++;
+        st.pieces.units[choice.to] = st.pieces.units[choice.from];
+        delete st.pieces.units[choice.from];
+        st.journal.stats.marches++;
         recordPlay(st, 'march', choice.to);
-        log(st, I.cap(p) + ' marches ' + I.UNITS[st.units[choice.to].type].name + ' from ' + I.hexLabel(choice.from) + ' to ' + I.hexLabel(choice.to) + '.');
+        log(st, I.cap(p) + ' marches ' + I.UNITS[st.pieces.units[choice.to].type].name + ' from ' + I.hexLabel(choice.from) + ' to ' + I.hexLabel(choice.to) + '.');
       }
     } else if (step.type === 'barrage') {
       var b = I.listBarrageTargets(st, p);
@@ -464,51 +489,51 @@
         var ti = choice.trenchIdx || 0;
         var okT = b.trenches.some(function (t) { return t.hex === choice.trenchHex && t.idx === ti; });
         if (!okT) throw new Error('invalid barrage');
-        st.trenches[choice.trenchHex].splice(ti, 1);
-        if (!st.trenches[choice.trenchHex].length) delete st.trenches[choice.trenchHex];
+        st.pieces.trenches[choice.trenchHex].splice(ti, 1);
+        if (!st.pieces.trenches[choice.trenchHex].length) delete st.pieces.trenches[choice.trenchHex];
         log(st, I.cap(p) + "'s naval barrage obliterates a trench at " + I.hexLabel(choice.trenchHex) + '.');
       } else if (choice.pieceId) {
-        var pc = st.terrainPieces.filter(function (x) { return x.id === choice.pieceId && !x.removed; })[0];
+        var pc = st.board.terrainPieces.filter(function (x) { return x.id === choice.pieceId && !x.removed; })[0];
         if (!pc || b.forestPieces.indexOf(pc) < 0) throw new Error('invalid barrage');
         pc.removed = true;
-        pc.edgeKeys.forEach(function (ek) { delete st.terrainEdges[ek]; });
+        pc.edgeKeys.forEach(function (ek) { delete st.board.terrainEdges[ek]; });
         log(st, I.cap(p) + "'s naval barrage burns away the forest at " + I.hexLabel(pc.edgeKeys[0].split('>')[0]) + '.');
       } else throw new Error('invalid barrage choice');
     }
-    if (st.pending) st.pending.acted = (st.pending.acted || 0) + 1;
+    if (st.flow.pending) st.flow.pending.acted = (st.flow.pending.acted || 0) + 1;
     advanceStep(st);
-    if (st.phase === 'step') skipImpossible(st);
+    if (st.flow.phase === 'step') skipImpossible(st);
     return st;
   }
 
   function endTurn(st) {
-    var p = st.current;
+    var p = st.flow.current;
     // Decisiveness: did this turn flip the field-score lead to the OTHER side?
     // (a swing to a tie doesn't count as a change — Feedback Round 2)
     var fr = fieldScore(st, 'red'), fb = fieldScore(st, 'blue');
     var lead = fr > fb ? 'red' : (fb > fr ? 'blue' : null);
     if (lead) {
-      if (st.lastLeader && lead !== st.lastLeader) st.leadChanges = (st.leadChanges || 0) + 1;
-      st.lastLeader = lead;
+      if (st.journal.lastLeader && lead !== st.journal.lastLeader) st.journal.leadChanges = (st.journal.leadChanges || 0) + 1;
+      st.journal.lastLeader = lead;
     }
-    if (st.fsTimeline) st.fsTimeline.push([fr, fb]); // absent on sims + pre-V1 saves
-    var entry = st.playLog[st.pending.logIdx];
-    if (entry && st.lastLeader) entry.ld = st.lastLeader; // WOA-031: leader after this turn (carries through ties)
-    if (st.pending.acted === 0) {
+    if (st.journal.fsTimeline) st.journal.fsTimeline.push([fr, fb]); // absent on sims + pre-V1 saves
+    var entry = st.journal.playLog[st.flow.pending.logIdx];
+    if (entry && st.journal.lastLeader) entry.ld = st.journal.lastLeader; // WOA-031: leader after this turn (carries through ties)
+    if (st.flow.pending.acted === 0) {
       // The play resolved zero actions — an effective skipped turn. Bill wants
       // these visible in the journal AND measurable in the card report.
       log(st, I.cap(p) + ' finds no opening — the card is spent to no effect.');
-      if (entry && entry.id === st.pending.cardId) entry.noop = true;
+      if (entry && entry.id === st.flow.pending.cardId) entry.noop = true;
     }
-    st.removed[p].push(st.pending.cardId);
-    st.pending = null;
+    st.cards.removed[p].push(st.flow.pending.cardId);
+    st.flow.pending = null;
     // discard remaining hand
-    st.discards[p] = st.discards[p].concat(st.hands[p]);
-    st.hands[p] = [];
-    st.current = I.other(p);
-    st.turnNumber++;
-    st.phase = 'choose-card';
-    drawHand(st, st.current); // may end skirmish by attrition
+    st.cards.discards[p] = st.cards.discards[p].concat(st.cards.hands[p]);
+    st.cards.hands[p] = [];
+    st.flow.current = I.other(p);
+    st.flow.turnNumber++;
+    st.flow.phase = 'choose-card';
+    drawHand(st, st.flow.current); // may end skirmish by attrition
   }
 
   /* shared-namespace exports */

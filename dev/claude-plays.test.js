@@ -24,8 +24,8 @@ const match = E.newBattle({ maps: [E.MAPS[0]], seed: 424242, firstPlayer: 'red' 
 const st = E.newSkirmish(match);
 E.CARDS.push(SENTINEL);
 E.CARD_BY_ID[SENTINEL.id] = SENTINEL;
-st.hands.blue.push(SENTINEL.id);
-st.decks.blue.push(SENTINEL.id);
+st.cards.hands.blue.push(SENTINEL.id);
+st.cards.decks.blue.push(SENTINEL.id);
 
 function leaks(text) { return text.indexOf('zz_hidden_sentinel') >= 0 || text.indexOf('ZZHIDDENSENTINEL') >= 0; }
 
@@ -33,8 +33,8 @@ const surfaces = [];
 surfaces.push(['stateView with hand', cp.stateView(st, 'red', true, { targetWins: 3, wins: match.wins, skirmishesPlayed: 0 })]);
 surfaces.push(['stateView without hand', cp.stateView(st, 'red', false, null)]);
 surfaces.push(['card options', cp.cardOptions(st, 'red').map(function (o) { return o.desc; }).join('\n')]);
-E.playCard(st, st.hands.red[0], 'normal'); // into a step
-if (st.phase === 'step') {
+E.playCard(st, st.cards.hands.red[0], 'normal'); // into a step
+if (st.flow.phase === 'step') {
   const so = E.stepOptions(st);
   const list = cp.stepChoiceList(st, 15, false);
   surfaces.push(['step header', cp.stepHeader(so)]);
@@ -46,7 +46,7 @@ surfaces.push(['system prompt', cp.sysPrompt('red', 3)]);
 test('honest-info sentinel', () => {
   // The opening play must actually reach a step, or the step-header/step-choices
   // surfaces above never got collected and the strongest leak vectors go untested.
-  assert.ok(st.phase === 'step', 'setup reached the step phase (step surfaces collected)');
+  assert.ok(st.flow.phase === 'step', 'setup reached the step phase (step surfaces collected)');
   surfaces.forEach(function (s) {
     assert.ok(!leaks(s[1]), s[0] + ' never shows the enemy hidden card');
   });
@@ -71,8 +71,8 @@ test('rules text matches the live rules version', () => {
 test('ranked option diet', () => {
   const m2 = E.newBattle({ maps: [E.MAPS[0]], seed: 77, firstPlayer: 'red' });
   const st2 = E.newSkirmish(m2);
-  E.playCard(st2, st2.hands.red[0], 'normal');
-  assert.ok(st2.phase === 'step', 'setup reached the step phase (diet invariants get exercised)');
+  E.playCard(st2, st2.cards.hands.red[0], 'normal');
+  assert.ok(st2.flow.phase === 'step', 'setup reached the step phase (diet invariants get exercised)');
   {
     const all = E.enumerateChoices(st2);
     const l1 = cp.stepChoiceList(st2, 15, false);

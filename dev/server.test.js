@@ -61,7 +61,7 @@ var runId, skirmishId, finishedState;
 
 test('recordskirmish persists a real finished skirmish (A1)', async function () {
   finishedState = SIM.simSkirmish(E.MAPS[0], 20250901, 'red', 'normal', 'normal');
-  assert.strictEqual(finishedState.phase, 'skirmish-over', 'the sim produced a finished state to hand off');
+  assert.strictEqual(finishedState.flow.phase, 'skirmish-over', 'the sim produced a finished state to hand off');
   const r = await req('POST', '/api/recordskirmish', {
     run: { version: E.VERSION, kind: 'balance', redAi: 'normal', blueAi: 'normal', n: 1, tool: 'server.test.js', deck: 'default', mapset: 'core7', seedBase: 20250901 },
     state: finishedState, firstPlayer: 'red', seed: 20250901
@@ -90,14 +90,14 @@ test('db rows read back through the real routes and parse via envelopeFromRow (B
   assert.strictEqual(sk.status, 200, '/api/skirmishes answers');
   assert.strictEqual(sk.json.length, 1, 'exactly the one skirmish for this run comes back (' + sk.json.length + ')');
   const row = sk.json[0];
-  assert.strictEqual(row.winner, finishedState.skirmishWinner, 'the row winner matches the finished state handed off');
+  assert.strictEqual(row.winner, finishedState.result.skirmishWinner, 'the row winner matches the finished state handed off');
   assert.ok(typeof row.trace === 'string', 'trace crosses as a JSON string (parsed client-side)');
   assert.ok(Array.isArray(row.fs) && row.fs.length > 0, 'the server timeline join attached a per-turn fs track (B2)');
 
   // The real row (not a hand-built fixture) must parse through the consumer the
   // dashboard uses — this is the fixture-vs-reality gap the inventory flagged.
   const env = R.envelopeFromRow(row);
-  assert.ok(env && env.map === E.MAPS[0].name && env.winner === finishedState.skirmishWinner,
+  assert.ok(env && env.map === E.MAPS[0].name && env.winner === finishedState.result.skirmishWinner,
     'envelopeFromRow turns the REAL db row into an envelope (map/winner intact)');
 });
 

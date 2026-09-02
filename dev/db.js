@@ -6,7 +6,7 @@
 
    Every skirmish source (CLI balance lab, dashboard via server proxy, human
    play, LLM skirmishes) funnels through insertSkirmish with a FINISHED engine
-   skirmish state (st.phase === 'skirmish-over').
+   skirmish state (st.flow.phase === 'skirmish-over').
 
    Usage:
      var db = require('./db.js');
@@ -29,9 +29,9 @@
    never create a baseline implicitly; baseline is opt-in per insertRun call.
 
    WOA-032 (SPEC §4, the trace): `skirmishes` grew a `trace` TEXT column — one
-   JSON blob per skirmish holding the full per-play trace (st.playLog, as the
+   JSON blob per skirmish holding the full per-play trace (st.journal.playLog, as the
    engine wrote it — action/hex/kill/leader/unit fields already folded in by
-   WOA-031) plus the per-unit-type `units` fold (st.unitMetrics). Everything
+   WOA-031) plus the per-unit-type `units` fold (st.journal.unitMetrics). Everything
    in SPEC §1-3 derivable from the trace is meant to be derived FROM this
    column (report-model.js folds), not re-captured as new skirmishes columns.
 
@@ -125,12 +125,29 @@ function migrateBattleNames(db) {
    field list and its reader can never drift apart: a new insertSkirmish read
    means extending this list in the same diff. A slimmed state survives the
    JSON round-trip into an identical skirmishes row (pinned by db.test.js). */
-var SKIRMISH_ST_FIELDS = ['phase', 'version', 'skirmishWinner', 'winType', 'mapName',
-  'turnNumber', 'seed', 'stats', 'kills', 'playLog', 'unitMetrics', 'leadChanges',
-  'lastKillTurn', 'reserves', 'units', 'fsTimeline'];
+// The exact fields insertSkirmish reads, addressed by their de-flattened block
+// (WoAProto#221). Top-level identity fields carry a null block. Extend this in
+// the same diff as a new insertSkirmish read — the field list and its reader
+// still cannot drift apart.
+var SKIRMISH_ST_FIELDS = [
+  [null, 'version'], [null, 'mapName'], [null, 'seed'],
+  ['flow', 'phase'], ['flow', 'turnNumber'],
+  ['result', 'skirmishWinner'], ['result', 'winType'], ['result', 'kills'],
+  ['pieces', 'units'], ['pieces', 'reserves'],
+  ['journal', 'stats'], ['journal', 'playLog'], ['journal', 'unitMetrics'],
+  ['journal', 'leadChanges'], ['journal', 'lastKillTurn'], ['journal', 'fsTimeline']
+];
 function slimSkirmishState(st) {
   var s = {};
-  SKIRMISH_ST_FIELDS.forEach(function (k) { if (st && st[k] !== undefined) s[k] = st[k]; });
+  if (!st) return s;
+  SKIRMISH_ST_FIELDS.forEach(function (fb) {
+    var block = fb[0], k = fb[1];
+    var src = block ? st[block] : st;
+    if (src && src[k] !== undefined) {
+      if (block) { (s[block] = s[block] || {})[k] = src[k]; }
+      else s[k] = src[k];
+    }
+  });
   return s;
 }
 
@@ -246,7 +263,7 @@ function setBaseline(h, runId) {
 /* Fold one FINISHED skirmish state into the DB — the same extractions
    engine.js balanceAdd makes (engine.js:1243), kept at skirmish grain instead
    of summed away. Inserts the skirmishes row + its card_plays (+ timeline rows
-   when st.fsTimeline exists) in ONE transaction. Returns skirmishId.
+   when st.journal.fsTimeline exists) in ONE transaction. Returns skirmishId.
      firstPlayer: 'red'|'blue' — who moved first (balanceFP schedule etc.)
      extra: { version?, seed? } — version falls back to st.version, then the
        run's version. seed falls back to st.seed, which by skirmish end is the
@@ -254,8 +271,8 @@ function setBaseline(h, runId) {
        original seed (simSkirmish callers do) should pass extra.seed. */
 function insertSkirmish(h, runId, st, firstPlayer, extra) {
   extra = extra || {};
-  if (!st || st.phase !== 'skirmish-over')
-    throw new Error('insertSkirmish: st must be a finished skirmish (phase skirmish-over, got "' + (st && st.phase) + '")');
+  if (!st || st.flow.phase !== 'skirmish-over')
+    throw new Error('insertSkirmish: st must be a finished skirmish (phase skirmish-over, got "' + (st && st.flow.phase) + '")');
   var version = extra.version || st.version || null;
   if (version === null) {
     var row = h.stmts.getRunVersion.get(runId);
@@ -267,14 +284,14 @@ function insertSkirmish(h, runId, st, firstPlayer, extra) {
   var f = SIM.skirmishFacts(st, firstPlayer);
   var winner = f.winner;
   var seed = extra.seed !== undefined ? extra.seed : nz(st.seed);
-  // WOA-032 (SPEC §4): the trace envelope — st.playLog + st.unitMetrics
+  // WOA-032 (SPEC §4): the trace envelope — st.journal.playLog + st.journal.unitMetrics
   // verbatim as the engine wrote them (WOA-031), not renamed to the spec
   // doc's shorthand keys ("store what the engine gives", feed-forward).
   // ~1.3 KB/skirmish (SPEC §4 cost estimate) — accepted.
   var trace = JSON.stringify({
     v: version, map: nz(st.mapName), seed: seed, fp: nz(firstPlayer),
     winner: winner, winType: nz(f.winType), turns: nz(f.turns),
-    trace: st.playLog || [], units: st.unitMetrics || {}
+    trace: st.journal.playLog || [], units: st.journal.unitMetrics || {}
   });
   return txn(h, function () {
     var res = h.stmts.insertSkirmish.run(
@@ -289,14 +306,14 @@ function insertSkirmish(h, runId, st, firstPlayer, extra) {
       f.resEndRed, f.resEndBlue,                          // WOA-016: pieces left in reserve at skirmish end
       trace, f.hexesRed, f.hexesBlue);
     var skirmishId = Number(res.lastInsertRowid);
-    (st.playLog || []).forEach(function (e) {
+    (st.journal.playLog || []).forEach(function (e) {
       h.stmts.insertCardPlay.run(skirmishId, e.p, e.id, nz(e.mode), nz(e.turn),
         nz(e.seen), e.noop ? 1 : 0, e.p === winner ? 1 : 0);
     });
-    // st.fsTimeline is an upcoming engine field ([fsRed, fsBlue] per turn,
+    // st.journal.fsTimeline is an upcoming engine field ([fsRed, fsBlue] per turn,
     // index 0 = turn 1) — tolerate its absence silently.
-    if (Array.isArray(st.fsTimeline)) {
-      st.fsTimeline.forEach(function (pair, i) {
+    if (Array.isArray(st.journal.fsTimeline)) {
+      st.journal.fsTimeline.forEach(function (pair, i) {
         if (Array.isArray(pair)) h.stmts.insertTimeline.run(skirmishId, i + 1, nz(pair[0]), nz(pair[1]));
       });
     }

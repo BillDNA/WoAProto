@@ -16,20 +16,20 @@
     return c;
   }
   // The AI's hot-loop clone: identical to clone() except it drops what the
-  // search never reads — the journal prose (st.log grows every turn and was
+  // search never reads — the journal prose (st.journal.log grows every turn and was
   // dominating clone cost late-skirmish), all playLog entries but the LAST
   // (noopPenalty reads exactly that one), and fsTimeline. __sim marks the
   // state so I.finishSkirmish never fires persistence hooks for search clones.
   function cloneForSim(st) {
-    var m = st.battle, lg = st.log, pl = st.playLog, tl = st.fsTimeline, sd = st.sideDecks;
+    var m = st.battle, lg = st.journal.log, pl = st.journal.playLog, tl = st.journal.fsTimeline, sd = st.cards.sideDecks;
     // WOA-055: sideDecks registries are immutable for the skirmish (resolved once
     // at newSkirmish) — strip them out of the deep clone (the byId maps carry the
     // whole card catalog) and reattach the SAME reference, like battle/log below.
-    st.battle = null; st.log = []; st.playLog = (pl && pl.length) ? [pl[pl.length - 1]] : []; st.fsTimeline = undefined; st.sideDecks = undefined;
+    st.battle = null; st.journal.log = []; st.journal.playLog = (pl && pl.length) ? [pl[pl.length - 1]] : []; st.journal.fsTimeline = undefined; st.cards.sideDecks = undefined;
     var c = JSON.parse(JSON.stringify(st));
-    st.battle = m; st.log = lg; st.playLog = pl; st.fsTimeline = tl; st.sideDecks = sd;
+    st.battle = m; st.journal.log = lg; st.journal.playLog = pl; st.journal.fsTimeline = tl; st.cards.sideDecks = sd;
     c.battle = { wins: { red: m.wins.red, blue: m.wins.blue }, skirmishIndex: m.skirmishIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
-    c.sideDecks = sd;
+    c.cards.sideDecks = sd;
     c.__sim = true;
     return c;
   }
@@ -95,7 +95,7 @@
     var score = 0;
     I.listAttacks(st, en).forEach(function (a) {
       var res = I.computeAttack(st, Object.assign({}, a, { mod: 1 }));
-      var tgt = st.units[a.to];
+      var tgt = st.pieces.units[a.to];
       if (res.defenderIsHQ) {
         if (res.outcome !== 'defender') score -= w.threatHQ; // enemy can take our HQ
       } else if (tgt && tgt.owner === me) {
@@ -126,7 +126,7 @@
   function evalState(st, me, w) {
     w = w || AI_WEIGHTS;
     var en = I.other(me);
-    if (st.phase === 'skirmish-over') return st.skirmishWinner === me ? 1e6 : -1e6;
+    if (st.flow.phase === 'skirmish-over') return st.result.skirmishWinner === me ? 1e6 : -1e6;
     var s = 0;
     // Attrition projection: who wins if the decks ran out right now? Ramps up as
     // they empty, so the side losing the standstill (incl. ties — second player
@@ -135,23 +135,23 @@
     var fsMe = I.fieldScore(st, me), fsEn = I.fieldScore(st, en);
     var turnsLeft = Math.min(I.cardsRemaining(st, me), I.cardsRemaining(st, en));
     var urgency = Math.max(0, 1 - turnsLeft / 12);
-    var attrWin = fsMe > fsEn || (fsMe === fsEn && st.second === me);
+    var attrWin = fsMe > fsEn || (fsMe === fsEn && st.flow.second === me);
     s += (attrWin ? 1 : -1) * w.attrWin * urgency;
     s += (fsMe - fsEn) * (w.fsDiff + w.fsDiffUrgent * urgency);
     var myUnits = [], enUnits = [];
-    for (var h in st.units) {
-      var u = st.units[h];
+    for (var h in st.pieces.units) {
+      var u = st.pieces.units[h];
       (u.owner === me ? myUnits : enUnits).push({ h: h, u: u });
     }
     myUnits.forEach(function (x) { s += unitValue(x.u.type, w) * w.unitOnBoard; });
     enUnits.forEach(function (x) { s -= unitValue(x.u.type, w) * w.unitOnBoard; });
     // reserves slightly less valuable than deployed
     ['infantry', 'cavalry', 'artillery'].forEach(function (t) {
-      s += st.reserves[me][t] * unitValue(t, w) * w.unitReserve;
-      s -= st.reserves[en][t] * unitValue(t, w) * w.unitReserve;
+      s += st.pieces.reserves[me][t] * unitValue(t, w) * w.unitReserve;
+      s -= st.pieces.reserves[en][t] * unitValue(t, w) * w.unitReserve;
     });
     // advance toward enemy HQ; keep some defense near own HQ
-    var ehq = st.hq[en], mhq = st.hq[me];
+    var ehq = st.board.hq[en], mhq = st.board.hq[me];
     myUnits.forEach(function (x) {
       s -= I.dist(x.h, ehq) * w.advance;
       if (I.dist(x.h, mhq) <= 1) s += w.hqGuard;
@@ -161,7 +161,7 @@
     I.listAttacks(st, me).forEach(function (a) {
       var res = I.computeAttack(st, a);
       if (res.defenderIsHQ) { if (res.outcome !== 'defender') s += w.myThreatHQ; }
-      else if (res.outcome === 'attacker') s += unitValue(st.units[a.to].type, w) * w.myThreatKill;
+      else if (res.outcome === 'attacker') s += unitValue(st.pieces.units[a.to].type, w) * w.myThreatKill;
     });
     // enemy threats on mine
     s += threatScan(st, me, w);
@@ -170,12 +170,12 @@
     // from. Count each covered edge on a live lane (my unit's hex, or a hex
     // shielding my HQ) so orientation stops being an arbitrary tie (V1).
     var enemyHexes = enUnits.map(function (x) { return x.h; });
-    for (var th in st.trenches) {
-      if (I.dist(th, mhq) <= 1) s += w.trenchHome * st.trenches[th].length;
-      var occ = st.units[th];
+    for (var th in st.pieces.trenches) {
+      if (I.dist(th, mhq) <= 1) s += w.trenchHome * st.pieces.trenches[th].length;
+      var occ = st.pieces.units[th];
       if ((occ && occ.owner === me) || I.dist(th, mhq) <= 1) {
-        for (var ti = 0; ti < st.trenches[th].length; ti++) {
-          s += w.trenchFacing * trenchFacingLive(st, th, st.trenches[th][ti].dirs, enemyHexes);
+        for (var ti = 0; ti < st.pieces.trenches[th].length; ti++) {
+          s += w.trenchFacing * trenchFacingLive(st, th, st.pieces.trenches[th][ti].dirs, enemyHexes);
         }
       }
     }
@@ -215,7 +215,7 @@
         mod: o.mod || 0, tieSpare: !!o.tieSpare, noAdvance: !!o.noAdvance });
       if (res.defenderIsHQ && res.outcome !== 'defender') return 1e4; // skirmish won
       var tgt = res.defenderUnit ? unitValue(res.defenderUnit, w) : 0;
-      var mine = unitValue(st.units[c.from].type, w);
+      var mine = unitValue(st.pieces.units[c.from].type, w);
       if (res.outcome === 'attacker') return 100 + tgt * 10;
       if (res.outcome === 'tie') return 50 + (tgt - mine) * 10;
       return -mine * 10; // walking into a repulse
@@ -234,8 +234,8 @@
   }
   function prescoreCtx(st, me) {
     var en = I.other(me), enemyHexes = [];
-    for (var h in st.units) if (st.units[h].owner === en) enemyHexes.push(h);
-    return { mhq: st.hq[me], ehq: st.hq[en], enemyHexes: enemyHexes };
+    for (var h in st.pieces.units) if (st.pieces.units[h].owner === en) enemyHexes.push(h);
+    return { mhq: st.board.hq[me], ehq: st.board.hq[en], enemyHexes: enemyHexes };
   }
 
   // Greedily resolve the pending card on a cloned state; returns {score, choices}
@@ -243,7 +243,7 @@
     w = w || AI_WEIGHTS;
     var choices = [];
     var guard = 0;
-    while (sim.phase === 'step' && guard++ < 12) {
+    while (sim.flow.phase === 'step' && guard++ < 12) {
       var eo = enumerateWithOptions(sim);
       var opts = eo.choices;
       var best = null, bestScore = -Infinity;
@@ -263,7 +263,7 @@
         var sc = evalState(sim2, me, w) + (randomness ? I.rnd(s) * randomness : 0);
         if (c.skip) sc -= 1; // mild bias toward acting
         // anti-shuffle: re-swapping the pair I swapped last time is ping-ponging
-        if (c.swap && sim.lastSwap && sim.lastSwap[me] === I.swapKey(c.a, c.b)) sc -= w.antiShuffle;
+        if (c.swap && sim.journal.lastSwap && sim.journal.lastSwap[me] === I.swapKey(c.a, c.b)) sc -= w.antiShuffle;
         if (sc > bestScore) { bestScore = sc; best = c; }
       });
       if (!best) best = { skip: true };
@@ -287,24 +287,24 @@
   // them play their best reply, and average over a few sampled hands.
   function sampledReplyScore(endSt, me, s, samples, w) {
     w = w || AI_WEIGHTS;
-    if (endSt.phase === 'skirmish-over') return evalState(endSt, me, w);
-    var opp = endSt.current;
+    if (endSt.flow.phase === 'skirmish-over') return evalState(endSt, me, w);
+    var opp = endSt.flow.current;
     var total = 0;
     for (var k = 0; k < samples; k++) {
       var sim0 = cloneForSim(endSt);
-      var pool = sim0.decks[opp].concat(sim0.hands[opp]);
+      var pool = sim0.cards.decks[opp].concat(sim0.cards.hands[opp]);
       I.shuffle(s, pool);
-      var hn = sim0.hands[opp].length;
-      sim0.hands[opp] = pool.slice(0, hn);
-      sim0.decks[opp] = pool.slice(hn);
+      var hn = sim0.cards.hands[opp].length;
+      sim0.cards.hands[opp] = pool.slice(0, hn);
+      sim0.cards.decks[opp] = pool.slice(hn);
       var bestOpp = -Infinity, bestState = sim0;
       var tried = {};
-      sim0.hands[opp].forEach(function (cid) {
+      sim0.cards.hands[opp].forEach(function (cid) {
         if (tried[cid]) return;
         tried[cid] = true;
         var sim2 = cloneForSim(sim0);
         try { I.playCard(sim2, cid); } catch (e) { return; }
-        var r = (sim2.phase === 'step') ? greedyResolve(sim2, opp, 0, s, w) : { score: evalState(sim2, opp, w), choices: [] };
+        var r = (sim2.flow.phase === 'step') ? greedyResolve(sim2, opp, 0, s, w) : { score: evalState(sim2, opp, w), choices: [] };
         if (r.score > bestOpp) { bestOpp = r.score; bestState = sim2; }
       });
       total += evalState(bestState, me, w);
@@ -322,10 +322,10 @@
   function aiPlanTurn(st, personality) {
     var cfg = aiConfig(personality);
     var w = cfg.w;
-    var me = st.current;
+    var me = st.flow.current;
     var randomness = cfg.noise;
     var s = { seed: (st.seed ^ 0x9e3779b9) | 0 };
-    var hand = st.hands[me].slice();
+    var hand = st.cards.hands[me].slice();
     var candidates = [];
     var tried = {};
     // A plan that resolves ZERO actions is a dead turn (Bill: players should
@@ -334,7 +334,7 @@
     // between candidates flipped it). When truly nothing can act, every plan
     // carries the penalty, so it cancels out.
     function noopPenalty(sim) {
-      var le = sim.playLog[sim.playLog.length - 1];
+      var le = sim.journal.playLog[sim.journal.playLog.length - 1];
       return (le && le.p === me && le.noop) ? w.noopPenalty : 0;
     }
     hand.forEach(function (cid) {
@@ -342,7 +342,7 @@
       tried[cid] = true;
       var sim = cloneForSim(st);
       try { I.playCard(sim, cid); } catch (e) { return; }
-      var r = (sim.phase === 'step') ? greedyResolve(sim, me, randomness, s, w) : { score: evalState(sim, me, w), choices: [] };
+      var r = (sim.flow.phase === 'step') ? greedyResolve(sim, me, randomness, s, w) : { score: evalState(sim, me, w), choices: [] };
       var pen = noopPenalty(sim);
       candidates.push({ plan: { cardId: cid, mode: 'normal', choices: r.choices },
         score: r.score - pen + (randomness ? I.rnd(s) * randomness : 0), pen: pen, end: sim });
@@ -354,7 +354,7 @@
       ['attack', 'reposition'].forEach(function (mode) {
         var sim = cloneForSim(st);
         try { I.playCard(sim, burn, mode); } catch (e) { return; }
-        var r = (sim.phase === 'step') ? greedyResolve(sim, me, randomness, s, w) : { score: evalState(sim, me, w), choices: [] };
+        var r = (sim.flow.phase === 'step') ? greedyResolve(sim, me, randomness, s, w) : { score: evalState(sim, me, w), choices: [] };
         var pen = noopPenalty(sim);
         candidates.push({ plan: { cardId: burn, mode: mode, choices: r.choices },
           score: r.score - w.fallbackBias - pen + (randomness ? I.rnd(s) * randomness : 0), pen: pen, end: sim }); // mild bias toward printed actions
@@ -392,11 +392,11 @@
     opts = opts || {};
     var k = opts.k || 15;
     var w = aiConfig(opts.config).w;
-    var me = st.current;
+    var me = st.flow.current;
     var eo = enumerateWithOptions(st);
     if (!eo.o) return { type: null, total: 0, shown: [] };
     if (eo.o.type === 'attack') k = Math.max(k, eo.choices.length); // never hide an attack
-    var mhq = st.hq[me], ehq = st.hq[I.other(me)];
+    var mhq = st.board.hq[me], ehq = st.board.hq[I.other(me)];
     function nearHQ(c) {
       var spots = [c.hex, c.to, c.from, c.a, c.b].filter(Boolean);
       return spots.some(function (h) { return I.dist(h, mhq) <= 1 || I.dist(h, ehq) <= 1; });

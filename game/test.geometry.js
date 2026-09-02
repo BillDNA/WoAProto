@@ -63,7 +63,7 @@ test('custom board shapes (explicit hex sets)', () => {
   assert.ok(E.validateMaps([IRR]).length === 0, 'irregular map validates: ' + E.validateMaps([IRR]).join('; '));
   var m = E.newBattle({ seed: 5, firstPlayer: 'red', maps: [IRR] });
   var st = E.newSkirmish(m);
-  assert.ok(st.boardShape === '@irr1', 'inline shapeDef registered under @<map id> (got ' + st.boardShape + ')');
+  assert.ok(st.board.boardShape === '@irr1', 'inline shapeDef registered under @<map id> (got ' + st.board.boardShape + ')');
   assert.ok(E.hexes().length === 7, 'skirmish runs on the 7-hex board');
   assert.ok(E.hexLabel('-1,0') === 'B1' && E.hexLabel('0,0') === 'B2', 'labels count from the leftmost hex');
   // point-symmetry from a hex set (this outline is symmetric about 0,0 -> Mirror works)
@@ -87,6 +87,6 @@ test('custom board shapes (explicit hex sets)', () => {
     '25-hex edited shape rejected by validateMaps');
   // an edited shape can play a full AI skirmish
   var sim = SIM.simSkirmish(IRR, 99, 'red', 'normal', 'normal');
-  assert.ok(sim.phase === 'skirmish-over', 'AI skirmish completes on an irregular board (winner ' + sim.skirmishWinner + ')');
+  assert.ok(sim.flow.phase === 'skirmish-over', 'AI skirmish completes on an irregular board (winner ' + sim.result.skirmishWinner + ')');
 })();
 });

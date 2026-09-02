@@ -7,17 +7,17 @@
   var I = global.WOA_E = global.WOA_E || {};
 
   /* ---------- queries ---------- */
-  function unitAt(st, h) { return st.units[h] || null; }
+  function unitAt(st, h) { return st.pieces.units[h] || null; }
   function isHQ(st, h) {
-    if (st.hqAlive.red && st.hq.red === h) return 'red';
-    if (st.hqAlive.blue && st.hq.blue === h) return 'blue';
+    if (st.board.hqAlive.red && st.board.hq.red === h) return 'red';
+    if (st.board.hqAlive.blue && st.board.hq.blue === h) return 'blue';
     return null;
   }
   function isEmpty(st, h) { return !unitAt(st, h) && !isHQ(st, h); }
   function controlledHexes(st, p) {
     var out = [];
-    for (var h in st.units) if (st.units[h].owner === p) out.push(h);
-    if (st.hqAlive[p]) out.push(st.hq[p]);
+    for (var h in st.pieces.units) if (st.pieces.units[h].owner === p) out.push(h);
+    if (st.board.hqAlive[p]) out.push(st.board.hq[p]);
     return out;
   }
   function deployTargets(st, p, anywhere) {
@@ -35,18 +35,18 @@
     }
     return Object.keys(set);
   }
-  // st.trenches[hex] is an ARRAY of {dirs:[d,d+1], owner} — a hex may hold
+  // st.pieces.trenches[hex] is an ARRAY of {dirs:[d,d+1], owner} — a hex may hold
   // several trenches (per Bill's DoubleTrenchNotAllowed report), but their
   // edges may not overlap each I.other or this hex's own terrain sides.
   function trenchCovers(st, h, d) {
-    var list = st.trenches[h];
+    var list = st.pieces.trenches[h];
     if (!list) return false;
     for (var i = 0; i < list.length; i++) if (list[i].dirs.indexOf(d) >= 0) return true;
     return false;
   }
   function edgeFreeForTrench(st, h, d) {
     // only works owned by this hex occupy the same physical space as a trench here
-    return !st.terrainEdges[I.sideKey(h, d)] && !trenchCovers(st, h, d);
+    return !st.board.terrainEdges[I.sideKey(h, d)] && !trenchCovers(st, h, d);
   }
   function trenchOrientations(st, h) {
     var out = [];
@@ -76,8 +76,8 @@
       seen[k] = true;
       out.push({ from: from, to: to, via: via || null });
     }
-    for (var h in st.units) {
-      if (st.units[h].owner !== p) continue;
+    for (var h in st.pieces.units) {
+      if (st.pieces.units[h].owner !== p) continue;
       I.neighbors(h).forEach(function (n) {
         var u = unitAt(st, n), hq = isHQ(st, n);
         if ((u && u.owner !== p) || (hq && hq !== p)) add(h, n, null);
@@ -99,9 +99,9 @@
     // it into the code): swapping two units of the SAME type changes nothing on
     // the board — it's a hidden skip the metrics can't see — so it's not legal.
     var moves = [], swaps = [], seenSwap = {};
-    for (var h in st.units) {
-      if (st.units[h].owner !== p) continue;
-      var myType = st.units[h].type;
+    for (var h in st.pieces.units) {
+      if (st.pieces.units[h].owner !== p) continue;
+      var myType = st.pieces.units[h].type;
       I.neighbors(h).forEach(function (n) {
         if (isEmpty(st, n)) moves.push({ from: h, to: n, via: null });
         var u = unitAt(st, n);
@@ -130,10 +130,10 @@
     // June 2026 ruling: the naval guns reach the whole board — ANY trench or
     // forest may be targeted (the old in/adjacent-to-controlled-hexes zone is gone).
     var trenches = [];
-    Object.keys(st.trenches).forEach(function (h) {
-      st.trenches[h].forEach(function (t, i) { trenches.push({ hex: h, idx: i, dirs: t.dirs }); });
+    Object.keys(st.pieces.trenches).forEach(function (h) {
+      st.pieces.trenches[h].forEach(function (t, i) { trenches.push({ hex: h, idx: i, dirs: t.dirs }); });
     });
-    var forestPieces = st.terrainPieces.filter(function (pc) {
+    var forestPieces = st.board.terrainPieces.filter(function (pc) {
       return pc.t === 'F' && !pc.removed;
     });
     return { trenches: trenches, forestPieces: forestPieces };
@@ -160,7 +160,7 @@
   // Reads both hexes' sides — ownership of the piece is irrelevant.
   function riverBetween(st, a, b) {
     var dOut = I.dirBetween(a, b), dIn = I.dirBetween(b, a);
-    return st.terrainEdges[I.sideKey(a, dOut)] === 'R' || st.terrainEdges[I.sideKey(b, dIn)] === 'R';
+    return st.board.terrainEdges[I.sideKey(a, dOut)] === 'R' || st.board.terrainEdges[I.sideKey(b, dIn)] === 'R';
   }
   function supportFor(st, p, skirmishHex, excludeHex, attacking) {
     var total = 0, parts = [], hexes = [];
@@ -181,8 +181,8 @@
   }
 
   function computeAttack(st, atk) {
-    var p = st.units[atk.from].owner, e = I.other(p);
-    var au = st.units[atk.from];
+    var p = st.pieces.units[atk.from].owner, e = I.other(p);
+    var au = st.pieces.units[atk.from];
     var attackEdgeFromHex = atk.via || atk.from; // hex the attack crosses from
     var atkSide = I.sideKey(attackEdgeFromHex, I.dirBetween(attackEdgeFromHex, atk.to));
     var defSide = I.sideKey(atk.to, I.dirBetween(atk.to, attackEdgeFromHex));
@@ -190,7 +190,7 @@
     var aPow = I.UNITS[au.type].atk;
     var asup = supportFor(st, p, atk.to, atk.from, true);
     aPow += asup.total; aParts = aParts.concat(asup.parts);
-    if (st.terrainEdges[atkSide] === 'F') { aPow += 1; aParts.push('Forest +1'); }
+    if (st.board.terrainEdges[atkSide] === 'F') { aPow += 1; aParts.push('Forest +1'); }
     var mod = atk.mod || 0;
     if (mod) { aPow += mod; aParts.push('Card ' + (mod > 0 ? '+' : '') + mod); }
 
@@ -201,7 +201,7 @@
     else { dPow = 0; dParts = ['Headquarters defense 0']; }
     var dsup = supportFor(st, e, atk.to, null, false);
     dPow += dsup.total; dParts = dParts.concat(dsup.parts);
-    if (st.terrainEdges[defSide] === 'M') { dPow += 1; dParts.push('Mountain +1'); }
+    if (st.board.terrainEdges[defSide] === 'M') { dPow += 1; dParts.push('Mountain +1'); }
     // (trenches no longer add defense — they deny attacker support instead;
     //  the attack itself may always cross a trench or river)
     var outcome = aPow > dPow ? 'attacker' : (dPow > aPow ? 'defender' : 'tie');
@@ -213,9 +213,9 @@
   }
 
   function resolveAttack(st, atk) {
-    var p = st.units[atk.from].owner, e = I.other(p);
+    var p = st.pieces.units[atk.from].owner, e = I.other(p);
     var res = computeAttack(st, atk);
-    var au = st.units[atk.from];
+    var au = st.pieces.units[atk.from];
     var du = unitAt(st, atk.to), dHQ = isHQ(st, atk.to);
     // rules 1.1 (S1): a trench on the ATTACKED border of the defending hex lets
     // the defender survive an even fight, and stops a tie from capturing a
@@ -237,24 +237,24 @@
       (atk.via ? ', striking through the HQ' : '') +
       ' (' + res.attackerPower + ' vs ' + res.defenderPower + '): ';
 
-    // st.kills tracks kills for stats/journal only — victory reads I.fieldScore.
+    // st.result.kills tracks kills for stats/journal only — victory reads I.fieldScore.
     function killDefender() {
       if (du) {
-        delete st.units[atk.to]; st.kills[p] += I.UNITS[du.type].worth; if (!st.stats.firstBlood) st.stats.firstBlood = p;
-        um[du.type].die++; um[du.type].dieT.push(st.turnNumber); um[au.type].kill++;
+        delete st.pieces.units[atk.to]; st.result.kills[p] += I.UNITS[du.type].worth; if (!st.journal.stats.firstBlood) st.journal.stats.firstBlood = p;
+        um[du.type].die++; um[du.type].dieT.push(st.flow.turnNumber); um[au.type].kill++;
         I.recordKill(st, 1);
       }
-      if (dHQ) { st.hqAlive[dHQ] = false; }
-      st.lastKillTurn = st.turnNumber;
+      if (dHQ) { st.board.hqAlive[dHQ] = false; }
+      st.journal.lastKillTurn = st.flow.turnNumber;
     }
     function killAttacker() {
-      delete st.units[atk.from];
-      st.kills[e] += I.UNITS[au.type].worth;
-      if (!st.stats.firstBlood) st.stats.firstBlood = e;
-      um[au.type].die++; um[au.type].dieT.push(st.turnNumber);
+      delete st.pieces.units[atk.from];
+      st.result.kills[e] += I.UNITS[au.type].worth;
+      if (!st.journal.stats.firstBlood) st.journal.stats.firstBlood = e;
+      um[au.type].die++; um[au.type].dieT.push(st.flow.turnNumber);
       if (du) um[du.type].kill++;
       I.recordKill(st, 1);
-      st.lastKillTurn = st.turnNumber;
+      st.journal.lastKillTurn = st.flow.turnNumber;
     }
 
     if (res.outcome === 'attacker') {
@@ -262,8 +262,8 @@
       if (atk.noAdvance) {
         msg += 'defender destroyed; the attacker holds its ground.';
       } else {
-        delete st.units[atk.from];
-        st.units[atk.to] = au;
+        delete st.pieces.units[atk.from];
+        st.pieces.units[atk.to] = au;
         msg += 'defender destroyed, attacker advances.';
       }
     } else if (res.outcome === 'defender') {

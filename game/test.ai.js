@@ -10,13 +10,13 @@ test('Field Marshal AI & skirmish sim', () => {
 (function () {
   var t0 = Date.now();
   var st = SIM.simSkirmish(E.MAPS[0], 4242, 'red', 'hard', 'normal');
-  assert.ok(st.phase === 'skirmish-over', 'hard-vs-normal skirmish finishes (winner ' + st.skirmishWinner + ', ' + st.turnNumber + ' turns)');
+  assert.ok(st.flow.phase === 'skirmish-over', 'hard-vs-normal skirmish finishes (winner ' + st.result.skirmishWinner + ', ' + st.flow.turnNumber + ' turns)');
   console.log('  (hard-AI skirmish took ' + ((Date.now() - t0) / 1000).toFixed(1) + 's)');
   var r = SIM.balanceMap(E.MAPS[4], 4, { seedBase: 11 });
   assert.ok(r.redWins <= 4 && r.turns > 0 && r.unfinished === 0, 'balanceMap aggregates: ' + JSON.stringify({ red: r.redWins, first: r.firstWins, hq: r.hqWins }));
   var a = SIM.simSkirmish(E.MAPS[2], 777, 'red', 'normal', 'normal');
   var b = SIM.simSkirmish(E.MAPS[2], 777, 'red', 'normal', 'normal');
-  assert.ok(a.skirmishWinner === b.skirmishWinner && a.turnNumber === b.turnNumber, 'simulation is deterministic per seed');
+  assert.ok(a.result.skirmishWinner === b.result.skirmishWinner && a.flow.turnNumber === b.flow.turnNumber, 'simulation is deterministic per seed');
 })();
 });
 
@@ -24,37 +24,37 @@ test('attrition victory (surviving units on the board)', () => {
 (function () {
   // Drain blue's card pool so red's next completed turn triggers attrition.
   function drainBlue(st) {
-    st.decks.blue = []; st.discards.blue = []; st.hands.blue = [];
-    st.firstTurnDone.blue = true; // or drawHand would gift the starting card
+    st.cards.decks.blue = []; st.cards.discards.blue = []; st.cards.hands.blue = [];
+    st.flow.firstTurnDone.blue = true; // or drawHand would gift the starting card
   }
   // Kills don't score: blue killed 5 points' worth, but red has more ON the board.
   var st = testSkirmish(111);
-  st.units['2,-1'] = { type: 'artillery', owner: 'red' };  // red fields 3 field score
-  st.units['-3,1'] = { type: 'infantry', owner: 'blue' };  // blue fields 1 field score
-  st.kills.blue = 5;
+  st.pieces.units['2,-1'] = { type: 'artillery', owner: 'red' };  // red fields 3 field score
+  st.pieces.units['-3,1'] = { type: 'infantry', owner: 'blue' };  // blue fields 1 field score
+  st.result.kills.blue = 5;
   drainBlue(st);
-  st.hands.red = ['attack_plus1']; // no legal attack: resolves to nothing, ends the turn
+  st.cards.hands.red = ['attack_plus1']; // no legal attack: resolves to nothing, ends the turn
   E.playCard(st, 'attack_plus1');
-  assert.ok(st.phase === 'skirmish-over' && st.skirmishWinner === 'red' && st.winType === 'attrition',
+  assert.ok(st.flow.phase === 'skirmish-over' && st.result.skirmishWinner === 'red' && st.result.winType === 'attrition',
     'attrition counts surviving units, not kills (red wins 3-1 despite 0-5 in kills)');
-  assert.ok(st.log.some(function (l) { return l.msg.indexOf('field score 3 vs 1, surviving units') >= 0; }),
+  assert.ok(st.journal.log.some(function (l) { return l.msg.indexOf('field score 3 vs 1, surviving units') >= 0; }),
     'journal reports the surviving-unit scores');
   assert.ok(E.fieldScore(st, 'red') === 3 && E.fieldScore(st, 'blue') === 1, 'fieldScore reads the board');
 
   // Undeployed reserves count for nothing: blue's full reserve loses to one fielded infantry.
   var st2 = testSkirmish(112);
-  st2.units['2,-1'] = { type: 'infantry', owner: 'red' };
+  st2.pieces.units['2,-1'] = { type: 'infantry', owner: 'red' };
   drainBlue(st2);
-  st2.hands.red = ['attack_plus1'];
+  st2.cards.hands.red = ['attack_plus1'];
   E.playCard(st2, 'attack_plus1');
-  assert.ok(st2.skirmishWinner === 'red', 'undeployed reserves count for nothing');
+  assert.ok(st2.result.skirmishWinner === 'red', 'undeployed reserves count for nothing');
 
   // Bare-board tie still goes to the second player.
   var st3 = testSkirmish(113);
   drainBlue(st3);
-  st3.hands.red = ['attack_plus1'];
+  st3.cards.hands.red = ['attack_plus1'];
   E.playCard(st3, 'attack_plus1');
-  assert.ok(st3.skirmishWinner === st3.second && st3.skirmishWinner === 'blue', '0-0 tie goes to the second player');
+  assert.ok(st3.result.skirmishWinner === st3.flow.second && st3.result.skirmishWinner === 'blue', '0-0 tie goes to the second player');
 })();
 });
 
@@ -63,7 +63,7 @@ test('behaviour counters (balance-lab metrics)', () => {
   var st = testSkirmish(120);
   E.playCard(st, 'deploy_inf_start');
   E.applyStep(st, { hex: E.stepOptions(st).targets[0] });
-  assert.ok(st.stats.deploys === 1, 'deploy increments stats.deploys');
+  assert.ok(st.journal.stats.deploys === 1, 'deploy increments stats.deploys');
   var r = SIM.balanceMap(E.MAPS[0], 2, { seedBase: 5 });
   // deploys (Attack/Swap share), the attrition slice (attritionEndings/
   // attritionKillTail for Tie%/Drag) and the HQ slice (hqEndings/reserveEndRedHQ/
@@ -97,9 +97,9 @@ test('metrics-v2 trace capture (per-play trace + units fold)', () => {
   var totalAtkEntries = 0, totalDeployEntries = 0, totalKillSum = 0, totalDieSum = 0, totalDieTSum = 0, totalLd = 0, totalPlays = 0;
   seeds.forEach(function (seed) {
     var st = SIM.simSkirmish(E.MAPS[seed % E.MAPS.length], seed, 'red', 'hard', 'hard');
-    assert.ok(st.phase === 'skirmish-over', 'seed ' + seed + ': skirmish finishes (' + st.turnNumber + ' turns)');
+    assert.ok(st.flow.phase === 'skirmish-over', 'seed ' + seed + ': skirmish finishes (' + st.flow.turnNumber + ' turns)');
     var killSum = 0, dieSum = 0, dieTSum = 0;
-    st.playLog.forEach(function (e) {
+    st.journal.playLog.forEach(function (e) {
       totalPlays++;
       assert.ok(!e.a || VALID_A[e.a], 'trace entry a is deploy|attack|swap|march or absent (got ' + e.a + ')');
       if (e.a === 'attack') { totalAtkEntries++; killSum += e.k || 0; assert.ok(!!e.h, 'attack entry carries h (target hex)'); }
@@ -111,16 +111,16 @@ test('metrics-v2 trace capture (per-play trace + units fold)', () => {
       assert.ok(typeof e.turn === 'number', 'entry keeps its original turn field');
     });
     Object.keys(E.UNITS).forEach(function (t) {
-      var u = st.unitMetrics[t];
+      var u = st.journal.unitMetrics[t];
       assert.ok(u && Array.isArray(u.dep) && typeof u.atk === 'number' && typeof u.abs === 'number' &&
         typeof u.kill === 'number' && typeof u.die === 'number',
         'seed ' + seed + ': unitMetrics.' + t + ' has {dep,atk,abs,kill,die} (' + JSON.stringify(u) + ')');
       dieSum += u.die;
-      u.dep.forEach(function (turn) { assert.ok(turn >= 1 && turn <= st.turnNumber, t + ' dep turn within skirmish range'); });
+      u.dep.forEach(function (turn) { assert.ok(turn >= 1 && turn <= st.flow.turnNumber, t + ' dep turn within skirmish range'); });
       // dieT is a death-TURN list, symmetric to dep and equal-length to die.
       assert.ok(Array.isArray(u.dieT) && u.dieT.length === u.die,
         'seed ' + seed + ': unitMetrics.' + t + '.dieT is an array with one entry per death (' + (u.dieT || []).length + ' == ' + u.die + ')');
-      u.dieT.forEach(function (turn) { assert.ok(turn >= 1 && turn <= st.turnNumber, t + ' dieT turn within skirmish range'); });
+      u.dieT.forEach(function (turn) { assert.ok(turn >= 1 && turn <= st.flow.turnNumber, t + ' dieT turn within skirmish range'); });
       dieTSum += u.dieT.length;
     });
     totalKillSum += killSum; totalDieSum += dieSum; totalDieTSum += dieTSum;
@@ -129,9 +129,9 @@ test('metrics-v2 trace capture (per-play trace + units fold)', () => {
     assert.ok(dieTSum === dieSum, 'seed ' + seed + ': sum of units[*].dieT.length == sum of units[*].die (' +
       dieTSum + ' == ' + dieSum + ')');
     var totalAtkByType = 0;
-    Object.keys(E.UNITS).forEach(function (t) { totalAtkByType += st.unitMetrics[t].atk; });
-    assert.ok(totalAtkByType === st.stats.attacks, 'seed ' + seed + ': sum of unitMetrics[*].atk == stats.attacks (' +
-      totalAtkByType + ' == ' + st.stats.attacks + ')');
+    Object.keys(E.UNITS).forEach(function (t) { totalAtkByType += st.journal.unitMetrics[t].atk; });
+    assert.ok(totalAtkByType === st.journal.stats.attacks, 'seed ' + seed + ': sum of unitMetrics[*].atk == stats.attacks (' +
+      totalAtkByType + ' == ' + st.journal.stats.attacks + ')');
   });
   assert.ok(totalAtkEntries > 0 && totalDeployEntries > 0, 'trace produced attack and deploy entries across seeds (' +
     totalAtkEntries + ' atk / ' + totalDeployEntries + ' deploy of ' + totalPlays + ' plays)');
@@ -154,12 +154,12 @@ test('AI personalities are data', () => {
   // a raw config object plans a legal turn
   var st = testSkirmish(140);
   var plan = E.aiPlanTurn(st, { noise: 0, breadth: 2, replySamples: 1, replyWeight: 0.5, weights: { advance: 9 } });
-  assert.ok(plan && st.hands.red.indexOf(plan.cardId) >= 0, 'raw config object produces a plan from the real hand');
+  assert.ok(plan && st.cards.hands.red.indexOf(plan.cardId) >= 0, 'raw config object produces a plan from the real hand');
   // personality skirmishes run to completion and stay deterministic
   var a = SIM.simSkirmish(E.MAPS[4], 4242, 'red', 'brawler', 'turtle');
   var b = SIM.simSkirmish(E.MAPS[4], 4242, 'red', 'brawler', 'turtle');
-  assert.ok(a.phase === 'skirmish-over', 'brawler-vs-turtle skirmish finishes (winner ' + a.skirmishWinner + ', ' + a.turnNumber + ' turns)');
-  assert.ok(a.skirmishWinner === b.skirmishWinner && a.turnNumber === b.turnNumber, 'personality skirmishes are deterministic per seed');
+  assert.ok(a.flow.phase === 'skirmish-over', 'brawler-vs-turtle skirmish finishes (winner ' + a.result.skirmishWinner + ', ' + a.flow.turnNumber + ' turns)');
+  assert.ok(a.result.skirmishWinner === b.result.skirmishWinner && a.flow.turnNumber === b.flow.turnNumber, 'personality skirmishes are deterministic per seed');
   // guardrail: a config that zeroes the anti-degeneracy terms is still legal
   // (Bill may experiment) but the defaults must not lose them
   assert.ok(E.AI_WEIGHTS.noopPenalty === 80 && E.AI_WEIGHTS.antiShuffle === 10, 'anti-degeneracy weights present in defaults');
@@ -175,11 +175,11 @@ test('AI dead-turn regression (hard AI must not skip turn 1)', () => {
       var plan = E.aiPlanTurn(st, diff);
       E.playCard(st, plan.cardId, plan.mode || 'normal');
       var g = 0;
-      while (st.phase === 'step' && g++ < 12) {
+      while (st.flow.phase === 'step' && g++ < 12) {
         var c = plan.choices.shift() || { skip: true };
         try { E.applyStep(st, c); } catch (e) { E.applyStep(st, { skip: true }); }
       }
-      var le = st.playLog[st.playLog.length - 1];
+      var le = st.journal.playLog[st.journal.playLog.length - 1];
       if (le && le.noop) noops++;
     }
     assert.ok(noops === 0, diff + ' AI: 0 turn-1 dead turns across 6 seeds (got ' + noops + ')');
@@ -191,10 +191,10 @@ test('concession', () => {
 (function () {
   var st = testSkirmish(88);
   E.concede(st, 'red');
-  assert.ok(st.phase === 'skirmish-over' && st.skirmishWinner === 'blue' && st.winType === 'concession',
+  assert.ok(st.flow.phase === 'skirmish-over' && st.result.skirmishWinner === 'blue' && st.result.winType === 'concession',
     'conceding hands the skirmish to the enemy');
   assert.ok(st.battle.wins.blue === 1 && st.battle.lastLoser === 'red', 'match bookkeeping matches a normal loss');
-  assert.ok(st.log.some(function (l) { return l.msg.indexOf('concedes the field') >= 0; }), 'concession reaches the journal');
+  assert.ok(st.journal.log.some(function (l) { return l.msg.indexOf('concedes the field') >= 0; }), 'concession reaches the journal');
 })();
 });
 
@@ -205,15 +205,15 @@ test('concede advisory (foregone-conclusion heuristic)', () => {
   // hopeless for red: 1 turn left, blue has 5 field score of units on the field vs red's
   // none (need 6 incl. the tie that goes to blue), best-case swing is 3/turn,
   // airdrop already spent, nothing within marching range of the blue HQ
-  st.decks.red = []; st.discards.red = []; st.hands.red = ['attack_plus1'];
-  st.removed.red.push('airdrop');
-  st.units['-3,1'] = { type: 'artillery', owner: 'blue' };
-  st.units['-2,1'] = { type: 'cavalry', owner: 'blue' };
+  st.cards.decks.red = []; st.cards.discards.red = []; st.cards.hands.red = ['attack_plus1'];
+  st.cards.removed.red.push('airdrop');
+  st.pieces.units['-3,1'] = { type: 'artillery', owner: 'blue' };
+  st.pieces.units['-2,1'] = { type: 'cavalry', owner: 'blue' };
   var adv = E.concedeAdvised(st, 'red');
   assert.ok(adv && adv.need === 6 && adv.turnsLeft === 1, 'hopeless position advised: ' + JSON.stringify(adv));
   assert.ok(E.concedeAdvised(st, 'blue') === null, 'the winning side is never advised to concede');
-  st.units['2,-1'] = { type: 'artillery', owner: 'red' };
-  st.units['1,-1'] = { type: 'artillery', owner: 'red' };
+  st.pieces.units['2,-1'] = { type: 'artillery', owner: 'red' };
+  st.pieces.units['1,-1'] = { type: 'artillery', owner: 'red' };
   assert.ok(E.concedeAdvised(st, 'red') === null, 'a leading player is never advised to concede');
 })();
 });
@@ -227,9 +227,9 @@ seeds.forEach(function (seed) {
   while (!match.winner && skirmishes < 12) {
     var st = E.newSkirmish(match);
     E.playToEnd(st, { decide: function (s) { return E.aiPlanTurn(s, 'normal'); } });
-    if (st.phase !== 'skirmish-over') assert.fail('skirmish did not finish (seed ' + seed + ')');
-    if (st.winType === 'hq') hqWins++; else attrWins++;
-    maxTurns = Math.max(maxTurns, st.turnNumber);
+    if (st.flow.phase !== 'skirmish-over') assert.fail('skirmish did not finish (seed ' + seed + ')');
+    if (st.result.winType === 'hq') hqWins++; else attrWins++;
+    maxTurns = Math.max(maxTurns, st.flow.turnNumber);
     skirmishes++;
   }
   assert.ok(match.winner === 'red' || match.winner === 'blue', 'seed ' + seed + ': match finished, winner=' + match.winner + ' (' + match.wins.red + '-' + match.wins.blue + ', ' + skirmishes + ' skirmishes)');
@@ -241,16 +241,16 @@ test('fsTimeline: one [fsRed,fsBlue] pair per completed turn', () => {
 (function () {
   // A REAL (non-sim) skirmish, played the same way the AI-vs-AI loop above
   // does — st here is never cloneForSim'd (that's the AI search's hot-loop
-  // clone, engine/05-ai.js), so st.fsTimeline is the live capture engine/
+  // clone, engine/05-ai.js), so st.journal.fsTimeline is the live capture engine/
   // 04-skirmish.js pushes to every completed turn (endTurn), not the stripped
   // copy a search clone carries.
   var st = E.newSkirmish(E.newBattle({ seed: 42 }));
   E.playToEnd(st, { decide: function (s) { return E.aiPlanTurn(s, 'normal'); } });
-  assert.ok(st.phase === 'skirmish-over', 'fsTimeline fixture skirmish finished (seed 42)');
-  assert.ok(Array.isArray(st.fsTimeline) && st.fsTimeline.length === st.turnNumber - 1,
-    'fsTimeline has one [fsRed,fsBlue] pair per completed turn (' + st.fsTimeline.length +
-    ' entries == turnNumber-1 = ' + (st.turnNumber - 1) + ')');
-  assert.ok(st.fsTimeline.every(function (p) { return Array.isArray(p) && p.length === 2 && typeof p[0] === 'number' && typeof p[1] === 'number'; }),
+  assert.ok(st.flow.phase === 'skirmish-over', 'fsTimeline fixture skirmish finished (seed 42)');
+  assert.ok(Array.isArray(st.journal.fsTimeline) && st.journal.fsTimeline.length === st.flow.turnNumber - 1,
+    'fsTimeline has one [fsRed,fsBlue] pair per completed turn (' + st.journal.fsTimeline.length +
+    ' entries == turnNumber-1 = ' + (st.flow.turnNumber - 1) + ')');
+  assert.ok(st.journal.fsTimeline.every(function (p) { return Array.isArray(p) && p.length === 2 && typeof p[0] === 'number' && typeof p[1] === 'number'; }),
     'every fsTimeline entry is a [number, number] pair');
 })();
 });
@@ -263,10 +263,10 @@ test('V1 AI search', () => {
   var st = E.newSkirmish(match);
   // Orientation term: same trench hex, enemy approaching from the east — the
   // east-facing trench must evaluate higher than the west-facing one.
-  st.units = { '0,0': { type: 'infantry', owner: 'red' }, '2,0': { type: 'infantry', owner: 'blue' } };
-  st.trenches = { '0,0': [{ dirs: [0, 1], owner: 'red' }] };   // faces E+NE (toward 2,0)
+  st.pieces.units = { '0,0': { type: 'infantry', owner: 'red' }, '2,0': { type: 'infantry', owner: 'blue' } };
+  st.pieces.trenches = { '0,0': [{ dirs: [0, 1], owner: 'red' }] };   // faces E+NE (toward 2,0)
   var facing = E.evalState(st, 'red');
-  st.trenches = { '0,0': [{ dirs: [3, 4], owner: 'red' }] };   // faces W+SW (away)
+  st.pieces.trenches = { '0,0': [{ dirs: [3, 4], owner: 'red' }] };   // faces W+SW (away)
   var away = E.evalState(st, 'red');
   assert.ok(facing > away, 'trench facing the live enemy lane outscores facing away (' +
     Math.round(facing) + ' > ' + Math.round(away) + ')');
@@ -276,7 +276,7 @@ test('V1 AI search', () => {
   // rankChoices: honest top-K of N for the LLM harness
   var m2 = E.newBattle({ seed: 7, maps: [cmap], firstPlayer: 'red' });
   var st2 = E.newSkirmish(m2);
-  E.playCard(st2, st2.hands.red[0], 'normal'); // starting card -> a step
+  E.playCard(st2, st2.cards.hands.red[0], 'normal'); // starting card -> a step
   var all = E.enumerateChoices(st2);
   var r = E.rankChoices(st2, { k: 4 });
   assert.ok(r.total === all.length, 'rankChoices.total = full legal count (' + r.total + ')');
@@ -292,7 +292,7 @@ test('V1 AI search', () => {
 
   // same-type swaps are a hidden skip — illegal.
   var st3 = E.newSkirmish(E.newBattle({ seed: 5, maps: [cmap], firstPlayer: 'red' }));
-  st3.units = {
+  st3.pieces.units = {
     '0,0': { type: 'infantry', owner: 'red' }, '1,0': { type: 'infantry', owner: 'red' },
     '0,1': { type: 'cavalry', owner: 'red' }
   };
@@ -303,7 +303,7 @@ test('V1 AI search', () => {
     'activeMaps = the active set (' + E.activeMaps().length + ' maps)');
 
   var reps = E.listRepositions(st3, 'red');
-  assert.ok(!reps.swaps.some(function (sw) { return st3.units[sw.a].type === st3.units[sw.b].type; }),
+  assert.ok(!reps.swaps.some(function (sw) { return st3.pieces.units[sw.a].type === st3.pieces.units[sw.b].type; }),
     'same-type swaps are not offered (' + reps.swaps.length + ' legal swaps, all cross-type)');
   assert.ok(reps.swaps.length >= 2, 'cross-type swaps still legal (infantry<->cavalry both pairs)');
 })();

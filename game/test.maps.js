@@ -40,7 +40,7 @@ test('carved shapeDef map rebuilds its board after a LAN serialize (F1, WoAProto
   assert.ok(wire.maps[0].shapeDef && Array.isArray(wire.maps[0].shapeDef.hexes),
     'shapeDef survives serialization inside battle.maps (nothing local needed to rebuild)');
   var st = E.newSkirmish(wire);                                  // far side rebuilds from the wire
-  var hexes = E.boardHexes(st.boardShape);
+  var hexes = E.boardHexes(st.board.boardShape);
   assert.ok(hexes.length === carved.shapeDef.hexes.length,
     'the rebuilt board has exactly the carved outline (' + hexes.length + ' hexes)');
   assert.ok(hexes.length !== E.boardHexes(E.DEFAULT_SHAPE).length,

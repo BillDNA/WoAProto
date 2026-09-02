@@ -28,15 +28,15 @@ test('integration: a real finished skirmish reaches the persistence seam', (t) =
     // through the public API to an actual HQ capture: red cavalry adjacent to the
     // blue HQ plays its first card as a basic attack and takes the headquarters.
     const st = testSkirmish(70);
-    st.units['-2,2'] = { type: 'cavalry', owner: 'red' }; // adjacent to blue HQ at -3,2
-    E.playCard(st, st.hands.red[0], 'attack');
+    st.pieces.units['-2,2'] = { type: 'cavalry', owner: 'red' }; // adjacent to blue HQ at -3,2
+    E.playCard(st, st.cards.hands.red[0], 'attack');
     E.applyStep(st, { from: '-2,2', to: '-3,2' });
-    assert.ok(st.phase === 'skirmish-over' && st.winType === 'hq' && st.skirmishWinner === 'red',
+    assert.ok(st.flow.phase === 'skirmish-over' && st.result.winType === 'hq' && st.result.skirmishWinner === 'red',
       'the real skirmish finished by HQ capture through the public entry points');
 
     assert.ok(seen.length === 1, 'onSkirmishEnd fired exactly once for a real finished skirmish (subscription wired)');
     const fired = seen[0];
-    assert.ok(fired === st && fired.phase === 'skirmish-over' && fired.skirmishWinner === 'red',
+    assert.ok(fired === st && fired.flow.phase === 'skirmish-over' && fired.result.skirmishWinner === 'red',
       'the hook received the finished, persistable state (not a stub or a clone)');
 
     // An AI look-ahead clone carries __sim (engine/05-ai.js) and must NOT reach
@@ -45,10 +45,10 @@ test('integration: a real finished skirmish reaches the persistence seam', (t) =
     const before = seen.length;
     const clone = testSkirmish(70);
     clone.__sim = true;
-    clone.units['-2,2'] = { type: 'cavalry', owner: 'red' };
-    E.playCard(clone, clone.hands.red[0], 'attack');
+    clone.pieces.units['-2,2'] = { type: 'cavalry', owner: 'red' };
+    E.playCard(clone, clone.cards.hands.red[0], 'attack');
     E.applyStep(clone, { from: '-2,2', to: '-3,2' });
-    assert.ok(clone.phase === 'skirmish-over', 'the __sim clone itself finished (same real path)');
+    assert.ok(clone.flow.phase === 'skirmish-over', 'the __sim clone itself finished (same real path)');
     assert.ok(seen.length === before, 'a finished __sim clone does NOT fire the persistence seam (the gate holds)');
 
     // The delivered state persists through the REAL dev/db.js into a temp db,
