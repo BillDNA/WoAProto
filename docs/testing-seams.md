@@ -2,63 +2,74 @@
 last-reviewed: 2026-09-01 (WoAProto#222)
 ---
 #claude-orientation #testing
-# Seam-test tracer & the integration gate
+# Hand-off seams & the real-path gates
 
-The verification pattern the later refactors reuse (WoAProto#222). Three rules, one
-ledger. When you refactor, copy the pattern; don't re-derive it.
+A **seam** is where one piece hands real data to the next: a producer writes/emits/
+serializes, a consumer reads/parses/deserializes, and the contract between them can
+silently drift. WoAProto#222's job is to add the missing tests for those hand-offs —
+tests that drive **real data across the actual boundary**, nothing mocked, so a red
+means the wiring broke. This doc carries the running inventory; treat it as a backlog,
+never a certificate.
 
 ## The pattern
 
-- **Assert the mechanism, never the value.** A test pins *that a limit can be set and
-  is enforced*, not *that the limit is 3*. Changing a game-content number (a card's
-  atk/count/steps, a deck's composition, a map's layout) must red **zero** tests — a
-  red there means the test pinned a value; fix the test, not the number. Build fixtures
-  *relative* to the live limit (`E.DECK_POINTS_CAP`), or from synthetic inputs, so the
-  boundary tracks the code.
-- **Test the seam alone.** A seam gets its own file/test so a red **localises** to that
-  seam, not the whole project.
-- **The integration gate drives the real entry point, nothing mocked.** Green must stop
-  meaning "80% wired". The gate plays through the public API to a real finish and
-  asserts the wiring; deliberately unwiring the feature reds it.
+- **Drive the real path, nothing mocked.** Green must stop meaning "80% wired". A gate
+  plays real data through the actual entry point (real HTTP, a real skirmish, the real
+  db) and reds when a feature is unwired.
+- **Assert the mechanism, never the value.** A test pins *that a limit is enforced*, not
+  *that the limit is 3*; changing an in-bounds game-content number must red **zero**
+  tests. Build fixtures relative to the live limit, or from synthetic inputs.
+- **Test a seam alone where you can**, so a red localises to that seam.
 
-## Where it lives
+## Where the gates live
 
-- `game/test.seams.js` — the isolated seam: the **army-points cap** as a settable,
-  enforced limit (`E.deckPoints` vs `E.DECK_POINTS_CAP`), asserted by mechanism only.
-- `game/test.integration.js` — the real-path **persistence** gate: a genuine HQ-capture
-  skirmish driven through the public engine API fires the `onSkirmishEnd` subscription
-  with a persistable state, an `__sim` look-ahead clone does **not**, and the delivered
-  state lands a row through the real `dev/db.js`. Unwire proof: neuter the
-  `if (!st.__sim) HOOKS.onSkirmishEnd…` dispatch in `engine/04-skirmish.js` and it reds.
-- Whole-suite property (no single file): changing an in-bounds content number reds no
-  test — verified by mutating a card's attack `mod` and running `node game/test.js`.
+- `dev/server.test.js` — boots the **real `game/server.js`** on an ephemeral port
+  (`server.listen(0)`, persistence pointed at a temp db via `WOA_DB_PATH`) and drives
+  the `/api/*` surface over real HTTP.
+- `game/test.integration.js` — a real HQ-capture skirmish through the public engine API
+  fires the `onSkirmishEnd` persistence subscription; an `__sim` clone does not; the
+  delivered state lands a row through the real `dev/db.js`. Unwire proof: neuter the
+  `if (!st.__sim) HOOKS.onSkirmishEnd…` dispatch in `engine/04-skirmish.js` → it reds.
+- `game/test.seams.js` — the army-points cap as a settable, enforced limit (mechanism,
+  not value).
 
-## What the suite still misses (incomplete by default)
+To make the server driveable, two small production changes (not behaviour changes):
+`game/server.js` guards its `.listen` behind `require.main` and exports
+`listen`/`handler`/`ROUTES`/`recordSkirmish`; `dev/db.js` `open()` honours `WOA_DB_PATH`.
 
-Treat this as a to-do, not a certificate. Known gaps as of WoAProto#222:
+## Seam inventory — coverage status
 
-- **The server HTTP proxy leg** (`/api/recordskirmish` → `dev/db.js`) is covered only by
-  a manual live smoke (spawn the server, POST a finished state, read the row back), not
-  the committed gate — `game/server.js` calls `.listen` at top level with no
-  `require.main` guard and no env DB path, so an in-process test can't require it. Closing
-  this cleanly needs a `require.main` guard + a `WOA_DB_PATH` override on `db.open()`.
-- **The browser DOM → server POST** is not asserted end to end: `dev/smoke.js` stubs
-  `window.fetch`, so `boot.js`'s recordskirmish hook fires against a fake, not a server.
-- **LAN room sync** (`/api/create` / `join` / `push` / `poll`) has no integration test.
-- **Only HQ capture** is driven through the integration gate; concession and attrition
-  finishes have unit coverage but are not exercised through the wired persistence path.
+`REAL` = a test drives real data across the boundary. `NONE`/`MOCKED`/`ONE-SIDED` =
+gap. Least-covered, most-load-bearing first.
 
-## Value-pins that REMAIN by design
+| Seam | Boundary | Status |
+|------|----------|--------|
+| A1/A2 finished skirmish → `/api/recordskirmish` → db row | boot.js hook → server → dev/db.js | **REAL** — `server.test.js` (+ `test.integration.js` for the engine hook) |
+| B1/B2/B3 db rows → `/api/runs`+`/api/skirmishes` (timeline join) → `envelopeFromRow` | dev/db.js → server → report-model | **REAL** — `server.test.js` feeds the real row into `envelopeFromRow` |
+| D1/D2/D3 LAN create/join/push/poll + seq-conflict | ui/net.js → server rooms | **REAL** (server side) — `server.test.js`; browser producers still DOM-only |
+| A6/A7 savereport/savedebug path-injection fences | server `saveUnderRepo` | **REAL** (reject side) — `server.test.js` |
+| A3/A8 savemap/deletemap → content file → manifest | server → content/ → manifest-gen | **NONE** — needs a temp content-dir sandbox (server + manifest-gen path override) |
+| A4 savedeck → custom-deck.js | server → game/custom-deck.js | **NONE** — self-restoring (save then null) once content-dir is overridable |
+| A5 savemapsets → destructive dir rewrite | server → content/mapsets/ | **NONE** — destructive; needs the sandbox before it's safe to drive |
+| C1 `--parallel` worker slim-state → parent → db | balance-report worker string → parent | **ONE-SIDED** — `slimSkirmishState` round-trip pinned; the driver/worker string is not |
+| E3 index.html deck bootstrap → ACTIVE_DECK | inline bootstrap → engine snapshot | **NONE** — localStorage-wins precedence runs only in the page |
+| F1 map.shapeDef → `@id` shape → board (LAN join/resume) | engine ↔ battle.maps serialization | **ONE-SIDED** — built-ins exercised; no carved-shapeDef round-trip through a join |
+| F2 map/deck bundle import parser | boot.js import → libraryReplace | **NONE** — lenient parser is pure node logic |
+| G2 AI hidden-hand resample honesty | engine sampledReplyScore | **NONE** — no "cannot peek at the true hidden order" assertion (the AI analog of G1) |
+| H1 `factsFromRow` ≡ `skirmishFacts` | engine live fold ↔ db-row fold | **NONE** — the identity that keeps the DB read path from drifting is unasserted |
+| G1 stateView LLM honesty | claude-plays → prompt | **REAL** — `claude-plays.test.js` sentinel |
+| H2 BANDS/balanceScore, H4 playLog→card_plays/trace | report-model / db | **REAL** — `test.reports.js`, `db.test.js` |
+| E2 manifest-gen ↔ committed manifest | content dirs → manifest.js | **REAL** — `test.maps.js` staleness test |
 
-Not every literal is a bug. These red only on a **rules/strength** change, which bumps
-`RULES_VERSION` (project doctrine) — the golden-diff is *meant* to catch them, so they
-are version-gated guardrails, not AC1 violations:
+## AC1 — value-pins that still red on a content edit
 
-- unit composition & stats (`7/2/1`, infantry `atk 1`, artillery `worth 3`) — `test.ai.js`
-- AI anti-degeneracy weights (`noopPenalty`, `antiShuffle`) and the `hard` preset — `test.ai.js`
-- classic board geometry (24 hexes, 4-5-6-5-4 rows) — the fixed physical board — `test.geometry.js`
-- physical-piece stocks (terrain R2/R3, the 16-17 deck band, the 10-piece total) — enforced *limits*, tested as enforcement
-- the active-mapset id (`core7`) — a structural pin, not a number — `test.ai.js`
+`test.cards.js`/`test.maps.js` had their content-value pins removed (deck total, card
+points, map count). **But AC1 is not fully met:** changing a unit stat (e.g. infantry
+`atk` in `maps.js`) still reds `combat math`, `terrain attack table`, and
+`unit composition & values` in `test.terrain.js`/`test.ai.js` — those pin exact combat
+powers/stats. Converting them to mechanism (support contributes, terrain contributes,
+higher total wins, tie kills both) is open work at the combat-resolver seam
+(`computeAttack`/`supportFor`). AI-weight pins are the same shape.
 
 ## Related
 
