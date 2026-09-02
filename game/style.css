@@ -652,6 +652,12 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
   body:not(.dev) .dev-only { display:none !important; }
 
   /* ===== front door + player nav ===== */
+  /* the card screens are menu-sized cards, not full-width bands — constrain the
+     panel so long stub copy wraps inside a centred card like the front door */
+  #settingsScr .panel, #campaignScr .panel, #rewardsScr .panel,
+  #runSummaryScr .panel, #devHubScr .panel{
+    width:min(480px, 92vw); padding:30px; margin:auto; overflow:hidden;
+  }
   /* the one loud call-to-action; Continue + Play share it */
   .menu-btns .btn-primary{
     font-size:19px; padding:14px;
