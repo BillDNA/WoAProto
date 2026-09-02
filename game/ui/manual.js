@@ -45,7 +45,7 @@ function mpDef(id, redHQ, blueHQ, pieces){
 // than through E.view (a read surface that cannot construct). It never touches a
 // live skirmish (APP.st) — every state here is a throwaway __sim diagram.
 //
-// A REAL skirmish state (deck, HQs, turn flow all live), then the fixture's
+// A REAL skirmish state (cards, HQs, turn flow all live), then the fixture's
 // pieces are placed directly. units: { 'q,r': ['infantry','red'], ... }.
 // NOTE: E.newSkirmish switches the engine's global board to this map's shape —
 // renderManual() saves and restores the live shape around every render.
@@ -322,7 +322,7 @@ var MANUAL_EXAMPLES = [
     d.resC = E.computeAttack(d.stC, d.atkC);
     d.postC = mpResolve(mpState(defA, unitsA), d.atkC);
     d.amC = mpAftermath(d.stC, d.postC, d.atkC);
-    // name the tieSpare card from the live deck (falls back if it's been cut)
+    // name the tieSpare card from the active battalion (falls back if it's been cut)
     var tieCard = E.CARDS.filter(function(c){ return (c.steps||[]).some(function(s){ return s.tieSpare; }); })[0];
     d.tieCardName = tieCard ? tieCard.name : 'a "attacker survives a tie" order';
     return d;

@@ -14,19 +14,19 @@
                                          pit any two AI personalities (built-in
                                          easy/normal/hard or a maps.js "ai" row)
      node dev/balance.js 40 brawler      per-map report with a personality
-     node dev/balance.js 40 --deck-red cavsplit-16 --deck-blue iter3
-                                         seat a different deck per side;
-                                         id/name from content/decks/. Omit either
-                                         flag to leave that side on the active deck.
+     node dev/balance.js 40 --battalion-red cavsplit-16 --battalion-blue iter3
+                                         seat a different battalion per side;
+                                         id/name from content/battalions/. Omit either
+                                         flag to leave that side on the active battalion.
 
    Reading the map report:
    - Red%/Blue% far from 50  -> the map itself favours a side (positions/terrain)
    - 1st%/2nd% far from 50   -> mover advantage on that map
    - HQ% near 0              -> nobody can crack the HQ; skirmishes always grind to attrition
-   - Turns                   -> pacing; the deck caps a skirmish at 32 plays
+   - Turns                   -> pacing; the battalion caps a skirmish at 32 plays
    - Atk%/Swp%               -> attacks / swaps as a SHARE of all actions taken
                                 (attacks+swaps+marches+deploys): AI behaviour health,
-                                deck-size-proof. Low Atk% + high Swp% = swap-dancing.
+                                battalion-size-proof. Low Atk% + high Swp% = swap-dancing.
    - 0kill%                  -> skirmishes where no unit ever died (degenerate stalemates)
    - Drag                    -> avg trailing turns with NO kill before the game ended,
                                 over ATTRITION endings only (HQ endings have Drag 0 by
@@ -76,7 +76,7 @@ function mapsForSet(setArg) {
 }
 
 /* ---------------- matchup mode: how much does skill matter? ---------------- */
-function matchup(n, a, b, maps, decks) {
+function matchup(n, a, b, maps, battalions) {
   var pairs = (a && b) ? [[a, b]] : [
     ['normal', 'easy'],
     ['hard', 'normal'],
@@ -85,20 +85,20 @@ function matchup(n, a, b, maps, decks) {
   ];
   console.log('Skill-vs-luck report: ' + n + ' skirmishes per map per pairing, ' + maps.length + ' maps.');
   console.log('Each pairing also swaps sides so colour bias cancels out.' +
-    (decks ? ' Decks swap WITH the AI so each keeps a fixed deck (skill, not deck, is measured).' : '') + '\n');
-  // The strong AI sits red in r1, blue in r2. If decks stayed seat-bound
-  // the strong AI would swap decks between orientations and the premium would fold
-  // in deck strength — so swap the decks alongside the sides, pinning each AI to
-  // one deck across both halves.
-  var decks2 = decks ? { red: decks.blue, blue: decks.red } : null;
+    (battalions ? ' Battalions swap WITH the AI so each keeps a fixed battalion (skill, not battalion, is measured).' : '') + '\n');
+  // The strong AI sits red in r1, blue in r2. If battalions stayed seat-bound
+  // the strong AI would swap battalions between orientations and the premium would fold
+  // in battalion strength — so swap the battalions alongside the sides, pinning each AI to
+  // one battalion across both halves.
+  var battalions2 = battalions ? { red: battalions.blue, blue: battalions.red } : null;
   var results = [];
   pairs.forEach(function (pr) {
     var strong = pr[0], weak = pr[1];
     var sWins = 0, games = 0;
     maps.forEach(function (map, mi) {
       var h1 = Math.ceil(n / 2), h2 = Math.floor(n / 2);
-      var r1 = SIM.balanceMap(map, h1, { diffRed: strong, diffBlue: weak, seedBase: (mi + 1) * 7919, decks: decks });
-      var r2 = SIM.balanceMap(map, h2, { diffRed: weak, diffBlue: strong, seedBase: (mi + 1) * 7919 + 31, decks: decks2 });
+      var r1 = SIM.balanceMap(map, h1, { diffRed: strong, diffBlue: weak, seedBase: (mi + 1) * 7919, battalions: battalions });
+      var r2 = SIM.balanceMap(map, h2, { diffRed: weak, diffBlue: strong, seedBase: (mi + 1) * 7919 + 31, battalions: battalions2 });
       sWins += r1.redWins + ((h2 - r2.unfinished) - r2.redWins);
       games += (h1 - r1.unfinished) + (h2 - r2.unfinished);
       process.stdout.write('.');
@@ -115,7 +115,7 @@ function matchup(n, a, b, maps, decks) {
 /* ---------------- per-map report ---------------- */
 // mapsetArg: the --mapset value `maps` was resolved from (null = active pool) —
 // a run-identity stamp only, doesn't affect which maps run.
-function mapReport(n, diff, filter, maps, mapsetArg, decks) {
+function mapReport(n, diff, filter, maps, mapsetArg, battalions) {
   if (filter) {
     maps = maps.filter(function (m) { return m.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0; });
     if (!maps.length) { console.log('No map matches "' + filter + '".'); return; }
@@ -131,7 +131,7 @@ function mapReport(n, diff, filter, maps, mapsetArg, decks) {
       dbh = db.open();
       runId = db.insertRun(dbh, {
         version: E.VERSION, kind: 'balance', redAi: diff, blueAi: diff, n: n, tool: 'balance.js',
-        deck: deckLabel,
+        deck: battalionLabel, // deck-scope-ok: db run-identity column (migration deferred)
         mapset: mapsetArg || (E.activeMapset() && E.activeMapset().id) || 'all',
         seedBase: 7919 // the SAME base the per-map (mi+1)*7919 schedule below multiplies
       });
@@ -152,7 +152,7 @@ function mapReport(n, diff, filter, maps, mapsetArg, decks) {
 
   maps.forEach(function (map, mi) {
     var seedBase = (mi + 1) * 7919;
-    var r = SIM.balanceMap(map, n, { diffRed: diff, diffBlue: diff, seedBase: seedBase, decks: decks,
+    var r = SIM.balanceMap(map, n, { diffRed: diff, diffBlue: diff, seedBase: seedBase, battalions: battalions,
       onGame: dbh && function (g1, nn, st) {
         try {
           db.insertSkirmish(dbh, runId, st, SIM.balanceFP(g1 - 1), { seed: SIM.balanceSeed(seedBase, g1 - 1), version: E.VERSION });
@@ -223,13 +223,13 @@ function mapReport(n, diff, filter, maps, mapsetArg, decks) {
   console.log('            Thin HQ slice — cards under ' + R.MISPRICE_MIN_HQPLAYS + ' such plays show \'-\'; read at scale.');
   console.log('\nBehaviour & decisiveness lines:');
   console.log('  attacks/swaps % of actions  AI play health, as a share of all actions taken');
-  console.log('            (deck-size-proof). Low attack% + high swap% = the AIs shuffle units');
+  console.log('            (battalion-size-proof). Low attack% + high swap% = the AIs shuffle units');
   console.log('            instead of fighting (the stalemate failure mode).');
   console.log('  zero-kill skirmishes  nobody died all skirmish: degenerate, should be ~0%.');
   console.log('  units fielded  share of all reserves that ever deployed. Low = turtling at home.');
   console.log('  reserves at end (HQ endings only)  share of a side\'s pieces still undeployed at an');
   console.log('            HQ capture — an HQ rush ends before a side commits its reserves, so this');
-  console.log('            reads meaningfully only on that slice (attrition endings run to deck-out).');
+  console.log('            reads meaningfully only on that slice (attrition endings run the draw pile dry).');
   console.log('            Typically small-n (HQ endings are a minority); the (n=N) note flags it.');
   console.log('  tie-goes-to-2nd  attrition wins with EQUAL field scores, as a share of ATTRITION');
   console.log('            endings. High = that one rule is deciding skirmishes, not play.');
@@ -248,24 +248,24 @@ function mapReport(n, diff, filter, maps, mapsetArg, decks) {
 var args = process.argv.slice(2);
 var setArg = null, si = args.indexOf('--mapset');
 if (si >= 0) { setArg = args[si + 1]; args.splice(si, 2); }
-// Seat a different deck per side. --deck-red/--deck-blue take a deck
-// id or name from content/decks/; omit either to leave that side on the active
-// deck. No flags = both sides share the active deck (default).
-var deckRed = null, dri = args.indexOf('--deck-red');
-if (dri >= 0) { deckRed = args[dri + 1]; args.splice(dri, 2); }
-var deckBlue = null, dbi = args.indexOf('--deck-blue');
-if (dbi >= 0) { deckBlue = args[dbi + 1]; args.splice(dbi, 2); }
-var decks = (deckRed || deckBlue) ? { red: deckRed, blue: deckBlue } : null;
-var activeId = (E.ACTIVE_DECK && E.ACTIVE_DECK.id) || null;
-// runs.deck stays a single id in the common case (other writers store one id);
-// only genuinely-different decks get the "X vs Y" composite.
-var deckLabel = activeId;
-if (decks) {
-  try { E.resolveDeck(decks.red); E.resolveDeck(decks.blue); }   // fail fast on a bad name
+// Seat a different battalion per side. --battalion-red/--battalion-blue take a battalion
+// id or name from content/battalions/; omit either to leave that side on the active
+// battalion. No flags = both sides share the active battalion (default).
+var battalionRed = null, dri = args.indexOf('--battalion-red');
+if (dri >= 0) { battalionRed = args[dri + 1]; args.splice(dri, 2); }
+var battalionBlue = null, dbi = args.indexOf('--battalion-blue');
+if (dbi >= 0) { battalionBlue = args[dbi + 1]; args.splice(dbi, 2); }
+var battalions = (battalionRed || battalionBlue) ? { red: battalionRed, blue: battalionBlue } : null;
+var activeId = (E.ACTIVE_BATTALION && E.ACTIVE_BATTALION.id) || null;
+// the run-identity id stays a single value in the common case (other writers store one id);
+// only genuinely-different battalions get the "X vs Y" composite.
+var battalionLabel = activeId;
+if (battalions) {
+  try { E.resolveBattalion(battalions.red); E.resolveBattalion(battalions.blue); }   // fail fast on a bad name
   catch (e) { console.log(e.message); process.exit(1); }
-  var redId = decks.red || activeId, blueId = decks.blue || activeId;
-  deckLabel = redId === blueId ? redId : redId + ' vs ' + blueId;
-  console.log('Decks: red = ' + (redId || 'active') + ', blue = ' + (blueId || 'active') + '\n');
+  var redId = battalions.red || activeId, blueId = battalions.blue || activeId;
+  battalionLabel = redId === blueId ? redId : redId + ' vs ' + blueId;
+  console.log('Battalions: red = ' + (redId || 'active') + ', blue = ' + (blueId || 'active') + '\n');
 }
 if (args[0] === 'matchup') {
   // node dev/balance.js matchup [n] [aiA aiB]  — aiA/aiB may be any AI_PRESETS
@@ -274,7 +274,7 @@ if (args[0] === 'matchup') {
   rest.forEach(function (a) {
     if (!E.AI_PRESETS[a]) { console.log('Unknown AI "' + a + '". Known: ' + Object.keys(E.AI_PRESETS).join(', ')); process.exit(1); }
   });
-  matchup(Math.max(2, +(args.filter(function (a) { return /^\d+$/.test(a); })[0]) || 12), rest[0], rest[1], mapsForSet(setArg), decks);
+  matchup(Math.max(2, +(args.filter(function (a) { return /^\d+$/.test(a); })[0]) || 12), rest[0], rest[1], mapsForSet(setArg), battalions);
 } else {
   var n = 24, diff = 'normal', filter = null;
   args.forEach(function (a) {
@@ -282,5 +282,5 @@ if (args[0] === 'matchup') {
     else if (E.AI_PRESETS[a]) diff = a; // easy/normal/hard or a maps.js personality
     else filter = filter ? filter + ' ' + a : a;
   });
-  mapReport(n, diff, filter, mapsForSet(setArg), setArg, decks);
+  mapReport(n, diff, filter, mapsForSet(setArg), setArg, battalions);
 }

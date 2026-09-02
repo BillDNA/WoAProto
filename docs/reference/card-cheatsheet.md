@@ -1,9 +1,9 @@
 #game-rules #human-instructions #code-architecture
 # Card editing cheat sheet
 
-Everything here lives in the active deck file, `game/content/decks/<slug>.js`
-(`default.js` as shipped; the Deck Editor's applied override is
-`game/custom-deck.js`). The card list is **pure JSON**: double-quoted keys, no
+Everything here lives in the active battalion file, `game/content/battalions/<slug>.js`
+(`default.js` as shipped; the Battalion Editor's applied override is
+`game/custom-battalion.js`). The card list is **pure JSON**: double-quoted keys, no
 trailing commas, no comments inside the data. Edit, save, refresh the browser.
 Then:
 

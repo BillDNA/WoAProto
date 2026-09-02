@@ -1,4 +1,4 @@
-(function(g){(g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],decks:[]}).maps.push(
+(function(g){(g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],battalions:[]}).maps.push(
 {
  "name": "Killing Ground",
  "shape": "classic",

@@ -1,7 +1,7 @@
-(function(g){(g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],decks:[]}).decks.push(
+(function(g){(g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],battalions:[]}).battalions.push(
 {
- "id": "cavsplit-16",
- "name": "Cav Split (16 - cut Forced March)",
+ "id": "cavsplit17-raid",
+ "name": "Cav split + Raiding Party (-OrdWdrw)",
  "active": false,
  "cards": [
   {
@@ -142,19 +142,6 @@
    ]
   },
   {
-   "id": "ordered_withdraw",
-   "name": "Ordered Withdraw",
-   "count": 1,
-   "text": "Order an attack. Your attacker survives a tie, and never advances into the hex.",
-   "steps": [
-    {
-     "type": "attack",
-     "tieSpare": true,
-     "noAdvance": true
-    }
-   ]
-  },
-  {
    "id": "naval_barrage",
    "name": "Naval Barrage",
    "count": 1,
@@ -165,6 +152,40 @@
     },
     {
      "type": "attack"
+    }
+   ]
+  },
+  {
+   "id": "forced_march",
+   "name": "Forced March",
+   "count": 1,
+   "text": "Reposition up to three times, in sequence.",
+   "steps": [
+    {
+     "type": "reposition"
+    },
+    {
+     "type": "reposition"
+    },
+    {
+     "type": "reposition"
+    }
+   ]
+  },
+  {
+   "id": "raiding_party",
+   "name": "Raiding Party",
+   "count": 1,
+   "text": "Place an Infantry unit adjacent to any controlled hex. Then order an attack: your attacker survives a tie and never advances into the hex. (A tie against a trench spares both sides.)",
+   "steps": [
+    {
+     "type": "deploy",
+     "unit": "infantry"
+    },
+    {
+     "type": "attack",
+     "tieSpare": true,
+     "noAdvance": true
     }
    ]
   }

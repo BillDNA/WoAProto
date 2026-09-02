@@ -20,17 +20,17 @@
   if (!CORE || !CORE.shapes || !CORE.units)
     throw new Error('War of Attrition: maps.js missing or malformed (must define WOA_BUILTIN with shapes + units)');
 
-  // CONTENT (the map library + the card decks) lives in per-item files under
-  // content/ — delete a map/deck by deleting its file. In the browser
+  // CONTENT (the map library + the card battalions) lives in per-item files under
+  // content/ — delete a map/battalion by deleting its file. In the browser
   // content/manifest.js document.write()'d them into WOA_CONTENT before this
   // script ran; in node we load them from disk here.
   (function loadContentNode() {
     if (global.WOA_CONTENT) return;                 // browser already populated it
     if (typeof require !== 'function') return;
-    global.WOA_CONTENT = { maps: [], cards: [], decks: [], mapsets: [], units: [] };
+    global.WOA_CONTENT = { maps: [], cards: [], battalions: [], mapsets: [], units: [] };
     try {
       var fs = require('fs'), path = require('path');
-      var kinds = ['decks', 'maps', 'mapsets', 'units'];
+      var kinds = ['battalions', 'maps', 'mapsets', 'units'];
       try { kinds = require('../content/kinds.js'); } catch (e2) { /* kinds.js is the source of truth when present */ }
       kinds.forEach(function (kind) {
         var dir = path.join(__dirname, '..', 'content', kind);
@@ -44,14 +44,14 @@
       if (typeof console !== 'undefined') console.error('WoA content load failed: ' + e.message);
     }
   })();
-  var CONTENT = global.WOA_CONTENT || { maps: [], cards: [], decks: [], mapsets: [], units: [] };
-  // the active deck decides the card list; fall back to any deck, then to any
+  var CONTENT = global.WOA_CONTENT || { maps: [], cards: [], battalions: [], mapsets: [], units: [] };
+  // the active battalion decides the card list; fall back to any battalion, then to any
   // loose WOA_CONTENT.cards (belt-and-braces for hand-authored content).
-  var ACTIVE_DECK = (CONTENT.decks || []).filter(function (d) { return d && d.active; })[0] ||
-    (CONTENT.decks || [])[0] || null;
-  var CARD_LIST = (ACTIVE_DECK && ACTIVE_DECK.cards && ACTIVE_DECK.cards.length) ? ACTIVE_DECK.cards : (CONTENT.cards || []);
+  var ACTIVE_BATTALION = (CONTENT.battalions || []).filter(function (d) { return d && d.active; })[0] ||
+    (CONTENT.battalions || [])[0] || null;
+  var CARD_LIST = (ACTIVE_BATTALION && ACTIVE_BATTALION.cards && ACTIVE_BATTALION.cards.length) ? ACTIVE_BATTALION.cards : (CONTENT.cards || []);
   // Unit composition & values as a content lever: a units variant in
-  // content/units/*.js (exactly one flagged active — the deck/mapset pattern)
+  // content/units/*.js (exactly one flagged active — the battalion/mapset pattern)
   // fully REPLACES the default unit block, so composition (counts), worth, and
   // atk/def/sup are all editable as data. No active variant falls back to
   // maps.js CORE.units — the shipped 7/2/1 default — so this is the ONE place
@@ -65,10 +65,10 @@
     cards: CARD_LIST
   };
   if (!BUILTIN.maps.length || !BUILTIN.cards.length)
-    throw new Error('War of Attrition: no content loaded (content/maps/*.js + content/decks/*.js). Check the content/ dirs and content/manifest.js.');
+    throw new Error('War of Attrition: no content loaded (content/maps/*.js + content/battalions/*.js). Check the content/ dirs and content/manifest.js.');
 
   // Mapsets: named sets in content/mapsets/*.js, exactly one flagged active —
-  // the deck pattern applied to maps. The active set IS the match/lab pool (one
+  // the battalion pattern applied to maps. The active set IS the match/lab pool (one
   // shared mapset across play modes and tools). No sets, or an active set
   // matching nothing, falls back to the full library.
   var MAPSETS = (CONTENT.mapsets || []).slice();
@@ -114,38 +114,38 @@
   var TERRAIN_STOCK = BUILTIN.terrainStock || { F3: 2, F2: 4, M3: 2, M2: 4 };
   var CARDS = BUILTIN.cards;
   if (!UNITS || !CARDS) throw new Error('War of Attrition: maps.js must define units and cards');
-  // A card registry is "everything the skirmish needs to know about one deck's
-  // cards": the id->def map + which card opens. Built once for the active deck
+  // A card registry is "everything the skirmish needs to know about one battalion's
+  // cards": the id->def map + which card opens. Built once for the active battalion
   // (the global default) and once per side when a skirmish seats asymmetric
-  // decks. One builder, so both paths derive it identically.
-  function deckRegistry(cards) {
+  // battalions. One builder, so both paths derive it identically.
+  function battalionRegistry(cards) {
     var byId = {};
     cards.forEach(function (c) { byId[c.id] = c; });
     var starting = (cards.filter(function (c) { return c.starting; })[0] || cards[0]).id;
     return { cards: cards, byId: byId, starting: starting };
   }
-  var DEFAULT_REG = deckRegistry(CARDS);
+  var DEFAULT_REG = battalionRegistry(CARDS);
   var CARD_BY_ID = DEFAULT_REG.byId;
   var STARTING_CARD = DEFAULT_REG.starting;
-  // Per-side deck binding: turn a deck SELECTION into a registry.
-  // null/undefined -> the active deck (the symmetric default);
-  // a deck object with .cards; or an id/name string looked up in CONTENT.decks.
+  // Per-side battalion binding: turn a battalion SELECTION into a registry.
+  // null/undefined -> the active battalion (the symmetric default);
+  // a battalion object with .cards; or an id/name string looked up in CONTENT.battalions.
   // Registries are immutable for the process lifetime, so memoize the by-name
-  // lookup — a balance run resolves the same two decks per skirmish (200x for a
+  // lookup — a balance run resolves the same two battalions per skirmish (200x for a
   // 100-skirmish sweep) and would otherwise rebuild each byId map every time.
   var REG_CACHE = {};
-  function resolveDeck(sel) {
+  function resolveBattalion(sel) {
     if (!sel) return DEFAULT_REG;
     if (typeof sel === 'string') {
       if (REG_CACHE[sel]) return REG_CACHE[sel];
-      var found = (CONTENT.decks || []).filter(function (d) { return d && (d.id === sel || d.name === sel); })[0];
-      if (!found) throw new Error('War of Attrition: no deck "' + sel + '" (known: ' +
-        ((CONTENT.decks || []).map(function (d) { return d.id; }).join(', ') || 'none') + ')');
-      if (!found.cards || !found.cards.length) throw new Error('War of Attrition: deck "' + found.id + '" has no cards');
-      return (REG_CACHE[sel] = deckRegistry(found.cards));
+      var found = (CONTENT.battalions || []).filter(function (d) { return d && (d.id === sel || d.name === sel); })[0];
+      if (!found) throw new Error('War of Attrition: no battalion "' + sel + '" (known: ' +
+        ((CONTENT.battalions || []).map(function (d) { return d.id; }).join(', ') || 'none') + ')');
+      if (!found.cards || !found.cards.length) throw new Error('War of Attrition: battalion "' + found.id + '" has no cards');
+      return (REG_CACHE[sel] = battalionRegistry(found.cards));
     }
-    if (!sel.cards || !sel.cards.length) throw new Error('War of Attrition: deck "' + (sel.id || sel) + '" has no cards');
-    return deckRegistry(sel.cards);
+    if (!sel.cards || !sel.cards.length) throw new Error('War of Attrition: battalion "' + (sel.id || sel) + '" has no cards');
+    return battalionRegistry(sel.cards);
   }
   // one slot per physical piece on the player mat
   var PIECE_TOTALS = { trench: TRENCH_COUNT };
@@ -183,15 +183,15 @@
     var sum = steps.reduce(function (s, st) { return s + stepPoints(st); }, 0);
     return sum * Math.pow(steps.length, POINTS.combo - 1);
   }
-  function deckPoints(deck) {
-    var cards = (deck && deck.cards) || [];
+  function battalionPoints(battalion) {
+    var cards = (battalion && battalion.cards) || [];
     return cards.reduce(function (s, c) { return s + cardPoints(c) * (c.count == null ? 1 : c.count); }, 0);
   }
   // Army-points budget ceiling: the fairness constraint that lets two
-  // asymmetric decks be called "matched". Seeded above the shipped decks; the
-  // deck editor's sum(count) band guardrail rejects an over-budget deck the
+  // asymmetric battalions be called "matched". Seeded above the shipped battalions; the
+  // battalion editor's sum(count) band guardrail rejects an over-budget battalion the
   // same way it rejects an oversized one.
-  var DECK_POINTS_CAP = 72;
+  var BATTALION_POINTS_CAP = 72;
 
   // tiny pure helpers used by every layer
   function other(p) { return p === 'red' ? 'blue' : 'red'; }
@@ -200,16 +200,16 @@
   /* shared-namespace exports */
   I.RULES_VERSION = RULES_VERSION;
   I.BUILTIN = BUILTIN;
-  // The deck the ENGINE actually resolved this load (id + name) — the one place
-  // to read "which deck is live", incl. the browser's '__applied' sandbox deck
+  // The battalion the ENGINE actually resolved this load (id + name) — the one place
+  // to read "which battalion is live", incl. the browser's '__applied' sandbox battalion
   // (index.html pushes it before this file runs). Run-identity stampers
   // (dev/balance.js, the dashboard Run loop) read this instead of re-deriving
-  // from content/decks/'s active flag.
-  I.ACTIVE_DECK = ACTIVE_DECK;
-  I.DECKS = CONTENT.decks || [];
+  // from content/battalions/'s active flag.
+  I.ACTIVE_BATTALION = ACTIVE_BATTALION;
+  I.BATTALIONS = CONTENT.battalions || [];
   I.DEFAULT_REG = DEFAULT_REG;
-  I.deckRegistry = deckRegistry;
-  I.resolveDeck = resolveDeck;
+  I.battalionRegistry = battalionRegistry;
+  I.resolveBattalion = resolveBattalion;
   I.rnd = rnd;
   I.shuffle = shuffle;
   I.UNITS = UNITS;
@@ -220,8 +220,8 @@
   I.STARTING_CARD = STARTING_CARD;
   I.PIECE_TOTALS = PIECE_TOTALS;
   I.cardPoints = cardPoints;
-  I.deckPoints = deckPoints;
-  I.DECK_POINTS_CAP = DECK_POINTS_CAP;
+  I.battalionPoints = battalionPoints;
+  I.BATTALION_POINTS_CAP = BATTALION_POINTS_CAP;
   I.MAPS = MAPS;
   I.MAPSETS = MAPSETS;
   I.activeMapset = activeMapset;

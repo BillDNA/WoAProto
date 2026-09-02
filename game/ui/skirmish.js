@@ -546,7 +546,7 @@ function showCards(){
     rows += '<tr>'+cells+'</tr>';
   });
   rows += '</table>';
-  if (inGame) rows += '<p class="small" style="margin-top:8px;">&#10006; = that copy has been resolved this skirmish and is gone from the game; &#9675; = still in deck, hand, or discard. Shaded cell = every copy spent.</p>';
+  if (inGame) rows += '<p class="small" style="margin-top:8px;">&#10006; = that copy has been resolved this skirmish and is gone from the game; &#9675; = still in draw pile, hand, or discard. Shaded cell = every copy spent.</p>';
   $('cardsBody').innerHTML = rows;
   openOverlay('cardsOvr');
 }

@@ -19,8 +19,8 @@ Start in [[code-architecture]] (`docs/`) — it is the orientation file for this
 
 ## Standing goals
 
-* **rapid balance iteration is still the point** — content is data files (`content/{decks,maps,mapsets}`, `maps.js` ai rows), tunables are data (AI_WEIGHTS overrides), new tools are small `dev/` scripts over the exported Engine surface
-* **Steam trajectory, guardrails kept**: we're aiming at a Steam release of a roguelite deck-builder. The physical-board constraints (24-hex ceiling, 16-card decks, piece stocks) stay as *design* guardrails even where code no longer needs them; code formalization is pulled in by a shipped feature, never speculatively
+* **rapid balance iteration is still the point** — content is data files (`content/{battalions,maps,mapsets}`, `maps.js` ai rows), tunables are data (AI_WEIGHTS overrides), new tools are small `dev/` scripts over the exported Engine surface
+* **Steam trajectory, guardrails kept**: we're aiming at a Steam release of a roguelite deck-builder. The physical-board constraints (24-hex ceiling, 16-card battalions, piece stocks) stay as *design* guardrails even where code no longer needs them; code formalization is pulled in by a shipped feature, never speculatively
 * **`game/` stays plain classic scripts + shared globals** in a hand-ordered script-tag chain — no ES modules, no bundler, no build step. The local server (`node game/server.js`) is the **standard and only supported run path** (the only path with writes/persistence); `file://` double-click is **no longer a supported target** (retired in [[0001-no-file-protocol-target]] — dropped the double-click guarantee, kept no-bundler/classic-scripts). `game/` stays zero-dependency; `dev/` may carry deps
 * **tests are the contract**: `node game/test/test.js` green on every commit (extend with every rules change), `node dev/smoke.js` green after UI changes. Refactors prove themselves with a **golden balance diff** (same seeds → byte-identical aggregates); anything that legitimately changes numbers bumps the rules version instead, atomically with its test-pin updates
 * **one implementation per fact**: the seed schedule + the balance fold (`game/sim.js`, the batch/measurement layer that sits outside the shipped engine), report scoring/rendering (`game/report-model.js`), the content-kind list (`content/kinds.js`) each live in exactly one file — if adding a metric/column/kind isn't a one-file diff, fix the seam first
@@ -42,7 +42,7 @@ defaults stand.)*
 ## Vision (not speced — YAGNI for now)
 
 - **Roguelite deck-builder**: a card pool larger than the 16-card deck plus a deck-building loop between battles.
-- **Side asymmetry**: different decks per side, and Commander abilities that bend the rules (e.g. guaranteed Conscription in the opening hand). Expect bigger balance swings — which is why the rubrics + metrics tooling above come first.
+- **Side asymmetry**: different battalions per side, and Commander abilities that bend the rules (e.g. guaranteed Conscription in the opening hand). Expect bigger balance swings — which is why the rubrics + metrics tooling above come first.
 
 ## Agent skills
 

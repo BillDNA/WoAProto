@@ -38,7 +38,7 @@ function api(path, body){
 }
 
 /* card art is looked up BY CARD ID: art/<id>.jpg, falling back to art/<id>.png,
-   falling back to no art at all — so new cards in the deck just need a matching
+   falling back to no art at all — so new cards in the battalion just need a matching
    file dropped into game/art (any heavy AI render: run dev/optimize-art.ps1). */
 var ART_STATE = {}; // id -> 'jpg' | 'png' | false (known missing)
 function artImg(id, cls){

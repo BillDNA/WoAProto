@@ -1,55 +1,55 @@
-/* War of Attrition — ui part: the deck editor (Quartermaster's Ledger) —
-   DK state, five deck slots, card list/detail/step builder, validation.
+/* War of Attrition — ui part: the battalion editor (Quartermaster's Ledger) —
+   DK state, five battalion slots, card list/detail/step builder, validation.
    Classic script, no wrapper — top-level names attach to window (see
    ui/app.js header). Extracted verbatim from index.html's inline app
    script; the dk* button wiring lives in ui/boot.js. */
 'use strict';
 
-/* =================== deck editor =================== */
-// Five named deck slots, stored in localStorage 'woa-decks'
+/* =================== battalion editor =================== */
+// Five named battalion slots, stored in localStorage 'woa-battalions'
 // as {active, slots:[{name,cards}|null ×5]}. Editing works on a copy of one
 // slot's cards (DK.cards) so all the per-card render/edit code is unchanged.
 // The APPLY path is deliberately untouched: Save mirrors the ACTIVE slot into
-// 'woa-custom-deck' + custom-deck.js and reloads — the engine snapshots the
+// 'woa-custom-battalion' + custom-battalion.js and reloads — the engine snapshots the
 // card list at load, so a reload IS the apply step (same contract as before).
 var DK = { cards: null, sel: 0, stepErr: {}, slots: null, slot: 0, active: 0 };
 var DK_SLOTS = 5;
-function loadDecks(){
+function loadBattalions(){
   var d = null;
-  try { d = JSON.parse(localStorage.getItem('woa-decks')); } catch(e){}
+  try { d = JSON.parse(localStorage.getItem('woa-battalions')); } catch(e){}
   if (d && Array.isArray(d.slots) && d.slots.length === DK_SLOTS) return d;
-  // First run: seed slot 0 with the currently-applied deck; rest empty.
+  // First run: seed slot 0 with the currently-applied battalion; rest empty.
   var slots = []; for (var i=0;i<DK_SLOTS;i++) slots.push(null);
-  slots[0] = { name: 'Deck 1', cards: JSON.parse(JSON.stringify(E.CARDS)) };
+  slots[0] = { name: 'Battalion 1', cards: JSON.parse(JSON.stringify(E.CARDS)) };
   return { active: 0, slots: slots };
 }
-function persistDecks(){ try { localStorage.setItem('woa-decks', JSON.stringify({ active: DK.active, slots: DK.slots })); } catch(e){} }
+function persistBattalions(){ try { localStorage.setItem('woa-battalions', JSON.stringify({ active: DK.active, slots: DK.slots })); } catch(e){} }
 // strip benched cards + the transient `out` flag → what actually ships to the game
 function shipCards(cards){ return cards.filter(function(c){ return !c.out; }).map(function(c){ var d={}; for (var k in c) if (k!=='out') d[k]=c[k]; return d; }); }
 function flushSlot(){ if (DK.slots[DK.slot]) DK.slots[DK.slot].cards = JSON.parse(JSON.stringify(DK.cards)); }
 function loadSlotIntoEditor(i){
-  if (!DK.slots[i]) DK.slots[i] = { name: 'Deck '+(i+1), cards: JSON.parse(JSON.stringify(DK.cards || E.CARDS)) }; // new slot = clone of the open one
+  if (!DK.slots[i]) DK.slots[i] = { name: 'Battalion '+(i+1), cards: JSON.parse(JSON.stringify(DK.cards || E.CARDS)) }; // new slot = clone of the open one
   DK.slot = i;
   DK.cards = JSON.parse(JSON.stringify(DK.slots[i].cards));
   DK.sel = 0;
   renderSlots();
-  renderDeck();
+  renderBattalion();
 }
 function renderSlots(){
   var host = $('dkSlots'); if (!host) return;
   var html = DK.slots.map(function(s, i){
-    var name = s ? (s.name || 'Deck '+(i+1)) : 'Deck '+(i+1);
+    var name = s ? (s.name || 'Battalion '+(i+1)) : 'Battalion '+(i+1);
     return '<button class="dkslot'+(i===DK.slot?' open':'')+(i===DK.active?' active':'')+'" data-slot="'+i+'">'+(i===DK.active?'&#9733; ':'')+dkEsc(name)+'</button>';
   }).join('');
-  html += '<input id="dkName" class="dkslot-name" value="'+dkEsc(DK.slots[DK.slot]?DK.slots[DK.slot].name:'')+'" title="rename this deck" maxlength="20">';
-  html += '<button id="dkSetActive" class="dkslot"'+(DK.slot===DK.active?' disabled':'')+' title="make this deck the one the game uses on reload">Set active</button>';
-  // content decks (game/content/decks/*.js) are loadable into the open slot —
-  // how a shipped deck (e.g. the balance-iteration slots) reaches the editor
-  var contentDecks = (typeof WOA_CONTENT !== 'undefined' && WOA_CONTENT.decks) || [];
-  if (contentDecks.length){
-    html += '<select id="dkLoadSel" class="dkslot" title="copy a shipped deck (game/content/decks/) into the open slot">' +
+  html += '<input id="dkName" class="dkslot-name" value="'+dkEsc(DK.slots[DK.slot]?DK.slots[DK.slot].name:'')+'" title="rename this battalion" maxlength="20">';
+  html += '<button id="dkSetActive" class="dkslot"'+(DK.slot===DK.active?' disabled':'')+' title="make this battalion the one the game uses on reload">Set active</button>';
+  // content battalions (game/content/battalions/*.js) are loadable into the open slot —
+  // how a shipped battalion (e.g. the balance-iteration slots) reaches the editor
+  var contentBattalions = (typeof WOA_CONTENT !== 'undefined' && WOA_CONTENT.battalions) || [];
+  if (contentBattalions.length){
+    html += '<select id="dkLoadSel" class="dkslot" title="copy a shipped battalion (game/content/battalions/) into the open slot">' +
       '<option value="">Load…</option>' +
-      contentDecks.map(function(d, i){ return '<option value="'+i+'">'+dkEsc(d.name||d.id)+'</option>'; }).join('') +
+      contentBattalions.map(function(d, i){ return '<option value="'+i+'">'+dkEsc(d.name||d.id)+'</option>'; }).join('') +
       '</select>';
   }
   host.innerHTML = html;
@@ -64,23 +64,23 @@ function renderSlots(){
   $('dkSetActive').onclick = function(){
     DK.active = DK.slot; renderSlots(); dkStatus();
     // starring is not applying — the engine only reads cards at page load
-    var nm = DK.slots[DK.active] ? (DK.slots[DK.active].name || 'this deck') : 'this deck';
+    var nm = DK.slots[DK.active] ? (DK.slots[DK.active].name || 'this battalion') : 'this battalion';
     toast('"'+nm+'" starred — click Save & Reload to actually play with it.', 3200);
   };
   var loadSel = $('dkLoadSel');
   if (loadSel) loadSel.onchange = function(){
-    var d = contentDecks[+this.value]; this.value = '';
+    var d = contentBattalions[+this.value]; this.value = '';
     if (!d) return;
     var cur = DK.slots[DK.slot];
-    if (cur && !confirm('Replace deck slot "'+(cur.name||('Deck '+(DK.slot+1)))+'" with "'+(d.name||d.id)+'"?')) return;
+    if (cur && !confirm('Replace battalion slot "'+(cur.name||('Battalion '+(DK.slot+1)))+'" with "'+(d.name||d.id)+'"?')) return;
     DK.slots[DK.slot] = { name: String(d.name||d.id).slice(0,20), cards: JSON.parse(JSON.stringify(d.cards)) };
-    persistDecks();
+    persistBattalions();
     loadSlotIntoEditor(DK.slot);
   };
 }
 var DK_STEP_FLAGS = { deploy:{unit:1,anywhere:1}, trench:{}, attack:{mod:1,tieSpare:1,noAdvance:1}, reposition:{}, barrage:{} };
 
-function deckProblems(cards){
+function battalionProblems(cards){
   var probs = [], ids = {}, total = 0, starting = 0;
   cards = cards.filter(function(c){ return !c.out; }); // benched cards aren't shipped or validated
   cards.forEach(function(c, i){
@@ -105,35 +105,35 @@ function deckProblems(cards){
   });
   if (starting !== 1) probs.push('exactly ONE card must be marked starting (got ' + starting + ')');
   // the physical guardrail is a design band, not one exact count —
-  // every shipped content/decks/*.js deck totals 16 or 17; a custom deck must
+  // every shipped content/battalions/*.js battalion totals 16 or 17; a custom battalion must
   // land in that same band.
-  if (total < 16 || total > 17) probs.push('the deck must total 16-17 cards (got ' + total + ') — hand-edit the deck file if you really want an exotic size');
+  if (total < 16 || total > 17) probs.push('the battalion must total 16-17 cards (got ' + total + ') — hand-edit the battalion file if you really want an exotic size');
   // army-points budget ceiling — the fairness constraint that lets two
-  // asymmetric decks be called "matched". Same reject-on-validate as the size band.
-  var pts = E.deckPoints({ cards: cards });
-  if (pts > E.DECK_POINTS_CAP) probs.push('the deck is over the army-points budget (' + pts + ' > ' + E.DECK_POINTS_CAP + ') — cut a card or a step');
+  // asymmetric battalions be called "matched". Same reject-on-validate as the size band.
+  var pts = E.battalionPoints({ cards: cards });
+  if (pts > E.BATTALION_POINTS_CAP) probs.push('the battalion is over the army-points budget (' + pts + ' > ' + E.BATTALION_POINTS_CAP + ') — cut a card or a step');
   return probs;
 }
 
-function openDeck(){
-  var d = loadDecks();
+function openBattalion(){
+  var d = loadBattalions();
   DK.slots = d.slots;
   DK.active = Math.min(DK_SLOTS-1, Math.max(0, d.active|0));
   loadSlotIntoEditor(DK.active);
-  show('deckScr');
+  show('battalionScr');
 }
 
 function dkEsc(s){ return uiEsc(s); } // one html-escape lives in ui-primitives.js
-function deckToShip(){ return shipCards(DK.cards); } // the open deck, benched cards stripped
+function battalionToShip(){ return shipCards(DK.cards); } // the open battalion, benched cards stripped
 // LEFT: the selectable card list with in/out (bench) checkboxes
-function renderDeck(){
+function renderBattalion(){
   var list = $('dkList');
   list.innerHTML = '';
   DK.cards.forEach(function(c, i){
     var li = document.createElement('div');
     li.className = 'dkli' + (i===DK.sel?' sel':'') + (c.out?' out':'');
     li.innerHTML =
-      '<input type="checkbox" class="dkli-in" '+(c.out?'':'checked')+' title="in the deck (untick to bench)">' +
+      '<input type="checkbox" class="dkli-in" '+(c.out?'':'checked')+' title="in the battalion (untick to bench)">' +
       '<span class="dkli-star">'+(c.starting?'&#9733;':'')+'</span>' +
       '<span class="dkli-name">'+dkEsc(c.name||'(unnamed)')+'</span>' +
       '<span class="dkli-ct">'+(c.out?'&mdash;':'&times;'+(c.count||1))+'</span>';
@@ -141,9 +141,9 @@ function renderDeck(){
       e.stopPropagation();
       c.out = !this.checked;
       if (c.out && c.starting) c.starting = false; // a benched card can't be the starting card
-      renderDeck();
+      renderBattalion();
     };
-    li.onclick = function(){ DK.sel = i; renderDeck(); };
+    li.onclick = function(){ DK.sel = i; renderBattalion(); };
     list.appendChild(li);
   });
   renderDetail();
@@ -180,7 +180,7 @@ function renderDetail(){
   q('.dkd-name').oninput = function(){ c.name = this.value; touchList(); };
   q('.dkd-id').oninput = function(){ c.id = this.value.trim(); renderDkArt(c); dkStatus(); };
   q('.dkd-count').oninput = function(){ c.count = +this.value; touchList(); };
-  q('#dkStart').onchange = function(){ DK.cards.forEach(function(x){ delete x.starting; }); c.starting = true; renderDeck(); };
+  q('#dkStart').onchange = function(){ DK.cards.forEach(function(x){ delete x.starting; }); c.starting = true; renderBattalion(); };
   q('#dkNoOpener').onchange = function(){ if (this.checked) c.noOpener = true; else delete c.noOpener; };
   q('.dkd-text').oninput = function(){ c.text = this.value; };
   q('#dkDup').onclick = function(){
@@ -190,12 +190,12 @@ function renderDetail(){
     copy.name = (c.name||'Card') + ' II';
     DK.cards.splice(DK.sel+1, 0, copy);
     DK.sel += 1;
-    renderDeck();
+    renderBattalion();
   };
   q('#dkDel').onclick = function(){
     DK.cards.splice(DK.sel, 1);
     if (DK.sel >= DK.cards.length) DK.sel = DK.cards.length - 1;
-    renderDeck();
+    renderBattalion();
   };
   q('#dkAddStep').onclick = function(){ c.steps = c.steps || []; c.steps.push({ type:'attack' }); renderSteps(c); dkStatus(); };
 }
@@ -254,18 +254,18 @@ function renderSteps(c){
 function dkStatus(){
   var inCards = DK.cards.filter(function(c){ return !c.out; });
   var total = inCards.reduce(function(a, c){ return a + (+c.count >= 1 ? Math.floor(+c.count) : 0); }, 0);
-  var openName = (DK.slots && DK.slots[DK.slot] && DK.slots[DK.slot].name) || ('Deck '+(DK.slot+1));
-  var applied = WOA_DECK_SRC === 'builtin' ? 'the active deck (' + dkEsc((E.ACTIVE_DECK && (E.ACTIVE_DECK.name || E.ACTIVE_DECK.id)) || '?') + ')' :
-            WOA_DECK_SRC === 'local' ? 'a custom deck saved in this browser' : 'custom-deck.js';
-  $('deckHdr').innerHTML = 'Editing <b>' + dkEsc(openName) + '</b>' +
-    (DK.slot === DK.active ? ' &middot; this is the active deck' : ' &middot; active deck is <b>'+dkEsc((DK.slots[DK.active]&&DK.slots[DK.active].name)||('Deck '+(DK.active+1)))+'</b>') +
+  var openName = (DK.slots && DK.slots[DK.slot] && DK.slots[DK.slot].name) || ('Battalion '+(DK.slot+1));
+  var applied = WOA_BATTALION_SRC === 'builtin' ? 'the active battalion (' + dkEsc((E.ACTIVE_BATTALION && (E.ACTIVE_BATTALION.name || E.ACTIVE_BATTALION.id)) || '?') + ')' :
+            WOA_BATTALION_SRC === 'local' ? 'a custom battalion saved in this browser' : 'custom-battalion.js';
+  $('battalionHdr').innerHTML = 'Editing <b>' + dkEsc(openName) + '</b>' +
+    (DK.slot === DK.active ? ' &middot; this is the active battalion' : ' &middot; active battalion is <b>'+dkEsc((DK.slots[DK.active]&&DK.slots[DK.active].name)||('Battalion '+(DK.active+1)))+'</b>') +
     ' &middot; game currently runs ' + applied;
   $('dkListFoot').innerHTML = inCards.length + ' cards &middot; <b>' + total + '</b> copies (target 16-17)';
-  var probs = deckProblems(DK.cards);
+  var probs = battalionProblems(DK.cards);
   $('dkWarn').innerHTML = probs.length ? '&#9888; ' + probs.join('<br>&#9888; ') : '';
   $('dkSave').disabled = probs.length > 0;
 }
 
-function syncDeckFile(deck, done){
-  api('savedeck', { deck: deck }).then(done).catch(done);
+function syncBattalionFile(battalion, done){
+  api('savebattalion', { battalion: battalion }).then(done).catch(done);
 }

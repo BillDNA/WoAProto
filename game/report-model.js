@@ -201,7 +201,7 @@ var WOA_REPORT = (function () {
      only, never a hard gate (ADR-0002). ONE place to tune; docs/balance,
      card-rubric, and review-reports cite these.
        RESID_PTS   — |residual| in army-points that trips the ⚠ flag. Absolute is
-                     fine because deck size is a fixed guardrail (~16 cards / ~68 pts);
+                     fine because battalion size is a fixed guardrail (~16 cards / ~68 pts);
                      re-tune if that budget moves a lot.
        MIN_HQPLAYS — a Card needs at least this many HQ × printed plays before its
                      residual is trusted (and shown). Below it the HQ slice is too
@@ -217,7 +217,7 @@ var WOA_REPORT = (function () {
 
      Mispricing residual: when `cardPoints` (E.cardPoints) is passed, each
      row also carries `points` (army-points cost, ADR-0002) and `resid` — the card's
-     share of the deck's DECISIVE WINS minus its share of the points BUDGET, scaled
+     share of the battalion's DECISIVE WINS minus its share of the points BUDGET, scaled
      back to points (so the subtraction is in points; no win-rate is fitted to points
      — descriptive, not predictive, ADR-0002):
        priceShare_i = points_i / Σ points   (over played cards)
@@ -543,7 +543,7 @@ var WOA_REPORT = (function () {
     L.push('');
     L.push('## Maps');
     L.push('');
-    // Atk%/Swp% are SHARES of all actions (deck-size-proof); Tie%/Drag are
+    // Atk%/Swp% are SHARES of all actions (battalion-size-proof); Tie%/Drag are
     // conditioned to attrition endings (a.attritionEndings), not `done`.
     L.push('| Map | Shape | Red% | 1st% | HQ% | Turns | FSdiff | Atk% | Swp% | 0kill% | Tie% | Drag | Swings | ' +
       (scoreCol ? 'Balance | ' : '') + 'Notes |');

@@ -5,12 +5,12 @@
    refresh the browser. `node test.js` validates everything and will point at
    exactly what is wrong. `node balance.js` shows what your change did.
 
-   NOTE: the MAP LIBRARY and the CARD DECK do not live here — they are per-item
+   NOTE: the MAP LIBRARY and the CARD BATTALIONS do not live here — they are per-item
    files under game/content/ (maps/<slug>.js,
-   decks/<slug>.js) that each register into a WOA_CONTENT global, so you can
-   delete a map or a deck by deleting its file (no more localStorage tombstones).
+   battalions/<slug>.js) that each register into a WOA_CONTENT global, so you can
+   delete a map or a battalion by deleting its file (no more localStorage tombstones).
    The engine assembles the full data set from THIS file (shapes/units/stock/ai)
-   plus WOA_CONTENT (maps + the active deck's cards). See content/manifest.js.
+   plus WOA_CONTENT (maps + the active battalion's cards). See content/manifest.js.
 
    UNITS — stats per unit type: atk/def/sup (support given to adjacent
    fights), worth (bounty the enemy scores for killing it), count (pieces per

@@ -22,9 +22,9 @@
       skirmishIndex: 0,
       wins: { red: 0, blue: 0 },
       firstPlayer: opts.firstPlayer || (I.rnd(s) < 0.5 ? 'red' : 'blue'),
-      // Per-side deck selection {red, blue} (each null|deck|id|name); travels
-      // with the battle like maps do. null = both sides share the active deck.
-      decks: opts.decks || null,
+      // Per-side battalion selection {red, blue} (each null|battalion|id|name);
+      // null = both sides share the active battalion (which instantiates the deck).
+      battalions: opts.battalions || null,
       winner: null
     };
     battle.seed = s.seed;
@@ -115,13 +115,13 @@
       }
     };
     st.flow.second = I.other(st.flow.current);
-    // Only seat per-side registries when a non-default deck is actually chosen.
+    // Only seat per-side registries when a non-default battalion is chosen.
     // The default (symmetric) path leaves st.cards.sideDecks absent — sideReg
     // falls back to DEFAULT_REG — so live/synced/persisted state never carries a
     // redundant card catalog on the hot path.
-    var dsel = battle.decks;
+    var dsel = battle.battalions;
     if (dsel && (dsel.red || dsel.blue))
-      st.cards.sideDecks = { red: I.resolveDeck(dsel.red), blue: I.resolveDeck(dsel.blue) };
+      st.cards.sideDecks = { red: I.resolveBattalion(dsel.red), blue: I.resolveBattalion(dsel.blue) };
     st.cards.decks.red = buildDeck(st, 'red');
     st.cards.decks.blue = buildDeck(st, 'blue');
     log(st, 'Skirmish ' + (battle.skirmishIndex + 1) + ' — "' + map.name + '". ' + I.cap(st.flow.current) + ' moves first.');

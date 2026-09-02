@@ -7,7 +7,7 @@ What 1.1 means: a trench on the attacked border spares the defender on a combat 
 
 # Box Contents
 
-* 2 player decks with 16 cards each  
+* 2 player battalions with 16 cards each  
 * 2 player mats with 7 infantry, 2 cavalry, 1 artillery, 1 head quaters and 3 trenches.  
 * 1 game board  
 * 1 Mapset of 12 Maps  
