@@ -317,8 +317,8 @@ test('unit composition & values as content data', () => {
   // (WOA_TEST_ACTIVATE = its id), then prints E.UNITS / E.PIECE_TOTALS — or the
   // load-time error string if the total-10 guardrail fired.
   var CHILD = 'var fs=require("fs"),path=require("path"),base=process.cwd();' +
-    'global.WOA_CONTENT={maps:[],cards:[],decks:[],mapsets:[],units:[]};' +
-    '["decks","maps","mapsets","units"].forEach(function(k){var d=path.join(base,"content",k);' +
+    'global.WOA_CONTENT={maps:[],cards:[],battalions:[],mapsets:[],units:[]};' +
+    '["battalions","maps","mapsets","units"].forEach(function(k){var d=path.join(base,"content",k);' +
     'try{fs.readdirSync(d).filter(function(f){return /\\.js$/.test(f)}).sort().forEach(function(f){require(path.join(d,f))})}catch(e){}});' +
     'var vj=process.env.WOA_TEST_UNITS||"",act=process.env.WOA_TEST_ACTIVATE||"";' +
     'if(vj){var v=JSON.parse(vj);global.WOA_CONTENT.units.forEach(function(u){u.active=false});global.WOA_CONTENT.units.push(v);}' +

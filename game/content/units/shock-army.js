@@ -5,7 +5,7 @@
    Guardrail: the counts must still total 10 (the engine throws at load if not).
    This one trades infantry for a heavier cavalry wing (6/3/1) and gives the
    artillery a little armour and bounty (def 0->1, worth 3->4) to show value edits. */
-(function(g){var c=g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],decks:[],mapsets:[],units:[]};(c.units=c.units||[]).push(
+(function(g){var c=g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],battalions:[],mapsets:[],units:[]};(c.units=c.units||[]).push(
 {
  "id": "shock-army",
  "name": "Shock Army (experimental)",

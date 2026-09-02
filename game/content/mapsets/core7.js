@@ -13,7 +13,7 @@
    - the-marshes (3.0)  reads clean under hard-vs-hard despite a normal-AI
                         directional side-bias flag; balanceScore is the tiebreak.
    - the-narrows (4.7)  hourglass shape, most back-and-forth of the keepers (swings 2.7). */
-(function(g){var c=g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],decks:[],mapsets:[]};(c.mapsets=c.mapsets||[]).push(
+(function(g){var c=g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],battalions:[],mapsets:[]};(c.mapsets=c.mapsets||[]).push(
 {
  "id": "core7",
  "name": "Core Six",

@@ -22,7 +22,7 @@ var SCREENS = {
   battle:     { kind: 'player', dom: 'game',          label: 'Battle' },
 
   devhub:     { kind: 'dev',    dom: 'devHubScr',     label: 'Dev Hub',           entry: function(){ renderDevHub(); show('devHubScr'); } },
-  deck:       { kind: 'dev',    dom: 'deckScr',       label: 'Deck Editor',       entry: function(){ openDeck(); },                    hub: true },
+  battalion:       { kind: 'dev',    dom: 'battalionScr',       label: 'Battalion Editor',       entry: function(){ openBattalion(); },                    hub: true },
   maps:       { kind: 'dev',    dom: 'mapsScr',       label: 'Maps & Map Editor', entry: function(){ renderMapsScr(); show('mapsScr'); }, hub: true },
   dash:       { kind: 'dev',    dom: 'dashScr',       label: 'Balance Dashboard', entry: function(){ openDash(); },                    hub: true },
   watch:      { kind: 'dev',    dom: null,            label: 'Watch: AI vs AI',   entry: function(){ startLocal('watch'); },           hub: true }
@@ -61,9 +61,9 @@ function devHotkey(ev){
 /* =================== Dev Hub ===================
    Buttons are generated from the registry (kind:dev, hub:true) so a new dev tool
    is one registry row. Ids on the buttons match the existing boot.js wiring
-   (btnDeck / btnMaps / btnDash / btnWatch), which stays the source of truth for
+   (btnBattalion / btnMaps / btnDash / btnWatch), which stays the source of truth for
    what each tool does. */
-var HUB_BTN_ID = { deck: 'btnDeck', maps: 'btnMaps', dash: 'btnDash', watch: 'btnWatch' };
+var HUB_BTN_ID = { battalion: 'btnBattalion', maps: 'btnMaps', dash: 'btnDash', watch: 'btnWatch' };
 function renderDevHub(){
   var wrap = $('devHubBtns'); if (!wrap) return;
   wrap.innerHTML = '';

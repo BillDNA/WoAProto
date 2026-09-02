@@ -20,7 +20,7 @@
      --quiet   suppress the progress dots
      --mapset <id>  run a specific mapset (default: the ACTIVE set's pool;
                'all' = every map on disk)
-     --deck <id>    report on content/decks/<id>.js instead of the ACTIVE deck
+     --battalion <id>    report on content/battalions/<id>.js instead of the ACTIVE deck
      --units <id>   report with content/units/<id>.js unit stats (composition +
                atk/def/sup/worth) instead of the maps.js default
      --parallel [k]  simulate maps in k parallel worker processes (default:
@@ -39,7 +39,7 @@
 var fs = require('fs');
 var path = require('path');
 
-// --deck <id> / --units <id>: report on a different content deck or unit-stat
+// --battalion <id> / --units <id>: report on a different content deck or unit-stat
 // variant. The engine snapshots the active deck AND unit block at require()
 // time, so pre-populate WOA_CONTENT with the flipped content FIRST (same trick,
 // same file order as dev/claude-plays.js preloadContent — node's require cache
@@ -54,23 +54,23 @@ var DECK = '', UNITSET = '';
     process.argv.splice(i, 2);
     return id;
   }
-  DECK = take('--deck');
+  DECK = take('--battalion');
   UNITSET = take('--units');
   if (!DECK && !UNITSET) return;
-  global.WOA_CONTENT = { maps: [], cards: [], decks: [], mapsets: [], units: [] };
-  ['decks', 'maps', 'mapsets', 'units'].forEach(function (kind) {
+  global.WOA_CONTENT = { maps: [], cards: [], battalions: [], mapsets: [], units: [] };
+  ['battalions', 'maps', 'mapsets', 'units'].forEach(function (kind) {
     var dir = path.join(__dirname, '..', 'game', 'content', kind);
     var files = [];
     try { files = fs.readdirSync(dir).filter(function (f) { return /\.js$/.test(f); }).sort(); } catch (e) { return; }
     files.forEach(function (f) { require(path.join(dir, f)); });
   });
   if (DECK) {
-    var decks = global.WOA_CONTENT.decks;
-    if (!decks.some(function (d) { return d.id === DECK; })) {
-      console.error('--deck "' + DECK + '" not found. Available: ' + decks.map(function (d) { return d.id; }).join(', '));
+    var battalions = global.WOA_CONTENT.battalions;
+    if (!battalions.some(function (d) { return d.id === DECK; })) {
+      console.error('--battalion "' + DECK + '" not found. Available: ' + battalions.map(function (d) { return d.id; }).join(', '));
       process.exit(1);
     }
-    decks.forEach(function (d) { d.active = (d.id === DECK); });
+    battalions.forEach(function (d) { d.active = (d.id === DECK); });
   }
   if (UNITSET) {
     var us = global.WOA_CONTENT.units || [];
@@ -160,7 +160,7 @@ async function run() {
 
   // Record the run's content + seed identity so it's reproducible and
   // the A/B picker can tell runs apart. seedBaseFor(0) includes the priorRuns offset.
-  var runDeck = DECK || (E.ACTIVE_DECK && E.ACTIVE_DECK.id) || '';
+  var runDeck = DECK || (E.ACTIVE_BATTALION && E.ACTIVE_BATTALION.id) || '';
   // Always resolve the actual mapset: --mapset <id> / 'all' verbatim, else the
   // active mapset id — so an all-maps run and an active-pool run never collide as ''.
   var actMset = E.activeMapset && E.activeMapset();
@@ -190,17 +190,17 @@ async function run() {
     // process-per-map: the engine's current-board state is module-global, so
     // in-process interleaving is unsafe — each worker require()s a fresh engine.
     var cp = require('child_process');
-    // each worker require()s a fresh engine, so --deck / --units must preload
+    // each worker require()s a fresh engine, so --battalion / --units must preload
     // there too. The worker also collects every finished skirmish via
     // balanceMap's onGame — slimmed by db.js's slimSkirmishState to exactly what
     // insertSkirmish reads — and ships them in the one JSON envelope; the PARENT
     // stays the single woa.db writer (no cross-process SQLite contention).
     var WORKER = 'var path=require("path");var deckId=process.argv[7]||"",unitsId=process.argv[8]||"";' +
       'if(deckId||unitsId){var fs=require("fs");' +
-      'global.WOA_CONTENT={maps:[],cards:[],decks:[],mapsets:[],units:[]};' +
-      '["decks","maps","mapsets","units"].forEach(function(kind){var dir=path.join(path.dirname(process.argv[1]),"content",kind);' +
+      'global.WOA_CONTENT={maps:[],cards:[],battalions:[],mapsets:[],units:[]};' +
+      '["battalions","maps","mapsets","units"].forEach(function(kind){var dir=path.join(path.dirname(process.argv[1]),"content",kind);' +
       'try{fs.readdirSync(dir).filter(function(f){return /\\.js$/.test(f)}).sort().forEach(function(f){require(path.join(dir,f))})}catch(e){}});' +
-      'if(deckId)global.WOA_CONTENT.decks.forEach(function(d){d.active=(d.id===deckId)});' +
+      'if(deckId)global.WOA_CONTENT.battalions.forEach(function(d){d.active=(d.id===deckId)});' +
       'if(unitsId)global.WOA_CONTENT.units.forEach(function(u){u.active=(u.id===unitsId)});}' +
       'var E=require(process.argv[1]);var SIM=require(path.join(path.dirname(process.argv[1]),"sim.js"));var m=E.MAPS.filter(function(x){return x.name===process.argv[2]})[0];' +
       'var slim=null;try{slim=require(path.join(path.dirname(process.argv[1]),"..","dev","db.js")).slimSkirmishState}catch(e){}' +

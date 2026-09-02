@@ -145,8 +145,8 @@ default.** A stronger / more committal opener pushes first-mover% **down** and
 lengthens battles (it hands the first mover a play the second answers); a cheaper /
 defensive opener does the reverse. So when **first-mover% or HQ%** drifts, check
 whether the `starting` card is the cause *before* reaching for the temperature dial
-or other levers. Exactly one card carries the flag (enforced by `deckProblems`); it
-lives in the active deck (`content/decks/`).
+or other levers. Exactly one card carries the flag (enforced by `battalionProblems`); it
+lives in the active battalion (`content/battalions/`).
 
 ## How to run the numbers
 

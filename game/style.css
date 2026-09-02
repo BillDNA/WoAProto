@@ -338,15 +338,15 @@
     position:fixed; left:50%; top:62px; transform:translateX(-50%); z-index:40;
     padding:10px 22px; display:none; font-size:15.5px; text-align:center; max-width:90vw;
   }
-  /* deck-override badge — small, fixed, above every screen; JS
+  /* battalion-override badge — small, fixed, above every screen; JS
      flips display to flex only when an override is actually live. */
-  #deckBadge{
+  #battalionBadge{
     position:fixed; left:10px; top:10px; z-index:41; display:none;
     align-items:center; gap:8px; padding:4px 10px 4px 12px; font-size:11.5px;
     color:var(--ink); max-width:min(360px,60vw);
   }
-  #deckBadge span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  #deckBadge button{padding:2px 9px; font-size:11px; box-shadow:none;}
+  #battalionBadge span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  #battalionBadge button{padding:2px 9px; font-size:11px; box-shadow:none;}
   .manual{text-align:left; font-size:14px; line-height:1.5;}
   .manual h3{font-variant:small-caps; margin:12px 0 4px; color:var(--brass-dark); border-bottom:1px solid var(--brass-dark);}
   .manual table{width:100%; border-collapse:collapse; font-size:13px;}
@@ -383,10 +383,10 @@
     #mpBoard .medge-glow{opacity:.6;}
   }
 
-  /* maps screen + editor + balance dashboard + deck editor */
+  /* maps screen + editor + balance dashboard + battalion editor */
   #mapsScr .panel, #editorScr .panel{width:min(900px,96vw); max-height:92vh; overflow-y:auto; padding:22px 26px;}
-  #deckScr .panel{width:min(1040px,97vw); max-height:97vh; overflow-y:auto; padding:20px 24px;}
-  /* master-detail deck editor */
+  #battalionScr .panel{width:min(1040px,97vw); max-height:97vh; overflow-y:auto; padding:20px 24px;}
+  /* master-detail battalion editor */
   #dkSlots{display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:center; margin:4px 0 2px;}
   .dkslot{font-family:inherit; font-size:12.5px; padding:4px 11px; border:1px solid var(--brass-dark); border-radius:14px; background:rgba(255,255,255,.3); color:var(--ink); cursor:pointer;}
   .dkslot.open{background:var(--brass); border-color:#6e5430; font-weight:bold;}

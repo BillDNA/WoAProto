@@ -16,18 +16,19 @@ function testSkirmish(seed) {
 }
 
 // Card-behaviour fixtures: pin a card's DEF from the full content catalog (every
-// deck loaded from content/decks/, not just the active deck's resolved list) so a
-// test can exercise a card the active deck cut. Registers into E.CARD_BY_ID
-// without touching E.CARDS, so the fixture never leaks into a shuffled deck.
-var ALL_DECK_CARDS = [].concat.apply([], ((typeof global !== 'undefined' && global.WOA_CONTENT && global.WOA_CONTENT.decks) || [])
+// battalion loaded from content/battalions/, not just the active battalion's resolved
+// list) so a test can exercise a card the active battalion cut. Registers into
+// E.CARD_BY_ID without touching E.CARDS, so the fixture never leaks into a shuffled
+// draw pile.
+var ALL_BATTALION_CARDS = [].concat.apply([], ((typeof global !== 'undefined' && global.WOA_CONTENT && global.WOA_CONTENT.battalions) || [])
   .map(function (d) { return d.cards || []; }));
 function fixtureCard(id) {
   if (!E.CARD_BY_ID[id]) {
-    var def = ALL_DECK_CARDS.filter(function (c) { return c.id === id; })[0];
-    if (!def) throw new Error('fixtureCard: "' + id + '" not found in any loaded deck');
+    var def = ALL_BATTALION_CARDS.filter(function (c) { return c.id === id; })[0];
+    if (!def) throw new Error('fixtureCard: "' + id + '" not found in any loaded battalion');
     E.CARD_BY_ID[id] = def;
   }
   return E.CARD_BY_ID[id];
 }
 
-module.exports = { E, SIM, TESTMAP, testSkirmish, fixtureCard, ALL_DECK_CARDS };
+module.exports = { E, SIM, TESTMAP, testSkirmish, fixtureCard, ALL_BATTALION_CARDS };

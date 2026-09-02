@@ -33,7 +33,7 @@ Needs Node.js (nodejs.org) on one computer — the server is plain Node and runs
 
 ## Boards, maps, units & cards — built for rapid tinkering
 
-**The tunable knobs live in `maps.js`** as plain JSON: board shapes, **unit stats and piece counts, the trench count, the AI personalities, and the physical terrain stock**. The **map library and card decks are their own files** under `game/content/` — one file per map (`content/maps/<name>.js`) and per deck (`content/decks/<name>.js`), so you delete a map by deleting its file. Edit any of it in a text editor, save, refresh the browser — the files explain their own format. Want to know what cavalry with 1 defense feels like, or a 20-card deck? Change a number, refresh, play (or run `node dev/balance.js` on it). `node test.js` validates everything and points at exactly what's wrong.
+**The tunable knobs live in `maps.js`** as plain JSON: board shapes, **unit stats and piece counts, the trench count, the AI personalities, and the physical terrain stock**. The **map library and card battalions are their own files** under `game/content/` — one file per map (`content/maps/<name>.js`) and per deck (`content/battalions/<name>.js`), so you delete a map by deleting its file. Edit any of it in a text editor, save, refresh the browser — the files explain their own format. Want to know what cavalry with 1 defense feels like, or a 20-card deck? Change a number, refresh, play (or run `node dev/balance.js` on it). `node test.js` validates everything and points at exactly what's wrong.
 
 The map library lives in `game/content/maps/` — one file per map — and is browsable with previews on the **Maps & Map Editor** screen. Every map sits on one of five boards (or carries its own carved outline), all at or under the 24-hex laser-cutter ceiling:
 
@@ -47,7 +47,7 @@ The old 37-hex Grand and 29-hex Wide boards are gone: they played slow and empty
 
 **Maps & Map Editor** on the main menu lists every skirmishfield with a preview. **Play** starts a quick AI campaign on just that map; **Balance** opens the Balance Dashboard scoped to it (the same full report as the CLI, run in the browser). **New Map** opens the editor: pick a board, paint terrain (click just inside a hex's border to cycle forest → mountain → river → empty on that hex's side), place both HQs, and **Mirror** to copy everything point-symmetrically — its **Balance** button runs the dashboard on the map as drawn, before you even save. Terrain pieces behave like the physical ones — each piece lives inside one hex and wraps its corners; the editor and engine both enforce it.
 
-**Mapsets** decide which maps are actually in the draw pile. The maps screen holds up to five named sets (like the deck editor's deck slots) — say a rivers-only training set next to the full tournament set — with exactly one set **active**: campaigns draw from the active set, and so do the balance tools. Tick maps in and out of the set you're viewing, and sets are saved as files (`content/mapsets/*.js`) when the local server runs, so both LAN players and every command-line tool see the same pool.
+**Mapsets** decide which maps are actually in the draw pile. The maps screen holds up to five named sets (like the battalion editor's battalion slots) — say a rivers-only training set next to the full tournament set — with exactly one set **active**: campaigns draw from the active set, and so do the balance tools. Tick maps in and out of the set you're viewing, and sets are saved as files (`content/mapsets/*.js`) when the local server runs, so both LAN players and every command-line tool see the same pool.
 
 ### Sharing custom maps (zip the folder)
 
@@ -120,10 +120,10 @@ A **river** (drawn in blue, in the same 2- and 3-side pieces as forest and mount
 - `sim.js` — the batch/measurement layer: runs AI-vs-AI skirmishes and folds the balance aggregate (shared by tests, the CLI reports, and the Balance Dashboard). Built on the engine; not part of it
 - `report-model.js` — the one copy of the balance-report scoring/format, shared by the CLI and the Balance Dashboard
 - `maps.js` — **core tunable data, hand-editable JSON**: board shapes, units, terrain stock, AI personalities
-- `content/` — **the map library, card decks, and mapsets, one file each** (`content/maps/*.js`, `content/decks/*.js`, `content/mapsets/*.js`): delete a map/deck by deleting its file. The map editor carves the **board outline itself** (Board hexes tool, add/remove under the 24-hex ceiling) and deletes maps for real (floor of 5); saving/deleting needs the local server.
+- `content/` — **the map library, card battalions, and mapsets, one file each** (`content/maps/*.js`, `content/battalions/*.js`, `content/mapsets/*.js`): delete a map/deck by deleting its file. The map editor carves the **board outline itself** (Board hexes tool, add/remove under the 24-hex ceiling) and deletes maps for real (floor of 5); saving/deleting needs the local server.
 - `dev/balance.js` — AI-vs-AI balance reports: `node dev/balance.js`, `node dev/balance.js matchup`
   (the CLI lives under `dev/`; the same report lives in the browser: **Balance Dashboard** on the main menu)
 - `server.js` / `run-server.bat` / `run-server.command` — tiny zero-dependency LAN + save server
-- `custom-deck.js` — the **applied** deck from the **Deck Editor** (menu): edit cards in the browser — name, copies, text, steps — with validation (16 cards, one starting card); Save reloads with the new deck (it overrides `content/decks/default.js`). The 5 editing slots live in the browser; the applied deck is a file.
+- `custom-battalion.js` — the **applied** deck from the **Battalion Editor** (menu): edit cards in the browser — name, copies, text, steps — with validation (16 cards, one starting card); Save reloads with the new deck (it overrides `content/battalions/default.js`). The 5 editing slots live in the browser; the applied battalion is a file.
 - `test.js` — engine test suite: `node test.js`
 - `CLAUDE.md` — pointer to the orientation notes for AI coding assistants working on this project

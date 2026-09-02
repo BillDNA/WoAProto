@@ -1,6 +1,6 @@
 ---
 summary: What makes a good War of Attrition Card — an order whose turn you remember, that argues with its hand-mates, and whose misplay you can name.
-applies-to: any Card in the active Deck (`content/decks/`) — an existing card under review or a proposed new one. Read against the whole Deck it sits in, never alone; and, for set-fit, against its peers across the Catalog (`content/cards/`).
+applies-to: any Card in the active Deck (`content/battalions/`) — an existing card under review or a proposed new one. Read against the whole Deck it sits in, never alone; and, for set-fit, against its peers across the Catalog (`content/cards/`).
 ---
 # Card rubric
 

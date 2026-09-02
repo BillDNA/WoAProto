@@ -1,13 +1,14 @@
-(function(g){(g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],decks:[]}).decks.push(
+(function(g){(g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],battalions:[]}).battalions.push(
 {
- "id": "cavsplit17-tempo",
- "name": "Cav Split 17 + Conscription opener",
+ "id": "cavsplit-17",
+ "name": "Cav Split (17 - gate relaxed)",
  "active": false,
  "cards": [
   {
    "id": "deploy_inf_start",
    "name": "Deploy Infantry",
    "count": 1,
+   "starting": true,
    "text": "Place an Infantry unit adjacent to any controlled hex.",
    "steps": [
     {
@@ -71,8 +72,7 @@
      "type": "deploy",
      "unit": "infantry"
     }
-   ],
-   "starting": true
+   ]
   },
   {
    "id": "deploy_cavalry",

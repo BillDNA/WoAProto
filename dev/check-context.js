@@ -99,7 +99,7 @@ var ALIASES = [
     note: 'active-set → Mapset; full collection → map library; piece mats stay the mats overlay' },
   // The engine best-of object is now st.battle / newBattle. What stays "match":
   // the claude-plays `--match` CLI flag + its jsonl log schema, the `matchup`
-  // luck-o-meter (a distinct pairing tool), "matched" decks (CONTEXT sanctions
+  // luck-o-meter (a distinct pairing tool), "matched" battalions (CONTEXT sanctions
   // it), and ordinary English (a map "matches", `.match(`). Too broad to lock.
   { term: 'match — best-of (→ Battle)', pattern: /\bmatch(es|up|ed|ing)?\b/gi,
     ignore: /matchup|matched|\.match\(|--match|match mode|match seed|MATCH mode/i,

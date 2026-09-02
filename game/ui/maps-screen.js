@@ -15,7 +15,7 @@
 // rewrites/removes its file on the server AND updates E.MAPS in place.
 //
 // The match pool is the ACTIVE MAPSET (content/mapsets/*.js — named
-// sets, up to five slots, one active; the deck-slot pattern applied to
+// sets, up to five slots, one active; the battalion-slot pattern applied to
 // maps), so the browser, the LAN peer, and every CLI tool agree on one mapset.
 // Set edits mutate E.MAPSETS in place and are saved to files via
 // /api/savemapsets (needs the server; without it, edits last the session).

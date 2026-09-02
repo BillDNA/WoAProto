@@ -1,7 +1,7 @@
 /* Real-path gates for two browser-inline hand-offs, driven through
    the actual page in jsdom (same inline-every-script boot as dev/smoke.js):
-   - E3: localStorage['woa-custom-deck'] -> the index.html deck bootstrap ->
-     WOA_CONTENT.decks -> the engine's ACTIVE_DECK snapshot (localStorage wins).
+   - E3: localStorage['woa-custom-battalion'] -> the index.html battalion bootstrap ->
+     WOA_CONTENT.battalions -> the engine's ACTIVE_BATTALION snapshot (localStorage wins).
    - F2: a maps-bundle file -> the importFile lenient parser (bare array /
      assignment prefix / trailing semicolon / single map) -> libraryReplace -> E.MAPS.
    Run: node --test dev/boot.test.js  (needs dev/node_modules/jsdom). */
@@ -16,7 +16,7 @@ const GAME = path.join(__dirname, '..', 'game');
 function read(f) { return fs.readFileSync(path.join(GAME, f), 'utf8'); }
 function readContent() {
   let out = '';
-  ['decks', 'maps'].forEach(function (kind) {
+  ['battalions', 'maps'].forEach(function (kind) {
     const d = path.join(GAME, 'content', kind);
     fs.readdirSync(d).filter(function (f) { return /\.js$/.test(f); }).sort().forEach(function (f) {
       out += fs.readFileSync(path.join(d, f), 'utf8') + '\n';
@@ -26,7 +26,7 @@ function readContent() {
 }
 // Inline every <script src> (manifest -> the content files) so jsdom needs no
 // loader — the same technique dev/smoke.js uses. `prefix` is injected before the
-// whole chain (used to seed localStorage ahead of the inline deck bootstrap).
+// whole chain (used to seed localStorage ahead of the inline battalion bootstrap).
 function bootHtml(prefix) {
   let html = read('index.html').replace(/<script src="([^"]+)"><\/script>/g, function (tag, src) {
     if (src === 'content/manifest.js') return '<script>' + readContent() + '</script>';
@@ -42,23 +42,23 @@ function makeDom(prefix) {
   return dom;
 }
 
-test('E3: localStorage deck override wins and becomes ACTIVE_DECK', function () {
-  // A non-empty applied deck seeded into localStorage BEFORE the chain runs — the
-  // inline bootstrap must deactivate the shipped decks and snapshot this one.
+test('E3: localStorage battalion override wins and becomes ACTIVE_BATTALION', function () {
+  // A non-empty applied battalion seeded into localStorage BEFORE the chain runs — the
+  // inline bootstrap must deactivate the shipped battalions and snapshot this one.
   const applied = [
     { id: 'deploy_inf_start', name: 'Start', count: 1, starting: true, steps: [{ type: 'deploy', unit: 'infantry' }] },
     { id: 'attack_plus1', name: 'Assault', count: 15, steps: [{ type: 'attack', mod: 1 }] }
   ];
-  const seed = '<script>try{localStorage.setItem("woa-custom-deck",' + JSON.stringify(JSON.stringify(applied)) + ')}catch(e){}</script>\n';
+  const seed = '<script>try{localStorage.setItem("woa-custom-battalion",' + JSON.stringify(JSON.stringify(applied)) + ')}catch(e){}</script>\n';
   const win = makeDom(seed).window;
   assert.ok(win.Engine, 'engine booted');
-  assert.strictEqual(win.Engine.ACTIVE_DECK.id, '__applied',
-    'localStorage override became the active deck (id __applied), winning over the shipped active deck');
-  const ids = win.Engine.ACTIVE_DECK.cards.map(function (c) { return c.id; });
+  assert.strictEqual(win.Engine.ACTIVE_BATTALION.id, '__applied',
+    'localStorage override became the active battalion (id __applied), winning over the shipped active battalion');
+  const ids = win.Engine.ACTIVE_BATTALION.cards.map(function (c) { return c.id; });
   assert.ok(ids.indexOf('attack_plus1') >= 0 && ids.indexOf('deploy_inf_start') >= 0,
-    'the applied deck carries the overridden cards (got ' + ids.join(',') + ')');
-  assert.ok(win.WOA_CONTENT.decks.filter(function (d) { return d.active; }).length === 1,
-    'exactly one deck is active after the override (the shipped ones were deactivated)');
+    'the applied battalion carries the overridden cards (got ' + ids.join(',') + ')');
+  assert.ok(win.WOA_CONTENT.battalions.filter(function (d) { return d.active; }).length === 1,
+    'exactly one battalion is active after the override (the shipped ones were deactivated)');
 });
 
 test('F2: maps-bundle import lenient parser lands the map in E.MAPS', function () {

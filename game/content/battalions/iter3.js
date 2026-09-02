@@ -1,16 +1,16 @@
-(function(g){(g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],decks:[]}).decks.push(
+(function(g){(g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],battalions:[]}).battalions.push(
 {
- "id": "iter2",
- "name": "Iter 2 - Tempo",
+ "id": "iter3",
+ "name": "Iter 3 - Decisive",
  "active": false,
  "cards": [
   {
-   "id": "deploy_inf_start",
-   "name": "Deploy Infantry",
+   "id": "vanguard",
+   "name": "Vanguard",
    "count": 1,
    "starting": true,
-   "text": "Place an Infantry unit adjacent to any controlled hex.",
-   "steps": [ { "type": "deploy", "unit": "infantry" } ]
+   "text": "Place an Infantry unit adjacent to any controlled hex. Then reposition a unit.",
+   "steps": [ { "type": "deploy", "unit": "infantry" }, { "type": "reposition" } ]
   },
   {
    "id": "deploy_artillery",
@@ -33,13 +33,6 @@
    "noOpener": true,
    "text": "Place an Infantry unit on any empty hex. (Never in your opening hand.)",
    "steps": [ { "type": "deploy", "unit": "infantry", "anywhere": true } ]
-  },
-  {
-   "id": "conscription",
-   "name": "Conscription",
-   "count": 1,
-   "text": "Place two Infantry units adjacent to any controlled hex, in sequence.",
-   "steps": [ { "type": "deploy", "unit": "infantry" }, { "type": "deploy", "unit": "infantry" } ]
   },
   {
    "id": "deploy_cavalry",
@@ -91,11 +84,18 @@
    "steps": [ { "type": "attack", "mod": 1 }, { "type": "trench" } ]
   },
   {
-   "id": "sappers",
-   "name": "Sappers",
+   "id": "over_the_top",
+   "name": "Over the Top",
    "count": 1,
-   "text": "Remove any trench or forest on the board (optional). Then build a trench on any controlled hex.",
-   "steps": [ { "type": "barrage" }, { "type": "trench" } ]
+   "text": "Reposition a unit. Then order an attack; your attacker survives a tie.",
+   "steps": [ { "type": "reposition" }, { "type": "attack", "tieSpare": true } ]
+  },
+  {
+   "id": "creeping_barrage",
+   "name": "Creeping Barrage",
+   "count": 1,
+   "text": "Remove any trench or forest on the board (optional). Then order an attack with +1 support; your attacker holds its ground.",
+   "steps": [ { "type": "barrage" }, { "type": "attack", "mod": 1, "noAdvance": true } ]
   }
  ]
 }

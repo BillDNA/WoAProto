@@ -63,8 +63,8 @@ a legibility finding).
 ## Recipe 4 — Iteration set (any deck + mapset; the balance-loop recipe)
 
 ```
-node dev/balance-report.js 100 hard hard --once --parallel [--deck <id>] [--mapset <id>]
-node dev/claude-plays.js --match 3 --red haiku --blue haiku --effort low --seed 1001 [--deck <id>] [--mapset <id>]
+node dev/balance-report.js 100 hard hard --once --parallel [--battalion <id>] [--mapset <id>]
+node dev/claude-plays.js --match 3 --red haiku --blue haiku --effort low --seed 1001 [--battalion <id>] [--mapset <id>]
 ```
 
 *Measures:* the full iteration read for a content slot — the n=100 sweep (±10/map) plus **one**
@@ -82,13 +82,13 @@ felt-read on one slot — the v1 three-match set, only when one match's signal i
 ## The before/after procedure (demonstrated)
 
 1. **Before:** run the recipe on untouched data.
-2. **Tweak** one data value (`content/decks/`, `content/maps/`, `maps.js` AI rows).
+2. **Tweak** one data value (`content/battalions/`, `content/maps/`, `maps.js` AI rows).
 3. **After:** run the exact same recipe. Compare.
 4. **Revert** (or keep, if the numbers say yes). A rerun after a revert must reproduce the
    *before* numbers exactly — if it doesn't, something else changed too.
 
 Worked example — Recipe 1 on The Ford, `attack_plus1` step `mod` 1 → 2
-(`game/content/decks/default.js`):
+(`game/content/battalions/default.js`):
 
 | | Red% | 1st% | HQ% | Turns | Atk | Swp | Attack +1 AvgSeen |
 |---|--:|--:|--:|--:|--:|--:|--:|

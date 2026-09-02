@@ -16,7 +16,7 @@
      --effort <level>   low|medium|high|xhigh|max for the LLM calls (shared;
      --red-effort/--blue-effort override per side)
      --seed <n>         match seed (default 1234)
-     --deck <id>        play with content/decks/<id>.js instead of the active deck
+     --battalion <id>        play with content/battalions/<id>.js instead of the active battalion
      --units <id>       play with content/units/<id>.js unit stats (composition +
                         atk/def/sup/worth) instead of the maps.js default
      --mapset <id>      restrict to a content/mapsets/<id>.js set
@@ -49,10 +49,10 @@
 const fs = require('fs');
 const path = require('path');
 
-/* ---------- CLI args (parsed before the engine loads: --deck needs it) ---------- */
+/* ---------- CLI args (parsed before the engine loads: --battalion needs it) ---------- */
 function parseArgs(argv) {
   const a = { map: '', red: 'haiku', blue: 'normal', seed: 1234, maxTurns: 60, mock: false, typicalN: 40,
-    effort: '', redEffort: '', blueEffort: '', deck: '', units: '', mapset: '', k: 15, fullOptions: false,
+    effort: '', redEffort: '', blueEffort: '', battalion: '', units: '', mapset: '', k: 15, fullOptions: false,
     cold: false, matchWins: 0, out: '' };
   for (let i = 2; i < argv.length; i++) {
     const k = argv[i];
@@ -65,7 +65,7 @@ function parseArgs(argv) {
     else if (k === '--effort') a.effort = String(argv[++i] || '').toLowerCase();
     else if (k === '--red-effort') a.redEffort = String(argv[++i] || '').toLowerCase();
     else if (k === '--blue-effort') a.blueEffort = String(argv[++i] || '').toLowerCase();
-    else if (k === '--deck') a.deck = argv[++i] || '';
+    else if (k === '--battalion') a.battalion = argv[++i] || '';
     else if (k === '--units') a.units = argv[++i] || '';
     else if (k === '--mapset') a.mapset = argv[++i] || '';
     else if (k === '--k') a.k = Math.max(3, Number(argv[++i]) | 0);
@@ -86,26 +86,26 @@ function parseArgs(argv) {
   return a;
 }
 
-// --deck / --units: the engine snapshots the ACTIVE deck AND unit stats at
+// --battalion / --units: the engine snapshots the ACTIVE battalion AND unit stats at
 // require time, so to swap either we pre-populate WOA_CONTENT ourselves (same
 // files, same sort order the engine's own node loader uses) and flip the active
 // flag first.
-function preloadContent(deckId, unitsId) {
-  global.WOA_CONTENT = { maps: [], cards: [], decks: [], mapsets: [], units: [] };
-  ['decks', 'maps', 'mapsets', 'units'].forEach(function (kind) {
+function preloadContent(battalionId, unitsId) {
+  global.WOA_CONTENT = { maps: [], cards: [], battalions: [], mapsets: [], units: [] };
+  ['battalions', 'maps', 'mapsets', 'units'].forEach(function (kind) {
     const dir = path.join(__dirname, '..', 'game', 'content', kind);
     let files = [];
     try { files = fs.readdirSync(dir).filter(function (f) { return /\.js$/.test(f); }).sort(); } catch (e) { return; }
     files.forEach(function (f) { require(path.join(dir, f)); });
   });
-  if (deckId) {
-    const decks = global.WOA_CONTENT.decks;
-    const want = decks.filter(function (d) { return d.id === deckId; })[0];
+  if (battalionId) {
+    const battalions = global.WOA_CONTENT.battalions;
+    const want = battalions.filter(function (d) { return d.id === battalionId; })[0];
     if (!want) {
-      console.error('--deck "' + deckId + '" not found. Available: ' + decks.map(function (d) { return d.id; }).join(', '));
+      console.error('--battalion "' + battalionId + '" not found. Available: ' + battalions.map(function (d) { return d.id; }).join(', '));
       process.exit(1);
     }
-    decks.forEach(function (d) { d.active = (d === want); });
+    battalions.forEach(function (d) { d.active = (d === want); });
   }
   if (unitsId) {
     const us = global.WOA_CONTENT.units || [];
@@ -119,7 +119,7 @@ function preloadContent(deckId, unitsId) {
 }
 
 const ARGS = parseArgs(process.argv);
-if (ARGS.deck || ARGS.units || ARGS.mapset) preloadContent(ARGS.deck, ARGS.units);
+if (ARGS.battalion || ARGS.units || ARGS.mapset) preloadContent(ARGS.battalion, ARGS.units);
 const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
 // balanceMap is the batch/measurement layer (game/sim.js), not the engine.
 const SIM = require(path.join(__dirname, '..', 'game', 'sim.js'));
@@ -148,7 +148,7 @@ const RULES = [
   'support 2, 3 points), and 3 trenches. One unit per hex; units never stand on HQ hexes.',
   '',
   'TURNS: each turn you draw a hand of order cards, play exactly ONE (its steps resolve in',
-  'order), and discard the rest (discards reshuffle back into your deck later; the PLAYED card',
+  'order), and discard the rest (discards reshuffle back into your draw pile later; the PLAYED card',
   'is removed from the game forever). Every turn burns one card, so the skirmish is a countdown.',
   'House rule: any card may instead resolve as one basic Attack, or — ONLY when you have no',
   'legal attack anywhere — one basic Reposition. Individual card steps may be skipped unless',
@@ -178,7 +178,7 @@ const RULES = [
   'marked side. RIVERS block nothing in combat — support, attacks and moves cross freely —',
   'their only effect is that you cannot DEPLOY to a hex reachable only across the water.',
   '',
-  'VICTORY: capture the enemy HQ, or — when a player cannot draw a hand (deck spent) — the',
+  'VICTORY: capture the enemy HQ, or — when a player cannot draw a hand (cards run out) — the',
   'side with the higher field score of SURVIVING UNITS ON THE BOARD wins (infantry 1 / cavalry 2 /',
   'artillery 3). Reserves never deployed count for nothing. An attrition TIE goes to whoever',
   'moved SECOND in that skirmish.'
@@ -239,7 +239,7 @@ function stateView(st, p, withHand, match) {
     ' moved second this skirmish and wins attrition ties.');
   L.push('Field score (surviving units on board): Red ' + E.fieldScore(st, 'red') +
     ', Blue ' + E.fieldScore(st, 'blue') + '.');
-  L.push('Cards left (deck+discard+hand; one burns per turn): Red ' + E.cardsRemaining(st, 'red') +
+  L.push('Cards left (draw pile+discard+hand; one burns per turn): Red ' + E.cardsRemaining(st, 'red') +
     ', Blue ' + E.cardsRemaining(st, 'blue') + '.');
   ['red', 'blue'].forEach(function (s) {
     L.push(cap(s) + ' HQ at ' + E.hexLabel(st.board.hq[s]) + (st.board.hqAlive[s] ? '' : ' (FALLEN)') + '.');
@@ -624,7 +624,7 @@ async function main() {
     (target ? ' — MATCH, first to ' + target : ' — single skirmish') +
     ' — red=' + args.red + (args.redEffort ? '(' + args.redEffort + ')' : '') +
     ' vs blue=' + args.blue + (args.blueEffort ? '(' + args.blueEffort + ')' : '') +
-    (args.deck ? ' — deck "' + args.deck + '"' : '') +
+    (args.battalion ? ' — battalion "' + args.battalion + '"' : '') +
     (args.mock ? '  [MOCK]' : args.cold ? '  [cold transport]' : '  [persistent sessions]'));
 
   const match = E.newBattle({ maps: pool, seed: args.seed, firstPlayer: 'red' });
@@ -740,7 +740,7 @@ async function main() {
   md.push('- rules version: **' + E.VERSION + '** · transport: ' + (args.mock ? 'mock' : args.cold ? 'cold per-call' : 'persistent session per side'));
   md.push('- red: **' + args.red + '**' + (args.redEffort ? ' (effort: ' + args.redEffort + ')' : '') +
     ' · blue: **' + args.blue + '**' + (args.blueEffort ? ' (effort: ' + args.blueEffort + ')' : '') +
-    (args.deck ? ' · deck: ' + args.deck : ''));
+    (args.battalion ? ' · battalion: ' + args.battalion : ''));
   md.push('- ' + ts0);
   if (target) {
     md.push('- Result: ' + (matchWinner ? '**' + cap(matchWinner) + '** wins the match **' + match.wins.red + '-' + match.wins.blue + '**' : 'no match winner') +

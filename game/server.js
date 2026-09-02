@@ -2,7 +2,7 @@
    Run:  node server.js   (or double-click run-server.command / run-server.bat)
    Then open the printed address on both devices (same wifi).
 
-   Also the browser's write proxy: content saves (maps/decks), report/debug
+   Also the browser's write proxy: content saves (maps/battalions), report/debug
    saves, and per-skirmish persistence into logs/woa.db via dev/db.js.
    The db require is guarded: a zipped game/ without dev/ still serves and
    plays; /api/recordskirmish just answers 501. */
@@ -16,7 +16,7 @@ var PORT = process.env.PORT || 8420;
 var ROOT = __dirname;
 var MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.json': 'application/json', '.md': 'text/markdown' };
 
-// --- content files: maps/decks are per-item files
+// --- content files: maps/battalions are per-item files
 // under content/, each registering into WOA_CONTENT; content/manifest.js is
 // regenerated (by scanning the dirs) so the browser loads exactly what's there.
 // WOA_CONTENT_DIR: a test points content writes (savemap/deletemap/savemapsets)
@@ -27,7 +27,7 @@ function contentSlug(s) { return String(s || 'map').toLowerCase().replace(/[^a-z
 function wrapContent(kind, obj) {
   // defensive: files written before a kind existed init WOA_CONTENT without it,
   // so every file ensures its own array rather than trusting the initializer
-  return "(function(g){var c=g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],decks:[],mapsets:[]};(c." + kind + "=c." + kind + "||[]).push(\n" +
+  return "(function(g){var c=g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],battalions:[],mapsets:[]};(c." + kind + "=c." + kind + "||[]).push(\n" +
     JSON.stringify(obj, null, 1) + "\n);})(typeof window!=='undefined'?window:globalThis);\n";
 }
 var regenContentManifest = require(path.join(CONTENT_DIR, 'manifest-gen.js')).regen;
@@ -164,12 +164,12 @@ var ROUTES = {
       json(res, 200, { ok: true, deleted: 'content/maps/' + id + '.js' });
     });
   },
-  'POST /api/savedeck': function (req, res, body) {
-    // the Deck Editor's applied-deck file: deck = card list, or null to fall
-    // back to the default deck (content/decks/default.js)
-    if (!('deck' in body)) return json(res, 400, { error: 'bad request' });
-    var content = 'window.WOA_CUSTOM_DECK = ' + JSON.stringify(body.deck, null, 1) + ';\n';
-    fs.writeFile(path.join(ROOT, 'custom-deck.js'), content, function (werr) {
+  'POST /api/savebattalion': function (req, res, body) {
+    // the Battalion Editor's applied-battalion file: battalion = card list, or
+    // null to fall back to the default battalion (content/battalions/default.js)
+    if (!('battalion' in body)) return json(res, 400, { error: 'bad request' });
+    var content = 'window.WOA_CUSTOM_BATTALION = ' + JSON.stringify(body.battalion, null, 1) + ';\n';
+    fs.writeFile(path.join(ROOT, 'custom-battalion.js'), content, function (werr) {
       if (werr) return json(res, 500, { error: 'write failed' });
       json(res, 200, { ok: true });
     });
@@ -188,7 +188,7 @@ var ROUTES = {
     saveUnderRepo(res, ['logs', 'debug'], String(body.filename), /^[A-Za-z0-9._-]+\.json$/, body.content);
   },
   'POST /api/savemapsets': function (req, res, body) {
-    // The Mapsets panel owns the full slot state (like the deck slots): it
+    // The Mapsets panel owns the full slot state (like the battalion slots): it
     // POSTs every named set + which one is active; we rewrite the whole
     // content/mapsets/ dir to match (files not in the list are deleted).
     var sets = body.mapsets;
@@ -214,8 +214,9 @@ var ROUTES = {
     // one finished skirmish -> a per-skirmish row in logs/woa.db.
     // body = { run:{version,kind,redAi,blueAi,n,tool,notes,deck,mapset,seedBase,label,baseline},
     //   runKey?, state, firstPlayer, seed } — run is forwarded to db.insertRun as-is
-    // (run identity); the caller (the dashboard Run loop) stamps
-    // deck/mapset/seedBase, never this proxy — the server stays a dumb pass-through.
+    // (run identity); the caller (the dashboard Run loop) stamps deck/mapset/seedBase,
+    // never this proxy — the server stays a dumb pass-through. (`deck` is the
+    // persisted logs/woa.db run-identity column; its rename rides with report-data.)
     try {
       var r = recordSkirmish(body);
       json(res, r.status, r.out);

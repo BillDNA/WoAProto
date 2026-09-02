@@ -3,7 +3,7 @@
    routes over real HTTP against a THROWAWAY content dir (WOA_CONTENT_DIR) copied
    from the real one, so the file-write -> manifest-regen hand-off is exercised for
    real without ever touching committed content. Seams: A3 savemap, A8 deletemap,
-   A5 savemapsets (the destructive dir rewrite), A4 savedeck.
+   A5 savemapsets (the destructive dir rewrite), A4 savebattalion.
 
    Node runs each --test file in its own process, so the env set here is isolated
    from dev/server.test.js. Run via npm test or `node --test dev/content-api.test.js`. */
@@ -26,14 +26,14 @@ process.env.WOA_DB_PATH = path.join(tmpDir, 'unused.db');
 
 const server = require(path.join(GAME, 'server.js'));
 
-const customDeckPath = path.join(GAME, 'custom-deck.js');
-const customDeckBackup = fs.readFileSync(customDeckPath, 'utf8'); // savedeck writes game/, not content/ — snapshot + restore
+const customBattalionPath = path.join(GAME, 'custom-battalion.js');
+const customBattalionBackup = fs.readFileSync(customBattalionPath, 'utf8'); // savebattalion writes game/, not content/ — snapshot + restore
 
 let srv, port;
 before(function () { return new Promise(function (r) { srv = server.listen(0, function () { port = srv.address().port; r(); }); }); });
 after(function () {
   try { srv.close(); } catch (e) {}
-  try { fs.writeFileSync(customDeckPath, customDeckBackup); } catch (e) {} // restore the committed no-op file
+  try { fs.writeFileSync(customBattalionPath, customBattalionBackup); } catch (e) {} // restore the committed no-op file
   try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (e) {}
 });
 
@@ -72,18 +72,18 @@ test('savemapsets rewrites the whole dir to the posted slots, deleting the rest 
   assert.deepStrictEqual(after, ['solo.js'], 'exactly the posted slot survives; every other mapset file was deleted (destructive rewrite)');
   assert.ok(fs.readFileSync(path.join(sandbox, 'mapsets', 'solo.js'), 'utf8').indexOf('"active": true') >= 0, 'the active flag is written through');
   // Check the manifest's mapsets slice specifically (a name like "bestof.js" also
-  // exists under decks/, so a whole-file search would give a false positive).
+  // exists under battalions/, so a whole-file search would give a false positive).
   const mapsetsInManifest = /"mapsets":\s*(\[[^\]]*\])/.exec(manifest());
   assert.ok(mapsetsInManifest && JSON.parse(mapsetsInManifest[1]).join(',') === 'solo.js',
     'the regenerated manifest lists exactly the rewritten mapsets dir (write -> manifest hand-off)');
 });
 
-test('savedeck writes the applied-deck file, and null restores the default (A4)', async function () {
-  const applied = await req('POST', '/api/savedeck', { deck: [{ id: 'x', name: 'X', count: 1, steps: [{ type: 'attack' }] }] });
-  assert.strictEqual(applied.status, 200, 'savedeck accepted a card list');
-  const written = fs.readFileSync(customDeckPath, 'utf8');
-  assert.ok(/window\.WOA_CUSTOM_DECK\s*=/.test(written) && written.indexOf('"id": "x"') >= 0, 'the applied deck was written to custom-deck.js');
-  const cleared = await req('POST', '/api/savedeck', { deck: null });
-  assert.strictEqual(cleared.status, 200, 'savedeck accepted null');
-  assert.ok(/WOA_CUSTOM_DECK\s*=\s*null/.test(fs.readFileSync(customDeckPath, 'utf8')), 'null resets custom-deck.js to the no-op default');
+test('savebattalion writes the applied-battalion file, and null restores the default (A4)', async function () {
+  const applied = await req('POST', '/api/savebattalion', { battalion: [{ id: 'x', name: 'X', count: 1, steps: [{ type: 'attack' }] }] });
+  assert.strictEqual(applied.status, 200, 'savebattalion accepted a card list');
+  const written = fs.readFileSync(customBattalionPath, 'utf8');
+  assert.ok(/window\.WOA_CUSTOM_BATTALION\s*=/.test(written) && written.indexOf('"id": "x"') >= 0, 'the applied battalion was written to custom-battalion.js');
+  const cleared = await req('POST', '/api/savebattalion', { battalion: null });
+  assert.strictEqual(cleared.status, 200, 'savebattalion accepted null');
+  assert.ok(/WOA_CUSTOM_BATTALION\s*=\s*null/.test(fs.readFileSync(customBattalionPath, 'utf8')), 'null resets custom-battalion.js to the no-op default');
 });

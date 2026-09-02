@@ -1,17 +1,17 @@
 ---
 name: create-card
-description: Propose new War of Attrition cards that add a decision the deck doesn't already offer, graded against the card rubric, in the exact deck-editor data shape. Use when asked to "design a card", "add a card", or "what card is the deck missing".
+description: Propose new War of Attrition cards that add a decision the deck doesn't already offer, graded against the card rubric, in the exact battalion-editor data shape. Use when asked to "design a card", "add a card", or "what card is the deck missing".
 ---
 
 # create-card
 
 Read the deck, find the missing decision, propose cards Bill can drop straight
-into the Deck Editor. **Proposals only — never edit the `content/decks/` files
-or custom-deck.js.**
+into the Battalion Editor. **Proposals only — never edit the `content/battalions/` files
+or custom-battalion.js.**
 
 ## Read first
 
-- `game/content/decks/default.js` — the active deck's card list (and
+- `game/content/battalions/default.js` — the active battalion's card list (and
   `game/maps.js` `"units"` for legal deploy targets).
 - `docs/reference/card-cheatsheet.md` — the FULL step vocabulary. It is small on
   purpose: `deploy(unit, anywhere)`, `trench`, `attack(mod, tieSpare, noAdvance)`,
@@ -21,7 +21,7 @@ or custom-deck.js.**
 - Latest card report (`node dev/balance.js 40` or Bill's Balance Dashboard) —
   where the current deck is weak (dead cards, hoarded cards, auto-plays).
 
-## Shape of a proposal (the deck-editor data shape, verbatim)
+## Shape of a proposal (the battalion-editor data shape, verbatim)
 
 ```json
 { "id": "snake_case_id", "name": "Name", "count": 1,
@@ -29,7 +29,7 @@ or custom-deck.js.**
   "steps": [{ "type": "attack", "mod": 1 }] }
 ```
 
-Rules the Deck Editor enforces (match them or the proposal is dead on arrival):
+Rules the Battalion Editor enforces (match them or the proposal is dead on arrival):
 16 total copies per deck (so say which existing card's copies to cut), exactly
 one `starting:true` card at count 1 (never propose a second), unique ids,
 known step types/flags/units only. `airdrop` as an id is engine-special
@@ -46,8 +46,8 @@ text-only renders clean.
    skeptic pass against the card rubric (loop v2, B.5.1.1: down from two per
    candidate; the 2-checker delta wasn't significant).
 3. State the swap: which copies leave the 16 to make room, and why.
-4. Tell Bill how to test: import via Deck Editor (or hand-edit
-   `game/content/decks/default.js`), then
+4. Tell Bill how to test: import via Battalion Editor (or hand-edit
+   `game/content/battalions/default.js`), then
    `node game/test/test.js` + a Balance Dashboard run; watch the new card's Simple% /
    1stSight% columns.
 5. **Offer art (only if Bill approves the card first).** If the `dig-mcp` MCP
@@ -79,7 +79,7 @@ not three independent 1:1 suggest-and-replace calls. Concretely:
   16 and exactly one `starting:true`.
 - **Seed candidate for the first batch: split Deploy Cavalry** (one 2-cav deploy card
   → two 1-cav deploy cards). Grounding: Deploy Cavalry holds **80% 1stSight across all
-  four decks** — the strongest auto-play in the game and the cavalry-rush engine;
+  four battalions** — the strongest auto-play in the game and the cavalry-rush engine;
   splitting the double-deploy halves the opening burst without banning cavalry. Watch
   the budget shift doesn't reintroduce Noop%.
 
@@ -88,4 +88,4 @@ not three independent 1:1 suggest-and-replace calls. Concretely:
 - Multi-step cards are the interesting design space (steps run in order,
   each skippable) — but every extra step raises the dead-turn (never-useful) risk.
 - A negative `mod` (Careful Maneuvers uses -1) is a real cost lever.
-- Don't propose bigger-than-16 pools or per-side decks — those are post-launch vision.
+- Don't propose bigger-than-16 pools or per-side battalions — those are post-launch vision.

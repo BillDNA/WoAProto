@@ -278,7 +278,7 @@ test('deploy / control rules', () => {
 
 test('a trench lets the defender survive a combat tie', () => {
 (function () {
-  fixtureCard('ordered_withdraw'); // fixture, not the active deck (used in (b) below)
+  fixtureCard('ordered_withdraw'); // fixture, not the active battalion (used in (b) below)
   // dirs of a trench covering the attacked border of `defHex` (the side facing
   // `fromHex`), plus its clockwise neighbour so it's a legal 2-edge orientation.
   function coverDir(defHex, fromHex) { var d = E.dirBetween(defHex, fromHex); return [d, (d + 1) % 6]; }

@@ -25,7 +25,7 @@ Suggestions only, like the skills it drives — it never edits maps.js, cards, r
 
 ## Defaults (settle silently, never ask)
 
-- **Content slot:** the ACTIVE deck + mapset. If the caller passed `--deck <id>` / `--mapset <id>`,
+- **Content slot:** the ACTIVE deck + mapset. If the caller passed `--battalion <id>` / `--mapset <id>`,
   thread the SAME ids through both the sweep and the match; otherwise omit the flags (active pair).
 - **Version / scope:** newest rules version (`Engine.VERSION`), both report types, T0 unless the
   slot is a candidate change (then review-reports picks T1 per its §Scope) — all its own defaults,
@@ -36,7 +36,7 @@ Suggestions only, like the skills it drives — it never edits maps.js, cards, r
 1. **Sweep (blocking, fatal on failure).** Run `generate-reports` **Step 1 only**:
 
    ```
-   node dev/balance-report.js 100 hard hard --once --parallel [--deck <id>] [--mapset <id>]
+   node dev/balance-report.js 100 hard hard --once --parallel [--battalion <id>] [--mapset <id>]
    ```
 
    Capture the `SAVED:` path. If this command errors, **stop** and report the failure —
@@ -47,10 +47,10 @@ Suggestions only, like the skills it drives — it never edits maps.js, cards, r
    the analysis has to cover the transcript):
 
    ```
-   node dev/claude-plays.js --match 3 --red haiku --blue haiku --effort low --seed 1001 [--deck <id>] [--mapset <id>]
+   node dev/claude-plays.js --match 3 --red haiku --blue haiku --effort low --seed 1001 [--battalion <id>] [--mapset <id>]
    ```
 
-   Same `--deck`/`--mapset` as Step 1; seed 1001 is fixed (the apples-to-apples anchor —
+   Same `--battalion`/`--mapset` as Step 1; seed 1001 is fixed (the apples-to-apples anchor —
    never change it). ~40–90 min wall-clock. If it exits non-zero, crashes, or is offline,
    **note "LLM match failed/skipped — grading the sweep alone" and continue** — do not abort.
    (Step 2 skill-premium and the optional 2002/3003 seeds stay out of the unattended loop.)

@@ -76,7 +76,7 @@ A side is keyed `sideKey(hex,dir)` = `'q,r>d'`. Map defs list pieces as `{t, edg
 Three anti-degeneracy guards (the `noopPenalty` / `antiShuffle` weights and the attrition projection — don't zero them in a preset without re-measuring `balance.js` Behaviour lines):
 
 - **Zero-action plans** take a −80 `noopPenalty` (greater than the −12 fallback bias and the hard AI's reply noise). At hard it is re-applied at full strength after the reply blend (`cand.pen`), and candidates are compared on common random numbers (fresh same-seeded rng per candidate).
-- **Attrition projection**: `evalState` projects the attrition winner if decks ran out now (fieldScore diff + tie-goes-to-second, ramping as `cardsRemaining` shrinks). The side losing the standstill is pushed to force combat — this removes the swap-dance stalemate.
+- **Attrition projection**: `evalState` projects the attrition winner if battalions ran out now (fieldScore diff + tie-goes-to-second, ramping as `cardsRemaining` shrinks). The side losing the standstill is pushed to force combat — this removes the swap-dance stalemate.
 - **Anti-shuffle**: re-swapping the pair a player swapped last turn costs −10 in `greedyResolve` (`st.lastSwap`).
 
 ## Refactor discipline — the golden-diff oracle

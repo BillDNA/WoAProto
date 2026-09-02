@@ -1,7 +1,7 @@
-(function(g){(g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],decks:[]}).decks.push(
+(function(g){(g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],battalions:[]}).battalions.push(
 {
- "id": "cavsplit-17",
- "name": "Cav Split (17 - gate relaxed)",
+ "id": "cavsplit-16",
+ "name": "Cav Split (16 - cut Forced March)",
  "active": false,
  "cards": [
   {
@@ -165,23 +165,6 @@
     },
     {
      "type": "attack"
-    }
-   ]
-  },
-  {
-   "id": "forced_march",
-   "name": "Forced March",
-   "count": 1,
-   "text": "Reposition up to three times, in sequence.",
-   "steps": [
-    {
-     "type": "reposition"
-    },
-    {
-     "type": "reposition"
-    },
-    {
-     "type": "reposition"
     }
    ]
   }

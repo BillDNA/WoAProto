@@ -27,7 +27,7 @@ army-points redundant with the win-rate the loop already measures.
 
 Army-points is a **descriptive capability yardstick**, not a predictive
 win-rate proxy. It is computed additively from a Card's steps via a single
-weight table (`cardPoints` / `deckPoints`), hand-seeded and then calibrated
+weight table (`cardPoints` / `battalionPoints`), hand-seeded and then calibrated
 against measured play as an *advisory* nudge — never fitted to reproduce
 win-rate.
 

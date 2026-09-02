@@ -73,7 +73,7 @@ reading "TODO — describe me" is new and needs a description in
 <!-- GEN:weights -->
 | Weight | Default | Plain English |
 |--------|--------:|---------------|
-| `attrWin` | 500 | Huge swing for being the projected attrition winner if the decks ran out now. Ramps up as cards run low. This is the anti-stalemate term — **don't zero it.** |
+| `attrWin` | 500 | Huge swing for being the projected attrition winner if the battalions ran out now. Ramps up as cards run low. This is the anti-stalemate term — **don't zero it.** |
 | `fsDiff` | 8 | Value per point of field-score lead (surviving units on board), always on. |
 | `fsDiffUrgent` | 40 | Extra value per point of field-score lead, scaled up as the game nears its end. |
 | `unitOnBoard` | 22 | Value of each of my deployed units (× the unit's worth). |

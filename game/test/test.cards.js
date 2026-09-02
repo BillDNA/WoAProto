@@ -116,16 +116,16 @@ test('army-points (computed from steps, weight table pinned)', () => {
   // content value). deploy inf 3 + attack (base 2, tieSpare +1, noAdvance +0.5) = 6.5.
   var pointsProbe = { steps: [{ type: 'deploy', unit: 'infantry' }, { type: 'attack', tieSpare: true, noAdvance: true }] };
   assert.ok(E.cardPoints(pointsProbe) === 6.5, 'weight table: deploy-inf + tieSpare/noAdvance attack = 6.5 pts');
-  assert.ok(E.cardPoints({ steps: [] }) === 0 && E.deckPoints({ cards: [] }) === 0, 'empty card / empty deck = 0');
-  assert.ok(E.cardPoints({ steps: 'oops' }) === 0, 'malformed (non-array) steps score 0, not a throw — deckProblems can still report the friendly error');
+  assert.ok(E.cardPoints({ steps: [] }) === 0 && E.battalionPoints({ cards: [] }) === 0, 'empty card / empty deck = 0');
+  assert.ok(E.cardPoints({ steps: 'oops' }) === 0, 'malformed (non-array) steps score 0, not a throw — battalionProblems can still report the friendly error');
   // deck-value cap gate: every shipped deck sits under the budget (the
   // gate lets the deck editor call two asymmetric decks "matched"), and a deck
   // pushed over it is rejected — the same reject-on-validate as an oversized deck.
-  var allDecks = (typeof global !== 'undefined' && global.WOA_CONTENT && global.WOA_CONTENT.decks) || [];
-  assert.ok(allDecks.length > 0 && allDecks.every(function (d) { return E.deckPoints(d) <= E.DECK_POINTS_CAP; }),
-    'all ' + allDecks.length + ' shipped decks are within the army-points cap (' + E.DECK_POINTS_CAP + ')');
-  var overBudget = { cards: E.ACTIVE_DECK.cards.concat([{ id: 'gild', name: 'Gild', count: 1, steps: [{ type: 'deploy', unit: 'artillery' }, { type: 'attack', mod: 3 }] }]) };
-  assert.ok(E.deckPoints(overBudget) > E.DECK_POINTS_CAP, 'a deck pushed over the cap is over budget (gate rejects it)');
+  var allDecks = (typeof global !== 'undefined' && global.WOA_CONTENT && global.WOA_CONTENT.battalions) || [];
+  assert.ok(allDecks.length > 0 && allDecks.every(function (d) { return E.battalionPoints(d) <= E.BATTALION_POINTS_CAP; }),
+    'all ' + allDecks.length + ' shipped decks are within the army-points cap (' + E.BATTALION_POINTS_CAP + ')');
+  var overBudget = { cards: E.ACTIVE_BATTALION.cards.concat([{ id: 'gild', name: 'Gild', count: 1, steps: [{ type: 'deploy', unit: 'artillery' }, { type: 'attack', mod: 3 }] }]) };
+  assert.ok(E.battalionPoints(overBudget) > E.BATTALION_POINTS_CAP, 'a deck pushed over the cap is over budget (gate rejects it)');
 })();
 });
 
@@ -236,16 +236,16 @@ test('asymmetric deck binding', () => {
     return Object.keys(counts).map(function (id) { return id + ':' + counts[id]; }).sort().join('|');
   }
 
-  var active = E.ACTIVE_DECK && E.ACTIVE_DECK.id;
+  var active = E.ACTIVE_BATTALION && E.ACTIVE_BATTALION.id;
   // (a) default (no per-side selection) is byte-identical to naming the active
   //     deck on both sides — the golden-safe path.
   var base = SIM.balanceMap(E.MAPS[4], 4, { seedBase: 5 });
-  var named = SIM.balanceMap(E.MAPS[4], 4, { seedBase: 5, decks: { red: active, blue: active } });
+  var named = SIM.balanceMap(E.MAPS[4], 4, { seedBase: 5, battalions: { red: active, blue: active } });
   assert.ok(JSON.stringify(base) === JSON.stringify(named),
     'balanceMap with decks={active,active} is identical to no decks (default unchanged)');
 
   // (b) find two decks with DIFFERENT non-starting composition, seat one per side.
-  var decks = E.DECKS || [];
+  var decks = E.BATTALIONS || [];
   var two = null;
   for (var i = 0; i < decks.length && !two; i++)
     for (var j = 0; j < decks.length; j++)
@@ -267,21 +267,21 @@ test('asymmetric deck binding', () => {
     return Object.keys(counts).map(function (id) { return id + ':' + counts[id]; }).sort().join('|');
   }
   // Fresh skirmish (no cards drawn yet) so the built deck is the full composition.
-  var m = E.newBattle({ seed: 7, firstPlayer: 'red', maps: [E.MAPS[0]], decks: { red: two[0].id, blue: two[1].id } });
+  var m = E.newBattle({ seed: 7, firstPlayer: 'red', maps: [E.MAPS[0]], battalions: { red: two[0].id, blue: two[1].id } });
   var fresh = E.newSkirmish(m);
   assert.ok(deckSigFromState(fresh, 'blue') === sig(two[1].cards),
     'blue is dealt its OWN deck (' + two[1].id + '), not red\'s (blue hasn\'t drawn yet)');
   // red drew its opening hand, so reconstruct from deck+hand+discards (minus the starting card).
   assert.ok(fullSideSig(fresh, 'red') === sig(two[0].cards),
     'red is dealt its OWN deck (' + two[0].id + ')');
-  assert.ok(fresh.cards.sideDecks.red.starting === E.resolveDeck(two[0].id).starting &&
-     fresh.cards.sideDecks.blue.starting === E.resolveDeck(two[1].id).starting,
+  assert.ok(fresh.cards.sideDecks.red.starting === E.resolveBattalion(two[0].id).starting &&
+     fresh.cards.sideDecks.blue.starting === E.resolveBattalion(two[1].id).starting,
     'each side gets its own deck\'s starting card');
 
   // Bad deck name fails loud.
   var threw = false;
-  try { E.resolveDeck('no-such-deck-xyz'); } catch (e) { threw = true; }
-  assert.ok(threw, 'resolveDeck throws on an unknown deck name');
+  try { E.resolveBattalion('no-such-deck-xyz'); } catch (e) { threw = true; }
+  assert.ok(threw, 'resolveBattalion throws on an unknown deck name');
 })();
 });
 

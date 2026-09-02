@@ -15,7 +15,7 @@ function read(f) { return fs.readFileSync(path.join(GAME, f), 'utf8'); }
 // window.WOA_CONTENT the same way) plus the core scripts.
 function readContent() {
   var out = '';
-  ['decks', 'maps'].forEach(function (kind) {
+  ['battalions', 'maps'].forEach(function (kind) {
     var d = path.join(GAME, 'content', kind);
     fs.readdirSync(d).filter(function (f) { return /\.js$/.test(f); }).sort().forEach(function (f) {
       out += fs.readFileSync(path.join(d, f), 'utf8') + '\n';
@@ -71,7 +71,7 @@ realSetTimeout(function () {
   assert.ok(!doc.getElementById('btnAI'), 'old March-against-AI button gone from the front door');
   assert.ok(doc.getElementById('btnPlay') && doc.getElementById('btnSettings'), 'front door offers Play + Settings');
   assert.ok(!win.devMode(), 'dev mode off by default');
-  assert.ok(!win.screenAllowed('maps') && !win.screenAllowed('deck') && !win.screenAllowed('dash') && !win.screenAllowed('devhub'),
+  assert.ok(!win.screenAllowed('maps') && !win.screenAllowed('battalion') && !win.screenAllowed('dash') && !win.screenAllowed('devhub'),
     'dev screens gated off while dev mode is off');
   assert.ok(win.screenAllowed('campaign') && win.screenAllowed('settings'), 'player screens always allowed');
   assert.ok(doc.getElementById('settingsScr').querySelector('#sideRow') && doc.getElementById('diffSel'),
@@ -91,11 +91,11 @@ realSetTimeout(function () {
   console.log('== player mats ==');
   assert.ok(doc.querySelectorAll('#matRed .slot').length === 13, 'red mat has 13 piece slots (7+2+1+3)');
   assert.ok(doc.querySelectorAll('#matBlue .slot').length === 13, 'blue mat has 13 piece slots');
-  // one .scard per card COPY in the active deck — derive the total from the
-  // deck so this stays correct at any deck size, not a hardcoded count.
-  var deckTotal = win.Engine.CARDS.reduce(function (a, c) { return a + (+c.count || 0); }, 0);
-  assert.ok(doc.querySelectorAll('#matRed .scard').length === deckTotal, 'red mat tracks all ' + deckTotal + ' orders');
-  assert.ok(doc.querySelectorAll('#matBlue .scard').length === deckTotal, 'blue mat tracks all ' + deckTotal + ' orders (enemy spend visible)');
+  // one .scard per card COPY in the active battalion — derive the total from the
+  // battalion so this stays correct at any battalion size, not a hardcoded count.
+  var battalionTotal = win.Engine.CARDS.reduce(function (a, c) { return a + (+c.count || 0); }, 0);
+  assert.ok(doc.querySelectorAll('#matRed .scard').length === battalionTotal, 'red mat tracks all ' + battalionTotal + ' orders');
+  assert.ok(doc.querySelectorAll('#matBlue .scard').length === battalionTotal, 'blue mat tracks all ' + battalionTotal + ' orders (enemy spend visible)');
   assert.ok(doc.querySelectorAll('#matRed .slot svg').length === 13, 'reserve slots carry piece glyphs at skirmish start');
   assert.ok(!!doc.getElementById('scorecard'), 'campaign score card present in top bar');
 
@@ -154,7 +154,7 @@ realSetTimeout(function () {
     assert.ok(win.devMode() && win.screenAllowed('maps'), 'dev mode on reveals the dev screens');
     doc.getElementById('btnDevHub').click(); // dev-only front-door link → Dev Hub
     assert.ok(doc.getElementById('devHubScr').classList.contains('active'), 'Dev Hub opens');
-    assert.ok(doc.getElementById('btnMaps') && doc.getElementById('btnDeck') && doc.getElementById('btnDash') && doc.getElementById('btnWatch'),
+    assert.ok(doc.getElementById('btnMaps') && doc.getElementById('btnBattalion') && doc.getElementById('btnDash') && doc.getElementById('btnWatch'),
       'Dev Hub generated its tool buttons from the registry');
     doc.getElementById('btnMaps').click();
     var tiles = doc.querySelectorAll('#mapGrid .mapitem').length;
@@ -474,50 +474,50 @@ realSetTimeout(function () {
     }
 
     function startWatch() {
-      console.log('== deck editor ==');
+      console.log('== battalion editor ==');
       doc.getElementById('dashBack').click();
-      doc.getElementById('btnDeck').click();
-      assert.ok(doc.getElementById('deckScr').classList.contains('active'), 'deck editor opens');
+      doc.getElementById('btnBattalion').click();
+      assert.ok(doc.getElementById('battalionScr').classList.contains('active'), 'battalion editor opens');
       assert.ok(doc.querySelectorAll('#dkList .dkli').length === win.Engine.CARDS.length,
         'one list row per card (' + doc.querySelectorAll('#dkList .dkli').length + ')');
       assert.ok(doc.querySelector('#dkDetail .dkd-name') && doc.querySelectorAll('#dkStepList .dkstep').length >= 1,
         'detail panel + GUI step builder render for the selected card');
-      // deckProblems() accepts a 16-17 band (design ceiling, not one exact count;
-      // every shipped content/decks/*.js deck lands in that band), so "clean" and
+      // battalionProblems() accepts a 16-17 band (design ceiling, not one exact count;
+      // every shipped content/battalions/*.js battalion lands in that band), so "clean" and
       // the break-it thresholds below are proved against the real band, not a
       // hardcoded count.
-      assert.ok(win.deckProblems(win.Engine.CARDS).length === 0, 'built-in deck validates clean');
-      assert.ok(!doc.getElementById('dkSave').disabled, 'Save enabled on a valid deck');
+      assert.ok(win.battalionProblems(win.Engine.CARDS).length === 0, 'built-in battalion validates clean');
+      assert.ok(!doc.getElementById('dkSave').disabled, 'Save enabled on a valid battalion');
       // break it: bump the selected card's count so the total exceeds the 16-17 band -> validation refuses
       var cnt = doc.querySelector('#dkDetail .dkd-count');
       cnt.value = String(+cnt.value + 1);
       cnt.dispatchEvent(new win.Event('input', { bubbles: true }));
-      assert.ok(/must total 16-17/.test(doc.getElementById('dkWarn').textContent), 'over-band (>17) deck flagged');
+      assert.ok(/must total 16-17/.test(doc.getElementById('dkWarn').textContent), 'over-band (>17) battalion flagged');
       assert.ok(doc.getElementById('dkSave').disabled, 'Save disabled while invalid');
       // two starting cards / bad step type are refused too
       var broken = JSON.parse(JSON.stringify(win.Engine.CARDS));
       broken[1].starting = true;
-      assert.ok(win.deckProblems(broken).some(function (p) { return /exactly ONE/.test(p); }), 'double starting card refused');
+      assert.ok(win.battalionProblems(broken).some(function (p) { return /exactly ONE/.test(p); }), 'double starting card refused');
       var badStep = JSON.parse(JSON.stringify(win.Engine.CARDS));
       badStep[0].steps = [{ type: 'heal' }];
-      assert.ok(win.deckProblems(badStep).some(function (p) { return /unknown type/.test(p); }), 'unknown step type refused');
+      assert.ok(win.battalionProblems(badStep).some(function (p) { return /unknown type/.test(p); }), 'unknown step type refused');
       var benched = JSON.parse(JSON.stringify(win.Engine.CARDS));
       benched[2].out = true; // benched cards drop from the total (here 17 -> 14, under the 16-17 band)
-      assert.ok(win.deckProblems(benched).some(function (p) { return /must total 16-17/.test(p); }), 'benching a card drops it below the 16-17 band');
-      // An over-army-points deck is refused by the same validation pass.
+      assert.ok(win.battalionProblems(benched).some(function (p) { return /must total 16-17/.test(p); }), 'benching a card drops it below the 16-17 band');
+      // An over-army-points battalion is refused by the same validation pass.
       // Swap the cheapest card for a maxed-out one so the total blows past the cap
       // without changing the card count (isolates the points gate from the size band).
       var overPts = JSON.parse(JSON.stringify(win.Engine.CARDS));
       overPts.forEach(function (c) { if (!c.starting) c.steps = [{ type: 'deploy', unit: 'artillery' }, { type: 'attack', mod: 5, tieSpare: true, anywhere: true }]; });
-      assert.ok(win.Engine.deckPoints({ cards: overPts.filter(function (c) { return !c.out; }) }) > win.Engine.DECK_POINTS_CAP &&
-         win.deckProblems(overPts).some(function (p) { return /over the army-points budget/.test(p); }), 'over-budget deck refused by the points gate');
-      // five deck slots, exactly one active
-      assert.ok(doc.querySelectorAll('#dkSlots .dkslot[data-slot]').length === 5, 'five deck slots offered');
-      assert.ok(doc.querySelectorAll('#dkSlots .dkslot.active').length === 1, 'exactly one active deck marked');
+      assert.ok(win.Engine.battalionPoints({ cards: overPts.filter(function (c) { return !c.out; }) }) > win.Engine.BATTALION_POINTS_CAP &&
+         win.battalionProblems(overPts).some(function (p) { return /over the army-points budget/.test(p); }), 'over-budget battalion refused by the points gate');
+      // five battalion slots, exactly one active
+      assert.ok(doc.querySelectorAll('#dkSlots .dkslot[data-slot]').length === 5, 'five battalion slots offered');
+      assert.ok(doc.querySelectorAll('#dkSlots .dkslot.active').length === 1, 'exactly one active battalion marked');
       doc.querySelector('#dkSlots .dkslot[data-slot="2"]').click();
       assert.ok(doc.querySelector('#dkSlots .dkslot[data-slot="2"]').classList.contains('open') &&
          doc.querySelectorAll('#dkList .dkli').length === win.Engine.CARDS.length,
-        'switching to an empty slot clones the open deck for editing');
+        'switching to an empty slot clones the open battalion for editing');
       doc.getElementById('dkBack').click();
 
       console.log('== watch mode (AI vs AI spectate) ==');

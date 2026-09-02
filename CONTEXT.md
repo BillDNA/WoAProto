@@ -110,9 +110,9 @@ A side's set of Cards for a Skirmish. The in-skirmish draw pile — stays "Deck"
 _Home_: `game/engine/04-skirmish.js:42` — `buildDeck`
 
 **Battalion**:
-The player-facing, curated set of Cards taken into a Battle — the roguelite successor to the raw dev Deck, built from the Card catalog. The in-skirmish draw pile it produces is still the Deck.
-_Avoid_: using Deck for the player's build layer (Deck is the dev/skirmish term).
-_Home_: none yet — Battalion layer, arrives with the content model.
+The player-facing, curated set of Cards taken into a Battle — the roguelite successor to the raw dev Deck, built from the Card catalog. The build layer: the content kind (`content/battalions/*.js`), the editor screen, and the army-points budget are all Battalion. The in-skirmish draw pile it instantiates is still the Deck.
+_Avoid_: using Deck for the player's build layer (Deck is the in-skirmish draw pile). A stray build-layer "deck" in code fails `dev/check-deck-scope.js`.
+_Home_: `game/engine/01-core.js:50` — `ACTIVE_BATTALION`
 
 **Card catalog**:
 The full pool of Cards a Battalion may draw from — the owned collection, distinct from the in-run *draft* that picks from it between Battles.
@@ -137,7 +137,7 @@ A `localStorage` flag, off by default, that reveals dev tooling; toggled by the 
 _Home_: `game/ui/screens.js:40` — `devMode`
 
 **Dev Hub**:
-The screen that roofs the standalone dev tools (Deck Editor, Maps & Map Editor, Balance Dashboard, Watch AI-vs-AI), reachable only in Dev mode.
+The screen that roofs the standalone dev tools (Battalion Editor, Maps & Map Editor, Balance Dashboard, Watch AI-vs-AI), reachable only in Dev mode.
 _Home_: `game/ui/screens.js:24` — `devhub:`
 
 ## Endings & scoring
@@ -198,13 +198,13 @@ _Home_: `game/sim.js:73` — `skirmishFacts`
 *(The vocabulary for growing content without losing balance — concepts, not the weights they currently sit at.)*
 
 **Army-points**:
-A Card's *capability cost*, and a Deck's total value as the sum over its Cards. A descriptive yardstick Decks are built under — not a prediction of win-rate; measured balance always overrules it (ADR-0002). Computed additively from a Card's steps via a single weight table, never stored per Card, so a Card that does more counts for more.
+A Card's *capability cost*, and a Battalion's total value as the sum over its Cards. A descriptive yardstick Battalions are built under — not a prediction of win-rate; measured balance always overrules it (ADR-0002). Computed additively from a Card's steps via a single weight table, never stored per Card, so a Card that does more counts for more.
 _Avoid_: Cost (a step has a cost; the Card's total is its army-points), Power level.
 _Home_: `game/engine/01-core.js:163` — `POINTS`
 
 **Points cap**:
-The shared army-points budget every Deck is built under. Two Decks at the same cap are "matched" in capability, which is what lets a Skirmish be asymmetric yet fair.
-_Home_: `game/engine/01-core.js:194` — `DECK_POINTS_CAP`
+The shared army-points budget every Battalion is built under. Two Battalions at the same cap are "matched" in capability, which is what lets a Skirmish be asymmetric yet fair.
+_Home_: `game/engine/01-core.js:194` — `BATTALION_POINTS_CAP`
 
 **Tolerance temperature**:
 How far a *measured* metric may sit outside its band before a result is accepted — the existing band-widening dial (strict / explore / hot). A verdict on outputs.

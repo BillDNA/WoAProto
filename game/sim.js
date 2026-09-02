@@ -15,10 +15,10 @@ var WOA_SIM = (function () {
     : (typeof require === 'function' ? require('./engine.js') : null);
 
   /* ---------- skirmish simulation (shared by the CLI reporters and the in-browser dashboard) ---------- */
-  // `decks` = {red, blue} per-side selection (each null|deck|id|name).
-  // Omitted -> both sides share the active deck.
-  function simSkirmish(map, seed, firstPlayer, diffRed, diffBlue, decks) {
-    var battle = ENG.newBattle({ seed: seed | 0, maps: [map], firstPlayer: firstPlayer || 'red', decks: decks || null });
+  // `battalions` = {red, blue} per-side selection (each null|battalion|id|name).
+  // Omitted -> both sides share the active battalion.
+  function simSkirmish(map, seed, firstPlayer, diffRed, diffBlue, battalions) {
+    var battle = ENG.newBattle({ seed: seed | 0, maps: [map], firstPlayer: firstPlayer || 'red', battalions: battalions || null });
     var st = ENG.newSkirmish(battle);
     return ENG.playToEnd(st, { decide: function (s) {
       var diff = s.current === 'red' ? (diffRed || 'normal') : (diffBlue || diffRed || 'normal');
@@ -34,7 +34,7 @@ var WOA_SIM = (function () {
     var out = { n: n, redWins: 0, firstWins: 0, hqWins: 0, turns: 0, fsDiff: 0, unfinished: 0, cards: {},
       // behaviour metrics: catch degenerate AI play, not just outcomes.
       // deploys joins attacks/swaps/marches so the report can print Attack/Swap
-      // SHARE (attacks / all four action counts) — deck-size-proof.
+      // SHARE (attacks / all four action counts) — battalion-size-proof.
       attacks: 0, swaps: 0, marches: 0, deploys: 0, zeroKill: 0, tiebreak: 0,
       firstBloodGames: 0, firstBloodWins: 0, controlGames: 0, controlWins: 0,
       deployedShare: 0,
@@ -143,7 +143,7 @@ var WOA_SIM = (function () {
     out.reserveEndBlue += f.resEndBlue / unitTotal;
     // Reserves-at-end conditions to HQ endings only (an HQ rush ends
     // before a side commits its reserves — the diagnostic reads meaningfully
-    // only there; attrition endings run to deck-out and deploy almost everything).
+    // only there; attrition endings run the draw pile dry and deploy almost everything).
     if (st.result.winType === 'hq') {
       out.hqEndings++;
       out.reserveEndRedHQ += f.resEndRed / unitTotal;
@@ -177,7 +177,7 @@ var WOA_SIM = (function () {
     var out = balanceNew(n);
     for (var g = 0; g < n; g++) {
       var fp = balanceFP(g);
-      var st = simSkirmish(map, balanceSeed(opts.seedBase, g), fp, opts.diffRed, opts.diffBlue, opts.decks);
+      var st = simSkirmish(map, balanceSeed(opts.seedBase, g), fp, opts.diffRed, opts.diffBlue, opts.battalions);
       balanceAdd(out, st, fp);
       if (st.flow.phase === 'skirmish-over' && opts.onGame) opts.onGame(g + 1, n, st);
     }
