@@ -12,7 +12,10 @@ assert.ok(probs.length === 0, 'all built-in maps valid' + (probs.length ? ': ' +
 // Maps are per-item files under game/content/maps/. `custom:true` marks Bill's
 // experiments; the shipped map library is the non-custom maps.
 var builtinMaps = E.MAPS.filter(function (m) { return !m.custom; });
-assert.ok(builtinMaps.length === 10, '10 shipped (non-custom) maps in the content map library (got ' + builtinMaps.length + ' of ' + E.MAPS.length + ' total)');
+// Mechanism, not a pinned count (WoAProto#222): the shipped library must stay
+// above the 5-map floor so a first-to-3 campaign always has fresh boards. Adding
+// or cutting a shipped map above the floor reds nothing here.
+assert.ok(builtinMaps.length >= 5, 'shipped (non-custom) map library stays above the 5-map floor (got ' + builtinMaps.length + ' of ' + E.MAPS.length + ' total)');
 (function () {
   // HQ-distance guardrail applies to the SHIPPED map library; custom maps are Bill's
   // experiments (a turn-2 rush map can be intentional) and are exempt.

@@ -110,10 +110,12 @@ test('army-points (WOA #54: computed from steps, weight table pinned)', () => {
      E.cardPoints({ steps: [{ type: 'attack' }] }) >
      E.cardPoints({ steps: [{ type: 'reposition' }] }),
     'deploy > attack > reposition base costs');
-  // Representative card: Raiding Party exercises deploy + attack flags (tieSpare,
-  // noAdvance). Pin it and the active deck's total so any weight change is reviewed.
-  assert.ok(E.cardPoints(E.CARD_BY_ID['raiding_party']) === 6.5, 'Raiding Party = 6.5 pts (deploy inf 3 + attack tieSpare/noAdvance 3.5)');
-  assert.ok(E.deckPoints(E.ACTIVE_DECK) === 67.5, 'active deck "' + E.ACTIVE_DECK.id + '" totals 67.5 army-points');
+  // Weight-table guardrail via a SYNTHETIC card (steps fixed here, NOT read from a
+  // content file), so a POINTS-table edit is reviewed while editing any actual card
+  // or the active deck reds nothing (WoAProto#222: assert the mechanism, never a
+  // content value). deploy inf 3 + attack (base 2, tieSpare +1, noAdvance +0.5) = 6.5.
+  var pointsProbe = { steps: [{ type: 'deploy', unit: 'infantry' }, { type: 'attack', tieSpare: true, noAdvance: true }] };
+  assert.ok(E.cardPoints(pointsProbe) === 6.5, 'weight table: deploy-inf + tieSpare/noAdvance attack = 6.5 pts');
   assert.ok(E.cardPoints({ steps: [] }) === 0 && E.deckPoints({ cards: [] }) === 0, 'empty card / empty deck = 0');
   assert.ok(E.cardPoints({ steps: 'oops' }) === 0, 'malformed (non-array) steps score 0, not a throw — deckProblems can still report the friendly error');
   // WOA #56 deck-value cap gate: every shipped deck sits under the budget (the
