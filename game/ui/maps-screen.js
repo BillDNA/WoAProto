@@ -4,7 +4,7 @@
    app script; the maps-screen button wiring lives in ui/boot.js. Balance
    checks all route to the Balance Dashboard (ui/dashboard.js) — the old
    in-game balance lab was deleted in restructure step 9 so exactly one
-   aggregation pipeline (E.balanceNew/balanceAdd) remains. */
+   aggregation pipeline (WOA_SIM.balanceNew/balanceAdd) remains. */
 'use strict';
 
 /* =================== map library & pool =================== */

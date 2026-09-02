@@ -9,3 +9,5 @@ require('./test.cards.js');
 require('./test.maps.js');
 require('./test.ai.js');
 require('./test.reports.js');
+require('./test.seams.js');
+require('./test.integration.js');

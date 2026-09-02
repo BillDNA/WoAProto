@@ -4,7 +4,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { E } = require('./test.helpers.js');
+const { E, SIM } = require('./test.helpers.js');
 
 test('shapes (data-driven from maps.js)', () => {
 (function () {
@@ -86,7 +86,7 @@ test('custom board shapes (explicit hex sets)', () => {
   assert.ok(E.validateMaps([BIGMAP]).some(function (p) { return p.indexOf('24-hex ceiling') >= 0; }),
     '25-hex edited shape rejected by validateMaps');
   // an edited shape can play a full AI skirmish
-  var sim = E.simSkirmish(IRR, 99, 'red', 'normal', 'normal');
+  var sim = SIM.simSkirmish(IRR, 99, 'red', 'normal', 'normal');
   assert.ok(sim.phase === 'skirmish-over', 'AI skirmish completes on an irregular board (winner ' + sim.skirmishWinner + ')');
 })();
 });

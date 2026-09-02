@@ -33,7 +33,7 @@ sync).
    the ids. Capture the `SAVED:` path. `BEST_MAP:` still prints — informational
    (matches no longer pin to it).
 
-2. **Skill premium, on a deck/AI change only** (WOA-030) — `node game/balance.js matchup 96
+2. **Skill premium, on a deck/AI change only** (WOA-030) — `node dev/balance.js matchup 96
    [--mapset <id>]` (all 4 pairings) or `matchup 96 <a> <b>` per pairing (chunked, ~1-5 min
    each) against the ACTIVE deck. Record the 4 %s in the rubric's north star 1 row (adjacent
    ≥60%, two-tier ≥75%, sanity ~50%); skip on report sets that don't touch card/deck/AI

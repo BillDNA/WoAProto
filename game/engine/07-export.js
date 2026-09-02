@@ -28,9 +28,9 @@
     aiPlanTurn: I.aiPlanTurn, rankChoices: I.rankChoices, clone: I.clone, cloneForSim: I.cloneForSim, evalState: I.evalState, validateMaps: I.validateMaps,
     AI_PRESETS: I.AI_PRESETS, AI_WEIGHTS: I.AI_WEIGHTS, aiConfig: I.aiConfig, CARD_KEEP: I.CARD_KEEP,
     hooks: I.HOOKS,
-    playToEnd: I.playToEnd, simSkirmish: I.simSkirmish, balanceMap: I.balanceMap,
-    balanceNew: I.balanceNew, balanceAdd: I.balanceAdd, balanceSeed: I.balanceSeed, balanceFP: I.balanceFP,
-    skirmishFacts: I.skirmishFacts, factsFromRow: I.factsFromRow, foldFacts: I.foldFacts
+    // The batch/measurement layer (skirmish sweeps + balance folds) is NOT on the
+    // engine surface — it lives in game/sim.js (WOA_SIM), built on playToEnd (#220).
+    playToEnd: I.playToEnd
   };
   global.Engine = Engine;
 })(typeof window !== 'undefined' ? window : globalThis);

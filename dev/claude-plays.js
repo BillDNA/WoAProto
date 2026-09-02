@@ -121,6 +121,9 @@ function preloadContent(deckId, unitsId) {
 const ARGS = parseArgs(process.argv);
 if (ARGS.deck || ARGS.units || ARGS.mapset) preloadContent(ARGS.deck, ARGS.units);
 const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
+// balanceMap is the batch/measurement layer (game/sim.js), evicted from the
+// engine in #220.
+const SIM = require(path.join(__dirname, '..', 'game', 'sim.js'));
 const llm = require(path.join(__dirname, 'llm-client.js'));
 const { LlmSession } = require(path.join(__dirname, 'llm-session.js'));
 
@@ -416,7 +419,7 @@ function typicalityBaseline(map, n) {
   let cache = {};
   try { cache = JSON.parse(fs.readFileSync(TYP_CACHE, 'utf8')); } catch (e) {}
   if (cache[key]) return cache[key];
-  const base = E.balanceMap(map, n, { diffRed: 'hard', diffBlue: 'hard' });
+  const base = SIM.balanceMap(map, n, { diffRed: 'hard', diffBlue: 'hard' });
   delete base.cards; // the footer never reads them; keep the cache lean
   cache[key] = base;
   try { fs.mkdirSync(LOG_DIR, { recursive: true }); fs.writeFileSync(TYP_CACHE, JSON.stringify(cache)); } catch (e) {}

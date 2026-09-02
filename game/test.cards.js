@@ -4,7 +4,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { E, testSkirmish, fixtureCard } = require('./test.helpers.js');
+const { E, SIM, testSkirmish, fixtureCard } = require('./test.helpers.js');
 
 test('noOpener cards never in the opening hand (e.g. Airdrop)', () => {
 (function () {
@@ -110,10 +110,12 @@ test('army-points (WOA #54: computed from steps, weight table pinned)', () => {
      E.cardPoints({ steps: [{ type: 'attack' }] }) >
      E.cardPoints({ steps: [{ type: 'reposition' }] }),
     'deploy > attack > reposition base costs');
-  // Representative card: Raiding Party exercises deploy + attack flags (tieSpare,
-  // noAdvance). Pin it and the active deck's total so any weight change is reviewed.
-  assert.ok(E.cardPoints(E.CARD_BY_ID['raiding_party']) === 6.5, 'Raiding Party = 6.5 pts (deploy inf 3 + attack tieSpare/noAdvance 3.5)');
-  assert.ok(E.deckPoints(E.ACTIVE_DECK) === 67.5, 'active deck "' + E.ACTIVE_DECK.id + '" totals 67.5 army-points');
+  // Weight-table guardrail via a SYNTHETIC card (steps fixed here, NOT read from a
+  // content file), so a POINTS-table edit is reviewed while editing any actual card
+  // or the active deck reds nothing (WoAProto#222: assert the mechanism, never a
+  // content value). deploy inf 3 + attack (base 2, tieSpare +1, noAdvance +0.5) = 6.5.
+  var pointsProbe = { steps: [{ type: 'deploy', unit: 'infantry' }, { type: 'attack', tieSpare: true, noAdvance: true }] };
+  assert.ok(E.cardPoints(pointsProbe) === 6.5, 'weight table: deploy-inf + tieSpare/noAdvance attack = 6.5 pts');
   assert.ok(E.cardPoints({ steps: [] }) === 0 && E.deckPoints({ cards: [] }) === 0, 'empty card / empty deck = 0');
   assert.ok(E.cardPoints({ steps: 'oops' }) === 0, 'malformed (non-array) steps score 0, not a throw — deckProblems can still report the friendly error');
   // WOA #56 deck-value cap gate: every shipped deck sits under the budget (the
@@ -213,7 +215,7 @@ test('play metrics (seen / playLog for the card report)', () => {
   var e = st.playLog[st.playLog.length - 1];
   assert.ok(e.id === 'deploy_inf_start' && e.p === 'red' && e.mode === 'normal' && e.seen === 1,
     'playLog records id/mode/first-sight: ' + JSON.stringify(e));
-  var r = E.balanceMap(E.MAPS[4], 2, { seedBase: 5 });
+  var r = SIM.balanceMap(E.MAPS[4], 2, { seedBase: 5 });
   var anyCard = Object.keys(r.cards).filter(function (id) { return r.cards[id].plays > 0; })[0];
   assert.ok(anyCard && 'simple' in r.cards[anyCard] && 'firstSight' in r.cards[anyCard] && 'seenSum' in r.cards[anyCard],
     'balanceMap aggregates simple/firstSight/seenSum per card');
@@ -237,8 +239,8 @@ test('WOA-055 asymmetric deck binding', () => {
   var active = E.ACTIVE_DECK && E.ACTIVE_DECK.id;
   // (a) default (no per-side selection) is byte-identical to naming the active
   //     deck on both sides — the golden-safe path.
-  var base = E.balanceMap(E.MAPS[4], 4, { seedBase: 5 });
-  var named = E.balanceMap(E.MAPS[4], 4, { seedBase: 5, decks: { red: active, blue: active } });
+  var base = SIM.balanceMap(E.MAPS[4], 4, { seedBase: 5 });
+  var named = SIM.balanceMap(E.MAPS[4], 4, { seedBase: 5, decks: { red: active, blue: active } });
   assert.ok(JSON.stringify(base) === JSON.stringify(named),
     'balanceMap with decks={active,active} is identical to no decks (default unchanged)');
 
@@ -252,7 +254,7 @@ test('WOA-055 asymmetric deck binding', () => {
       }
   if (!two) { assert.ok(true, '(skipped: need two decks with distinct composition; have ' + decks.length + ')'); return; }
 
-  var st = E.simSkirmish(E.MAPS[0], 4242, 'red', 'normal', 'normal', { red: two[0].id, blue: two[1].id });
+  var st = SIM.simSkirmish(E.MAPS[0], 4242, 'red', 'normal', 'normal', { red: two[0].id, blue: two[1].id });
   assert.ok(st.phase === 'skirmish-over', 'asymmetric skirmish (' + two[0].id + ' vs ' + two[1].id + ') finishes');
   // The deck each side was DEALT (built + hand + discards) must match its own deck.
   function fullSideSig(st, p) {
@@ -348,7 +350,7 @@ test('no-op plays are logged and marked (skipped-turn report)', () => {
   E.playCard(st2, 'deploy_inf_start');
   E.applyStep(st2, { hex: E.stepOptions(st2).targets ? E.stepOptions(st2).targets[0] : null });
   assert.ok(!st2.playLog[st2.playLog.length - 1].noop, 'a play that acted is NOT marked noop');
-  var r = E.balanceMap(E.MAPS[4], 2, { seedBase: 5 });
+  var r = SIM.balanceMap(E.MAPS[4], 2, { seedBase: 5 });
   var anyCard = Object.keys(r.cards)[0];
   assert.ok('noop' in r.cards[anyCard], 'balanceMap aggregates noop per card');
 })();

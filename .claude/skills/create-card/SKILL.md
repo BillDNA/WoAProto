@@ -18,7 +18,7 @@ or custom-deck.js.**
   `reposition`, `barrage`. **A card needing a step type that doesn't exist is an
   engine change — flag it as such, don't pretend the JSON works.**
 - `docs/rubrics/card-rubric.md` — the card rubric (goal / evidence / score meaning).
-- Latest card report (`node game/balance.js 40` or Bill's Balance Dashboard) —
+- Latest card report (`node dev/balance.js 40` or Bill's Balance Dashboard) —
   where the current deck is weak (dead cards, hoarded cards, auto-plays).
 
 ## Shape of a proposal (the deck-editor data shape, verbatim)

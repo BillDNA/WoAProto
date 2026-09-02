@@ -253,8 +253,9 @@ realSetTimeout(function () {
           assert.ok(doc.querySelectorAll('#dashOut th.sortable').length > 10, 'columns are sortable');
           var dashTxt = doc.getElementById('dashOut').textContent;
           assert.ok(/Aggression/.test(dashTxt) && /Decisiveness/.test(dashTxt), 'behaviour + decisiveness metrics shown');
-          // dashboard numbers must equal the CLI's: same fold, same seeds
-          var cli = win.Engine.balanceMap(win.Engine.MAPS[4], 20, { seedBase: 1 * 7919, diffRed: 'normal', diffBlue: 'normal' });
+          // dashboard numbers must equal the CLI's: same fold, same seeds.
+          // balanceMap is the sim layer (WOA_SIM), evicted from the engine (#220).
+          var cli = win.WOA_SIM.balanceMap(win.Engine.MAPS[4], 20, { seedBase: 1 * 7919, diffRed: 'normal', diffBlue: 'normal' });
           var gui = win.DASH.results[0].out;
           assert.ok(cli.redWins === gui.redWins && cli.turns === gui.turns && cli.attacks === gui.attacks,
             'GUI and CLI agree exactly (red ' + gui.redWins + '/' + cli.redWins + ', turns ' + gui.turns + '/' + cli.turns + ')');

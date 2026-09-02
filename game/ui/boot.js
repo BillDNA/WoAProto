@@ -386,13 +386,13 @@ $('dashRun').onclick = function(){
   DASH.running = true; DASH.cancel = false;
   // mapset/seedBase (WOA-032, SPEC §7 run identity): `pick` IS this run's map
   // selection ('all' = the active mapset's pool, a map name, or '@adhoc');
-  // 7919 is the SAME seed-schedule base the per-map E.balanceSeed((mi+1)*7919, g)
+  // 7919 is the SAME seed-schedule base the per-map WOA_SIM.balanceSeed((mi+1)*7919, g)
   // call below already uses — one fact, not a second number invented here.
   DASH.results = []; DASH.meta = { n:n, dr:dr, db:db, mapset:pick, seedBase:7919 };
   DASH.detail = {}; DASH.chartMap = null; // per-skirmish rows for the Charts view (histogram)
   DASH.runKey = 'dash-' + Date.now(); // groups this run's skirmishes into one DB run row
   $('dashStop').style.display = ''; $('dashRun').disabled = true;
-  var mi = 0, g = 0, out = E.balanceNew(n);
+  var mi = 0, g = 0, out = WOA_SIM.balanceNew(n);
   var t0 = Date.now();
   function finish(){
     DASH.running = false;
@@ -407,16 +407,16 @@ $('dashRun').onclick = function(){
     if (g >= n){
       DASH.results.push({ map: maps[mi], out: out });
       renderDash();
-      mi++; g = 0; out = E.balanceNew(n);
+      mi++; g = 0; out = WOA_SIM.balanceNew(n);
       if (mi >= maps.length){ finish(); return; }
     }
     $('dashStatus').textContent = 'Map '+(mi+1)+'/'+maps.length+' — "'+maps[mi].name+'", skirmish '+(g+1)+'/'+n+'…'+
       (dr==='hard'||db==='hard' ? ' (Field Marshal thinks ~1s per skirmish)' : '');
     setTimeout(function(){
       if (DASH.cancel){ finish(); return; }
-      var fp = E.balanceFP(g);
-      var st = E.simSkirmish(maps[mi], E.balanceSeed((mi+1)*7919, g), fp, dr, db);
-      E.balanceAdd(out, st, fp);
+      var fp = WOA_SIM.balanceFP(g);
+      var st = WOA_SIM.simSkirmish(maps[mi], WOA_SIM.balanceSeed((mi+1)*7919, g), fp, dr, db);
+      WOA_SIM.balanceAdd(out, st, fp);
       // keep each skirmish's length + ending for the Charts view's histogram —
       // the aggregate throws these away (graphs-spec Q4); tiny per-run memory
       if (st.phase === 'skirmish-over'){

@@ -6,9 +6,9 @@
 'use strict';
 
 /* =================== balance dashboard =================== */
-// The full balance.js report in the browser. Aggregation is E.balanceNew /
-// E.balanceAdd — the SAME code the CLI folds skirmishes through — and the
-// seed/first-player schedule is E.balanceSeed/balanceFP, so a run here with
+// The full dev/balance.js report in the browser. Aggregation is WOA_SIM.balanceNew /
+// WOA_SIM.balanceAdd — the SAME code the CLI folds skirmishes through — and the
+// seed/first-player schedule is WOA_SIM.balanceSeed/balanceFP, so a run here with
 // the same n/AI/maps reproduces the terminal's numbers exactly.
 // view: 'tables' (today's dashboard, unchanged) | 'overview'|'maps'|'cards'|
 // 'units' (the WOA-034 shell's pill nav — view-only, reads saved runs;

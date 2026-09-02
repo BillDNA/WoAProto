@@ -54,7 +54,7 @@ var st  = mpState(def, { '0,0':['infantry','blue'], '-1,0':['infantry','red'] },
 
 - `mpDef` builds a tiny inline map on the shared 9-hex outline `MP_HEXES`
   (labels A1–A3 / B1–B3 / C1–C3). `mpState` runs the REAL
-  `E.newMatch({maps:[def], seed:7, firstPlayer:'red'})` + `E.newSkirmish`, then
+  `E.newBattle({maps:[def], seed:7, firstPlayer:'red'})` + `E.newSkirmish`, then
   overwrites `st.units` / `st.trenches` with the fixture's pieces and sets
   `st.__sim = true` (never fire real-skirmish hooks).
 - Terrain goes in the **map def** (`pieces`) so `buildTerrain` validates it;

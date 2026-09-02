@@ -1,6 +1,6 @@
 /* War of Attrition — report model: the ONE copy of the balance-report logic every
    reporting surface shares (CLI, dashboard, saved markdown). Pure plain-data folds
-   over E.balanceMap aggregates + trace envelopes; dual-exported (WOA_REPORT global
+   over WOA_SIM.balanceMap aggregates + trace envelopes; dual-exported (WOA_REPORT global
    + module.exports) like maps.js. Subsystem reference — envelope schema, band
    semantics, reporting doctrine, reconstruction caveats: docs/report-model.md.
 
@@ -27,10 +27,11 @@
 
 var WOA_REPORT = (function () {
 
-  // foldSkirmishes is the only fold downstream of the engine (delegates to its
-  // single-source factsFromRow/foldFacts). Resolve the engine dual like maps.js.
-  var ENG = (typeof window !== 'undefined' && window.Engine) ? window.Engine
-    : (typeof require === 'function' ? require('./engine.js') : null);
+  // foldSkirmishes is the only fold downstream of the sim layer (delegates to its
+  // single-source factsFromRow/foldFacts, evicted from the engine in #220).
+  // Resolve the sim dual like maps.js.
+  var SIM = (typeof window !== 'undefined' && window.WOA_SIM) ? window.WOA_SIM
+    : (typeof require === 'function' ? require('./sim.js') : null);
 
   function pct(a, b) { return b ? Math.round(100 * a / b) : 0; }
   function f1(x) { return (Math.round(x * 10) / 10).toFixed(1); }
@@ -192,7 +193,7 @@ var WOA_REPORT = (function () {
       firstBloodGames: 0, firstBloodWins: 0, controlGames: 0, controlWins: 0, cards: {} };
     // factsFromRow maps stored columns onto the fact record foldFacts accumulates —
     // the same record + fold balanceAdd uses live. `cards` stays {} (separate table).
-    (rows || []).forEach(function (r) { ENG.foldFacts(agg, ENG.factsFromRow(r)); });
+    (rows || []).forEach(function (r) { SIM.foldFacts(agg, SIM.factsFromRow(r)); });
     return { agg: agg, done: (rows || []).length };
   }
 

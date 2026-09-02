@@ -19,7 +19,7 @@ not luck. Every recipe was run and verified 2026-07-07 (rules 1.0). Run from the
 ## Recipe 1 — Quick pulse (one map, seconds)
 
 ```
-node game/balance.js 12 normal <map-name-filter>
+node dev/balance.js 12 normal <map-name-filter>
 ```
 
 *Measures:* did my tweak move anything on this map — Red%, 1st%, HQ%, Atk/Swp, the card report.
@@ -108,7 +108,7 @@ determinism the whole runbook leans on. (The tweak was reverted; `mod` is 1 on d
 Copy the shape: **name · exact command · what it measures · cost · what to watch.** Keep the
 command byte-exact (seeds ride the defaults — never pass a random seed), note whether it saves an
 artifact, and add it here. Candidates already proven elsewhere: the skill-premium matchup
-(`node game/balance.js matchup 16 hard normal` — stronger AI's win rate, ~60% is the 0.x anchor)
+(`node dev/balance.js matchup 16 hard normal` — stronger AI's win rate, ~60% is the 0.x anchor)
 and a personality duel (`matchup 16 brawler turtle`).
 
 ## Related
