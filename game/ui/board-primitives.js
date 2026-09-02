@@ -243,8 +243,8 @@ function bpUnit(g, hexKey, unit){
 }
 
 // a standalone mini piece glyph (its own 20x20 <svg> string), echoing the board
-// markings — infantry X, cavalry slash, artillery shot, trench arc. The mats /
-// roster twin of bpUnitToken; col/colD are the caller's side colours (the chit
+// markings — infantry X, cavalry slash, artillery shot, trench arc. The mats
+// twin of bpUnitToken; col/colD are the caller's side colours (the chit
 // ink and trench colour stay BOARD, one edit for both). Returns a string for
 // innerHTML, not a DOM append, because the slot spans are built by concat.
 function bpPieceGlyph(type, col, colD){

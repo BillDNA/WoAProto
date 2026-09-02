@@ -100,7 +100,7 @@ The live-board unit — a `bpUnitToken` in its own hover group.
 _Home_: `game/ui/board-primitives.js:237` — `bpUnit`
 
 **bpPieceGlyph**:
-The standalone mini piece glyph (its own `<svg>` string) — the mats/roster twin of `bpUnitToken`.
+The standalone mini piece glyph (its own `<svg>` string) — the mats twin of `bpUnitToken`.
 _Home_: `game/ui/board-primitives.js:250` — `bpPieceGlyph`
 
 **bpAttackLayer**:
