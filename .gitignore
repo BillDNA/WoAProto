@@ -14,18 +14,19 @@ Thumbs.db
 # (The HexClarificationDiagram the terrain rules are defined by is tracked under docs/.)
 dev/art-originals/
 
-# Playtest reports live under logs/reports/ (Feedback Round 4). The balance +
-# skirmish .md reports ARE the corpus the report skills read, so they're tracked;
-# only the append-only master log, live scratch log, and debug-state dumps are
-# noise — ignored.
+# Playtest reports live under logs/reports/ (see logs/README.md). The committed
+# .md reports are the gameplay/content corpus the report skills read; the
+# append-only master log, live scratch log, and debug-state dumps are noise —
+# ignored.
 logs/reports/skirmish/claude-plays-log.jsonl
 logs/reports/skirmish/run-live.log
+logs/reports/skirmish/.typicality-cache.json
 logs/debug/*
 !logs/debug/.gitkeep
 dev/claude-plays-log.jsonl
 
-# V1 skirmish database — a regenerable index over the committed reports (Bill's
-# ruling: gitignore for now). WAL mode adds -wal/-shm siblings.
+# Skirmish database — a regenerable index over the reports; gitignored. WAL mode
+# adds -wal/-shm siblings.
 logs/woa.db
 logs/woa.db-wal
 logs/woa.db-shm
