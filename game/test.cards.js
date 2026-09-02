@@ -14,7 +14,7 @@ test('noOpener cards never in the opening hand (e.g. Airdrop)', () => {
   var deckTotal = E.CARDS.reduce(function (s, c) { return s + c.count; }, 0);
   var bad = 0;
   for (var seed = 200; seed < 240; seed++) {
-    var m = E.newMatch({ seed: seed, firstPlayer: 'red' });
+    var m = E.newBattle({ seed: seed, firstPlayer: 'red' });
     var st = E.newSkirmish(m);
     noOpenerIds.forEach(function (id) {
       if (st.hands.red.indexOf(id) >= 0) bad++;
@@ -265,7 +265,7 @@ test('WOA-055 asymmetric deck binding', () => {
     return Object.keys(counts).map(function (id) { return id + ':' + counts[id]; }).sort().join('|');
   }
   // Fresh skirmish (no cards drawn yet) so the built deck is the full composition.
-  var m = E.newMatch({ seed: 7, firstPlayer: 'red', maps: [E.MAPS[0]], decks: { red: two[0].id, blue: two[1].id } });
+  var m = E.newBattle({ seed: 7, firstPlayer: 'red', maps: [E.MAPS[0]], decks: { red: two[0].id, blue: two[1].id } });
   var fresh = E.newSkirmish(m);
   assert.ok(deckSigFromState(fresh, 'blue') === sig(two[1].cards),
     'blue is dealt its OWN deck (' + two[1].id + '), not red\'s (blue hasn\'t drawn yet)');
@@ -322,7 +322,7 @@ test('Barrage targets ANY trench or forest', () => {
   // forest + trench deep in blue territory, far from anything red controls
   var BARMAP = { name: 'Barrage Range', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2],
     pieces: [{ t: 'F', edges: [[-2, 2, 0], [-2, 2, 1]] }] };
-  var m = E.newMatch({ seed: 31, firstPlayer: 'red', maps: [BARMAP] });
+  var m = E.newBattle({ seed: 31, firstPlayer: 'red', maps: [BARMAP] });
   var st = E.newSkirmish(m);
   st.trenches['-3,1'] = [{ dirs: [0, 1], owner: 'blue' }];
   var b = E.listBarrageTargets(st, 'red');

@@ -117,7 +117,7 @@ test('timeline', function () {
   var tl0 = h.db.prepare('SELECT COUNT(*) c FROM timeline WHERE skirmish_id = ?').get(skirmishId).c;
   assert.ok(tl0 === (st.fsTimeline ? st.fsTimeline.length : 0) && tl0 > 0,
     'a real skirmish lands its per-turn timeline (' + tl0 + ' rows)');
-  var noTl = JSON.parse(JSON.stringify(st)); noTl.match = st.match; delete noTl.fsTimeline;
+  var noTl = JSON.parse(JSON.stringify(st)); noTl.battle = st.battle; delete noTl.fsTimeline;
   var skirmishId0 = db.insertSkirmish(h, runId, noTl, 'red', { seed: 1234 });
   var tlAbsent = h.db.prepare('SELECT COUNT(*) c FROM timeline WHERE skirmish_id = ?').get(skirmishId0).c;
   assert.ok(tlAbsent === 0, 'a state without fsTimeline (pre-V1 save) -> zero rows, tolerated silently');
@@ -243,7 +243,7 @@ test('run identity + trace (WOA-032)', function () {
 
 /* ---------- hexes_red/hexes_blue: known-units column mapping (WOA-038) ---------- */
 test('hex-ownership tally (WOA-038)', function () {
-  var stHex = JSON.parse(JSON.stringify(st2)); stHex.match = st2.match;
+  var stHex = JSON.parse(JSON.stringify(st2)); stHex.battle = st2.battle;
   stHex.units = { // a deliberately uneven, hand-known split: 3 red hexes, 1 blue hex
     '0,0': { type: 'infantry', owner: 'red' },
     '1,0': { type: 'infantry', owner: 'red' },
@@ -255,7 +255,7 @@ test('hex-ownership tally (WOA-038)', function () {
   assert.ok(bHex.hexes_red === 3 && bHex.hexes_blue === 1,
     'hexes_red/hexes_blue = 3/1 for a hand-built 4-unit board (' + bHex.hexes_red + '/' + bHex.hexes_blue + ')');
 
-  var stEmpty = JSON.parse(JSON.stringify(st2)); stEmpty.match = st2.match; stEmpty.units = {};
+  var stEmpty = JSON.parse(JSON.stringify(st2)); stEmpty.battle = st2.battle; stEmpty.units = {};
   var skirmishIdEmpty = db.insertSkirmish(h2, runIdA, stEmpty, 'red', { seed: 9002 });
   var bEmpty = h2.db.prepare('SELECT hexes_red, hexes_blue FROM skirmishes WHERE id = ?').get(skirmishIdEmpty);
   assert.ok(bEmpty.hexes_red === 0 && bEmpty.hexes_blue === 0,

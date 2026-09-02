@@ -100,9 +100,13 @@ var ALIASES = [
   { term: 'roster (→ Mapset / map library)', pattern: /\broster/gi,
     ignore: /rostersOvr|rostersBody|fabRosters|syncRostersOverlay|RostersOverlay|BOTH rosters|>Rosters<|map-roster-and-shapes/, status: 'locked',
     note: 'active-set → Mapset; full collection → map library; piece mats stay the mats overlay' },
+  // The engine best-of object is now st.battle / newBattle. What stays "match":
+  // the claude-plays `--match` CLI flag + its jsonl log schema, the `matchup`
+  // luck-o-meter (a distinct pairing tool), "matched" decks (CONTEXT sanctions
+  // it), and ordinary English (a map "matches", `.match(`). Too broad to lock.
   { term: 'match — best-of (→ Battle)', pattern: /\bmatch(es|up|ed|ing)?\b/gi,
-    ignore: /matchup|matched in|\.match\(|match\.maps|match\.wins|st\.match|newMatch|skirmishWinner/i,
-    status: 'pending', note: 'st.match / newMatch identifiers + runbook prose' },
+    ignore: /matchup|matched|\.match\(|--match|match mode|match seed|MATCH mode/i,
+    status: 'pending', note: 'engine object → st.battle/newBattle; residual is the --match CLI flag + matchup tool + prose' },
   // Order (noun, the card) is cleared in prose, but the word "order" is too common
   // (var order, attack order, enumeration order) to lock without false positives.
   { term: 'Order — noun (→ Card)', pattern: /\borders?\b/gi,

@@ -20,7 +20,7 @@ const SENTINEL = { id: 'zz_hidden_sentinel', name: 'ZZHIDDENSENTINEL', text: 'yo
 
 // Build the skirmish FIRST (so the ordinary decks can't deal the sentinel to
 // red), then register the card and plant it in blue's HIDDEN zones only.
-const match = E.newMatch({ maps: [E.MAPS[0]], seed: 424242, firstPlayer: 'red' });
+const match = E.newBattle({ maps: [E.MAPS[0]], seed: 424242, firstPlayer: 'red' });
 const st = E.newSkirmish(match);
 E.CARDS.push(SENTINEL);
 E.CARD_BY_ID[SENTINEL.id] = SENTINEL;
@@ -69,7 +69,7 @@ test('rules text matches the live rules version', () => {
 });
 
 test('ranked option diet', () => {
-  const m2 = E.newMatch({ maps: [E.MAPS[0]], seed: 77, firstPlayer: 'red' });
+  const m2 = E.newBattle({ maps: [E.MAPS[0]], seed: 77, firstPlayer: 'red' });
   const st2 = E.newSkirmish(m2);
   E.playCard(st2, st2.hands.red[0], 'normal');
   assert.ok(st2.phase === 'step', 'setup reached the step phase (diet invariants get exercised)');

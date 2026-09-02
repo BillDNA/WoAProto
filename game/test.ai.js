@@ -193,7 +193,7 @@ test('concession', () => {
   E.concede(st, 'red');
   assert.ok(st.phase === 'skirmish-over' && st.skirmishWinner === 'blue' && st.winType === 'concession',
     'conceding hands the skirmish to the enemy');
-  assert.ok(st.match.wins.blue === 1 && st.match.lastLoser === 'red', 'match bookkeeping matches a normal loss');
+  assert.ok(st.battle.wins.blue === 1 && st.battle.lastLoser === 'red', 'match bookkeeping matches a normal loss');
   assert.ok(st.log.some(function (l) { return l.msg.indexOf('concedes the field') >= 0; }), 'concession reaches the journal');
 })();
 });
@@ -222,7 +222,7 @@ test('AI vs AI full matches', () => {
 var seeds = [1, 2, 3, 4, 5, 6, 7, 8];
 var hqWins = 0, attrWins = 0, maxTurns = 0;
 seeds.forEach(function (seed) {
-  var match = E.newMatch({ seed: seed });
+  var match = E.newBattle({ seed: seed });
   var skirmishes = 0;
   while (!match.winner && skirmishes < 12) {
     var st = E.newSkirmish(match);
@@ -244,7 +244,7 @@ test('fsTimeline: one [fsRed,fsBlue] pair per completed turn', () => {
   // clone, engine/05-ai.js), so st.fsTimeline is the live capture engine/
   // 04-skirmish.js pushes to every completed turn (endTurn), not the stripped
   // copy a search clone carries.
-  var st = E.newSkirmish(E.newMatch({ seed: 42 }));
+  var st = E.newSkirmish(E.newBattle({ seed: 42 }));
   E.playToEnd(st, { decide: function (s) { return E.aiPlanTurn(s, 'normal'); } });
   assert.ok(st.phase === 'skirmish-over', 'fsTimeline fixture skirmish finished (seed 42)');
   assert.ok(Array.isArray(st.fsTimeline) && st.fsTimeline.length === st.turnNumber - 1,
@@ -259,7 +259,7 @@ test('V1 AI search', () => {
 (function () {
   var cmap = E.MAPS.filter(function (m) { return m.shape === 'classic'; })[0];
   assert.ok(!!cmap, 'a classic-shape map exists for the fixture');
-  var match = E.newMatch({ seed: 99, maps: [cmap], firstPlayer: 'red' });
+  var match = E.newBattle({ seed: 99, maps: [cmap], firstPlayer: 'red' });
   var st = E.newSkirmish(match);
   // Orientation term: same trench hex, enemy approaching from the east — the
   // east-facing trench must evaluate higher than the west-facing one.
@@ -274,7 +274,7 @@ test('V1 AI search', () => {
     'trenchFacing + shortlist live in AI_WEIGHTS (tunable, personality-overridable)');
 
   // rankChoices: honest top-K of N for the LLM harness
-  var m2 = E.newMatch({ seed: 7, maps: [cmap], firstPlayer: 'red' });
+  var m2 = E.newBattle({ seed: 7, maps: [cmap], firstPlayer: 'red' });
   var st2 = E.newSkirmish(m2);
   E.playCard(st2, st2.hands.red[0], 'normal'); // starting card -> a step
   var all = E.enumerateChoices(st2);
@@ -291,7 +291,7 @@ test('V1 AI search', () => {
   assert.ok(big.shown.length === all.length, 'k >= N shows the whole list (' + big.shown.length + ')');
 
   // same-type swaps are a hidden skip — illegal.
-  var st3 = E.newSkirmish(E.newMatch({ seed: 5, maps: [cmap], firstPlayer: 'red' }));
+  var st3 = E.newSkirmish(E.newBattle({ seed: 5, maps: [cmap], firstPlayer: 'red' }));
   st3.units = {
     '0,0': { type: 'infantry', owner: 'red' }, '1,0': { type: 'infantry', owner: 'red' },
     '0,1': { type: 'cavalry', owner: 'red' }

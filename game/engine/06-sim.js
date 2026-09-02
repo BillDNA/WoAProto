@@ -32,8 +32,8 @@
   // WOA-055: `decks` = {red, blue} per-side selection (each null|deck|id|name).
   // Omitted -> both sides share the active deck (behaviour unchanged from pre-055).
   function simSkirmish(map, seed, firstPlayer, diffRed, diffBlue, decks) {
-    var match = I.newMatch({ seed: seed | 0, maps: [map], firstPlayer: firstPlayer || 'red', decks: decks || null });
-    var st = I.newSkirmish(match);
+    var battle = I.newBattle({ seed: seed | 0, maps: [map], firstPlayer: firstPlayer || 'red', decks: decks || null });
+    var st = I.newSkirmish(battle);
     return playToEnd(st, { decide: function (s) {
       var diff = s.current === 'red' ? (diffRed || 'normal') : (diffBlue || diffRed || 'normal');
       return I.aiPlanTurn(s, diff);

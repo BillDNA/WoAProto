@@ -8,11 +8,11 @@
 
   /* ---------- AI ---------- */
   function clone(st) {
-    var m = st.match;
-    st.match = null;
+    var m = st.battle;
+    st.battle = null;
     var c = JSON.parse(JSON.stringify(st));
-    st.match = m;
-    c.match = { wins: { red: m.wins.red, blue: m.wins.blue }, skirmishIndex: m.skirmishIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
+    st.battle = m;
+    c.battle = { wins: { red: m.wins.red, blue: m.wins.blue }, skirmishIndex: m.skirmishIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
     return c;
   }
   // The AI's hot-loop clone: identical to clone() except it drops what the
@@ -21,14 +21,14 @@
   // (noopPenalty reads exactly that one), and fsTimeline. __sim marks the
   // state so I.finishSkirmish never fires persistence hooks for search clones.
   function cloneForSim(st) {
-    var m = st.match, lg = st.log, pl = st.playLog, tl = st.fsTimeline, sd = st.sideDecks;
+    var m = st.battle, lg = st.log, pl = st.playLog, tl = st.fsTimeline, sd = st.sideDecks;
     // WOA-055: sideDecks registries are immutable for the skirmish (resolved once
     // at newSkirmish) — strip them out of the deep clone (the byId maps carry the
-    // whole card catalog) and reattach the SAME reference, like match/log below.
-    st.match = null; st.log = []; st.playLog = (pl && pl.length) ? [pl[pl.length - 1]] : []; st.fsTimeline = undefined; st.sideDecks = undefined;
+    // whole card catalog) and reattach the SAME reference, like battle/log below.
+    st.battle = null; st.log = []; st.playLog = (pl && pl.length) ? [pl[pl.length - 1]] : []; st.fsTimeline = undefined; st.sideDecks = undefined;
     var c = JSON.parse(JSON.stringify(st));
-    st.match = m; st.log = lg; st.playLog = pl; st.fsTimeline = tl; st.sideDecks = sd;
-    c.match = { wins: { red: m.wins.red, blue: m.wins.blue }, skirmishIndex: m.skirmishIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
+    st.battle = m; st.log = lg; st.playLog = pl; st.fsTimeline = tl; st.sideDecks = sd;
+    c.battle = { wins: { red: m.wins.red, blue: m.wins.blue }, skirmishIndex: m.skirmishIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
     c.sideDecks = sd;
     c.__sim = true;
     return c;

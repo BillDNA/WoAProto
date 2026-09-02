@@ -26,7 +26,7 @@ assert.ok(builtinMaps.length === 10, '10 shipped (non-custom) maps in the conten
 test('active mapset', () => {
 (function () {
   var one = [E.MAPS[0]];
-  var m = E.newMatch({ seed: 33, maps: one });
+  var m = E.newBattle({ seed: 33, maps: one });
   assert.ok(m.maps.length === 1 && m.mapOrder.length === 1, 'battle carries its own 1-map set');
   var st = E.newSkirmish(m);
   assert.ok(st.mapName === E.MAPS[0].name, 'skirmish 1 uses the pooled map');

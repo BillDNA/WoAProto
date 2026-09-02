@@ -34,8 +34,8 @@ function startLocal(mode, mapsOverride){
   var pool = mapsOverride || getActiveMaps();
   if (!pool || !pool.length){ toast('No maps are in play! Enable some in Maps &amp; Map Editor.', 3500); return; }
   APP.mode = mode;
-  var match = E.newMatch({ maps: pool });
-  try { APP.st = E.newSkirmish(match); }
+  var battle = E.newBattle({ maps: pool });
+  try { APP.st = E.newSkirmish(battle); }
   catch(e){ APP.mode = null; toast('A map in the pool cannot be played: '+e.message+'<br><span class="small">Untick it in Maps &amp; Map Editor.</span>', 5000); return; }
   APP.ui = { sel:null, stage:null, busy:false, handoffPending: mode==='hotseat' };
   APP.snap = null;
@@ -160,7 +160,7 @@ function renderMat(p){
   el.querySelector('.spent').onclick = showCards;
 }
 function renderTop(){
-  var st = APP.st, m = st.match;
+  var st = APP.st, m = st.battle;
   var youSide = (APP.mode==='ai' || APP.mode==='net') ? APP.mySide : null;
   var bn = 'Skirmish ' + (st.phase==='skirmish-over' ? m.skirmishIndex : m.skirmishIndex+1);
   $('skirmishTitle').innerHTML = bn + ' &middot; <i>&ldquo;'+st.mapName+'&rdquo;</i>' +
@@ -219,7 +219,7 @@ function renderHand(){
   var hand = st.hands[side];
   var live = inputLive() && st.phase==='choose-card';
   // deal-in flourish only the first time this turn's hand is shown
-  var dealKey = st.turnNumber + '|' + side + '|' + st.match.skirmishIndex;
+  var dealKey = st.turnNumber + '|' + side + '|' + st.battle.skirmishIndex;
   var deal = APP.ui.dealtKey !== dealKey && st.phase==='choose-card';
   if (deal) APP.ui.dealtKey = dealKey;
   hand.forEach(function(cid, i){
@@ -297,7 +297,7 @@ function renderPrompt(){
 function renderAll(){
   if (APP.st){
     // a resumed/joined skirmish on an edited outline must re-register its shape
-    var mm = APP.st.match && APP.st.match.maps && APP.st.match.maps[APP.st.mapIndex];
+    var mm = APP.st.battle && APP.st.battle.maps && APP.st.battle.maps[APP.st.mapIndex];
     if (mm && mm.shapeDef) E.ensureMapShape(mm);
     E.setBoard(APP.st.boardShape);
   }
@@ -397,7 +397,7 @@ function confirmAttack(a){
 }
 
 function showSkirmishOver(){
-  var st = APP.st, m = st.match;
+  var st = APP.st, m = st.battle;
   var w = st.skirmishWinner;
   var html = '<h2 class="'+w+'">'+capName(w)+' takes the field!</h2>' +
     '<p style="font-style:italic;">"'+st.mapName+'" — ' + (st.winType==='hq' ? 'the enemy headquarters was captured.' :
@@ -434,7 +434,7 @@ function showSkirmishOver(){
     clearSave();
     if (APP.mode==='net'){
       var pool = getActiveMaps() || E.MAPS;
-      var match = E.newMatch({ maps: pool });
+      var match = E.newBattle({ maps: pool });
       APP.st = E.newSkirmish(match);
       renderAll(); pushState();
     } else startLocal(APP.mode);
@@ -450,7 +450,7 @@ function showSkirmishOver(){
 
 // Plain-text campaign journal for the clipboard (Feedback Round 2).
 function journalText(st){
-  var m = st.match;
+  var m = st.battle;
   var res = st.winType==='hq' ? capName(st.skirmishWinner)+' captured the enemy HQ'
     : st.winType==='concession' ? capName(st.skirmishWinner)+' won — enemy conceded'
     : capName(st.skirmishWinner)+' won by attrition ('+E.fieldScore(st,'red')+'–'+E.fieldScore(st,'blue')+' field score surviving)';
@@ -526,14 +526,14 @@ function afterChange(){
   renderAll(); saveLocal();
   if (APP.mode==='net') pushState();
   // let the final strike arrow / death animation (~.85s) finish before the win card
-  if (st.phase === 'skirmish-over'){ clearIfMatchOver(); setTimeout(showSkirmishOver, 900); return; }
+  if (st.phase === 'skirmish-over'){ clearIfBattleOver(); setTimeout(showSkirmishOver, 900); return; }
   if (st.phase === 'choose-card'){
     // turn changed
     if (APP.mode==='hotseat') showHandoff();
     else maybeAI();
   }
 }
-function clearIfMatchOver(){ if (APP.st.match.winner) clearSave(); }
+function clearIfBattleOver(){ if (APP.st.battle.winner) clearSave(); }
 
 /* =================== card glossary =================== */
 function showCards(){
@@ -578,7 +578,7 @@ function maybeAI(){
       toast(capName(loser)+' <b>concedes the field</b> — the outcome was beyond doubt.', 3200);
       APP.ui.busy = false;
       renderAll(); saveLocal();
-      clearIfMatchOver(); showSkirmishOver();
+      clearIfBattleOver(); showSkirmishOver();
       return;
     }
     var plan = E.aiPlanTurn(st, APP.diff);
@@ -592,7 +592,7 @@ function maybeAI(){
       if (st.phase !== 'step'){
         APP.ui.busy = false;
         renderAll(); saveLocal();
-        if (st.phase==='skirmish-over'){ clearIfMatchOver(); showSkirmishOver(); }
+        if (st.phase==='skirmish-over'){ clearIfBattleOver(); showSkirmishOver(); }
         else { renderPrompt(); maybeAI(); } // watch mode: the other general takes over
         return;
       }

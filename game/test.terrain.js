@@ -216,7 +216,7 @@ test('V0 terrain-crossing rules: trench support denial + rivers', () => {
   var single = { name: 'Trickle', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2],
     pieces: [{ t: 'R', edges: [[0, 0, 1]] }] };
   assert.ok(E.validateMaps([single]).length === 1, 'a single-side river has no physical counterpart (R1 removed)');
-  var m3 = E.newMatch({ seed: 99, firstPlayer: 'red', maps: [riverMap] });
+  var m3 = E.newBattle({ seed: 99, firstPlayer: 'red', maps: [riverMap] });
   var st3 = E.newSkirmish(m3);
   var bt = E.listBarrageTargets(st3, 'red');
   assert.ok(bt.forestPieces.length === 0, 'rivers are not barrage targets (they act like mountains)');

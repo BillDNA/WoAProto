@@ -55,8 +55,8 @@ function mpDef(id, redHQ, blueHQ, pieces){
 // NOTE: E.newSkirmish switches the engine's global board to this map's shape —
 // renderManual() saves and restores the live shape around every render.
 function mpState(def, units, trenches){
-  var match = E.newMatch({ maps: [def], seed: 7, firstPlayer: 'red' });
-  var st = E.newSkirmish(match);
+  var battle = E.newBattle({ maps: [def], seed: 7, firstPlayer: 'red' });
+  var st = E.newSkirmish(battle);
   st.__sim = true; // a diagram, not a real skirmish — never fire onSkirmishEnd hooks
   st.units = {};
   Object.keys(units).forEach(function(h){ st.units[h] = { type: units[h][0], owner: units[h][1] }; });

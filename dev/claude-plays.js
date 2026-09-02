@@ -625,7 +625,7 @@ async function main() {
     (args.deck ? ' — deck "' + args.deck + '"' : '') +
     (args.mock ? '  [MOCK]' : args.cold ? '  [cold transport]' : '  [persistent sessions]'));
 
-  const match = E.newMatch({ maps: pool, seed: args.seed, firstPlayer: 'red' });
+  const match = E.newBattle({ maps: pool, seed: args.seed, firstPlayer: 'red' });
   const matchInfo = { targetWins: target, wins: match.wins, skirmishesPlayed: 0 };
   const transports = {
     red: makeSideTransport(args, 'red', target),
