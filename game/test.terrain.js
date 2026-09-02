@@ -40,6 +40,9 @@ test('trench/terrain edge exclusivity', () => {
 
 test('multiple trenches per hex', () => {
 (function () {
+  // Powers are expressed relative to the LIVE unit stats (WoAProto#222: mechanism,
+  // not pinned integers) so retuning a unit stat reds nothing here.
+  var U = E.UNITS, Ia = U.infantry.atk, Id = U.infantry.def, Is = U.infantry.sup;
   var st = testSkirmish(60);
   st.units['-1,1'] = { type: 'infantry', owner: 'red' };
   st.trenches['-1,1'] = [{ dirs: [3, 4], owner: 'red' }];
@@ -54,13 +57,13 @@ test('multiple trenches per hex', () => {
   assert.ok(st.trenches['-1,1'].length === 2, 'second trench dug on the same hex');
   st.units['0,0'] = { type: 'infantry', owner: 'blue' };
   var r = E.computeAttack(st, { from: '0,0', to: '-1,1' });
-  assert.ok(r.defenderPower === 1, 'trenches add no defense under the V0 rules (got ' + r.defenderPower + ')');
+  assert.ok(r.defenderPower === Id, 'trenches add no defense under the V0 rules (bare def, got ' + r.defenderPower + ')');
   st.units['-1,0'] = { type: 'infantry', owner: 'blue' }; // its border into the hex is trenched (dir 2)
   var r2 = E.computeAttack(st, { from: '0,0', to: '-1,1' });
-  assert.ok(r2.attackerPower === 1, 'second trench denies attacker support across its edges (got ' + r2.attackerPower + ')');
+  assert.ok(r2.attackerPower === Ia, 'second trench denies attacker support across its edges (bare atk, got ' + r2.attackerPower + ')');
   st.units['0,1'] = { type: 'infantry', owner: 'blue' }; // untrenched border into the hex
   var r3 = E.computeAttack(st, { from: '0,0', to: '-1,1' });
-  assert.ok(r3.attackerPower === 2, 'support across an untrenched border still counts (got ' + r3.attackerPower + ')');
+  assert.ok(r3.attackerPower === Ia + Is, 'support across an untrenched border still counts (atk + one support, got ' + r3.attackerPower + ')');
   // overlap stays illegal
   var st2 = testSkirmish(61);
   st2.units['0,0'] = { type: 'infantry', owner: 'red' };
@@ -78,6 +81,9 @@ test('terrain attack table (A/B/C)', () => {
 (function () {
   // A top, B = A's SW neighbor, C = A's SE neighbor. Forest in A on edges A|B and A|C.
   // Mountain in B on edges B|A and B|C.
+  // Base powers from live stats; terrain adds a flat +1 (a rules constant, not a
+  // unit stat), so retuning unit stats reds nothing here (WoAProto#222).
+  var Ia = E.UNITS.infantry.atk, Id = E.UNITS.infantry.def;
   var A = '0,0', B = '-1,1', C = '0,1';
   function fresh() {
     var st = testSkirmish(77);
@@ -88,12 +94,12 @@ test('terrain attack table (A/B/C)', () => {
     return st;
   }
   var cases = [
-    [A, C, 2, 1, 'A->C: a+1 c+0'],
-    [A, B, 2, 2, 'A->B: a+1 b+1'],
-    [B, A, 1, 1, 'B->A: b+0 a+0'],
-    [B, C, 1, 1, 'B->C: b+0 c+0'],
-    [C, A, 1, 1, 'C->A: c+0 a+0'],
-    [C, B, 1, 2, 'C->B: c+0 b+1']
+    [A, C, Ia + 1, Id, 'A->C: a+1 c+0'],
+    [A, B, Ia + 1, Id + 1, 'A->B: a+1 b+1'],
+    [B, A, Ia, Id, 'B->A: b+0 a+0'],
+    [B, C, Ia, Id, 'B->C: b+0 c+0'],
+    [C, A, Ia, Id, 'C->A: c+0 a+0'],
+    [C, B, Ia, Id + 1, 'C->B: c+0 b+1']
   ];
   cases.forEach(function (cs) {
     var st = fresh();
@@ -108,49 +114,55 @@ test('terrain attack table (A/B/C)', () => {
 
 test('combat math', () => {
 (function () {
+  // Powers relative to live stats (WoAProto#222): base = infantry atk/def, each
+  // infantry supporter adds its sup, artillery adds its sup; terrain/HQ/card mod
+  // are flat +1 rules constants. Retuning a unit stat reds nothing here.
+  var U = E.UNITS, Ia = U.infantry.atk, Id = U.infantry.def, Is = U.infantry.sup, As = U.artillery.sup;
+  function winner(a, d) { return a > d ? 'attacker' : a < d ? 'defender' : 'tie'; }
   var st = testSkirmish(42);
   st.units['0,0'] = { type: 'infantry', owner: 'red' };
   st.units['0,1'] = { type: 'infantry', owner: 'blue' };
   var res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.attackerPower === 1 && res.defenderPower === 1 && res.outcome === 'tie', 'inf vs inf bare = 1v1 tie (got ' + res.attackerPower + 'v' + res.defenderPower + ')');
+  assert.ok(res.attackerPower === Ia && res.defenderPower === Id && res.outcome === winner(Ia, Id),
+    'inf vs inf bare = atk vs def, higher wins / equal ties (got ' + res.attackerPower + 'v' + res.defenderPower + ' ' + res.outcome + ')');
   // attacker support: red artillery adjacent to skirmish hex
   st.units['-1,1'] = { type: 'artillery', owner: 'red' };
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.attackerPower === 3 && res.outcome === 'attacker', 'artillery support +2 (got ' + res.attackerPower + ')');
+  assert.ok(res.attackerPower === Ia + As && res.outcome === winner(Ia + As, Id), 'artillery adds its sup to attacker (got ' + res.attackerPower + ')');
   // defender support: blue infantry adjacent to skirmish hex
   st.units['1,1'] = { type: 'infantry', owner: 'blue' };
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.defenderPower === 2, 'defender inf support +1 (got ' + res.defenderPower + ')');
+  assert.ok(res.defenderPower === Id + Is, 'defender gains one infantry support (got ' + res.defenderPower + ')');
   // trench across the artillery's support border: that support is denied (V0 rules)
   st.trenches['0,1'] = [{ dirs: [2, 3], owner: 'blue' }]; // covers borders toward 0,0 and -1,1
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.attackerPower === 1 && res.defenderPower === 2,
+  assert.ok(res.attackerPower === Ia && res.defenderPower === Id + Is,
     'trench denies attacker support and adds no defense (got ' + res.attackerPower + 'v' + res.defenderPower + ')');
   st.trenches['0,1'] = [{ dirs: [0, 1], owner: 'blue' }]; // clear of the support borders; covers blue supporter's border
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.attackerPower === 3, 'trench clear of the attacker-support border denies nothing (got ' + res.attackerPower + ')');
-  assert.ok(res.defenderPower === 2, 'defender support is never trench-blocked (got ' + res.defenderPower + ')');
+  assert.ok(res.attackerPower === Ia + As, 'trench clear of the attacker-support border denies nothing (got ' + res.attackerPower + ')');
+  assert.ok(res.defenderPower === Id + Is, 'defender support is never trench-blocked (got ' + res.defenderPower + ')');
   // terrain is hex-owned and directional (HexClarificationDiagram)
   st.terrainEdges[E.sideKey('0,0', 5)] = 'F'; // forest in the attacker's hex facing 0,1
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.attackerPower === 4, 'forest +1 attacking out of its hex (got ' + res.attackerPower + ')');
+  assert.ok(res.attackerPower === Ia + As + 1, 'forest +1 attacking out of its hex (got ' + res.attackerPower + ')');
   delete st.terrainEdges[E.sideKey('0,0', 5)];
   st.terrainEdges[E.sideKey('0,1', 2)] = 'F'; // forest in DEFENDER hex: no effect
   st.terrainEdges[E.sideKey('0,0', 5)] = 'M'; // mountain in ATTACKER hex: no effect
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.attackerPower === 3 && res.defenderPower === 2, 'reversed sides give no bonus (got ' + res.attackerPower + 'v' + res.defenderPower + ')');
+  assert.ok(res.attackerPower === Ia + As && res.defenderPower === Id + Is, 'reversed sides give no bonus (got ' + res.attackerPower + 'v' + res.defenderPower + ')');
   delete st.terrainEdges[E.sideKey('0,1', 2)];
   delete st.terrainEdges[E.sideKey('0,0', 5)];
   st.terrainEdges[E.sideKey('0,1', 2)] = 'M'; // mountain in the defender's hex facing 0,0
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.attackerPower === 3 && res.defenderPower === 3, 'mountain +1 defending its hex (got ' + res.defenderPower + ')');
+  assert.ok(res.attackerPower === Ia + As && res.defenderPower === Id + Is + 1, 'mountain +1 defending its hex (got ' + res.defenderPower + ')');
   // card mod
   res = E.computeAttack(st, { from: '0,0', to: '0,1', mod: 1 });
-  assert.ok(res.attackerPower === 4, 'card +1 mod applied');
+  assert.ok(res.attackerPower === Ia + As + 1, 'card +1 mod applied');
   // HQ support: blue HQ adjacent to skirmish hex
   st.hq.blue = '1,0';
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.defenderPower === 4, 'HQ gives +1 support to adjacent skirmish hex (got ' + res.defenderPower + ')');
+  assert.ok(res.defenderPower === Id + Is + 1 + 1, 'HQ gives +1 support to adjacent skirmish hex (mountain + HQ, got ' + res.defenderPower + ')');
   // attack the HQ itself
   st.units['2,0'] = { type: 'cavalry', owner: 'red' };
   var hqAtk = E.computeAttack(st, { from: '2,0', to: '1,0' });
@@ -162,21 +174,23 @@ test('V0 terrain-crossing rules: trench support denial + rivers', () => {
 (function () {
   // Trench on the SUPPORTER's hex blocks just the same (ownership of the
   // border piece is irrelevant): red attacks 0,1 from 0,0; red support at 1,1.
+  // Powers relative to live stats (WoAProto#222).
+  var Ia = E.UNITS.infantry.atk, Id = E.UNITS.infantry.def, Is = E.UNITS.infantry.sup;
   var st = testSkirmish(130);
   st.units['0,0'] = { type: 'infantry', owner: 'red' };
   st.units['1,1'] = { type: 'infantry', owner: 'red' };
   st.units['0,1'] = { type: 'infantry', owner: 'blue' };
   var res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.attackerPower === 2, 'baseline: supporter counts (got ' + res.attackerPower + ')');
+  assert.ok(res.attackerPower === Ia + Is, 'baseline: supporter counts (got ' + res.attackerPower + ')');
   st.trenches['1,1'] = [{ dirs: [3, 4], owner: 'red' }]; // covers the 1,1 -> 0,1 border
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.attackerPower === 1, "trench in the supporter's hex blocks its support out across it (got " + res.attackerPower + ')');
+  assert.ok(res.attackerPower === Ia, "trench in the supporter's hex blocks its support out across it (got " + res.attackerPower + ')');
   assert.ok(res.attackerParts.some(function (p) { return p.indexOf('blocked by trench') >= 0; }),
     'breakdown names the blocked support');
   // ...but a trench NOT on that border never locks a unit in:
   st.trenches['1,1'] = [{ dirs: [0, 1], owner: 'red' }];
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.attackerPower === 2, 'a unit in a trenched hex still supports out across a free border');
+  assert.ok(res.attackerPower === Ia + Is, 'a unit in a trenched hex still supports out across a free border');
   // The attack itself may always cross a trenched border:
   st.trenches['0,1'] = [{ dirs: [2, 3], owner: 'blue' }]; // covers the attack border from 0,0
   var atks = E.listAttacks(st, 'red').filter(function (a) { return a.from === '0,0' && a.to === '0,1'; });
@@ -193,14 +207,14 @@ test('V0 terrain-crossing rules: trench support denial + rivers', () => {
   st2.units[C3] = { type: 'infantry', owner: 'blue' };
   st2.terrainEdges[E.sideKey(C2, 0)] = 'R'; // river on C2's side toward C3
   var rB = E.computeAttack(st2, { from: B3, to: C3 });
-  assert.ok(rB.attackerPower === 2, 'B3->C3: support crosses the river now (got ' + rB.attackerPower + ')');
+  assert.ok(rB.attackerPower === Ia + Is, 'B3->C3: support crosses the river now (got ' + rB.attackerPower + ')');
   assert.ok(!rB.attackerParts.some(function (p) { return p.indexOf('blocked by river') >= 0; }), 'river no longer blocks support');
   // Defender support crosses the river too (neither hex's side blocks):
   var D3 = '-1,1';
   st2.units[D3] = { type: 'infantry', owner: 'blue' };
   st2.terrainEdges[E.sideKey(C3, 5)] = 'R'; // river owned by the SKIRMISH hex side toward D3
   var rD = E.computeAttack(st2, { from: B3, to: C3 });
-  assert.ok(rD.defenderPower === 2, "D3's defender support crosses the river (got " + rD.defenderPower + ')');
+  assert.ok(rD.defenderPower === Id + Is, "D3's defender support crosses the river (got " + rD.defenderPower + ')');
 
   // River pieces come in the same lengths as forest/mountain (2- and 3-side),
   // validated against the R3/R2 stock; still not barrageable.

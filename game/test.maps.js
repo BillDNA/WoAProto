@@ -26,6 +26,28 @@ assert.ok(builtinMaps.length >= 5, 'shipped (non-custom) map library stays above
 })();
 });
 
+test('carved shapeDef map rebuilds its board after a LAN serialize (F1, WoAProto#222)', () => {
+(function () {
+  // The seam: a carved-outline map travels inside battle.maps; the joiner/resumer
+  // rebuilds the board from that transmitted shapeDef ALONE (ensureMapShape). Drive
+  // it: build a battle on a carved map, JSON round-trip it (the whole-state LAN
+  // hand-off), and start the skirmish on the far side — the board must be the
+  // carved outline, not a fallback.
+  var carved = E.MAPS.filter(function (m) { return m.shapeDef && m.shapeDef.hexes; })[0];
+  assert.ok(carved, 'there is a carved shapeDef map in the library to exercise');
+  var battle = E.newBattle({ seed: 9, firstPlayer: 'red', maps: [carved] });
+  var wire = JSON.parse(JSON.stringify(battle));                 // the wire: whole-state JSON
+  assert.ok(wire.maps[0].shapeDef && Array.isArray(wire.maps[0].shapeDef.hexes),
+    'shapeDef survives serialization inside battle.maps (nothing local needed to rebuild)');
+  var st = E.newSkirmish(wire);                                  // far side rebuilds from the wire
+  var hexes = E.boardHexes(st.boardShape);
+  assert.ok(hexes.length === carved.shapeDef.hexes.length,
+    'the rebuilt board has exactly the carved outline (' + hexes.length + ' hexes)');
+  assert.ok(hexes.length !== E.boardHexes(E.DEFAULT_SHAPE).length,
+    'the carved board is not the default shape — really rebuilt from shapeDef, not fallen back');
+})();
+});
+
 test('active mapset', () => {
 (function () {
   var one = [E.MAPS[0]];

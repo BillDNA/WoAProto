@@ -69,15 +69,26 @@ gap. Least-covered, most-load-bearing first.
 | H2 BANDS/balanceScore, H4 playLog→card_plays/trace | report-model / db | **REAL** — `test.reports.js`, `db.test.js` |
 | E2 manifest-gen ↔ committed manifest | content dirs → manifest.js | **REAL** — `test.maps.js` staleness test |
 
-## AC1 — value-pins that still red on a content edit
+## AC1 — mechanism, not value
 
-`test.cards.js`/`test.maps.js` had their content-value pins removed (deck total, card
-points, map count). **But AC1 is not fully met:** changing a unit stat (e.g. infantry
-`atk` in `maps.js`) still reds `combat math`, `terrain attack table`, and
-`unit composition & values` in `test.terrain.js`/`test.ai.js` — those pin exact combat
-powers/stats. Converting them to mechanism (support contributes, terrain contributes,
-higher total wins, tie kills both) is open work at the combat-resolver seam
-(`computeAttack`/`supportFor`). AI-weight pins are the same shape.
+Content-value pins were removed across the suite: deck total / card points
+(`test.cards.js`), map count (`test.maps.js`), the default + shock-army unit
+composition/stats (`test.ai.js`), and every **absolute combat power** in
+`test.terrain.js` (`combat math`, `terrain attack table`, `multiple trenches`, `V0
+terrain-crossing`) — those now read the live stats (`E.UNITS.*`) and assert deltas
+(support adds the supporter's `sup`; terrain/HQ/card mod are flat `+1` rules
+constants). Verified: mutating infantry `sup` or artillery `sup` in `maps.js` reds
+**zero** tests; mutating `atk`/`def` reds only the outcome tests below.
+
+**The residual coupling is deliberate, not a value-pin.** A handful of tests assert
+combat *outcomes* — `rules 1.1: trench tie` and `noAdvance attacks` — which depend on
+a stat **relationship**, not an absolute value: a *tie* is defined by equal power
+(`atk === def`), a *kill* by higher power (`cav.atk > inf.def`). Changing `atk`/`def`
+so the relationship inverts removes the very phenomenon (the tie, the clean kill) the
+test exercises, so those tests legitimately red — that is the rules-relationship
+guardrail, distinct from pinning `attackerPower === 3`. AI-weight pins in `test.ai.js`
+(`noopPenalty`, the `hard` preset) are the same shape: they guard anti-degeneracy
+defaults and red only on a deliberate AI-strength change (which bumps RULES_VERSION).
 
 ## Related
 

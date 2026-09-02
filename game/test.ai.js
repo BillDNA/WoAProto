@@ -336,11 +336,16 @@ test('unit composition & values as content data', () => {
   //    the example units file on disk is genuinely inert (golden-diff safety).
   var base = runUnits({});
   assert.ok(!base.error, 'default units load with no active variant (no error)');
-  assert.ok(base.units.infantry.count === 7 && base.units.cavalry.count === 2 && base.units.artillery.count === 1,
-    'default composition is 7/2/1 (got ' + [base.units.infantry.count, base.units.cavalry.count, base.units.artillery.count].join('/') + ')');
-  assert.ok(base.units.infantry.atk === 1 && base.units.artillery.worth === 3, 'default values intact (inf atk 1, art worth 3)');
-  assert.ok(base.totals.infantry === 7 && base.totals.cavalry === 2 && base.totals.artillery === 1,
-    'PIECE_TOTALS track the default composition');
+  // Mechanism, not the shipped numbers (WoAProto#222): the default resolves as
+  // content data with a well-formed shape, honours the total-10 guardrail, and
+  // PIECE_TOTALS mirror the composition. Retuning any unit stat reds nothing here.
+  ['infantry', 'cavalry', 'artillery'].forEach(function (t) {
+    var u = base.units[t];
+    assert.ok(u && ['atk', 'def', 'sup', 'worth', 'count'].every(function (k) { return typeof u[k] === 'number'; }),
+      t + ' resolves with numeric atk/def/sup/worth/count');
+    assert.ok(base.totals[t] === u.count, 'PIECE_TOTALS.' + t + ' mirrors its count');
+  });
+  assert.ok(total(base.units) === 10, 'default composition totals 10 pieces (physical-board guardrail)');
 
   // 2) An active variant fully overrides composition + atk/def/sup + worth.
   var variant = { id: '__test_units', name: 'Test', active: true, units: {
@@ -367,7 +372,9 @@ test('unit composition & values as content data', () => {
   //    end-to-end when activated, and honours the total-10 guardrail (6/3/1).
   var ex = runUnits({ WOA_TEST_ACTIVATE: 'shock-army' });
   assert.ok(!ex.error, 'shipped shock-army variant loads when activated (no error)');
-  assert.ok(ex.units.infantry.count === 6 && ex.units.cavalry.count === 3 && ex.units.artillery.count === 1 && total(ex.units) === 10,
-    'shock-army composition is 6/3/1 and totals 10');
+  // Mechanism, not the shipped 6/3/1 (editing content/units/shock-army.js reds
+  // nothing here): the shipped example resolves end-to-end and honours total-10.
+  assert.ok(total(ex.units) === 10, 'shock-army resolves and honours the total-10 guardrail (composition = ' +
+    ['infantry', 'cavalry', 'artillery'].map(function (t) { return ex.units[t].count; }).join('/') + ')');
 })();
 });
