@@ -51,7 +51,9 @@ var E = require(path.join(__dirname, '..', 'game', 'engine.js'));
 // layer's, evicted from the engine in #220.
 var SIM = require(path.join(__dirname, '..', 'game', 'sim.js'));
 
-var DEFAULT_DB = path.join(__dirname, '..', 'logs', 'woa.db');
+// WOA_DB_PATH lets a spawned/required server (and tests) target a throwaway db
+// instead of the repo's logs/woa.db; unset in normal use.
+var DEFAULT_DB = process.env.WOA_DB_PATH || path.join(__dirname, '..', 'logs', 'woa.db');
 var RUN_KINDS = ['balance', 'llm', 'human', 'watch'];
 
 var SCHEMA = [

@@ -337,3 +337,20 @@ test('baseline uniqueness (WOA-032)', function () {
 
   db.close(h2);
 });
+
+/* ---------- factsFromRow ≡ skirmishFacts: the DB read path must not drift from
+   the live path (WoAProto#222). Both folds feed the shared aggregate; if a column
+   alias or a derivation ever disagrees, this catches it as a field-level diff. */
+test('factsFromRow ≡ skirmishFacts (WoAProto#222)', function () {
+  var hf = db.open(path.join(tmpDir, 'facts.db'));
+  try {
+    var st = SIM.simSkirmish(E.MAPS[0], 555, 'red', 'normal', 'normal');
+    var live = SIM.skirmishFacts(st, 'red');               // the LIVE-state fold (sim layer, #220)
+    var rid = db.insertRun(hf, { version: E.VERSION, kind: 'balance', redAi: 'normal', blueAi: 'normal', n: 1, tool: 'db.test.js' });
+    db.insertSkirmish(hf, rid, st, 'red', { seed: 555 });
+    var row = db.listSkirmishes(hf, rid)[0];               // round-trip through SQLite
+    var fromRow = SIM.factsFromRow(row);                    // the DB-row fold
+    assert.deepStrictEqual(fromRow, live,
+      'factsFromRow(db row) matches skirmishFacts(live state) field-for-field — the two folds agree');
+  } finally { db.close(hf); }
+});

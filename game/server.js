@@ -19,7 +19,10 @@ var MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
 // --- content files (Feedback Round 4 Pass 2): maps/decks are per-item files
 // under content/, each registering into WOA_CONTENT; content/manifest.js is
 // regenerated (by scanning the dirs) so the browser loads exactly what's there.
-var CONTENT_DIR = path.join(ROOT, 'content');
+// WOA_CONTENT_DIR: a test points content writes (savemap/deletemap/savemapsets)
+// at a throwaway dir; unset in normal use = game/content. manifest-gen honours
+// the same env so writes and the manifest regen agree.
+var CONTENT_DIR = process.env.WOA_CONTENT_DIR || path.join(ROOT, 'content');
 function contentSlug(s) { return String(s || 'map').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'map'; }
 function wrapContent(kind, obj) {
   // defensive: files written before a kind existed init WOA_CONTENT without it,
@@ -75,7 +78,7 @@ function cleanup() {
     }
   }
 }
-setInterval(cleanup, 600000);
+setInterval(cleanup, 600000).unref(); // .unref: don't keep the loop alive (so `require`ing the server in a test can exit)
 
 function json(res, status, obj) {
   var body = JSON.stringify(obj);
@@ -275,7 +278,7 @@ var ROUTES = {
   }
 };
 
-http.createServer(function (req, res) {
+function handler(req, res) {
   var u = new URL(req.url, 'http://x');
   var route = ROUTES[req.method + ' ' + u.pathname];
   if (route) {
@@ -296,30 +299,43 @@ http.createServer(function (req, res) {
     res.writeHead(200, { 'Content-Type': MIME[path.extname(full)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
     res.end(data);
   });
-}).on('error', function (err) {
-  if (err.code === 'EADDRINUSE') {
+}
+
+// Boot the server. Exported (with `handler` + `ROUTES` + `recordSkirmish`) so a
+// test can drive the real /api/* surface over real HTTP on an ephemeral port
+// (`listen(0, cb)`) instead of mocking it; run directly (`node server.js`) it
+// listens on PORT and prints the LAN banner exactly as before. Persistence
+// honours WOA_DB_PATH (dev/db.js), so a test points it at a throwaway db.
+function listen(port, cb) {
+  return http.createServer(handler).on('error', function (err) {
+    if (err.code === 'EADDRINUSE') {
+      console.log('');
+      console.log('  Port ' + port + ' is already taken — the server is probably already running');
+      console.log('  in another window (check http://localhost:' + port + '). Close that window,');
+      console.log('  or run with a different port:  PORT=8421 node server.js   (Windows: set PORT=8421 && node server.js)');
+      process.exit(1);
+    }
+    throw err;
+  }).listen(port, cb || function () {
     console.log('');
-    console.log('  Port ' + PORT + ' is already taken — the server is probably already running');
-    console.log('  in another window (check http://localhost:' + PORT + '). Close that window,');
-    console.log('  or run with a different port:  PORT=8421 node server.js   (Windows: set PORT=8421 && node server.js)');
-    process.exit(1);
-  }
-  throw err;
-}).listen(PORT, function () {
-  console.log('');
-  console.log('  WAR OF ATTRITION — server running' + (VERSION ? '   (rules ' + VERSION + ')' : ''));
-  console.log('  ---------------------------------');
-  console.log('  On this computer:  http://localhost:' + PORT);
-  var ifaces = os.networkInterfaces();
-  Object.keys(ifaces).forEach(function (name) {
-    (ifaces[name] || []).forEach(function (i) {
-      if (i.family === 'IPv4' && !i.internal) {
-        console.log('  Other devices:     http://' + i.address + ':' + PORT + '   (same wifi)');
-      }
+    console.log('  WAR OF ATTRITION — server running' + (VERSION ? '   (rules ' + VERSION + ')' : ''));
+    console.log('  ---------------------------------');
+    console.log('  On this computer:  http://localhost:' + port);
+    var ifaces = os.networkInterfaces();
+    Object.keys(ifaces).forEach(function (name) {
+      (ifaces[name] || []).forEach(function (i) {
+        if (i.family === 'IPv4' && !i.internal) {
+          console.log('  Other devices:     http://' + i.address + ':' + port + '   (same wifi)');
+        }
+      });
     });
+    console.log('  Skirmish persistence: ' + (db ? 'ON -> logs/woa.db' : 'off (dev/db.js not found — fine for a zipped copy)'));
+    console.log('');
+    console.log('  One player clicks "Host a Room", the other enters the 4-letter code.');
+    console.log('  Press Ctrl+C to stop.');
   });
-  console.log('  Skirmish persistence: ' + (db ? 'ON -> logs/woa.db' : 'off (dev/db.js not found — fine for a zipped copy)'));
-  console.log('');
-  console.log('  One player clicks "Host a Room", the other enters the 4-letter code.');
-  console.log('  Press Ctrl+C to stop.');
-});
+}
+
+if (require.main === module) listen(PORT);
+
+module.exports = { ROUTES: ROUTES, recordSkirmish: recordSkirmish, handler: handler, listen: listen };
