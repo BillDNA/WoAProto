@@ -37,7 +37,7 @@
    - Card report             -> Simple%/1stSight%/AvgSeen per card (per-card Win% is
                                 computed but not printed; see docs/report-model.md)
 
-   Attrition victory (June 2026 rules): the player with more VP of SURVIVING
+   Attrition victory (June 2026 rules): the player with the higher field score of SURVIVING
    units on the board wins when the cards run out; reserves count for nothing.
 */
 var E = require('./engine.js');
@@ -167,7 +167,7 @@ function mapReport(n, diff, filter, maps, mapsetArg, decks) {
       pad(pct(r.redWins, done), 6) + pad(pct(done - r.redWins, done), 7) +
       pad(pct(r.firstWins, done), 6) + pad(pct(done - r.firstWins, done), 6) +
       pad(pct(r.hqWins, done), 6) + pad((r.turns / Math.max(1, done)).toFixed(1), 7) +
-      pad((r.vpDiff / Math.max(1, done)).toFixed(1), 8) +
+      pad((r.fsDiff / Math.max(1, done)).toFixed(1), 8) +
       pad(pct(r.attacks, act), 6) +
       pad(pct(r.swaps, act), 6) +
       pad(pct(r.zeroKill, done), 8) +

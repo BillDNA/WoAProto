@@ -85,10 +85,10 @@ function checkHomes(terms) {
 var ALIASES = [
   // Locked: driven to zero and guarded against regression.
   { term: 'per-battle (→ Skirmish fact)', pattern: /\bper-battle\b/gi, status: 'locked' },
+  { term: 'VP / victory point (→ Field score)', pattern: /\bvictory points?\b|\bVP\b/g,
+    ignore: /LLM|token/i, status: 'locked', note: 'the quantity is field score; a unit\'s worth is `worth`; the kills tally is `st.kills`' },
   // Pending: canonical name agreed, migration awaiting Bill's sign-off
   // (player-facing) or a non-pure data/DB change (out of a rename's scope).
-  { term: 'VP / victory point (→ Field score)', pattern: /\bvictory points?\b|\bVP\b/g,
-    ignore: /LLM|token/i, status: 'pending', note: 'player-facing labels + `vp` data key/DB column; st.vp also tracks kills (distinct)' },
   { term: 'map-set (→ Mapset)', pattern: /\bmap-sets?\b/gi, status: 'pending', note: 'hyphenated form in README (player-facing) + docs' },
   { term: 'map pool (→ Mapset)', pattern: /\bmap ?pool\b/gi, ignore: /mapPool\(|E\.mapPool/, status: 'pending', note: '`mapPool()` exported engine API + UI wrappers' },
   { term: 'roster (→ Mapset)', pattern: /\broster/gi, status: 'pending', note: 'Rosters UI overlay + rosterFor/rosterReplace identifiers' },

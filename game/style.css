@@ -109,7 +109,7 @@
   .pips{display:flex; gap:4px; align-items:center;}
   .pip{width:14px; height:18px; border:1px solid var(--brass); border-radius:2px; background:transparent;}
   .pip.red{background:var(--red);} .pip.blue{background:var(--blue);}
-  /* the VP tug-bar: solid = VP on the board now, hatched = ceiling if every
+  /* the field-score tug-bar: solid = field score on the board now, hatched = ceiling if every
      reserve deploys without a further loss, cream seam = the projected front */
   .tug{ position:relative; height:16px; width:clamp(120px, 18vw, 240px); border:1px solid var(--brass-dark); border-radius:8px; overflow:hidden;
         display:flex; background:#241f14; box-shadow:inset 0 1px 2px rgba(0,0,0,.5); }
@@ -598,7 +598,7 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
 @keyframes ovFlash{0%{background:rgba(158,43,37,.3);} 100%{background:transparent;}}
 
 /* WOA-040: the Map drill-down screen (breadcrumb switcher + A|B|A/B toggle,
-   design 4b) — tempo lanes/VP-diff track/settle curve are built with inline
+   design 4b) — tempo lanes/FS-diff track/settle curve are built with inline
    styles like the Overview minis (ov-mini/ov-grid above are reused as-is);
    these classes are just the new chrome. */
 .mapd-wrap{text-align:left;}

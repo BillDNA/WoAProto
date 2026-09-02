@@ -27,17 +27,17 @@ test('attrition victory (surviving units on the board)', () => {
     st.decks.blue = []; st.discards.blue = []; st.hands.blue = [];
     st.firstTurnDone.blue = true; // or drawHand would gift the starting card
   }
-  // Kills don't score: blue killed 5 VP worth, but red has more ON the board.
+  // Kills don't score: blue killed 5 points' worth, but red has more ON the board.
   var st = testSkirmish(111);
-  st.units['2,-1'] = { type: 'artillery', owner: 'red' };  // red fields 3 VP
-  st.units['-3,1'] = { type: 'infantry', owner: 'blue' };  // blue fields 1 VP
-  st.vp.blue = 5;
+  st.units['2,-1'] = { type: 'artillery', owner: 'red' };  // red fields 3 field score
+  st.units['-3,1'] = { type: 'infantry', owner: 'blue' };  // blue fields 1 field score
+  st.kills.blue = 5;
   drainBlue(st);
   st.hands.red = ['attack_plus1']; // no legal attack: resolves to nothing, ends the turn
   E.playCard(st, 'attack_plus1');
   assert.ok(st.phase === 'skirmish-over' && st.skirmishWinner === 'red' && st.winType === 'attrition',
     'attrition counts surviving units, not kills (red wins 3-1 despite 0-5 in kills)');
-  assert.ok(st.log.some(function (l) { return l.msg.indexOf('3 VP vs 1 VP of surviving units') >= 0; }),
+  assert.ok(st.log.some(function (l) { return l.msg.indexOf('field score 3 vs 1, surviving units') >= 0; }),
     'journal reports the surviving-unit scores');
   assert.ok(E.fieldScore(st, 'red') === 3 && E.fieldScore(st, 'blue') === 1, 'fieldScore reads the board');
 
@@ -202,7 +202,7 @@ test('concede advisory (foregone-conclusion heuristic)', () => {
 (function () {
   var st = testSkirmish(99);
   assert.ok(E.concedeAdvised(st, 'red') === null, 'fresh skirmish: no advisory (Airdrop HQ snipe still possible)');
-  // hopeless for red: 1 turn left, blue has 5 VP of units on the field vs red's
+  // hopeless for red: 1 turn left, blue has 5 field score of units on the field vs red's
   // none (need 6 incl. the tie that goes to blue), best-case swing is 3/turn,
   // airdrop already spent, nothing within marching range of the blue HQ
   st.decks.red = []; st.discards.red = []; st.hands.red = ['attack_plus1'];
@@ -338,28 +338,28 @@ test('unit composition & values as content data', () => {
   assert.ok(!base.error, 'default units load with no active variant (no error)');
   assert.ok(base.units.infantry.count === 7 && base.units.cavalry.count === 2 && base.units.artillery.count === 1,
     'default composition is 7/2/1 (got ' + [base.units.infantry.count, base.units.cavalry.count, base.units.artillery.count].join('/') + ')');
-  assert.ok(base.units.infantry.atk === 1 && base.units.artillery.vp === 3, 'default values intact (inf atk 1, art vp 3)');
+  assert.ok(base.units.infantry.atk === 1 && base.units.artillery.worth === 3, 'default values intact (inf atk 1, art worth 3)');
   assert.ok(base.totals.infantry === 7 && base.totals.cavalry === 2 && base.totals.artillery === 1,
     'PIECE_TOTALS track the default composition');
 
   // 2) An active variant fully overrides composition + atk/def/sup + vp.
   var variant = { id: '__test_units', name: 'Test', active: true, units: {
-    infantry:  { name: 'Infantry',  atk: 2, def: 1, sup: 1, vp: 1, count: 8 },
-    cavalry:   { name: 'Cavalry',   atk: 3, def: 0, sup: 0, vp: 2, count: 1 },
-    artillery: { name: 'Artillery', atk: 0, def: 2, sup: 2, vp: 5, count: 1 } } };
+    infantry:  { name: 'Infantry',  atk: 2, def: 1, sup: 1, worth: 1, count: 8 },
+    cavalry:   { name: 'Cavalry',   atk: 3, def: 0, sup: 0, worth: 2, count: 1 },
+    artillery: { name: 'Artillery', atk: 0, def: 2, sup: 2, worth: 5, count: 1 } } };
   var v = runUnits({ WOA_TEST_UNITS: JSON.stringify(variant) });
   assert.ok(!v.error, 'a valid units variant loads (no error)');
   assert.ok(v.units.infantry.count === 8 && v.units.cavalry.count === 1 && total(v.units) === 10,
     'variant composition overrides the default and still totals 10 (8/1/1)');
-  assert.ok(v.units.infantry.atk === 2 && v.units.artillery.def === 2 && v.units.artillery.vp === 5,
+  assert.ok(v.units.infantry.atk === 2 && v.units.artillery.def === 2 && v.units.artillery.worth === 5,
     'variant atk/def/vp values override the default');
   assert.ok(v.totals.infantry === 8 && v.totals.cavalry === 1, 'PIECE_TOTALS follow the variant composition');
 
   // 3) Total-10 is enforced at load: a variant summing to 11 throws loudly.
   var bad = { id: '__bad', active: true, units: {
-    infantry:  { name: 'Infantry',  atk: 1, def: 1, sup: 1, vp: 1, count: 8 },
-    cavalry:   { name: 'Cavalry',   atk: 3, def: 0, sup: 0, vp: 2, count: 2 },
-    artillery: { name: 'Artillery', atk: 0, def: 0, sup: 2, vp: 3, count: 1 } } };
+    infantry:  { name: 'Infantry',  atk: 1, def: 1, sup: 1, worth: 1, count: 8 },
+    cavalry:   { name: 'Cavalry',   atk: 3, def: 0, sup: 0, worth: 2, count: 2 },
+    artillery: { name: 'Artillery', atk: 0, def: 0, sup: 2, worth: 3, count: 1 } } };
   var b = runUnits({ WOA_TEST_UNITS: JSON.stringify(bad) });
   assert.ok(b.error && /10 pieces/.test(b.error), 'a variant that does not total 10 is rejected at load (' + (b.error || 'NO ERROR') + ')');
 

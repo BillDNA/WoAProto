@@ -89,20 +89,20 @@ test('report-model: bands as data + trace folds', () => {
   assert.ok(near(lanes[0].deploy, 1) && near(lanes[2].attack, 1) && near(lanes[4].swap, 1) && near(lanes[6].march, 1),
     'octile lanes place each action in its turn-octile at 1 play/turn');
   assert.ok(near(lanes[2].deploy, 0) && near(lanes[2].swap, 0), 'non-firing lanes read 0 in that octile');
-  var vp = R.vpDiffTrack(env);
+  var vp = R.fsDiffTrack(env);
   assert.ok(JSON.stringify(vp.track) === JSON.stringify([0, 1, 3, 1, 3, 2, 1, 0]) && vp.peak === 3 && vp.final === 0,
-    '|VP-diff| track = |red-blue| per turn (peak 3, final 0)');
-  assert.ok(R.vpDiffTrack({ turns: 3, trace: [] }) === null, 'vpDiffTrack = null when env.fs is absent (caller greys it)');
+    '|FS-diff| track = |red-blue| per turn (peak 3, final 0)');
+  assert.ok(R.fsDiffTrack({ turns: 3, trace: [] }) === null, 'fsDiffTrack = null when env.fs is absent (caller greys it)');
 
   // ---- envelopeFromRow attaches the DB-sibling fs (GET /api/skirmishes joins the
   // timeline table onto the row; row.fs sits beside row.trace, not inside the
   // trace blob, since dev/db.js's insertSkirmish never put it there) ----
   var dbRow = { trace: JSON.stringify({ turns: 3, trace: [] }), fs: [[1, 0], [2, 0], [2, 1]] };
   var envFromRow = R.envelopeFromRow(dbRow);
-  assert.ok(R.vpDiffTrack(envFromRow) !== null, 'envelopeFromRow folds row.fs into the parsed envelope, so vpDiffTrack sees it');
-  assert.ok(R.vpDiffTrack(envFromRow).peak === 2, 'the attached fs really is what vpDiffTrack reads (|1-0|,|2-0|,|2-1| -> peak 2)');
-  assert.ok(R.vpDiffTrack(R.envelopeFromRow({ trace: JSON.stringify({ turns: 3, trace: [] }) })) === null,
-    'a row with no fs (older DB rows before this ticket) still yields vpDiffTrack = null');
+  assert.ok(R.fsDiffTrack(envFromRow) !== null, 'envelopeFromRow folds row.fs into the parsed envelope, so fsDiffTrack sees it');
+  assert.ok(R.fsDiffTrack(envFromRow).peak === 2, 'the attached fs really is what fsDiffTrack reads (|1-0|,|2-0|,|2-1| -> peak 2)');
+  assert.ok(R.fsDiffTrack(R.envelopeFromRow({ trace: JSON.stringify({ turns: 3, trace: [] }) })) === null,
+    'a row with no fs (older DB rows before this ticket) still yields fsDiffTrack = null');
   var q = R.cardPlayTurnQuartiles(env);
   assert.ok(q.C.n === 3 && near(q.C.median, 0.75) && near(q.C.q1, 0.5625) && near(q.C.q3, 0.875),
     'cardPlayTurnQuartiles: card C plays at turns 3,6,8/8 → median 0.75, q1 0.5625, q3 0.875');
@@ -254,7 +254,7 @@ test('report-model: cross-skirmish drill-down folds (Maps pane)', () => {
   function near(a, b) { return Math.abs(a - b) < 1e-9; }
 
   // The same hand-built envelope the trace-fold tests above pin (known lanes +
-  // |VP-diff| track [0,1,3,1,3,2,1,0]), reused as the fold input here.
+  // |FS-diff| track [0,1,3,1,3,2,1,0]), reused as the fold input here.
   var env = {
     turns: 8,
     trace: [
@@ -297,19 +297,19 @@ test('report-model: cross-skirmish drill-down folds (Maps pane)', () => {
   assert.ok(reshapeOk, 'laneAvg([env]) reshapes actionOctileLanes into per-lane octile arrays, value-for-value');
   assert.ok(avgOk, 'laneAvg of two identical envelopes equals one (averaging is stable)');
 
-  // ---- vpDiffAvg: resample [0,1,3,1,3,2,1,0] onto 9 points over normalized
+  // ---- fsDiffAvg: resample [0,1,3,1,3,2,1,0] onto 9 points over normalized
   // time (linear interp), hand-computed independently of the implementation ----
-  var vd = R.vpDiffAvg([env], 8);
+  var vd = R.fsDiffAvg([env], 8);
   var expect = [0, 0.875, 2.5, 1.75, 2, 2.625, 1.75, 0.875, 0];
   var ptsOk = vd.points.length === 9 && vd.points.every(function (v, i) { return near(v, expect[i]); });
-  assert.ok(ptsOk, '|VP-diff| resample matches the hand-computed 9-point interpolation (got ' + JSON.stringify(vd.points.map(function (v) { return +v.toFixed(3); })) + ')');
-  assert.ok(vd.n === 1 && vd.total === 1, 'vpDiffAvg counts n=1/total=1 for one fs-carrying envelope');
-  var both = R.vpDiffAvg([env, env], 8);
+  assert.ok(ptsOk, '|FS-diff| resample matches the hand-computed 9-point interpolation (got ' + JSON.stringify(vd.points.map(function (v) { return +v.toFixed(3); })) + ')');
+  assert.ok(vd.n === 1 && vd.total === 1, 'fsDiffAvg counts n=1/total=1 for one fs-carrying envelope');
+  var both = R.fsDiffAvg([env, env], 8);
   assert.ok(both.points.every(function (v, i) { return near(v, expect[i]); }) && both.n === 2 && both.total === 2, 'two identical tracks average to the same points, n=2/total=2');
   // an envelope with no fs is skipped from the average but still counted in total
   var envNoFs = { turns: 3, trace: [] };
-  assert.ok(R.vpDiffAvg([envNoFs]) === null, 'vpDiffAvg = null when NO envelope carries fs');
-  var mixed = R.vpDiffAvg([env, envNoFs], 8);
+  assert.ok(R.fsDiffAvg([envNoFs]) === null, 'fsDiffAvg = null when NO envelope carries fs');
+  var mixed = R.fsDiffAvg([env, envNoFs], 8);
   assert.ok(mixed.n === 1 && mixed.total === 2, 'a mix folds only the fs-carrying track (n=1) but reports total=2');
 })();
 });

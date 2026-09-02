@@ -67,7 +67,7 @@ test('round-trip (real simSkirmish state)', function () {
   assert.ok(b.kill_tail === Math.max(0, st.turnNumber - (st.lastKillTurn || 0)),
     'kill_tail = turns - lastKillTurn (' + b.kill_tail + ')');
   assert.ok(b.lead_changes === (st.leadChanges || 0), 'lead_changes matches (' + b.lead_changes + ')');
-  assert.ok(b.zero_kill === ((st.vp.red + st.vp.blue === 0) ? 1 : 0), 'zero_kill flag matches');
+  assert.ok(b.zero_kill === ((st.kills.red + st.kills.blue === 0) ? 1 : 0), 'zero_kill flag matches');
   assert.ok(b.tiebreak === ((st.winType === 'attrition' && b.fs_red === b.fs_blue) ? 1 : 0), 'tiebreak flag matches');
   assert.ok(b.attacks === (st.stats.attacks || 0) && b.swaps === (st.stats.swaps || 0) &&
      b.marches === (st.stats.marches || 0) && b.deploys === (st.stats.deploys || 0),

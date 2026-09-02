@@ -68,7 +68,7 @@
       units: {},      // hexKey -> {type, owner}
       trenches: {},   // hexKey -> {dirs:[d1,d2]}
       reserves: { red: copyReserves(), blue: copyReserves() },
-      vp: { red: 0, blue: 0 },
+      kills: { red: 0, blue: 0 },
       decks: {}, discards: { red: [], blue: [] }, removed: { red: [], blue: [] }, hands: { red: [], blue: [] },
       seen: { red: {}, blue: {} },  // cardId -> times it has appeared in p's hand
       playLog: [],                  // {p, id, mode, turn, seen-at-play} per card played
@@ -173,13 +173,13 @@
     if (hand.length === 0) endByAttrition(st);
   }
 
-  // Attrition score (June 2026 rules revision): VP of a player's SURVIVING units
+  // Attrition score (June 2026 rules revision): field score of a player's SURVIVING units
   // on the board. Reserves never deployed count for nothing; kills only matter
-  // because they remove enemy units from the field. (st.vp still tracks kills
+  // because they remove enemy units from the field. (st.kills still tracks kills
   // for stats/journal, but victory reads the board.)
   function fieldScore(st, p) {
     var s = 0;
-    for (var h in st.units) { var u = st.units[h]; if (u.owner === p) s += I.UNITS[u.type].vp; }
+    for (var h in st.units) { var u = st.units[h]; if (u.owner === p) s += I.UNITS[u.type].worth; }
     return s;
   }
 
@@ -210,7 +210,7 @@
     if (m.wins[winner] >= 3) { m.winner = winner; }
     log(st, I.cap(winner) + ' wins the skirmish by ' + (how === 'hq' ? 'capturing the headquarters!' :
       how === 'concession' ? 'concession.' :
-      'attrition (' + fieldScore(st, 'red') + ' VP vs ' + fieldScore(st, 'blue') + ' VP of surviving units).'));
+      'attrition (field score ' + fieldScore(st, 'red') + ' vs ' + fieldScore(st, 'blue') + ', surviving units).'));
     if (!st.__sim) HOOKS.onSkirmishEnd.forEach(function (fn) {
       try { fn(st); } catch (e) { if (typeof console !== 'undefined') console.error('onSkirmishEnd hook failed: ' + e.message); }
     });
@@ -228,7 +228,7 @@
   // Truthy ({need, gain, turnsLeft}) when BOTH paths to victory look closed:
   //  - attrition (surviving-units scoring): the field-score gap is bigger than
   //    the most p could plausibly swing it in the turns left. One turn can swing
-  //    at most ~3 VP p's way (deploy or destroy an artillery) — multi-action
+  //    at most ~3 field-score points p's way (deploy or destroy an artillery) — multi-action
   //    cards can beat that, so this is a heuristic, which is why it only advises.
   //  - HQ capture: no unit (fielded, or deployed then marched) can reach the
   //    enemy HQ within the turns p has left; a live Airdrop keeps hope alive.
@@ -238,7 +238,7 @@
     var turnsLeft = cardsRemaining(st, p); // each turn removes exactly 1 card from p's pool
     var need = (fieldScore(st, e) - fieldScore(st, p)) + (st.second === p ? 0 : 1); // second player wins ties
     if (need <= 0) return null;            // p still ahead (or tied as second player)
-    var gain = 3 * turnsLeft;              // best case: a 3-VP swing every remaining turn
+    var gain = 3 * turnsLeft;              // best case: a 3-point swing every remaining turn
     if (gain >= need) return null;         // the gap can still be closed in principle
     if (st.hqAlive[e] && turnsLeft > 0) {
       var hasReserve = Object.keys(I.UNITS).some(function (t) { return st.reserves[p][t] > 0; });

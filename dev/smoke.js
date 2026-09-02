@@ -332,7 +332,7 @@ realSetTimeout(function () {
       ];
       // run B's Fixture Alpha rows carry a per-turn fs timeline — run A's rows do
       // NOT, so toggling the Maps drill-down to run A exercises the "this run
-      // predates the fs capture" honest-grey path on the |VP-diff| track.
+      // predates the fs capture" honest-grey path on the |FS-diff| track.
       rowsB[0].fs = [[1, 0], [1, 1], [2, 1], [2, 2]];
       rowsB[1].fs = [[1, 0], [1, 1], [2, 1], [2, 2]];
       var fetchCalls = [];
@@ -373,7 +373,7 @@ realSetTimeout(function () {
     }
 
     // the Map drill-down screen (breadcrumb, A|B|A/B toggle, tempo lanes +
-    // |VP-diff| track, per-map band board, settle curve) reusing the SAME seeded
+    // |FS-diff| track, per-map band board, settle curve) reusing the SAME seeded
     // fixture overviewSmoke just built (SKIRMISH_CACHE is already warm from the
     // Overview fetch above — dashLoadSkirmishRows hits the cache, so every render
     // below is synchronous, no fetch/wait needed). Runs straight off the mapRow
@@ -418,14 +418,14 @@ realSetTimeout(function () {
         'march lane (never played this fixture) keeps its OWN 0.00 max, not borrowed from the other lanes (proves per-lane scale, not a shared 100% total)');
       assert.ok(/max \d+\.\d\d\/turn/.test(el.textContent), 'each lane prints its own "max N.NN/turn" scale label');
 
-      console.log('-- |VP-diff| track: honest grey on a run that predates fs capture --');
+      console.log('-- |FS-diff| track: honest grey on a run that predates fs capture --');
       assert.ok(!/unavailable/.test(el.textContent), 'run B (default) carries fs -> track renders, no "unavailable" note');
-      assert.ok(el.querySelectorAll('.mapd-col-l svg polyline').length >= 1, '|VP-diff| track drew a polyline for run B');
+      assert.ok(el.querySelectorAll('.mapd-col-l svg polyline').length >= 1, '|FS-diff| track drew a polyline for run B');
       el.querySelector('.ab-toggle [data-ab="A"]').click();
       assert.ok(win.DASH.abMode === 'A', 'clicking A switches the toggle');
       el = doc.getElementById('dashPaneMaps');
       assert.ok(/predates the fs capture/.test(el.textContent),
-        'run A (no fs on its rows) greys the |VP-diff| track with the honest "predates the fs capture" note instead of a fabricated line');
+        'run A (no fs on its rows) greys the |FS-diff| track with the honest "predates the fs capture" note instead of a fabricated line');
 
       console.log('-- A/B mode: B solid, A ghost overlay --');
       el.querySelector('.ab-toggle [data-ab="AB"]').click();

@@ -16,7 +16,7 @@
    - reportMarkdown(model)     the full saved-report markdown document
    - trace folds (one skirmish envelope in, derived value out):
        firstContactTurn · deployInterleave · settlePoint · actionOctileLanes ·
-       vpDiffTrack · cardPlayTurnQuartiles
+       fsDiffTrack · cardPlayTurnQuartiles
    - per-hex lenses: hexLenses (one skirmish -> per-hex occupancy/flips/kills) ·
        foldHexLenses (many skirmishes -> per-hex averages + dead/avenue class)
    - unitsAggFromEnvelopes(envs)  many envelopes -> per-unit-type {n, depMedian,
@@ -185,7 +185,7 @@ var WOA_REPORT = (function () {
      single-source fold (below); done is rows.length (only skirmish-over states are
      stored). Column mapping + control NULL/NULL handling: docs/report-model.md. */
   function foldSkirmishes(rows) {
-    var agg = { redWins: 0, firstWins: 0, hqWins: 0, turns: 0, vpDiff: 0,
+    var agg = { redWins: 0, firstWins: 0, hqWins: 0, turns: 0, fsDiff: 0,
       zeroKill: 0, tiebreak: 0, killTail: 0, leadChanges: 0,
       attacks: 0, swaps: 0, marches: 0, deploys: 0,
       attritionEndings: 0, attritionKillTail: 0,
@@ -342,15 +342,15 @@ var WOA_REPORT = (function () {
     });
   }
 
-  /* |VP-diff| track: the per-turn field-score margin. This is the EXACT VP diff
-     (the same field scores the report's VPdiff column and woa.db store), which
-     the play/kill stream alone can't reconstruct (a kill's victim VP isn't in
+  /* |FS-diff| track: the per-turn field-score margin. This is the EXACT field-score diff
+     (the same field scores the report's FSdiff column and woa.db store), which
+     the play/kill stream alone can't reconstruct (a kill's victim worth isn't in
      the trace) — so it reads env.fs, the per-turn [red,blue] field-score
      timeline (live state: st.fsTimeline; DB: the `timeline` table, joined
      in by GET /api/skirmishes and folded into the row by envelopeFromRow).
      Returns null when fs is absent (the caller greys it — no
      fabricated magnitude). { track:|r-b|/turn, signed:r-b/turn, peak, final }. */
-  function vpDiffTrack(env) {
+  function fsDiffTrack(env) {
     var fs = env && env.fs;
     if (!Array.isArray(fs) || !fs.length) return null;
     var track = fs.map(function (p) { return Math.abs((p[0] || 0) - (p[1] || 0)); });
@@ -544,13 +544,13 @@ var WOA_REPORT = (function () {
     L.push('');
     // Atk%/Swp% are SHARES of all actions (deck-size-proof); Tie%/Drag are
     // conditioned to attrition endings (a.attritionEndings), not `done`.
-    L.push('| Map | Shape | Red% | 1st% | HQ% | Turns | VPdiff | Atk% | Swp% | 0kill% | Tie% | Drag | Swings | ' +
+    L.push('| Map | Shape | Red% | 1st% | HQ% | Turns | FSdiff | Atk% | Swp% | 0kill% | Tie% | Drag | Swings | ' +
       (scoreCol ? 'Balance | ' : '') + 'Notes |');
     L.push('|---|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|' + (scoreCol ? '--:|' : '') + '---|');
     model.rows.forEach(function (x) {
       var a = x.agg, done = x.done, act = actionTotal(a), att = a.attritionEndings || 0;
       L.push('| ' + x.name + ' | ' + x.shape + ' | ' + pct(a.redWins, done) + ' | ' + pct(a.firstWins, done) +
-        ' | ' + pct(a.hqWins, done) + ' | ' + f1(a.turns / done) + ' | ' + f1(a.vpDiff / done) + ' | ' + pct(a.attacks, act) +
+        ' | ' + pct(a.hqWins, done) + ' | ' + f1(a.turns / done) + ' | ' + f1(a.fsDiff / done) + ' | ' + pct(a.attacks, act) +
         ' | ' + pct(a.swaps, act) + ' | ' + pct(a.zeroKill, done) + ' | ' + pct(a.tiebreak, att) +
         ' | ' + f1((a.attritionKillTail || 0) / Math.max(1, att)) + ' | ' + f1((a.leadChanges || 0) / done) +
         (scoreCol ? ' | ' + f1(x.score) : '') + ' | ' + x.notes.join(', ') + ' |');
@@ -688,7 +688,7 @@ var WOA_REPORT = (function () {
 
   /* ===== cross-skirmish drill-down folds (Maps pane) =====
      Combine many per-skirmish envelopes into one map's chart data. The
-     per-skirmish primitives (envelopeFromRow / actionOctileLanes / vpDiffTrack)
+     per-skirmish primitives (envelopeFromRow / actionOctileLanes / fsDiffTrack)
      are above; these fold them ACROSS a map's skirmishes. Pure, node + browser. */
 
   // One map's parsed envelopes from a run's rows (skips rows that don't parse).
@@ -714,14 +714,14 @@ var WOA_REPORT = (function () {
     return out;
   }
 
-  // Resample each skirmish's |VP-diff| track (per-turn, so different lengths
+  // Resample each skirmish's |FS-diff| track (per-turn, so different lengths
   // can't be averaged index-for-index) onto steps+1 evenly-spaced points over
   // normalized skirmish time (linear interpolation), then average across
   // skirmishes. Envelopes with no fs are skipped, not zeroed; {points, n, total}
   // tells the caller how many carried fs. null only when NOT ONE envelope has fs.
-  function vpDiffAvg(envs, steps) {
+  function fsDiffAvg(envs, steps) {
     steps = steps || 8;
-    var tracks = envs.map(function (env) { var vd = vpDiffTrack(env); return vd && vd.track; }).filter(function (t) { return !!t && t.length; });
+    var tracks = envs.map(function (env) { var vd = fsDiffTrack(env); return vd && vd.track; }).filter(function (t) { return !!t && t.length; });
     if (!tracks.length) return null;
     var points = [];
     for (var s = 0; s <= steps; s++) {
@@ -771,9 +771,9 @@ var WOA_REPORT = (function () {
     // bands-as-data + trace folds (node + browser both consume)
     BANDS: BANDS, bands: bands, outBand: outBand, quantile: quantile,
     firstContactTurn: firstContactTurn, deployInterleave: deployInterleave, settlePoint: settlePoint,
-    actionOctileLanes: actionOctileLanes, vpDiffTrack: vpDiffTrack, cardPlayTurnQuartiles: cardPlayTurnQuartiles,
+    actionOctileLanes: actionOctileLanes, fsDiffTrack: fsDiffTrack, cardPlayTurnQuartiles: cardPlayTurnQuartiles,
     // Maps pane: cross-skirmish drill-down folds (one map, many skirmishes)
-    envelopesForMap: envelopesForMap, laneAvg: laneAvg, vpDiffAvg: vpDiffAvg,
+    envelopesForMap: envelopesForMap, laneAvg: laneAvg, fsDiffAvg: fsDiffAvg,
     // Overview pane: per-map balance-score dumbbell fold (1f)
     mapScoreDumbbells: mapScoreDumbbells,
     // per-card DB-rows aggregate (cardRows-compatible) + the Win% doctrine slice

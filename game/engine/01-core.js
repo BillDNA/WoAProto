@@ -54,7 +54,7 @@
   var CARD_LIST = (ACTIVE_DECK && ACTIVE_DECK.cards && ACTIVE_DECK.cards.length) ? ACTIVE_DECK.cards : (CONTENT.cards || []);
   // Unit composition & values as a content lever (WOA-011): a units variant in
   // content/units/*.js (exactly one flagged active — the deck/map-set pattern)
-  // fully REPLACES the default unit block, so composition (counts), VP, and
+  // fully REPLACES the default unit block, so composition (counts), worth, and
   // atk/def/sup are all editable as data. No active variant falls back to
   // maps.js CORE.units — the shipped 7/2/1 default — so this is the ONE place
   // unit stats resolve (every other layer reads I.UNITS).

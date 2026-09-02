@@ -40,7 +40,7 @@
   function unitValue(t, w) {
     var k = UNIT_VAL_KEY[t];
     if (k && w && typeof w[k] === 'number') return w[k];
-    return { infantry: 3, cavalry: 4, artillery: 5 }[t] || ((I.UNITS[t] ? I.UNITS[t].vp : 1) + 2);
+    return { infantry: 3, cavalry: 4, artillery: 5 }[t] || ((I.UNITS[t] ? I.UNITS[t].worth : 1) + 2);
   }
 
   // ---- AI personalities are DATA (V0 ai-variety) ----
@@ -131,7 +131,7 @@
     // Attrition projection: who wins if the decks ran out right now? Ramps up as
     // they empty, so the side losing the standstill (incl. ties — second player
     // wins those) is pushed to force combat instead of swap-dancing to 0-0.
-    // This replaced a kill-VP term when scoring moved to surviving units (June 2026).
+    // This replaced a kill-score term when scoring moved to surviving units (June 2026).
     var fsMe = I.fieldScore(st, me), fsEn = I.fieldScore(st, en);
     var turnsLeft = Math.min(I.cardsRemaining(st, me), I.cardsRemaining(st, en));
     var urgency = Math.max(0, 1 - turnsLeft / 12);

@@ -194,7 +194,7 @@ var MAP_TIPS = {
   first:'First-mover win rate. Target ~46-50%; ≥62% / ≤38% flags a turn-order bias',
   hq:'Share of skirmishes ending in HQ capture (rest are attrition). ≤8% = attrition-only, ≥55% = HQ-rushable',
   turns:'Average skirmish length in turns (~20 typical)',
-  vpdiff:'Average field-score margin of victory — higher = more decisive',
+  fsdiff:'Average field-score margin of victory — higher = more decisive',
   atk:'Attacks per skirmish. Healthy ~5', swp:'Swaps per skirmish. Healthy ~7',
   zk:'Zero-kill skirmishes. Healthy ~4%; ≥20% flags stalemates',
   tie:'Skirmishes decided by the tie-goes-to-2nd rule — lower is better (10% baseline, rules 1.1)',
@@ -244,7 +244,7 @@ function renderDashTables(el){
     return {
       name: r.map.name, shape: (r.map.shapeDef || String(r.map.shape||'').charAt(0)==='@') ? 'custom' : (r.map.shape || '?'), done: done,
       red: dpct(o.redWins, done), first: dpct(o.firstWins, done),
-      hq: dpct(o.hqWins, done), turns: +(o.turns/done).toFixed(1), vpdiff: +(o.vpDiff/done).toFixed(1),
+      hq: dpct(o.hqWins, done), turns: +(o.turns/done).toFixed(1), fsdiff: +(o.fsDiff/done).toFixed(1),
       atk: +(o.attacks/done).toFixed(1), swp: +(o.swaps/done).toFixed(1),
       zk: dpct(o.zeroKill, done), tie: dpct(o.tiebreak, done),
       drag: +((o.killTail||0)/done).toFixed(1), swing: +((o.leadChanges||0)/done).toFixed(1),
@@ -255,7 +255,7 @@ function renderDashTables(el){
   if (key) rows = dashSort(rows, key, dir);
   var cols = [
     ['name','Map'], ['shape','Shape'], ['red','Red%'], ['first','1st%'], ['hq','HQ%'],
-    ['turns','Turns'], ['vpdiff','VPdiff'], ['atk','Atk'], ['swp','Swp'], ['zk','0kill%'], ['tie','Tie%'],
+    ['turns','Turns'], ['fsdiff','VPdiff'], ['atk','Atk'], ['swp','Swp'], ['zk','0kill%'], ['tie','Tie%'],
     ['drag','Drag'], ['swing','Swings'], [null,'notes']
   ];
   var h = '<h3>Maps &mdash; '+n+' skirmishes each, '+aiLabel+' <span class="small">(&plusmn;'+noise+' points at this n)</span></h3>';
@@ -267,7 +267,7 @@ function renderDashTables(el){
   h += '<th title="red vs blue win share">R/B</th></tr>';
   rows.forEach(function(r){
     h += '<tr><td style="text-align:left;"><b>'+r.name+'</b></td><td>'+r.shape+'</td>' +
-      '<td>'+r.red+'%</td><td>'+r.first+'%</td><td>'+r.hq+'%</td><td>'+r.turns+'</td><td>'+r.vpdiff+'</td>' +
+      '<td>'+r.red+'%</td><td>'+r.first+'%</td><td>'+r.hq+'%</td><td>'+r.turns+'</td><td>'+r.fsdiff+'</td>' +
       '<td>'+r.atk+'</td><td>'+r.swp+'</td><td>'+r.zk+'%</td><td>'+r.tie+'%</td>' +
       '<td>'+r.drag+'</td><td>'+r.swing+'</td>' +
       '<td style="text-align:left;" class="dnote">'+(r.notes||'')+'</td><td>'+dbar(r.red)+'</td></tr>';

@@ -84,7 +84,7 @@ This skill is step 1 of the balance loop. The full v2 order (B.5.4) is:
    <version>/…-balance-loop-final.md` (see below).
 
 The **v2 levers** the loop can now pull, beyond cards/maps: **unit composition & values
-as slot data** (WOA-011 — infantry/cavalry/artillery mix, VP, atk/def/support, all a
+as slot data** (WOA-011 — infantry/cavalry/artillery mix, worth, atk/def/support, all a
 one-file content diff). Cards, maps, and unit values are the three knobs an iteration
 may turn.
 

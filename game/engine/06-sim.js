@@ -45,7 +45,7 @@
   // number, that's a bug. balanceNew makes an empty aggregate; balanceAdd folds
   // one finished skirmish in; balanceMap is the synchronous convenience loop.
   function balanceNew(n) {
-    var out = { n: n, redWins: 0, firstWins: 0, hqWins: 0, turns: 0, vpDiff: 0, unfinished: 0, cards: {},
+    var out = { n: n, redWins: 0, firstWins: 0, hqWins: 0, turns: 0, fsDiff: 0, unfinished: 0, cards: {},
       // behaviour metrics (June 2026): catch degenerate AI play, not just outcomes.
       // WOA-039 (rules 1.2): deploys joins attacks/swaps/marches so the report can
       // print Attack/Swap SHARE (attacks / all four action counts) — deck-size-proof.
@@ -87,7 +87,7 @@
   function skirmishFacts(st, firstPlayer) {
     var fsr = I.fieldScore(st, 'red'), fsb = I.fieldScore(st, 'blue');
     var stats = st.stats || {};
-    var vp = st.vp || { red: 0, blue: 0 };
+    var kills = st.kills || { red: 0, blue: 0 };
     var hr = 0, hb = 0;
     for (var h in st.units) (st.units[h].owner === 'red' ? hr++ : hb++);
     var resRed = 0, resBlue = 0;
@@ -99,7 +99,7 @@
       turns: st.turnNumber || 0, fsRed: fsr, fsBlue: fsb,
       firstBlood: stats.firstBlood || null, leadChanges: st.leadChanges || 0,
       attacks: stats.attacks || 0, swaps: stats.swaps || 0, marches: stats.marches || 0, deploys: stats.deploys || 0,
-      zeroKill: (vp.red + vp.blue === 0) ? 1 : 0,                            // no unit ever died
+      zeroKill: (kills.red + kills.blue === 0) ? 1 : 0,                            // no unit ever died
       tiebreak: (st.winType === 'attrition' && fsr === fsb) ? 1 : 0,        // decided only by tie-goes-to-2nd
       killTail: Math.max(0, (st.turnNumber || 0) - (st.lastKillTurn || 0)), // trailing kill-less turns
       hexesRed: hr, hexesBlue: hb, resEndRed: resRed, resEndBlue: resBlue
@@ -126,7 +126,7 @@
     if (f.winner && f.winner === f.firstPlayer) agg.firstWins++;
     if (f.winType === 'hq') agg.hqWins++;
     agg.turns += f.turns;
-    agg.vpDiff += Math.abs(f.fsRed - f.fsBlue);
+    agg.fsDiff += Math.abs(f.fsRed - f.fsBlue);
     agg.attacks += f.attacks; agg.swaps += f.swaps; agg.marches += f.marches; agg.deploys += f.deploys;
     if (f.zeroKill) agg.zeroKill++;
     if (f.tiebreak) agg.tiebreak++;

@@ -35,9 +35,9 @@
 var WOA_BUILTIN =
 {
   "units": {
-    "infantry":  { "name": "Infantry",  "atk": 1, "def": 1, "sup": 1, "vp": 1, "count": 7 },
-    "cavalry":   { "name": "Cavalry",   "atk": 3, "def": 0, "sup": 0, "vp": 2, "count": 2 },
-    "artillery": { "name": "Artillery", "atk": 0, "def": 0, "sup": 2, "vp": 3, "count": 1 }
+    "infantry":  { "name": "Infantry",  "atk": 1, "def": 1, "sup": 1, "worth": 1, "count": 7 },
+    "cavalry":   { "name": "Cavalry",   "atk": 3, "def": 0, "sup": 0, "worth": 2, "count": 2 },
+    "artillery": { "name": "Artillery", "atk": 0, "def": 0, "sup": 2, "worth": 3, "count": 1 }
   },
   "trenchCount": 3,
   "terrainStock": { "F3": 2, "F2": 4, "M3": 2, "M2": 4, "R3": 2, "R2": 4 },

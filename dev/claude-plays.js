@@ -141,9 +141,9 @@ function say(msg) { console.log('[' + stamp() + '] ' + msg); }
 const RULES = [
   'WAR OF ATTRITION — RULES IN BRIEF (v' + E.VERSION + ')',
   'Two sides (Red, Blue) fight on a small hex board (grid refs A1, B3, ...). Each side has one',
-  'HQ hex and identical forces: 7 Infantry (attack 1, defense 1, support 1, worth 1 VP),',
-  '2 Cavalry (attack 3, defense 0, support 0, 2 VP), 1 Artillery (attack 0, defense 0,',
-  'support 2, 3 VP), and 3 trenches. One unit per hex; units never stand on HQ hexes.',
+  'HQ hex and identical forces: 7 Infantry (attack 1, defense 1, support 1, worth 1 point),',
+  '2 Cavalry (attack 3, defense 0, support 0, 2 points), 1 Artillery (attack 0, defense 0,',
+  'support 2, 3 points), and 3 trenches. One unit per hex; units never stand on HQ hexes.',
   '',
   'TURNS: each turn you draw a hand of order cards, play exactly ONE (its steps resolve in',
   'order), and discard the rest (discards reshuffle back into your deck later; the PLAYED card',
@@ -177,7 +177,7 @@ const RULES = [
   'their only effect is that you cannot DEPLOY to a hex reachable only across the water.',
   '',
   'VICTORY: capture the enemy HQ, or — when a player cannot draw a hand (deck spent) — the',
-  'side with more VP of SURVIVING UNITS ON THE BOARD wins (infantry 1 / cavalry 2 /',
+  'side with the higher field score of SURVIVING UNITS ON THE BOARD wins (infantry 1 / cavalry 2 /',
   'artillery 3). Reserves never deployed count for nothing. An attrition TIE goes to whoever',
   'moved SECOND in that skirmish.'
 ].join('\n');
@@ -235,7 +235,7 @@ function stateView(st, p, withHand, match) {
   L.push('Map "' + st.mapName + '". Board rows top-to-bottom: ' + rowsStr(st) + '.');
   L.push('You are ' + p.toUpperCase() + ' and it is your turn. ' + cap(st.second) +
     ' moved second this skirmish and wins attrition ties.');
-  L.push('Field score (VP of surviving units on board): Red ' + E.fieldScore(st, 'red') +
+  L.push('Field score (surviving units on board): Red ' + E.fieldScore(st, 'red') +
     ', Blue ' + E.fieldScore(st, 'blue') + '.');
   L.push('Cards left (deck+discard+hand; one burns per turn): Red ' + E.cardsRemaining(st, 'red') +
     ', Blue ' + E.cardsRemaining(st, 'blue') + '.');
@@ -429,8 +429,8 @@ function typicalitySection(map, st, n) {
   const pct = function (x) { return Math.round(100 * x / done); };
   const per = function (x) { return x / done; };
   const avgTurns = per(base.turns), hqPct = pct(base.hqWins), redPct = pct(base.redWins), zeroPct = pct(base.zeroKill);
-  const avgAtk = per(base.attacks), avgVP = per(base.vpDiff);
-  const kills = st.vp.red + st.vp.blue;
+  const avgAtk = per(base.attacks), avgFS = per(base.fsDiff);
+  const kills = st.kills.red + st.kills.blue;
   const gAtk = (st.stats && st.stats.attacks) || 0;
   const gVP = Math.abs(E.fieldScore(st, 'red') - E.fieldScore(st, 'blue'));
   const dT = avgTurns ? Math.round(100 * (st.turnNumber - avgTurns) / avgTurns) : 0;
@@ -460,7 +460,7 @@ function typicalitySection(map, st, n) {
     '| Winner side | ' + cap(st.skirmishWinner) + ' | red ' + redPct + '% | map leans ' + (redPct >= 50 ? 'red' : 'blue') + ' ' + Math.max(redPct, 100 - redPct) + '% |',
     '| Kills (units lost) | ' + kills + ' | ' + zeroPct + '% zero-kill | ' + killRead + ' |',
     '| Attacks resolved | ' + gAtk + ' | ~' + avgAtk.toFixed(1) + ' avg | ' + cmp(gAtk, avgAtk) + ' |',
-    '| Final VP gap | ' + gVP + ' | ~' + avgVP.toFixed(1) + ' avg | ' + cmp(gVP, avgVP) + ' |',
+    '| Final FS gap | ' + gVP + ' | ~' + avgFS.toFixed(1) + ' avg | ' + cmp(gVP, avgVP) + ' |',
     '', verdict];
 }
 

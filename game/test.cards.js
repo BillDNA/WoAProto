@@ -297,7 +297,7 @@ test('noAdvance attacks (Ordered Withdraw holds its ground)', () => {
   E.applyStep(st, { from: '0,0', to: '1,0' });
   assert.ok(!st.units['1,0'], 'defender destroyed on a clear win');
   assert.ok(st.units['0,0'] && st.units['0,0'].type === 'cavalry', 'attacker did NOT take the hex');
-  assert.ok(st.vp.red === 1, 'VP scored for the kill');
+  assert.ok(st.kills.red === 1, 'kill scored');
   // tie: infantry vs infantry (1 vs 1) — defender dies, attacker survives in place
   var st2 = testSkirmish(71);
   st2.units['0,0'] = { type: 'infantry', owner: 'red' };

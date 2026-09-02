@@ -243,7 +243,7 @@ var ROUTES = {
       var rows = db.listSkirmishes(dbHandle, runId);
       // WOA-037: attach each skirmish's per-turn field-score timeline as a
       // sibling `fs: [[fsRed,fsBlue], ...]` (turn-ordered) — env.fs for
-      // WOA_REPORT.vpDiffTrack/envelopeFromRow. ONE grouped query over the
+      // WOA_REPORT.fsDiffTrack/envelopeFromRow. ONE grouped query over the
       // `timeline` table for this run's skirmish ids (never N+1 per skirmish).
       // dev/db.js owns the write path (insertTimeline, tested by db.test.js)
       // and stays untouched — this read is dashboard-only, so it lives here.

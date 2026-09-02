@@ -94,7 +94,7 @@ function glyphSVG(type, col, colD){
 function statTip(type){
   if (type==='trench') return 'Trench — enemy attacks across its two covered edges get no support';
   var u = E.UNITS[type];
-  return u.name+' — attack '+u.atk+', defense '+u.def+', support '+u.sup+', worth '+u.vp+' VP to the enemy';
+  return u.name+' — attack '+u.atk+', defense '+u.def+', support '+u.sup+', worth '+u.worth+' field-score points to the enemy';
 }
 var CARD_ABBR = {
   deploy_inf_start:'In', deploy_artillery:'Ar', deploy_inf_trench:'En', airdrop:'Ad',
@@ -155,7 +155,7 @@ function renderMat(p){
     '<div class="row" style="margin-top:2px;"><span>Orders left</span><b>'+E.cardsRemaining(st,p)+'</b></div>' +
     '<div class="spentlbl">orders spent &mdash; gone from the game</div>' +
     '<div class="spent" title="Click for the full card glossary">'+spent+'</div>' +
-    '<div class="vp">'+E.fieldScore(st,p)+' VP</div>' +
+    '<div class="vp">'+E.fieldScore(st,p)+' pts</div>' +
     '<div class="small" style="text-align:center;">surviving units on the field</div>';
   el.querySelector('.spent').onclick = showCards;
 }
@@ -175,11 +175,11 @@ function renderTop(){
   }
   pips($('pipsRed'), m.wins.red);
   pips($('pipsBlue'), m.wins.blue);
-  // VP tug-bar: solid = fieldScore now; hatched = ceiling if every reserve
+  // field-score tug-bar: solid = fieldScore now; hatched = ceiling if every reserve
   // deploys (fieldScore + reserves x vp); the seam marks the projected front
   function ceiling(side){
     var cur = E.fieldScore(st, side), extra = 0, res = st.reserves[side];
-    Object.keys(E.UNITS).forEach(function(t){ extra += (res[t]||0) * E.UNITS[t].vp; });
+    Object.keys(E.UNITS).forEach(function(t){ extra += (res[t]||0) * E.UNITS[t].worth; });
     return { cur: cur, max: cur + extra };
   }
   var R = ceiling('red'), B = ceiling('blue');
@@ -402,7 +402,7 @@ function showSkirmishOver(){
   var html = '<h2 class="'+w+'">'+capName(w)+' takes the field!</h2>' +
     '<p style="font-style:italic;">"'+st.mapName+'" — ' + (st.winType==='hq' ? 'the enemy headquarters was captured.' :
       st.winType==='concession' ? 'the enemy conceded the field.' :
-      'won by attrition, '+E.fieldScore(st,'red')+' VP to '+E.fieldScore(st,'blue')+' VP of surviving units.') + '</p>' +
+      'won by attrition, field score '+E.fieldScore(st,'red')+' to '+E.fieldScore(st,'blue')+' of surviving units.') + '</p>' +
     '<p style="margin-top:10px;font-size:18px;">Campaign: <b style="color:var(--red-dark)">Red '+m.wins.red+'</b> — <b style="color:var(--blue-dark)">Blue '+m.wins.blue+'</b></p>';
   var rematch = APP.mode !== 'net'
     ? '<button id="boRematch" class="ghost btn-ghost-dark" title="Fresh skirmish, same map — for A/B testing a layout">Rematch this map</button>'
@@ -453,7 +453,7 @@ function journalText(st){
   var m = st.match;
   var res = st.winType==='hq' ? capName(st.skirmishWinner)+' captured the enemy HQ'
     : st.winType==='concession' ? capName(st.skirmishWinner)+' won — enemy conceded'
-    : capName(st.skirmishWinner)+' won by attrition ('+E.fieldScore(st,'red')+'–'+E.fieldScore(st,'blue')+' VP surviving)';
+    : capName(st.skirmishWinner)+' won by attrition ('+E.fieldScore(st,'red')+'–'+E.fieldScore(st,'blue')+' field score surviving)';
   var lines = [
     'War of Attrition — Skirmish '+(m.skirmishIndex+1)+' — "'+st.mapName+'"',
     'Result: '+res,
