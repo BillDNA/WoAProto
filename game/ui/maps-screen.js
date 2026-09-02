@@ -77,38 +77,8 @@ function updateMapsHint(){
   el.innerHTML = 'Maps are files in <b>game/content/maps/</b> — deleting one here deletes its file. Zip the folder and friends get your map library.';
 }
 
-/* mini preview svg (self-contained, no global board state). Draws through the
-   shared board geometry (hexXY/hexPoints/corner math) and the BOARD palette at
-   its own tiny s=11 scale — the thumbnails render in the DOM, so var(--…) from
-   BOARD resolves. Only the thumbnail-specific tile fill and the tighter viewBox
-   margin stay local. */
-function previewSVG(def){
-  var s = 11;
-  var hexList = E.boardHexes(E.ensureMapShape(def));
-  var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
-  var body = '';
-  hexList.forEach(function(k){
-    var p = hexXY(k, s);
-    minX=Math.min(minX,p[0]); maxX=Math.max(maxX,p[0]); minY=Math.min(minY,p[1]); maxY=Math.max(maxY,p[1]);
-    body += '<polygon points="'+hexPoints(p[0],p[1],s-0.6)+'" fill="#d9cca8" stroke="#4a3d26" stroke-width="0.8"/>';
-  });
-  (def.pieces||[]).forEach(function(pc){
-    pc.edges.forEach(function(e){
-      var c = hexXY(E.key(e[0],e[1]), s), aa = cornerAngles(e[2]);
-      var p1 = cornerPt(c[0],c[1],aa[0],s-2.4), p2 = cornerPt(c[0],c[1],aa[1],s-2.4);
-      body += '<line x1="'+p1[0].toFixed(1)+'" y1="'+p1[1].toFixed(1)+'" x2="'+p2[0].toFixed(1)+'" y2="'+p2[1].toFixed(1)+
-        '" stroke="'+BOARD.terrainStroke(pc.t)+'" stroke-width="2.6" stroke-linecap="round"/>';
-    });
-  });
-  ['red','blue'].forEach(function(side){
-    var hq = def[side+'HQ'];
-    if (!hq) return;
-    var p = hexXY(E.key(hq[0],hq[1]), s);
-    body += '<polygon points="'+hexPoints(p[0],p[1],s*0.62)+'" fill="'+BOARD.side(side).fill+'" stroke="'+BOARD.outline+'" stroke-width="0.8"/>';
-  });
-  var m = s*1.4;
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="'+(minX-m).toFixed(0)+' '+(minY-m).toFixed(0)+' '+(maxX-minX+2*m).toFixed(0)+' '+(maxY-minY+2*m).toFixed(0)+'">'+body+'</svg>';
-}
+// previewSVG (the map-library thumbnail) is a board renderer — it lives with the
+// other board marks in ui/board-primitives.js (bpThumb* + the BOARD palette).
 
 function renderMapsetBar(){
   var bar = $('mapsetBar');

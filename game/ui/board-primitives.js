@@ -64,9 +64,10 @@ function viewBoxFor(hexList, s){
   var m = s*1.3;
   return (minX-m).toFixed(0)+' '+(minY-m).toFixed(0)+' '+(maxX-minX+2*m).toFixed(0)+' '+(maxY-minY+2*m).toFixed(0);
 }
-// the two endpoints of an inset edge (terrain/trench/barrage all share this)
-function bpEdgePts(hexKey, dir, rad){
-  var c = hexXY(hexKey), aa = cornerAngles(dir);
+// the two endpoints of an inset edge (terrain/trench/barrage all share this).
+// s scales the hex centre so a mini-board (manual at MP_S) shares ONE impl.
+function bpEdgePts(hexKey, dir, rad, s){
+  var c = hexXY(hexKey, s), aa = cornerAngles(dir);
   return [ cornerPt(c[0], c[1], aa[0], rad), cornerPt(c[0], c[1], aa[1], rad) ];
 }
 
@@ -85,6 +86,7 @@ var BOARD = {
   star:'#f0e6cc',       // HQ star + pill text
   trench:'#5a4326',     // dug-in earthwork
   barrage:'#c0392b',    // barrage action marks
+  thumbTile:'#d9cca8', thumbTileStroke:'#4a3d26', // maps-screen preview tiles (own look, not the live .hex class)
   // attack-math pill fill by combat outcome (neutral = manual's "no clear side")
   hint:{ attacker:'rgba(58,99,48,.92)', tie:'rgba(138,108,60,.94)', defender:'rgba(111,29,25,.92)', neutral:'rgba(74,61,38,.92)' },
   // fx.js transient support-ring accents (drawn on the live board, not marks)
@@ -118,34 +120,59 @@ function bpBeginBoard(svg){
 function bpHexPoly(cx, cy, rad, dark){
   return svgEl('polygon', { points: hexPoints(cx, cy, rad), 'class': 'hex' + (dark ? ' dark' : '') });
 }
+// the grid coord label above a hex centre. ONE impl for every board (live board,
+// manual, editor); s scales the offset, pe optionally makes it click-through.
+function bpCoordLabel(g, cx, cy, text, s, pe){
+  s = s || S;
+  var lbl = svgEl('text', { x:cx, y:cy - s*0.58, 'text-anchor':'middle', 'class':'coordlbl' });
+  if (pe) lbl.setAttribute('pointer-events', pe);
+  lbl.textContent = text;
+  g.appendChild(lbl);
+  return lbl;
+}
 // one parchment hex + its coord label
 function bpHexTile(g, key){
   var xy = hexXY(key), qr = E.parseKey(key);
   var p = bpHexPoly(xy[0], xy[1], S-1, ((qr[0]-qr[1])%2+2)%2);
   p.dataset.hex = key;
   g.appendChild(p);
-  var lbl = svgEl('text', { x: xy[0], y: xy[1]-S*0.58, 'text-anchor':'middle', 'class':'coordlbl' });
-  lbl.textContent = E.hexLabel(key);
-  g.appendChild(lbl);
+  bpCoordLabel(g, xy[0], xy[1], E.hexLabel(key));
   return p;
 }
 
-// a hex-owned terrain side, drawn inset inside the owning hex, with its glyph
-function bpTerrainEdge(g, edgeKey, type){
-  var parts = edgeKey.split('>'), d = +parts[1];
-  var pt = bpEdgePts(parts[0], d, BOARD_R.terrain), p1 = pt[0], p2 = pt[1];
-  var line = svgEl('line', { x1:p1[0], y1:p1[1], x2:p2[0], y2:p2[1],
-    stroke: BOARD.terrainStroke(type), 'stroke-width': 8, 'stroke-linecap':'round' });
-  line.dataset.edge = edgeKey;
+// the bare terrain edge stroke (no glyph) — the coloured line the editor paints
+// on its own, and the base line of the full glyphed side below. Returns [p1,p2]
+// (the editor reuses them for its edge-hit line). o: {s, rad, sw, pe, edgeData}
+// — edgeData:false skips the data-edge hover attr (mini-boards / editor).
+function bpTerrainStroke(g, hexKey, dir, type, o){
+  o = o || {};
+  var s = o.s || S, rad = o.rad != null ? o.rad : s*0.85;
+  var pt = bpEdgePts(hexKey, dir, rad, s), p1 = pt[0], p2 = pt[1];
+  var attrs = { x1:p1[0], y1:p1[1], x2:p2[0], y2:p2[1], stroke: BOARD.terrainStroke(type),
+    'stroke-width': o.sw != null ? o.sw : 8, 'stroke-linecap':'round' };
+  if (o.pe) attrs['pointer-events'] = o.pe;
+  var line = svgEl('line', attrs);
+  if (o.edgeData !== false) line.dataset.edge = hexKey + '>' + dir;
   g.appendChild(line);
-  var mx=(p1[0]+p2[0])/2, my=(p1[1]+p2[1])/2, c = hexXY(parts[0]);
+  return [p1, p2];
+}
+// a hex-owned terrain side, drawn inset inside the owning hex, with its glyph.
+// Board defaults (S scale); a mini-board passes o = {s, sw, riverSW, riverDash,
+// forestR, forestR2, edgeData} so the SAME mark renders at its scale.
+function bpTerrainEdge(g, edgeKey, type, o){
+  o = o || {};
+  var s = o.s || S, parts = edgeKey.split('>'), d = +parts[1];
+  var ep = bpTerrainStroke(g, parts[0], d, type, { s:s, rad:o.rad, sw:o.sw, edgeData:o.edgeData });
+  var p1 = ep[0], p2 = ep[1];
+  var mx=(p1[0]+p2[0])/2, my=(p1[1]+p2[1])/2, c = hexXY(parts[0], s);
   if (type==='R'){
     g.appendChild(svgEl('line',{ x1:(p1[0]*0.7+mx*0.3), y1:(p1[1]*0.7+my*0.3), x2:(p2[0]*0.7+mx*0.3), y2:(p2[1]*0.7+my*0.3),
-      stroke:BOARD.riverCurrent, 'stroke-width':2.2, 'stroke-linecap':'round', 'stroke-dasharray':'6 5' }));
+      stroke:BOARD.riverCurrent, 'stroke-width':o.riverSW!=null?o.riverSW:2.2, 'stroke-linecap':'round', 'stroke-dasharray':o.riverDash||'6 5' }));
   } else if (type==='F'){
-    g.appendChild(svgEl('circle',{ cx:mx, cy:my, r:4.4, fill:BOARD.forestGlyph }));
-    g.appendChild(svgEl('circle',{ cx:(p1[0]+mx)/2, cy:(p1[1]+my)/2, r:3.4, fill:BOARD.forestGlyph }));
-    g.appendChild(svgEl('circle',{ cx:(p2[0]+mx)/2, cy:(p2[1]+my)/2, r:3.4, fill:BOARD.forestGlyph }));
+    var fr = o.forestR!=null?o.forestR:4.4, fr2 = o.forestR2!=null?o.forestR2:3.4;
+    g.appendChild(svgEl('circle',{ cx:mx, cy:my, r:fr, fill:BOARD.forestGlyph }));
+    g.appendChild(svgEl('circle',{ cx:(p1[0]+mx)/2, cy:(p1[1]+my)/2, r:fr2, fill:BOARD.forestGlyph }));
+    g.appendChild(svgEl('circle',{ cx:(p2[0]+mx)/2, cy:(p2[1]+my)/2, r:fr2, fill:BOARD.forestGlyph }));
   } else {
     var ex = (p2[0]-p1[0]), eyy = (p2[1]-p1[1]);
     var tri = [ [mx-ex*0.14, my-eyy*0.14], [mx+ex*0.14, my+eyy*0.14], [mx-(my-c[1])*0.18, my+(mx-c[0])*0.18] ];
@@ -153,11 +180,14 @@ function bpTerrainEdge(g, edgeKey, type){
   }
 }
 
-// a dug trench segment on one edge of a hex
-function bpTrenchLine(g, hexKey, dir){
-  var pt = bpEdgePts(hexKey, dir, BOARD_R.trench);
+// a dug trench segment on one edge of a hex. o = {s, rad, sw, dash} lets a
+// mini-board (manual at MP_S) draw the SAME mark at its scale.
+function bpTrenchLine(g, hexKey, dir, o){
+  o = o || {};
+  var s = o.s || S, rad = o.rad != null ? o.rad : s*0.74;
+  var pt = bpEdgePts(hexKey, dir, rad, s);
   g.appendChild(svgEl('line',{ x1:pt[0][0], y1:pt[0][1], x2:pt[1][0], y2:pt[1][1],
-    stroke:BOARD.trench, 'stroke-width':6.5, 'stroke-linecap':'round', 'stroke-dasharray':'7 4' }));
+    stroke:BOARD.trench, 'stroke-width':o.sw!=null?o.sw:6.5, 'stroke-linecap':'round', 'stroke-dasharray':o.dash||'7 4' }));
 }
 
 // a headquarters marker at an explicit centre. ONE implementation shared by the
@@ -267,4 +297,67 @@ function bpBarrageForestEdge(g, hexKey, dir){
     stroke:BOARD.barrage, 'stroke-width':12, 'stroke-linecap':'round', opacity:.55, 'class':'hl' });
   g.appendChild(line);
   return line;
+}
+
+/* =================== map-editor marks =================== */
+// an invisible edge-hit line (.edge-hit CSS makes it a fat transparent click
+// target). Returns the line so the editor wires its own terrain-paint handler.
+function bpEdgeHitLine(g, hexKey, dir, rad, s){
+  var pt = bpEdgePts(hexKey, dir, rad, s);
+  var hit = svgEl('line', { x1:pt[0][0], y1:pt[0][1], x2:pt[1][0], y2:pt[1][1], 'class':'edge-hit' });
+  g.appendChild(hit);
+  return hit;
+}
+// a dashed ghost-hex outline — the editor's "add this hex" affordance. Returns
+// the polygon so the editor wires its own hover/click (fill defined here).
+function bpGhostHex(g, cx, cy, rad){
+  var p = svgEl('polygon', { points: hexPoints(cx, cy, rad),
+    fill:'rgba(255,255,255,.10)', stroke:'rgba(74,61,38,.5)', 'stroke-width':1.4, 'stroke-dasharray':'6 5' });
+  g.appendChild(p);
+  return p;
+}
+
+/* =================== string thumbnail marks (maps-screen previews) ===================
+   The one STRING board renderer: the map-library thumbnails go into innerHTML
+   (var(--…) resolves in the DOM), so previewSVG builds an SVG string — the same
+   geometry (hexXY/hexPoints/corner math) + BOARD palette as the live board, at
+   its own tiny s=11 scale. The tile is deliberately its OWN look (BOARD.thumbTile,
+   not the .hex CSS class), and the HQ is a plain side-coloured hex (no brass ring
+   / star). Each thumbnail mark lives in one bpThumb* builder, so maps-screen.js
+   builds nothing by hand. */
+function bpThumbHex(cx, cy, rad){
+  return '<polygon points="'+hexPoints(cx, cy, rad)+'" fill="'+BOARD.thumbTile+'" stroke="'+BOARD.thumbTileStroke+'" stroke-width="0.8"/>';
+}
+function bpThumbTerrain(p1, p2, type){
+  return '<line x1="'+p1[0].toFixed(1)+'" y1="'+p1[1].toFixed(1)+'" x2="'+p2[0].toFixed(1)+'" y2="'+p2[1].toFixed(1)+
+    '" stroke="'+BOARD.terrainStroke(type)+'" stroke-width="2.6" stroke-linecap="round"/>';
+}
+function bpThumbHQ(cx, cy, side, rad){
+  return '<polygon points="'+hexPoints(cx, cy, rad)+'" fill="'+BOARD.side(side).fill+'" stroke="'+BOARD.outline+'" stroke-width="0.8"/>';
+}
+// self-contained map thumbnail (no global board state): tiles, terrain sides, HQs.
+function previewSVG(def){
+  var s = 11;
+  var hexList = E.boardHexes(E.ensureMapShape(def));
+  var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  var body = '';
+  hexList.forEach(function(k){
+    var p = hexXY(k, s);
+    minX=Math.min(minX,p[0]); maxX=Math.max(maxX,p[0]); minY=Math.min(minY,p[1]); maxY=Math.max(maxY,p[1]);
+    body += bpThumbHex(p[0], p[1], s-0.6);
+  });
+  (def.pieces||[]).forEach(function(pc){
+    pc.edges.forEach(function(e){
+      var c = hexXY(E.key(e[0],e[1]), s), aa = cornerAngles(e[2]);
+      body += bpThumbTerrain(cornerPt(c[0],c[1],aa[0],s-2.4), cornerPt(c[0],c[1],aa[1],s-2.4), pc.t);
+    });
+  });
+  ['red','blue'].forEach(function(side){
+    var hq = def[side+'HQ'];
+    if (!hq) return;
+    var p = hexXY(E.key(hq[0],hq[1]), s);
+    body += bpThumbHQ(p[0], p[1], side, s*0.62);
+  });
+  var m = s*1.4;
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="'+(minX-m).toFixed(0)+' '+(minY-m).toFixed(0)+' '+(maxX-minX+2*m).toFixed(0)+' '+(maxY-minY+2*m).toFixed(0)+'">'+body+'</svg>';
 }

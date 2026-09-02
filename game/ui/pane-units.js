@@ -90,8 +90,8 @@ function chartUnitsRoleMap(rows) {
   var pw = W - L - R, ph = H - T - B;
   function sx(v) { return L + v / 100 * pw; }
   function sy(v) { return T + (100 - v) / 100 * ph; }
-  var s = '<svg id="chUnitsRole" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Unit role map">';
-  s += '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="' + CHART.surface + '" rx="6"/>';
+  var s = chSvgOpen({ id: 'chUnitsRole', vb: '0 0 ' + W + ' ' + H, role: 'img', aria: 'Unit role map' });
+  s += chRect(0, 0, W, H, { fill: CHART.surface, rx: 6 });
   s += chLine(L, sy(50), L + pw, sy(50), CHART.axis, 1.4);
   var chrome = '';
   chrome += chText(L + pw / 2, T - 16, 'LEADING THE CHARGE', { fs: 10, anchor: 'middle', fill: CHART.muted, italic: true });
@@ -121,29 +121,29 @@ function chartUnitsRoleMap(rows) {
   pts.forEach(function (p, i) {
     var r = p.r, idA = 'chUr' + i + 'a', idB = 'chUr' + i + 'b', markIds = [];
     if (p.a && p.b) {
-      marks += '<line x1="' + p.a.x.toFixed(1) + '" y1="' + p.a.y.toFixed(1) + '" x2="' + p.b.x.toFixed(1) + '" y2="' + p.b.y.toFixed(1) +
-        '" stroke="' + r.color + '" stroke-width="1.6" stroke-dasharray="4 2"' + ((p.a.small || p.b.small) ? ' opacity="0.5"' : '') + '/>';
+      marks += chLine(p.a.x.toFixed(1), p.a.y.toFixed(1), p.b.x.toFixed(1), p.b.y.toFixed(1),
+        r.color, 1.6, '4 2', (p.a.small || p.b.small) ? '0.5' : null);
     }
     if (p.a) {
       markIds.push(idA);
-      marks += '<circle id="' + idA + '" cx="' + p.a.x.toFixed(1) + '" cy="' + p.a.y.toFixed(1) + '" r="' + p.rad.toFixed(1) +
-        '" fill="' + CHART.runADot + '" stroke="' + r.color + '" stroke-width="2" stroke-dasharray="3 2"' + (p.a.small ? ' opacity="0.5"' : '') + ' data-ring="' + r.color + '"/>';
+      marks += chCircle({ id: idA, cx: p.a.x.toFixed(1), cy: p.a.y.toFixed(1), r: p.rad.toFixed(1),
+        fill: CHART.runADot, stroke: r.color, sw: 2, dash: '3 2', opacity: p.a.small ? '0.5' : null, ring: r.color });
     }
     if (p.b) {
       markIds.push(idB);
       var bRad = Math.max(5, p.rad - 1.5);
-      marks += '<circle id="' + idB + '" cx="' + p.b.x.toFixed(1) + '" cy="' + p.b.y.toFixed(1) + '" r="' + bRad.toFixed(1) +
-        '" fill="' + r.color + '" stroke="' + CHART.surface + '" stroke-width="2"' + (p.b.small ? ' opacity="0.5"' : '') + ' data-ring="' + CHART.surface + '"/>';
+      marks += chCircle({ id: idB, cx: p.b.x.toFixed(1), cy: p.b.y.toFixed(1), r: bRad.toFixed(1),
+        fill: r.color, stroke: CHART.surface, sw: 2, opacity: p.b.small ? '0.5' : null, ring: CHART.surface });
     }
     var anchor = p.b || p.a;
     var pl = placer.place(anchor.x, anchor.y, p.rad, r.name, 11) || { x: anchor.x + p.rad + 4, y: anchor.y + 4 };
     labels += chText(pl.x, pl.y, r.name, { fs: 11, fill: CHART.ink, bold: true });
-    hits += '<circle class="ch-hit" cx="' + anchor.x.toFixed(1) + '" cy="' + anchor.y.toFixed(1) + '" r="' + Math.max(p.rad + 6, 14) +
-      '" fill="transparent"' + chTipAttrs(r.name, [
+    hits += chCircle({ cls: 'ch-hit', cx: anchor.x.toFixed(1), cy: anchor.y.toFixed(1), r: Math.max(p.rad + 6, 14),
+      fill: 'transparent', extra: chTipAttrs(r.name, [
         ['deploy timing A → B', (p.a ? Math.round(r.a.depMedian * 100) + '%' : '—') + ' → ' + (p.b ? Math.round(r.b.depMedian * 100) + '%' : '—')],
         ['made vs absorbed A → B', (p.a ? Math.round(r.a.roleY) + '%' : '—') + ' → ' + (p.b ? Math.round(r.b.roleY) + '%' : '—')],
         ['skirmishes fielded A → B', (r.a ? r.a.n : 0) + ' → ' + (r.b ? r.b.n : 0)]
-      ], markIds.join(',')) + '/>';
+      ], markIds.join(',')) });
   });
   s += marks + chrome + labels + hits + '</svg>';
   return s;
