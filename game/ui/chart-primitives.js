@@ -73,6 +73,16 @@ function chLine(x1, y1, x2, y2, stroke, w, dash, op){
   return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+stroke+'" stroke-width="'+(w||1)+'"'+
     (dash ? ' stroke-dasharray="'+dash+'"' : '')+(op != null ? ' opacity="'+op+'"' : '')+'/>';
 }
+// a hidden <defs> carrying ONE diagonal-hatch <pattern>, referenced by url(#id)
+// elsewhere in the document (the map-drilldown dead-hex fill). Defined once per
+// pane. o: { size, stroke, sw, angle } default to the dead-hatch look.
+function chHatchDefs(id, o){
+  o = o || {};
+  var size = o.size != null ? o.size : 6, angle = o.angle != null ? o.angle : 45;
+  return chSvgOpen({ w: 0, h: 0, hidden: true, style: 'position:absolute;' }) + '<defs>' +
+    '<pattern id="'+id+'" width="'+size+'" height="'+size+'" patternUnits="userSpaceOnUse" patternTransform="rotate('+angle+')">' +
+    chLine(0, 0, 0, size, o.stroke || CHART.muted, o.sw != null ? o.sw : 1.5) + '</pattern></defs></svg>';
+}
 function chPolyline(points, o){
   o = o || {};
   return '<polyline points="'+points+'" fill="'+(o.fill != null ? o.fill : 'none')+'"'+

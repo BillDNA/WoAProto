@@ -231,9 +231,7 @@ function mdHexLensSection(mapName, hex) {
 
   var vb = viewBoxFor(hexList);
   // dead-hex hatch: one <pattern>, defined once, referenced by url() doc-wide
-  var defs = chSvgOpen({ w: 0, h: 0, hidden: true, style: 'position:absolute;' }) + '<defs>' +
-    '<pattern id="mdHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">' +
-    chLine(0, 0, 0, 6, CHART.muted, 1.5) + '</pattern></defs></svg>';
+  var defs = chHatchDefs('mdHatch');
 
   var boards = MD_HEX_LENSES.map(function (lens) {
     // display max over BOTH runs' hexes for this lens, so ghost + solid compare

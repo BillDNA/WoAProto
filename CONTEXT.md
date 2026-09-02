@@ -16,7 +16,7 @@ _Home_: `game/engine/04-skirmish.js:51` — `newSkirmish`
 **Battle**:
 A best-of contest across Skirmishes — first to a set number of Skirmish wins takes the Battle.
 _Avoid_: Game, match, series.
-_Home_: `game/engine/04-skirmish.js:210` — `wins[winner] >= 3`
+_Home_: `game/engine/04-skirmish.js:235` — `wins[winner] >= 3`
 
 **Campaign**:
 The larger roguelite arc across Battles — the deck-building, Commander, progression layer. The nebulous destination, not yet in code.
@@ -49,7 +49,7 @@ _Home_: `game/engine/02-board.js:11` — `key(q, r)`
 
 **Control**:
 The reach a side may Deploy adjacent to — extends by adjacency, and is stopped by a River.
-_Home_: `game/engine/03-rules.js:23` — `deployTargets`
+_Home_: `game/engine/03-rules.js:44` — `deployTargets`
 
 **Terrain**:
 A board feature on a hex or its border. **Mountain** favors the defender attacked across it; **Forest** favors the attacker striking across it; **River** blocks Control and Support from crossing while letting movement and attacks through.
@@ -70,40 +70,40 @@ _Home_: `game/engine/03-rules.js:11` — `isHQ`
 **Trench**:
 A structure that denies attacking Support across the edges it covers — and nothing else. Serves whichever side holds its hex.
 _Avoid_: Fortification.
-_Home_: `game/engine/03-rules.js:153` — `borderBlocked`
+_Home_: `game/engine/03-rules.js:174` — `borderBlocked`
 
 **Reserve**:
 Pieces a side owns but has not placed. Deploying is one-way, and reserve pieces score nothing at Attrition.
-_Home_: `game/engine/04-skirmish.js:106` — `copyReserves`
+_Home_: `game/engine/04-skirmish.js:131` — `copyReserves`
 
 ## Actions
 
 **Deploy**:
 Place a piece from Reserve onto the board within Control. Called **Build** for a structure.
 _Avoid_: Summon, spawn.
-_Home_: `game/engine/04-skirmish.js:413` — `'deploy'`
+_Home_: `game/engine/04-skirmish.js:438` — `'deploy'`
 
 **Attack**:
 Order one unit to strike an adjacent occupied hex, resolved by comparing combat power.
-_Home_: `game/engine/03-rules.js:215` — `resolveAttack`
+_Home_: `game/engine/03-rules.js:236` — `resolveAttack`
 
 **Support**:
 What adjacent allied pieces contribute to a combat — subject to Trench and River blocking.
-_Home_: `game/engine/03-rules.js:165` — `supportFor`
+_Home_: `game/engine/03-rules.js:186` — `supportFor`
 
 **Reposition**:
 Reposition a unit: **Move** it to an empty adjacent hex, or **Swap** it with an adjacent unit of a different type.
 _Avoid_: using "Move" for the whole action — Move is one kind of Reposition.
-_Home_: `game/engine/03-rules.js:97` — `listRepositions`
+_Home_: `game/engine/03-rules.js:118` — `listRepositions`
 
 **Swap**:
 The Reposition that exchanges two adjacent different-type units. Its share of all actions is a balance signal.
-_Home_: `game/engine/03-rules.js:108` — `!== myType`
+_Home_: `game/engine/03-rules.js:129` — `!== myType`
 
 **Card**:
 A one-shot order played from the hand and then spent. Any Card may instead be spent as a basic Attack or Reposition.
 _Avoid_: Order (a Card *is* the order; "order an attack" is the verb).
-_Home_: `game/engine/04-skirmish.js:257` — `playCard`
+_Home_: `game/engine/04-skirmish.js:282` — `playCard`
 
 **Deck**:
 A side's set of Cards for a Skirmish.
@@ -113,16 +113,16 @@ _Home_: `game/engine/04-skirmish.js:42` — `buildDeck`
 
 **HQ capture**:
 Ending a Skirmish by successfully attacking into the enemy HQ.
-_Home_: `game/engine/03-rules.js:298` — `'hq'`
+_Home_: `game/engine/03-rules.js:317` — `'hq'`
 
 **Attrition**:
 The Skirmish ending reached when a side can no longer draw a Card; decided by Field score.
-_Home_: `game/engine/04-skirmish.js:186` — `endByAttrition`
+_Home_: `game/engine/04-skirmish.js:211` — `endByAttrition`
 
 **Field score**:
 The standing of a side at Attrition, from its surviving on-board units. Reserve counts nothing.
 _Avoid_: VP, points, victory points.
-_Home_: `game/engine/04-skirmish.js:180` — `fieldScore`
+_Home_: `game/engine/04-skirmish.js:205` — `fieldScore`
 
 ## Balance & measurement
 
@@ -143,24 +143,24 @@ _Home_: `docs/balance-baselines.md:1` — `figures to protect`
 
 **Drag**:
 Trailing kill-less turns before a Skirmish ends — the "circling without resolving" signal.
-_Home_: `game/report-model.js:56` — `'drag'`
+_Home_: `game/report-model.js:57` — `'drag'`
 
 **Swings**:
 Lead changes within a Skirmish — the "back-and-forth" signal.
-_Home_: `game/report-model.js:58` — `'swings'`
+_Home_: `game/report-model.js:59` — `'swings'`
 
 **No-op**:
 A played Card that resolved zero actions — a dead turn.
-_Home_: `game/engine/04-skirmish.js:501` — `noop = true`
+_Home_: `game/engine/04-skirmish.js:524` — `noop = true`
 
 **Skirmish fact**:
 The flat record of everything the balance layer reads off one finished Skirmish
 — winner, win type, field scores, kill-tail, tiebreak, hexes held, reserves
-left, action counts. Derived in exactly one place (the engine's `skirmishFacts`),
+left, action counts. Derived in exactly one place (the sim layer's `skirmishFacts`),
 whether from a live end-state or a persisted row, so the live fold and the
 stored-data fold can never disagree.
 _Avoid_: battle fact, per-battle row (a row is the persisted form of the fact).
-_Home_: `game/engine/06-sim.js:87` — `skirmishFacts`
+_Home_: `game/sim.js:73` — `skirmishFacts`
 
 ## Content iteration & army-points
 
@@ -178,7 +178,7 @@ _Home_: `game/engine/01-core.js:198` — `DECK_POINTS_CAP`
 **Tolerance temperature**:
 How far a *measured* metric may sit outside its band before a result is accepted — the existing band-widening dial (strict / explore / hot). A verdict on outputs.
 _Avoid_: bare "temperature" (say which one; the two are different concepts).
-_Home_: `game/report-model.js:96` — `temperature`
+_Home_: `game/report-model.js:97` — `temperature`
 
 **Exploration temperature**:
 How large a *step* content iteration takes through design space — the willingness to try a structurally different but budget-legal candidate to escape a local optimum. An input to the search, realized chiefly *through* the points cap. Distinct from Tolerance temperature.
@@ -186,7 +186,7 @@ _Home_: none yet — search-layer concept, not in code.
 
 **Mispricing residual**:
 The gap between a Card's *measured* win-contribution and its *army-points* cost. A large gap flags an over- or under-priced Card — the anti-slop signal. Advisory only, because of the Timing blind spot.
-_Home_: `game/report-model.js:250` — `r.resid`
+_Home_: `game/report-model.js:251` — `r.resid`
 
 **Timing blind spot**:
 The balance scorer's known inability to value a Card whose worth is in *when* it is held or played (e.g. a saved attack buff). Such a Card can read as weak or mispriced without being either. Same class of gap as the AI eval not seeing reserve-hoarding.
