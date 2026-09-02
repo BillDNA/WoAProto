@@ -43,10 +43,10 @@ sanity **46%** (thin, within noise).
 
 Under rules-1.2 the metrics were redefined:
 
-- **Attack / Swap** are now **% of actions**, not counts-per-battle.
+- **Attack / Swap** are now **% of actions**, not counts-per-skirmish.
 - **Tie% / Drag** condition to **attrition endings** (not pooled over all endings).
 - **Reserves** condition to **HQ endings**.
 
 So a **1.1 count/pooled figure and a 1.2 share/sliced figure are NOT comparable** — grading a
 fresh 1.2 run against an old 1.1 count would flag a healthy deck as broken. If you find a stray
-count-per-battle or pooled figure, it is superseded; use the table above.
+count-per-skirmish or pooled figure, it is superseded; use the table above.
