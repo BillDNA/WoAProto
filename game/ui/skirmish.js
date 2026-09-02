@@ -296,9 +296,10 @@ function renderPrompt(){
 function renderAll(){
   if (APP.st){
     // a resumed/joined skirmish on an edited outline must re-register its shape
-    var mm = E.view(APP.st).battle && E.view(APP.st).battle.maps && E.view(APP.st).battle.maps[E.view(APP.st).mapIndex];
+    var v = E.view(APP.st);
+    var mm = v.battle && v.battle.maps && v.battle.maps[v.mapIndex];
     if (mm && mm.shapeDef) E.ensureMapShape(mm);
-    E.setBoard(E.view(APP.st).boardShape);
+    E.setBoard(v.boardShape);
   }
   ensureSnapshot();
   renderTop(); renderMat('red'); renderMat('blue'); renderBoard(); renderHand(); renderPrompt(); renderLog();
