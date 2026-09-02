@@ -12,7 +12,7 @@ Then:
 
 ```
 node game/test.js      # validates the deck; points at exactly what's wrong
-node game/balance.js   # shows what your change did to win rates + the card report
+node dev/balance.js   # shows what your change did to win rates + the card report
 ```
 
 ## Card fields
@@ -118,7 +118,7 @@ barrage:    —
 - **Art**: drop `game/art/<id>.jpg` (or `.png`) and the card picks it up; no
   file = clean text-only card. Heavy AI renders: run `dev/optimize-art.ps1`.
 - **Validate, then measure**: `node game/test.js` for legality,
-  `node game/balance.js 60` for what it does to the game. Watch the card report:
+  `node dev/balance.js 60` for what it does to the game. Watch the card report:
   Win% (correlation), Simple% (printed action not worth it), the no-op counts
   in the data (dead turns — should stay ~0), 1stSight% high + AvgSeen low
   (overpowered watchlist).

@@ -1,20 +1,20 @@
 /* War of Attrition — balance lab.
    Runs AI-vs-AI skirmishes and reports what the numbers say.
 
-     node balance.js                     24 skirmishes per map, normal AI, all maps
-     node balance.js 60                  60 skirmishes per map
-     node balance.js 60 hard             ...with the Field Marshal AI
-     node balance.js 40 narrows          only maps whose name matches "narrows"
+     node dev/balance.js                 24 skirmishes per map, normal AI, all maps
+     node dev/balance.js 60              60 skirmishes per map
+     node dev/balance.js 60 hard         ...with the Field Marshal AI
+     node dev/balance.js 40 narrows      only maps whose name matches "narrows"
                                          (all content/maps/*.js are included)
-     node balance.js matchup             skill-vs-luck report: better AIs fight
-     node balance.js matchup 16          worse ones; the stronger side's win rate
+     node dev/balance.js matchup         skill-vs-luck report: better AIs fight
+     node dev/balance.js matchup 16      worse ones; the stronger side's win rate
                                          is the skill premium. ~50% = card-draw
                                          luck decides; 65%+ = skill decides.
-     node balance.js matchup 16 brawler turtle
+     node dev/balance.js matchup 16 brawler turtle
                                          pit any two AI personalities (built-in
                                          easy/normal/hard or a maps.js "ai" row)
-     node balance.js 40 brawler          per-map report with a personality
-     node balance.js 40 --deck-red cavsplit-16 --deck-blue iter3
+     node dev/balance.js 40 brawler      per-map report with a personality
+     node dev/balance.js 40 --deck-red cavsplit-16 --deck-blue iter3
                                          seat a different deck per side (WOA-055);
                                          id/name from content/decks/. Omit either
                                          flag to leave that side on the active deck.
@@ -40,17 +40,19 @@
    Attrition victory (June 2026 rules): the player with the higher field score of SURVIVING
    units on the board wins when the cards run out; reserves count for nothing.
 */
-var E = require('./engine.js');
+var E = require('../game/engine.js');
+// The batch/measurement layer: skirmish sweeps + balance folds (evicted from the
+// engine in #220). balanceMap/balanceFP/balanceSeed live here now, not on E.
+var SIM = require('../game/sim.js');
 // Shared report model: thresholds, folds, card-row derivation (report-model.js
 // is the ONE copy — this file keeps only its terminal formatting).
-var R = require('./report-model.js');
+var R = require('../game/report-model.js');
 var fs = require('fs');
 var path = require('path');
-// Skirmish persistence, guarded like game/server.js's require: a zipped game/
-// without dev/ still runs and prints, just doesn't persist. dev/ may carry deps
-// (node:sqlite); game/ itself stays dependency-free.
+// Skirmish persistence: dev/ may carry deps (node:sqlite); game/ stays
+// dependency-free. Guarded so the tool still runs and prints without the DB.
 var db = null;
-try { db = require(path.join(__dirname, '..', 'dev', 'db.js')); } catch (e) { /* persistence off */ }
+try { db = require(path.join(__dirname, 'db.js')); } catch (e) { /* persistence off */ }
 
 var pct = R.pct;
 function pad(s, w, right) {
@@ -95,8 +97,8 @@ function matchup(n, a, b, maps, decks) {
     var sWins = 0, games = 0;
     maps.forEach(function (map, mi) {
       var h1 = Math.ceil(n / 2), h2 = Math.floor(n / 2);
-      var r1 = E.balanceMap(map, h1, { diffRed: strong, diffBlue: weak, seedBase: (mi + 1) * 7919, decks: decks });
-      var r2 = E.balanceMap(map, h2, { diffRed: weak, diffBlue: strong, seedBase: (mi + 1) * 7919 + 31, decks: decks2 });
+      var r1 = SIM.balanceMap(map, h1, { diffRed: strong, diffBlue: weak, seedBase: (mi + 1) * 7919, decks: decks });
+      var r2 = SIM.balanceMap(map, h2, { diffRed: weak, diffBlue: strong, seedBase: (mi + 1) * 7919 + 31, decks: decks2 });
       sWins += r1.redWins + ((h2 - r2.unfinished) - r2.redWins);
       games += (h1 - r1.unfinished) + (h2 - r2.unfinished);
       process.stdout.write('.');
@@ -150,10 +152,10 @@ function mapReport(n, diff, filter, maps, mapsetArg, decks) {
 
   maps.forEach(function (map, mi) {
     var seedBase = (mi + 1) * 7919;
-    var r = E.balanceMap(map, n, { diffRed: diff, diffBlue: diff, seedBase: seedBase, decks: decks,
+    var r = SIM.balanceMap(map, n, { diffRed: diff, diffBlue: diff, seedBase: seedBase, decks: decks,
       onGame: dbh && function (g1, nn, st) {
         try {
-          db.insertSkirmish(dbh, runId, st, E.balanceFP(g1 - 1), { seed: E.balanceSeed(seedBase, g1 - 1), version: E.VERSION });
+          db.insertSkirmish(dbh, runId, st, SIM.balanceFP(g1 - 1), { seed: SIM.balanceSeed(seedBase, g1 - 1), version: E.VERSION });
         } catch (e) { /* persistence is best-effort */ }
       } });
     var done = n - r.unfinished;
@@ -266,7 +268,7 @@ if (decks) {
   console.log('Decks: red = ' + (redId || 'active') + ', blue = ' + (blueId || 'active') + '\n');
 }
 if (args[0] === 'matchup') {
-  // node balance.js matchup [n] [aiA aiB]  — aiA/aiB may be any AI_PRESETS
+  // node dev/balance.js matchup [n] [aiA aiB]  — aiA/aiB may be any AI_PRESETS
   // name (easy/normal/hard or a maps.js "ai" personality)
   var rest = args.slice(1).filter(function (a) { return !/^\d+$/.test(a); });
   rest.forEach(function (a) {

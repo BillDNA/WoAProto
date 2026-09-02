@@ -35,7 +35,7 @@ Considered harness choices:
 
 An earlier objection — that `node:test` would break the golden-balance-diff's
 byte-identical contract — was wrong: the golden diff oracles
-`node game/balance.js` output, **not** `test.js` output. The functional gate's
+`node dev/balance.js` output, **not** `test.js` output. The functional gate's
 console format is free to change as long as it still exits non-zero on failure.
 
 ## Decision
@@ -67,7 +67,7 @@ The golden-balance-diff is **not** promoted to a first-class test here. Tests
 answer *"does it function"*; balance answers *"is this fair"*. Content and
 functional work does not care whether the meta is fair, so the fairness oracle
 does not belong in the functional gate — coupling it would add a slow test and
-conflate two separate concerns. It stays the manual `node game/balance.js`
+conflate two separate concerns. It stays the manual `node dev/balance.js`
 byte-identical discipline. A dedicated fairness-check *suite* (a sweep sibling
 to the test suite) is a parked idea, not this work.
 

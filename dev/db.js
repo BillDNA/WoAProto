@@ -37,7 +37,7 @@
 
    WOA-038 (Control% on the dashboard): `skirmishes` grew `hexes_red`/`hexes_blue`
    INTEGER columns -- hex-ownership tally at skirmish end, now sourced from the
-   engine's single-source E.skirmishFacts (architecture review 01) so the DB
+   sim layer's single-source SIM.skirmishFacts (architecture review 01) so the DB
    path and balanceAdd cannot drift. NULL on rows written before this ticket
    (report-model.js's foldSkirmishes treats a NULL pair as "no control data",
    never a fabricated 0/0 tie). */
@@ -47,6 +47,9 @@ var fs = require('fs');
 var path = require('path');
 var sqlite = require('node:sqlite');
 var E = require(path.join(__dirname, '..', 'game', 'engine.js'));
+// skirmishFacts (the shared per-skirmish fact derivation) is the batch/measurement
+// layer's, evicted from the engine in #220.
+var SIM = require(path.join(__dirname, '..', 'game', 'sim.js'));
 
 var DEFAULT_DB = path.join(__dirname, '..', 'logs', 'woa.db');
 var RUN_KINDS = ['balance', 'llm', 'human', 'watch'];
@@ -259,7 +262,7 @@ function insertSkirmish(h, runId, st, firstPlayer, extra) {
   // Architecture review 01: the per-Skirmish scalar facts are derived ONCE, by
   // the engine, and written straight to columns here — no more hand-mirrored
   // "bit-for-bit the same as balanceAdd" derivations in this file.
-  var f = E.skirmishFacts(st, firstPlayer);
+  var f = SIM.skirmishFacts(st, firstPlayer);
   var winner = f.winner;
   var seed = extra.seed !== undefined ? extra.seed : nz(st.seed);
   // WOA-032 (SPEC §4): the trace envelope — st.playLog + st.unitMetrics
