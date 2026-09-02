@@ -511,7 +511,7 @@ function playCardUI(cid){
   $('pcCancel').onclick = function(){ closeOverlay('playOvr'); };
 }
 function act(choice){
-  var st = APP.st, v = E.view(st);
+  var st = APP.st;
   var pre = capturePre(st, choice);
   try { E.applyStep(st, choice); } catch(e){ toast('Invalid move.', 1800); renderAll(); return; }
   APP.ui.sel = null;

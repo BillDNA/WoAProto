@@ -271,8 +271,8 @@ function setBaseline(h, runId) {
        original seed (simSkirmish callers do) should pass extra.seed. */
 function insertSkirmish(h, runId, st, firstPlayer, extra) {
   extra = extra || {};
-  if (!st || st.flow.phase !== 'skirmish-over')
-    throw new Error('insertSkirmish: st must be a finished skirmish (phase skirmish-over, got "' + (st && st.flow.phase) + '")');
+  if (!st || !st.flow || st.flow.phase !== 'skirmish-over')
+    throw new Error('insertSkirmish: st must be a finished skirmish (phase skirmish-over, got "' + (st && st.flow && st.flow.phase) + '")');
   var version = extra.version || st.version || null;
   if (version === null) {
     var row = h.stmts.getRunVersion.get(runId);
