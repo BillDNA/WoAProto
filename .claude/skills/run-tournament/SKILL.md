@@ -1,6 +1,6 @@
 ---
 name: run-tournament
-description: Run an AI (and optionally LLM) tournament over the War of Attrition map roster and turn the metric spread into graded balance suggestions for Bill. Use when asked to "run a tournament", "check the balance", "measure the meta", or after any rules/card/map change lands.
+description: Run an AI (and optionally LLM) tournament over the War of Attrition map library and turn the metric spread into graded balance suggestions for Bill. Use when asked to "run a tournament", "check the balance", "measure the meta", or after any rules/card/map change lands.
 ---
 
 # run-tournament
@@ -13,14 +13,14 @@ changes).
 **Stays in its lane:** this skill both *measures* (the sweep) and *grades*
 (the rubric read) in one pass — the combined job `generate-reports` +
 `review-reports` split across two skills. Use `run-tournament` for a quick
-one-shot roster-wide meta check with no saved artifact; use the
+one-shot mapset-wide meta check with no saved artifact; use the
 `generate-reports` → `review-reports` pair when you want the fuller loop (a
 seeded LLM felt-note match, a saved `logs/reports/analysis/` write-up, or
 findings meant to feed `create-card`/`create-map`).
 
 ## Inputs to settle first (ask only if genuinely unclear)
 
-- Scope: the default pool is the ACTIVE map-set (12-map roster as shipped);
+- Scope: the default pool is the ACTIVE mapset (12-map set as shipped);
   `--mapset <id>` picks another set, `--mapset all` = every map on disk, or use
   a name filter. n per map (default 60; 24 for a quick look)?
 - Which AIs: `normal` for the standard read; add `hard` if pacing allows; any
@@ -33,7 +33,7 @@ findings meant to feed `create-card`/`create-map`).
    - `node game/balance.js 60` — per-map report + Behaviour/Decisiveness + card report.
      (To SAVE the report and fold it into the per-version accumulator, use
      `node dev/balance-report.js 60 --parallel` instead — much faster on the
-     full roster, identical numbers.)
+     full mapset, identical numbers.)
    - `node game/balance.js matchup 16` — skill premium (stronger AI's win rate).
    - Pit personalities when relevant: `node game/balance.js matchup 16 brawler turtle`.
 2. **LLM skirmishes** (only if asked): `node dev/claude-plays.js --red haiku --blue normal

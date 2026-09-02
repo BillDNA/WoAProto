@@ -92,8 +92,14 @@ var ALIASES = [
   { term: 'map-set (→ Mapset)', pattern: /\bmap-sets?\b/gi, status: 'pending', note: 'hyphenated form in README (player-facing) + docs' },
   { term: 'Map Card / Map Deck (→ Map)', pattern: /\bmap (cards?|deck)\b/gi, status: 'locked' },
   { term: 'difficulty (→ AI personality / strength)', pattern: /\bdifficult(y|ies)\b/gi, status: 'locked', note: 'the AI param is `personality`; a preset\'s tier is its strength' },
-  { term: 'map pool (→ Mapset)', pattern: /\bmap ?pool\b/gi, ignore: /mapPool\(|E\.mapPool/, status: 'pending', note: '`mapPool()` exported engine API + UI wrappers' },
-  { term: 'roster (→ Mapset)', pattern: /\broster/gi, status: 'pending', note: 'Rosters UI overlay + rosterFor/rosterReplace identifiers' },
+  { term: 'map-set (→ Mapset)', pattern: /\bmap-sets?\b/gi, status: 'locked' },
+  { term: 'map pool (→ Mapset)', pattern: /\bmap ?pool\b/gi, status: 'locked', note: 'the active mapset is the draw pool; its maps are `activeMaps()`' },
+  // roster meant three things; the mapset + map-library senses are migrated, so
+  // the only allowed "roster" is the player piece-mats overlay UI (a distinct
+  // concept) and the V0 `map-roster-and-shapes` spec codename.
+  { term: 'roster (→ Mapset / map library)', pattern: /\broster/gi,
+    ignore: /rostersOvr|rostersBody|fabRosters|syncRostersOverlay|RostersOverlay|BOTH rosters|>Rosters<|map-roster-and-shapes/, status: 'locked',
+    note: 'active-set → Mapset; full collection → map library; piece mats stay the mats overlay' },
   { term: 'match — best-of (→ Battle)', pattern: /\bmatch(es|up|ed|ing)?\b/gi,
     ignore: /matchup|matched in|\.match\(|match\.maps|match\.wins|st\.match|newMatch|skirmishWinner/i,
     status: 'pending', note: 'st.match / newMatch identifiers + runbook prose' },

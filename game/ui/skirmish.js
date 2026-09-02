@@ -31,7 +31,7 @@ function syncRostersOverlay(){
 }
 
 function startLocal(mode, mapsOverride){
-  var pool = mapsOverride || getMapPool();
+  var pool = mapsOverride || getActiveMaps();
   if (!pool || !pool.length){ toast('No maps are in play! Enable some in Maps &amp; Map Editor.', 3500); return; }
   APP.mode = mode;
   var match = E.newMatch({ maps: pool });
@@ -433,7 +433,7 @@ function showSkirmishOver(){
     $('skirmishOvr').classList.remove('active');
     clearSave();
     if (APP.mode==='net'){
-      var pool = getMapPool() || E.MAPS;
+      var pool = getActiveMaps() || E.MAPS;
       var match = E.newMatch({ maps: pool });
       APP.st = E.newSkirmish(match);
       renderAll(); pushState();

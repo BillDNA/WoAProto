@@ -39,9 +39,9 @@ _Avoid_: Board, level, battlefield, Map Card.
 _Home_: `game/content/maps/causeway.js:3` — `"name"`
 
 **Mapset**:
-A named roster of Maps; exactly one is *active* at a time and is the draw pool for every play mode and tool.
-_Avoid_: Map-set, map pool, roster.
-_Home_: `game/engine/01-core.js:81` — `mapPool`
+A named, curated list of Maps; exactly one is *active* at a time and is the draw pool for every play mode and tool. Distinct from the **map library** — the full set of content Maps (`E.MAPS`) the sets are drawn from.
+_Avoid_: Map-set, map pool, roster (for the active set — the whole collection is the *map library*, the player's pieces are the *mats*).
+_Home_: `game/engine/01-core.js:81` — `activeMaps`
 
 **Hex**:
 One cell of the board; a piece occupies at most one.

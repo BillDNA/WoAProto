@@ -165,7 +165,7 @@ $('btnResume').onclick = function(){
 checkResume();
 
 $('btnHost').onclick = function(){
-  var pool = getMapPool();
+  var pool = getActiveMaps();
   if (!pool || !pool.length){ toast('No maps are in play! Enable some in Maps &amp; Map Editor.', 3500); return; }
   var match = E.newMatch({ maps: pool });
   var st = E.newSkirmish(match);
@@ -196,7 +196,7 @@ $('btnCardsMenu').onclick = showCards;
 $('btnMaps').onclick = function(){ renderMapsScr(); show('mapsScr'); };
 $('btnMapsBack').onclick = function(){ show('menu'); checkResume(); };
 $('btnNewMap').onclick = function(){ openEditor(null); };
-// Export the whole roster as a shareable bundle (maps are files now, so this is
+// Export the whole map library as a shareable bundle (maps are files now, so this is
 // just a convenient way to hand someone your set); Import writes each map to its
 // own content file via the server.
 $('btnExportMaps').onclick = function(){
@@ -229,7 +229,7 @@ $('importFile').onchange = function(){
         m.custom = true;
         m.id = m.id || slugifyMap(m.name);
         if (m.shapeDef) m.shape = '@' + m.id;
-        rosterReplace(m);
+        libraryReplace(m);
         saveMapFile(m).catch(function(){ toast('Could not save "'+m.name+'" as a file.', 3500); });
         saved++;
       });
@@ -380,14 +380,14 @@ $('dashRun').onclick = function(){
   var dr = $('dashRed').value, db = $('dashBlue').value;
   var pick = $('dashMap').value;
   // '@adhoc' = the map editor's as-drawn (possibly unsaved) def, via openDashDef
-  var maps = pick === '@adhoc' ? (DASH.adhoc ? [DASH.adhoc] : []) : getMapPool();
+  var maps = pick === '@adhoc' ? (DASH.adhoc ? [DASH.adhoc] : []) : getActiveMaps();
   if (pick !== 'all' && pick !== '@adhoc') maps = maps.filter(function(m){ return m.name === pick; });
   if (!maps.length){ toast('No maps in play — enable some in Maps &amp; Map Editor.', 3500); return; }
   var probs = E.validateMaps(maps);
   if (probs.length){ toast('Fix these maps first: '+probs.join('; '), 4500); return; }
   DASH.running = true; DASH.cancel = false;
   // mapset/seedBase (WOA-032, SPEC §7 run identity): `pick` IS this run's map
-  // selection ('all' = the active map-set's pool, a map name, or '@adhoc');
+  // selection ('all' = the active mapset's pool, a map name, or '@adhoc');
   // 7919 is the SAME seed-schedule base the per-map E.balanceSeed((mi+1)*7919, g)
   // call below already uses — one fact, not a second number invented here.
   DASH.results = []; DASH.meta = { n:n, dr:dr, db:db, mapset:pick, seedBase:7919 };

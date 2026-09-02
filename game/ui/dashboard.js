@@ -33,7 +33,7 @@ function openDash(){
   var sel = $('dashMap');
   var cur = sel.value;
   sel.innerHTML = '<option value="all">All in play</option>';
-  getMapPool().forEach(function(m){
+  getActiveMaps().forEach(function(m){
     var o = document.createElement('option');
     o.value = m.name; o.textContent = m.name;
     sel.appendChild(o);

@@ -29,7 +29,7 @@ function wrapContent(kind, obj) {
 }
 var regenContentManifest = require(path.join(CONTENT_DIR, 'manifest-gen.js')).regen;
 // Regenerate at boot too, not just on save/delete — hand-added content files
-// (or a git pull) otherwise leave the browser on a stale roster.
+// (or a git pull) otherwise leave the browser on a stale map library.
 try { regenContentManifest(); } catch (e) { console.log('  (manifest regen failed: ' + e.message + ')'); }
 
 // --- V1 skirmish persistence (guarded: dev/ may be absent from a zip) ---------
@@ -185,7 +185,7 @@ var ROUTES = {
     saveUnderRepo(res, ['logs', 'debug'], String(body.filename), /^[A-Za-z0-9._-]+\.json$/, body.content);
   },
   'POST /api/savemapsets': function (req, res, body) {
-    // The Map-Sets panel owns the full slot state (like the deck slots): it
+    // The Mapsets panel owns the full slot state (like the deck slots): it
     // POSTs every named set + which one is active; we rewrite the whole
     // content/mapsets/ dir to match (files not in the list are deleted).
     var sets = body.mapsets;

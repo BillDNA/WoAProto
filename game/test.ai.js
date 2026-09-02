@@ -296,11 +296,11 @@ test('V1 AI search', () => {
     '0,0': { type: 'infantry', owner: 'red' }, '1,0': { type: 'infantry', owner: 'red' },
     '0,1': { type: 'cavalry', owner: 'red' }
   };
-  // V1 map-sets: the active set IS the pool, one roster for every consumer
+  // V1 mapsets: the active set IS the pool, one mapset for every consumer
   assert.ok(E.MAPSETS.length >= 1 && E.activeMapset() && E.activeMapset().id === 'core7',
-    'core7 map-set loaded and active');
-  assert.ok(E.mapPool().length === E.activeMapset().maps.length && E.mapPool().length <= E.MAPS.length,
-    'mapPool = the active set (' + E.mapPool().length + ' maps)');
+    'core7 mapset loaded and active');
+  assert.ok(E.activeMaps().length === E.activeMapset().maps.length && E.activeMaps().length <= E.MAPS.length,
+    'activeMaps = the active set (' + E.activeMaps().length + ' maps)');
 
   var reps = E.listRepositions(st3, 'red');
   assert.ok(!reps.swaps.some(function (sw) { return st3.units[sw.a].type === st3.units[sw.b].type; }),

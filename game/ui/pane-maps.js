@@ -177,7 +177,7 @@ var MDHEX_R = 40; // hex draw radius; board.js hexXY spacing is S=44 -> ~4px gut
 
 /* map NAME (the DB/trace `map` field IS st.mapName = map.name) -> its map def
    on disk, or null if it's been deleted since the run. Searched over the whole
-   roster (E.MAPS), not just the active pool — a run may predate a pool edit. */
+   map library (E.MAPS), not just the active mapset — a run may predate a pool edit. */
 function mdMapDef(mapName) {
   var maps = E.MAPS || [];
   for (var i = 0; i < maps.length; i++) if (maps[i].name === mapName) return maps[i];

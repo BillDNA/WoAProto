@@ -6,7 +6,7 @@
 
    Usage: node dev/claude-plays.js [options]
      --map <filter>     map name filter, case-insensitive — pins ONE map. Default:
-                        MATCH mode draws each skirmish's map from the roster/mapset
+                        MATCH mode draws each skirmish's map from the mapset
                         pool (engine-shuffled by seed); single skirmish = first map
      --red <spec>       easy|normal|hard (or any maps.js "ai" row) = heuristic AI;
      --blue <spec>      anything else (haiku|sonnet|opus|model id) = LLM.
@@ -19,7 +19,7 @@
      --deck <id>        play with content/decks/<id>.js instead of the active deck
      --units <id>       play with content/units/<id>.js unit stats (composition +
                         atk/def/sup/vp) instead of the maps.js default
-     --mapset <id>      restrict the roster to a content/mapsets/<id>.js set
+     --mapset <id>      restrict to a content/mapsets/<id>.js set
      --k <n>            step options shown to the LLM: the n most promising of
                         the full legal list, engine-ranked (default 15; attack
                         steps are never truncated). --full-options disables it.
@@ -598,13 +598,13 @@ async function feltNotes(args, transports, side, prompt, usage) {
 /* ---------- the run ---------- */
 async function main() {
   const args = ARGS;
-  let maps = E.mapPool(); // the ACTIVE map-set's roster (V1)
+  let maps = E.activeMaps(); // the ACTIVE mapset's maps (V1)
   if (args.mapset === 'all') maps = E.MAPS;
   else if (args.mapset) {
     const set = E.MAPSETS.filter(function (s) { return s.id === args.mapset; })[0];
     if (!set) { console.error('--mapset "' + args.mapset + '" not found. Available: ' + (E.MAPSETS.map(function (s) { return s.id; }).join(', ') || 'none installed') + ', all'); process.exit(1); }
     maps = E.MAPS.filter(function (m) { return set.maps.indexOf(m.id) >= 0 || set.maps.indexOf(m.name) >= 0; });
-    if (!maps.length) { console.error('map-set "' + args.mapset + '" matches no installed maps'); process.exit(1); }
+    if (!maps.length) { console.error('mapset "' + args.mapset + '" matches no installed maps'); process.exit(1); }
   }
   const map = args.map
     ? maps.find(function (m) { return m.name.toLowerCase().includes(args.map.toLowerCase()); })

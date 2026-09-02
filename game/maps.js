@@ -5,7 +5,7 @@
    refresh the browser. `node test.js` validates everything and will point at
    exactly what is wrong. `node balance.js` shows what your change did.
 
-   NOTE (Feedback Round 4, Pass 2): the MAP ROSTER and the CARD DECK no longer
+   NOTE (Feedback Round 4, Pass 2): the MAP LIBRARY and the CARD DECK no longer
    live here — they are per-item files under game/content/ (maps/<slug>.js,
    decks/<slug>.js) that each register into a WOA_CONTENT global, so you can
    delete a map or a deck by deleting its file (no more localStorage tombstones).

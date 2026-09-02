@@ -293,6 +293,6 @@ function edSaveDef(def){
   def.custom = true;
   if (!def.id) def.id = slugifyMap(def.name);
   if (def.shapeDef) def.shape = '@' + def.id;    // ensureMapShape keys off id
-  rosterReplace(def);                            // usable in E.MAPS immediately
+  libraryReplace(def);                            // usable in E.MAPS immediately
   return saveMapFile(def);                       // persist to content/maps/<id>.js when the server is up
 }

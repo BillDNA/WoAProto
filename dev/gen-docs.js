@@ -10,8 +10,8 @@
                                  easy/normal/hard, i.e. the maps.js "ai" rows)
      in docs/ai/ai-heuristic-model.md, and
 
-     <!-- GEN:content -->        the current content roster (maps with shape +
-                                 custom flag, decks, map-sets with the active
+     <!-- GEN:content -->        the current content map library (maps with shape +
+                                 custom flag, decks, mapsets with the active
                                  marker) in docs/code-architecture.md.
 
    Usage: node dev/gen-docs.js
@@ -113,7 +113,7 @@ function genContent() {
     '',
     '- **Maps (' + maps.length + '):** ' + maps.join(', '),
     '- **Decks (' + decks.length + '):** ' + decks.join(', '),
-    '- **Map-sets (' + sets.length + '):** ' + sets.join(', '),
+    '- **Mapsets (' + sets.length + '):** ' + sets.join(', '),
     '- **Unit-sets (' + units.length + '):** ' + (units.join(', ') || '_none — engine uses the maps.js default 7/2/1_')
   ].join('\n');
 }

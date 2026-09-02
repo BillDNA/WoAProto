@@ -1,12 +1,12 @@
 ---
 name: generate-reports
-description: Generate a fresh War of Attrition report set — a 100-skirmish hard-vs-hard balance sweep plus one fire-and-forget first-to-3 LLM match (fixed seed 1001, maps drawn from the mapset pool; seeds 2002/3003 are optional extras) against any deck + map-set. Saves everything the standard way under logs/reports. Use when asked to "generate reports", "make a fresh report set", "generate-reports", or to refresh the data before a review.
+description: Generate a fresh War of Attrition report set — a 100-skirmish hard-vs-hard balance sweep plus one fire-and-forget first-to-3 LLM match (fixed seed 1001, maps drawn from the mapset pool; seeds 2002/3003 are optional extras) against any deck + mapset. Saves everything the standard way under logs/reports. Use when asked to "generate reports", "make a fresh report set", "generate-reports", or to refresh the data before a review.
 ---
 
 # generate-reports
 
 Produce the standard report set for the current rules version, against ANY deck +
-map-set (defaults: the ACTIVE pair). **This only generates data — it changes no game
+mapset (defaults: the ACTIVE pair). **This only generates data — it changes no game
 files.** Repo-relative paths; run from the repo root.
 
 This is the **gather-data** step of the balance-iteration loop (§ The v2 loop below;

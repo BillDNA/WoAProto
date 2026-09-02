@@ -63,7 +63,7 @@ win.setTimeout = function (fn, ms) { return realSetTimeout(fn, Math.min(ms || 0,
 
 realSetTimeout(function () {
   console.log('== boot ==');
-  assert.ok(win.Engine && win.Engine.MAPS.length >= 5, 'engine loaded the map roster (' + (win.Engine && win.Engine.MAPS.length) + ' maps)');
+  assert.ok(win.Engine && win.Engine.MAPS.length >= 5, 'engine loaded the map library (' + (win.Engine && win.Engine.MAPS.length) + ' maps)');
   assert.ok(doc.querySelectorAll('#edShape option').length === Object.keys(win.Engine.SHAPES).length + 1,
     'editor shape dropdown = maps.js shapes + the Custom entry');
 
@@ -151,7 +151,7 @@ realSetTimeout(function () {
     doc.getElementById('edMirror').click();
     assert.ok(Object.keys(win.ED.edges).length === 2, 'Mirror creates the rotated twin side');
 
-    console.log('== map roster deletion + board-shape carving (V0) ==');
+    console.log('== map library deletion + board-shape carving (V0) ==');
     var firstTileBtns = doc.querySelector('#mapGrid .mapitem .btns');
     assert.ok(firstTileBtns && firstTileBtns.textContent.indexOf('Delete') >= 0, 'built-in map tiles offer Delete (floor of 5 enforced on click)');
     var hexTool = doc.querySelector('.edtools button[data-tool="hexes"]');

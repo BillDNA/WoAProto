@@ -24,7 +24,7 @@ opponent is *someone worth beating*.
 2. ==**The tell can be learned and turned.**== Watch a loss: name the pattern a beaten player would diagnose and beat next time. If you can't — it hides behind no tell, out-muscles you with a tell that has no counter, or won't commit to its pattern long enough to read — say which, because each points at a different repair.
 3. ==**No two members fall to the same read.**== Across the panel, does beating one personality teach you to beat another? A shared counter means one puzzle wearing two names — and the style *nothing* punishes is the gap content overfits into. The balance sweep's spread (`Swings`/`Drag` among its metrics) is the evidence, read as a per-member profile, never a mean.
 
-## Roster
+## Personalities
 
 An archetype *spread*, not a set of tuned rows: **brawler · turtle · hawk** seed
 the corners; add a row only when a story-character (a Commander's `personality`)
