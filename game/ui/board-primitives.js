@@ -112,10 +112,16 @@ function bpBeginBoard(svg){
 }
 
 /* =================== primitives =================== */
+// the bare parchment hex-tile polygon (its look is the .hex / .hex.dark CSS
+// class). Shared by every board renderer: the live board (bpHexTile adds the
+// coord label + data-hex), the manual diagram, and the map editor.
+function bpHexPoly(cx, cy, rad, dark){
+  return svgEl('polygon', { points: hexPoints(cx, cy, rad), 'class': 'hex' + (dark ? ' dark' : '') });
+}
 // one parchment hex + its coord label
 function bpHexTile(g, key){
   var xy = hexXY(key), qr = E.parseKey(key);
-  var p = svgEl('polygon', { points: hexPoints(xy[0], xy[1], S-1), 'class':'hex'+(((qr[0]-qr[1])%2+2)%2 ? ' dark':'') });
+  var p = bpHexPoly(xy[0], xy[1], S-1, ((qr[0]-qr[1])%2+2)%2);
   p.dataset.hex = key;
   g.appendChild(p);
   var lbl = svgEl('text', { x: xy[0], y: xy[1]-S*0.58, 'text-anchor':'middle', 'class':'coordlbl' });

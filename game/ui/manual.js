@@ -97,8 +97,7 @@ function mpDrawFrame(f){
   // hexes + grid labels (same classes as the live board)
   list.forEach(function(k){
     var xy = mpXY(k), p = E.parseKey(k);
-    svg.appendChild(svgEl('polygon', { points: hexPoints(xy[0], xy[1], MP_S-1),
-      'class': 'hex'+(((p[0]-p[1])%2+2)%2 ? ' dark' : '') }));
+    svg.appendChild(bpHexPoly(xy[0], xy[1], MP_S-1, ((p[0]-p[1])%2+2)%2));
     var lbl = svgEl('text', { x: xy[0], y: xy[1]-MP_S*0.58, 'text-anchor':'middle', 'class':'coordlbl' });
     lbl.textContent = E.hexLabel(k);
     svg.appendChild(lbl);

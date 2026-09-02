@@ -117,7 +117,7 @@ function renderEditor(){
   svg.appendChild(gHex); svg.appendChild(gTer); svg.appendChild(gHit);
   hexList.forEach(function(k){
     var xy = hexXY(k);
-    var p = svgEl('polygon', { points: hexPoints(xy[0], xy[1], S-1), 'class':'hex' });
+    var p = bpHexPoly(xy[0], xy[1], S-1, false); // editor tiles are uniform, no dark parity
     if (ED.tool==='redhq' || ED.tool==='bluehq'){
       p.style.cursor = 'pointer';
       p.addEventListener('click', function(){
