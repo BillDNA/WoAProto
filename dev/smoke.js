@@ -67,9 +67,22 @@ realSetTimeout(function () {
   assert.ok(doc.querySelectorAll('#edShape option').length === Object.keys(win.Engine.SHAPES).length + 1,
     'editor shape dropdown = maps.js shapes + the Custom entry');
 
-  console.log('== AI skirmish through the DOM ==');
-  doc.getElementById('btnAI').click();
-  assert.ok(doc.getElementById('game').classList.contains('active'), 'game screen shown');
+  console.log('== partition: front door hides dev tooling by default ==');
+  assert.ok(!doc.getElementById('btnAI'), 'old March-against-AI button gone from the front door');
+  assert.ok(doc.getElementById('btnPlay') && doc.getElementById('btnSettings'), 'front door offers Play + Settings');
+  assert.ok(!win.devMode(), 'dev mode off by default');
+  assert.ok(!win.screenAllowed('maps') && !win.screenAllowed('deck') && !win.screenAllowed('dash') && !win.screenAllowed('devhub'),
+    'dev screens gated off while dev mode is off');
+  assert.ok(win.screenAllowed('campaign') && win.screenAllowed('settings'), 'player screens always allowed');
+  assert.ok(doc.getElementById('settingsScr').querySelector('#sideRow') && doc.getElementById('diffSel'),
+    'side + enemy general moved off the menu into Settings');
+
+  console.log('== front door → campaign → battle ==');
+  doc.getElementById('btnPlay').click();
+  assert.ok(doc.getElementById('campaignScr').classList.contains('active'),
+    'Play opens the campaign run-flow stub, not a battle directly');
+  doc.getElementById('btnNextBattle').click();
+  assert.ok(doc.getElementById('game').classList.contains('active'), 'Next Battle drops into a battle');
   assert.ok(doc.querySelectorAll('#board polygon.hex').length >= 19, 'board hexes rendered');
   assert.ok(doc.querySelectorAll('#board .coordlbl').length >= 19, 'grid labels rendered on hexes');
   var lblTexts = Array.prototype.map.call(doc.querySelectorAll('#board .coordlbl'), function (t) { return t.textContent; });
@@ -134,8 +147,15 @@ realSetTimeout(function () {
     assert.ok(spentRed >= 1 && spentBlue >= 1, 'both mats show spent orders (red ' + spentRed + ', blue ' + spentBlue + ')');
     assert.ok(doc.querySelectorAll('#matRed .slot.field, #matRed .slot.lost').length >= 1, 'red mat slots emptied as pieces deployed/died');
 
-    console.log('== maps screen & editor ==');
+    console.log('== dev mode reveals the Dev Hub → maps screen & editor ==');
     doc.getElementById('btnQuit').click();
+    assert.ok(doc.getElementById('menu').classList.contains('active'), 'Menu returns to the front door');
+    win.setDevMode(true); // arm the real dev flag (the ` hotkey / Settings toggle path)
+    assert.ok(win.devMode() && win.screenAllowed('maps'), 'dev mode on reveals the dev screens');
+    doc.getElementById('btnDevHub').click(); // dev-only front-door link → Dev Hub
+    assert.ok(doc.getElementById('devHubScr').classList.contains('active'), 'Dev Hub opens');
+    assert.ok(doc.getElementById('btnMaps') && doc.getElementById('btnDeck') && doc.getElementById('btnDash') && doc.getElementById('btnWatch'),
+      'Dev Hub generated its tool buttons from the registry');
     doc.getElementById('btnMaps').click();
     var tiles = doc.querySelectorAll('#mapGrid .mapitem').length;
     assert.ok(tiles >= win.Engine.MAPS.length, 'all built-in maps listed (+ any shipped customs): ' + tiles + ' tiles');

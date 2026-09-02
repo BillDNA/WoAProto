@@ -106,8 +106,39 @@ _Avoid_: Order (a Card *is* the order; "order an attack" is the verb).
 _Home_: `game/engine/04-skirmish.js:281` — `playCard`
 
 **Deck**:
-A side's set of Cards for a Skirmish.
+A side's set of Cards for a Skirmish. The in-skirmish draw pile — stays "Deck" even once the build layer becomes the Battalion.
 _Home_: `game/engine/04-skirmish.js:42` — `buildDeck`
+
+**Battalion**:
+The player-facing, curated set of Cards taken into a Battle — the roguelite successor to the raw dev Deck, built from the Card catalog. The in-skirmish draw pile it produces is still the Deck.
+_Avoid_: using Deck for the player's build layer (Deck is the dev/skirmish term).
+_Home_: none yet — Battalion layer, arrives with the content model.
+
+**Card catalog**:
+The full pool of Cards a Battalion may draw from — the owned collection, distinct from the in-run *draft* that picks from it between Battles.
+_Avoid_: draft (the draft is the between-Battle pick, not the pool).
+_Home_: none yet — catalog layer, arrives with the content model.
+
+## Player surface & navigation
+
+*(The running app's screens and the dev/player seam — see the UI partition.)*
+
+**Front door**:
+The Play-first entry screen a player meets: Play (New Campaign), Continue (only with a save), Settings. Replaces the old flat menu that mixed dev tools in.
+_Avoid_: main menu (it is a front door onto a run, not a flat hub).
+_Home_: `game/ui/screens.js:17` — `frontdoor:`
+
+**Run flow**:
+The sequence of player screens a campaign moves through between Battles — campaign → battle → rewards → run summary — each a registry slot, built or reserved as a stub.
+_Home_: `game/ui/screens.js:19` — `campaign:`
+
+**Dev mode**:
+A `localStorage` flag, off by default, that reveals dev tooling; toggled by the `` ` `` hotkey or the Settings row. The single hardening seam — a player build never sets it, and every dev surface stays hidden.
+_Home_: `game/ui/screens.js:40` — `devMode`
+
+**Dev Hub**:
+The screen that roofs the standalone dev tools (Deck Editor, Maps & Map Editor, Balance Dashboard, Watch AI-vs-AI), reachable only in Dev mode.
+_Home_: `game/ui/screens.js:24` — `devhub:`
 
 ## Endings & scoring
 

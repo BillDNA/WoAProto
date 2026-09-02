@@ -8,12 +8,49 @@
 </head>
 <body>
 
-<!-- ============ MENU ============ -->
+<!-- ============ MENU (front door) ============
+     Play-first: one loud Play, Continue only when a save exists, Settings quiet.
+     Local multiplayer folds into one disclosure; dev tooling is gone from here —
+     it lives behind the dev-mode flag (` hotkey) → Dev Hub. -->
 <div id="menu" class="screen active">
   <div class="panel parchment">
     <h1>War of Attrition</h1>
     <div class="sub">a field commander's journal of the long campaign</div>
     <div class="rule"></div>
+    <div class="menu-btns">
+      <button id="btnResume" class="btn-primary" style="display:none;">Continue Campaign</button>
+      <button id="btnPlay" class="btn-primary">Play &mdash; New Campaign</button>
+      <button id="btnSettings" class="ghost btn-ghost-dark">Settings</button>
+      <details class="mp-fold">
+        <summary>Play with a friend</summary>
+        <div class="mp-group">
+          <button id="btnHotseat">Hotseat &mdash; Shared Device</button>
+          <button id="btnHost">Host a Room (two devices)</button>
+          <div class="join-row">
+            <input id="joinCode" maxlength="4" placeholder="CODE">
+            <button id="btnJoin">Join</button>
+          </div>
+          <div class="small" id="netHint">For two devices: run the little server (run-server.bat), then open this page on both devices at the address it prints.</div>
+        </div>
+      </details>
+    </div>
+    <div class="rule"></div>
+    <div class="menu-foot">
+      <button id="btnManual" class="linklike">Field Manual</button>
+      <span class="foot-sep">&middot;</span>
+      <button id="btnCardsMenu" class="linklike">Card Glossary</button>
+      <span class="foot-sep dev-only">&middot;</span>
+      <button id="btnDevHub" class="linklike dev-only">Dev Hub</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SETTINGS ============
+     Side + enemy general moved off the front door; Display reserved; the Dev
+     mode toggle mirrors the ` hotkey flag. -->
+<div id="settingsScr" class="screen">
+  <div class="panel parchment">
+    <h2 style="font-variant:small-caps;text-align:center;">Settings</h2>
     <div class="opt-row" id="sideRow">
       <span class="small" style="align-self:center;">Play as:</span>
       <span class="choice sel" data-side="red">Red</span>
@@ -27,24 +64,67 @@
         <option value="hard" title="Thinks about your best reply before committing — takes a moment per turn">Field Marshal</option>
       </select>
     </div>
-    <div class="menu-btns">
-      <button id="btnResume" style="display:none;">Resume Campaign</button>
-      <button id="btnAI">March Against the AI</button>
-      <button id="btnHotseat">Hotseat &mdash; Shared Device</button>
-      <button id="btnHost">Host a Room (two devices)</button>
-      <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
-        <input id="joinCode" maxlength="4" placeholder="CODE">
-        <button id="btnJoin">Join</button>
-      </div>
-      <button id="btnWatch" class="ghost btn-ghost-dark">Watch: AI vs AI</button>
-      <button id="btnMaps" class="ghost btn-ghost-dark">Maps &amp; Map Editor</button>
-      <button id="btnDash" class="ghost btn-ghost-dark">Balance Dashboard</button>
-      <button id="btnDeck" class="ghost btn-ghost-dark">Deck Editor</button>
-      <button id="btnManual" class="ghost btn-ghost-dark">Field Manual (rules)</button>
-      <button id="btnCardsMenu" class="ghost btn-ghost-dark">Card Glossary</button>
+    <div class="opt-row">
+      <span class="small" style="align-self:center;">Display:</span>
+      <span class="small" style="align-self:center;opacity:.6;">(reserved)</span>
+    </div>
+    <div class="opt-row">
+      <label class="small" style="align-self:center;"><input type="checkbox" id="setDevToggle"> Dev mode &mdash; show dev tools (hotkey <kbd>`</kbd>)</label>
     </div>
     <div class="rule"></div>
-    <div class="small" id="netHint">For two devices: run the little server (run-server.bat), then open this page on both devices at the address it prints.</div>
+    <div class="ovr-btns"><button id="btnSettingsBack" class="ghost btn-ghost-dark">Back</button></div>
+  </div>
+</div>
+
+<!-- ============ CAMPAIGN (run-flow entry stub) ============
+     Play → here. The run system (campaign map, rewards, run summary) is a later
+     build; for now this reserves its home and a single Next Battle button drops
+     into a battle. -->
+<div id="campaignScr" class="screen">
+  <div class="panel parchment">
+    <h2 style="font-variant:small-caps;text-align:center;">The Campaign</h2>
+    <p class="small" style="text-align:center;">A campaign is a run of battles with screens between them. The campaign map, rewards, and run summary are reserved here — the run system that fills them arrives in a later build. For now, march into the next battle.</p>
+    <div class="ovr-btns" style="justify-content:center;">
+      <button id="btnNextBattle" class="btn-primary">Next Battle</button>
+    </div>
+    <div class="rule"></div>
+    <p class="small" style="text-align:center;">Reserved run-flow homes:
+      <button id="btnPeekRewards" class="linklike">Rewards / card draft</button>
+      <span class="foot-sep">&middot;</span>
+      <button id="btnPeekSummary" class="linklike">Run summary</button>
+    </p>
+    <div class="ovr-btns"><button id="btnCampaignBack" class="ghost btn-ghost-dark">Back</button></div>
+  </div>
+</div>
+
+<!-- ============ REWARDS / CARD DRAFT (reserved stub) ============ -->
+<div id="rewardsScr" class="screen">
+  <div class="panel parchment">
+    <h2 style="font-variant:small-caps;text-align:center;">Spoils of War</h2>
+    <p class="small" style="text-align:center;">Reserved home for the post-battle card draft (a pick-one card upgrade). The run system fills this in a later build.</p>
+    <div class="ovr-btns"><button id="btnRewardsBack" class="ghost btn-ghost-dark">Back</button></div>
+  </div>
+</div>
+
+<!-- ============ RUN SUMMARY (reserved stub) ============ -->
+<div id="runSummaryScr" class="screen">
+  <div class="panel parchment">
+    <h2 style="font-variant:small-caps;text-align:center;">Dispatches</h2>
+    <p class="small" style="text-align:center;">Reserved home for the end-of-run recap. The run system fills this in a later build.</p>
+    <div class="ovr-btns"><button id="btnRunSummaryBack" class="ghost btn-ghost-dark">Back</button></div>
+  </div>
+</div>
+
+<!-- ============ DEV HUB (dev mode only) ============
+     Roofs the standalone dev tools. Buttons are generated from the screen
+     registry (ui/screens.js) — one row per dev tool. -->
+<div id="devHubScr" class="screen">
+  <div class="panel parchment">
+    <h2 style="font-variant:small-caps;text-align:center;">Dev Hub</h2>
+    <p class="small" style="text-align:center;">Dev tooling, kept out of the player's way. Toggle dev mode with the <kbd>`</kbd> hotkey or in Settings.</p>
+    <div class="menu-btns" id="devHubBtns"></div>
+    <div class="rule"></div>
+    <div class="ovr-btns"><button id="btnDevHubBack" class="ghost btn-ghost-dark">Back</button></div>
   </div>
 </div>
 
@@ -61,7 +141,7 @@
       <span id="roomchip" style="display:none; padding:3px 10px; border:1px dashed var(--brass); border-radius:5px; font-size:13px; letter-spacing:2px;"></span>
       <span id="turnbadge">RED</span>
       <button class="ghost btn-sm" id="btnConcede" title="Give up this skirmish; the campaign moves on">Concede</button>
-      <button class="ghost btn-sm" id="btnDebug" title="Save this exact game state to logs/debug/ for a bug report (downloads a copy if the server isn't running)">Debug</button>
+      <button class="ghost btn-sm dev-only" id="btnDebug" title="Save this exact game state to logs/debug/ for a bug report (downloads a copy if the server isn't running)">Debug</button>
       <button class="ghost btn-sm" id="btnCards">Cards</button>
       <button class="ghost btn-sm" id="btnManual2">Manual</button>
       <button class="ghost btn-sm" id="btnQuit">Menu</button>
@@ -323,6 +403,7 @@ try {
 <script src="report-model.js"></script>
 <script src="ui/chart-model.js"></script>
 <script src="ui/app.js"></script>
+<script src="ui/screens.js"></script>
 <script src="ui/ui-primitives.js"></script>
 <script src="ui/board-primitives.js"></script>
 <script src="ui/board.js"></script>

@@ -644,3 +644,41 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
 .mapset-bar .mschip.active { border-width:2px; }
 .mapset-bar .mschip .msn { opacity:.7; font-size:11px; }
 .mapset-bar .msname { width:130px; font-size:13px; padding:2px 6px; }
+
+  /* ===== dev-mode seam ===== */
+  /* One predicate: everything marked .dev-only is hidden unless body.dev is set
+     (ui/screens.js applyDevMode). The single hardening seam — a player build
+     that never sets the flag drops every dev affordance. */
+  body:not(.dev) .dev-only { display:none !important; }
+
+  /* ===== front door + player nav ===== */
+  /* the one loud call-to-action; Continue + Play share it */
+  .menu-btns .btn-primary{
+    font-size:19px; padding:14px;
+    background:linear-gradient(180deg,#c8632f,var(--copper),#7a3f22);
+    color:#fff2e2; border:1px solid #5c2f1a;
+    text-shadow:0 1px 1px rgba(0,0,0,.4);
+  }
+  /* local-multiplayer disclosure */
+  .mp-fold{ text-align:center; }
+  .mp-fold > summary{
+    list-style:none; cursor:pointer; color:var(--ink-soft); font-style:italic;
+    font-size:13px; padding:6px; border:1px dashed var(--brass); border-radius:6px;
+  }
+  .mp-fold > summary::-webkit-details-marker{ display:none; }
+  .mp-fold[open] > summary{ margin-bottom:10px; }
+  .mp-group{ display:flex; flex-direction:column; gap:10px; }
+  .mp-group .join-row{ display:flex; gap:8px; justify-content:center; align-items:center; }
+  /* footer text-links (Manual / Glossary / Dev Hub) */
+  .menu-foot{ display:flex; gap:6px; justify-content:center; align-items:center; flex-wrap:wrap; }
+  .menu-foot .foot-sep{ color:var(--ink-soft); }
+  .linklike{
+    background:none; border:none; box-shadow:none; padding:2px 4px;
+    color:var(--ink-soft); font-style:italic; font-size:12.5px; letter-spacing:0;
+    text-decoration:underline; font-weight:normal;
+  }
+  .linklike:hover{ filter:none; color:var(--copper); }
+  kbd{
+    font-family:monospace; font-size:12px; padding:0 5px; border:1px solid var(--brass-dark);
+    border-radius:4px; background:rgba(255,255,255,.35);
+  }

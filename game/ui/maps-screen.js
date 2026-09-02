@@ -107,13 +107,13 @@ function renderMapsetBar(){
     bar.appendChild(name);
     if (!cur.active){
       var act = document.createElement('button');
-      act.className = 'mschip'; act.textContent = 'Make active';
+      act.className = 'mschip dev-only'; act.textContent = 'Make active';
       act.title = 'The active set becomes the match pool for every play mode and the balance tools';
       act.onclick = function(){ msSetActive(MS.slot); renderMapsScr(); };
       bar.appendChild(act);
     }
     var save = document.createElement('button');
-    save.className = 'mschip'; save.textContent = 'Save sets';
+    save.className = 'mschip dev-only'; save.textContent = 'Save sets';
     save.title = 'Write content/mapsets/*.js (needs the local server)';
     save.onclick = msSave;
     bar.appendChild(save);
@@ -143,20 +143,22 @@ function renderMapsScr(){
       renderMapsetBar(); // membership count on the chip
     };
     var btns = d.querySelector('.btns');
+    // Play + the in-set checkbox stay player-usable; Balance / Copy / Edit /
+    // Delete are dev authoring — gated behind dev mode (body.dev + .dev-only).
     var bp = document.createElement('button'); bp.textContent='Play';
     bp.title = 'A quick campaign vs the AI on just this map';
     bp.onclick = function(){ startLocal('ai', [m.def]); };
     btns.appendChild(bp);
-    var bb = document.createElement('button'); bb.textContent='Balance';
+    var bb = document.createElement('button'); bb.textContent='Balance'; bb.className='dev-only';
     bb.title = 'Open the Balance Dashboard and run this map';
     bb.onclick = function(){ openDash(); $('dashMap').value = m.def.name; $('dashRun').click(); };
     btns.appendChild(bb);
     if (!m.builtin){
-      var be = document.createElement('button'); be.textContent='Edit';
+      var be = document.createElement('button'); be.textContent='Edit'; be.className='dev-only';
       be.onclick = function(){ openEditor(m.def); };
       btns.appendChild(be);
     }
-    var bc = document.createElement('button'); bc.textContent='Copy';
+    var bc = document.createElement('button'); bc.textContent='Copy'; bc.className='dev-only';
     bc.onclick = function(){
       var copy = JSON.parse(JSON.stringify(m.def));
       copy.name = m.def.name + ' (copy)';
@@ -164,7 +166,7 @@ function renderMapsScr(){
       openEditor(copy, true);
     };
     btns.appendChild(bc);
-    var bd = document.createElement('button'); bd.textContent='Delete';
+    var bd = document.createElement('button'); bd.textContent='Delete'; bd.className='dev-only';
     bd.onclick = function(){
       if (allMaps().length <= MAP_FLOOR){
         toast('The map library keeps a floor of '+MAP_FLOOR+' maps so a first-to-3 campaign always has fresh boards. Add a map first.', 4500);
