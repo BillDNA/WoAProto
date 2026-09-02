@@ -2,14 +2,15 @@
    This drives a genuine skirmish through the PUBLIC engine entry points to an
    actual HQ capture — nothing mocked, no __sim clone — and proves the persistence
    SUBSCRIPTION seam is wired end to end: finishSkirmish -> onSkirmishEnd fires with
-   a persistable finished state, sims deliberately do NOT fire it, and that same
-   delivered state lands a row through the real dev/db.js (the leg the server's
-   /api/recordskirmish proxy calls).
+   a persistable finished state, an __sim AI-search look-ahead clone deliberately
+   does NOT fire it, and that same delivered state lands a row through the real
+   dev/db.js (the leg the server's /api/recordskirmish proxy calls).
 
    UNWIRE PROOF (what reds this): delete the `if (!st.__sim) HOOKS.onSkirmishEnd...`
    dispatch in engine/04-skirmish.js and the "fires once" assertion reds; break the
-   __sim gating and "sims don't fire" reds; deliver an unfinished state to the hook
-   and the db leg reds. Each red localises to the wiring, not to game content.
+   __sim gating and the "clone does not fire" assertion reds; deliver an unfinished
+   state to the hook and the db leg reds. Each red localises to the wiring, not to
+   game content.
 
    Frozen-API entry game/test.js delegates here; run alone with
    `node game/test.integration.js` or the whole gate with `node game/test.js`. */
