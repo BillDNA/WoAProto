@@ -21,7 +21,7 @@
       "type": "node",
       "request": "launch",
       "name": "Run engine tests",
-      "program": "${workspaceFolder}/game/test.js",
+      "program": "${workspaceFolder}/game/test/test.js",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },

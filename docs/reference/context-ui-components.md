@@ -5,7 +5,7 @@ is **law**. The companion to root `CONTEXT.md` (domain terms) — this file is t
 *component* spine: nothing in `game/ui/` draws SVG by hand, so every tile, glyph,
 chit, mark, axis, and pattern resolves to exactly one builder below. A screen calls
 these; it never string-concatenates or `createElementNS`'s its own. The contract is
-enforced two ways: the app-wide backstop (`game/test.ui.js`) reds if any screen
+enforced two ways: the app-wide backstop (`game/test/test.ui.js`) reds if any screen
 draws raw SVG, and the home pointers here are machine-checked by
 `node dev/check-context.js` — a moved primitive fails until its pointer is fixed in
 the same commit.

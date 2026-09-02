@@ -161,7 +161,7 @@ var WOA_SIM = (function () {
       // Mispricing residual: the axis-worthy card win contribution —
       // HQ-capture endings × printed (non-simple) plays only, mirroring
       // cardHqWinSlice (report-model.js). Pooled Win% is dead at these n
-      // (docs/report-model.md#reporting-doctrine); this slice carries the signal.
+      // (docs/reference/report-model.md#reporting-doctrine); this slice carries the signal.
       if (hqEnding && e.mode === 'normal') { c.hqPlays++; if (e.p === w) c.hqWins++; }
     });
     return out;

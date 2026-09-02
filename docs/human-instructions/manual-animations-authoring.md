@@ -105,7 +105,7 @@ is automatically correct — CSS animation is garnish only.
 
 ## Testing a new/edited example
 
-1. `node --check game/ui/manual.js` then `node game/test.js` (must stay green).
+1. `node --check game/ui/manual.js` then `node game/test/test.js` (must stay green).
 2. `node dev/smoke.js` — the "field manual diagram player" section asserts the
    overlay, the beat counter, the rings, and **engine truth** (pill text ==
    fresh `supportFor`/`computeAttack` on `window.MANUAL.state`/`.atk`). Extend
@@ -125,5 +125,5 @@ is automatically correct — CSS animation is garnish only.
 - [ ] Every number/ring/outcome read from `supportFor` / `computeAttack` / `mpResolve`+`mpAftermath` — zero hardcoded rules numbers, including in captions.
 - [ ] Beats: one idea each, running tally builds beat by beat, final beat shows the resolved aftermath.
 - [ ] Engine reads happen right after the state they belong to is built (board-shape trap).
-- [ ] `node game/test.js` and `node dev/smoke.js` green; screenshots of each new beat verified by eye.
+- [ ] `node game/test/test.js` and `node dev/smoke.js` green; screenshots of each new beat verified by eye.
 - [ ] No new wiring outside `ui/boot.js`; no markup beyond `#manualPlayer`'s existing chrome unless truly needed.

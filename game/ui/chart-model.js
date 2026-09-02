@@ -1,7 +1,7 @@
 /* War of Attrition — ui part: pure display-model builders for the dashboard
    drill-down panes. Data in (already-fetched skirmish rows), plain display
    model out — NO document, NO fetch, NO APP/DASH. charts.js renders whatever
-   this returns; node tests require() it directly (game/test.js). Dual-export
+   this returns; node tests require() it directly (game/test/test.js). Dual-export
    (browser global + module.exports), the SAME pattern as report-model.js. */
 'use strict';
 

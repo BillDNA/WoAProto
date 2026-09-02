@@ -8,7 +8,7 @@
                                  + the hand-maintained descriptions map BELOW)
      <!-- GEN:personalities -->  the extra AI personalities (AI_PRESETS minus
                                  easy/normal/hard, i.e. the maps.js "ai" rows)
-     in docs/ai/ai-heuristic-model.md, and
+     in docs/reference/ai-heuristic-model.md, and
 
      <!-- GEN:content -->        the current content map library (maps with shape +
                                  custom flag, decks, mapsets with the active
@@ -121,8 +121,8 @@ function genContent() {
 /* ---------- marker plumbing ---------- */
 
 var BLOCKS = [
-  { file: 'docs/ai/ai-heuristic-model.md', name: 'weights', gen: genWeights },
-  { file: 'docs/ai/ai-heuristic-model.md', name: 'personalities', gen: genPersonalities },
+  { file: 'docs/reference/ai-heuristic-model.md', name: 'weights', gen: genWeights },
+  { file: 'docs/reference/ai-heuristic-model.md', name: 'personalities', gen: genPersonalities },
   { file: 'docs/code-architecture.md', name: 'content', gen: genContent }
 ];
 

@@ -16,7 +16,7 @@ _Home_: `game/engine/04-skirmish.js:51` — `newSkirmish`
 **Battle**:
 A best-of contest across Skirmishes — first to a set number of Skirmish wins takes the Battle.
 _Avoid_: Game, match, series.
-_Home_: `game/engine/04-skirmish.js:235` — `wins[winner] >= 3`
+_Home_: `game/engine/04-skirmish.js:234` — `wins[winner] >= 3`
 
 **Campaign**:
 The larger roguelite arc across Battles — the deck-building, Commander, progression layer. The nebulous destination, not yet in code.
@@ -29,7 +29,7 @@ _Home_: `game/engine/04-skirmish.js:24` — `firstPlayer`
 
 **Red / Blue**:
 The two sides. A side win-rate skew (independent of first mover) is a balance signal.
-_Home_: `game/engine/01-core.js:201` — `other(p)`
+_Home_: `game/engine/01-core.js:197` — `other(p)`
 
 ## The board
 
@@ -41,7 +41,7 @@ _Home_: `game/content/maps/causeway.js:3` — `"name"`
 **Mapset**:
 A named, curated list of Maps; exactly one is *active* at a time and is the draw pool for every play mode and tool. Distinct from the **map library** — the full set of content Maps (`E.MAPS`) the sets are drawn from.
 _Avoid_: Map-set, map pool, roster (for the active set — the whole collection is the *map library*, the player's pieces are the *mats*).
-_Home_: `game/engine/01-core.js:81` — `activeMaps`
+_Home_: `game/engine/01-core.js:78` — `activeMaps`
 
 **Hex**:
 One cell of the board; a piece occupies at most one.
@@ -70,7 +70,7 @@ _Home_: `game/engine/03-rules.js:11` — `isHQ`
 **Trench**:
 A structure that denies attacking Support across the edges it covers — and nothing else. Serves whichever side holds its hex.
 _Avoid_: Fortification.
-_Home_: `game/engine/03-rules.js:174` — `borderBlocked`
+_Home_: `game/engine/03-rules.js:172` — `borderBlocked`
 
 **Reserve**:
 Pieces a side owns but has not placed. Deploying is one-way, and reserve pieces score nothing at Attrition.
@@ -81,15 +81,15 @@ _Home_: `game/engine/04-skirmish.js:131` — `copyReserves`
 **Deploy**:
 Place a piece from Reserve onto the board within Control. Called **Build** for a structure.
 _Avoid_: Summon, spawn.
-_Home_: `game/engine/04-skirmish.js:438` — `'deploy'`
+_Home_: `game/engine/04-skirmish.js:437` — `'deploy'`
 
 **Attack**:
 Order one unit to strike an adjacent occupied hex, resolved by comparing combat power.
-_Home_: `game/engine/03-rules.js:236` — `resolveAttack`
+_Home_: `game/engine/03-rules.js:234` — `resolveAttack`
 
 **Support**:
 What adjacent allied pieces contribute to a combat — subject to Trench and River blocking.
-_Home_: `game/engine/03-rules.js:186` — `supportFor`
+_Home_: `game/engine/03-rules.js:184` — `supportFor`
 
 **Reposition**:
 Reposition a unit: **Move** it to an empty adjacent hex, or **Swap** it with an adjacent unit of a different type.
@@ -98,12 +98,12 @@ _Home_: `game/engine/03-rules.js:118` — `listRepositions`
 
 **Swap**:
 The Reposition that exchanges two adjacent different-type units. Its share of all actions is a balance signal.
-_Home_: `game/engine/03-rules.js:129` — `!== myType`
+_Home_: `game/engine/03-rules.js:128` — `!== myType`
 
 **Card**:
 A one-shot order played from the hand and then spent. Any Card may instead be spent as a basic Attack or Reposition.
 _Avoid_: Order (a Card *is* the order; "order an attack" is the verb).
-_Home_: `game/engine/04-skirmish.js:282` — `playCard`
+_Home_: `game/engine/04-skirmish.js:281` — `playCard`
 
 **Deck**:
 A side's set of Cards for a Skirmish.
@@ -113,16 +113,16 @@ _Home_: `game/engine/04-skirmish.js:42` — `buildDeck`
 
 **HQ capture**:
 Ending a Skirmish by successfully attacking into the enemy HQ.
-_Home_: `game/engine/03-rules.js:317` — `'hq'`
+_Home_: `game/engine/03-rules.js:315` — `'hq'`
 
 **Attrition**:
 The Skirmish ending reached when a side can no longer draw a Card; decided by Field score.
-_Home_: `game/engine/04-skirmish.js:211` — `endByAttrition`
+_Home_: `game/engine/04-skirmish.js:210` — `endByAttrition`
 
 **Field score**:
 The standing of a side at Attrition, from its surviving on-board units. Reserve counts nothing.
 _Avoid_: VP, points, victory points.
-_Home_: `game/engine/04-skirmish.js:205` — `fieldScore`
+_Home_: `game/engine/04-skirmish.js:204` — `fieldScore`
 
 ## Balance & measurement
 
@@ -130,16 +130,16 @@ _Home_: `game/engine/04-skirmish.js:205` — `fieldScore`
 
 **Balance loop**:
 The iterate cycle: run AI (and LLM) play over the active Mapset, fold the per-Skirmish results into aggregate metrics, grade them, adjust content, repeat.
-_Home_: `docs/human-instructions/standard-runs-runbook.md:66` — `balance-loop recipe`
+_Home_: `docs/human-instructions/standard-runs-runbook.md:63` — `balance-loop recipe`
 
 **Rules era**:
 A regime of rules-plus-AI-strength treated as internally comparable; data across eras is not apples-to-apples.
 _Avoid_: Version (reserve for the era's number).
-_Home_: `game/engine/01-core.js:16` — `RULES_VERSION`
+_Home_: `game/engine/01-core.js:14` — `RULES_VERSION`
 
 **Baselines to protect**:
 The healthy metric values for the current era; a sharp move away signals a regression even when win rates look fine.
-_Home_: `docs/balance-baselines.md:1` — `figures to protect`
+_Home_: `docs/balance/balance-baselines.md:1` — `figures to protect`
 
 **Drag**:
 Trailing kill-less turns before a Skirmish ends — the "circling without resolving" signal.
@@ -151,7 +151,7 @@ _Home_: `game/report-model.js:59` — `'swings'`
 
 **No-op**:
 A played Card that resolved zero actions — a dead turn.
-_Home_: `game/engine/04-skirmish.js:524` — `noop = true`
+_Home_: `game/engine/04-skirmish.js:523` — `noop = true`
 
 **Skirmish fact**:
 The flat record of everything the balance layer reads off one finished Skirmish
@@ -169,11 +169,11 @@ _Home_: `game/sim.js:73` — `skirmishFacts`
 **Army-points**:
 A Card's *capability cost*, and a Deck's total value as the sum over its Cards. A descriptive yardstick Decks are built under — not a prediction of win-rate; measured balance always overrules it (ADR-0002). Computed additively from a Card's steps via a single weight table, never stored per Card, so a Card that does more counts for more.
 _Avoid_: Cost (a step has a cost; the Card's total is its army-points), Power level.
-_Home_: `game/engine/01-core.js:167` — `POINTS`
+_Home_: `game/engine/01-core.js:163` — `POINTS`
 
 **Points cap**:
 The shared army-points budget every Deck is built under. Two Decks at the same cap are "matched" in capability, which is what lets a Skirmish be asymmetric yet fair.
-_Home_: `game/engine/01-core.js:198` — `DECK_POINTS_CAP`
+_Home_: `game/engine/01-core.js:194` — `DECK_POINTS_CAP`
 
 **Tolerance temperature**:
 How far a *measured* metric may sit outside its band before a result is accepted — the existing band-widening dial (strict / explore / hot). A verdict on outputs.

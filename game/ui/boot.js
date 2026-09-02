@@ -3,7 +3,7 @@
    all button/overlay wiring, the initial checkResume(). Function
    declarations do not hoist across files, so immediate statements must run
    after every ui part above has been parsed — keep this file last in
-   index.html's tag chain (game/test.js asserts it). Extracted verbatim
+   index.html's tag chain (game/test/test.js asserts it). Extracted verbatim
    from index.html's inline app script. */
 'use strict';
 

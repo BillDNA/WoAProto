@@ -14,7 +14,7 @@
      · rules-version prose "rules 1.0 bump" (the bare version string stays a value)
 
    Two files are exempt because naming the patterns IS their job: this scanner
-   and the style guide (docs/code-style.md), the definitional home of the rule.
+   and the style guide (docs/reference/code-style.md), the definitional home of the rule.
 
    Usage: node dev/check-prose.js         full report + exit code
    Exits 0 when the tree is clean, 1 with a per-file hit list otherwise. */
@@ -27,7 +27,7 @@ var ROOT = path.resolve(__dirname, '..');
 
 var SCAN_EXT = ['.js', '.md', '.css', '.html'];
 var SKIP_DIR = ['.git', 'node_modules', 'graphify-out', 'logs', '.obsidian', '.vscode', 'art', 'art-originals', 'worktrees'];
-var EXEMPT = ['dev/check-prose.js', 'dev/check-prose.test.js', 'docs/code-style.md'];
+var EXEMPT = ['dev/check-prose.js', 'dev/check-prose.test.js', 'docs/reference/code-style.md'];
 
 // Each pattern is global; `ignore` is tested against the matched token itself
 // (per-match, not per-line), so a real ref sharing a line with an ignorable

@@ -64,12 +64,12 @@ test('active mapset', () => {
 test('index.html script-tag chain', () => {
 (function () {
   var fs = require('fs'), path = require('path');
-  var html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+  var html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   var tags = [];
   html.replace(/<script src="([^"]+)"><\/script>/g, function (m, src) { tags.push(src); return m; });
   function diskSorted(sub) {
     try {
-      return fs.readdirSync(path.join(__dirname, sub)).filter(function (f) { return /\.js$/.test(f); })
+      return fs.readdirSync(path.join(__dirname, '..', sub)).filter(function (f) { return /\.js$/.test(f); })
         .sort().map(function (f) { return sub + '/' + f; });
     } catch (e) { return null; }
   }
@@ -96,7 +96,7 @@ test('index.html script-tag chain', () => {
 test('content/manifest.js staleness', () => {
 (function () {
   var fs = require('fs'), path = require('path');
-  var gen = require('./content/manifest-gen.js');
+  var gen = require('../content/manifest-gen.js');
   var expected = gen.buildManifest();
   var actual;
   try { actual = fs.readFileSync(gen.MANIFEST_PATH, 'utf8').replace(/\r\n/g, '\n'); } catch (e) { actual = null; }

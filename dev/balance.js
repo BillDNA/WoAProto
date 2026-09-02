@@ -35,7 +35,7 @@
                                 side per skirmish. High = real back-and-forth (you can
                                 feel you'll come back); 0 = one side led wire-to-wire.
    - Card report             -> Simple%/1stSight%/AvgSeen per card (per-card Win% is
-                                computed but not printed; see docs/report-model.md)
+                                computed but not printed; see docs/reference/report-model.md)
 
    Attrition victory: the player with the higher field score of SURVIVING
    units on the board wins when the cards run out; reserves count for nothing.
@@ -199,7 +199,7 @@ function mapReport(n, diff, filter, maps, mapsetArg, decks) {
 
   console.log('\nCard report (' + G.games + ' skirmishes of AI play — biases noted below):');
   // Win% deliberately not printed (still computed in cardRows() + logged) —
-  // docs/report-model.md#reporting-doctrine.
+  // docs/reference/report-model.md#reporting-doctrine.
   var ch = pad('Card', 20, true) + pad('Simple%', 9) + pad('1stSight%', 11) + pad('AvgSeen', 9) + pad('plays', 8) +
     pad('Pts', 7) + pad('Resid', 8);
   console.log(ch);

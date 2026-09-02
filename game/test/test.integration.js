@@ -58,7 +58,7 @@ test('integration: a real finished skirmish reaches the persistence seam', (t) =
     let db, fs, os, path;
     try {
       fs = require('fs'); os = require('os'); path = require('path');
-      db = require('../dev/db.js');
+      db = require('../../dev/db.js');
     } catch (e) { db = null; }
     if (db) {
       const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'woa-int-'));

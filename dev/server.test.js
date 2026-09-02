@@ -4,7 +4,7 @@
    boundary on the /api/* surface is exercised with real data, not a described shape.
    Persistence targets a throwaway db via WOA_DB_PATH; LAN rooms are in-memory.
 
-   Seams covered here (see docs/testing-seams.md for the full inventory):
+   Seams covered here (see docs/reference/testing-seams.md for the full inventory):
    - A1/A2 finished skirmish -> POST /api/recordskirmish -> dev/db.js -> a real row
    - B1/B2/B3 db rows -> GET /api/runs + /api/skirmishes (with the timeline join) ->
      fed straight into report-model.envelopeFromRow (closes the fixture-vs-reality gap)

@@ -7,7 +7,7 @@ const assert = require('node:assert');
 
 test('report-model: bands as data + trace folds', () => {
 (function () {
-  var R = require('./report-model.js');
+  var R = require('../report-model.js');
   function near(a, b) { return Math.abs(a - b) < 1e-9; }
 
   // ---- band table unifies with balanceScore (scored set is 8; the guard set is
@@ -216,7 +216,7 @@ test('report-model: bands as data + trace folds', () => {
 
 test('report-model: foldSkirmishes control% from hexesRed/hexesBlue', () => {
 (function () {
-  var R = require('./report-model.js');
+  var R = require('../report-model.js');
   // A mixed row set: real control skirmishes (some ties), plus legacy rows with
   // hexesRed/hexesBlue never written -> NULL (one row with only ONE side null to
   // prove the guard needs BOTH, not either).
@@ -250,7 +250,7 @@ test('report-model: foldSkirmishes control% from hexesRed/hexesBlue', () => {
 
 test('report-model: cross-skirmish drill-down folds (Maps pane)', () => {
 (function () {
-  var R = require('./report-model.js');
+  var R = require('../report-model.js');
   function near(a, b) { return Math.abs(a - b) < 1e-9; }
 
   // The same hand-built envelope the trace-fold tests above pin (known lanes +
@@ -316,7 +316,7 @@ test('report-model: cross-skirmish drill-down folds (Maps pane)', () => {
 
 test('chart-model: buildMapDrillModel (Maps pane display model)', () => {
 (function () {
-  var C = require('./ui/chart-model.js');
+  var C = require('../ui/chart-model.js');
   function row(map) { return { map: map, winner: 'red', trace: JSON.stringify({ turns: 3, trace: [] }), fs: [[1, 0], [2, 0], [2, 1]] }; }
   var rowsA = [row('Frontier'), row('Frontier'), row('The Void')];
   var rowsB = [row('Frontier')];
@@ -345,7 +345,7 @@ test('chart-model: buildMapDrillModel (Maps pane display model)', () => {
 
 test('report-model: mapScoreDumbbells (Overview per-map balance fold)', () => {
 (function () {
-  var R = require('./report-model.js');
+  var R = require('../report-model.js');
   function wins(n, redFrac, map) { var a = []; for (var i = 0; i < n; i++) a.push({ map: map, winner: i < redFrac * n ? 'red' : 'blue' }); return a; }
   // A: two maps; B: only Frontier (heavily red-skewed -> worse balance score).
   var rowsA = wins(10, 0.5, 'Frontier').concat(wins(6, 0.5, 'The Void'));
@@ -374,7 +374,7 @@ test('report-model: mapScoreDumbbells (Overview per-map balance fold)', () => {
 
 test('chart-model: ovFmt / ovTrackDomain / ovPos (Overview presentation math)', () => {
 (function () {
-  var C = require('./ui/chart-model.js');
+  var C = require('../ui/chart-model.js');
   function near(a, b) { return Math.abs(a - b) < 1e-9; }
   // ovFmt: percent keys round to N%, non-percent keys go through f1, null -> n/a.
   assert.ok(C.ovFmt('red', 49.6) === '50%', 'ovFmt rounds a percent key to a whole %');
@@ -389,7 +389,7 @@ test('chart-model: ovFmt / ovTrackDomain / ovPos (Overview presentation math)', 
 
   // ovTrackDomain (percent key 'red', T2 band 41..59): in-band values leave the
   // band-driven domain 41-4.5 .. 59+4.5 (25% pad); an out-of-band value extends it.
-  var redRow = require('./report-model.js').BANDS.filter(function (b) { return b.key === 'red'; })[0];
+  var redRow = require('../report-model.js').BANDS.filter(function (b) { return b.key === 'red'; })[0];
   var d = C.ovTrackDomain(redRow, 50, 52);
   assert.ok(near(d.lo, 36.5) && near(d.hi, 63.5), 'ovTrackDomain brackets the T2 band with 25% padding when A/B sit inside it');
   var dOut = C.ovTrackDomain(redRow, 50, 70);
@@ -399,8 +399,8 @@ test('chart-model: ovFmt / ovTrackDomain / ovPos (Overview presentation math)', 
 
 test('chart-model: buildOverviewModel (Overview display model)', () => {
 (function () {
-  var C = require('./ui/chart-model.js');
-  var R = require('./report-model.js');
+  var C = require('../ui/chart-model.js');
+  var R = require('../report-model.js');
   function wins(n, redFrac, map) { var a = []; for (var i = 0; i < n; i++) a.push({ map: map, winner: i < redFrac * n ? 'red' : 'blue' }); return a; }
   // fleet SMALL_N is 240, so use 300 rows/run to clear the small-n gate and let breaches count.
   var rowsA = wins(300, 0.5, 'Frontier');
@@ -431,7 +431,7 @@ test('chart-model: buildOverviewModel (Overview display model)', () => {
 
 test('report-model: Cards-pane folds (cardRunView / cardFleetFireTimes)', () => {
 (function () {
-  var R = require('./report-model.js');
+  var R = require('../report-model.js');
   function near(a, b) { return Math.abs(a - b) < 1e-9; }
   var CARDS = [{ id: 'raid', name: 'Raid' }, { id: 'hold', name: 'Hold' }];
 
@@ -474,7 +474,7 @@ test('report-model: Cards-pane folds (cardRunView / cardFleetFireTimes)', () => 
 
 test('chart-model: buildCardsModel (Cards pane display model)', () => {
 (function () {
-  var C = require('./ui/chart-model.js');
+  var C = require('../ui/chart-model.js');
   var CARDS = [{ id: 'raid', name: 'Raid' }, { id: 'hold', name: 'Hold' }];
   function row(env) { return { trace: JSON.stringify(env) }; }
   var rowsA = [
@@ -512,7 +512,7 @@ test('chart-model: buildCardsModel (Cards pane display model)', () => {
 
 test('report-model: unitsAggFromRows (Units pane per-run fold)', () => {
 (function () {
-  var R = require('./report-model.js');
+  var R = require('../report-model.js');
   // One skirmish, 10 turns: infantry deploys T2, dies T8 (lifespan 6); cavalry
   // deploys T3, never dies. Hand-fold below is independent of the loop.
   var env = { turns: 10, units: {
@@ -533,7 +533,7 @@ test('report-model: unitsAggFromRows (Units pane per-run fold)', () => {
 
 test('chart-model: buildUnitsModel + unLinearDomain/unPos (Units pane)', () => {
 (function () {
-  var C = require('./ui/chart-model.js');
+  var C = require('../ui/chart-model.js');
   function near(a, b) { return Math.abs(a - b) < 1e-9; }
   var env = { turns: 10, units: {
     infantry: { dep: [2], atk: 4, abs: 6, kill: 2, die: 2, dieT: [8] },

@@ -10,7 +10,7 @@
      1. No screen draws raw SVG. Grep every ui/*.js that is NOT a *primitives.js
         for a raw SVG element built as a string literal or via createElementNS.
      2. The component spine resolves. Every primitive named in
-        docs/context-ui-components.md resolves to a real file:line home with its
+        docs/reference/context-ui-components.md resolves to a real file:line home with its
         anchor on that line (the companion of CONTEXT.md's home gate, for UI).
 
    Both assert the MECHANISM, never a value: adding a screen, glyph, or mark reds
@@ -26,8 +26,8 @@ const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
 
-const UI_DIR = path.join(__dirname, 'ui');
-const SPINE_DOC = path.join(__dirname, '..', 'docs', 'context-ui-components.md');
+const UI_DIR = path.join(__dirname, '..', 'ui');
+const SPINE_DOC = path.join(__dirname, '..', '..', 'docs', 'reference', 'context-ui-components.md');
 
 // SVG element tags — every one is SVG-only (none is a valid HTML element), so a
 // literal `<tag` in a string that survives comment/regex-stripping is hand-drawn
@@ -108,7 +108,7 @@ test('UI contract: the scanner catches string-built SVG and ignores look-alikes'
 
 test('UI contract: every primitive in context-ui-components.md resolves to its home', () => {
   const md = fs.readFileSync(SPINE_DOC, 'utf8').split('\n');
-  const root = path.join(__dirname, '..');
+  const root = path.join(__dirname, '..', '..');
   const terms = [];
   let cur = null;
   md.forEach((ln) => {
@@ -132,5 +132,5 @@ test('UI contract: every primitive in context-ui-components.md resolves to its h
     fails.push(t.name + ' — anchor `' + anchor + '` not at ' + m[1] + ':' + want +
       (at.length ? ' (found at :' + at.join(',') + ' — update the pointer)' : ' (anchor not in file)'));
   });
-  assert.strictEqual(fails.length, 0, 'stale home pointers in docs/context-ui-components.md:\n' + fails.join('\n'));
+  assert.strictEqual(fails.length, 0, 'stale home pointers in docs/reference/context-ui-components.md:\n' + fails.join('\n'));
 });

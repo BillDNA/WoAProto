@@ -81,7 +81,7 @@ Three anti-degeneracy guards (the `noopPenalty` / `antiShuffle` weights and the 
 
 ## Refactor discipline — the golden-diff oracle
 
-Determinism is the free regression net: the same seed schedule produces **byte-identical `balance.js` aggregates**. Before moving code around, capture golden baselines (`node dev/balance.js 24 normal` and `24 easy` — easy-AI noise is enumeration-order-sensitive); every refactor commit must reproduce them byte-identically, on top of `node game/test.js` and `node dev/smoke.js` green. A change that legitimately moves the numbers is not a refactor — it is a rules/AI-strength change: **bump `RULES_VERSION`** (`engine/01-core.js`, tracking the rule book header) atomically with its test-pin updates, so playtest data stays apples-to-apples per version.
+Determinism is the free regression net: the same seed schedule produces **byte-identical `balance.js` aggregates**. Before moving code around, capture golden baselines (`node dev/balance.js 24 normal` and `24 easy` — easy-AI noise is enumeration-order-sensitive); every refactor commit must reproduce them byte-identically, on top of `node game/test/test.js` and `node dev/smoke.js` green. A change that legitimately moves the numbers is not a refactor — it is a rules/AI-strength change: **bump `RULES_VERSION`** (`engine/01-core.js`, tracking the rule book header) atomically with its test-pin updates, so playtest data stays apples-to-apples per version.
 
 ## Related
 

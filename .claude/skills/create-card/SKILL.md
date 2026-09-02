@@ -13,7 +13,7 @@ or custom-deck.js.**
 
 - `game/content/decks/default.js` — the active deck's card list (and
   `game/maps.js` `"units"` for legal deploy targets).
-- `docs/card-cheatsheet.md` — the FULL step vocabulary. It is small on
+- `docs/reference/card-cheatsheet.md` — the FULL step vocabulary. It is small on
   purpose: `deploy(unit, anywhere)`, `trench`, `attack(mod, tieSpare, noAdvance)`,
   `reposition`, `barrage`. **A card needing a step type that doesn't exist is an
   engine change — flag it as such, don't pretend the JSON works.**
@@ -48,7 +48,7 @@ text-only renders clean.
 3. State the swap: which copies leave the 16 to make room, and why.
 4. Tell Bill how to test: import via Deck Editor (or hand-edit
    `game/content/decks/default.js`), then
-   `node game/test.js` + a Balance Dashboard run; watch the new card's Simple% /
+   `node game/test/test.js` + a Balance Dashboard run; watch the new card's Simple% /
    1stSight% columns.
 5. **Offer art (only if Bill approves the card first).** If the `dig-mcp` MCP
    server is connected, ask Bill whether he wants generated card art. Only on a

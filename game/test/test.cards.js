@@ -131,7 +131,7 @@ test('army-points (computed from steps, weight table pinned)', () => {
 
 test('mispricing residual (cardRows points + residual, soft flag)', () => {
 (function () {
-  var R = require('./report-model.js');
+  var R = require('../report-model.js');
   var cards = [{ id: 'x', name: 'X' }, { id: 'y', name: 'Y' }, { id: 'z', name: 'Z' }, { id: 'w', name: 'W' }];
   var pts = { x: 4, y: 6, z: 2, w: 3 };
   var pointsOf = function (c) { return pts[c.id]; };

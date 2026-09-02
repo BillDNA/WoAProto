@@ -327,7 +327,7 @@ test('unit composition & values as content data', () => {
     'catch(e){process.stdout.write(JSON.stringify({error:e.message}));}';
   function runUnits(env) {
     var e = Object.assign({}, process.env, { WOA_TEST_UNITS: '', WOA_TEST_ACTIVATE: '' }, env || {});
-    var out = cp.execFileSync(process.execPath, ['-e', CHILD], { cwd: __dirname, env: e }).toString();
+    var out = cp.execFileSync(process.execPath, ['-e', CHILD], { cwd: path.join(__dirname, '..'), env: e }).toString();
     return JSON.parse(out);
   }
   function total(u) { return Object.keys(u).reduce(function (s, t) { return s + (u[t].count || 0); }, 0); }

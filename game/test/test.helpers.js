@@ -2,10 +2,10 @@
    from the old game/test.js preamble; the bespoke ok()/fails harness is retired
    in favour of node:test + node:assert. */
 'use strict';
-var E = require('./engine.js');
+var E = require('../engine.js');
 // The batch/measurement layer (sweeps + balance folds), separate from the engine.
 // simSkirmish/balanceMap/etc live here, not on E.
-var SIM = require('./sim.js');
+var SIM = require('../sim.js');
 
 // A bare classic-board map so rules tests are deterministic regardless of the
 // built-in map library. HQs in opposite corners, no terrain.

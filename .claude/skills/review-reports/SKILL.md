@@ -44,7 +44,7 @@ analysis to `logs/reports/analysis/`. Covers both report types:
   **quote the rubric's band, never restate its baseline figures here**; this
   skill file goes stale the moment a restated number does, and the rubric is
   the one place they're allowed to live.
-- `docs/ai/ai-heuristic-model.md` — so any AI-behaviour
+- `docs/reference/ai-heuristic-model.md` — so any AI-behaviour
   suggestion names the exact weight to turn.
 - The reports themselves. Default to the **current rules version** (the highest
   `<version>` folder / the `Engine.VERSION` stamped in report headers). Don't mix
@@ -143,7 +143,7 @@ Then tell Bill the saved path and give a 3-line verbal summary.
   read the rubric's ⚠ box before grading a card an auto-play or a dead hoard
   off those two columns alone.
 - If Behaviour numbers moved sharply vs the dated baseline in
-  `docs/balance-baselines.md` (the single numbers home — every figure there
+  `docs/balance/balance-baselines.md` (the single numbers home — every figure there
   carries its AI tier / n / mapset / date; don't restate numbers here, they go
   stale), read against the Behaviour-health guard in `docs/balance/README.md`
   §Game-level guards, treat it as an AI

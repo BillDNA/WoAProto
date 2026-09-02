@@ -22,11 +22,11 @@ doc carries the running inventory; treat it as a backlog, never a certificate.
 - `dev/server.test.js` — boots the **real `game/server.js`** on an ephemeral port
   (`server.listen(0)`, persistence pointed at a temp db via `WOA_DB_PATH`) and drives
   the `/api/*` surface over real HTTP.
-- `game/test.integration.js` — a real HQ-capture skirmish through the public engine API
+- `game/test/test.integration.js` — a real HQ-capture skirmish through the public engine API
   fires the `onSkirmishEnd` persistence subscription; an `__sim` clone does not; the
   delivered state lands a row through the real `dev/db.js`. Unwire proof: neuter the
   `if (!st.__sim) HOOKS.onSkirmishEnd…` dispatch in `engine/04-skirmish.js` → it reds.
-- `game/test.seams.js` — the army-points cap as a settable, enforced limit (mechanism,
+- `game/test/test.seams.js` — the army-points cap as a settable, enforced limit (mechanism,
   not value).
 
 - `dev/content-api.test.js` — drives the content-write routes over real HTTP against
