@@ -200,6 +200,21 @@ function ovBandRect(domain, band, color) {
   return '<div style="position:absolute;top:5px;bottom:5px;left:' + left.toFixed(1) + '%;width:' +
     (right - left).toFixed(1) + '%;background:' + color + ';border-radius:2px;"></div>';
 }
+/* the A/B dumbbell row shared by the Cards + Overview panes: baseline track,
+   the A→B connector, the hollow run-A dot, the filled run-B dot — ONE
+   implementation. posA/posB are already-resolved percent positions; aBorder is
+   the run-A ring colour (the panes differ only there: ink vs inkSoft). */
+function chDumbbell(posA, posB, aBorder, bFill, connColor) {
+  var connLeft = 0, connWidth = 0;
+  if (posA != null && posB != null) { connLeft = Math.min(posA, posB); connWidth = Math.abs(posB - posA); }
+  return '<div style="position:absolute;top:8px;left:0;right:0;height:2px;background:' + CHART.grid + ';"></div>' +
+    (posA != null && posB != null ? '<div style="position:absolute;top:8px;height:2px;left:' + connLeft.toFixed(1) +
+      '%;width:' + connWidth.toFixed(1) + '%;background:' + connColor + ';"></div>' : '') +
+    (posA != null ? '<div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid ' +
+      aBorder + ';background:' + CHART.runADot + ';left:calc(' + posA.toFixed(1) + '% - 6px);"></div>' : '') +
+    (posB != null ? '<div style="position:absolute;top:4px;width:11px;height:11px;border-radius:50%;background:' +
+      bFill + ';left:calc(' + posB.toFixed(1) + '% - 5px);"></div>' : '');
+}
 function ovDot(domain, v, isA, breached) {
   if (v == null) return '';
   var pos = CHART_MODEL.ovPos(domain, v);

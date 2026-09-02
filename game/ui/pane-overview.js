@@ -48,15 +48,7 @@ function ovMapDumbbells(rows) {
     var improved = posA != null && posB != null && r.scoreB < r.scoreA;
     var connColor = regressed ? CHART.regress : (improved ? CHART.improve : '#d8caa2');
     var bFill = regressed ? CHART.breach : (improved ? CHART.improveDot : CHART.ink);
-    var connLeft = 0, connWidth = 0;
-    if (posA != null && posB != null) { connLeft = Math.min(posA, posB); connWidth = Math.abs(posB - posA); }
-    var inner = '<div style="position:absolute;top:8px;left:0;right:0;height:2px;background:#d8caa2;"></div>' +
-      (posA != null && posB != null ? '<div style="position:absolute;top:8px;height:2px;left:' + connLeft.toFixed(1) +
-        '%;width:' + connWidth.toFixed(1) + '%;background:' + connColor + ';"></div>' : '') +
-      (posA != null ? '<div style="position:absolute;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid ' +
-        CHART.inkSoft + ';background:' + CHART.runADot + ';left:calc(' + posA.toFixed(1) + '% - 6px);"></div>' : '') +
-      (posB != null ? '<div style="position:absolute;top:4px;width:11px;height:11px;border-radius:50%;background:' +
-        bFill + ';left:calc(' + posB.toFixed(1) + '% - 5px);"></div>' : '');
+    var inner = chDumbbell(posA, posB, CHART.inkSoft, bFill, connColor);
     var valText = (r.scoreA == null ? '—' : WOA_REPORT.f1(r.scoreA)) + ' → ' + (r.scoreB == null ? '—' : WOA_REPORT.f1(r.scoreB));
     var tip = [['run A score', r.scoreA == null ? 'n/a' : WOA_REPORT.f1(r.scoreA) + ' (n=' + r.doneA + ')'],
       ['run B score', r.scoreB == null ? 'n/a' : WOA_REPORT.f1(r.scoreB) + ' (n=' + r.doneB + ')']];
