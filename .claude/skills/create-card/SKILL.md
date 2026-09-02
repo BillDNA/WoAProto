@@ -13,7 +13,7 @@ or custom-deck.js.**
 
 - `game/content/decks/default.js` — the active deck's card list (and
   `game/maps.js` `"units"` for legal deploy targets).
-- `docs/card-cheatsheet.md` — the FULL step vocabulary. It is small on
+- `docs/reference/card-cheatsheet.md` — the FULL step vocabulary. It is small on
   purpose: `deploy(unit, anywhere)`, `trench`, `attack(mod, tieSpare, noAdvance)`,
   `reposition`, `barrage`. **A card needing a step type that doesn't exist is an
   engine change — flag it as such, don't pretend the JSON works.**
@@ -48,7 +48,7 @@ text-only renders clean.
 3. State the swap: which copies leave the 16 to make room, and why.
 4. Tell Bill how to test: import via Deck Editor (or hand-edit
    `game/content/decks/default.js`), then
-   `node game/test.js` + a Balance Dashboard run; watch the new card's Simple% /
+   `node game/test/test.js` + a Balance Dashboard run; watch the new card's Simple% /
    1stSight% columns.
 5. **Offer art (only if Bill approves the card first).** If the `dig-mcp` MCP
    server is connected, ask Bill whether he wants generated card art. Only on a
@@ -62,7 +62,7 @@ text-only renders clean.
 
 ## Loop v2 — the 3-for-3 batch (given the current deck)
 
-When the balance loop drives this skill (B.5.2.1, Bill 2026-07-10), the invocation
+When the balance loop drives this skill, the invocation
 is different from a one-off "design a card": you are **handed the current deck** and
 told it will lose its 3 weakest slots this iteration. Generate **one batch of 3
 candidates for those 3 replacement slots, judged AS A SET against the whole deck** —
@@ -77,16 +77,15 @@ not three independent 1:1 suggest-and-replace calls. Concretely:
 - Grade the batch together (each card's rubric self-grade + one adversarial checker,
   per Step 2), then state the 3-out/3-in swap as a single move that keeps the deck at
   16 and exactly one `starting:true`.
-- **Seed candidate for the first batch: split Deploy Cavalry** (WOA-009 §S4 — one
-  2-cav deploy card → two 1-cav deploy cards). Grounding: Deploy Cavalry holds **80%
-  1stSight across all four decks** — the strongest auto-play in the game and the
-  cavalry-rush engine; splitting the double-deploy halves the opening burst without
-  banning cavalry. Watch the budget shift doesn't reintroduce Noop%. Ref:
-  `logs/reports/analysis/1.0/2026-07-10-rule-change-suggestions.md` §S4.
+- **Seed candidate for the first batch: split Deploy Cavalry** (one 2-cav deploy card
+  → two 1-cav deploy cards). Grounding: Deploy Cavalry holds **80% 1stSight across all
+  four decks** — the strongest auto-play in the game and the cavalry-rush engine;
+  splitting the double-deploy halves the opening burst without banning cavalry. Watch
+  the budget shift doesn't reintroduce Noop%.
 
 ## Gotchas
 
 - Multi-step cards are the interesting design space (steps run in order,
   each skippable) — but every extra step raises the dead-turn (never-useful) risk.
 - A negative `mod` (Careful Maneuvers uses -1) is a real cost lever.
-- Don't propose bigger-than-16 pools or per-side decks — post-V0 vision.
+- Don't propose bigger-than-16 pools or per-side decks — those are post-launch vision.

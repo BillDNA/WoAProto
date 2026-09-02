@@ -27,8 +27,8 @@ Band edges: `lo`/`hi` are the range; an open side (no penalty there) is written
 | Swings | `leadChanges/done` | 2.0–— | 6 /swing short |
 | Control% | `controlWins/controlGames` | 70–100 | 0.5 /pt short (skipped when no control games) |
 
-**Tie% and Drag divide by attrition endings, not every battle** (rules 1.2,
-WOA-039): HQ endings have Drag 0 by definition and only diluted the pooled Tie%.
+**Tie% and Drag divide by attrition endings, not every battle**: HQ endings have
+Drag 0 by definition and only diluted the pooled Tie%.
 Both carry a slice-n and are greyed/excluded from the verdict when that slice is
 small (see the small-n rule in `docs/balance/README.md`).
 
@@ -43,12 +43,11 @@ never touch the score.
 | Attack% | `attacks / (attacks+swaps+marches+deploys)` | 12–28 |
 | Swap% | `swaps / (attacks+swaps+marches+deploys)` | 10–26 |
 
-Attack% / Swap% are **shares of all actions taken** (rules 1.2, WOA-039 —
-deck-size-proof, replacing the old raw counts); a sharp move in either after a
+Attack% / Swap% are **shares of all actions taken** (deck-size-proof); a sharp move in either after a
 change is a regression even when win rates look fine (the swap-dance detector).
 
 ## Ruling on record
 
 Attrition-only maps ARE penalised — HQ% below 10 costs points, because both win
-paths should live on every map (2026-07-10, Bill). Swings at or above 2.0 score
+paths should live on every map (Bill's ruling). Swings at or above 2.0 score
 clean; they no longer buy back a fairness failure.

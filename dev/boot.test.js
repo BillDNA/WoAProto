@@ -1,4 +1,4 @@
-/* Real-path gates for two browser-inline hand-offs (WoAProto#222), driven through
+/* Real-path gates for two browser-inline hand-offs, driven through
    the actual page in jsdom (same inline-every-script boot as dev/smoke.js):
    - E3: localStorage['woa-custom-deck'] -> the index.html deck bootstrap ->
      WOA_CONTENT.decks -> the engine's ACTIVE_DECK snapshot (localStorage wins).

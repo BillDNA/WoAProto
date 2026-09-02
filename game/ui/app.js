@@ -3,9 +3,8 @@
    top-level declarations attach to window on purpose: the ui files
    cross-reference each other by bare name, and dev/smoke.js plus inline
    onload=/onerror= attributes in generated markup reach them via window.
-   Extracted verbatim from index.html's inline app script (V1 seam-split);
-   load order is the hand-ordered <script> tags in index.html (asserted by
-   game/test.js). ui/boot.js, loaded last, holds every statement that RUNS
+   Load order is the hand-ordered <script> tags in index.html (asserted by
+   game/test/test.js). ui/boot.js, loaded last, holds every statement that RUNS
    at load — everything here only declares. */
 'use strict';
 
@@ -31,7 +30,7 @@ function aiDisplayName(diff){
   return opt ? opt.textContent : capName(diff||'ai');
 }
 
-var SAVE_V = 6; // bumped when old saves can no longer be loaded (board shapes, trench arrays, #221 block-shaped state, ...)
+var SAVE_V = 6; // bumped when old saves can no longer be loaded (board shapes, trench arrays, block-shaped state, ...)
 
 function api(path, body){
   return fetch('/api/'+path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body||{}) })

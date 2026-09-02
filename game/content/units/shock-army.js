@@ -1,5 +1,5 @@
 /* EXPERIMENTAL unit variant — NOT ACTIVE (active:false). A worked example of
-   the WOA-011 content lever: a units file fully replaces maps.js's default unit
+   the units content lever: a units file fully replaces maps.js's default unit
    block, so composition (counts), worth, and atk/def/sup are all editable as data.
    To try it in a balance run:  node dev/balance-report.js 20 hard hard --once --units shock-army
    Guardrail: the counts must still total 10 (the engine throws at load if not).

@@ -1,10 +1,10 @@
 # ADR-0003 — Adopt `node:test` as the one test harness
 
-Status: Accepted (2026-08-25)
+Status: Accepted
 
 ## Context
 
-`game/test.js` is a flat 1654-line god-file with a hand-rolled `ok()` harness,
+`game/test/test.js` is a flat 1654-line god-file with a hand-rolled `ok()` harness,
 and that harness is re-implemented inline in almost every other test file
 (`dev/claude-plays.test.js`, `dev/db.test.js`, `dev/smoke.js` each redefine
 `ok()`; `dev/db.test.js` also redefines `section()`). Two files
@@ -23,7 +23,7 @@ more divergence over time, not less.
 
 Considered harness choices:
 
-- **Keep flat / status quo** — the god-file the spec (#46) is filed against.
+- **Keep flat / status quo** — the god-file this decision is filed against.
 - **Bespoke shared harness module** — extract `ok()`/`section()` into one
   ~15-line module every file requires. Smallest diff today, still zero-dep, but
   it is a module we keep bolting features onto (isolation, async, filtering) as
@@ -48,16 +48,16 @@ Single entry point is **`npm test`**, wired in a root `package.json` that
 carries only the `test` script and **no dependencies**:
 
 ```json
-{ "scripts": { "test": "node --test game/test.js dev/*.test.js dev/smoke.js" } }
+{ "scripts": { "test": "node --test game/test/test.js dev/*.test.js dev/smoke.js" } }
 ```
 
-Explicit paths (not a rename of the frozen `game/test.js`) so no path-freeze
+Explicit paths (not a rename of the frozen `game/test/test.js`) so no path-freeze
 sweep is triggered by the runner itself. `jsdom` stays declared in
 `dev/package.json`; Node resolves it for the smoke test regardless of where
 `npm test` is invoked, so the root stays dependency-free.
 
-`game/test.js` is split by subsystem along its existing `== section ==` seams
-(geometry / terrain / cards / maps / ai-matches). A thin `game/test.js` shim
+`game/test/test.js` is split by subsystem along its existing `== section ==` seams
+(geometry / terrain / cards / maps / ai-matches). A thin `game/test/test.js` shim
 remains so the frozen-API path still resolves; its subsystem doc/skill sweep
 lands in the same commit as the split.
 
@@ -77,11 +77,11 @@ to the test suite) is a parked idea, not this work.
   filtering, and setup/teardown from stdlib — nothing bespoke to feed.
 - The 1654-line god-file is split into subsystem files under the shared runner;
   adding a subsystem is a new file, not another section in one growing file.
-- `game/test.js` stays a resolvable path via a thin shim, so skills and docs
+- `game/test/test.js` stays a resolvable path via a thin shim, so skills and docs
   that pin it keep working; the split lands with its same-commit doc sweep.
 - Test console output changes format (TAP). This is cosmetic: the gate contract
   is only the non-zero exit on failure, and the golden diff never read test
-  output. `node game/test.js` still runs standalone under `node:test`.
+  output. `node game/test/test.js` still runs standalone under `node:test`.
 - Conversion is file-by-file, each riding its own green gate; a temporary mixed
   state (some files converted, some not) is harmless because a plain `ok()`
   file still runs under `node --test` as one implicit test.

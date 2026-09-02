@@ -59,7 +59,7 @@ rubric. Pass the brief below unchanged.
 - A **yes/no axis slug** is a checkbox even when its body disclaims scoring — a
   good slug is an assertion whose body demands a described position + direction.
 - No inventing a format — read the peer rubrics and one real review artifact
-  (`logs/reports/analysis/1.1/2026-07-16-1.1-analysis.md`) and match that voice.
+  under `logs/reports/analysis/` and match that voice.
 
 ## Subagent brief
 

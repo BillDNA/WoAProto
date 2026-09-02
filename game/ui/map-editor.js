@@ -86,7 +86,7 @@ function edRemoveHex(k){
 }
 function edInternalSides(){
   // every side of every on-board hex is paintable — including sides facing the
-  // board edge or an interior hole (e.g. The Void), Feedback Round 1
+  // board edge or an interior hole (e.g. The Void)
   var set = edHexSet(), out = [];
   Object.keys(set).forEach(function(k){
     for (var d=0; d<6; d++) out.push([k, d]);
@@ -203,7 +203,7 @@ function groupEdgesToPieces(edges){
     var qr = E.parseKey(it.a);
     // physical pieces come in lengths 2-3, but several can share one hex —
     // split longer runs into 3s and 2s (TwoSetsOfThree: a full forest ring = 3+3).
-    // Rivers now come in the same physical lengths as forest/mountain (Feedback Round 1).
+    // Rivers come in the same physical lengths as forest/mountain.
     var chunks = splitRun(comp.map(function(x){ return x.d; }));
     chunks.forEach(function(chunk){
       pieces.push({ t: it.t, edges: chunk.map(function(d){ return [qr[0], qr[1], d]; }) });

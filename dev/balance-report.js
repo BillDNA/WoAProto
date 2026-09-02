@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /* dev/balance-report.js — run a balance report and SAVE it as markdown under
-   logs/reports/balance/<rules-version>/ (Feedback Round 4). balance.js only
+   logs/reports/balance/<rules-version>/. balance.js only
    prints to the terminal; this mirrors the in-browser Balance Dashboard's saved
    format so review-reports reads one shape for CLI and GUI runs alike.
 
-   PERSISTENT DATA (Round 4): by default each run FOLDS into a per-version
+   PERSISTENT DATA: by default each run FOLDS into a per-version
    accumulator (logs/reports/balance/<version>/accumulated.json) so more runs =
    more data, and the saved report reflects every skirmish to date on this rules
    version. The accumulator persists until the version bumps or you reset it.
@@ -28,7 +28,7 @@
                parallelism is process-per-map — each worker require()s its own
                engine. Workers ship every finished skirmish back to the parent,
                which writes ALL per-skirmish DB rows itself under the one run id
-               (single woa.db writer — WOA-041; report, accumulator AND DB rows
+               (single woa.db writer; report, accumulator AND DB rows
                are identical to a serial run on the same seeds).
 
    It also ranks maps by a balance-quality score and prints `BEST_MAP: <name>`
@@ -84,7 +84,7 @@ var DECK = '', UNITSET = '';
 
 var E = require(path.join(__dirname, '..', 'game', 'engine.js'));
 // Sweeps + balance folds live in the batch/measurement layer (game/sim.js),
-// evicted from the engine in #220 — balanceMap/balanceFP/balanceSeed, not on E.
+// not on E — balanceMap/balanceFP/balanceSeed.
 var SIM = require(path.join(__dirname, '..', 'game', 'sim.js'));
 // Scoring / thresholds / folds / markdown all live in the shared report model
 // (game/report-model.js) — one implementation per fact; this file keeps only
@@ -120,7 +120,7 @@ async function run() {
   var dr = diffs[0] || 'hard', db = diffs[1] || dr, diffLabel = dr === db ? dr + ' vs ' + dr : dr + ' vs ' + db;
   var ver = E.VERSION;
 
-  var maps = E.activeMaps(); // the ACTIVE mapset's maps (V1)
+  var maps = E.activeMaps(); // the ACTIVE mapset's maps
   if (flags.mapset === 'all') maps = E.MAPS;
   else if (flags.mapset) {
     var mset = E.MAPSETS.filter(function (s) { return s.id === flags.mapset; })[0];
@@ -158,7 +158,7 @@ async function run() {
   // so accumulated runs can never replay a prior run's seeds
   function seedBaseFor(mi) { return (mi + 1) * 7919 + priorRuns * 7919 * 2711; }
 
-  // WOA-045: record the run's content + seed identity so it's reproducible and
+  // Record the run's content + seed identity so it's reproducible and
   // the A/B picker can tell runs apart. seedBaseFor(0) includes the priorRuns offset.
   var runDeck = DECK || (E.ACTIVE_DECK && E.ACTIVE_DECK.id) || '';
   // Always resolve the actual mapset: --mapset <id> / 'all' verbatim, else the
@@ -170,7 +170,7 @@ async function run() {
   var runLabel = 'balance ' + diffLabel + ' · ' + (runDeck || 'active') + ' · ' + runMapset +
     (filter ? ' /' + filter : '') + ' · n' + n;
 
-  // V1: every skirmish also lands as a per-skirmish row in logs/woa.db (guarded —
+  // Every skirmish also lands as a per-skirmish row in logs/woa.db (guarded —
   // the markdown report works fine without it).
   var dbm = null, dbh = null, runId = null;
   try {
@@ -191,7 +191,7 @@ async function run() {
     // in-process interleaving is unsafe — each worker require()s a fresh engine.
     var cp = require('child_process');
     // each worker require()s a fresh engine, so --deck / --units must preload
-    // there too. WOA-041: the worker also collects every finished skirmish via
+    // there too. The worker also collects every finished skirmish via
     // balanceMap's onGame — slimmed by db.js's slimSkirmishState to exactly what
     // insertSkirmish reads — and ships them in the one JSON envelope; the PARENT
     // stays the single woa.db writer (no cross-process SQLite contention).
@@ -220,7 +220,7 @@ async function run() {
             var out;
             try { out = JSON.parse(stdout); thisRun[map.name] = { shape: shapeOf(map), agg: out.agg }; }
             catch (e) { return reject(e); }
-            // WOA-041: persist the worker's skirmishes under this run id, on the
+            // Persist the worker's skirmishes under this run id, on the
             // same seed/fp schedule the serial path uses (g is 1-based).
             if (dbm) (out.skirmishes || []).forEach(function (b) {
               try { dbm.insertSkirmish(dbh, runId, b.st, SIM.balanceFP(b.g - 1), { seed: SIM.balanceSeed(seedBaseFor(mi), b.g - 1), version: ver }); }

@@ -48,7 +48,7 @@ findings meant to feed `create-card`/`create-map`).
    - North-star scoreboard: each metric, current value, target band, verdict.
    - Per-map flags: SIDE-BIASED / mover-strong / attrition-only / STALEMATES rows,
      with the numbers.
-   - Pacing (Feedback Round 2): the Drag column (trailing kill-less turns before
+   - Pacing: the Drag column (trailing kill-less turns before
      the game ends — high = the AIs march in circles) and Swings (field-score
      lead flips per skirmish — high = real back-and-forth). Flag maps that drag.
    - Card watchlist: high Simple%, high 1stSight% + low AvgSeen.
@@ -63,11 +63,11 @@ findings meant to feed `create-card`/`create-map`).
 - The card report's Simple% carries the CARD_KEEP burn bias (the AI burns its
   least precious card) — say so when citing it.
 - If Behaviour numbers moved sharply vs the dated baseline in
-  docs/balance-baselines.md (the single numbers home — read against the
+  docs/balance/balance-baselines.md (the single numbers home — read against the
   Behaviour-health guard in docs/balance/README.md §Game-level guards) — every
   figure there carries its AI tier / n / mapset / date;
   don't restate numbers here, they go stale), treat it as an AI regression
   signal even when win rates look fine. Grade like-for-like: match the
   baseline's labeled setup (AI tier + mapset) before comparing.
-- Keep `node game/test.js` out of scope here — this skill measures balance, not
+- Keep `node game/test/test.js` out of scope here — this skill measures balance, not
   correctness.

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* dev/tune-weights.js — offline AI_WEIGHTS sweeper (V1 ai-search-and-tuning).
+/* dev/tune-weights.js — offline AI_WEIGHTS sweeper.
 
    Coordinate-descent over selected weight keys: for each key, try a few
    multipliers of the current value (both AIs get the candidate weights),
@@ -28,8 +28,7 @@
 
 var path = require('path');
 var E = require(path.join(__dirname, '..', 'game', 'engine.js'));
-// balanceMap is the batch/measurement layer (game/sim.js), evicted from the
-// engine in #220.
+// balanceMap is the batch/measurement layer (game/sim.js), not the engine.
 var SIM = require(path.join(__dirname, '..', 'game', 'sim.js'));
 // Fitness = the shared balance score (game/report-model.js) — the SAME
 // implementation dev/balance-report.js ranks maps with, not a drifting copy.
@@ -88,7 +87,7 @@ function measure(maps, n, base, weights) {
   };
 }
 
-// Guardrails: the round-5/6 anti-degeneracy bands. A candidate that "wins" on
+// Guardrails: the anti-degeneracy bands. A candidate that "wins" on
 // fitness while breaking these is a regression wearing a good score.
 function guardrails(m, base) {
   var flags = [];

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* dev/gen-docs.js — regenerate the drift-prone doc tables from the code/data
-   that owns them (V1 architecture review: the judges' pick to kill doc drift).
+   that owns them, so the tables never drift from the source.
 
    Rewrites, IN PLACE, the text between explicit marker pairs:
 
@@ -8,7 +8,7 @@
                                  + the hand-maintained descriptions map BELOW)
      <!-- GEN:personalities -->  the extra AI personalities (AI_PRESETS minus
                                  easy/normal/hard, i.e. the maps.js "ai" rows)
-     in docs/ai/ai-heuristic-model.md, and
+     in docs/reference/ai-heuristic-model.md, and
 
      <!-- GEN:content -->        the current content map library (maps with shape +
                                  custom flag, decks, mapsets with the active
@@ -40,7 +40,7 @@ var WEIGHT_DESC = {
   fsDiffUrgent: 'Extra value per point of field-score lead, scaled up as the game nears its end.',
   unitOnBoard: 'Value of each of my deployed units (× the unit\'s worth).',
   unitReserve: 'Value of each of my un-deployed reserves. Lower than on-board = mild nudge to actually field them.',
-  unitValInfantry: 'The AI\'s worth of one infantry, multiplied into the unit/threat terms. V1: a weight, so the tuner and personalities can sweep it.',
+  unitValInfantry: 'The AI\'s worth of one infantry, multiplied into the unit/threat terms. A weight, so the tuner and personalities can sweep it.',
   unitValCavalry: 'The AI\'s worth of one cavalry (see `unitValInfantry`).',
   unitValArtillery: 'The AI\'s worth of one artillery (see `unitValInfantry`).',
   advance: 'Reward for my units being *closer* to the enemy HQ (per hex). Raise it to make the AI pushy.',
@@ -52,11 +52,11 @@ var WEIGHT_DESC = {
   threatKill: 'Penalty per point of my unit the enemy threatens to kill.',
   threatTie: 'Penalty per point of my unit the enemy could trade with (tie).',
   trenchHome: 'Bonus per trench dug near my own HQ.',
-  trenchFacing: 'V1: bonus per covered trench edge that faces a **live enemy lane** (an enemy unit within 2 hexes of the far side of the denied border). This is what makes trench *orientation* a real choice — see below.',
+  trenchFacing: 'Bonus per covered trench edge that faces a **live enemy lane** (an enemy unit within 2 hexes of the far side of the denied border). This is what makes trench *orientation* a real choice — see below.',
   noopPenalty: 'Penalty for a plan that resolves **zero** actions (a dead turn). Anti-degeneracy — **don\'t zero it.**',
   antiShuffle: 'Penalty for re-swapping the same pair of units it swapped last turn. Anti-degeneracy.',
   fallbackBias: 'Mild preference for a card\'s printed action over burning it.',
-  shortlist: 'V1 search dial: when a step has more options than this, keep the top N by a cheap static pre-rank (winning attacks first, advances next, swaps last). Replaces the old **random** 80-cap that could discard the best move. Lower = faster + more approximate — lab personalities can crank it down.'
+  shortlist: 'Search dial: when a step has more options than this, keep the top N by a cheap static pre-rank (winning attacks first, advances next, swaps last). Lower = faster + more approximate — lab personalities can crank it down.'
 };
 
 /* ---------- generators ---------- */
@@ -121,8 +121,8 @@ function genContent() {
 /* ---------- marker plumbing ---------- */
 
 var BLOCKS = [
-  { file: 'docs/ai/ai-heuristic-model.md', name: 'weights', gen: genWeights },
-  { file: 'docs/ai/ai-heuristic-model.md', name: 'personalities', gen: genPersonalities },
+  { file: 'docs/reference/ai-heuristic-model.md', name: 'weights', gen: genWeights },
+  { file: 'docs/reference/ai-heuristic-model.md', name: 'personalities', gen: genPersonalities },
   { file: 'docs/code-architecture.md', name: 'content', gen: genContent }
 ];
 

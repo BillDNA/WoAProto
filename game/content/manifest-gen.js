@@ -1,5 +1,5 @@
 /* Single source for the generated content/manifest.js body — required by
-   game/server.js (which writes it) and game/test.js (which checks the
+   game/server.js (which writes it) and game/test/test.js (which checks the
    committed file hasn't drifted). Node-only; no second copy of the
    file-listing logic. */
 'use strict';

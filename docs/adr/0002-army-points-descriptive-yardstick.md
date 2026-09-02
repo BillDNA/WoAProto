@@ -1,6 +1,6 @@
 # ADR-0002 — Army-points is a descriptive yardstick, not a predictive proxy
 
-Status: Accepted (2026-08-25)
+Status: Accepted
 
 ## Context
 

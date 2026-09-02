@@ -1,21 +1,20 @@
-/* War of Attrition — ui part: the Balance Dashboard's OVERVIEW pane (WOA-035,
-   design 4a/1c/1f/1e). THE QUESTION: what regressed, run A -> run B? Reads BOTH
+/* War of Attrition — ui part: the Balance Dashboard's OVERVIEW pane.
+   THE QUESTION: what regressed, run A -> run B? Reads BOTH
    runs' skirmish rows from GET /api/skirmishes?run=<id> (fetched once per A/B
    pair and cached — SKIRMISH_CACHE in ui/net.js, shared with the Maps
    drill-down so switching pills never refetches), folds them through
    WOA_REPORT.foldSkirmishes (report-model.js — the ONE DB-rows -> agg fold),
-   then draws: a verdict banner, the triage band board (1c), the per-map
-   balance-score dumbbells (1f), and two fleet-wide pacing minis (1e).
+   then draws: a verdict banner, the triage band board, the per-map
+   balance-score dumbbells, and two fleet-wide pacing minis.
 
    Render-only: all shaping is CHART_MODEL.buildOverviewModel (ui/chart-model.js).
    Draws over the shared toolkit in ui/chart-primitives.js — the band-board row
    renderer (ovBandRect/ovDot/ovBandRowHtml, shared with the Maps pane), the
    settle-curve svg (chSettleSvg), and the .chtip/ch-hit hover layer (chBindHits)
-   all live there. Plain divs by string concat, matching the design canvas's OWN
-   technique for 1c/1f/4a (not SVG). */
+   all live there. Plain divs by string concat (not SVG). */
 'use strict';
 /* Verdict banner: named links for every SCORED band row run B breaches at the
-   selected temperature (small-n rows excluded, SPEC §8 — the breach set is
+   selected temperature (small-n rows excluded — the breach set is
    computed in buildOverviewModel; this only draws it). Cheapest honest click
    target: scroll the matching band-board row into view and flash it. */
 function ovVerdictBanner(verdict) {
@@ -83,8 +82,8 @@ function ovPacingMinis(pacing) {
     '%</b></h4>' + bars + '<p class="small" style="margin:6px 0 0;">share of each skirmish&rsquo;s deploys landing before vs after first contact &mdash; A ' +
     nA + ' skirmishes (hollow), B ' + nB + ' (solid)</p></div>';
 
-  // ---- settle curve: CDF of settlePoint, A dashed / B solid (WOA-040: the
-  // svg-building moved to the shared chSettleSvg — same numbers, one impl) ----
+  // ---- settle curve: CDF of settlePoint, A dashed / B solid (the
+  // svg-building lives in the shared chSettleSvg — same numbers, one impl) ----
   var W = 200, H = 64;
   var svg = chSettleSvg(st.settleA, st.settleB, W, H);
   var settleMini = '<div class="ov-mini"><h4>median settle <b>' + Math.round(st.medianA) + '%→' +

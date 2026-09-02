@@ -151,7 +151,7 @@ realSetTimeout(function () {
     doc.getElementById('edMirror').click();
     assert.ok(Object.keys(win.ED.edges).length === 2, 'Mirror creates the rotated twin side');
 
-    console.log('== map library deletion + board-shape carving (V0) ==');
+    console.log('== map library deletion + board-shape carving ==');
     var firstTileBtns = doc.querySelector('#mapGrid .mapitem .btns');
     assert.ok(firstTileBtns && firstTileBtns.textContent.indexOf('Delete') >= 0, 'built-in map tiles offer Delete (floor of 5 enforced on click)');
     var hexTool = doc.querySelector('.edtools button[data-tool="hexes"]');
@@ -254,7 +254,7 @@ realSetTimeout(function () {
           var dashTxt = doc.getElementById('dashOut').textContent;
           assert.ok(/Aggression/.test(dashTxt) && /Decisiveness/.test(dashTxt), 'behaviour + decisiveness metrics shown');
           // dashboard numbers must equal the CLI's: same fold, same seeds.
-          // balanceMap is the sim layer (WOA_SIM), evicted from the engine (#220).
+          // balanceMap is the sim layer (WOA_SIM), separate from the engine.
           var cli = win.WOA_SIM.balanceMap(win.Engine.MAPS[4], 20, { seedBase: 1 * 7919, diffRed: 'normal', diffBlue: 'normal' });
           var gui = win.DASH.results[0].out;
           assert.ok(cli.redWins === gui.redWins && cli.turns === gui.turns && cli.attacks === gui.attacks,
@@ -484,7 +484,7 @@ realSetTimeout(function () {
       var benched = JSON.parse(JSON.stringify(win.Engine.CARDS));
       benched[2].out = true; // benched cards drop from the total (here 17 -> 14, under the 16-17 band)
       assert.ok(win.deckProblems(benched).some(function (p) { return /must total 16-17/.test(p); }), 'benching a card drops it below the 16-17 band');
-      // WOA #56: an over-army-points deck is refused by the same validation pass.
+      // An over-army-points deck is refused by the same validation pass.
       // Swap the cheapest card for a maxed-out one so the total blows past the cap
       // without changing the card count (isolates the points gate from the size band).
       var overPts = JSON.parse(JSON.stringify(win.Engine.CARDS));
@@ -516,7 +516,7 @@ realSetTimeout(function () {
     }
 
     function manualPlayer() {
-      console.log('== field manual diagram player (V1) ==');
+      console.log('== field manual diagram player ==');
       doc.getElementById('btnQuit').click();
       var liveShape = win.Engine.currentShape();
       doc.getElementById('btnManual').click();

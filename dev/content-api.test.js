@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Real-path content-write gate (WoAProto#222). Drives the ACTUAL server's content
+/* Real-path content-write gate. Drives the ACTUAL server's content
    routes over real HTTP against a THROWAWAY content dir (WOA_CONTENT_DIR) copied
    from the real one, so the file-write -> manifest-regen hand-off is exercised for
    real without ever touching committed content. Seams: A3 savemap, A8 deletemap,

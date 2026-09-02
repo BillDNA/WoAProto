@@ -15,7 +15,7 @@
   }
   function isEmpty(st, h) { return !unitAt(st, h) && !isHQ(st, h); }
 
-  /* ---------- piece storage (WoAProto#221) ----------
+  /* ---------- piece storage ----------
      The ONE place the shape of st.pieces (units / trenches / reserves) is
      known. Every free function reaches pieces through these accessors — reads
      via unitAt/units/eachUnit, writes via place/remove/advance and the reserve
@@ -49,7 +49,7 @@
       controlledHexes(st, p).forEach(function (c) {
         I.neighbors(c).forEach(function (n) {
           // a river on the c|n border stops control from extending across it
-          // (Round 3: adjacency control must not cross the water)
+          // (adjacency control must not cross the water)
           if (isEmpty(st, n) && !riverBetween(st, c, n)) set[n] = true;
         });
       });
@@ -76,7 +76,7 @@
       if (!edgeFreeForTrench(st, h, d) || !edgeFreeForTrench(st, h, d2)) continue;
       // A trench only denies support across a border that a skirmish can happen on.
       // If BOTH edges face off-board there's no such border — it does nothing, so
-      // don't offer it (Feedback Round 2: AI dug a useless trench facing off-board).
+      // don't offer it (else the AI can dig a useless trench facing off-board).
       if (!I.neighbor(h, d) && !I.neighbor(h, d2)) continue;
       out.push([d, d2]);
     }
@@ -116,9 +116,8 @@
   }
 
   function listRepositions(st, p) {
-    // Round-3 ruling, enforced in 1.0 (was documented as shipped but never made
-    // it into the code): swapping two units of the SAME type changes nothing on
-    // the board — it's a hidden skip the metrics can't see — so it's not legal.
+    // Swapping two units of the SAME type changes nothing on the board — it's a
+    // hidden skip the metrics can't see — so it's not legal.
     var moves = [], swaps = [], seenSwap = {};
     for (var h in st.pieces.units) {
       if (st.pieces.units[h].owner !== p) continue;
@@ -148,8 +147,7 @@
   }
 
   function listBarrageTargets(st, p) {
-    // June 2026 ruling: the naval guns reach the whole board — ANY trench or
-    // forest may be targeted (the old in/adjacent-to-controlled-hexes zone is gone).
+    // The naval guns reach the whole board — ANY trench or forest may be targeted.
     var trenches = [];
     Object.keys(st.pieces.trenches).forEach(function (h) {
       st.pieces.trenches[h].forEach(function (t, i) { trenches.push({ hex: h, idx: i, dirs: t.dirs }); });
@@ -161,23 +159,23 @@
   }
 
   /* ---------- combat ---------- */
-  // Support crossing rules (Feedback Round 3 river revision, July 2026):
+  // Support crossing rules:
   //  - a TRENCH on the border between supporter and skirmish hex blocks ATTACKER
-  //    support only. Ownership is irrelevant (Bill: lose a trench and the enemy
-  //    uses it just fine). Trenches grant no +1 defense — that's for mountains.
-  //  - a RIVER no longer blocks support at all: support crosses it freely for
-  //    both sides. A river instead denies DEPLOY-control extension across it
-  //    (riverBetween / deployTargets) — control creep stops at the water, but
-  //    armies already on the field still support across it. Bill's Round-3 goal:
-  //    make situational repositioning stronger and cut infantry-for-infantry
-  //    swaps. Attacks/moves/Airdrop cross freely; a river is not barrageable.
+  //    support only. Ownership is irrelevant (lose a trench and the enemy uses
+  //    it just fine). Trenches grant no +1 defense — that's for mountains.
+  //  - a RIVER does not block support: support crosses it freely for both sides.
+  //    A river instead denies DEPLOY-control extension across it (riverBetween /
+  //    deployTargets) — control creep stops at the water, but armies already on
+  //    the field still support across it. This makes situational repositioning
+  //    stronger and cuts infantry-for-infantry swaps. Attacks/moves/Airdrop
+  //    cross freely; a river is not barrageable.
   function borderBlocked(st, fromHex, skirmishHex, attacking) {
     var dOut = I.dirBetween(fromHex, skirmishHex), dIn = I.dirBetween(skirmishHex, fromHex);
     if (attacking && (trenchCovers(st, fromHex, dOut) || trenchCovers(st, skirmishHex, dIn))) return 'trench';
     return null;
   }
   // A river on the border between two adjacent hexes stops deploy-control from
-  // extending across it (Round 3: adjacency control must not cross the water).
+  // extending across it (adjacency control must not cross the water).
   // Reads both hexes' sides — ownership of the piece is irrelevant.
   function riverBetween(st, a, b) {
     var dOut = I.dirBetween(a, b), dIn = I.dirBetween(b, a);
@@ -237,14 +235,14 @@
     var au = unitAt(st, atk.from), p = au.owner, e = I.other(p);
     var res = computeAttack(st, atk);
     var du = unitAt(st, atk.to), dHQ = isHQ(st, atk.to);
-    // rules 1.1 (S1): a trench on the ATTACKED border of the defending hex lets
-    // the defender survive an even fight, and stops a tie from capturing a
-    // trenched HQ. Same edge test borderBlocked uses (dIn = the defender's side
-    // toward the hex the attack crosses from); trench OWNERSHIP is irrelevant.
+    // A trench on the ATTACKED border of the defending hex lets the defender
+    // survive an even fight, and stops a tie from capturing a trenched HQ. Same
+    // edge test borderBlocked uses (dIn = the defender's side toward the hex the
+    // attack crosses from); trench OWNERSHIP is irrelevant.
     var borderTrenched = trenchCovers(st, atk.to, I.dirBetween(atk.to, atk.via || atk.from));
     I.ensureStats(st).attacks++;
-    // WOA-031 (SPEC §4): tag the play as an attack + tally attacks-made/absorbed
-    // by unit type. 'attack' is sticky on the trace entry (see I.recordPlay) so
+    // Tag the play as an attack + tally attacks-made/absorbed by unit type.
+    // 'attack' is sticky on the trace entry (see I.recordPlay) so
     // a reposition step later in the SAME play (Reckless Maneuvers) can't steal
     // the tag out from under this attack's kill.
     I.recordPlay(st, 'attack', atk.to);
@@ -290,10 +288,10 @@
       msg += 'attack repelled, attacker destroyed.';
     } else { // tie
       if (borderTrenched) {
-        // rules 1.1 (S1, Variant A/A1): a trenched border spares the defender on
-        // a tie — an even assault bounces off the dug-in line. The attacker still
-        // dies as in a normal tie UNLESS it has tieSpare (Ordered Withdraw / Over
-        // the Top); tieSpare + trench = a whiff where nobody falls (A1).
+        // A trenched border spares the defender on a tie — an even assault
+        // bounces off the dug-in line. The attacker still dies as in a normal
+        // tie UNLESS it has tieSpare (Ordered Withdraw / Over the Top); tieSpare
+        // + trench = a whiff where nobody falls.
         if (atk.tieSpare) {
           msg += 'a tie against the trench — the assault is thrown back; the attacker withdraws in good order and neither side falls.';
         } else {
@@ -311,8 +309,8 @@
     }
     I.log(st, msg);
     // HQ capture: an attacker win always takes it; a tie takes it too UNLESS the
-    // attacked HQ border is trenched (rules 1.1, S1 — trench your HQ and a tie
-    // can't take it). An untrenched-HQ tie still captures exactly as before.
+    // attacked HQ border is trenched (trench your HQ and a tie can't take it).
+    // An untrenched-HQ tie still captures.
     if (dHQ && (res.outcome === 'attacker' || (res.outcome === 'tie' && !borderTrenched))) {
       I.finishSkirmish(st, p, 'hq');
     }

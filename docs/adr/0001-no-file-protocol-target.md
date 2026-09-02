@@ -1,6 +1,6 @@
 # ADR-0001 — `file://` double-click is not a supported target
 
-Status: Accepted (2026-08-24)
+Status: Accepted
 
 ## Context
 

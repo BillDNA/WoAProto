@@ -26,10 +26,10 @@
     },
     {
       "label": "Run engine tests",
-      "detail": "node game/test.js",
+      "detail": "node game/test/test.js",
       "type": "shell",
       "command": "node",
-      "args": ["game/test.js"],
+      "args": ["game/test/test.js"],
       "options": { "cwd": "${workspaceFolder}" },
       "group": { "kind": "test", "isDefault": true },
       "problemMatcher": []

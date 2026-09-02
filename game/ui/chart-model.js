@@ -1,7 +1,7 @@
 /* War of Attrition — ui part: pure display-model builders for the dashboard
    drill-down panes. Data in (already-fetched skirmish rows), plain display
    model out — NO document, NO fetch, NO APP/DASH. charts.js renders whatever
-   this returns; node tests require() it directly (game/test.js). Dual-export
+   this returns; node tests require() it directly (game/test/test.js). Dual-export
    (browser global + module.exports), the SAME pattern as report-model.js. */
 'use strict';
 
@@ -66,13 +66,13 @@ var CHART_MODEL = (function () {
     };
   }
 
-  /* ===== Overview pane (WOA-035) shape-model =====
+  /* ===== Overview pane shape-model =====
      THE QUESTION: what regressed, run A -> run B? This assembles the whole
      Overview display model from two runs' skirmish rows; charts.js only draws
      it. Pure — no document/fetch/DASH. */
 
   // metrics whose val() returns a 0-100 percentage (drag/swings are raw counts).
-  // WOA-039: attackShare/swapShare are % of all actions taken.
+  // attackShare/swapShare are % of all actions taken.
   var OV_PERCENT_KEYS = { red: 1, first: 1, hq: 1, zeroKill: 1, tie: 1, control: 1, firstBlood: 1, attackShare: 1, swapShare: 1 };
 
   function ovFmt(key, v) {
@@ -143,7 +143,7 @@ var CHART_MODEL = (function () {
   /* Assemble the Overview pane's display model from two runs' skirmish rows.
      aggA/aggB are the fleet-wide DB-rows folds; scoredRows/guardRows are the
      BANDS slices the board draws; verdict.breaches are the scored rows run B
-     breaches at the selected temperature (small-n excluded, SPEC §8);
+     breaches at the selected temperature (small-n excluded);
      dumbbells is the per-map balance-score fold; pacing is the 1e minis fold.
      Pure — the caller (charts.js) draws band rows through the shared
      ovBandRowHtml, which reads ovTrackDomain/ovPos from here. */
@@ -172,10 +172,10 @@ var CHART_MODEL = (function () {
   /* Assemble the Cards pane's pure display model from two runs' skirmish rows
      (the SAME rowsA/rowsB shape the panes fetch). `cards` is the engine card
      list (E.CARDS) — passed in so this stays engine-global-free. Returns the
-     merged per-card rows (each with a/b sub-views + name), the SPEC §2 Win%
+     merged per-card rows (each with a/b sub-views + name), the doctrine Win%
      slice folded into those rows, the fire-time strips input (fireA/fireB), and
      the quadrant's plays->radius scaling input (maxPlays). Only cards with
-     plays in A and/or B are kept; quadEligible/omitted count the SPEC §2 slice's
+     plays in A and/or B are kept; quadEligible/omitted count the doctrine slice's
      coverage for the caption. */
   function buildCardsModel(rowsA, rowsB, cards) {
     var A = R.cardRunView(rowsA, cards), B = R.cardRunView(rowsB, cards);

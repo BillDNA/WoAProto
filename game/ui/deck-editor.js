@@ -6,7 +6,7 @@
 'use strict';
 
 /* =================== deck editor =================== */
-// Five named deck slots (Feedback Round 2), stored in localStorage 'woa-decks'
+// Five named deck slots, stored in localStorage 'woa-decks'
 // as {active, slots:[{name,cards}|null ×5]}. Editing works on a copy of one
 // slot's cards (DK.cards) so all the per-card render/edit code is unchanged.
 // The APPLY path is deliberately untouched: Save mirrors the ACTIVE slot into
@@ -104,12 +104,11 @@ function deckProblems(cards){
     });
   });
   if (starting !== 1) probs.push('exactly ONE card must be marked starting (got ' + starting + ')');
-  // WOA-036: the physical guardrail is a design band, not one exact count —
-  // every shipped content/decks/*.js deck totals 16 or 17 (the 17-card
-  // cavsplit17-raid-paid adopted 2026-07-18, WOA-030); a custom deck must
+  // the physical guardrail is a design band, not one exact count —
+  // every shipped content/decks/*.js deck totals 16 or 17; a custom deck must
   // land in that same band.
   if (total < 16 || total > 17) probs.push('the deck must total 16-17 cards (got ' + total + ') — hand-edit the deck file if you really want an exotic size');
-  // WOA #56: army-points budget ceiling — the fairness constraint that lets two
+  // army-points budget ceiling — the fairness constraint that lets two
   // asymmetric decks be called "matched". Same reject-on-validate as the size band.
   var pts = E.deckPoints({ cards: cards });
   if (pts > E.DECK_POINTS_CAP) probs.push('the deck is over the army-points budget (' + pts + ' > ' + E.DECK_POINTS_CAP + ') — cut a card or a step');

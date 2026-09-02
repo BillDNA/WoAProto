@@ -20,7 +20,7 @@ analysis to `logs/reports/analysis/`. Covers both report types:
   metric tables from the Balance Dashboard or `dev/balance-report.js`: per-map
   Red%/1st%/HQ%/Turns/FSdiff/Atk/Swp/0kill%/Tie%/Drag/Swings/Balance + card
   table — Simple%/1stSight%/AvgSeen/Plays plus **Pts/Resid** (army-points cost
-  and the WOA #57 mispricing residual — a `⚠` marks a **soft** mispricing flag,
+  and the mispricing residual — a `⚠` marks a **soft** mispricing flag,
   see card rubric axis 5); Win% was dropped from this table,
   see rubric Card criterion 6). `accumulated.json` beside them is the
   per-version fold of every skirmish to date; the same skirmishes also land as
@@ -44,7 +44,7 @@ analysis to `logs/reports/analysis/`. Covers both report types:
   **quote the rubric's band, never restate its baseline figures here**; this
   skill file goes stale the moment a restated number does, and the rubric is
   the one place they're allowed to live.
-- `docs/ai/ai-heuristic-model.md` — so any AI-behaviour
+- `docs/reference/ai-heuristic-model.md` — so any AI-behaviour
   suggestion names the exact weight to turn.
 - The reports themselves. Default to the **current rules version** (the highest
   `<version>` folder / the `Engine.VERSION` stamped in report headers). Don't mix
@@ -87,7 +87,7 @@ the same way; the tags are how the right era's reports are found fast.
    criterion's Lever, so a bad reading never arrives without something to turn.
 2. **Per-map flags** — grade each map against the rubric's Map criteria (side
    balance, mover balance, HQ-vs-attrition mix, board control, tie-rule share)
-   and the "Best map" Balance-score ranking. Per Bill's Round-4 note (rubric,
+   and the "Best map" Balance-score ranking. Per Bill's note (rubric,
    "Best map" table), an **attrition-only map with high Swings + low Drag is
    GOOD** (the lead changed hands to the end) — don't flag it as broken; flag
    maps that *drag* (high Drag, low Swings) or that a side/mover runs away
@@ -143,7 +143,7 @@ Then tell Bill the saved path and give a 3-line verbal summary.
   read the rubric's ⚠ box before grading a card an auto-play or a dead hoard
   off those two columns alone.
 - If Behaviour numbers moved sharply vs the dated baseline in
-  `docs/balance-baselines.md` (the single numbers home — every figure there
+  `docs/balance/balance-baselines.md` (the single numbers home — every figure there
   carries its AI tier / n / mapset / date; don't restate numbers here, they go
   stale), read against the Behaviour-health guard in `docs/balance/README.md`
   §Game-level guards, treat it as an AI

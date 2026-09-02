@@ -1,6 +1,6 @@
 # ADR-0001 — Un-ready intent lives as `idea`-labeled issues, not a parking-lot doc
 
-**Status:** Accepted (2026-08-24)
+**Status:** Accepted
 
 ## Context
 
@@ -10,8 +10,8 @@ a `Backlog.md` / `Bugs.md` / `Sprint.md` / `Roadmap.md` set for live work, and a
 "icebox") — plus an `inbound/` routing area. Ideas graduated by hand-editing docs and moving
 text between files.
 
-The map *WoAProto into the mp system* (issue #1) moves this project onto the standard
-mattpocock flow, whose best practice is **the tracker is the source of truth — no bespoke
+Moving this project onto the standard mattpocock flow raised the question: its best
+practice is **the tracker is the source of truth — no bespoke
 spec-markdown in the repo**. That leaves the question of where *un-ready* intent lives: keep the
 freeform parking-lot canvas, or invert it onto the tracker.
 
@@ -31,6 +31,5 @@ live backlog/roadmap intent becomes normal labeled issues; the scrum-process sca
 - **Cost:** loses the freeform Obsidian/markdown canvas — the `[[wikilink]]` web and the ability
   to sketch half-formed structure in prose across linked files. Issue bodies are a flatter medium;
   cross-idea structure now rides in-body links and labels rather than a linked-note graph.
-- Migrated ideas: run-design (#22), meta-progression (#23), commander-traits (#24), narrative
-  (#25), map points of interest (#26), the Steam leverage map (#27).
-- Executed under issue #5 (distill `planning/` → issues).
+- Migrated ideas: run-design, meta-progression, commander-traits, narrative, map points of
+  interest, and the Steam leverage map now live as `idea` issues.

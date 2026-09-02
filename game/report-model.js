@@ -2,7 +2,7 @@
    reporting surface shares (CLI, dashboard, saved markdown). Pure plain-data folds
    over WOA_SIM.balanceMap aggregates + trace envelopes; dual-exported (WOA_REPORT global
    + module.exports) like maps.js. Subsystem reference — envelope schema, band
-   semantics, reporting doctrine, reconstruction caveats: docs/report-model.md.
+   semantics, reporting doctrine, reconstruction caveats: docs/reference/report-model.md.
 
    - pct(a, b)                 rounded percentage (0 when b is 0)
    - f1(x)                     one-decimal string, round-half-up
@@ -28,7 +28,7 @@
 var WOA_REPORT = (function () {
 
   // foldSkirmishes is the only fold downstream of the sim layer (delegates to its
-  // single-source factsFromRow/foldFacts, evicted from the engine in #220).
+  // single-source factsFromRow/foldFacts, which live in the sim layer, not the engine).
   // Resolve the sim dual like maps.js.
   var SIM = (typeof window !== 'undefined' && window.WOA_SIM) ? window.WOA_SIM
     : (typeof require === 'function' ? require('./sim.js') : null);
@@ -37,13 +37,13 @@ var WOA_REPORT = (function () {
   function f1(x) { return (Math.round(x * 10) / 10).toFixed(1); }
   // Total actions = attacks + swaps + marches + deploys; the Attack/Swap SHARE denominator.
   function actionTotal(a) { return (a.attacks || 0) + (a.swaps || 0) + (a.marches || 0) + (a.deploys || 0); }
-  // Prints a conditioned metric's slice-n, flagging small-n (see docs/report-model.md).
+  // Prints a conditioned metric's slice-n, flagging small-n (see docs/reference/report-model.md).
   function smallNote(n) { return ' (n=' + (n || 0) + ((n || 0) < SMALL_N.fleet ? ', small-n' : '') + ')'; }
   function hqReservePct(sum, n) { return n ? Math.round(100 * sum / n) + '%' : '—'; }
 
   /* The ONE band table, as data — balanceScore folds the eight feedsScore:true rows
      (no second copy of the ranges). Row shape {key,label,lo,hi,weight,feedsScore,
-     val,nFor?} and every edge/denominator rationale: docs/report-model.md#metric-bands.
+     val,nFor?} and every edge/denominator rationale: docs/reference/report-model.md#metric-bands.
      SOT for the ranges is docs/balance/best-map-score.md — if it and this table
      disagree, the doc wins and this table is fixed. */
   var BANDS = [
@@ -93,7 +93,7 @@ var WOA_REPORT = (function () {
 
   /* Effective band at a temperature: widen each CLOSED edge outward by 20% (T1) /
      40% (T2) of band width; OPEN edges stay open; a half-open band (Swings) widens
-     by that fraction of |edge|. T0 = stored edges. See docs/report-model.md#metric-bands. */
+     by that fraction of |edge|. T0 = stored edges. See docs/reference/report-model.md#metric-bands. */
   function bands(metric, temperature) {
     var b = (typeof metric === 'string') ? BAND_BY_KEY[metric] : metric;
     if (!b) return null;
@@ -184,7 +184,7 @@ var WOA_REPORT = (function () {
   /* DB `skirmishes` rows (GET /api/skirmishes) -> the { agg, done } shape
      foldGlobal/balanceScore/BANDS consume. Delegates each row to the engine's
      single-source fold (below); done is rows.length (only skirmish-over states are
-     stored). Column mapping + control NULL/NULL handling: docs/report-model.md. */
+     stored). Column mapping + control NULL/NULL handling: docs/reference/report-model.md. */
   function foldSkirmishes(rows) {
     var agg = { redWins: 0, firstWins: 0, hqWins: 0, turns: 0, fsDiff: 0,
       zeroKill: 0, tiebreak: 0, killTail: 0, leadChanges: 0,
@@ -197,7 +197,7 @@ var WOA_REPORT = (function () {
     return { agg: agg, done: (rows || []).length };
   }
 
-  /* WOA #57 — Mispricing residual soft-flag tunables (see cardRows below). ADVISORY
+  /* Mispricing residual soft-flag tunables (see cardRows below). ADVISORY
      only, never a hard gate (ADR-0002). ONE place to tune; docs/balance,
      card-rubric, and review-reports cite these.
        RESID_PTS   — |residual| in army-points that trips the ⚠ flag. Absolute is
@@ -215,7 +215,7 @@ var WOA_REPORT = (function () {
      plays; seen is the display string ('-' when never played) and seenNum the
      same value as a number for sortable UIs.
 
-     WOA #57 mispricing residual: when `cardPoints` (E.cardPoints) is passed, each
+     Mispricing residual: when `cardPoints` (E.cardPoints) is passed, each
      row also carries `points` (army-points cost, ADR-0002) and `resid` — the card's
      share of the deck's DECISIVE WINS minus its share of the points BUDGET, scaled
      back to points (so the subtraction is in points; no win-rate is fitted to points
@@ -258,7 +258,7 @@ var WOA_REPORT = (function () {
   /* ===== Trace folds =====
      Pure functions over ONE skirmish's trace ENVELOPE (the shape both a DB trace row
      and a live skirmish state produce). Envelope schema, the dieT legacy rule, and
-     the deploy-timing fidelity note: docs/report-model.md#trace-envelope. No DB, no
+     the deploy-timing fidelity note: docs/reference/report-model.md#trace-envelope. No DB, no
      DOM, nothing mutated; absent fields are omitted, so every reader guards. */
   /* envelopeFromRow: accept a DB row (string .trace -> JSON.parse, malformed returns
      null) or an already-parsed envelope, and fold in the sibling row.fs (the timeline
@@ -383,7 +383,7 @@ var WOA_REPORT = (function () {
   /* Per-card {plays,wins,simple,firstSight,seenSum,noop} from a run's envelopes —
      the SAME shape balanceAdd builds live, so cardRows is reused UNMODIFIED for DB
      rows. `wins` is the POOLED rate (internal bubble-sizing only; never printed —
-     docs/report-model.md#reporting-doctrine). */
+     docs/reference/report-model.md#reporting-doctrine). */
   function cardAggFromEnvelopes(envs) {
     var cards = {};
     (envs || []).forEach(function (env) {
@@ -403,7 +403,7 @@ var WOA_REPORT = (function () {
 
   /* The axis-worthy card Win%: sliced to HQ-capture endings × non-simple plays only
      (pooled Win% stays off print and off the quadrant axis — see the doctrine in
-     docs/report-model.md#reporting-doctrine). Returns {cardId:{plays,wins}}; pct() at
+     docs/reference/report-model.md#reporting-doctrine). Returns {cardId:{plays,wins}}; pct() at
      the call site (0-play reads null), and callers apply the small-n rule to `plays`
      — this slice is thin by construction. */
   function cardHqWinSlice(envs) {
@@ -466,7 +466,7 @@ var WOA_REPORT = (function () {
      (attacks vs absorbed), breakthrough (absorbed/fielded), exchange (kills/deaths),
      median lifespan. One fold, every Units-tab chart reads it. Lifespan is a per-type
      FIFO pairing of dep[]->dieT[] with survivors right-censored, and the small-n /
-     legacy-greying rules: docs/report-model.md#unit-lifespan-pairing-is-fifo. */
+     legacy-greying rules: docs/reference/report-model.md#unit-lifespan-pairing-is-fifo. */
   function unitsAggFromEnvelopes(envs) {
     var out = {}, sawUnits = false, sawDieT = false;
     (envs || []).forEach(function (env) {
@@ -558,7 +558,7 @@ var WOA_REPORT = (function () {
     });
     L.push('');
     if (style === 'report') {
-      L.push('_Balance column: weighted distance outside each metric\'s ideal range (0 = ideal, lower = better) — Red/1st 45–55, HQ 10–40, 0kill ≤5, Tie ≤18, Drag ≤3.0, Swings ≥2.0, Control ≥70. Tie%/Drag over attrition endings only (rules 1.2). SOT: docs/balance/best-map-score.md._');
+      L.push('_Balance column: weighted distance outside each metric\'s ideal range (0 = ideal, lower = better) — Red/1st 45–55, HQ 10–40, 0kill ≤5, Tie ≤18, Drag ≤3.0, Swings ≥2.0, Control ≥70. Tie%/Drag over attrition endings only. SOT: docs/balance/best-map-score.md._');
       L.push('');
       L.push('## Overall');
       L.push('');
@@ -590,8 +590,8 @@ var WOA_REPORT = (function () {
       L.push('## Card report');
     }
     L.push('');
-    // Noop% printed (dead-turn check); Win% deliberately omitted — docs/report-model.md#reporting-doctrine.
-    // WOA #57: Pts (army-points cost) + Resid (mispricing residual) print when cardPoints is supplied.
+    // Noop% printed (dead-turn check); Win% deliberately omitted — docs/reference/report-model.md#reporting-doctrine.
+    // Pts (army-points cost) + Resid (mispricing residual) print when cardPoints is supplied.
     var withPts = !!model.cardPoints, flagged = false;
     L.push('| Card | Simple% | Noop% | 1stSight% | AvgSeen | ' + (style === 'report' ? 'Plays' : 'plays') +
       (withPts ? ' | Pts | Resid' : '') + ' |');
@@ -626,7 +626,7 @@ var WOA_REPORT = (function () {
      swap is a touch only. occ = held-turns / plays; only touched hexes appear.
      Best-effort reconstruction — the trace has no march origin/outcome/HQ positions;
      the bounded approximations (lingering origins, own-death in k, HQ exemption) are
-     in docs/report-model.md#spatial-reconstruction-hexlenses-is-best-effort. */
+     in docs/reference/report-model.md#spatial-reconstruction-hexlenses-is-best-effort. */
   function hexLenses(env) {
     var tr = traceOf(env), owner = {}, held = {}, flips = {}, kills = {}, touched = {}, plays = 0;
     tr.forEach(function (e) {

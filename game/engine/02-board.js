@@ -159,9 +159,9 @@
     // Each [q,r,d] in a piece is a SIDE owned by hex (q,r):
     //   forest in hex X: +1 attack when X's occupant attacks out across it;
     //   mountain in hex X: +1 defense when X is attacked across it;
-    //   river on a border: DEPLOY-control doesn't extend across it (Round 3;
-    //   support still crosses freely). The crossing check reads BOTH hexes'
-    //   sides, so which hex owns it is moot.
+    //   river on a border: DEPLOY-control doesn't extend across it (support
+    //   still crosses freely). The crossing check reads BOTH hexes' sides, so
+    //   which hex owns it is moot.
     // returns { edges: {sideKey: 'F'|'M'|'R'}, pieces:[{id,t,edgeKeys:[sideKey...]}] }
     var edges = {}, pieces = [];
     map.pieces.forEach(function (p, i) {

@@ -7,7 +7,7 @@ subjective-fun side lives in `docs/rubrics/`.
 Two neighbours, one fact each:
 - **`best-map-score.md`** — the "best map" ideal-range score, the SOT for the
   metric bands (`report-model.js` folds over it).
-- **`docs/balance-baselines.md`** — the current *measured* healthy figures (the
+- **`docs/balance/balance-baselines.md`** — the current *measured* healthy figures (the
   baselines to protect) and the rules-1.2 metric-redefinition warning. The
   numbers below are **targets** (what good looks like); the live readings that
   currently sit inside them are recorded there, not restated here.
@@ -49,7 +49,7 @@ its slice-n and is greyed / excluded from the verdict when that slice is small
 
 The five headline targets; grade any rules/content/AI change against these first.
 Goal + target + lever below; the current measured readings are in
-`docs/balance-baselines.md`.
+`docs/balance/balance-baselines.md`.
 
 1. **Skill over luck.** A stronger player wins more. Evidence: the `matchup` skill
    premium. Target: adjacent tiers ≥60%, two apart ≥75%. Lever: AI tier
@@ -66,8 +66,8 @@ Goal + target + lever below; the current measured readings are in
    Evidence: first-mover line + per-map Red%/1st%. Target: 45–55% overall and per
    map. Lever: the `starting:true` opener card (see below) + per-map geometry.
 5. **Tie-rule not deciding too much.** Tie-goes-to-2nd breaks ties, doesn't decide
-   games. Evidence: the tie-decided line, **as a share of attrition endings**
-   (rules 1.2). Target: ≤18% of attrition endings (**hard floor**); a guardrail to
+   games. Evidence: the tie-decided line, **as a share of attrition endings**.
+   Target: ≤18% of attrition endings (**hard floor**); a guardrail to
    hold, not a lever to pull. Lever: attack-card supply + trench tie-survival rules.
 
 > **Two different "ties" — don't conflate them.** The **attrition tiebreak**
@@ -155,7 +155,7 @@ All commands run against the ACTIVE mapset with no flag needed; pass
 label (AI tier, n, mapset, date).
 
 ```
-node game/test.js                                          # legality first — always green before measuring
+node game/test/test.js                                          # legality first — always green before measuring
 node dev/balance.js 60                                    # full report: per-map rows, Behaviour/Decisiveness, card report
 node dev/balance.js 60 hard                               # same at the Field Marshal tier (behaviour differs; grade like-for-like)
 node dev/balance.js 40 narrows                            # one map's numbers — the overall lines become that map's

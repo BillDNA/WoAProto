@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* dev/check-context.js — the run that keeps CONTEXT.md honest (WoAProto#219).
+/* dev/check-context.js — the run that keeps CONTEXT.md honest.
 
    Two checks over CONTEXT.md's term→code spine:
 
@@ -93,7 +93,7 @@ var ALIASES = [
   { term: 'map pool (→ Mapset)', pattern: /\bmap ?pool\b/gi, status: 'locked', note: 'the active mapset is the draw pool; its maps are `activeMaps()`' },
   // roster meant three things; the mapset + map-library senses are migrated, so
   // the only allowed "roster" is the player piece-mats overlay UI (a distinct
-  // concept) and the V0 `map-roster-and-shapes` spec codename.
+  // concept) and the `map-roster-and-shapes` spec codename.
   { term: 'roster (→ Mapset / map library)', pattern: /\broster/gi,
     ignore: /rostersOvr|rostersBody|fabRosters|syncRostersOverlay|RostersOverlay|BOTH rosters|>Rosters<|map-roster-and-shapes/, status: 'locked',
     note: 'active-set → Mapset; full collection → map library; piece mats stay the mats overlay' },

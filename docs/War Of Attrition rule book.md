@@ -1,16 +1,9 @@
 #claude-orientation #game-rules
 # War of Attrition — Rule Book
 
-**Version 1.1** — trench tie-survival (July 2026). Bump this whenever a rule OR AI-strength change would make playtest data incomparable.
+**Version 1.1** — trench tie-survival. Bump this whenever a rule OR AI-strength change would make playtest data incomparable (the version string is `RULES_VERSION` in `game/engine/01-core.js`; playtest data is filed per version).
 
-Version history:
-- **1.1 — trench tie-survival** (S1 A/A1, `D.D:rules-1.1-adoption`, WOA-010): a trench on the attacked
-  border spares the defender on a combat tie; the attacker still dies unless it carries a survive-a-tie
-  order (then the attack whiffs — nobody falls); a tie can't capture a trenched HQ border. Untrenched
-  ties unchanged.
-- **1.0 — V1.** No rules-text changes from 0.3. The AI search was overhauled (ranked shortlist instead of a random branching cap, orientation-aware trench evaluation), which shifts balance numbers enough that old baselines don't compare — hence the bump. Per-skirmish data collection (logs/woa.db) begins here.
-- **0.3** — river revision: a river no longer blocks support — support crosses freely — but control no longer extends across a river, so you cannot deploy across one. River-deploy bug fixed.
-- **0.2** — versioning begins (V0 feedback round 2): no-skip rule, same-type-swap ban arrives in round 3.
+What 1.1 means: a trench on the attacked border spares the defender on a combat tie; the attacker still dies unless it carries a survive-a-tie order (then the attack whiffs — nobody falls); a tie can't capture a trenched HQ border. Untrenched ties are unchanged.
 
 # Box Contents
 
@@ -63,7 +56,7 @@ Calculating Defender’s  Power
 * If the defending **Headquarters** is adjacent to the skirmish hex, add \+1.  
 * If a mountain is present in the skirmish hex along the edge from which the attack is coming, add \+1
 
-Trenches and rivers *(trenches revised July 2026 — previously \+1 defense; rivers revised 0.3 — previously blocked support)*
+Trenches and rivers
 
 * A **trench** covers two edges of its hex. Attacking support may not cross a covered edge; that is all it does. It adds no defense, never blocks the attack itself, and never hinders the defender. Whoever dug it is irrelevant — a captured trench serves its new occupant.  
 * A **river** sits on one border. **Support crosses it freely** for both sides, but **control does not extend across it**: you may not deploy a unit onto a hex whose only link to a hex you control crosses a river (adjacency control stops at the water). Attacks and movement still cross freely; Airdrop may land beyond it; Naval Barrage cannot remove it.
@@ -83,7 +76,6 @@ Trenches and rivers *(trenches revised July 2026 — previously \+1 defense; riv
     * Units still in reserve (never deployed) count for nothing  
   * Victor is the player with the higher field score  
   * In the event of a tie who ever went 2nd wins  
-  * *(Revised June 2026 — previously scored by defeated enemy units; board presence now decides the standstill.)*
 
 ## Battle Victory Conditions
 
@@ -165,7 +157,7 @@ Trenches and rivers *(trenches revised July 2026 — previously \+1 defense; riv
 
 ## Building Types
 
-* Trench *(revised July 2026)*  
+* Trench  
   * Attacking support may not cross its two covered edges — the attacker fights without the help that would arrive over the trench line.  
   * Gives no defense, never blocks the attack itself, and never hinders the defender's support.  
   * Works the same whichever side dug it; a captured trench serves its new occupant.  
@@ -180,6 +172,6 @@ Trenches and rivers *(trenches revised July 2026 — previously \+1 defense; riv
   * Will give 1 defense when attacked across.  
 * Forest (Green)  
   * Will give 1 attack when attacked across.  
-* River (Blue) *(new July 2026)*  
+* River (Blue)  
   * Sits on one border; support never crosses it, for either side.  
   * Attacks and movement cross freely; Airdrop may land beyond it; Naval Barrage cannot remove it.

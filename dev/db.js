@@ -1,8 +1,7 @@
-/* dev/db.js — SQLite persistence for per-skirmish data (V1 data persistence,
-   the retired v1-data-persistence spec, git history). Zero deps: uses Node's BUILT-IN
-   node:sqlite (Node 22+; we run 26). The DB is the dev-side analysis store —
-   one row per skirmish instead of the pre-summed aggregates balanceAdd keeps —
-   so distributions, typicality and version-over-version trends become SQL.
+/* dev/db.js — SQLite persistence for per-skirmish data. Zero deps: uses Node's
+   BUILT-IN node:sqlite (Node 22+; we run 26). The DB is the dev-side analysis
+   store — one row per skirmish instead of the pre-summed aggregates balanceAdd
+   keeps — so distributions, typicality and version-over-version trends become SQL.
 
    Every skirmish source (CLI balance lab, dashboard via server proxy, human
    play, LLM skirmishes) funnels through insertSkirmish with a FINISHED engine
@@ -21,34 +20,33 @@
    Query it with dev/db-query.js. The .db file is gitignored (regenerable);
    the markdown reports remain the committed human-readable record.
 
-   WOA-032 (SPEC §7, run identity for the A/B picker): `runs` grew deck/
-   mapset/seed_base/label/baseline columns. Exactly one baseline=1 row per
-   `version` is enforced by db.js itself (insertRun's baseline:true, or the
-   standalone setBaseline(h, runId)) — pinning a new baseline atomically
-   clears the old one(s) for that version, never left to callers. Callers
-   never create a baseline implicitly; baseline is opt-in per insertRun call.
+   Run identity (for the A/B picker): `runs` carries deck/mapset/seed_base/
+   label/baseline columns. Exactly one baseline=1 row per `version` is enforced
+   by db.js itself (insertRun's baseline:true, or the standalone
+   setBaseline(h, runId)) — pinning a new baseline atomically clears the old
+   one(s) for that version, never left to callers. Callers never create a
+   baseline implicitly; baseline is opt-in per insertRun call.
 
-   WOA-032 (SPEC §4, the trace): `skirmishes` grew a `trace` TEXT column — one
-   JSON blob per skirmish holding the full per-play trace (st.journal.playLog, as the
-   engine wrote it — action/hex/kill/leader/unit fields already folded in by
-   WOA-031) plus the per-unit-type `units` fold (st.journal.unitMetrics). Everything
-   in SPEC §1-3 derivable from the trace is meant to be derived FROM this
-   column (report-model.js folds), not re-captured as new skirmishes columns.
+   The trace: `skirmishes` carries a `trace` TEXT column — one JSON blob per
+   skirmish holding the full per-play trace (st.journal.playLog, as the engine
+   wrote it — action/hex/kill/leader/unit fields already folded in) plus the
+   per-unit-type `units` fold (st.journal.unitMetrics). Everything derivable
+   from the trace is derived FROM this column (report-model.js folds), not
+   re-captured as new skirmishes columns.
 
-   WOA-038 (Control% on the dashboard): `skirmishes` grew `hexes_red`/`hexes_blue`
-   INTEGER columns -- hex-ownership tally at skirmish end, now sourced from the
-   sim layer's single-source SIM.skirmishFacts (architecture review 01) so the DB
-   path and balanceAdd cannot drift. NULL on rows written before this ticket
-   (report-model.js's foldSkirmishes treats a NULL pair as "no control data",
-   never a fabricated 0/0 tie). */
+   Control%: `skirmishes` carries `hexes_red`/`hexes_blue` INTEGER columns —
+   hex-ownership tally at skirmish end, sourced from the sim layer's
+   single-source SIM.skirmishFacts so the DB path and balanceAdd cannot drift.
+   NULL on legacy rows (report-model.js's foldSkirmishes treats a NULL pair as
+   "no control data", never a fabricated 0/0 tie). */
 'use strict';
 
 var fs = require('fs');
 var path = require('path');
 var sqlite = require('node:sqlite');
 var E = require(path.join(__dirname, '..', 'game', 'engine.js'));
-// skirmishFacts (the shared per-skirmish fact derivation) is the batch/measurement
-// layer's, evicted from the engine in #220.
+// skirmishFacts (the shared per-skirmish fact derivation) lives in the
+// batch/measurement layer (game/sim.js), not the engine.
 var SIM = require(path.join(__dirname, '..', 'game', 'sim.js'));
 
 // WOA_DB_PATH lets a spawned/required server (and tests) target a throwaway db
@@ -96,7 +94,7 @@ function ensureColumn(db, table, col, type) {
 }
 
 // One-time legacy rename: the atomic map-fight was called `battle` before the
-// battle→skirmish rename (WoAProto#9). An old woa.db still has the `battles`
+// battle→skirmish rename. An old woa.db still has the `battles`
 // table + `battle_id` FKs; rename in place BEFORE SCHEMA's CREATE IF NOT EXISTS
 // so we keep prior history instead of birthing an empty `skirmishes` beside it.
 // Idempotent — a no-op on a DB already on the new names or a fresh one.
@@ -116,7 +114,7 @@ function migrateBattleNames(db) {
   }
 }
 
-/* WOA-041: the st fields insertSkirmish actually reads, picked into a plain
+/* The st fields insertSkirmish actually reads, picked into a plain
    JSON-safe object. balance-report's --parallel workers run the engine in
    child processes; each worker ships its finished skirmishes over stdout to the
    PARENT — the single woa.db writer (no cross-process SQLite contention) —
@@ -125,8 +123,8 @@ function migrateBattleNames(db) {
    field list and its reader can never drift apart: a new insertSkirmish read
    means extending this list in the same diff. A slimmed state survives the
    JSON round-trip into an identical skirmishes row (pinned by db.test.js). */
-// The exact fields insertSkirmish reads, addressed by their de-flattened block
-// (WoAProto#221). Top-level identity fields carry a null block. Extend this in
+// The exact fields insertSkirmish reads, addressed by their de-flattened block.
+// Top-level identity fields carry a null block. Extend this in
 // the same diff as a new insertSkirmish read — the field list and its reader
 // still cannot drift apart.
 var SKIRMISH_ST_FIELDS = [
@@ -162,10 +160,10 @@ function open(dbPath) {
   db.exec(SCHEMA);
   ensureColumn(db, 'skirmishes', 'res_end_red', 'INTEGER');
   ensureColumn(db, 'skirmishes', 'res_end_blue', 'INTEGER');
-  ensureColumn(db, 'skirmishes', 'trace', 'TEXT');       // WOA-032 (SPEC §4): per-skirmish trace JSON
-  ensureColumn(db, 'skirmishes', 'hexes_red', 'INTEGER'); // WOA-038: hex-ownership tally at skirmish end
+  ensureColumn(db, 'skirmishes', 'trace', 'TEXT');       // per-skirmish trace JSON
+  ensureColumn(db, 'skirmishes', 'hexes_red', 'INTEGER'); // hex-ownership tally at skirmish end
   ensureColumn(db, 'skirmishes', 'hexes_blue', 'INTEGER');
-  ensureColumn(db, 'runs', 'deck', 'TEXT');           // WOA-032 (SPEC §7): run identity for the A/B picker
+  ensureColumn(db, 'runs', 'deck', 'TEXT');           // run identity for the A/B picker
   ensureColumn(db, 'runs', 'mapset', 'TEXT');
   ensureColumn(db, 'runs', 'seed_base', 'INTEGER');
   ensureColumn(db, 'runs', 'label', 'TEXT');
@@ -175,19 +173,19 @@ function open(dbPath) {
       'INSERT INTO runs (version, ts, kind, red_ai, blue_ai, n, tool, notes,' +
       ' deck, mapset, seed_base, label, baseline) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)'),
     getRunVersion: db.prepare('SELECT version FROM runs WHERE id = ?'),
-    // WOA-032: exactly one baseline=1 row per rules version. `version IS ?`
+    // Exactly one baseline=1 row per rules version. `version IS ?`
     // (not `=`) so a NULL-version run's baseline still clears correctly —
     // SQL `= NULL` never matches, `IS ?` does.
     clearBaseline: db.prepare('UPDATE runs SET baseline = 0 WHERE baseline = 1 AND version IS ?'),
     setBaselineFlag: db.prepare('UPDATE runs SET baseline = 1 WHERE id = ?'),
-    // WOA-034: the header run-A/B pickers' listing — id DESC (most recent
+    // The header run-A/B pickers' listing — id DESC (most recent
     // first) so "no baseline pinned yet" falls back to runs[0] with no
     // extra query. Aliased to the camelCase shape the dashboard/GET /api/runs
     // hand across the wire, so the server stays a dumb pass-through.
     listRuns: db.prepare(
       'SELECT id, version, ts, kind, red_ai AS redAi, blue_ai AS blueAi, n, tool, notes,' +
       ' deck, mapset, seed_base AS seedBase, label, baseline FROM runs ORDER BY id DESC LIMIT ?'),
-    // WOA-035: the Overview screen's skirmish fetch (GET /api/skirmishes?run=<id>)
+    // The Overview screen's skirmish fetch (GET /api/skirmishes?run=<id>)
     // — every stored scalar column + the trace TEXT blob (parsed client-side
     // by WOA_REPORT.envelopeFromRow), camelCase like listRuns above so the
     // server stays a dumb pass-through.
@@ -227,14 +225,13 @@ function pinBaseline(h, version, runId) {
   h.stmts.setBaselineFlag.run(runId);
 }
 
-/* Record one run (a batch of skirmishes from one tool invocation) — SPEC §7.
+/* Record one run (a batch of skirmishes from one tool invocation).
    r = { version, kind('balance'|'llm'|'human'|'watch'), redAi, blueAi, n,
          tool, notes?, ts? (ISO string; default now),
          deck?, mapset?, seedBase?, label?, baseline?(bool) }. Returns runId.
    baseline:true pins this run as ITS version's one baseline, atomically
-   clearing any prior baseline for that version (SPEC §7: "pinning a new one
-   clears the old") — never left half-done even if the insert or the clear
-   fails partway (both run inside one transaction). */
+   clearing any prior baseline for that version — never left half-done even if
+   the insert or the clear fails partway (both run inside one transaction). */
 function insertRun(h, r) {
   r = r || {};
   if (RUN_KINDS.indexOf(r.kind) < 0)
@@ -284,10 +281,9 @@ function insertSkirmish(h, runId, st, firstPlayer, extra) {
   var f = SIM.skirmishFacts(st, firstPlayer);
   var winner = f.winner;
   var seed = extra.seed !== undefined ? extra.seed : nz(st.seed);
-  // WOA-032 (SPEC §4): the trace envelope — st.journal.playLog + st.journal.unitMetrics
-  // verbatim as the engine wrote them (WOA-031), not renamed to the spec
-  // doc's shorthand keys ("store what the engine gives", feed-forward).
-  // ~1.3 KB/skirmish (SPEC §4 cost estimate) — accepted.
+  // The trace envelope — st.journal.playLog + st.journal.unitMetrics verbatim
+  // as the engine wrote them, not renamed to shorthand keys ("store what the
+  // engine gives"). ~1.3 KB/skirmish — accepted.
   var trace = JSON.stringify({
     v: version, map: nz(st.mapName), seed: seed, fp: nz(firstPlayer),
     winner: winner, winType: nz(f.winType), turns: nz(f.turns),
@@ -303,7 +299,7 @@ function insertSkirmish(h, runId, st, firstPlayer, extra) {
       f.zeroKill,                                         // no unit ever died
       f.tiebreak,                                         // decided only by tie-goes-to-2nd
       f.attacks, f.swaps, f.marches, f.deploys,
-      f.resEndRed, f.resEndBlue,                          // WOA-016: pieces left in reserve at skirmish end
+      f.resEndRed, f.resEndBlue,                          // pieces left in reserve at skirmish end
       trace, f.hexesRed, f.hexesBlue);
     var skirmishId = Number(res.lastInsertRowid);
     (st.journal.playLog || []).forEach(function (e) {
@@ -321,14 +317,14 @@ function insertSkirmish(h, runId, st, firstPlayer, extra) {
   });
 }
 
-/* List runs, most recent first (WOA-034: the dashboard header's run-A/B
+/* List runs, most recent first (the dashboard header's run-A/B
    pickers, via GET /api/runs). limit defaults to 200 — plenty for a picker,
    cheap even on a DB with years of balance sweeps in it. */
 function listRuns(h, limit) {
   return h.stmts.listRuns.all(limit || 200);
 }
 
-/* List every skirmish row for one run, in insertion order (WOA-035: the
+/* List every skirmish row for one run, in insertion order (the
    Overview screen's fetch, via GET /api/skirmishes?run=<id>). trace comes back
    as the raw TEXT column — callers parse it (report-model.js's
    envelopeFromRow), the same "parse client-side" contract the spec asked for. */
@@ -341,5 +337,5 @@ function close(h) { h.db.close(); }
 module.exports = {
   open: open, insertRun: insertRun, insertSkirmish: insertSkirmish, setBaseline: setBaseline,
   listRuns: listRuns, listSkirmishes: listSkirmishes, close: close, DEFAULT_DB: DEFAULT_DB,
-  slimSkirmishState: slimSkirmishState // WOA-041: the --parallel worker->parent skirmish envelope
+  slimSkirmishState: slimSkirmishState // the --parallel worker->parent skirmish envelope
 };

@@ -1,12 +1,8 @@
----
-last-reviewed: 2026-07-07
----
 #human-instructions #code-architecture #game-rules
 
-# Field Manual animations — authoring guide for future sessions
+# Field Manual animations — authoring guide
 
-How to add or edit a worked example in the Field Manual's diagram player
-(V1; the retired `v1-field-manual-animations` spec is in git history). Everything
+How to add or edit a worked example in the Field Manual's diagram player. Everything
 lives in **`game/ui/manual.js`**; read that file alongside this doc.
 
 ## The pieces
@@ -57,7 +53,7 @@ var st  = mpState(def, { '0,0':['infantry','blue'], '-1,0':['infantry','red'] },
   `E.newBattle({maps:[def], seed:7, firstPlayer:'red'})` + `E.newSkirmish`, then
   overwrites `st.pieces.units` / `st.pieces.trenches` with the fixture's pieces
   and sets `st.__sim = true` (never fire real-skirmish hooks). The state is
-  block-shaped (WoAProto#221: `board`/`pieces`/`cards`/`flow`/`result`/`journal`);
+  block-shaped (`board`/`pieces`/`cards`/`flow`/`result`/`journal`);
   the manual authors it directly because it constructs and drives engine states,
   rather than through the read-only `Engine.view` play surface.
 - Terrain goes in the **map def** (`pieces`) so `buildTerrain` validates it;
@@ -109,7 +105,7 @@ is automatically correct — CSS animation is garnish only.
 
 ## Testing a new/edited example
 
-1. `node --check game/ui/manual.js` then `node game/test.js` (must stay green).
+1. `node --check game/ui/manual.js` then `node game/test/test.js` (must stay green).
 2. `node dev/smoke.js` — the "field manual diagram player" section asserts the
    overlay, the beat counter, the rings, and **engine truth** (pill text ==
    fresh `supportFor`/`computeAttack` on `window.MANUAL.state`/`.atk`). Extend
@@ -129,5 +125,5 @@ is automatically correct — CSS animation is garnish only.
 - [ ] Every number/ring/outcome read from `supportFor` / `computeAttack` / `mpResolve`+`mpAftermath` — zero hardcoded rules numbers, including in captions.
 - [ ] Beats: one idea each, running tally builds beat by beat, final beat shows the resolved aftermath.
 - [ ] Engine reads happen right after the state they belong to is built (board-shape trap).
-- [ ] `node game/test.js` and `node dev/smoke.js` green; screenshots of each new beat verified by eye.
+- [ ] `node game/test/test.js` and `node dev/smoke.js` green; screenshots of each new beat verified by eye.
 - [ ] No new wiring outside `ui/boot.js`; no markup beyond `#manualPlayer`'s existing chrome unless truly needed.
