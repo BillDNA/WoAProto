@@ -28,6 +28,9 @@
 
 var path = require('path');
 var E = require(path.join(__dirname, '..', 'game', 'engine.js'));
+// balanceMap is the batch/measurement layer (game/sim.js), evicted from the
+// engine in #220.
+var SIM = require(path.join(__dirname, '..', 'game', 'sim.js'));
 // Fitness = the shared balance score (game/report-model.js) — the SAME
 // implementation dev/balance-report.js ranks maps with, not a drifting copy.
 var R = require(path.join(__dirname, '..', 'game', 'report-model.js'));
@@ -73,7 +76,7 @@ function measure(maps, n, base, weights) {
   var cfg = Object.assign({}, preset, { weights: Object.assign({}, preset.weights || {}, weights) });
   var scores = [], G = { attacks: 0, swaps: 0, zeroKill: 0, tiebreak: 0, games: 0 };
   maps.forEach(function (map, mi) {
-    var r = E.balanceMap(map, n, { diffRed: cfg, diffBlue: cfg, seedBase: (mi + 1) * 7919 });
+    var r = SIM.balanceMap(map, n, { diffRed: cfg, diffBlue: cfg, seedBase: (mi + 1) * 7919 });
     var done = Math.max(1, n - r.unfinished);
     scores.push(balanceScore(r, done));
     G.attacks += r.attacks; G.swaps += r.swaps; G.zeroKill += r.zeroKill; G.tiebreak += r.tiebreak; G.games += done;
@@ -139,7 +142,7 @@ function run() {
     suggestions.forEach(function (s) {
       console.log('| ' + s.key + ' | ' + s.from + ' | ' + s.to + ' | ' + s.fitness.toFixed(1) + ' |');
     });
-    console.log('\nVerify on the full mapset before adopting: node game/balance.js 60 ' + a.ai);
+    console.log('\nVerify on the full mapset before adopting: node dev/balance.js 60 ' + a.ai);
     console.log('Adopt by editing AI_WEIGHTS in game/engine/05-ai.js (and bump the rules version —');
     console.log('weight changes shift the data baseline). Suggestions only — Bill decides.');
   }

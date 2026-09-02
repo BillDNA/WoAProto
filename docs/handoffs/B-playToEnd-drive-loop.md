@@ -1,5 +1,15 @@
 # Handoff — Candidate B: one skirmish drive-loop behind a decision seam
 
+> **Updated by #220 (dev/ship seam):** `playToEnd` was already extracted and is
+> now the sole play-orchestration content of `game/engine/06-drive.js` (with
+> `validateMaps`), exported as `Engine.playToEnd`. The balance/sim fold that this
+> doc found beside it (`balanceMap` and friends) was evicted to the batch layer
+> `game/sim.js` (`WOA_SIM.balanceMap`), so the "6th copy" it calls out now lives
+> in `sim.js`, not the engine. The remaining candidate-B work is repointing the
+> outer sites (test.js ×2, smoke.js, claude-plays.js ×2) at `Engine.playToEnd`.
+> Read the paths/symbols below with that move applied (`06-sim.js` → `06-drive.js`
+> for `playToEnd`; `E.balanceMap` → `WOA_SIM.balanceMap`).
+
 *Written for a fresh session to pick up cold. Prereq context: this came out of an
 architecture review (see [[code-style]] and the `report-model.js` scrub on branch
 `worktree-arch-comment-scrub`). Candidate A (comment scrub + style guide) is done;
@@ -73,7 +83,7 @@ aiPlanTurn(st, diff)`; the LLM and fixture sites need that injectable. Keep the
 ## Constraints (hard)
 
 - **Golden-diff contract** (`CLAUDE.md`, `docs/workflow.md`): capture
-  `node game/balance.js 24 normal` and `24 easy` stdout BEFORE touching engine code;
+  `node dev/balance.js 24 normal` and `24 easy` stdout BEFORE touching engine code;
   they must reproduce **byte-identical** after. If `balanceMap` is refactored to call
   the extracted loop, this is the proof it didn't change behaviour. Anything that
   legitimately moves numbers bumps `RULES_VERSION` instead — but this refactor must
@@ -104,4 +114,4 @@ aiPlanTurn(st, diff)`; the LLM and fixture sites need that injectable. Keep the
 > repoint all sites at it. Read the handoff doc first, then answer its CRITICAL open
 > question (does `balanceMap` in engine/06-sim.js already own the canonical loop?)
 > before writing anything. Honour the golden-diff contract — capture
-> `node game/balance.js 24 normal` and `24 easy` before and prove byte-identical after.
+> `node dev/balance.js 24 normal` and `24 easy` before and prove byte-identical after.

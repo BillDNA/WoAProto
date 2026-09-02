@@ -14,6 +14,9 @@ const cp = require('child_process');
 
 const db = require(path.join(__dirname, 'db.js'));
 const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
+// simSkirmish is the batch/measurement layer (game/sim.js), evicted from the
+// engine in #220.
+const SIM = require(path.join(__dirname, '..', 'game', 'sim.js'));
 
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'woa-db-test-'));
 const dbFile = path.join(tmpDir, 'test.db');
@@ -40,7 +43,7 @@ test('schema', function () {
 
 /* ---------- insertRun / insertSkirmish round-trip with a REAL skirmish ---------- */
 test('round-trip (real simSkirmish state)', function () {
-  st = E.simSkirmish(E.MAPS[0], 1234, 'red', 'normal', 'normal');
+  st = SIM.simSkirmish(E.MAPS[0], 1234, 'red', 'normal', 'normal');
   assert.ok(st.phase === 'skirmish-over', 'simSkirmish(MAPS[0], 1234) finished (phase ' + st.phase + ')');
 
   runId = db.insertRun(h, {
@@ -224,7 +227,7 @@ test('run identity + trace (WOA-032)', function () {
     'runs row carries deck/mapset/seed_base/label (SPEC §7)');
   assert.ok(rowA.baseline === 0, 'baseline defaults to 0 when not requested');
 
-  st2 = E.simSkirmish(E.MAPS[0], 4242, 'red', 'normal', 'normal');
+  st2 = SIM.simSkirmish(E.MAPS[0], 4242, 'red', 'normal', 'normal');
   skirmishIdA = db.insertSkirmish(h2, runIdA, st2, 'red', { seed: 4242 });
   var bA = h2.db.prepare('SELECT run_id, trace FROM skirmishes WHERE id = ?').get(skirmishIdA);
   assert.ok(bA.run_id === runIdA, 'skirmish row references its run id (run_id column)');

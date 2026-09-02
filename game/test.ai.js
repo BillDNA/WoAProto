@@ -4,18 +4,18 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { E, testSkirmish } = require('./test.helpers.js');
+const { E, SIM, testSkirmish } = require('./test.helpers.js');
 
 test('Field Marshal AI & skirmish sim', () => {
 (function () {
   var t0 = Date.now();
-  var st = E.simSkirmish(E.MAPS[0], 4242, 'red', 'hard', 'normal');
+  var st = SIM.simSkirmish(E.MAPS[0], 4242, 'red', 'hard', 'normal');
   assert.ok(st.phase === 'skirmish-over', 'hard-vs-normal skirmish finishes (winner ' + st.skirmishWinner + ', ' + st.turnNumber + ' turns)');
   console.log('  (hard-AI skirmish took ' + ((Date.now() - t0) / 1000).toFixed(1) + 's)');
-  var r = E.balanceMap(E.MAPS[4], 4, { seedBase: 11 });
+  var r = SIM.balanceMap(E.MAPS[4], 4, { seedBase: 11 });
   assert.ok(r.redWins <= 4 && r.turns > 0 && r.unfinished === 0, 'balanceMap aggregates: ' + JSON.stringify({ red: r.redWins, first: r.firstWins, hq: r.hqWins }));
-  var a = E.simSkirmish(E.MAPS[2], 777, 'red', 'normal', 'normal');
-  var b = E.simSkirmish(E.MAPS[2], 777, 'red', 'normal', 'normal');
+  var a = SIM.simSkirmish(E.MAPS[2], 777, 'red', 'normal', 'normal');
+  var b = SIM.simSkirmish(E.MAPS[2], 777, 'red', 'normal', 'normal');
   assert.ok(a.skirmishWinner === b.skirmishWinner && a.turnNumber === b.turnNumber, 'simulation is deterministic per seed');
 })();
 });
@@ -64,7 +64,7 @@ test('behaviour counters (balance-lab metrics)', () => {
   E.playCard(st, 'deploy_inf_start');
   E.applyStep(st, { hex: E.stepOptions(st).targets[0] });
   assert.ok(st.stats.deploys === 1, 'deploy increments stats.deploys');
-  var r = E.balanceMap(E.MAPS[0], 2, { seedBase: 5 });
+  var r = SIM.balanceMap(E.MAPS[0], 2, { seedBase: 5 });
   // deploys (Attack/Swap share), the attrition slice (attritionEndings/
   // attritionKillTail for Tie%/Drag) and the HQ slice (hqEndings/reserveEndRedHQ/
   // reserveEndBlueHQ for Reserves) join the agg.
@@ -96,7 +96,7 @@ test('metrics-v2 trace capture (per-play trace + units fold)', () => {
   var seeds = [4242, 5150, 8181, 9091, 1212];
   var totalAtkEntries = 0, totalDeployEntries = 0, totalKillSum = 0, totalDieSum = 0, totalDieTSum = 0, totalLd = 0, totalPlays = 0;
   seeds.forEach(function (seed) {
-    var st = E.simSkirmish(E.MAPS[seed % E.MAPS.length], seed, 'red', 'hard', 'hard');
+    var st = SIM.simSkirmish(E.MAPS[seed % E.MAPS.length], seed, 'red', 'hard', 'hard');
     assert.ok(st.phase === 'skirmish-over', 'seed ' + seed + ': skirmish finishes (' + st.turnNumber + ' turns)');
     var killSum = 0, dieSum = 0, dieTSum = 0;
     st.playLog.forEach(function (e) {
@@ -156,8 +156,8 @@ test('AI personalities are data', () => {
   var plan = E.aiPlanTurn(st, { noise: 0, breadth: 2, replySamples: 1, replyWeight: 0.5, weights: { advance: 9 } });
   assert.ok(plan && st.hands.red.indexOf(plan.cardId) >= 0, 'raw config object produces a plan from the real hand');
   // personality skirmishes run to completion and stay deterministic
-  var a = E.simSkirmish(E.MAPS[4], 4242, 'red', 'brawler', 'turtle');
-  var b = E.simSkirmish(E.MAPS[4], 4242, 'red', 'brawler', 'turtle');
+  var a = SIM.simSkirmish(E.MAPS[4], 4242, 'red', 'brawler', 'turtle');
+  var b = SIM.simSkirmish(E.MAPS[4], 4242, 'red', 'brawler', 'turtle');
   assert.ok(a.phase === 'skirmish-over', 'brawler-vs-turtle skirmish finishes (winner ' + a.skirmishWinner + ', ' + a.turnNumber + ' turns)');
   assert.ok(a.skirmishWinner === b.skirmishWinner && a.turnNumber === b.turnNumber, 'personality skirmishes are deterministic per seed');
   // guardrail: a config that zeroes the anti-degeneracy terms is still legal

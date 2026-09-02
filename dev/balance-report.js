@@ -83,6 +83,9 @@ var DECK = '', UNITSET = '';
 })();
 
 var E = require(path.join(__dirname, '..', 'game', 'engine.js'));
+// Sweeps + balance folds live in the batch/measurement layer (game/sim.js),
+// evicted from the engine in #220 — balanceMap/balanceFP/balanceSeed, not on E.
+var SIM = require(path.join(__dirname, '..', 'game', 'sim.js'));
 // Scoring / thresholds / folds / markdown all live in the shared report model
 // (game/report-model.js) — one implementation per fact; this file keeps only
 // the run/accumulate/save plumbing.
@@ -199,10 +202,10 @@ async function run() {
       'try{fs.readdirSync(dir).filter(function(f){return /\\.js$/.test(f)}).sort().forEach(function(f){require(path.join(dir,f))})}catch(e){}});' +
       'if(deckId)global.WOA_CONTENT.decks.forEach(function(d){d.active=(d.id===deckId)});' +
       'if(unitsId)global.WOA_CONTENT.units.forEach(function(u){u.active=(u.id===unitsId)});}' +
-      'var E=require(process.argv[1]);var m=E.MAPS.filter(function(x){return x.name===process.argv[2]})[0];' +
+      'var E=require(process.argv[1]);var SIM=require(path.join(path.dirname(process.argv[1]),"sim.js"));var m=E.MAPS.filter(function(x){return x.name===process.argv[2]})[0];' +
       'var slim=null;try{slim=require(path.join(path.dirname(process.argv[1]),"..","dev","db.js")).slimSkirmishState}catch(e){}' +
       'var skirmishes=[];' +
-      'var agg=E.balanceMap(m,+process.argv[3],{diffRed:process.argv[4],diffBlue:process.argv[5],seedBase:+process.argv[6],' +
+      'var agg=SIM.balanceMap(m,+process.argv[3],{diffRed:process.argv[4],diffBlue:process.argv[5],seedBase:+process.argv[6],' +
       'onGame:slim&&function(g,nn,st){skirmishes.push({g:g,st:slim(st)})}});' +
       'process.stdout.write(JSON.stringify({agg:agg,skirmishes:skirmishes}));';
     var enginePath = path.join(__dirname, '..', 'game', 'engine.js');
@@ -220,7 +223,7 @@ async function run() {
             // WOA-041: persist the worker's skirmishes under this run id, on the
             // same seed/fp schedule the serial path uses (g is 1-based).
             if (dbm) (out.skirmishes || []).forEach(function (b) {
-              try { dbm.insertSkirmish(dbh, runId, b.st, E.balanceFP(b.g - 1), { seed: E.balanceSeed(seedBaseFor(mi), b.g - 1), version: ver }); }
+              try { dbm.insertSkirmish(dbh, runId, b.st, SIM.balanceFP(b.g - 1), { seed: SIM.balanceSeed(seedBaseFor(mi), b.g - 1), version: ver }); }
               catch (e2) { /* a bad row never kills the report */ }
             });
             if (!flags.quiet) process.stderr.write('.');
@@ -233,9 +236,9 @@ async function run() {
   } else {
     maps.forEach(function (map, mi) {
       var seedBase = seedBaseFor(mi);
-      var r = E.balanceMap(map, n, { diffRed: dr, diffBlue: db, seedBase: seedBase,
+      var r = SIM.balanceMap(map, n, { diffRed: dr, diffBlue: db, seedBase: seedBase,
         onGame: dbm && function (g1, nn, st) {
-          try { dbm.insertSkirmish(dbh, runId, st, E.balanceFP(g1 - 1), { seed: E.balanceSeed(seedBase, g1 - 1), version: ver }); }
+          try { dbm.insertSkirmish(dbh, runId, st, SIM.balanceFP(g1 - 1), { seed: SIM.balanceSeed(seedBase, g1 - 1), version: ver }); }
           catch (e) { /* a bad row never kills the report */ }
         } });
       thisRun[map.name] = { shape: shapeOf(map), agg: r };
