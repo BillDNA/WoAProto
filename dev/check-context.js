@@ -33,7 +33,7 @@ var CONTEXT = path.join(ROOT, 'CONTEXT.md');
 
 /* ---- the tree we scan for alias residuals ------------------------------- */
 var SCAN_EXT = ['.js', '.md', '.css', '.html'];
-var SKIP_DIR = ['.git', 'node_modules', 'graphify-out', 'logs', '.obsidian', '.vscode', 'art'];
+var SKIP_DIR = ['.git', 'node_modules', 'graphify-out', 'logs', '.obsidian', '.vscode', 'art', 'worktrees'];
 function walk(dir, out) {
   fs.readdirSync(dir, { withFileTypes: true }).forEach(function (e) {
     if (SKIP_DIR.indexOf(e.name) >= 0) return;
