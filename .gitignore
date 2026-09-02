@@ -37,5 +37,9 @@ logs/woa.db-shm
 .board-log.jsonl
 
 
-# graphify knowledge graph — regenerable local index (`graphify update .`); not tracked.
-graphify-out/
+# graphify knowledge graph — the map (graph.json + report) is committed per-project so
+# every clone/worktree starts with it; local build state is not (cache, html, manifest,
+# cost, dated snapshots, machine-specific dotfiles).
+graphify-out/*
+!graphify-out/graph.json
+!graphify-out/GRAPH_REPORT.md
