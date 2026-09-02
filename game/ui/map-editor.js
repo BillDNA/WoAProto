@@ -149,15 +149,12 @@ function renderEditor(){
     p.addEventListener('mouseleave', function(){ p.setAttribute('fill','rgba(255,255,255,.10)'); });
     gHex.appendChild(p);
   });
-  [['red','var(--red)'],['blue','var(--blue)']].forEach(function(h){
-    var hq = ED[h[0]];
+  ['red','blue'].forEach(function(side){
+    var hq = ED[side];
     if (!hq) return;
     var xy = hexXY(E.key(hq[0],hq[1]));
-    var poly = svgEl('polygon',{points: hexPoints(xy[0],xy[1],S*0.62), fill:h[1], stroke:'#2b2113','stroke-width':2, opacity:.92, 'pointer-events':'none'});
-    gHex.appendChild(poly);
-    var star = svgEl('text',{x:xy[0], y:xy[1]+7, 'text-anchor':'middle','font-size':20, fill:'#f0e6cc','pointer-events':'none'});
-    star.textContent = '★';
-    gHex.appendChild(star);
+    // the live board's HQ marker sans brass ring (the editor's plain flag)
+    bpHQMarker(gHex, xy[0], xy[1], side, { rInner:false, pe:'none' });
   });
   edInternalSides().forEach(function(e){
     var ek = e[0] + '>' + e[1];
@@ -167,7 +164,7 @@ function renderEditor(){
     var t = ED.edges[ek];
     if (t){
       gTer.appendChild(svgEl('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
-        stroke: t==='F'?'var(--forest)':t==='R'?'var(--river)':'var(--mountain)', 'stroke-width':8, 'stroke-linecap':'round','pointer-events':'none'}));
+        stroke: BOARD.terrainStroke(t), 'stroke-width':8, 'stroke-linecap':'round','pointer-events':'none'}));
     }
     if (ED.tool==='terrain'){
       var hit = svgEl('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],'class':'edge-hit'});

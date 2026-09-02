@@ -84,11 +84,11 @@ function clearSave(){ try{ localStorage.removeItem('woa-save'); }catch(e){} }
 function glyphSVG(type, col, colD){
   var pre = '<svg viewBox="0 0 20 20">';
   if (type==='trench')
-    return pre+'<path d="M3 13 Q10 5 17 13" stroke="#5a4326" stroke-width="2.6" stroke-dasharray="3.4 2.4" fill="none" stroke-linecap="round"/></svg>';
+    return pre+'<path d="M3 13 Q10 5 17 13" stroke="'+BOARD.trench+'" stroke-width="2.6" stroke-dasharray="3.4 2.4" fill="none" stroke-linecap="round"/></svg>';
   var s = pre+'<circle cx="10" cy="10" r="8.4" fill="'+col+'" stroke="'+colD+'" stroke-width="1.6"/>';
-  if (type==='infantry') s += '<path d="M5.5 13.5 L14.5 6.5 M5.5 6.5 L14.5 13.5" stroke="#ece1c4" stroke-width="2" stroke-linecap="round"/>';
-  else if (type==='cavalry') s += '<path d="M5.5 14 L14.5 6" stroke="#ece1c4" stroke-width="2.3" stroke-linecap="round"/>';
-  else s += '<circle cx="10" cy="10" r="3.4" fill="#ece1c4"/>';
+  if (type==='infantry') s += '<path d="M5.5 13.5 L14.5 6.5 M5.5 6.5 L14.5 13.5" stroke="'+BOARD.chit+'" stroke-width="2" stroke-linecap="round"/>';
+  else if (type==='cavalry') s += '<path d="M5.5 14 L14.5 6" stroke="'+BOARD.chit+'" stroke-width="2.3" stroke-linecap="round"/>';
+  else s += '<circle cx="10" cy="10" r="3.4" fill="'+BOARD.chit+'"/>';
   return s+'</svg>';
 }
 function statTip(type){

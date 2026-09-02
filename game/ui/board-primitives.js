@@ -8,22 +8,29 @@
    restyled in one place, reflected everywhere the game board draws it.
 
    The geometry + svgEl are GLOBAL on purpose — every board consumer reuses
-   them, so this file loads before them in index.html's script chain. fx.js
-   draws transient flourishes on the SAME live #board and sources its colours +
-   unit radius from here (BOARD/BOARD_R). The true mini-board renderers
-   (map-editor.js, manual.js) still hand-draw their own miniatures at their own
-   scale (own hexes/terrain/HQ/unit); parametrising the bp* marks by size so
-   those two can call them is future work, not part of #223. Colours
+   them, so this file loads before them in index.html's script chain. Every
+   board consumer draws from ONE palette + shared builders: fx.js (live-board
+   flourishes) takes its colours + unit radius from BOARD/BOARD_R; the manual
+   diagram (manual.js, MP_S scale) and the map editor (map-editor.js) draw
+   their hexes/terrain/HQ/units through hexXY(k,s) + bpUnitToken / bpHQMarker
+   (sizes are options, colours from BOARD) and route every board colour through
+   BOARD — so restyling a terrain glyph, a side colour, or the unit token is
+   one edit reflected on every board in the game. The mini-boards keep their
+   own scale-tuned line widths + editing/animation overlays; only the marks and
+   the palette are shared. Colours
    that live in CSS stay CSS vars here (var(--forest) etc.); the inline glyph
    hexes the stylesheet never sees (river current, forest dots, mountain peak,
    trench, barrage, chit/star/outline ink) are named once in BOARD. */
 'use strict';
 
 /* =================== hex geometry (shared) =================== */
+// S is the live board's hex size; every geometry helper takes an optional
+// scale so a mini-board (manual.js at MP_S) shares ONE implementation.
 var S = 44, SQ3 = Math.sqrt(3);
-function hexXY(k){
+function hexXY(k, s){
+  s = s || S;
   var qr = E.parseKey(k);
-  return [ S*SQ3*(qr[0] + qr[1]/2), S*1.5*qr[1] ];
+  return [ s*SQ3*(qr[0] + qr[1]/2), s*1.5*qr[1] ];
 }
 function cornerAngles(d){ // dir -> [a1,a2] degrees (y down)
   var ang = [0,-60,-120,180,120,60][d];
@@ -46,14 +53,15 @@ function svgEl(tag, attrs){
   for (var k in attrs) el.setAttribute(k, attrs[k]);
   return el;
 }
-function viewBoxFor(hexList){
+function viewBoxFor(hexList, s){
+  s = s || S;
   var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
   hexList.forEach(function(k){
-    var xy = hexXY(k);
+    var xy = hexXY(k, s);
     minX=Math.min(minX,xy[0]); maxX=Math.max(maxX,xy[0]);
     minY=Math.min(minY,xy[1]); maxY=Math.max(maxY,xy[1]);
   });
-  var m = S*1.3;
+  var m = s*1.3;
   return (minX-m).toFixed(0)+' '+(minY-m).toFixed(0)+' '+(maxX-minX+2*m).toFixed(0)+' '+(maxY-minY+2*m).toFixed(0);
 }
 // the two endpoints of an inset edge (terrain/trench/barrage all share this)
@@ -77,8 +85,8 @@ var BOARD = {
   star:'#f0e6cc',       // HQ star + pill text
   trench:'#5a4326',     // dug-in earthwork
   barrage:'#c0392b',    // barrage action marks
-  // attack-math pill fill by combat outcome
-  hint:{ attacker:'rgba(58,99,48,.92)', tie:'rgba(138,108,60,.94)', defender:'rgba(111,29,25,.92)' },
+  // attack-math pill fill by combat outcome (neutral = manual's "no clear side")
+  hint:{ attacker:'rgba(58,99,48,.92)', tie:'rgba(138,108,60,.94)', defender:'rgba(111,29,25,.92)', neutral:'rgba(74,61,38,.92)' },
   // fx.js transient support-ring accents (drawn on the live board, not marks)
   supportAlly:'#d4af37',   // gold — an allied unit whose support counted
   supportEnemy:'#8ea8be'   // slate — a defender's support that counted
@@ -146,31 +154,54 @@ function bpTrenchLine(g, hexKey, dir){
     stroke:BOARD.trench, 'stroke-width':6.5, 'stroke-linecap':'round', 'stroke-dasharray':'7 4' }));
 }
 
-// a headquarters marker
-function bpHQ(g, hexKey, side){
-  var xy = hexXY(hexKey), col = BOARD.side(side).fill;
-  g.appendChild(svgEl('polygon',{ points: hexPoints(xy[0], xy[1], BOARD_R.hqOuter), fill:col, stroke:BOARD.outline, 'stroke-width':2, opacity:.92 }));
-  g.appendChild(svgEl('polygon',{ points: hexPoints(xy[0], xy[1], BOARD_R.hqInner), fill:'none', stroke:BOARD.brass, 'stroke-width':1.6 }));
-  var star = svgEl('text',{ x:xy[0], y:xy[1]+7, 'text-anchor':'middle', 'font-size':20, fill:BOARD.star });
+// a headquarters marker at an explicit centre. ONE implementation shared by the
+// live board, the manual diagram, and the map editor — sizes/stroke-widths are
+// options (board defaults reproduce the live board), colours come from BOARD.
+// o: { rOuter, rInner (false = no brass ring), outerSW, brassSW, starFS, starDY, pe }
+function bpHQMarker(g, cx, cy, side, o){
+  o = o || {};
+  var col = BOARD.side(side).fill, pe = o.pe;
+  var poly = svgEl('polygon',{ points: hexPoints(cx, cy, o.rOuter!=null?o.rOuter:BOARD_R.hqOuter),
+    fill:col, stroke:BOARD.outline, 'stroke-width':o.outerSW!=null?o.outerSW:2, opacity:.92 });
+  if (pe) poly.setAttribute('pointer-events', pe);
+  g.appendChild(poly);
+  var rInner = o.rInner!=null ? o.rInner : BOARD_R.hqInner;
+  if (rInner !== false){
+    var ring = svgEl('polygon',{ points: hexPoints(cx, cy, rInner), fill:'none', stroke:BOARD.brass, 'stroke-width':o.brassSW!=null?o.brassSW:1.6 });
+    if (pe) ring.setAttribute('pointer-events', pe);
+    g.appendChild(ring);
+  }
+  var star = svgEl('text',{ x:cx, y:cy+(o.starDY!=null?o.starDY:7), 'text-anchor':'middle', 'font-size':o.starFS!=null?o.starFS:20, fill:BOARD.star });
+  if (pe) star.setAttribute('pointer-events', pe);
   star.textContent = '★';
   g.appendChild(star);
 }
+function bpHQ(g, hexKey, side){ var xy = hexXY(hexKey); bpHQMarker(g, xy[0], xy[1], side, {}); }
 
-// a unit token (circle + chit + type glyph). Returns the <g> so the caller can
-// wire the attack-math hover on it.
-function bpUnit(g, hexKey, unit){
-  var xy = hexXY(hexKey), sc = BOARD.side(unit.owner), col = sc.fill, colD = sc.dark;
-  var u = svgEl('g',{ 'class':'unit', 'data-hex':hexKey });
-  u.appendChild(svgEl('circle',{ cx:xy[0], cy:xy[1], r:BOARD_R.unit, fill:col, stroke:colD, 'stroke-width':2.5 }));
-  u.appendChild(svgEl('rect',{ x:xy[0]-13, y:xy[1]-9, width:26, height:18, fill:BOARD.chit, stroke:colD, 'stroke-width':1.4, rx:1.5 }));
-  if (unit.type==='infantry'){
-    u.appendChild(svgEl('line',{ x1:xy[0]-13, y1:xy[1]-9, x2:xy[0]+13, y2:xy[1]+9, stroke:colD, 'stroke-width':2 }));
-    u.appendChild(svgEl('line',{ x1:xy[0]-13, y1:xy[1]+9, x2:xy[0]+13, y2:xy[1]-9, stroke:colD, 'stroke-width':2 }));
-  } else if (unit.type==='cavalry'){
-    u.appendChild(svgEl('line',{ x1:xy[0]-13, y1:xy[1]+9, x2:xy[0]+13, y2:xy[1]-9, stroke:colD, 'stroke-width':2 }));
+// a unit token (circle + chit + type glyph) drawn into a caller-owned group at
+// an explicit centre. ONE implementation shared by the live board and the
+// manual diagram; sizes are options (board defaults), colours from BOARD.
+// o: { r, circSW, chitHW, chitHH, chitSW, glyphSW, artR }
+function bpUnitToken(g, cx, cy, owner, type, o){
+  o = o || {};
+  var sc = BOARD.side(owner), col = sc.fill, colD = sc.dark;
+  var r = o.r!=null?o.r:BOARD_R.unit, hw = o.chitHW!=null?o.chitHW:13, hh = o.chitHH!=null?o.chitHH:9, gsw = o.glyphSW!=null?o.glyphSW:2;
+  g.appendChild(svgEl('circle',{ cx:cx, cy:cy, r:r, fill:col, stroke:colD, 'stroke-width':o.circSW!=null?o.circSW:2.5 }));
+  g.appendChild(svgEl('rect',{ x:cx-hw, y:cy-hh, width:hw*2, height:hh*2, fill:BOARD.chit, stroke:colD, 'stroke-width':o.chitSW!=null?o.chitSW:1.4, rx:1.5 }));
+  if (type==='infantry'){
+    g.appendChild(svgEl('line',{ x1:cx-hw, y1:cy-hh, x2:cx+hw, y2:cy+hh, stroke:colD, 'stroke-width':gsw }));
+    g.appendChild(svgEl('line',{ x1:cx-hw, y1:cy+hh, x2:cx+hw, y2:cy-hh, stroke:colD, 'stroke-width':gsw }));
+  } else if (type==='cavalry'){
+    g.appendChild(svgEl('line',{ x1:cx-hw, y1:cy+hh, x2:cx+hw, y2:cy-hh, stroke:colD, 'stroke-width':gsw }));
   } else {
-    u.appendChild(svgEl('circle',{ cx:xy[0], cy:xy[1], r:4.5, fill:colD }));
+    g.appendChild(svgEl('circle',{ cx:cx, cy:cy, r:o.artR!=null?o.artR:4.5, fill:colD }));
   }
+}
+// the live-board unit: own <g class="unit" data-hex> for the attack-math hover.
+function bpUnit(g, hexKey, unit){
+  var xy = hexXY(hexKey);
+  var u = svgEl('g',{ 'class':'unit', 'data-hex':hexKey });
+  bpUnitToken(u, xy[0], xy[1], unit.owner, unit.type, {});
   g.appendChild(u);
   return u;
 }
