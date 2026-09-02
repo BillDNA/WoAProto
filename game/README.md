@@ -73,7 +73,7 @@ Everything in the rule book: the full 16-card deck, infantry/cavalry/artillery, 
 
 Reading the table at a glance:
 
-- **Player mats** mirror the physical ones: one slot per piece — solid icon = in reserve, dashed empty slot = out on the field, ✕ = destroyed. Below them, all 16 orders as chips that gray out as each side spends them — you always know exactly what the enemy has burned and what might still be coming.
+- **Player mats** mirror the physical ones: one slot per piece — solid icon = in reserve, dashed empty slot = out on the field, ✕ = destroyed. Below them, all 16 cards as chips that gray out as each side spends them — you always know exactly what the enemy has burned and what might still be coming.
 - **Grid references**: every hex wears a faint label (A1…E4) and the campaign journal speaks them — "Red deploys Infantry at D2."
 - The **campaign score card** sits centred in the top bar; the **journal** (lower right) marks skirmishes, turns, and victories.
 - Small animations: hands deal in, deployments pop, marches glide, attacks ring and fallen units fade, the board shakes when an HQ falls.
@@ -88,8 +88,8 @@ A **river** (drawn in blue, in the same 2- and 3-side pieces as forest and mount
 
 ## House rules (per Bill's prototyping)
 
-- **Flexible orders**: any card may resolve as the printed action, a basic Attack, or a basic Reposition — the card is removed from the game regardless. A basic Reposition is only offered when no basic Attack is possible: if you can fight, you can't spend the order just shuffling pieces.
-- **Every order must do something**: you may skip an individual step of a multi-step card, but not skip *every* step — if the card can accomplish any action, at least one must be played (the **Skip step** button hides on the last playable step). An order that genuinely has no legal action anywhere is still spent to no effect.
+- **Flexible orders**: any card may resolve as the printed action, a basic Attack, or a basic Reposition — the card is removed from the game regardless. A basic Reposition is only offered when no basic Attack is possible: if you can fight, you can't spend the card just shuffling pieces.
+- **Every card must do something**: you may skip an individual step of a multi-step card, but not skip *every* step — if the card can accomplish any action, at least one must be played (the **Skip step** button hides on the last playable step). A card that genuinely has no legal action anywhere is still spent to no effect.
 - **Reset turn**: mid-way through a multi-step card you can reset back to the start of your turn (button next to Skip). Once the card fully resolves the turn is final.
 - **No stacking**: a hex side with terrain can't also hold a trench; to place one, pick the hex then click the brass corner knob of the orientation you want (hovering a knob previews its two edges).
 - **Reading a fight**: hover any of your units to see the attack math against every hex it could hit (green = you win, brass = tie, red = you lose — the same numbers the confirm dialog shows). When an attack lands, an arrow shows where it came from (bending through an HQ on a through-HQ strike) and rings mark every unit whose support actually counted — gold for the attacker's, steel for the defender's.

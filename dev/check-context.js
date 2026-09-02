@@ -90,16 +90,18 @@ var ALIASES = [
   // Pending: canonical name agreed, migration awaiting Bill's sign-off
   // (player-facing) or a non-pure data/DB change (out of a rename's scope).
   { term: 'map-set (→ Mapset)', pattern: /\bmap-sets?\b/gi, status: 'pending', note: 'hyphenated form in README (player-facing) + docs' },
+  { term: 'Map Card / Map Deck (→ Map)', pattern: /\bmap (cards?|deck)\b/gi, status: 'locked' },
+  { term: 'difficulty (→ AI personality / strength)', pattern: /\bdifficult(y|ies)\b/gi, status: 'locked', note: 'the AI param is `personality`; a preset\'s tier is its strength' },
   { term: 'map pool (→ Mapset)', pattern: /\bmap ?pool\b/gi, ignore: /mapPool\(|E\.mapPool/, status: 'pending', note: '`mapPool()` exported engine API + UI wrappers' },
   { term: 'roster (→ Mapset)', pattern: /\broster/gi, status: 'pending', note: 'Rosters UI overlay + rosterFor/rosterReplace identifiers' },
   { term: 'match — best-of (→ Battle)', pattern: /\bmatch(es|up|ed|ing)?\b/gi,
     ignore: /matchup|matched in|\.match\(|match\.maps|match\.wins|st\.match|newMatch|skirmishWinner/i,
     status: 'pending', note: 'st.match / newMatch identifiers + runbook prose' },
+  // Order (noun, the card) is cleared in prose, but the word "order" is too common
+  // (var order, attack order, enumeration order) to lock without false positives.
   { term: 'Order — noun (→ Card)', pattern: /\borders?\b/gi,
     ignore: /order an|order a |turn[- ]order|load[- ]order|z-order|in order to|reorder|ordering/i,
-    status: 'pending', note: 'rule book + README + journal string' },
-  { term: 'Map Card / Map Deck (→ Map)', pattern: /\bmap (cards?|deck)\b/gi, status: 'pending', note: 'legacy rule book only' },
-  { term: 'difficulty (→ AI personality)', pattern: /\bdifficult(y|ies)\b/gi, status: 'pending', note: 'aiPlanTurn(st, difficulty) param — holds strength presets, borderline' },
+    status: 'pending', note: 'card-sense prose cleared; pattern still catches ordinary "order"' },
 ];
 
 function scanAliases(files) {

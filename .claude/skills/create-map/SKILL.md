@@ -83,7 +83,7 @@ built-ins), point-symmetric outlines keep Mirror and fair-HQ placement working.
   barrageable.
 - Barrage removes forests and trenches anywhere — a forest-dependent map plan
   must survive one barrage.
-- Screen cost is all in the sim, and AI difficulty dominates it (~690 ms/skirmish
+- Screen cost is all in the sim, and AI strength dominates it (~690 ms/skirmish
   hard vs ~100 ms normal; n is near-linear on top). When a finalist is screened
   across the whole active set, `dev/balance-report.js --parallel` is ~3.3× faster
   for identical numbers — prefer it over serial `balance.js` for multi-map screens.

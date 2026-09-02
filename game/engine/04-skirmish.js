@@ -352,7 +352,7 @@
   }
 
   // Feedback Round 2: a card must accomplish at least one action if it can — you
-  // may skip an individual step, but not skip EVERY step to burn the order for
+  // may skip an individual step, but not skip EVERY step to burn the card for
   // free. A voluntary skip is refused only when nothing has acted yet, this step
   // can act, and no later step can (it's the card's last chance). Steps with no
   // legal option are still auto-skipped by skipImpossible, and a card where no
@@ -497,7 +497,7 @@
     if (st.pending.acted === 0) {
       // The play resolved zero actions — an effective skipped turn. Bill wants
       // these visible in the journal AND measurable in the card report.
-      log(st, I.cap(p) + ' finds no opening — the order is spent to no effect.');
+      log(st, I.cap(p) + ' finds no opening — the card is spent to no effect.');
       if (entry && entry.id === st.pending.cardId) entry.noop = true;
     }
     st.removed[p].push(st.pending.cardId);

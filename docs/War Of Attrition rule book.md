@@ -17,24 +17,24 @@ Version history:
 * 2 player decks with 16 cards each  
 * 2 player mats with 7 infantry, 2 cavalry, 1 artillery, 1 head quaters and 3 trenches.  
 * 1 game board  
-* 1 map deck with 12 cards  
+* 1 Mapset of 12 Maps  
 * 18 terrain pieces — 2 length‑3 and 4 length‑2 **mountains**, 2 length‑3 and 4 length‑2 **forests**, 2 length‑3 and 4 length‑2 **rivers**.
 
 # Game setup
 
-	Each player gets a full deck of (16) cards, 7 infantry units, 2 cavalry units, 1 artillery units, 1 Headquarters, and 3 length 2 trenches. Shuffle and place the map cards off to the side of the board.  Select a player to go first by the manner of your choosing.    
-War of Attrition is fought across various skirmishfields, each represented by a unique "Map Card." These cards define the layout of terrain and the starting positions for each skirmish. Draw the top card from the Map Deck. This card dictates the current skirmishfield for the skirmish. Set up the game board to match the hex grid and terrain features shown on the drawn Map Card.  Each player places their Headquarters unit on their designated "Red HQ" or "Blue HQ" hex as shown on the Map Card.  
-	Once a victor of the skirmish is determined, they take the map card signifying a victory, draw the next map and the loser goes first in the next skirmish.  The 1st player to collect 3 victories wins the game.
+	Each player gets a full deck of (16) cards, 7 infantry units, 2 cavalry units, 1 artillery units, 1 Headquarters, and 3 length 2 trenches. Shuffle and place the Maps off to the side of the board.  Select a player to go first by the manner of your choosing.    
+War of Attrition is fought across various skirmishfields, each represented by a unique **Map**. These Maps define the layout of terrain and the starting positions for each skirmish. Draw the top Map from the Mapset. This Map dictates the current skirmishfield for the skirmish. Set up the game board to match the hex grid and terrain features shown on the drawn Map.  Each player places their Headquarters unit on their designated "Red HQ" or "Blue HQ" hex as shown on the Map.  
+	Once a victor of the skirmish is determined, they take the Map signifying a victory, draw the next Map and the loser goes first in the next skirmish.  The 1st player to collect 3 victories wins the Battle.
 
 # Turn Order
 
 * Draw 4 cards  
-  * In the 1st round of the game only put the deployed infantry starting card in your hand then draw only 3 cards, for a hand of 4\.  
+  * On the 1st turn of the skirmish only put the deployed infantry starting card in your hand then draw only 3 cards, for a hand of 4\.  
   * If you can not draw up to a hand of 4, shuffle the discard pile.  
 * Select 1 to play  
 * Resolve the card (see the Card Actions section). You may always resolve any card instead as one **basic Attack** or one **basic Reposition**, with two limits:  
   * A basic **Reposition** is only allowed when you have **no** basic Attack available — you can't shuffle pieces to dodge a fight.  
-  * You must resolve **at least one step** of whatever you play. If a card's steps can all act, you may not skip every one to spend the order for free; only a card that genuinely has no legal action fizzles.  
+  * You must resolve **at least one step** of whatever you play. If a card's steps can all act, you may not skip every one to spend the card for free; only a card that genuinely has no legal action fizzles.  
 * Remove the played card from the game.  
 * Discard remaining cards.   
   * Once there are 5 or less cards, draw all remaining cards during the draw phase.
@@ -76,18 +76,18 @@ Trenches and rivers *(trenches revised July 2026 — previously \+1 defense; riv
   * Successfully attack into the opponent's headquarters.  A tie where both units get removed counts.  
 * Attrition  
   * No cards are left to play  
-  * Calls for a points win counting each player's **surviving units on the board**  
-    * 1 vp / infantry  
-    * 2 vp / calvary  
-    * 3 vp / artillery  
+  * Calls for a field-score win counting each player's **surviving units on the board**  
+    * 1 point / infantry  
+    * 2 points / calvary  
+    * 3 points / artillery  
     * Units still in reserve (never deployed) count for nothing  
-  * Victor is the player with more points  
+  * Victor is the player with the higher field score  
   * In the event of a tie who ever went 2nd wins  
   * *(Revised June 2026 — previously scored by defeated enemy units; board presence now decides the standstill.)*
 
-## Game Victory Conditions
+## Battle Victory Conditions
 
-* 1st to collect 3 map cards.
+* 1st to collect 3 Maps (win 3 skirmishes).
 
 # Glossary
 
@@ -97,7 +97,7 @@ Trenches and rivers *(trenches revised July 2026 — previously \+1 defense; riv
   * Take a unit or building from your player mate and place it on the board  
 * Reposition (can do one of these)  
   * Move any unit into an empty adjacent hex; can move through a headquarters.  
-  * Swap the position of two adjacent units **of different types** (swapping two identical units changes nothing — it is not a legal move); can swap through a headquarters.  
+  * Swap the position of two adjacent units **of different types** (swapping two identical units changes nothing — it is not a legal reposition); can swap through a headquarters.  
 * Attack  
   * Select a unit on the board to attack an adjacent tile; tile must have a unit or headquarters in it for it to count as an attack.  
 * In sequence   

@@ -343,7 +343,7 @@ test('no-op plays are logged and marked (skipped-turn report)', () => {
   assert.ok(st.current === 'blue', 'impossible card ends the turn immediately');
   var e = st.playLog[st.playLog.length - 1];
   assert.ok(e.id === 'attack_plus1' && e.noop === true, 'playLog entry marked noop: ' + JSON.stringify(e));
-  assert.ok(st.log.some(function (l) { return l.msg.indexOf('no opening') >= 0; }), 'journal says the order was spent to no effect');
+  assert.ok(st.log.some(function (l) { return l.msg.indexOf('no opening') >= 0; }), 'journal says the card was spent to no effect');
   var st2 = testSkirmish(78);
   E.playCard(st2, 'deploy_inf_start');
   E.applyStep(st2, { hex: E.stepOptions(st2).targets ? E.stepOptions(st2).targets[0] : null });

@@ -313,14 +313,14 @@
   }
 
   // Decide the AI's whole turn. Returns {cardId, mode, choices:[...]}
-  // `difficulty` is a preset name ('easy' | 'normal' | 'hard' | any maps.js
+  // `personality` is a preset name ('easy' | 'normal' | 'hard' | any maps.js
   // "ai" entry) or a raw config object — see AI_PRESETS/aiConfig above.
   // easy   = greedy with noisy evaluations (makes mistakes)
   // normal = greedy, one turn deep
   // hard   = normal shortlist, then the top `breadth` candidates are re-scored
   //          by what the enemy can do back (sampled hands — never peeks at yours)
-  function aiPlanTurn(st, difficulty) {
-    var cfg = aiConfig(difficulty);
+  function aiPlanTurn(st, personality) {
+    var cfg = aiConfig(personality);
     var w = cfg.w;
     var me = st.current;
     var randomness = cfg.noise;
