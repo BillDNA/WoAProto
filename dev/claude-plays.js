@@ -204,22 +204,22 @@ const CHOICE_SCHEMA = JSON.stringify({
 /* ---------- honest state serialization (what a player can see) ---------- */
 function unitList(st, p) {
   const out = [];
-  Object.keys(st.units).forEach(function (h) {
-    if (st.units[h].owner === p) out.push({ h: h, name: E.UNITS[st.units[h].type].name });
+  Object.keys(st.pieces.units).forEach(function (h) {
+    if (st.pieces.units[h].owner === p) out.push({ h: h, name: E.UNITS[st.pieces.units[h].type].name });
   });
   out.sort(function (a, b) { return E.hexLabel(a.h) < E.hexLabel(b.h) ? -1 : 1; });
   return out.map(function (u) { return u.name + ' at ' + E.hexLabel(u.h); }).join(', ') || 'none';
 }
 function reservesStr(st, p) {
-  const r = st.reserves[p];
+  const r = st.pieces.reserves[p];
   return Object.keys(E.UNITS).map(function (t) { return r[t] + ' ' + E.UNITS[t].name; }).join(', ') +
     ', ' + r.trench + ' trenches';
 }
 function spentStr(st, p) {
-  return st.removed[p].map(function (id) { return E.CARD_BY_ID[id].name; }).join(', ') || 'none yet';
+  return st.cards.removed[p].map(function (id) { return E.CARD_BY_ID[id].name; }).join(', ') || 'none yet';
 }
 function rowsStr(st) {
-  const s = E.SHAPES[st.boardShape];
+  const s = E.SHAPES[st.board.boardShape];
   const counts = {};
   s.list.forEach(function (k) { const r = E.parseKey(k)[1]; counts[r] = (counts[r] || 0) + 1; });
   return s.rowRs.map(function (r, i) {
@@ -230,32 +230,32 @@ function rowsStr(st) {
 function stateView(st, p, withHand, match) {
   const en = E.other(p);
   const L = [];
-  L.push('=== SKIRMISH STATE (turn ' + st.turnNumber + ') ===');
+  L.push('=== SKIRMISH STATE (turn ' + st.flow.turnNumber + ') ===');
   if (match && match.targetWins) {
     L.push('Match score (first to ' + match.targetWins + '): Red ' + match.wins.red + ' — Blue ' + match.wins.blue +
       '. This is skirmish ' + (match.skirmishesPlayed + 1) + '.');
   }
   L.push('Map "' + st.mapName + '". Board rows top-to-bottom: ' + rowsStr(st) + '.');
-  L.push('You are ' + p.toUpperCase() + ' and it is your turn. ' + cap(st.second) +
+  L.push('You are ' + p.toUpperCase() + ' and it is your turn. ' + cap(st.flow.second) +
     ' moved second this skirmish and wins attrition ties.');
   L.push('Field score (surviving units on board): Red ' + E.fieldScore(st, 'red') +
     ', Blue ' + E.fieldScore(st, 'blue') + '.');
   L.push('Cards left (deck+discard+hand; one burns per turn): Red ' + E.cardsRemaining(st, 'red') +
     ', Blue ' + E.cardsRemaining(st, 'blue') + '.');
   ['red', 'blue'].forEach(function (s) {
-    L.push(cap(s) + ' HQ at ' + E.hexLabel(st.hq[s]) + (st.hqAlive[s] ? '' : ' (FALLEN)') + '.');
+    L.push(cap(s) + ' HQ at ' + E.hexLabel(st.board.hq[s]) + (st.board.hqAlive[s] ? '' : ' (FALLEN)') + '.');
   });
   L.push('Red units: ' + unitList(st, 'red') + '.');
   L.push('Blue units: ' + unitList(st, 'blue') + '.');
   L.push('Red reserves: ' + reservesStr(st, 'red') + '. Blue reserves: ' + reservesStr(st, 'blue') + '.');
   const tr = [];
-  Object.keys(st.trenches).forEach(function (h) {
-    st.trenches[h].forEach(function (t) {
+  Object.keys(st.pieces.trenches).forEach(function (h) {
+    st.pieces.trenches[h].forEach(function (t) {
       tr.push(E.hexLabel(h) + ' (edges ' + t.dirs.map(function (d) { return DIRN[d]; }).join('+') + ')');
     });
   });
   L.push('Trenches (deny attacker support across their edges): ' + (tr.join('; ') || 'none') + '.');
-  const te = st.terrainPieces.filter(function (pc) { return !pc.removed; }).map(function (pc) {
+  const te = st.board.terrainPieces.filter(function (pc) { return !pc.removed; }).map(function (pc) {
     const hex = pc.edgeKeys[0].split('>')[0];
     const dirs = pc.edgeKeys.map(function (ek) { return DIRN[+ek.split('>')[1]]; }).join(',');
     return (pc.t === 'F' ? 'Forest' : pc.t === 'M' ? 'Mountain' : 'River') + ' in ' + E.hexLabel(hex) + ' (sides ' + dirs + ')';
@@ -263,10 +263,10 @@ function stateView(st, p, withHand, match) {
   L.push('Terrain: ' + (te.join('; ') || 'none') + '.');
   L.push('Red spent orders (removed from game): ' + spentStr(st, 'red') + '.');
   L.push('Blue spent orders: ' + spentStr(st, 'blue') + '.');
-  L.push(cap(en) + ' holds ' + st.hands[en].length + ' hidden cards.');
+  L.push(cap(en) + ' holds ' + st.cards.hands[en].length + ' hidden cards.');
   if (withHand) {
     L.push('Your hand:');
-    st.hands[p].forEach(function (id) {
+    st.cards.hands[p].forEach(function (id) {
       L.push('- ' + E.CARD_BY_ID[id].name + ': ' + E.CARD_BY_ID[id].text);
     });
   }
@@ -275,7 +275,7 @@ function stateView(st, p, withHand, match) {
 
 /* ---------- move descriptions ---------- */
 function cardOptions(st, p) {
-  const hand = st.hands[p];
+  const hand = st.cards.hands[p];
   const counts = {};
   hand.forEach(function (id) { counts[id] = (counts[id] || 0) + 1; });
   const opts = [];
@@ -322,7 +322,7 @@ function describeChoice(st, so, c) {
       return x.from === c.from && x.to === c.to && (x.via || null) === (c.via || null);
     });
     const pv = a && a.preview;
-    const atkName = E.UNITS[st.units[c.from].type].name;
+    const atkName = E.UNITS[st.pieces.units[c.from].type].name;
     let s = 'Attack: ' + atkName + ' at ' + E.hexLabel(c.from) + ' strikes ' +
       (pv && pv.defenderIsHQ ? 'the enemy HQ' : 'enemy ' + (pv ? E.UNITS[pv.defenderUnit].name : 'unit')) +
       ' at ' + E.hexLabel(c.to) + (c.via ? ' through the HQ at ' + E.hexLabel(c.via) : '');
@@ -337,15 +337,15 @@ function describeChoice(st, so, c) {
   }
   if (so.type === 'reposition') {
     if (c.swap) {
-      return 'Swap ' + E.UNITS[st.units[c.a].type].name + ' at ' + E.hexLabel(c.a) +
-        ' with ' + E.UNITS[st.units[c.b].type].name + ' at ' + E.hexLabel(c.b);
+      return 'Swap ' + E.UNITS[st.pieces.units[c.a].type].name + ' at ' + E.hexLabel(c.a) +
+        ' with ' + E.UNITS[st.pieces.units[c.b].type].name + ' at ' + E.hexLabel(c.b);
     }
-    return 'March ' + E.UNITS[st.units[c.from].type].name + ' from ' + E.hexLabel(c.from) +
+    return 'March ' + E.UNITS[st.pieces.units[c.from].type].name + ' from ' + E.hexLabel(c.from) +
       ' to ' + E.hexLabel(c.to);
   }
   if (so.type === 'barrage') {
     if (c.trenchHex) return 'Barrage: destroy the trench at ' + E.hexLabel(c.trenchHex);
-    const pc = st.terrainPieces.find(function (x) { return x.id === c.pieceId; });
+    const pc = st.board.terrainPieces.find(function (x) { return x.id === c.pieceId; });
     return 'Barrage: burn away the forest at ' + E.hexLabel(pc.edgeKeys[0].split('>')[0]);
   }
   return JSON.stringify(c);
@@ -426,29 +426,29 @@ function typicalityBaseline(map, n) {
   return base;
 }
 function typicalitySection(map, st, n) {
-  if (n <= 0 || st.phase !== 'skirmish-over') return [];
+  if (n <= 0 || st.flow.phase !== 'skirmish-over') return [];
   const base = typicalityBaseline(map, n);
   const done = Math.max(1, n - base.unfinished);
   const pct = function (x) { return Math.round(100 * x / done); };
   const per = function (x) { return x / done; };
   const avgTurns = per(base.turns), hqPct = pct(base.hqWins), redPct = pct(base.redWins), zeroPct = pct(base.zeroKill);
   const avgAtk = per(base.attacks), avgFS = per(base.fsDiff);
-  const kills = st.kills.red + st.kills.blue;
-  const gAtk = (st.stats && st.stats.attacks) || 0;
+  const kills = st.result.kills.red + st.result.kills.blue;
+  const gAtk = (st.journal.stats && st.journal.stats.attacks) || 0;
   const gVP = Math.abs(E.fieldScore(st, 'red') - E.fieldScore(st, 'blue'));
-  const dT = avgTurns ? Math.round(100 * (st.turnNumber - avgTurns) / avgTurns) : 0;
+  const dT = avgTurns ? Math.round(100 * (st.flow.turnNumber - avgTurns) / avgTurns) : 0;
   const lenRead = Math.abs(dT) <= 15 ? 'typical length'
     : dT < 0 ? Math.abs(dT) + '% shorter — quicker than usual' : dT + '% longer — grindier than usual';
   let endRead;
-  if (st.winType === 'hq') endRead = hqPct < 25 ? 'HQ capture is uncommon here (' + hqPct + '%) — decisive' : 'HQ capture, in line with the map';
-  else if (st.winType === 'attrition') endRead = hqPct >= 50 ? 'attrition, though this map often ends by HQ (' + hqPct + '%)' : 'attrition — typical for this map';
-  else endRead = st.winType;
+  if (st.result.winType === 'hq') endRead = hqPct < 25 ? 'HQ capture is uncommon here (' + hqPct + '%) — decisive' : 'HQ capture, in line with the map';
+  else if (st.result.winType === 'attrition') endRead = hqPct >= 50 ? 'attrition, though this map often ends by HQ (' + hqPct + '%)' : 'attrition — typical for this map';
+  else endRead = st.result.winType;
   const killRead = kills === 0 ? 'a zero-kill game (' + zeroPct + '% of baseline games are)' : 'had combat (' + zeroPct + '% of baseline games have none)';
   const cmp = function (g, avg) { return avg === 0 ? '—' : (g >= avg * 1.25 ? 'above baseline' : g <= avg * 0.75 ? 'below baseline' : 'about average'); };
   const flags = [];
   if (Math.abs(dT) > 25) flags.push(dT < 0 ? 'much shorter than average' : 'much longer than average');
-  if (st.winType === 'hq' && hqPct < 25) flags.push('ended by a rare HQ capture');
-  if (st.winType === 'attrition' && hqPct >= 60) flags.push('went to attrition on an HQ-happy map');
+  if (st.result.winType === 'hq' && hqPct < 25) flags.push('ended by a rare HQ capture');
+  if (st.result.winType === 'attrition' && hqPct >= 60) flags.push('went to attrition on an HQ-happy map');
   if (kills === 0 && zeroPct < 15) flags.push('a zero-kill game where the map usually sees combat');
   if (kills > 0 && zeroPct >= 60) flags.push('a fighting game on a map that usually stalemates');
   const verdict = flags.length === 0
@@ -458,9 +458,9 @@ function typicalitySection(map, st, n) {
     '_Baseline: ' + n + ' hard-AI self-play skirmishes on "' + map.name + '" (rules ' + E.VERSION +
     '), folded through the same aggregation as the Balance Dashboard (cached)._', '',
     '| Metric | This game | Baseline | Read |', '|---|--:|--:|---|',
-    '| Ending | ' + cap(st.skirmishWinner) + ' by ' + st.winType + ' | ' + hqPct + '% HQ / ' + (100 - hqPct) + '% attrition | ' + endRead + ' |',
-    '| Length | T' + st.turnNumber + ' | ~' + avgTurns.toFixed(0) + ' avg | ' + lenRead + ' |',
-    '| Winner side | ' + cap(st.skirmishWinner) + ' | red ' + redPct + '% | map leans ' + (redPct >= 50 ? 'red' : 'blue') + ' ' + Math.max(redPct, 100 - redPct) + '% |',
+    '| Ending | ' + cap(st.result.skirmishWinner) + ' by ' + st.result.winType + ' | ' + hqPct + '% HQ / ' + (100 - hqPct) + '% attrition | ' + endRead + ' |',
+    '| Length | T' + st.flow.turnNumber + ' | ~' + avgTurns.toFixed(0) + ' avg | ' + lenRead + ' |',
+    '| Winner side | ' + cap(st.result.skirmishWinner) + ' | red ' + redPct + '% | map leans ' + (redPct >= 50 ? 'red' : 'blue') + ' ' + Math.max(redPct, 100 - redPct) + '% |',
     '| Kills (units lost) | ' + kills + ' | ' + zeroPct + '% zero-kill | ' + killRead + ' |',
     '| Attacks resolved | ' + gAtk + ' | ~' + avgAtk.toFixed(1) + ' avg | ' + cmp(gAtk, avgAtk) + ' |',
     '| Final FS gap | ' + gVP + ' | ~' + avgFS.toFixed(1) + ' avg | ' + cmp(gVP, avgFS) + ' |',
@@ -473,7 +473,7 @@ async function playSkirmish(st, args, transports, matchInfo, usage) {
   let fallbacks = 0;
   let logIdx = 0;
   function flushLog() {
-    while (logIdx < st.log.length) console.log('           | ' + st.log[logIdx++].msg);
+    while (logIdx < st.journal.log.length) console.log('           | ' + st.journal.log[logIdx++].msg);
   }
   function scoreboard() {
     say('  score R ' + E.fieldScore(st, 'red') + ' - B ' + E.fieldScore(st, 'blue') +
@@ -500,14 +500,14 @@ async function playSkirmish(st, args, transports, matchInfo, usage) {
   function heuristicTurn(side, diff) {
     const plan = E.aiPlanTurn(st, diff);
     if (!plan) return false;
-    const turn = st.turnNumber;
+    const turn = st.flow.turnNumber;
     const mode = plan.mode || 'normal';
     E.playCard(st, plan.cardId, mode);
     const desc = '"' + E.CARD_BY_ID[plan.cardId].name + '"' + (mode !== 'normal' ? ' as basic ' + mode : '');
     say('T' + turn + ' ' + side + ' [' + diff + ']: plays ' + desc);
     decisions.push({ turn: turn, side: side, kind: 'card', choice: desc, why: '', fallback: false });
     let g = 0;
-    while (st.phase === 'step' && g++ < 12) {
+    while (st.flow.phase === 'step' && g++ < 12) {
       const c = plan.choices.shift() || { skip: true };
       try { E.applyStep(st, c); }
       catch (e) { try { E.applyStep(st, { skip: true }); } catch (e2) { break; } }
@@ -517,7 +517,7 @@ async function playSkirmish(st, args, transports, matchInfo, usage) {
   }
 
   async function llmTurn(side, model) {
-    const turn = st.turnNumber;
+    const turn = st.flow.turnNumber;
     // 1. card pick
     const opts = cardOptions(st, side);
     const um = stateView(st, side, true, matchInfo) +
@@ -546,7 +546,7 @@ async function playSkirmish(st, args, transports, matchInfo, usage) {
     flushLog();
     // 2. step loop
     let g = 0;
-    while (st.phase === 'step' && g++ < 12) {
+    while (st.flow.phase === 'step' && g++ < 12) {
       const so = E.stepOptions(st);
       const list = stepChoiceList(st, args.k, args.fullOptions);
       const descs = list.choices.map(function (c) { return describeChoice(st, so, c); });
@@ -574,13 +574,13 @@ async function playSkirmish(st, args, transports, matchInfo, usage) {
         (why2 ? ' — "' + why2 + '"' : '') + (fb2 ? '  (fallback)' : ''));
       record(turn, 'step-' + so.type, side, descs[idx], why2, fb2);
       flushLog();
-      if (st.phase === 'skirmish-over') break;
+      if (st.flow.phase === 'skirmish-over') break;
     }
     scoreboard();
   }
 
-  while (st.phase !== 'skirmish-over' && st.turnNumber <= args.maxTurns) {
-    const side = st.current;
+  while (st.flow.phase !== 'skirmish-over' && st.flow.turnNumber <= args.maxTurns) {
+    const side = st.flow.current;
     const spec = side === 'red' ? args.red : args.blue;
     if (HEURISTIC[spec]) { if (!heuristicTurn(side, spec)) break; }
     else await llmTurn(side, spec);
@@ -652,13 +652,13 @@ async function main() {
 
   while (true) {
     const st = E.newSkirmish(match);
-    const firstPlayer = st.current; // skirmish 1 = match.firstPlayer; later = last loser
+    const firstPlayer = st.flow.current; // skirmish 1 = match.firstPlayer; later = last loser
     matchInfo.skirmishesPlayed = skirmishes.length;
     say('— skirmish ' + (skirmishes.length + 1) + ' on "' + st.mapName + '"' + (target ? ' (match R ' + match.wins.red + '-' + match.wins.blue + ' B)' : '') + ' —');
     const played = await playSkirmish(st, args, transports, matchInfo, usage);
-    const finished = st.phase === 'skirmish-over';
+    const finished = st.flow.phase === 'skirmish-over';
     say(finished
-      ? '== ' + cap(st.skirmishWinner) + ' wins skirmish ' + (skirmishes.length + 1) + ' by ' + st.winType + ' after ' + st.turnNumber + ' turns ==' +
+      ? '== ' + cap(st.result.skirmishWinner) + ' wins skirmish ' + (skirmishes.length + 1) + ' by ' + st.result.winType + ' after ' + st.flow.turnNumber + ' turns ==' +
         (target ? '  (match R ' + match.wins.red + '-' + match.wins.blue + ' B)' : '')
       : '== skirmish unfinished at the --max-turns cap (' + args.maxTurns + ') ==');
 
@@ -666,8 +666,8 @@ async function main() {
     const notes = {};
     for (const side of ['red', 'blue']) {
       const n = await feltNotes(args, transports, side,
-        'Skirmish ' + (skirmishes.length + 1) + ' just ended: ' + (finished ? cap(st.skirmishWinner) + ' won by ' + st.winType : 'unfinished') +
-        ' after ' + st.turnNumber + ' turns. In ONE or TWO sentences: how did that skirmish feel from your side?', usage);
+        'Skirmish ' + (skirmishes.length + 1) + ' just ended: ' + (finished ? cap(st.result.skirmishWinner) + ' won by ' + st.result.winType : 'unfinished') +
+        ' after ' + st.flow.turnNumber + ' turns. In ONE or TWO sentences: how did that skirmish feel from your side?', usage);
       if (n) { notes[side] = n; say(side + ' notes: ' + n); }
     }
 
@@ -677,9 +677,9 @@ async function main() {
       matchId: target ? ts0 : null, skirmishIndex: skirmishes.length + 1,
       red: args.red, blue: args.blue,
       redEffort: args.redEffort || null, blueEffort: args.blueEffort || null,
-      winner: finished ? st.skirmishWinner : null,
-      winType: finished ? st.winType : 'unfinished',
-      turns: st.turnNumber, fallbacks: played.fallbacks,
+      winner: finished ? st.result.skirmishWinner : null,
+      winType: finished ? st.result.winType : 'unfinished',
+      turns: st.flow.turnNumber, fallbacks: played.fallbacks,
       decisions: played.decisions, notes: notes, usage: null // usage reported on the match row
     };
     try { fs.mkdirSync(LOG_DIR, { recursive: true }); } catch (e) {}
@@ -688,8 +688,8 @@ async function main() {
       try { dbm.insertSkirmish(dbh, runId, st, firstPlayer, { seed: args.seed, version: E.VERSION }); }
       catch (e) { /* never fatal */ }
     }
-    skirmishes.push({ index: skirmishes.length + 1, winner: finished ? st.skirmishWinner : null,
-      winType: finished ? st.winType : 'unfinished', turns: st.turnNumber,
+    skirmishes.push({ index: skirmishes.length + 1, winner: finished ? st.result.skirmishWinner : null,
+      winType: finished ? st.result.winType : 'unfinished', turns: st.flow.turnNumber,
       decisions: played.decisions, fallbacks: played.fallbacks, notes: notes, st: st });
 
     if (!target) break;                              // single skirmish mode
@@ -718,7 +718,7 @@ async function main() {
   } else if (!target) {
     for (const side of ['red', 'blue']) {
       const st = skirmishes[0].st;
-      const journal = st.log.map(function (e) { return 'T' + e.turn + ' ' + e.msg; }).join('\n');
+      const journal = st.journal.log.map(function (e) { return 'T' + e.turn + ' ' + e.msg; }).join('\n');
       const n = await feltNotes(args, transports, side,
         'You just played a full skirmish of War of Attrition as ' + side.toUpperCase() +
         '. The final campaign journal:\n\n' + journal +
@@ -776,7 +776,7 @@ async function main() {
     }
     md.push('');
     md.push('### Campaign journal');
-    b.st.log.forEach(function (e) { md.push('- T' + e.turn + ' ' + e.msg); });
+    b.st.journal.log.forEach(function (e) { md.push('- T' + e.turn + ' ' + e.msg); });
   });
   if (Object.keys(matchNotes).length) {
     md.push('');

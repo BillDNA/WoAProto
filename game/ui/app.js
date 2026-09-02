@@ -31,7 +31,7 @@ function aiDisplayName(diff){
   return opt ? opt.textContent : capName(diff||'ai');
 }
 
-var SAVE_V = 5; // bumped when old saves can no longer be loaded (board shapes, trench arrays, ...)
+var SAVE_V = 6; // bumped when old saves can no longer be loaded (board shapes, trench arrays, #221 block-shaped state, ...)
 
 function api(path, body){
   return fetch('/api/'+path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body||{}) })

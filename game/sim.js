@@ -72,22 +72,22 @@ var WOA_SIM = (function () {
      duplicated in foldBattles, so they stay in balanceAdd below. */
   function skirmishFacts(st, firstPlayer) {
     var fsr = ENG.fieldScore(st, 'red'), fsb = ENG.fieldScore(st, 'blue');
-    var stats = st.stats || {};
-    var kills = st.kills || { red: 0, blue: 0 };
+    var stats = st.journal.stats || {};
+    var kills = st.result.kills || { red: 0, blue: 0 };
     var hr = 0, hb = 0;
-    for (var h in st.units) (st.units[h].owner === 'red' ? hr++ : hb++);
+    for (var h in st.pieces.units) (st.pieces.units[h].owner === 'red' ? hr++ : hb++);
     var resRed = 0, resBlue = 0;
     Object.keys(ENG.UNITS).forEach(function (t) {
-      resRed += (st.reserves.red[t] || 0); resBlue += (st.reserves.blue[t] || 0);
+      resRed += (st.pieces.reserves.red[t] || 0); resBlue += (st.pieces.reserves.blue[t] || 0);
     });
     return {
-      firstPlayer: firstPlayer, winner: st.skirmishWinner || null, winType: st.winType || null,
-      turns: st.turnNumber || 0, fsRed: fsr, fsBlue: fsb,
-      firstBlood: stats.firstBlood || null, leadChanges: st.leadChanges || 0,
+      firstPlayer: firstPlayer, winner: st.result.skirmishWinner || null, winType: st.result.winType || null,
+      turns: st.flow.turnNumber || 0, fsRed: fsr, fsBlue: fsb,
+      firstBlood: stats.firstBlood || null, leadChanges: st.journal.leadChanges || 0,
       attacks: stats.attacks || 0, swaps: stats.swaps || 0, marches: stats.marches || 0, deploys: stats.deploys || 0,
       zeroKill: (kills.red + kills.blue === 0) ? 1 : 0,                            // no unit ever died
-      tiebreak: (st.winType === 'attrition' && fsr === fsb) ? 1 : 0,        // decided only by tie-goes-to-2nd
-      killTail: Math.max(0, (st.turnNumber || 0) - (st.lastKillTurn || 0)), // trailing kill-less turns
+      tiebreak: (st.result.winType === 'attrition' && fsr === fsb) ? 1 : 0,        // decided only by tie-goes-to-2nd
+      killTail: Math.max(0, (st.flow.turnNumber || 0) - (st.journal.lastKillTurn || 0)), // trailing kill-less turns
       hexesRed: hr, hexesBlue: hb, resEndRed: resRed, resEndBlue: resBlue
     };
   }
@@ -131,7 +131,7 @@ var WOA_SIM = (function () {
   }
 
   function balanceAdd(out, st, fp) {
-    if (st.phase !== 'skirmish-over') { out.unfinished++; return out; }
+    if (st.flow.phase !== 'skirmish-over') { out.unfinished++; return out; }
     var unitTotal = 0;
     Object.keys(ENG.UNITS).forEach(function (t) { unitTotal += ENG.UNITS[t].count || 0; });
     var f = skirmishFacts(st, fp);
@@ -144,13 +144,13 @@ var WOA_SIM = (function () {
     // WOA-039: Reserves-at-end conditions to HQ endings only (an HQ rush ends
     // before a side commits its reserves — the diagnostic reads meaningfully
     // only there; attrition endings run to deck-out and deploy almost everything).
-    if (st.winType === 'hq') {
+    if (st.result.winType === 'hq') {
       out.hqEndings++;
       out.reserveEndRedHQ += f.resEndRed / unitTotal;
       out.reserveEndBlueHQ += f.resEndBlue / unitTotal;
     }
-    var hqEnding = st.winType === 'hq';
-    (st.playLog || []).forEach(function (e) {
+    var hqEnding = st.result.winType === 'hq';
+    (st.journal.playLog || []).forEach(function (e) {
       var c = out.cards[e.id] || (out.cards[e.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0, hqPlays: 0, hqWins: 0 });
       c.plays++;
       if (e.p === w) c.wins++;
@@ -179,7 +179,7 @@ var WOA_SIM = (function () {
       var fp = balanceFP(g);
       var st = simSkirmish(map, balanceSeed(opts.seedBase, g), fp, opts.diffRed, opts.diffBlue, opts.decks);
       balanceAdd(out, st, fp);
-      if (st.phase === 'skirmish-over' && opts.onGame) opts.onGame(g + 1, n, st);
+      if (st.flow.phase === 'skirmish-over' && opts.onGame) opts.onGame(g + 1, n, st);
     }
     return out;
   }

@@ -44,7 +44,7 @@ test('schema', function () {
 /* ---------- insertRun / insertSkirmish round-trip with a REAL skirmish ---------- */
 test('round-trip (real simSkirmish state)', function () {
   st = SIM.simSkirmish(E.MAPS[0], 1234, 'red', 'normal', 'normal');
-  assert.ok(st.phase === 'skirmish-over', 'simSkirmish(MAPS[0], 1234) finished (phase ' + st.phase + ')');
+  assert.ok(st.flow.phase === 'skirmish-over', 'simSkirmish(MAPS[0], 1234) finished (phase ' + st.flow.phase + ')');
 
   runId = db.insertRun(h, {
     version: E.VERSION, kind: 'balance', redAi: 'normal', blueAi: 'normal',
@@ -62,54 +62,54 @@ test('round-trip (real simSkirmish state)', function () {
   assert.ok(b.map === E.MAPS[0].name, 'map name matches (' + b.map + ')');
   assert.ok(b.seed === 1234, 'extra.seed stored as the skirmish seed');
   assert.ok(b.first_player === 'red', 'first_player stored');
-  assert.ok(b.winner === st.skirmishWinner, 'winner matches st.skirmishWinner (' + b.winner + ')');
-  assert.ok(b.win_type === st.winType, 'win_type matches (' + b.win_type + ')');
-  assert.ok(b.turns === st.turnNumber, 'turns matches st.turnNumber (' + b.turns + ')');
+  assert.ok(b.winner === st.result.skirmishWinner, 'winner matches st.result.skirmishWinner (' + b.winner + ')');
+  assert.ok(b.win_type === st.result.winType, 'win_type matches (' + b.win_type + ')');
+  assert.ok(b.turns === st.flow.turnNumber, 'turns matches st.flow.turnNumber (' + b.turns + ')');
   assert.ok(b.fs_red === E.fieldScore(st, 'red') && b.fs_blue === E.fieldScore(st, 'blue'),
     'fs_red/fs_blue = fieldScore of surviving units (' + b.fs_red + '/' + b.fs_blue + ')');
-  assert.ok(b.kill_tail === Math.max(0, st.turnNumber - (st.lastKillTurn || 0)),
+  assert.ok(b.kill_tail === Math.max(0, st.flow.turnNumber - (st.journal.lastKillTurn || 0)),
     'kill_tail = turns - lastKillTurn (' + b.kill_tail + ')');
-  assert.ok(b.lead_changes === (st.leadChanges || 0), 'lead_changes matches (' + b.lead_changes + ')');
-  assert.ok(b.zero_kill === ((st.kills.red + st.kills.blue === 0) ? 1 : 0), 'zero_kill flag matches');
-  assert.ok(b.tiebreak === ((st.winType === 'attrition' && b.fs_red === b.fs_blue) ? 1 : 0), 'tiebreak flag matches');
-  assert.ok(b.attacks === (st.stats.attacks || 0) && b.swaps === (st.stats.swaps || 0) &&
-     b.marches === (st.stats.marches || 0) && b.deploys === (st.stats.deploys || 0),
-    'attacks/swaps/marches/deploys copied from st.stats');
-  assert.ok(b.first_blood === (st.stats.firstBlood || null), 'first_blood matches (' + b.first_blood + ')');
-  // WOA-016: reserve-held-at-end, computed independently here from st.reserves
+  assert.ok(b.lead_changes === (st.journal.leadChanges || 0), 'lead_changes matches (' + b.lead_changes + ')');
+  assert.ok(b.zero_kill === ((st.result.kills.red + st.result.kills.blue === 0) ? 1 : 0), 'zero_kill flag matches');
+  assert.ok(b.tiebreak === ((st.result.winType === 'attrition' && b.fs_red === b.fs_blue) ? 1 : 0), 'tiebreak flag matches');
+  assert.ok(b.attacks === (st.journal.stats.attacks || 0) && b.swaps === (st.journal.stats.swaps || 0) &&
+     b.marches === (st.journal.stats.marches || 0) && b.deploys === (st.journal.stats.deploys || 0),
+    'attacks/swaps/marches/deploys copied from st.journal.stats');
+  assert.ok(b.first_blood === (st.journal.stats.firstBlood || null), 'first_blood matches (' + b.first_blood + ')');
+  // WOA-016: reserve-held-at-end, computed independently here from st.pieces.reserves
   // to prove db.js's own reservesLeft() reads the same source of truth.
   function reservesLeft(sideReserves) {
     var n = 0; Object.keys(E.UNITS).forEach(function (t) { n += sideReserves[t] || 0; }); return n;
   }
-  assert.ok(b.res_end_red === reservesLeft(st.reserves.red) && b.res_end_blue === reservesLeft(st.reserves.blue),
-    'res_end_red/res_end_blue = pieces left in st.reserves at skirmish end (' + b.res_end_red + '/' + b.res_end_blue + ')');
+  assert.ok(b.res_end_red === reservesLeft(st.pieces.reserves.red) && b.res_end_blue === reservesLeft(st.pieces.reserves.blue),
+    'res_end_red/res_end_blue = pieces left in st.pieces.reserves at skirmish end (' + b.res_end_red + '/' + b.res_end_blue + ')');
   // WOA-038: hexes_red/hexes_blue = hex-ownership tally at skirmish end, computed
-  // independently here from st.units (the SAME read balanceAdd does live) to
+  // independently here from st.pieces.units (the SAME read balanceAdd does live) to
   // prove db.js's hexesHeld() reads the same source of truth.
   function hexTally(units) {
     var hr = 0, hb = 0;
     for (var hh in units) (units[hh].owner === 'red' ? hr++ : hb++);
     return { red: hr, blue: hb };
   }
-  hexesExpected = hexTally(st.units);
+  hexesExpected = hexTally(st.pieces.units);
   assert.ok(b.hexes_red === hexesExpected.red && b.hexes_blue === hexesExpected.blue,
-    'hexes_red/hexes_blue match a hex-ownership tally of st.units (' + b.hexes_red + '/' + b.hexes_blue + ')');
+    'hexes_red/hexes_blue match a hex-ownership tally of st.pieces.units (' + b.hexes_red + '/' + b.hexes_blue + ')');
 });
 
 /* ---------- card_plays ---------- */
 test('card_plays', function () {
   var plays = h.db.prepare('SELECT * FROM card_plays WHERE skirmish_id = ? ORDER BY id').all(skirmishId);
-  assert.ok(plays.length === st.playLog.length,
-    'one card_plays row per playLog entry (' + plays.length + ' = ' + st.playLog.length + ')');
+  assert.ok(plays.length === st.journal.playLog.length,
+    'one card_plays row per playLog entry (' + plays.length + ' = ' + st.journal.playLog.length + ')');
   var allMatch = plays.every(function (r, i) {
-    var e = st.playLog[i];
+    var e = st.journal.playLog[i];
     return r.side === e.p && r.card_id === e.id && r.mode === e.mode &&
       r.turn === e.turn && r.seen === e.seen && r.noop === (e.noop ? 1 : 0) &&
-      r.won === (e.p === st.skirmishWinner ? 1 : 0);
+      r.won === (e.p === st.result.skirmishWinner ? 1 : 0);
   });
   assert.ok(allMatch, 'every row matches its playLog entry (side/card/mode/turn/seen/noop/won)');
   var wonRows = h.db.prepare('SELECT COUNT(*) c FROM card_plays WHERE skirmish_id = ? AND won = 1').get(skirmishId).c;
-  var wonExpected = st.playLog.filter(function (e) { return e.p === st.skirmishWinner; }).length;
+  var wonExpected = st.journal.playLog.filter(function (e) { return e.p === st.result.skirmishWinner; }).length;
   assert.ok(wonRows === wonExpected, 'won=1 count equals winner-side plays (' + wonRows + ')');
 });
 
@@ -118,20 +118,20 @@ test('timeline', function () {
   // simSkirmish states carry fsTimeline since the V1 seams commit — a real skirmish
   // should have produced per-turn rows above.
   var tl0 = h.db.prepare('SELECT COUNT(*) c FROM timeline WHERE skirmish_id = ?').get(skirmishId).c;
-  assert.ok(tl0 === (st.fsTimeline ? st.fsTimeline.length : 0) && tl0 > 0,
+  assert.ok(tl0 === (st.journal.fsTimeline ? st.journal.fsTimeline.length : 0) && tl0 > 0,
     'a real skirmish lands its per-turn timeline (' + tl0 + ' rows)');
-  var noTl = JSON.parse(JSON.stringify(st)); noTl.battle = st.battle; delete noTl.fsTimeline;
+  var noTl = JSON.parse(JSON.stringify(st)); noTl.battle = st.battle; delete noTl.journal.fsTimeline;
   var skirmishId0 = db.insertSkirmish(h, runId, noTl, 'red', { seed: 1234 });
   var tlAbsent = h.db.prepare('SELECT COUNT(*) c FROM timeline WHERE skirmish_id = ?').get(skirmishId0).c;
   assert.ok(tlAbsent === 0, 'a state without fsTimeline (pre-V1 save) -> zero rows, tolerated silently');
 
-  st.fsTimeline = [[2, 2], [4, 2], [4, 5]]; // synthetic, to pin the column mapping
+  st.journal.fsTimeline = [[2, 2], [4, 2], [4, 5]]; // synthetic, to pin the column mapping
   var skirmishId2 = db.insertSkirmish(h, runId, st, 'blue', { seed: 1234 });
   var tl = h.db.prepare('SELECT turn, fs_red, fs_blue FROM timeline WHERE skirmish_id = ? ORDER BY turn').all(skirmishId2);
   assert.ok(tl.length === 3, 'synthetic 3-entry fsTimeline -> 3 rows (got ' + tl.length + ')');
   assert.ok(tl[0].turn === 1 && tl[2].turn === 3, 'timeline turns are 1-based (index 0 = turn 1)');
   assert.ok(tl[1].fs_red === 4 && tl[1].fs_blue === 2 && tl[2].fs_blue === 5, 'fs values land in the right columns');
-  delete st.fsTimeline;
+  delete st.journal.fsTimeline;
 });
 
 /* ---------- unfinished states are rejected (transaction leaves no debris) ---------- */
@@ -150,7 +150,7 @@ test('GROUP BY via the handle', function () {
   var g = h.db.prepare('SELECT map, COUNT(*) n, AVG(turns) avg_turns FROM skirmishes GROUP BY map').all();
   assert.ok(g.length === 1 && g[0].map === E.MAPS[0].name, 'one map group (' + (g[0] && g[0].map) + ')');
   assert.ok(g[0].n === 3, 'all three skirmishes counted (n=' + g[0].n + ')');
-  assert.ok(g[0].avg_turns === st.turnNumber, 'AVG(turns) is sane (' + g[0].avg_turns + ')');
+  assert.ok(g[0].avg_turns === st.flow.turnNumber, 'AVG(turns) is sane (' + g[0].avg_turns + ')');
 });
 
 /* ---------- listRuns (WOA-034: the dashboard header's run-A/B pickers) ---------- */
@@ -179,7 +179,7 @@ test('listSkirmishes (WOA-035)', function () {
   });
   assert.ok(bRow.hexesRed === hexesExpected.red && bRow.hexesBlue === hexesExpected.blue,
     'listSkirmishes hexesRed/hexesBlue round-trip the same tally (' + bRow.hexesRed + '/' + bRow.hexesBlue + ')');
-  assert.ok(bRow.map === E.MAPS[0].name && bRow.firstPlayer === 'red' && bRow.winner === st.skirmishWinner,
+  assert.ok(bRow.map === E.MAPS[0].name && bRow.firstPlayer === 'red' && bRow.winner === st.result.skirmishWinner,
     'listSkirmishes row matches the round-trip skirmish inserted above (map/firstPlayer/winner)');
   assert.ok(typeof bRow.trace === 'string' && JSON.parse(bRow.trace).map === E.MAPS[0].name,
     'trace column is still a raw JSON string — envelopeFromRow parses it client-side, not db.js');
@@ -236,10 +236,10 @@ test('run identity + trace (WOA-032)', function () {
   ['v', 'map', 'seed', 'fp', 'winner', 'winType', 'turns', 'trace', 'units'].forEach(function (k) {
     assert.ok(k in trace, 'trace envelope has "' + k + '" (SPEC §4 shape)');
   });
-  assert.ok(Array.isArray(trace.trace) && trace.trace.length === st2.playLog.length,
-    'trace.trace = st.playLog verbatim (' + trace.trace.length + ' entries)');
-  assert.ok(JSON.stringify(trace.units) === JSON.stringify(st2.unitMetrics),
-    'trace.units = st.unitMetrics verbatim');
+  assert.ok(Array.isArray(trace.trace) && trace.trace.length === st2.journal.playLog.length,
+    'trace.trace = st.journal.playLog verbatim (' + trace.trace.length + ' entries)');
+  assert.ok(JSON.stringify(trace.units) === JSON.stringify(st2.journal.unitMetrics),
+    'trace.units = st.journal.unitMetrics verbatim');
   assert.ok(Object.keys(trace.units).indexOf('infantry') >= 0,
     'unitMetrics keyed by FULL unit-type name "infantry" (WOA-031 feed-forward), not "inf" shorthand');
 });
@@ -247,7 +247,7 @@ test('run identity + trace (WOA-032)', function () {
 /* ---------- hexes_red/hexes_blue: known-units column mapping (WOA-038) ---------- */
 test('hex-ownership tally (WOA-038)', function () {
   var stHex = JSON.parse(JSON.stringify(st2)); stHex.battle = st2.battle;
-  stHex.units = { // a deliberately uneven, hand-known split: 3 red hexes, 1 blue hex
+  stHex.pieces.units = { // a deliberately uneven, hand-known split: 3 red hexes, 1 blue hex
     '0,0': { type: 'infantry', owner: 'red' },
     '1,0': { type: 'infantry', owner: 'red' },
     '2,0': { type: 'cavalry', owner: 'red' },
@@ -258,7 +258,7 @@ test('hex-ownership tally (WOA-038)', function () {
   assert.ok(bHex.hexes_red === 3 && bHex.hexes_blue === 1,
     'hexes_red/hexes_blue = 3/1 for a hand-built 4-unit board (' + bHex.hexes_red + '/' + bHex.hexes_blue + ')');
 
-  var stEmpty = JSON.parse(JSON.stringify(st2)); stEmpty.battle = st2.battle; stEmpty.units = {};
+  var stEmpty = JSON.parse(JSON.stringify(st2)); stEmpty.battle = st2.battle; stEmpty.pieces.units = {};
   var skirmishIdEmpty = db.insertSkirmish(h2, runIdA, stEmpty, 'red', { seed: 9002 });
   var bEmpty = h2.db.prepare('SELECT hexes_red, hexes_blue FROM skirmishes WHERE id = ?').get(skirmishIdEmpty);
   assert.ok(bEmpty.hexes_red === 0 && bEmpty.hexes_blue === 0,
@@ -292,7 +292,7 @@ test('slimSkirmishState (WOA-041)', function () {
   assert.ok(driftCols.length === 0,
     'a JSON-round-tripped slim state lands an identical skirmishes row (drift: ' + (driftCols.join(',') || 'none') + ')');
   var cpSlim = h2.db.prepare('SELECT COUNT(*) c FROM card_plays WHERE skirmish_id = ?').get(skirmishIdSlim).c;
-  assert.ok(cpSlim === st2.playLog.length, 'slim state lands one card_plays row per playLog entry (' + cpSlim + ')');
+  assert.ok(cpSlim === st2.journal.playLog.length, 'slim state lands one card_plays row per playLog entry (' + cpSlim + ')');
   var tlFull = h2.db.prepare('SELECT COUNT(*) c FROM timeline WHERE skirmish_id = ?').get(skirmishIdA).c;
   var tlSlim = h2.db.prepare('SELECT COUNT(*) c FROM timeline WHERE skirmish_id = ?').get(skirmishIdSlim).c;
   assert.ok(tlSlim === tlFull && tlSlim > 0, 'slim state lands the same timeline rows (' + tlSlim + ')');

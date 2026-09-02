@@ -347,7 +347,7 @@ var WOA_REPORT = (function () {
      (the same field scores the report's FSdiff column and woa.db store), which
      the play/kill stream alone can't reconstruct (a kill's victim worth isn't in
      the trace) — so it reads env.fs, the per-turn [red,blue] field-score
-     timeline (live state: st.fsTimeline; DB: the `timeline` table, joined
+     timeline (live state: st.journal.fsTimeline; DB: the `timeline` table, joined
      in by GET /api/skirmishes and folded into the row by envelopeFromRow).
      Returns null when fs is absent (the caller greys it — no
      fabricated magnitude). { track:|r-b|/turn, signed:r-b/turn, peak, final }. */

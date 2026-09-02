@@ -17,10 +17,10 @@ test('noOpener cards never in the opening hand (e.g. Airdrop)', () => {
     var m = E.newBattle({ seed: seed, firstPlayer: 'red' });
     var st = E.newSkirmish(m);
     noOpenerIds.forEach(function (id) {
-      if (st.hands.red.indexOf(id) >= 0) bad++;
-      if (st.decks.red.indexOf(id) < 0) bad++;                  // returned to the deck
+      if (st.cards.hands.red.indexOf(id) >= 0) bad++;
+      if (st.cards.decks.red.indexOf(id) < 0) bad++;                  // returned to the deck
     });
-    if (st.decks.red.length + st.hands.red.length !== deckTotal) bad++; // nothing lost
+    if (st.cards.decks.red.length + st.cards.hands.red.length !== deckTotal) bad++; // nothing lost
   }
   assert.ok(bad === 0, noOpenerIds.length + ' noOpener card(s) (' + noOpenerIds.join(', ') +
     ') excluded from 40 opening hands and returned to the deck (' + bad + ' problems)');
@@ -30,29 +30,29 @@ test('noOpener cards never in the opening hand (e.g. Airdrop)', () => {
 test('house rule: play any card as basic attack/reposition', () => {
 (function () {
   var st = testSkirmish(21);
-  st.units['0,0'] = { type: 'infantry', owner: 'red' };
-  st.units['0,1'] = { type: 'cavalry', owner: 'blue' };
-  var cid = st.hands.red.filter(function (c) { return c !== 'attack_plus1'; })[0];
+  st.pieces.units['0,0'] = { type: 'infantry', owner: 'red' };
+  st.pieces.units['0,1'] = { type: 'cavalry', owner: 'blue' };
+  var cid = st.cards.hands.red.filter(function (c) { return c !== 'attack_plus1'; })[0];
   E.playCard(st, cid, 'attack');
   var o = E.stepOptions(st);
   assert.ok(o.type === 'attack' && (o.mod || 0) === 0, 'card resolves as plain attack step');
   E.applyStep(st, { from: '0,0', to: '0,1' });
-  assert.ok(st.removed.red.indexOf(cid) >= 0, 'card still removed from game');
+  assert.ok(st.cards.removed.red.indexOf(cid) >= 0, 'card still removed from game');
   // reposition mode
   var st2 = testSkirmish(22);
-  st2.units['0,0'] = { type: 'infantry', owner: 'red' };
-  var cid2 = st2.hands.red[0];
+  st2.pieces.units['0,0'] = { type: 'infantry', owner: 'red' };
+  var cid2 = st2.cards.hands.red[0];
   E.playCard(st2, cid2, 'reposition');
   assert.ok(E.stepOptions(st2).type === 'reposition', 'card resolves as plain reposition step');
   // reposition is refused while a basic attack is possible
   var st3 = testSkirmish(23);
-  st3.units['0,0'] = { type: 'infantry', owner: 'red' };
-  st3.units['0,1'] = { type: 'infantry', owner: 'blue' }; // a basic attack IS available
-  var cid3 = st3.hands.red[0];
+  st3.pieces.units['0,0'] = { type: 'infantry', owner: 'red' };
+  st3.pieces.units['0,1'] = { type: 'infantry', owner: 'blue' }; // a basic attack IS available
+  var cid3 = st3.cards.hands.red[0];
   var threw = false;
   try { E.playCard(st3, cid3, 'reposition'); } catch (e) { threw = true; }
   assert.ok(threw, 'reposition refused while a basic attack is available');
-  assert.ok(st3.phase === 'choose-card' && st3.hands.red.indexOf(cid3) >= 0, 'the refused card stays in hand');
+  assert.ok(st3.flow.phase === 'choose-card' && st3.cards.hands.red.indexOf(cid3) >= 0, 'the refused card stays in hand');
 })();
 });
 
@@ -60,8 +60,8 @@ test('at least one step of a card must be played', () => {
 (function () {
   // Red inf at 0,0 can only strike blue inf at 0,1 (both far from either HQ).
   var st = testSkirmish(31);
-  st.units = { '0,0': { type: 'infantry', owner: 'red' }, '0,1': { type: 'infantry', owner: 'blue' } };
-  st.hands.red = ['mass_assault']; // two attack steps
+  st.pieces.units = { '0,0': { type: 'infantry', owner: 'red' }, '0,1': { type: 'infantry', owner: 'blue' } };
+  st.cards.hands.red = ['mass_assault']; // two attack steps
   E.playCard(st, 'mass_assault');
   assert.ok(!E.mustPlayStep(st), 'step 1 is skippable — a later step can still act');
   E.applyStep(st, { skip: true }); // allowed: attack #2 remains
@@ -70,23 +70,23 @@ test('at least one step of a card must be played', () => {
   try { E.applyStep(st, { skip: true }); } catch (e) { threw = true; }
   assert.ok(threw, 'engine refuses to skip the whole card');
   E.applyStep(st, { from: '0,0', to: '0,1' }); // playing an action satisfies the rule
-  assert.ok(st.phase !== 'step', 'once an action is played the card resolves');
+  assert.ok(st.flow.phase !== 'step', 'once an action is played the card resolves');
 
   // Once one action is done, remaining steps ARE skippable.
   var st2 = testSkirmish(32);
-  st2.units = { '0,0': { type: 'infantry', owner: 'red' } }; // lone unit, room to march, no enemies
-  st2.hands.red = ['forced_march']; // three reposition steps
+  st2.pieces.units = { '0,0': { type: 'infantry', owner: 'red' } }; // lone unit, room to march, no enemies
+  st2.cards.hands.red = ['forced_march']; // three reposition steps
   E.playCard(st2, 'forced_march');
   E.applyStep(st2, { from: '0,0', to: E.listRepositions(st2, 'red').moves[0].to });
-  assert.ok(st2.phase !== 'step' || !E.mustPlayStep(st2), 'after acting, later steps are skippable');
+  assert.ok(st2.flow.phase !== 'step' || !E.mustPlayStep(st2), 'after acting, later steps are skippable');
 
   // A card that genuinely cannot act anywhere still spends the turn (no-op).
   var st3 = testSkirmish(33);
-  st3.units = {}; // no units -> no barrage targets, no attacks
-  st3.hands.red = ['naval_barrage']; // [barrage, attack]
+  st3.pieces.units = {}; // no units -> no barrage targets, no attacks
+  st3.cards.hands.red = ['naval_barrage']; // [barrage, attack]
   E.playCard(st3, 'naval_barrage');
-  assert.ok(st3.phase === 'choose-card' && st3.current === 'blue', 'a truly dead card still ends the turn');
-  var le = st3.playLog[st3.playLog.length - 1];
+  assert.ok(st3.flow.phase === 'choose-card' && st3.flow.current === 'blue', 'a truly dead card still ends the turn');
+  var le = st3.journal.playLog[st3.journal.playLog.length - 1];
   assert.ok(le && le.noop, 'the dead card is logged as a no-op');
 })();
 });
@@ -196,23 +196,23 @@ test('deploy step budget vs stock (no deploy fallback, oversubscription = broken
 test('turn flow / first hand', () => {
 (function () {
   var st = testSkirmish(11);
-  assert.ok(st.hands.red.length === 4, 'first hand has 4 cards');
-  assert.ok(st.hands.red.indexOf('deploy_inf_start') >= 0, 'starting card guaranteed in first hand');
+  assert.ok(st.cards.hands.red.length === 4, 'first hand has 4 cards');
+  assert.ok(st.cards.hands.red.indexOf('deploy_inf_start') >= 0, 'starting card guaranteed in first hand');
   E.playCard(st, 'deploy_inf_start');
   var o = E.stepOptions(st);
   assert.ok(o.type === 'deploy' && o.targets.length === 3, 'starting deploy offers 3 hexes');
   E.applyStep(st, { hex: o.targets[0] });
-  assert.ok(st.current === 'blue' && st.hands.blue.length === 4, 'turn passed to blue with 4 cards');
-  assert.ok(st.removed.red.length === 1 && st.discards.red.length === 3, 'played card removed, rest discarded');
+  assert.ok(st.flow.current === 'blue' && st.cards.hands.blue.length === 4, 'turn passed to blue with 4 cards');
+  assert.ok(st.cards.removed.red.length === 1 && st.cards.discards.red.length === 3, 'played card removed, rest discarded');
 })();
 });
 
 test('play metrics (seen / playLog for the card report)', () => {
 (function () {
   var st = testSkirmish(101);
-  assert.ok(Object.keys(st.seen.red).length >= 3, 'opening hand counted as seen (' + Object.keys(st.seen.red).length + ' distinct cards)');
+  assert.ok(Object.keys(st.cards.seen.red).length >= 3, 'opening hand counted as seen (' + Object.keys(st.cards.seen.red).length + ' distinct cards)');
   E.playCard(st, 'deploy_inf_start', 'normal');
-  var e = st.playLog[st.playLog.length - 1];
+  var e = st.journal.playLog[st.journal.playLog.length - 1];
   assert.ok(e.id === 'deploy_inf_start' && e.p === 'red' && e.mode === 'normal' && e.seen === 1,
     'playLog records id/mode/first-sight: ' + JSON.stringify(e));
   var r = SIM.balanceMap(E.MAPS[4], 2, { seedBase: 5 });
@@ -232,7 +232,7 @@ test('WOA-055 asymmetric deck binding', () => {
   }
   function deckSigFromState(st, p) {
     var counts = {};
-    st.decks[p].forEach(function (id) { counts[id] = (counts[id] || 0) + 1; });
+    st.cards.decks[p].forEach(function (id) { counts[id] = (counts[id] || 0) + 1; });
     return Object.keys(counts).map(function (id) { return id + ':' + counts[id]; }).sort().join('|');
   }
 
@@ -255,12 +255,12 @@ test('WOA-055 asymmetric deck binding', () => {
   if (!two) { assert.ok(true, '(skipped: need two decks with distinct composition; have ' + decks.length + ')'); return; }
 
   var st = SIM.simSkirmish(E.MAPS[0], 4242, 'red', 'normal', 'normal', { red: two[0].id, blue: two[1].id });
-  assert.ok(st.phase === 'skirmish-over', 'asymmetric skirmish (' + two[0].id + ' vs ' + two[1].id + ') finishes');
+  assert.ok(st.flow.phase === 'skirmish-over', 'asymmetric skirmish (' + two[0].id + ' vs ' + two[1].id + ') finishes');
   // The deck each side was DEALT (built + hand + discards) must match its own deck.
   function fullSideSig(st, p) {
     var counts = {};
-    [].concat(st.decks[p], st.hands[p], st.discards[p]).forEach(function (id) {
-      var c = st.sideDecks[p].byId[id];
+    [].concat(st.cards.decks[p], st.cards.hands[p], st.cards.discards[p]).forEach(function (id) {
+      var c = st.cards.sideDecks[p].byId[id];
       if (c && c.starting) return;                 // the seeded starting card isn't in the shuffled deck
       counts[id] = (counts[id] || 0) + 1;
     });
@@ -274,8 +274,8 @@ test('WOA-055 asymmetric deck binding', () => {
   // red drew its opening hand, so reconstruct from deck+hand+discards (minus the starting card).
   assert.ok(fullSideSig(fresh, 'red') === sig(two[0].cards),
     'red is dealt its OWN deck (' + two[0].id + ')');
-  assert.ok(fresh.sideDecks.red.starting === E.resolveDeck(two[0].id).starting &&
-     fresh.sideDecks.blue.starting === E.resolveDeck(two[1].id).starting,
+  assert.ok(fresh.cards.sideDecks.red.starting === E.resolveDeck(two[0].id).starting &&
+     fresh.cards.sideDecks.blue.starting === E.resolveDeck(two[1].id).starting,
     'each side gets its own deck\'s starting card');
 
   // Bad deck name fails loud.
@@ -292,29 +292,29 @@ test('noAdvance attacks (Ordered Withdraw holds its ground)', () => {
     'Ordered Withdraw carries tieSpare + noAdvance');
   // outright victory: cavalry (atk 3) vs lone infantry (def 1) — defender dies, attacker stays put
   var st = testSkirmish(70);
-  st.units['0,0'] = { type: 'cavalry', owner: 'red' };
-  st.units['1,0'] = { type: 'infantry', owner: 'blue' };
-  st.hands.red = ['ordered_withdraw'];
+  st.pieces.units['0,0'] = { type: 'cavalry', owner: 'red' };
+  st.pieces.units['1,0'] = { type: 'infantry', owner: 'blue' };
+  st.cards.hands.red = ['ordered_withdraw'];
   E.playCard(st, 'ordered_withdraw');
   E.applyStep(st, { from: '0,0', to: '1,0' });
-  assert.ok(!st.units['1,0'], 'defender destroyed on a clear win');
-  assert.ok(st.units['0,0'] && st.units['0,0'].type === 'cavalry', 'attacker did NOT take the hex');
-  assert.ok(st.kills.red === 1, 'kill scored');
+  assert.ok(!st.pieces.units['1,0'], 'defender destroyed on a clear win');
+  assert.ok(st.pieces.units['0,0'] && st.pieces.units['0,0'].type === 'cavalry', 'attacker did NOT take the hex');
+  assert.ok(st.result.kills.red === 1, 'kill scored');
   // tie: infantry vs infantry (1 vs 1) — defender dies, attacker survives in place
   var st2 = testSkirmish(71);
-  st2.units['0,0'] = { type: 'infantry', owner: 'red' };
-  st2.units['1,0'] = { type: 'infantry', owner: 'blue' };
-  st2.hands.red = ['ordered_withdraw'];
+  st2.pieces.units['0,0'] = { type: 'infantry', owner: 'red' };
+  st2.pieces.units['1,0'] = { type: 'infantry', owner: 'blue' };
+  st2.cards.hands.red = ['ordered_withdraw'];
   E.playCard(st2, 'ordered_withdraw');
   E.applyStep(st2, { from: '0,0', to: '1,0' });
-  assert.ok(!st2.units['1,0'] && st2.units['0,0'], 'tie: defender destroyed, attacker survives in place');
+  assert.ok(!st2.pieces.units['1,0'] && st2.pieces.units['0,0'], 'tie: defender destroyed, attacker survives in place');
   // HQ still falls to a noAdvance attack (capture does not require entering)
   var st3 = testSkirmish(72);
-  st3.units['-2,2'] = { type: 'cavalry', owner: 'red' }; // adjacent to blue HQ at -3,2
-  st3.hands.red = ['ordered_withdraw'];
+  st3.pieces.units['-2,2'] = { type: 'cavalry', owner: 'red' }; // adjacent to blue HQ at -3,2
+  st3.cards.hands.red = ['ordered_withdraw'];
   E.playCard(st3, 'ordered_withdraw');
   E.applyStep(st3, { from: '-2,2', to: '-3,2' });
-  assert.ok(st3.phase === 'skirmish-over' && st3.skirmishWinner === 'red' && st3.winType === 'hq',
+  assert.ok(st3.flow.phase === 'skirmish-over' && st3.result.skirmishWinner === 'red' && st3.result.winType === 'hq',
     'noAdvance attack still captures the HQ');
 })();
 });
@@ -326,30 +326,30 @@ test('Barrage targets ANY trench or forest', () => {
     pieces: [{ t: 'F', edges: [[-2, 2, 0], [-2, 2, 1]] }] };
   var m = E.newBattle({ seed: 31, firstPlayer: 'red', maps: [BARMAP] });
   var st = E.newSkirmish(m);
-  st.trenches['-3,1'] = [{ dirs: [0, 1], owner: 'blue' }];
+  st.pieces.trenches['-3,1'] = [{ dirs: [0, 1], owner: 'blue' }];
   var b = E.listBarrageTargets(st, 'red');
   assert.ok(b.forestPieces.length === 1, 'forest far outside red lines is targetable (got ' + b.forestPieces.length + ')');
   assert.ok(b.trenches.length === 1 && b.trenches[0].hex === '-3,1', 'trench far outside red lines is targetable');
-  st.hands.red = ['naval_barrage'];
+  st.cards.hands.red = ['naval_barrage'];
   E.playCard(st, 'naval_barrage');
   E.applyStep(st, { trenchHex: '-3,1', trenchIdx: 0 });
-  assert.ok(!st.trenches['-3,1'], 'barrage destroys the distant trench');
+  assert.ok(!st.pieces.trenches['-3,1'], 'barrage destroys the distant trench');
 })();
 });
 
 test('no-op plays are logged and marked (skipped-turn report)', () => {
 (function () {
   var st = testSkirmish(77);
-  st.hands.red = ['attack_plus1']; // no units on the board: the attack cannot resolve
+  st.cards.hands.red = ['attack_plus1']; // no units on the board: the attack cannot resolve
   E.playCard(st, 'attack_plus1');
-  assert.ok(st.current === 'blue', 'impossible card ends the turn immediately');
-  var e = st.playLog[st.playLog.length - 1];
+  assert.ok(st.flow.current === 'blue', 'impossible card ends the turn immediately');
+  var e = st.journal.playLog[st.journal.playLog.length - 1];
   assert.ok(e.id === 'attack_plus1' && e.noop === true, 'playLog entry marked noop: ' + JSON.stringify(e));
-  assert.ok(st.log.some(function (l) { return l.msg.indexOf('no opening') >= 0; }), 'journal says the card was spent to no effect');
+  assert.ok(st.journal.log.some(function (l) { return l.msg.indexOf('no opening') >= 0; }), 'journal says the card was spent to no effect');
   var st2 = testSkirmish(78);
   E.playCard(st2, 'deploy_inf_start');
   E.applyStep(st2, { hex: E.stepOptions(st2).targets ? E.stepOptions(st2).targets[0] : null });
-  assert.ok(!st2.playLog[st2.playLog.length - 1].noop, 'a play that acted is NOT marked noop');
+  assert.ok(!st2.journal.playLog[st2.journal.playLog.length - 1].noop, 'a play that acted is NOT marked noop');
   var r = SIM.balanceMap(E.MAPS[4], 2, { seedBase: 5 });
   var anyCard = Object.keys(r.cards)[0];
   assert.ok('noop' in r.cards[anyCard], 'balanceMap aggregates noop per card');

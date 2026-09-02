@@ -48,14 +48,14 @@ function startLocal(mode, mapsOverride){
 
 /* ---- turn snapshot / reset (house rule: reset to start of your turn mid-card) ---- */
 function ensureSnapshot(){
-  var st = APP.st;
-  if (!st || st.phase !== 'choose-card') return;
-  if (APP.snap && APP.snap.turn === st.turnNumber) return;
-  APP.snap = { turn: st.turnNumber, data: JSON.stringify(st) };
+  var st = APP.st, v = E.view(st);
+  if (!st || v.phase !== 'choose-card') return;
+  if (APP.snap && APP.snap.turn === v.turnNumber) return;
+  APP.snap = { turn: v.turnNumber, data: JSON.stringify(st) };
 }
 function canReset(){
-  var st = APP.st;
-  return st && st.phase === 'step' && APP.snap && APP.snap.turn === st.turnNumber && inputLive();
+  var st = APP.st, v = E.view(st);
+  return st && v.phase === 'step' && APP.snap && APP.snap.turn === v.turnNumber && inputLive();
 }
 function resetTurn(){
   if (!canReset()) return;
@@ -108,16 +108,16 @@ function cardAbbr(c){
   return (w.length > 1 ? w[0].charAt(0) + w[1].charAt(0) : w[0].slice(0, 2)); // custom cards: initials
 }
 function renderMat(p){
-  var st = APP.st;
+  var st = APP.st, v = E.view(st);
   var el = p==='red' ? $('matRed') : $('matBlue');
-  var r = st.reserves[p];
+  var r = v.reserves(p);
   var col = p==='red' ? 'var(--red)' : 'var(--blue)';
   var colD = p==='red' ? 'var(--red-dark)' : 'var(--blue-dark)';
   var totals = E.PIECE_TOTALS;
   var onField = { trench:0 };
   Object.keys(totals).forEach(function(t){ onField[t] = onField[t] || 0; });
-  for (var h in st.units) if (st.units[h].owner===p) onField[st.units[h].type]++;
-  for (var th in st.trenches) st.trenches[th].forEach(function(t){ if (t.owner===p) onField.trench++; });
+  for (var h in v.units) if (v.units[h].owner===p) onField[v.units[h].type]++;
+  for (var th in v.trenches) v.trenches[th].forEach(function(t){ if (t.owner===p) onField.trench++; });
 
   // one slot per physical piece: solid = still on the mat, dashed = on the
   // field, X = destroyed — same at-a-glance read as the wooden player mat
@@ -139,7 +139,7 @@ function renderMat(p){
 
   var spent = '';
   E.CARDS.forEach(function(c){
-    var n = st.removed[p].filter(function(id){ return id===c.id; }).length;
+    var n = v.removed(p).filter(function(id){ return id===c.id; }).length;
     for (var i=0;i<c.count;i++){
       var gone = i < n;
       spent += '<span class="scard'+(gone?' gone':'')+'" title="'+c.name+(gone?' — spent, gone from the game':'')+'">'+cardAbbr(c)+'</span>';
@@ -160,10 +160,10 @@ function renderMat(p){
   el.querySelector('.spent').onclick = showCards;
 }
 function renderTop(){
-  var st = APP.st, m = st.battle;
+  var st = APP.st, v = E.view(st), m = v.battle;
   var youSide = (APP.mode==='ai' || APP.mode==='net') ? APP.mySide : null;
-  var bn = 'Skirmish ' + (st.phase==='skirmish-over' ? m.skirmishIndex : m.skirmishIndex+1);
-  $('skirmishTitle').innerHTML = bn + ' &middot; <i>&ldquo;'+st.mapName+'&rdquo;</i>' +
+  var bn = 'Skirmish ' + (v.phase==='skirmish-over' ? m.skirmishIndex : m.skirmishIndex+1);
+  $('skirmishTitle').innerHTML = bn + ' &middot; <i>&ldquo;'+v.mapName+'&rdquo;</i>' +
     (youSide ? '<span class="youchip '+youSide+'">YOU &middot; '+youSide.toUpperCase()+'</span>' : '');
   function pips(el, n){
     el.innerHTML='';
@@ -178,7 +178,7 @@ function renderTop(){
   // field-score tug-bar: solid = fieldScore now; hatched = ceiling if every reserve
   // deploys (fieldScore + reserves x worth); the seam marks the projected front
   function ceiling(side){
-    var cur = E.fieldScore(st, side), extra = 0, res = st.reserves[side];
+    var cur = E.fieldScore(st, side), extra = 0, res = v.reserves(side);
     Object.keys(E.UNITS).forEach(function(t){ extra += (res[t]||0) * E.UNITS[t].worth; });
     return { cur: cur, max: cur + extra };
   }
@@ -205,22 +205,22 @@ function renderTop(){
     rc.title = 'The other player joins with this code';
   } else rc.style.display = 'none';
   var b = $('turnbadge');
-  b.textContent = capName(st.current) + (APP.mode!=='hotseat' && st.current===APP.mySide ? ' — you' : '');
-  b.className = st.current;
+  b.textContent = capName(v.current) + (APP.mode!=='hotseat' && v.current===APP.mySide ? ' — you' : '');
+  b.className = v.current;
   // conceding is a human act; the AI decides it for itself (and watch mode has no human side)
-  $('btnConcede').style.display = (st.phase !== 'skirmish-over' && APP.mode !== 'watch') ? '' : 'none';
+  $('btnConcede').style.display = (v.phase !== 'skirmish-over' && APP.mode !== 'watch') ? '' : 'none';
 }
 
 function renderHand(){
-  var st = APP.st, el = $('hand');
+  var st = APP.st, v = E.view(st), el = $('hand');
   el.innerHTML = '';
   var side = viewSide();
   var hideCards = APP.mode==='hotseat' && APP.ui.handoffPending;
-  var hand = st.hands[side];
-  var live = inputLive() && st.phase==='choose-card';
+  var hand = v.hand(side);
+  var live = inputLive() && v.phase==='choose-card';
   // deal-in flourish only the first time this turn's hand is shown
-  var dealKey = st.turnNumber + '|' + side + '|' + st.battle.skirmishIndex;
-  var deal = APP.ui.dealtKey !== dealKey && st.phase==='choose-card';
+  var dealKey = v.turnNumber + '|' + side + '|' + v.battle.skirmishIndex;
+  var deal = APP.ui.dealtKey !== dealKey && v.phase==='choose-card';
   if (deal) APP.ui.dealtKey = dealKey;
   hand.forEach(function(cid, i){
     var c = E.CARD_BY_ID[cid];
@@ -236,25 +236,25 @@ function renderHand(){
     if (live) d.onclick = function(){ playCardUI(cid); };
     el.appendChild(d);
   });
-  if (hand.length===0 && st.phase!=='skirmish-over'){
-    el.innerHTML = '<div class="small" style="color:var(--parch);">'+(st.current===side ? '' : 'Waiting for '+capName(st.current)+'…')+'</div>';
+  if (hand.length===0 && v.phase!=='skirmish-over'){
+    el.innerHTML = '<div class="small" style="color:var(--parch);">'+(v.current===side ? '' : 'Waiting for '+capName(v.current)+'…')+'</div>';
   }
 }
 function renderPrompt(){
-  var st = APP.st, el = $('promptbar');
+  var st = APP.st, v = E.view(st), el = $('promptbar');
   el.innerHTML = '';
-  if (st.phase === 'skirmish-over') return;
-  var who = capName(st.current);
+  if (v.phase === 'skirmish-over') return;
+  var who = capName(v.current);
   if (!inputLive()){
-    el.innerHTML = (APP.mode==='ai' && st.current!==APP.mySide)
+    el.innerHTML = (APP.mode==='ai' && v.current!==APP.mySide)
       ? '<b>'+who+'</b> (the enemy general) is thinking…'
       : APP.mode==='watch'
         ? 'General <b>'+who+'</b> surveys the field… <span class="small" style="color:#bbb;">(you are spectating)</span>'
         : 'Waiting for <b>'+who+'</b>…';
     return;
   }
-  if (st.phase === 'choose-card'){
-    var adv = E.concedeAdvised(st, st.current);
+  if (v.phase === 'choose-card'){
+    var adv = E.concedeAdvised(st, v.current);
     el.innerHTML = '<b>'+who+'</b>: choose a card to play. <span class="small" style="color:#bbb;">(played cards are gone for good)</span>' +
       (adv ? ' <span class="small" style="color:#e3c06a;">The cause looks lost — <b>Concede</b> (top right) keeps the campaign moving.</span>' : '');
     return;
@@ -269,7 +269,7 @@ function renderPrompt(){
   else if (o.type==='attack') msg = APP.ui.sel ? 'Choose a target' : 'Choose an attacker' + (o.mod ? ' <b>('+(o.mod>0?'+':'')+o.mod+' support)</b>':'') + (o.tieSpare?' <b>(tie spares your unit)</b>':'');
   else if (o.type==='reposition') msg = APP.ui.sel ? 'Move to a gold hex, or swap with a violet unit' : 'Choose a unit to <b>reposition</b>';
   else if (o.type==='barrage') msg = 'Barrage: click <b>any trench</b> or <b>forest</b> on the board to destroy' + (canSkip ? ' — or skip straight to the attack' : '');
-  el.innerHTML = '<b>'+E.CARD_BY_ID[st.pending.cardId].name+'</b>: '+msg+stepTag +
+  el.innerHTML = '<b>'+E.CARD_BY_ID[v.pending.cardId].name+'</b>: '+msg+stepTag +
     (canSkip ? '' : ' <span class="small" style="color:#e3c06a;">(this order must accomplish at least one action)</span>');
   if (canSkip){
     var sk = document.createElement('button');
@@ -296,20 +296,21 @@ function renderPrompt(){
 function renderAll(){
   if (APP.st){
     // a resumed/joined skirmish on an edited outline must re-register its shape
-    var mm = APP.st.battle && APP.st.battle.maps && APP.st.battle.maps[APP.st.mapIndex];
+    var v = E.view(APP.st);
+    var mm = v.battle && v.battle.maps && v.battle.maps[v.mapIndex];
     if (mm && mm.shapeDef) E.ensureMapShape(mm);
-    E.setBoard(APP.st.boardShape);
+    E.setBoard(v.boardShape);
   }
   ensureSnapshot();
   renderTop(); renderMat('red'); renderMat('blue'); renderBoard(); renderHand(); renderPrompt(); renderLog();
 }
 function renderLog(){
-  var el = $('log'); var st = APP.st;
+  var el = $('log'); var st = APP.st, v = E.view(st);
   // group entries into turns: a card play opens a turn, its resolution steps are
   // children. The last two turns render in full; older turns collapse to the
   // play line with a "+N ›" click-to-expand (UI-only, not saved).
   var groups = [];
-  st.log.slice(-160).forEach(function(e){
+  v.log.slice(-160).forEach(function(e){
     var hdr = e.msg.indexOf('Skirmish ') === 0;
     var play = e.msg.indexOf(' plays "') > 0;
     if (play) groups.push({ e: e, steps: [], id: 't' + e.turn + e.player });
@@ -370,20 +371,20 @@ function renderLog(){
 }
 
 function confirmAttack(a){
-  var st = APP.st;
+  var st = APP.st, v = E.view(st);
   var pv = a.preview;
-  var au = st.units[a.from];
-  var tgt = pv.defenderIsHQ ? capName(E.other(st.current))+' Headquarters' : capName(E.other(st.current))+' '+E.UNITS[pv.defenderUnit].name;
+  var au = v.units[a.from];
+  var tgt = pv.defenderIsHQ ? capName(E.other(v.current))+' Headquarters' : capName(E.other(v.current))+' '+E.UNITS[pv.defenderUnit].name;
   var outcomeTxt = { attacker: 'Attack succeeds — defender destroyed' + (pv.defenderIsHQ ? '. <b>HEADQUARTERS FALLS!</b>' : (a.noAdvance ? ', your unit holds its ground.' : ', your unit advances.')),
                      defender: '<b>Attack fails — your unit is destroyed.</b>',
                      tie: a.tieSpare ? 'Tie — defender destroyed, your unit withdraws safely.' + (pv.defenderIsHQ?' <b>HEADQUARTERS FALLS!</b>':'') : 'Tie — <b>both units destroyed.</b>' + (pv.defenderIsHQ?' <b>HEADQUARTERS FALLS!</b>':'') }[pv.outcome];
   confirmDialog({
     title: 'Order of Skirmish',
     body:
-      '<p>'+capName(st.current)+' '+E.UNITS[au.type].name+' attacks '+tgt+(a.via?' <i>(through the HQ)</i>':'')+'</p>' +
+      '<p>'+capName(v.current)+' '+E.UNITS[au.type].name+' attacks '+tgt+(a.via?' <i>(through the HQ)</i>':'')+'</p>' +
       '<div class="skirmish-calc">' +
-        '<div class="side"><h4 style="color:var(--'+st.current+'-dark)">Attacker</h4>'+pv.attackerParts.join('<br>')+'<div class="total">'+pv.attackerPower+'</div></div>' +
-        '<div class="side"><h4 style="color:var(--'+E.other(st.current)+'-dark)">Defender</h4>'+pv.defenderParts.join('<br>')+'<div class="total">'+pv.defenderPower+'</div></div>' +
+        '<div class="side"><h4 style="color:var(--'+v.current+'-dark)">Attacker</h4>'+pv.attackerParts.join('<br>')+'<div class="total">'+pv.attackerPower+'</div></div>' +
+        '<div class="side"><h4 style="color:var(--'+E.other(v.current)+'-dark)">Defender</h4>'+pv.defenderParts.join('<br>')+'<div class="total">'+pv.defenderPower+'</div></div>' +
       '</div>' +
       '<p style="font-size:14.5px;">'+outcomeTxt+'</p>',
     yesLabel: 'Attack!', noLabel: 'Stand Down',
@@ -392,11 +393,11 @@ function confirmAttack(a){
 }
 
 function showSkirmishOver(){
-  var st = APP.st, m = st.battle;
-  var w = st.skirmishWinner;
+  var st = APP.st, v = E.view(st), m = v.battle;
+  var w = v.skirmishWinner;
   var html = '<h2 class="'+w+'">'+capName(w)+' takes the field!</h2>' +
-    '<p style="font-style:italic;">"'+st.mapName+'" — ' + (st.winType==='hq' ? 'the enemy headquarters was captured.' :
-      st.winType==='concession' ? 'the enemy conceded the field.' :
+    '<p style="font-style:italic;">"'+v.mapName+'" — ' + (v.winType==='hq' ? 'the enemy headquarters was captured.' :
+      v.winType==='concession' ? 'the enemy conceded the field.' :
       'won by attrition, field score '+E.fieldScore(st,'red')+' to '+E.fieldScore(st,'blue')+' of surviving units.') + '</p>' +
     '<p style="margin-top:10px;font-size:18px;">Campaign: <b style="color:var(--red-dark)">Red '+m.wins.red+'</b> — <b style="color:var(--blue-dark)">Blue '+m.wins.blue+'</b></p>';
   var rematch = APP.mode !== 'net'
@@ -414,7 +415,7 @@ function showSkirmishOver(){
   openOverlay('skirmishOvr');
   if ($('boRematch')) $('boRematch').onclick = function(){
     closeOverlay('skirmishOvr');
-    startLocal(APP.mode, [m.maps[st.mapIndex]]);
+    startLocal(APP.mode, [m.maps[v.mapIndex]]);
   };
   if ($('boNext')) $('boNext').onclick = function(){
     closeOverlay('skirmishOvr');
@@ -445,24 +446,25 @@ function showSkirmishOver(){
 
 // Plain-text campaign journal for the clipboard (Feedback Round 2).
 function journalText(st){
-  var m = st.battle;
-  var res = st.winType==='hq' ? capName(st.skirmishWinner)+' captured the enemy HQ'
-    : st.winType==='concession' ? capName(st.skirmishWinner)+' won — enemy conceded'
-    : capName(st.skirmishWinner)+' won by attrition ('+E.fieldScore(st,'red')+'–'+E.fieldScore(st,'blue')+' field score surviving)';
+  var v = E.view(st);
+  var m = v.battle;
+  var res = v.winType==='hq' ? capName(v.skirmishWinner)+' captured the enemy HQ'
+    : v.winType==='concession' ? capName(v.skirmishWinner)+' won — enemy conceded'
+    : capName(v.skirmishWinner)+' won by attrition ('+E.fieldScore(st,'red')+'–'+E.fieldScore(st,'blue')+' field score surviving)';
   var lines = [
-    'War of Attrition — Skirmish '+(m.skirmishIndex+1)+' — "'+st.mapName+'"',
+    'War of Attrition — Skirmish '+(m.skirmishIndex+1)+' — "'+v.mapName+'"',
     'Result: '+res,
     'Campaign: Red '+m.wins.red+' — Blue '+m.wins.blue,
     ''
   ];
-  (st.log||[]).forEach(function(e){ lines.push('T'+e.turn+' · '+e.msg); });
+  (v.log||[]).forEach(function(e){ lines.push('T'+e.turn+' · '+e.msg); });
   return lines.join('\n');
 }
 
 function showHandoff(){
-  if (APP.st.phase==='skirmish-over') return;
+  if (E.view(APP.st).phase==='skirmish-over') return;
   APP.ui.handoffPending = true;
-  var p = APP.st.current;
+  var p = E.view(APP.st).current;
   $('handoffPanel').innerHTML =
     '<h2 class="'+p+'">'+capName(p)+'&rsquo;s turn</h2>' +
     '<p>Pass the device to the '+capName(p)+' commander.</p>' +
@@ -479,9 +481,9 @@ function showHandoff(){
 /* =================== actions =================== */
 // House rule: any card can instead be resolved as a basic attack or a basic reposition.
 function playCardUI(cid){
-  var st = APP.st;
+  var st = APP.st, v = E.view(st);
   var c = E.CARD_BY_ID[cid];
-  var side = st.current;
+  var side = v.current;
   var canAtk = E.listAttacks(st, side).length > 0;
   var rp = E.listRepositions(st, side);
   var canRp = rp.moves.length > 0 || rp.swaps.length > 0;
@@ -517,18 +519,18 @@ function act(choice){
   playFX(pre);
 }
 function afterChange(){
-  var st = APP.st;
+  var st = APP.st, v = E.view(st);
   renderAll(); saveLocal();
   if (APP.mode==='net') pushState();
   // let the final strike arrow / death animation (~.85s) finish before the win card
-  if (st.phase === 'skirmish-over'){ clearIfBattleOver(); setTimeout(showSkirmishOver, 900); return; }
-  if (st.phase === 'choose-card'){
+  if (v.phase === 'skirmish-over'){ clearIfBattleOver(); setTimeout(showSkirmishOver, 900); return; }
+  if (v.phase === 'choose-card'){
     // turn changed
     if (APP.mode==='hotseat') showHandoff();
     else maybeAI();
   }
 }
-function clearIfBattleOver(){ if (APP.st.battle.winner) clearSave(); }
+function clearIfBattleOver(){ if (E.view(APP.st).battle.winner) clearSave(); }
 
 /* =================== card glossary =================== */
 function showCards(){
@@ -546,8 +548,8 @@ function showCards(){
     var cells = '<td style="text-align:left;"><b>'+c.name+'</b>'+(c.starting?' <span class="small">(starting card)</span>':'')+'</td>' +
       '<td>'+c.count+'</td><td style="text-align:left;">'+c.text+'</td>';
     if (inGame){
-      var rN = APP.st.removed.red.filter(function(id){ return id===c.id; }).length;
-      var bN = APP.st.removed.blue.filter(function(id){ return id===c.id; }).length;
+      var rN = E.view(APP.st).removed('red').filter(function(id){ return id===c.id; }).length;
+      var bN = E.view(APP.st).removed('blue').filter(function(id){ return id===c.id; }).length;
       cells += spentCell(rN, c.count, 'rgba(158,43,37,.18)') + spentCell(bN, c.count, 'rgba(40,82,122,.18)');
     }
     rows += '<tr>'+cells+'</tr>';
@@ -560,15 +562,15 @@ function showCards(){
 
 /* =================== AI driver =================== */
 function maybeAI(){
-  var st = APP.st;
-  var aiTurn = (APP.mode === 'ai' && st.current !== APP.mySide) || APP.mode === 'watch';
-  if (!aiTurn || st.phase !== 'choose-card') return;
+  var st = APP.st, v = E.view(st);
+  var aiTurn = (APP.mode === 'ai' && v.current !== APP.mySide) || APP.mode === 'watch';
+  if (!aiTurn || v.phase !== 'choose-card') return;
   APP.ui.busy = true;
   renderPrompt();
   setTimeout(function(){
     // a beaten general yields rather than playing out a foregone conclusion
-    if (E.concedeAdvised(st, st.current)){
-      var loser = st.current;
+    if (E.concedeAdvised(st, v.current)){
+      var loser = v.current;
       E.concede(st, loser);
       toast(capName(loser)+' <b>concedes the field</b> — the outcome was beyond doubt.', 3200);
       APP.ui.busy = false;
@@ -580,14 +582,14 @@ function maybeAI(){
     if (!plan){ APP.ui.busy=false; return; }
     E.playCard(st, plan.cardId, plan.mode || 'normal');
     var modeTxt = plan.mode==='attack' ? ' as a direct attack' : plan.mode==='reposition' ? ' as a simple maneuver' : '';
-    toast(capName(st.current)+' plays <b>'+E.CARD_BY_ID[plan.cardId].name+'</b>'+modeTxt, 2200);
+    toast(capName(v.current)+' plays <b>'+E.CARD_BY_ID[plan.cardId].name+'</b>'+modeTxt, 2200);
     renderAll();
     var i = 0;
     function nextStep(){
-      if (st.phase !== 'step'){
+      if (v.phase !== 'step'){
         APP.ui.busy = false;
         renderAll(); saveLocal();
-        if (st.phase==='skirmish-over'){ clearIfBattleOver(); showSkirmishOver(); }
+        if (v.phase==='skirmish-over'){ clearIfBattleOver(); showSkirmishOver(); }
         else { renderPrompt(); maybeAI(); } // watch mode: the other general takes over
         return;
       }

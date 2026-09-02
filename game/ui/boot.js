@@ -82,9 +82,9 @@ $('mpNext').onclick = function(){ manualStep(1); };
 $('mpTabs').onclick = manualTabClick;            // tab clicks delegated to ui/manual.js
 document.addEventListener('keydown', manualKey); // ← / → step beats while the manual is open
 $('btnConcede').onclick = function(){
-  var st = APP.st;
-  if (!st || st.phase === 'skirmish-over' || APP.mode === 'watch') return;
-  if (!inputLive() || st.phase !== 'choose-card'){ toast('You can concede at the start of your own turn.'); return; }
+  var st = APP.st, v = E.view(st);
+  if (!st || v.phase === 'skirmish-over' || APP.mode === 'watch') return;
+  if (!inputLive() || v.phase !== 'choose-card'){ toast('You can concede at the start of your own turn.'); return; }
   var p = viewSide();
   confirmDialog({
     title: 'Concede the field?', titleClass: p,
@@ -102,7 +102,7 @@ $('btnConcede').onclick = function(){
 // so Bill can hand Claude the situation without pasting a screenshot. The state
 // carries battle.maps (full board + terrain defs) so the dump is self-contained.
 $('btnDebug').onclick = function(){
-  var st = APP.st;
+  var st = APP.st, v = E.view(st);
   if (!st){ toast('No skirmish in progress to snapshot.', 2500); return; }
   var note = prompt('Save a debug snapshot of the current game.\nDescribe what looks wrong (optional):', '');
   if (note === null) return; // cancelled
@@ -112,15 +112,15 @@ $('btnDebug').onclick = function(){
     saveV: SAVE_V,
     mode: APP.mode, mySide: APP.mySide, diff: APP.diff,
     note: note || '',
-    turn: st.turnNumber, phase: st.phase, current: st.current,
+    turn: v.turnNumber, phase: v.phase, current: v.current,
     customDeck: !!localStorage.getItem('woa-custom-deck') || !!window.WOA_CUSTOM_DECK,
     state: st
   };
   var json = JSON.stringify(bundle, null, 1);
-  var slug = String(st.mapName || 'skirmish').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  var slug = String(v.mapName || 'skirmish').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
   var d = new Date(), p2 = function(x){ return (x<10?'0':'')+x; };
   var stamp = d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'-'+p2(d.getHours())+p2(d.getMinutes())+p2(d.getSeconds());
-  var fname = stamp+'-'+slug+'-T'+st.turnNumber+'-'+st.phase+'.json';
+  var fname = stamp+'-'+slug+'-T'+v.turnNumber+'-'+v.phase+'.json';
   api('savedebug', { filename: fname, content: json })
     .then(function(r){ toast('Debug snapshot saved &rarr; '+(r.path || 'logs/debug/'+fname), 4200); })
     .catch(function(){ downloadDebug(fname, json); });
@@ -155,7 +155,7 @@ $('btnResume').onclick = function(){
     $('diffSel').value = d.diff || 'normal';
     APP.ui = { sel:null, stage:null, busy:false, handoffPending: d.mode==='hotseat' };
     show('game'); renderAll();
-    if (APP.st.phase === 'skirmish-over') showSkirmishOver();
+    if (E.view(APP.st).phase === 'skirmish-over') showSkirmishOver();
     else if (d.mode==='hotseat') showHandoff();
     else maybeAI();
   }catch(e){ clearSave(); checkResume(); }
@@ -184,7 +184,7 @@ $('btnJoin').onclick = function(){
     APP.ui = { sel:null, stage:null, busy:false };
     show('game'); renderAll(); startPolling();
     toast('Joined! You are Blue.', 3000);
-    if (APP.st.phase==='skirmish-over') showSkirmishOver();
+    if (E.view(APP.st).phase==='skirmish-over') showSkirmishOver();
   }).catch(function(e){ toast('Could not join: '+e.message, 3500); });
 };
 
@@ -333,6 +333,7 @@ $('dkImportFile').onchange = function(){
 // that dealt the final blow (exactly one of the two), and each dashboard
 // simulation skirmish. Search clones never fire it (__sim).
 E.hooks.onSkirmishEnd.push(function (st) {
+  var v = E.view(st);
   var dash = (typeof DASH !== 'undefined') && DASH.running;
   var kind = dash ? 'balance' : APP.mode === 'watch' ? 'watch' : 'human';
   function aiOf(side){
@@ -341,7 +342,7 @@ E.hooks.onSkirmishEnd.push(function (st) {
     if (APP.mode === 'ai') return side === APP.mySide ? 'human' : (APP.diff || 'normal');
     return 'human'; // hotseat + LAN
   }
-  var m = st.battle; st.battle = null; // the cycle never crosses the wire
+  var m = st.battle; st.battle = null; // the cycle never crosses the wire (battle is the identity handle)
   try {
     api('recordskirmish', {
       runKey: dash ? DASH.runKey : undefined,
@@ -354,7 +355,7 @@ E.hooks.onSkirmishEnd.push(function (st) {
         deck: E.ACTIVE_DECK && E.ACTIVE_DECK.id,
         mapset: dash ? DASH.meta.mapset : undefined,
         seedBase: dash ? DASH.meta.seedBase : undefined },
-      state: st, firstPlayer: E.other(st.second), seed: st.seed
+      state: st, firstPlayer: E.other(v.second), seed: v.seed
     }).catch(function(){ /* persistence is best-effort */ });
   } finally { st.battle = m; }
 });
@@ -416,13 +417,14 @@ $('dashRun').onclick = function(){
       if (DASH.cancel){ finish(); return; }
       var fp = WOA_SIM.balanceFP(g);
       var st = WOA_SIM.simSkirmish(maps[mi], WOA_SIM.balanceSeed((mi+1)*7919, g), fp, dr, db);
+      var v = E.view(st);
       WOA_SIM.balanceAdd(out, st, fp);
       // keep each skirmish's length + ending for the Charts view's histogram —
       // the aggregate throws these away (graphs-spec Q4); tiny per-run memory
-      if (st.phase === 'skirmish-over'){
+      if (v.phase === 'skirmish-over'){
         var det = DASH.detail[maps[mi].name] || (DASH.detail[maps[mi].name] = { turns: [], winTypes: [] });
-        det.turns.push(st.turnNumber);
-        det.winTypes.push(st.winType);
+        det.turns.push(v.turnNumber);
+        det.winTypes.push(v.winType);
       }
       g++;
       step();

@@ -86,7 +86,7 @@ var ALIASES = [
   // Locked: driven to zero and guarded against regression.
   { term: 'per-battle (→ Skirmish fact)', pattern: /\bper-battle\b/gi, status: 'locked' },
   { term: 'VP / victory point (→ Field score)', pattern: /\bvictory points?\b|vp-?diff|\bvp\b/gi,
-    ignore: /LLM|token/i, status: 'locked', note: 'the quantity is field score; a unit\'s worth is `worth`; the kills tally is `st.kills`; the report margin is `fsDiff`' },
+    ignore: /LLM|token/i, status: 'locked', note: 'the quantity is field score; a unit\'s worth is `worth`; the kills tally is `st.result.kills`; the report margin is `fsDiff`' },
   { term: 'Map Card / Map Deck (→ Map)', pattern: /\bmap (cards?|deck)\b/gi, status: 'locked' },
   { term: 'difficulty (→ AI personality / strength)', pattern: /\bdifficult(y|ies)\b/gi, status: 'locked', note: 'the AI param is `personality`; a preset\'s tier is its strength' },
   { term: 'map-set (→ Mapset)', pattern: /\bmap-sets?\b/gi, status: 'locked' },

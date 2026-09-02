@@ -15,12 +15,12 @@
   function playToEnd(st, opts) {
     opts = opts || {};
     var guard = 0;
-    while (st.phase !== 'skirmish-over' && guard++ < 400) {
+    while (st.flow.phase !== 'skirmish-over' && guard++ < 400) {
       var plan = opts.decide(st);
       if (!plan) break;
       I.playCard(st, plan.cardId, plan.mode || 'normal');
       var g2 = 0;
-      while (st.phase === 'step' && g2++ < 12) {
+      while (st.flow.phase === 'step' && g2++ < 12) {
         var c = plan.choices.shift() || { skip: true };
         try { I.applyStep(st, c); }
         catch (e) { try { I.applyStep(st, { skip: true }); } catch (e2) { break; } }

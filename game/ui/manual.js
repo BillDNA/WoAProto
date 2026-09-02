@@ -40,6 +40,12 @@ function mpDef(id, redHQ, blueHQ, pieces){
     shapeDef: { label: 'Manual diagram', hexes: MP_HEXES },
     redHQ: redHQ, blueHQ: blueHQ, pieces: pieces || [] };
 }
+// The Field Manual is an engine-state AUTHOR, not a play-surface consumer: it
+// builds diagram states and drives them through the REAL rules (E.applyStep with
+// a synthesized pending step), so it reaches the state blocks directly rather
+// than through E.view (a read surface that cannot construct). It never touches a
+// live skirmish (APP.st) — every state here is a throwaway __sim diagram.
+//
 // A REAL skirmish state (deck, HQs, turn flow all live), then the fixture's
 // pieces are placed directly. units: { 'q,r': ['infantry','red'], ... }.
 // NOTE: E.newSkirmish switches the engine's global board to this map's shape —
@@ -48,40 +54,40 @@ function mpState(def, units, trenches){
   var battle = E.newBattle({ maps: [def], seed: 7, firstPlayer: 'red' });
   var st = E.newSkirmish(battle);
   st.__sim = true; // a diagram, not a real skirmish — never fire onSkirmishEnd hooks
-  st.units = {};
-  Object.keys(units).forEach(function(h){ st.units[h] = { type: units[h][0], owner: units[h][1] }; });
-  st.trenches = trenches || {};
+  st.pieces.units = {};
+  Object.keys(units).forEach(function(h){ st.pieces.units[h] = { type: units[h][0], owner: units[h][1] }; });
+  st.pieces.trenches = trenches || {};
   return st;
 }
 // Resolve an attack through the REAL rules path (legality check + resolveAttack
 // + tie/HQ/advance handling), by handing applyStep a synthesized attack step.
 function mpResolve(st, atk){
-  st.pending = { cardId: st.hands[st.current][0] || 'manual', mode: 'attack',
+  st.flow.pending = { cardId: st.cards.hands[st.flow.current][0] || 'manual', mode: 'attack',
     steps: [{ type:'attack', mod: atk.mod||0, tieSpare: !!atk.tieSpare, noAdvance: !!atk.noAdvance }],
     idx: 0, acted: 0, logIdx: -1 };
-  st.phase = 'step';
+  st.flow.phase = 'step';
   E.applyStep(st, { from: atk.from, to: atk.to, via: atk.via || null });
   return st;
 }
 // What actually happened, read from the pre/post states (same derivation the
 // live playFX uses) — never re-derived from rules text.
 function mpAftermath(pre, post, atk){
-  var att = pre.units[atk.from], def = pre.units[atk.to];
+  var att = pre.pieces.units[atk.from], def = pre.pieces.units[atk.to];
   var defHQ = null;
-  ['red','blue'].forEach(function(p){ if (pre.hqAlive[p] && pre.hq[p] === atk.to) defHQ = p; });
-  var now = post.units[atk.to];
-  var advanced = !!(now && att && now.owner === att.owner && !post.units[atk.from]);
+  ['red','blue'].forEach(function(p){ if (pre.board.hqAlive[p] && pre.board.hq[p] === atk.to) defHQ = p; });
+  var now = post.pieces.units[atk.to];
+  var advanced = !!(now && att && now.owner === att.owner && !post.pieces.units[atk.from]);
   return {
     advanced: advanced,
-    attackerFell: !!(att && !post.units[atk.from] && !advanced),
+    attackerFell: !!(att && !post.pieces.units[atk.from] && !advanced),
     defenderFell: !!(def && (!now || advanced)),
-    hqFell: !!(defHQ && !post.hqAlive[defHQ]),
+    hqFell: !!(defHQ && !post.board.hqAlive[defHQ]),
     hqSide: defHQ,
-    winner: post.skirmishWinner || null
+    winner: post.result.skirmishWinner || null
   };
 }
 // support given by the piece on hex h (engine data, used for running tallies)
-function mpSupAmount(st, h){ return E.isHQ(st, h) ? 1 : E.UNITS[st.units[h].type].sup; }
+function mpSupAmount(st, h){ return E.isHQ(st, h) ? 1 : E.UNITS[st.pieces.units[h].type].sup; }
 function mpSum(st, hexes){ var t=0; hexes.forEach(function(h){ t += mpSupAmount(st,h); }); return t; }
 
 /* ============ frame drawing ============ */
@@ -91,7 +97,7 @@ function mpSum(st, hexes){ var t=0; hexes.forEach(function(h){ t += mpSupAmount(
 function mpDrawFrame(f){
   var st = f.st, svg = $('mpBoard');
   svg.innerHTML = '';
-  var list = E.SHAPES[st.boardShape].list;
+  var list = E.SHAPES[st.board.boardShape].list;
   svg.setAttribute('viewBox', mpViewBox(list));
 
   // hexes + grid labels (same classes as the live board)
@@ -120,26 +126,26 @@ function mpDrawFrame(f){
 
   // terrain sides — the live board's terrain mark (bpTerrainEdge) at MP_S scale,
   // its glyph sizes/line widths tuned for the mini board (no data-edge hover).
-  for (var ek in st.terrainEdges){
-    bpTerrainEdge(svg, ek, st.terrainEdges[ek],
+  for (var ek in st.board.terrainEdges){
+    bpTerrainEdge(svg, ek, st.board.terrainEdges[ek],
       { s:MP_S, sw:6, riverSW:1.8, riverDash:'5 4', forestR:3.4, forestR2:2.6, edgeData:false });
   }
 
   // trenches — the live board's trench mark (bpTrenchLine) at MP_S scale
-  for (var th in st.trenches){
-    st.trenches[th].forEach(function(tr){
+  for (var th in st.pieces.trenches){
+    st.pieces.trenches[th].forEach(function(tr){
       tr.dirs.forEach(function(d2){ bpTrenchLine(svg, th, d2, { s:MP_S, sw:5, dash:'5.5 3' }); });
     });
   }
 
   // HQs (plus the fallen-HQ ghost)
   ['red','blue'].forEach(function(p){
-    if (st.hqAlive[p]) mpDrawHQ(svg, st.hq[p], p, false);
+    if (st.board.hqAlive[p]) mpDrawHQ(svg, st.board.hq[p], p, false);
   });
   if (f.hqGhost && f.hqGhost.hex) mpDrawHQ(svg, f.hqGhost.hex, f.hqGhost.side, true);
 
   // units, then the fallen (ghosts render where a hex ended up empty)
-  for (var uh in st.units) mpDrawUnit(svg, uh, st.units[uh], false);
+  for (var uh in st.pieces.units) mpDrawUnit(svg, uh, st.pieces.units[uh], false);
   (f.ghosts||[]).forEach(function(g){ mpDrawUnit(svg, g.hex, g.unit, true); });
 
   // support rings — the live FX colors: gold attacker / steel defender / grey denied
@@ -254,7 +260,7 @@ var MANUAL_EXAMPLES = [
     d.dsup = E.supportFor(d.st, 'blue', d.atk.to, null, false);
     d.aUnits = d.asup.hexes.filter(function(h){ return !E.isHQ(d.st, h); });
     d.aHQs   = d.asup.hexes.filter(function(h){ return  E.isHQ(d.st, h); });
-    d.base  = E.UNITS[d.st.units[d.atk.from].type].atk;
+    d.base  = E.UNITS[d.st.pieces.units[d.atk.from].type].atk;
     d.t2 = d.base + mpSum(d.st, d.aUnits);            // after unit support
     d.t3 = d.base + d.asup.total;                     // after HQ support
     d.forest = d.res.attackerPower - d.t3;            // engine-derived terrain bonus
@@ -286,8 +292,8 @@ var MANUAL_EXAMPLES = [
     { cap: function(d){ return mpAftermathWords(d.am)+' That’s the whole trick of support: never send a soldier alone to a knife fight.'; },
       frame: function(d){ return { st:d.post, strike:{from:d.atk.from,to:d.atk.to,color:'var(--red)'}, pill:{at:d.atk.to, text:d.res.attackerPower+' vs '+d.res.defenderPower, tone:d.res.outcome},
         badges: (d.am.defenderFell && d.am.advanced) ? [d.atk.to] : [],
-        ghosts: (d.am.defenderFell && !d.am.advanced ? [{hex:d.atk.to, unit:d.st.units[d.atk.to]}] : [])
-          .concat(d.am.attackerFell ? [{hex:d.atk.from, unit:d.st.units[d.atk.from]}] : []) }; } }
+        ghosts: (d.am.defenderFell && !d.am.advanced ? [{hex:d.atk.to, unit:d.st.pieces.units[d.atk.to]}] : [])
+          .concat(d.am.attackerFell ? [{hex:d.atk.from, unit:d.st.pieces.units[d.atk.from]}] : []) }; } }
   ] },
 
 { id: 'ties', label: 'Ties',
@@ -406,7 +412,7 @@ function renderManual(){
     var d = ex.scene();
     var beat = ex.beats[MANUAL.beat];
     var f = beat.frame(d);
-    E.setBoard(f.st.boardShape); // labels + geometry under the frame's own board
+    E.setBoard(f.st.board.boardShape); // labels + geometry under the frame's own board
     mpDrawFrame(f);
     $('mpCaption').innerHTML = beat.cap(d);
     $('mpCounter').textContent = (MANUAL.beat + 1) + '/' + ex.beats.length;

@@ -40,7 +40,7 @@ var db = null, dbHandle = null, dbRuns = {}; // runKey -> runId (per server boot
 try { db = require(path.join(ROOT, '..', 'dev', 'db.js')); } catch (e) { /* persistence off */ }
 function recordSkirmish(body) {
   if (!db) return { status: 501, out: { error: 'persistence unavailable (dev/db.js not present)' } };
-  if (!body || !body.state || body.state.phase !== 'skirmish-over' || !body.run)
+  if (!body || !body.state || !body.state.flow || body.state.flow.phase !== 'skirmish-over' || !body.run)
     return { status: 400, out: { error: 'need a finished state + run info' } };
   if (!dbHandle) dbHandle = db.open();
   var runKey = String(body.runKey || (body.run.kind + '|' + (body.run.version || '?') + '|' + (body.run.redAi || '?') + '|' + (body.run.blueAi || '?')));
