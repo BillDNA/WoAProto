@@ -1,6 +1,9 @@
 /* War of Attrition — ui part: board effects (pure flourish, no rules).
    Classic script, no wrapper — top-level names attach to window (see
-   ui/app.js header). Extracted verbatim from index.html's inline app script. */
+   ui/app.js header). These draw transient marks on the SAME live #board as
+   board.js, so colours + the unit radius come from board-primitives' BOARD /
+   BOARD_R — restyle a side colour or the unit token once and the flourishes
+   follow. */
 'use strict';
 
 /* =================== board effects (pure flourish, no rules) =================== */
@@ -23,11 +26,9 @@ function popUnit(hex){
 function ghostUnit(hex, unit){
   var svg = $('board');
   if (!svg.firstChild || !unit) return;
-  var xy = hexXY(hex);
-  var col = unit.owner==='red' ? 'var(--red)' : 'var(--blue)';
-  var colD = unit.owner==='red' ? 'var(--red-dark)' : 'var(--blue-dark)';
+  var xy = hexXY(hex), sc = BOARD.side(unit.owner);
   var g = svgEl('g',{'class':'fx-ghost'});
-  g.appendChild(svgEl('circle',{cx:xy[0], cy:xy[1], r:S*0.5, fill:col, stroke:colD, 'stroke-width':2.5}));
+  g.appendChild(svgEl('circle',{cx:xy[0], cy:xy[1], r:BOARD_R.unit, fill:sc.fill, stroke:sc.dark, 'stroke-width':2.5}));
   svg.appendChild(g);
   setTimeout(function(){ if (g.parentNode) g.parentNode.removeChild(g); }, 750);
 }
@@ -57,7 +58,7 @@ function fxStrike(fromHex, toHex, viaHex, color){
   var p1 = [tip[0]-Math.cos(ang)*l+Math.sin(ang)*wdt, tip[1]-Math.sin(ang)*l-Math.cos(ang)*wdt];
   var p2 = [tip[0]-Math.cos(ang)*l-Math.sin(ang)*wdt, tip[1]-Math.sin(ang)*l+Math.cos(ang)*wdt];
   g.appendChild(svgEl('polygon', { points: [tip, p1, p2].map(function(p){ return p[0].toFixed(1)+','+p[1].toFixed(1); }).join(' '),
-    fill: color, stroke:'#2b2113', 'stroke-width':1 }));
+    fill: color, stroke:BOARD.outline, 'stroke-width':1 }));
   svg.appendChild(g);
   setTimeout(function(){ if (g.parentNode) g.parentNode.removeChild(g); }, 900);
 }
@@ -90,8 +91,8 @@ function playFX(pre){
   if (!pre) return;
   var st = APP.st, c = pre.choice;
   if (pre.type==='deploy' && c.hex){ popUnit(c.hex); }
-  else if (pre.type==='trench' && c.hex){ ringAt(c.hex, '#5a4326'); }
-  else if (pre.type==='barrage'){ ringAt(c.trenchHex || fxPieceHex(c.pieceId), '#c0392b'); }
+  else if (pre.type==='trench' && c.hex){ ringAt(c.hex, BOARD.trench); }
+  else if (pre.type==='barrage'){ ringAt(c.trenchHex || fxPieceHex(c.pieceId), BOARD.barrage); }
   else if (pre.type==='reposition'){
     if (c.swap){ slideUnit(c.b, c.a); slideUnit(c.a, c.b); }
     else slideUnit(c.from, c.to);
@@ -100,11 +101,11 @@ function playFX(pre){
     // where the blow comes from — a strike line (bending through the HQ on a
     // via-attack) plus a ring on every unit whose support actually counted
     if (pre.attacker){
-      fxStrike(c.from, c.to, c.via, pre.attacker.owner==='red' ? 'var(--red)' : 'var(--blue)');
-      (pre.supporters || []).forEach(function(h){ ringAt(h, '#d4af37'); });
-      (pre.defSupporters || []).forEach(function(h){ ringAt(h, '#8ea8be'); });
+      fxStrike(c.from, c.to, c.via, BOARD.side(pre.attacker.owner).fill);
+      (pre.supporters || []).forEach(function(h){ ringAt(h, BOARD.supportAlly); });
+      (pre.defSupporters || []).forEach(function(h){ ringAt(h, BOARD.supportEnemy); });
     }
-    ringAt(c.to, '#c0392b');
+    ringAt(c.to, BOARD.barrage);
     var now = st.units[c.to];
     var advanced = now && pre.attacker && now.owner===pre.attacker.owner && !st.units[c.from];
     if (advanced) slideUnit(c.from, c.to);

@@ -7,11 +7,13 @@
    this toolkit and builds nothing by hand: one implementation of each mark,
    restyled in one place, reflected everywhere the game board draws it.
 
-   The geometry + svgEl are GLOBAL on purpose — the mini-board renderers
-   (map-editor.js, manual.js, pane-maps.js, fx.js) reuse them, so this file
-   loads before every board consumer in index.html's script chain. Those
-   mini-renderers still hand-draw their own miniatures (own hexes/terrain/HQ);
-   migrating them onto the bp* marks is future work, not part of #223. Colours
+   The geometry + svgEl are GLOBAL on purpose — every board consumer reuses
+   them, so this file loads before them in index.html's script chain. fx.js
+   draws transient flourishes on the SAME live #board and sources its colours +
+   unit radius from here (BOARD/BOARD_R). The true mini-board renderers
+   (map-editor.js, manual.js) still hand-draw their own miniatures at their own
+   scale (own hexes/terrain/HQ/unit); parametrising the bp* marks by size so
+   those two can call them is future work, not part of #223. Colours
    that live in CSS stay CSS vars here (var(--forest) etc.); the inline glyph
    hexes the stylesheet never sees (river current, forest dots, mountain peak,
    trench, barrage, chit/star/outline ink) are named once in BOARD. */
@@ -76,7 +78,10 @@ var BOARD = {
   trench:'#5a4326',     // dug-in earthwork
   barrage:'#c0392b',    // barrage action marks
   // attack-math pill fill by combat outcome
-  hint:{ attacker:'rgba(58,99,48,.92)', tie:'rgba(138,108,60,.94)', defender:'rgba(111,29,25,.92)' }
+  hint:{ attacker:'rgba(58,99,48,.92)', tie:'rgba(138,108,60,.94)', defender:'rgba(111,29,25,.92)' },
+  // fx.js transient support-ring accents (drawn on the live board, not marks)
+  supportAlly:'#d4af37',   // gold — an allied unit whose support counted
+  supportEnemy:'#8ea8be'   // slate — a defender's support that counted
 };
 BOARD.side = function(owner){
   return owner==='red' ? { fill:BOARD.red, dark:BOARD.redDark } : { fill:BOARD.blue, dark:BOARD.blueDark };
