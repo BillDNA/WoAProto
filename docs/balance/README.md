@@ -156,10 +156,10 @@ label (AI tier, n, mapset, date).
 
 ```
 node game/test.js                                          # legality first — always green before measuring
-node game/balance.js 60                                    # full report: per-map rows, Behaviour/Decisiveness, card report
-node game/balance.js 60 hard                               # same at the Field Marshal tier (behaviour differs; grade like-for-like)
-node game/balance.js 40 narrows                            # one map's numbers — the overall lines become that map's
-node game/balance.js matchup 96                            # skill premium (the luck-o-meter), 96 battles per pairing
+node dev/balance.js 60                                    # full report: per-map rows, Behaviour/Decisiveness, card report
+node dev/balance.js 60 hard                               # same at the Field Marshal tier (behaviour differs; grade like-for-like)
+node dev/balance.js 40 narrows                            # one map's numbers — the overall lines become that map's
+node dev/balance.js matchup 96                            # skill premium (the luck-o-meter), 96 battles per pairing
 node dev/balance-report.js 60 hard hard --parallel --once  # saved, apples-to-apples standard sweep
 ```
 

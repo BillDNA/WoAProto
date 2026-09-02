@@ -28,6 +28,7 @@ process.env.WOA_DB_PATH = path.join(tmpDir, 'srv.db');
 
 const server = require(path.join(__dirname, '..', 'game', 'server.js'));
 const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
+const SIM = require(path.join(__dirname, '..', 'game', 'sim.js')); // simSkirmish moved out of the engine in #220
 const R = require(path.join(__dirname, '..', 'game', 'report-model.js'));
 
 let srv, port;
@@ -59,7 +60,7 @@ function req(method, pathname, body) {
 var runId, skirmishId, finishedState;
 
 test('recordskirmish persists a real finished skirmish (A1)', async function () {
-  finishedState = E.simSkirmish(E.MAPS[0], 20250901, 'red', 'normal', 'normal');
+  finishedState = SIM.simSkirmish(E.MAPS[0], 20250901, 'red', 'normal', 'normal');
   assert.strictEqual(finishedState.phase, 'skirmish-over', 'the sim produced a finished state to hand off');
   const r = await req('POST', '/api/recordskirmish', {
     run: { version: E.VERSION, kind: 'balance', redAi: 'normal', blueAi: 'normal', n: 1, tool: 'server.test.js', deck: 'default', mapset: 'core7', seedBase: 20250901 },

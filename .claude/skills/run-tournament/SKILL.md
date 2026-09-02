@@ -30,12 +30,12 @@ findings meant to feed `create-card`/`create-map`).
 ## Steps
 
 1. **Baseline runs** (all from repo root):
-   - `node game/balance.js 60` — per-map report + Behaviour/Decisiveness + card report.
+   - `node dev/balance.js 60` — per-map report + Behaviour/Decisiveness + card report.
      (To SAVE the report and fold it into the per-version accumulator, use
      `node dev/balance-report.js 60 --parallel` instead — much faster on the
      full mapset, identical numbers.)
-   - `node game/balance.js matchup 16` — skill premium (stronger AI's win rate).
-   - Pit personalities when relevant: `node game/balance.js matchup 16 brawler turtle`.
+   - `node dev/balance.js matchup 16` — skill premium (stronger AI's win rate).
+   - Pit personalities when relevant: `node dev/balance.js matchup 16 brawler turtle`.
 2. **LLM skirmishes** (only if asked): `node dev/claude-plays.js --red haiku --blue normal
    --map <name>` per interesting map (add `--match 3` for a first-to-3 match; each
    LLM side gets one persistent session, so matches are token-cheap per skirmish).

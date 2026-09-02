@@ -4,7 +4,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { E, testSkirmish, fixtureCard } = require('./test.helpers.js');
+const { E, SIM, testSkirmish, fixtureCard } = require('./test.helpers.js');
 
 test('noOpener cards never in the opening hand (e.g. Airdrop)', () => {
 (function () {
@@ -215,7 +215,7 @@ test('play metrics (seen / playLog for the card report)', () => {
   var e = st.playLog[st.playLog.length - 1];
   assert.ok(e.id === 'deploy_inf_start' && e.p === 'red' && e.mode === 'normal' && e.seen === 1,
     'playLog records id/mode/first-sight: ' + JSON.stringify(e));
-  var r = E.balanceMap(E.MAPS[4], 2, { seedBase: 5 });
+  var r = SIM.balanceMap(E.MAPS[4], 2, { seedBase: 5 });
   var anyCard = Object.keys(r.cards).filter(function (id) { return r.cards[id].plays > 0; })[0];
   assert.ok(anyCard && 'simple' in r.cards[anyCard] && 'firstSight' in r.cards[anyCard] && 'seenSum' in r.cards[anyCard],
     'balanceMap aggregates simple/firstSight/seenSum per card');
@@ -239,8 +239,8 @@ test('WOA-055 asymmetric deck binding', () => {
   var active = E.ACTIVE_DECK && E.ACTIVE_DECK.id;
   // (a) default (no per-side selection) is byte-identical to naming the active
   //     deck on both sides — the golden-safe path.
-  var base = E.balanceMap(E.MAPS[4], 4, { seedBase: 5 });
-  var named = E.balanceMap(E.MAPS[4], 4, { seedBase: 5, decks: { red: active, blue: active } });
+  var base = SIM.balanceMap(E.MAPS[4], 4, { seedBase: 5 });
+  var named = SIM.balanceMap(E.MAPS[4], 4, { seedBase: 5, decks: { red: active, blue: active } });
   assert.ok(JSON.stringify(base) === JSON.stringify(named),
     'balanceMap with decks={active,active} is identical to no decks (default unchanged)');
 
@@ -254,7 +254,7 @@ test('WOA-055 asymmetric deck binding', () => {
       }
   if (!two) { assert.ok(true, '(skipped: need two decks with distinct composition; have ' + decks.length + ')'); return; }
 
-  var st = E.simSkirmish(E.MAPS[0], 4242, 'red', 'normal', 'normal', { red: two[0].id, blue: two[1].id });
+  var st = SIM.simSkirmish(E.MAPS[0], 4242, 'red', 'normal', 'normal', { red: two[0].id, blue: two[1].id });
   assert.ok(st.phase === 'skirmish-over', 'asymmetric skirmish (' + two[0].id + ' vs ' + two[1].id + ') finishes');
   // The deck each side was DEALT (built + hand + discards) must match its own deck.
   function fullSideSig(st, p) {
@@ -350,7 +350,7 @@ test('no-op plays are logged and marked (skipped-turn report)', () => {
   E.playCard(st2, 'deploy_inf_start');
   E.applyStep(st2, { hex: E.stepOptions(st2).targets ? E.stepOptions(st2).targets[0] : null });
   assert.ok(!st2.playLog[st2.playLog.length - 1].noop, 'a play that acted is NOT marked noop');
-  var r = E.balanceMap(E.MAPS[4], 2, { seedBase: 5 });
+  var r = SIM.balanceMap(E.MAPS[4], 2, { seedBase: 5 });
   var anyCard = Object.keys(r.cards)[0];
   assert.ok('noop' in r.cards[anyCard], 'balanceMap aggregates noop per card');
 })();

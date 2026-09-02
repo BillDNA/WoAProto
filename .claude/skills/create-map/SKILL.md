@@ -21,7 +21,7 @@ writes a `game/content/maps/` file).**
   measured directly with a name filter / `--mapset all`.
 - `docs/rubrics/map-rubric.md` — the map rubric.
 - Balance evidence: docs/code-architecture.md "Known balance
-  signals" (0.x-era baseline) + a fresh `node game/balance.js 40 <filter>` for
+  signals" (0.x-era baseline) + a fresh `node dev/balance.js 40 <filter>` for
   any map you're comparing against.
 
 ## Data shape
@@ -63,7 +63,7 @@ built-ins), point-symmetric outlines keep Mirror and fair-HQ placement working.
 4. Tell Bill how to test: paste into the editor (its Balance button runs the
    Balance Dashboard on the map AS DRAWN, before saving) or Import, then
    the balance screen — **reject cheaply, verdict-check dear**:
-   `node game/balance.js 40 <name>` at the default **normal** AI (~4 s) is enough to
+   `node dev/balance.js 40 <name>` at the default **normal** AI (~4 s) is enough to
    *kill* a side-biased / attrition-only candidate; only promote the one or two
    finalists to a **hard** screen at n=100–200 (a hard screen is ~7× slower —
    ~28 s at n=40 — so it's a finalist verdict, not triage; profile:
@@ -86,4 +86,4 @@ built-ins), point-symmetric outlines keep Mirror and fair-HQ placement working.
 - Screen cost is all in the sim, and AI strength dominates it (~690 ms/skirmish
   hard vs ~100 ms normal; n is near-linear on top). When a finalist is screened
   across the whole active set, `dev/balance-report.js --parallel` is ~3.3× faster
-  for identical numbers — prefer it over serial `balance.js` for multi-map screens.
+  for identical numbers — prefer it over serial `dev/balance.js` for multi-map screens.

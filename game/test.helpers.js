@@ -3,6 +3,9 @@
    in favour of node:test + node:assert. */
 'use strict';
 var E = require('./engine.js');
+// The batch/measurement layer (sweeps + balance folds), evicted from the engine
+// in #220. simSkirmish/balanceMap/etc live here now, not on E.
+var SIM = require('./sim.js');
 
 // A bare classic-board map so rules tests are deterministic regardless of the
 // built-in map library. HQs in opposite corners, no terrain.
@@ -27,4 +30,4 @@ function fixtureCard(id) {
   return E.CARD_BY_ID[id];
 }
 
-module.exports = { E, TESTMAP, testSkirmish, fixtureCard, ALL_DECK_CARDS };
+module.exports = { E, SIM, TESTMAP, testSkirmish, fixtureCard, ALL_DECK_CARDS };

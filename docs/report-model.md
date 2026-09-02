@@ -8,7 +8,7 @@ they live in `report-model.js` now, and consumers keep only their own presentati
 
 It is exposed dual: the browser global `WOA_REPORT` (classic script) and
 `module.exports` for node — the pattern `maps.js` uses. Nearly every function
-takes plain data (`E.balanceMap` aggregates, `E.CARDS`) as arguments and is pure.
+takes plain data (`WOA_SIM.balanceMap` aggregates, `E.CARDS`) as arguments and is pure.
 The one exception is `foldSkirmishes`, which delegates the per-skirmish fold to the
 engine's single-source `factsFromRow`/`foldFacts` rather than keep a second copy.
 

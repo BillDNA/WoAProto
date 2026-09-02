@@ -33,7 +33,7 @@ Needs Node.js (nodejs.org) on one computer — the server is plain Node and runs
 
 ## Boards, maps, units & cards — built for rapid tinkering
 
-**The tunable knobs live in `maps.js`** as plain JSON: board shapes, **unit stats and piece counts, the trench count, the AI personalities, and the physical terrain stock**. The **map library and card decks are their own files** under `game/content/` — one file per map (`content/maps/<name>.js`) and per deck (`content/decks/<name>.js`), so you delete a map by deleting its file. Edit any of it in a text editor, save, refresh the browser — the files explain their own format. Want to know what cavalry with 1 defense feels like, or a 20-card deck? Change a number, refresh, play (or run `node balance.js` on it). `node test.js` validates everything and points at exactly what's wrong.
+**The tunable knobs live in `maps.js`** as plain JSON: board shapes, **unit stats and piece counts, the trench count, the AI personalities, and the physical terrain stock**. The **map library and card decks are their own files** under `game/content/` — one file per map (`content/maps/<name>.js`) and per deck (`content/decks/<name>.js`), so you delete a map by deleting its file. Edit any of it in a text editor, save, refresh the browser — the files explain their own format. Want to know what cavalry with 1 defense feels like, or a 20-card deck? Change a number, refresh, play (or run `node dev/balance.js` on it). `node test.js` validates everything and points at exactly what's wrong.
 
 The map library lives in `game/content/maps/` — one file per map — and is browsable with previews on the **Maps & Map Editor** screen. Every map sits on one of five boards (or carries its own carved outline), all at or under the 24-hex laser-cutter ceiling:
 
@@ -55,11 +55,11 @@ Maps you make or edit are saved as **files in `game/content/maps/`** (one file p
 
 ## The balance lab
 
-`node balance.js` runs AI-vs-AI skirmishes on every map in the active mapset (`--mapset <id>` picks another set, `--mapset all` runs every map on disk) and prints a report: win rate by side, by first/second mover, HQ-capture vs attrition share, skirmish length, AI behaviour health (attacks & swaps per skirmish, zero-kill stalemates, share of units fielded), decisiveness (tiebreak share, first-blood conversion, board control vs winning), and how often each card sat in the winner's spent pile.
+`node dev/balance.js` runs AI-vs-AI skirmishes on every map in the active mapset (`--mapset <id>` picks another set, `--mapset all` runs every map on disk) and prints a report: win rate by side, by first/second mover, HQ-capture vs attrition share, skirmish length, AI behaviour health (attacks & swaps per skirmish, zero-kill stalemates, share of units fielded), decisiveness (tiebreak share, first-blood conversion, board control vs winning), and how often each card sat in the winner's spent pile.
 
-- `node balance.js 60` — bigger samples; `node balance.js 60 hard` — with the Field Marshal
-- `node balance.js 40 narrows` — only maps whose name matches "narrows"
-- `node balance.js matchup` — **the luck-o-meter**: better AIs fight worse ones, and the stronger side's win rate is the skill premium. If a clearly better player only wins ~55%, the card draw decides most skirmishes; 65%+ means skill decides. The normal-vs-normal line is a ~50% sanity check.
+- `node dev/balance.js 60` — bigger samples; `node dev/balance.js 60 hard` — with the Field Marshal
+- `node dev/balance.js 40 narrows` — only maps whose name matches "narrows"
+- `node dev/balance.js matchup` — **the luck-o-meter**: better AIs fight worse ones, and the stronger side's win rate is the skill premium. If a clearly better player only wins ~55%, the card draw decides most skirmishes; 65%+ means skill decides. The normal-vs-normal line is a ~50% sanity check.
 
 The same report lives in the browser as the **Balance Dashboard** (main menu): pick skirmishes-per-map, the AI for each side, and a map or the whole pool — every table is click-to-sort. The **Balance** buttons on the maps screen and in the editor open it too (the editor's runs the map as drawn). After any skirmish, **Rematch this map** restarts on the same skirmishfield — tweak, rematch, compare. That's the loop this prototype exists for.
 
@@ -116,12 +116,13 @@ A **river** (drawn in blue, in the same 2- and 3-side pieces as forest and mount
 ## Files
 
 - `index.html` + `style.css` + `ui/` — the game's screens and chrome (menu, board, mats, editors, Balance Dashboard, Field Manual); index.html is just the markup and the ordered script list
-- `engine.js` + `engine/` — the rules engine, loaded as seven ordered parts: all rules, the six AI personalities (the easy/normal/hard presets plus the `maps.js` data rows), and the skirmish simulator (shared by tests and every balance report)
+- `engine.js` + `engine/` — the rules engine, loaded as seven ordered parts: all rules, the six AI personalities (the easy/normal/hard presets plus the `maps.js` data rows), and the play-to-end drive loop. Single-game play + AI-that-plays-a-turn only; the batch simulator/sweeps live in `sim.js`
+- `sim.js` — the batch/measurement layer: runs AI-vs-AI skirmishes and folds the balance aggregate (shared by tests, the CLI reports, and the Balance Dashboard). Built on the engine; not part of it
 - `report-model.js` — the one copy of the balance-report scoring/format, shared by the CLI and the Balance Dashboard
 - `maps.js` — **core tunable data, hand-editable JSON**: board shapes, units, terrain stock, AI personalities
 - `content/` — **the map library, card decks, and mapsets, one file each** (`content/maps/*.js`, `content/decks/*.js`, `content/mapsets/*.js`): delete a map/deck by deleting its file. The map editor carves the **board outline itself** (Board hexes tool, add/remove under the 24-hex ceiling) and deletes maps for real (floor of 5); saving/deleting needs the local server.
-- `balance.js` — AI-vs-AI balance reports: `node balance.js`, `node balance.js matchup`
-  (the same report lives in the browser: **Balance Dashboard** on the main menu)
+- `dev/balance.js` — AI-vs-AI balance reports: `node dev/balance.js`, `node dev/balance.js matchup`
+  (the CLI lives under `dev/`; the same report lives in the browser: **Balance Dashboard** on the main menu)
 - `server.js` / `run-server.bat` / `run-server.command` — tiny zero-dependency LAN + save server
 - `custom-deck.js` — the **applied** deck from the **Deck Editor** (menu): edit cards in the browser — name, copies, text, steps — with validation (16 cards, one starting card); Save reloads with the new deck (it overrides `content/decks/default.js`). The 5 editing slots live in the browser; the applied deck is a file.
 - `test.js` — engine test suite: `node test.js`

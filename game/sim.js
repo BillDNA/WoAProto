@@ -1,46 +1,32 @@
-/* War of Attrition — engine part 06: skirmish simulation + balance aggregation + map validation.
-   Classic script (browser + node). Engine parts share the internal namespace
-   g.WOA_E (alias I) — cross-part calls go through I.* at the CALL SITE (never
-   captured at load time), so only filename-sorted load order matters. */
-(function (global) {
-  'use strict';
-  var I = global.WOA_E = global.WOA_E || {};
+/* War of Attrition — the batch/measurement layer: skirmish simulation + balance
+   aggregation, evicted from the shipped engine (#220). This is NOT the engine —
+   it is measurement built ON the engine's play surface (playToEnd + the play
+   primitives). Deleting this file leaves a game that still boots and plays a
+   skirmish by hand; only the Balance Dashboard's live sweep and the CLI reporters
+   go dark. It stays under game/ (not dev/) because the in-browser dashboard runs
+   the SAME fold and the server serves only game/ — see docs/code-architecture.md.
 
-  /* The one skirmish drive-loop: decide a turn, play the card, drain the step
-     queue. `decide` is the only thing that varies (which AI/plan drives the turn)
-     — one implementation per fact. The 400-turn / 12-step caps are load-bearing
-     infinite-loop guards. Not used by claude-plays.js (its LLM decides per step,
-     so there's no whole-plan drain) or smoke.js (which drives the real DOM). */
-  function playToEnd(st, opts) {
-    opts = opts || {};
-    var guard = 0;
-    while (st.phase !== 'skirmish-over' && guard++ < 400) {
-      var plan = opts.decide(st);
-      if (!plan) break;
-      I.playCard(st, plan.cardId, plan.mode || 'normal');
-      var g2 = 0;
-      while (st.phase === 'step' && g2++ < 12) {
-        var c = plan.choices.shift() || { skip: true };
-        try { I.applyStep(st, c); }
-        catch (e) { try { I.applyStep(st, { skip: true }); } catch (e2) { break; } }
-      }
-    }
-    return st;
-  }
+   Dual-exported (WOA_SIM global + module.exports) like report-model.js; resolves
+   the engine dual the same way. Load order: engine parts -> sim.js -> report-model.js
+   (report-model's foldSkirmishes delegates to factsFromRow/foldFacts here). */
+var WOA_SIM = (function () {
 
-  /* ---------- skirmish simulation (shared by balance.js and the in-game lab) ---------- */
+  var ENG = (typeof window !== 'undefined' && window.Engine) ? window.Engine
+    : (typeof require === 'function' ? require('./engine.js') : null);
+
+  /* ---------- skirmish simulation (shared by the CLI reporters and the in-browser dashboard) ---------- */
   // WOA-055: `decks` = {red, blue} per-side selection (each null|deck|id|name).
   // Omitted -> both sides share the active deck (behaviour unchanged from pre-055).
   function simSkirmish(map, seed, firstPlayer, diffRed, diffBlue, decks) {
-    var battle = I.newBattle({ seed: seed | 0, maps: [map], firstPlayer: firstPlayer || 'red', decks: decks || null });
-    var st = I.newSkirmish(battle);
-    return playToEnd(st, { decide: function (s) {
+    var battle = ENG.newBattle({ seed: seed | 0, maps: [map], firstPlayer: firstPlayer || 'red', decks: decks || null });
+    var st = ENG.newSkirmish(battle);
+    return ENG.playToEnd(st, { decide: function (s) {
       var diff = s.current === 'red' ? (diffRed || 'normal') : (diffBlue || diffRed || 'normal');
-      return I.aiPlanTurn(s, diff);
+      return ENG.aiPlanTurn(s, diff);
     } });
   }
 
-  // Balance aggregation is split so the CLI (balance.js) and the in-browser
+  // Balance aggregation is split so the CLI reporters and the in-browser
   // dashboard fold skirmishes through the SAME code — if they ever disagree on a
   // number, that's a bug. balanceNew makes an empty aggregate; balanceAdd folds
   // one finished skirmish in; balanceMap is the synchronous convenience loop.
@@ -68,7 +54,7 @@
       // Feedback Round 2 pacing metrics:
       killTail: 0,      // trailing kill-less turns (0 = ended on a kill/HQ, ~32 = no-kill grind)
       leadChanges: 0 }; // field-score lead flips per skirmish (higher = more back-and-forth)
-    I.CARDS.forEach(function (c) { out.cards[c.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0, hqPlays: 0, hqWins: 0 }; });
+    ENG.CARDS.forEach(function (c) { out.cards[c.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0, hqPlays: 0, hqWins: 0 }; });
     return out;
   }
   /* ---------- the per-Skirmish FACT (architecture review 01) ----------
@@ -85,13 +71,13 @@
      extras (reserve fractions, HQ-ending slice, the per-card fold) were never
      duplicated in foldBattles, so they stay in balanceAdd below. */
   function skirmishFacts(st, firstPlayer) {
-    var fsr = I.fieldScore(st, 'red'), fsb = I.fieldScore(st, 'blue');
+    var fsr = ENG.fieldScore(st, 'red'), fsb = ENG.fieldScore(st, 'blue');
     var stats = st.stats || {};
     var kills = st.kills || { red: 0, blue: 0 };
     var hr = 0, hb = 0;
     for (var h in st.units) (st.units[h].owner === 'red' ? hr++ : hb++);
     var resRed = 0, resBlue = 0;
-    Object.keys(I.UNITS).forEach(function (t) {
+    Object.keys(ENG.UNITS).forEach(function (t) {
       resRed += (st.reserves.red[t] || 0); resBlue += (st.reserves.blue[t] || 0);
     });
     return {
@@ -147,7 +133,7 @@
   function balanceAdd(out, st, fp) {
     if (st.phase !== 'skirmish-over') { out.unfinished++; return out; }
     var unitTotal = 0;
-    Object.keys(I.UNITS).forEach(function (t) { unitTotal += I.UNITS[t].count || 0; });
+    Object.keys(ENG.UNITS).forEach(function (t) { unitTotal += ENG.UNITS[t].count || 0; });
     var f = skirmishFacts(st, fp);
     foldFacts(out, f);                                          // the shared scalar facts + fold
     var w = f.winner;
@@ -181,7 +167,7 @@
     return out;
   }
   // the seed/first-player schedule for skirmish g of a balance run — one place,
-  // so the CLI and the dashboard replay the identical skirmishes
+  // so every reporter and the dashboard replay the identical skirmishes
   function balanceSeed(seedBase, g) { return (seedBase || 7919) + g * 104729 + 13; }
   function balanceFP(g) { return g % 2 === 0 ? 'red' : 'blue'; }
 
@@ -198,48 +184,12 @@
     return out;
   }
 
-  /* ---------- validation helper (for tests) ---------- */
-  function validateMaps(list) {
-    var problems = [];
-    var prevShape = I.currentShape();
-    (list || I.MAPS).forEach(function (m) {
-      var shape;
-      try { shape = I.ensureMapShape(m); }
-      catch (e) { problems.push(m.name + ': ' + e.message); return; }
-      if (!I.SHAPES[shape]) { problems.push(m.name + ': unknown board shape "' + shape + '"'); return; }
-      if (m.shapeDef && I.SHAPES[shape].list.length > 24)
-        problems.push(m.name + ': ' + I.SHAPES[shape].list.length + ' hexes exceeds the 24-hex ceiling (laser-cutter max; big empty maps are not fun)');
-      I.setBoard(shape);
-      try {
-        I.buildTerrain(m);
-        if (!I.inBoard.apply(null, m.redHQ)) problems.push(m.name + ': red HQ off board');
-        if (!I.inBoard.apply(null, m.blueHQ)) problems.push(m.name + ': blue HQ off board');
-        if (I.key.apply(null, m.redHQ) === I.key.apply(null, m.blueHQ)) problems.push(m.name + ': HQs overlap');
-        var stock = {};
-        Object.keys(I.TERRAIN_STOCK).forEach(function (k) { stock[k] = 0; });
-        m.pieces.forEach(function (p) {
-          var sk = p.t + p.edges.length;
-          if (stock[sk] === undefined) problems.push(m.name + ': piece of length ' + p.edges.length + ' has no physical counterpart (stock: ' + Object.keys(I.TERRAIN_STOCK).join(',') + ')');
-          else stock[sk]++;
-        });
-        var over = Object.keys(I.TERRAIN_STOCK).filter(function (k) { return stock[k] > I.TERRAIN_STOCK[k]; });
-        if (over.length) problems.push(m.name + ': exceeds terrain stock ' + JSON.stringify(stock));
-      } catch (e) { problems.push(e.message); }
-    });
-    I.setBoard(prevShape);
-    return problems;
-  }
+  return {
+    simSkirmish: simSkirmish,
+    skirmishFacts: skirmishFacts, factsFromRow: factsFromRow, foldFacts: foldFacts,
+    balanceNew: balanceNew, balanceAdd: balanceAdd,
+    balanceSeed: balanceSeed, balanceFP: balanceFP, balanceMap: balanceMap
+  };
+})();
 
-  /* shared-namespace exports */
-  I.playToEnd = playToEnd;
-  I.simSkirmish = simSkirmish;
-  I.skirmishFacts = skirmishFacts;
-  I.factsFromRow = factsFromRow;
-  I.foldFacts = foldFacts;
-  I.balanceNew = balanceNew;
-  I.balanceAdd = balanceAdd;
-  I.balanceSeed = balanceSeed;
-  I.balanceFP = balanceFP;
-  I.balanceMap = balanceMap;
-  I.validateMaps = validateMaps;
-})(typeof window !== 'undefined' ? window : globalThis);
+if (typeof module !== 'undefined' && module.exports) module.exports = WOA_SIM;

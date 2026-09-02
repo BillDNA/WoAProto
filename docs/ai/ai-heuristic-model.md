@@ -32,7 +32,7 @@ different *rows of numbers* fed to it. Seven ship today:
 So `AI_PRESETS` in `engine/05-ai.js` holds **3**; the engine then merges in
 every row of the `"ai"` block from `maps.js` (`Object.keys(BUILTIN.ai)…`),
 which adds brawler, turtle, hawk, and tuned → **7 total**. They all show up
-automatically in the menu AI pickers, the Balance Dashboard, and `balance.js`
+automatically in the menu AI pickers, the Balance Dashboard, and `dev/balance.js`
 (`boot.js` puts every `AI_PRESETS` key other than easy/normal/hard into the
 live pickers — `tuned` included; it isn't gated out, per `D.D:weight-tuner-sweep-rejected`).
 **Adding another AI is adding a row to `maps.js`, not writing code.**
@@ -55,7 +55,7 @@ Every turn the AI does a small greedy search:
 5. **Play the highest-scoring candidate.**
 
 A full hard skirmish simulates in about a second, so it's fine both live and in
-the Balance Dashboard / `balance.js` runs. Keep new personalities in that
+the Balance Dashboard / `dev/balance.js` runs. Keep new personalities in that
 ballpark.
 
 ### The tie-breaker for burning cards (CARD_KEEP)
@@ -180,8 +180,8 @@ examples, not balanced archetypes).
 1. **Tweak an archetype:** edit its `weights` in `maps.js`. No code.
 2. **Add a new one:** add a row to the `"ai"` block in `maps.js` with any
    subset of the weights above. It auto-appears everywhere.
-3. **Measure it:** `node game/balance.js matchup 16 <yours> normal` (pit it vs
-   a preset) or `node game/balance.js 40 <yours>` (per-map report driven by it).
+3. **Measure it:** `node dev/balance.js matchup 16 <yours> normal` (pit it vs
+   a preset) or `node dev/balance.js 40 <yours>` (per-map report driven by it).
    Watch the Behaviour + Pacing lines — if attacks/swaps or Drag/Swings move
    sharply, you changed the *feel*, not just the win rate.
 4. **Regenerate this doc:** `node dev/gen-docs.js` (new weights need a
