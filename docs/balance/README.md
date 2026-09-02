@@ -66,8 +66,8 @@ Goal + target + lever below; the current measured readings are in
    Evidence: first-mover line + per-map Red%/1st%. Target: 45–55% overall and per
    map. Lever: the `starting:true` opener card (see below) + per-map geometry.
 5. **Tie-rule not deciding too much.** Tie-goes-to-2nd breaks ties, doesn't decide
-   games. Evidence: the tie-decided line, **as a share of attrition endings**
-   (rules 1.2). Target: ≤18% of attrition endings (**hard floor**); a guardrail to
+   games. Evidence: the tie-decided line, **as a share of attrition endings**.
+   Target: ≤18% of attrition endings (**hard floor**); a guardrail to
    hold, not a lever to pull. Lever: attack-card supply + trench tie-survival rules.
 
 > **Two different "ties" — don't conflate them.** The **attrition tiebreak**

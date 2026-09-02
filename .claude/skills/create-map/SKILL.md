@@ -15,8 +15,8 @@ writes a `game/content/maps/` file).**
   header: `{"t":"F"|"M"|"R","edges":[[q,r,d],...]}`, sides of one piece belong
   to ONE hex, contiguous dirs; rivers come in the same 2/3-side lengths as
   forest and mountain).
-- `game/content/maps/<slug>.js` — the map library, one file per map (12 shipped
-  after the V1 trim). Note the match pool is the ACTIVE mapset
+- `game/content/maps/<slug>.js` — the map library, one file per map. Note the
+  match pool is the ACTIVE mapset
   (`game/content/mapsets/`), so a new map must also be added to a set — or
   measured directly with a name filter / `--mapset all`.
 - `docs/rubrics/map-rubric.md` — the map rubric.
@@ -66,8 +66,7 @@ built-ins), point-symmetric outlines keep Mirror and fair-HQ placement working.
    `node dev/balance.js 40 <name>` at the default **normal** AI (~4 s) is enough to
    *kill* a side-biased / attrition-only candidate; only promote the one or two
    finalists to a **hard** screen at n=100–200 (a hard screen is ~7× slower —
-   ~28 s at n=40 — so it's a finalist verdict, not triage; profile:
-   `logs/reports/analysis/1.1/2026-07-10-create-map-profile.md`). To put a survivor
+   ~28 s at n=40 — so it's a finalist verdict, not triage). To put a survivor
    in the match pool, tick it into the active mapset on the maps screen. Flag
    thresholds live in game/report-model.js (side ≥62/38, mover ≥62, HQ% ≤8 =
    attrition-only).

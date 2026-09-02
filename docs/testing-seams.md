@@ -1,15 +1,11 @@
----
-last-reviewed: 2026-09-01 (WoAProto#222)
----
 #claude-orientation #testing
 # Hand-off seams & the real-path gates
 
 A **seam** is where one piece hands real data to the next: a producer writes/emits/
 serializes, a consumer reads/parses/deserializes, and the contract between them can
-silently drift. WoAProto#222's job is to add the missing tests for those hand-offs —
-tests that drive **real data across the actual boundary**, nothing mocked, so a red
-means the wiring broke. This doc carries the running inventory; treat it as a backlog,
-never a certificate.
+silently drift. The seam tests cover those hand-offs — tests that drive **real data
+across the actual boundary**, nothing mocked, so a red means the wiring broke. This
+doc carries the running inventory; treat it as a backlog, never a certificate.
 
 ## The pattern
 
@@ -81,14 +77,14 @@ gap. Least-covered, most-load-bearing first.
 Content-value pins were removed across the suite: deck total / card points
 (`test.cards.js`), map count (`test.maps.js`), the default + shock-army unit
 composition/stats (`test.ai.js`), and every **absolute combat power** in
-`test.terrain.js` (`combat math`, `terrain attack table`, `multiple trenches`, `V0
-terrain-crossing`) — those now read the live stats (`E.UNITS.*`) and assert deltas
+`test.terrain.js` (`combat math`, `terrain attack table`, `multiple trenches`,
+`terrain-crossing`) — those now read the live stats (`E.UNITS.*`) and assert deltas
 (support adds the supporter's `sup`; terrain/HQ/card mod are flat `+1` rules
 constants). Verified: mutating infantry `sup` or artillery `sup` in `maps.js` reds
 **zero** tests; mutating `atk`/`def` reds only the outcome tests below.
 
 **The residual coupling is deliberate, not a value-pin.** A handful of tests assert
-combat *outcomes* — `rules 1.1: trench tie` and `noAdvance attacks` — which depend on
+combat *outcomes* — `trench tie` and `noAdvance attacks` — which depend on
 a stat **relationship**, not an absolute value: a *tie* is defined by equal power
 (`atk === def`), a *kill* by higher power (`cav.atk > inf.def`). Changing `atk`/`def`
 so the relationship inverts removes the very phenomenon (the tie, the clean kill) the

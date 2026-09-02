@@ -15,7 +15,7 @@
                                          easy/normal/hard or a maps.js "ai" row)
      node dev/balance.js 40 brawler      per-map report with a personality
      node dev/balance.js 40 --deck-red cavsplit-16 --deck-blue iter3
-                                         seat a different deck per side (WOA-055);
+                                         seat a different deck per side;
                                          id/name from content/decks/. Omit either
                                          flag to leave that side on the active deck.
 
@@ -37,12 +37,12 @@
    - Card report             -> Simple%/1stSight%/AvgSeen per card (per-card Win% is
                                 computed but not printed; see docs/report-model.md)
 
-   Attrition victory (June 2026 rules): the player with the higher field score of SURVIVING
+   Attrition victory: the player with the higher field score of SURVIVING
    units on the board wins when the cards run out; reserves count for nothing.
 */
 var E = require('../game/engine.js');
-// The batch/measurement layer: skirmish sweeps + balance folds (evicted from the
-// engine in #220). balanceMap/balanceFP/balanceSeed live here now, not on E.
+// The batch/measurement layer: skirmish sweeps + balance folds. It lives in
+// game/sim.js, not on E — balanceMap/balanceFP/balanceSeed are here.
 var SIM = require('../game/sim.js');
 // Shared report model: thresholds, folds, card-row derivation (report-model.js
 // is the ONE copy — this file keeps only its terminal formatting).
@@ -61,7 +61,7 @@ function pad(s, w, right) {
   return s;
 }
 
-// Mapset selection (V1 mapsets): default = the ACTIVE mapset's pool (one
+// Mapset selection: default = the ACTIVE mapset's pool (one
 // shared mapset across play modes + tools); `--mapset <id>` picks a specific
 // set; `--mapset all` = every map on disk.
 function mapsForSet(setArg) {
@@ -86,7 +86,7 @@ function matchup(n, a, b, maps, decks) {
   console.log('Skill-vs-luck report: ' + n + ' skirmishes per map per pairing, ' + maps.length + ' maps.');
   console.log('Each pairing also swaps sides so colour bias cancels out.' +
     (decks ? ' Decks swap WITH the AI so each keeps a fixed deck (skill, not deck, is measured).' : '') + '\n');
-  // WOA-055: the strong AI sits red in r1, blue in r2. If decks stayed seat-bound
+  // The strong AI sits red in r1, blue in r2. If decks stayed seat-bound
   // the strong AI would swap decks between orientations and the premium would fold
   // in deck strength — so swap the decks alongside the sides, pinning each AI to
   // one deck across both halves.
@@ -224,7 +224,7 @@ function mapReport(n, diff, filter, maps, mapsetArg, decks) {
   console.log('\nBehaviour & decisiveness lines:');
   console.log('  attacks/swaps % of actions  AI play health, as a share of all actions taken');
   console.log('            (deck-size-proof). Low attack% + high swap% = the AIs shuffle units');
-  console.log('            instead of fighting (the round-6 stalemate bug).');
+  console.log('            instead of fighting (the stalemate failure mode).');
   console.log('  zero-kill skirmishes  nobody died all skirmish: degenerate, should be ~0%.');
   console.log('  units fielded  share of all reserves that ever deployed. Low = turtling at home.');
   console.log('  reserves at end (HQ endings only)  share of a side\'s pieces still undeployed at an');
@@ -248,7 +248,7 @@ function mapReport(n, diff, filter, maps, mapsetArg, decks) {
 var args = process.argv.slice(2);
 var setArg = null, si = args.indexOf('--mapset');
 if (si >= 0) { setArg = args[si + 1]; args.splice(si, 2); }
-// WOA-055: seat a different deck per side. --deck-red/--deck-blue take a deck
+// Seat a different deck per side. --deck-red/--deck-blue take a deck
 // id or name from content/decks/; omit either to leave that side on the active
 // deck. No flags = both sides share the active deck (default).
 var deckRed = null, dri = args.indexOf('--deck-red');

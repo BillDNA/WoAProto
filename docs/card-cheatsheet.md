@@ -1,6 +1,3 @@
----
-last-reviewed: 2026-07-07
----
 #game-rules #human-instructions #code-architecture
 # Card editing cheat sheet
 
@@ -59,7 +56,7 @@ near zero).
 - No options. Player picks a controlled hex, then two contiguous edges that
   don't overlap existing trenches or that hex's own terrain.
 - Needs a trench in reserve (`"trenchCount"` per player, top of the file).
-- What a trench DOES (July 2026 rules): enemy attacking support may not cross
+- What a trench DOES: enemy attacking support may not cross
   its covered edges. No defense bonus, no effect on the attack itself or on
   the defender's support; ownership irrelevant.
 
@@ -90,7 +87,7 @@ near zero).
 { "type": "barrage" }
 ```
 - No options. Removes ANY single trench, or ANY whole forest piece, anywhere on
-  the board (June 2026 ruling). Mountains are safe.
+  the board. Mountains are safe.
 
 ## What you canNOT do from JSON
 

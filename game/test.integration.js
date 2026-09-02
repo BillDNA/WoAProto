@@ -1,4 +1,4 @@
-/* Real-path integration gate (WoAProto#222). Green must stop meaning "80% wired".
+/* Real-path integration gate. Green must stop meaning "80% wired".
    This drives a genuine skirmish through the PUBLIC engine entry points to an
    actual HQ capture — nothing mocked, no __sim clone — and proves the persistence
    SUBSCRIPTION seam is wired end to end: finishSkirmish -> onSkirmishEnd fires with
@@ -66,7 +66,7 @@ test('integration: a real finished skirmish reaches the persistence seam', (t) =
       try {
         const runId = db.insertRun(h, {
           version: E.VERSION, kind: 'balance', redAi: 'human', blueAi: 'human',
-          n: 1, tool: 'test.integration.js', notes: 'WoAProto#222 real-path gate'
+          n: 1, tool: 'test.integration.js', notes: 'real-path integration gate'
         });
         const sid = db.insertSkirmish(h, runId, fired, 'red', { seed: fired.seed });
         const row = h.db.prepare('SELECT winner, win_type, map FROM skirmishes WHERE id = ?').get(sid);

@@ -22,8 +22,8 @@
       skirmishIndex: 0,
       wins: { red: 0, blue: 0 },
       firstPlayer: opts.firstPlayer || (I.rnd(s) < 0.5 ? 'red' : 'blue'),
-      // WOA-055: per-side deck selection {red, blue} (each null|deck|id|name);
-      // travels with the battle like maps do. null = both sides share the active deck.
+      // Per-side deck selection {red, blue} (each null|deck|id|name); travels
+      // with the battle like maps do. null = both sides share the active deck.
       decks: opts.decks || null,
       winner: null
     };
@@ -31,9 +31,9 @@
     return battle;
   }
 
-  // WOA-055: the card registry for one side — the skirmish's per-side deck if it
-  // seats them, else the active-deck default. Self-heals pre-055 saves/sims that
-  // have no st.cards.sideDecks. Every per-side card lookup (buildDeck, drawHand,
+  // The card registry for one side — the skirmish's per-side deck if it seats
+  // them, else the active-deck default. Self-heals saves/sims that have no
+  // st.cards.sideDecks. Every per-side card lookup (buildDeck, drawHand,
   // playCard, stepOptions) routes through here so a side always reads ITS deck.
   function sideReg(st, p) {
     return (st.cards.sideDecks && st.cards.sideDecks[p]) || I.DEFAULT_REG;
@@ -55,7 +55,7 @@
     var shapeName = I.ensureMapShape(map);
     I.setBoard(shapeName);
     var terrain = I.buildTerrain(map);
-    // De-flattened skirmish state (WoAProto#221): the ~30 top-level keys are
+    // De-flattened skirmish state: the ~30 top-level keys are
     // grouped into composable blocks so a change to one seam does not ripple
     // across unrelated ones. Blocks mirror the CONTEXT.md sections —
     // board / pieces / cards / flow (turn) / result / journal. Identity keys
@@ -105,18 +105,18 @@
       journal: {
         log: [],
         playLog: [],                  // {p, id, mode, turn, seen-at-play} per card played
-        unitMetrics: initUnitMetrics(), // WOA-031 (SPEC §4 "units"): per-unit-type {dep,atk,abs,kill,die} fold
+        unitMetrics: initUnitMetrics(), // per-unit-type {dep,atk,abs,kill,die} fold
         lastSwap: { red: null, blue: null }, // p's most recent swap pair (AI anti-shuffle)
         stats: { attacks: 0, swaps: 0, marches: 0, deploys: 0, firstBlood: null }, // behaviour counters for the balance lab
         lastKillTurn: 0,   // turn of the most recent kill/HQ fall — kill-less-tail metric
         leadChanges: 0,    // times the field-score leader flipped to the OTHER side
         lastLeader: null,  // last definite (non-tie) field-score leader
-        fsTimeline: []     // [fsRed, fsBlue] per completed turn (V1 DB timeline; absent on sims + old saves)
+        fsTimeline: []     // [fsRed, fsBlue] per completed turn (DB timeline; absent on sims + old saves)
       }
     };
     st.flow.second = I.other(st.flow.current);
-    // WOA-055: only seat per-side registries when a non-default deck is actually
-    // chosen. The default (symmetric) path leaves st.cards.sideDecks absent — sideReg
+    // Only seat per-side registries when a non-default deck is actually chosen.
+    // The default (symmetric) path leaves st.cards.sideDecks absent — sideReg
     // falls back to DEFAULT_REG — so live/synced/persisted state never carries a
     // redundant card catalog on the hot path.
     var dsel = battle.decks;
@@ -133,15 +133,14 @@
     Object.keys(I.UNITS).forEach(function (t) { r[t] = I.UNITS[t].count || 0; });
     return r;
   }
-  // WOA-031 (SPEC §4): per-skirmish, per-unit-type fold — keyed by I.UNITS' own
-  // type keys (infantry/cavalry/artillery), not the spec doc's shorthand.
-  // Named unitMetrics (not "units") because st.pieces.units already means the
-  // hexKey->{type,owner} board map.
-  // WOA-044: dieT is a death-TURN list, symmetric to dep[] — pushed wherever
-  // die++ is tallied (engine/03-rules.js killDefender/killAttacker). Capture
-  // only: no existing field renamed or removed, so golden-diff aggregates are
-  // untouched (WOA-031/037/038 precedent). report-model.js's
-  // unitsAggFromEnvelopes pairs dep[]/dieT[] per skirmish to derive lifespan.
+  // Per-skirmish, per-unit-type fold — keyed by I.UNITS' own type keys
+  // (infantry/cavalry/artillery). Named unitMetrics (not "units") because
+  // st.pieces.units already means the hexKey->{type,owner} board map.
+  // dieT is a death-TURN list, symmetric to dep[] — pushed wherever die++ is
+  // tallied (engine/03-rules.js killDefender/killAttacker). Capture only: no
+  // existing field is renamed or removed, so golden-diff aggregates are
+  // untouched. report-model.js's unitsAggFromEnvelopes pairs dep[]/dieT[] per
+  // skirmish to derive lifespan.
   function initUnitMetrics() {
     var u = {};
     Object.keys(I.UNITS).forEach(function (t) { u[t] = { dep: [], atk: 0, abs: 0, kill: 0, die: 0, dieT: [] }; });
@@ -149,7 +148,7 @@
   }
   function ensureUnitMetrics(st) { // self-heal pre-metrics saves/sims
     if (!st.journal.unitMetrics) { st.journal.unitMetrics = initUnitMetrics(); return st.journal.unitMetrics; }
-    // WOA-044: a save resumed from just before dieT existed has per-type
+    // A save resumed from just before dieT existed has per-type
     // {dep,atk,abs,kill,die} but no dieT array — heal it in place so
     // killDefender/killAttacker's dieT.push never hits undefined.
     Object.keys(I.UNITS).forEach(function (t) {
@@ -198,8 +197,8 @@
     if (hand.length === 0) endByAttrition(st);
   }
 
-  // Attrition score (June 2026 rules revision): field score of a player's SURVIVING units
-  // on the board. Reserves never deployed count for nothing; kills only matter
+  // Attrition score: field score of a player's SURVIVING units on the
+  // board. Reserves never deployed count for nothing; kills only matter
   // because they remove enemy units from the field. (st.result.kills still tracks kills
   // for stats/journal, but victory reads the board.)
   function fieldScore(st, p) {
@@ -217,7 +216,7 @@
     finishSkirmish(st, winner, 'attrition');
   }
 
-  // V1 seam: every REAL finished skirmish (never an AI-search clone — those carry
+  // Every REAL finished skirmish (never an AI-search clone — those carry
   // __sim) flows through here, so persistence subscribes once and covers every
   // source: human play, watch mode, the lab, LLM skirmishes. Hook errors never
   // break the game.
@@ -285,8 +284,8 @@
     var p = st.flow.current;
     var idx = st.cards.hands[p].indexOf(cardId);
     if (idx < 0) throw new Error('card not in hand');
-    // House rule (Feedback Round 1): a basic reposition is only allowed when no
-    // basic attack is possible — you can't I.shuffle pieces to dodge a fight.
+    // House rule: a basic reposition is only allowed when no basic attack is
+    // possible — you can't I.shuffle pieces to dodge a fight.
     if (mode === 'reposition' && I.listAttacks(st, p).length > 0)
       throw new Error('cannot reposition while a basic attack is available');
     st.cards.hands[p].splice(idx, 1);
@@ -320,7 +319,7 @@
 
   // opts.previews === false skips the per-attack I.computeAttack preview — the
   // previews exist for the UI's hover pills; the AI's I.enumerateChoices and the
-  // step-possibility checks below never read them (V1 seam, hot path).
+  // step-possibility checks below never read them (hot path).
   function stepOptions(st, opts) {
     var step = currentStep(st);
     if (!step) return null;
@@ -376,7 +375,7 @@
     if (st.flow.pending.idx >= st.flow.pending.steps.length) endTurn(st);
   }
 
-  // Feedback Round 2: a card must accomplish at least one action if it can — you
+  // A card must accomplish at least one action if it can — you
   // may skip an individual step, but not skip EVERY step to burn the card for
   // free. A voluntary skip is refused only when nothing has acted yet, this step
   // can act, and no later step can (it's the card's last chance). Steps with no
@@ -403,8 +402,8 @@
   }
   function swapKey(a, b) { return a < b ? a + '|' + b : b + '|' + a; }
 
-  // WOA-031 (SPEC §4): tag the CURRENT play's trace fields as its steps
-  // resolve. 'attack' is sticky — once an attack resolves in a play, a later
+  // Tag the CURRENT play's trace fields as its steps resolve.
+  // 'attack' is sticky — once an attack resolves in a play, a later
   // reposition step (e.g. Reckless Maneuvers: attack THEN reposition) must
   // not steal the tag and strand that attack's kill off an 'attack' entry.
   // Terse — omit absent fields rather than writing null (cost ~40B/play).
@@ -507,16 +506,16 @@
   function endTurn(st) {
     var p = st.flow.current;
     // Decisiveness: did this turn flip the field-score lead to the OTHER side?
-    // (a swing to a tie doesn't count as a change — Feedback Round 2)
+    // (a swing to a tie doesn't count as a change)
     var fr = fieldScore(st, 'red'), fb = fieldScore(st, 'blue');
     var lead = fr > fb ? 'red' : (fb > fr ? 'blue' : null);
     if (lead) {
       if (st.journal.lastLeader && lead !== st.journal.lastLeader) st.journal.leadChanges = (st.journal.leadChanges || 0) + 1;
       st.journal.lastLeader = lead;
     }
-    if (st.journal.fsTimeline) st.journal.fsTimeline.push([fr, fb]); // absent on sims + pre-V1 saves
+    if (st.journal.fsTimeline) st.journal.fsTimeline.push([fr, fb]); // absent on sims + old saves
     var entry = st.journal.playLog[st.flow.pending.logIdx];
-    if (entry && st.journal.lastLeader) entry.ld = st.journal.lastLeader; // WOA-031: leader after this turn (carries through ties)
+    if (entry && st.journal.lastLeader) entry.ld = st.journal.lastLeader; // leader after this turn (carries through ties)
     if (st.flow.pending.acted === 0) {
       // The play resolved zero actions — an effective skipped turn. Bill wants
       // these visible in the journal AND measurable in the card report.
@@ -534,7 +533,7 @@
     drawHand(st, st.flow.current); // may end skirmish by attrition
   }
 
-  /* ---------- play surface (WoAProto#221) ----------
+  /* ---------- play surface ----------
      The read boundary the UI consumes instead of poking the skirmish state's
      internals. The UI depends on THIS stable surface, not on the block layout
      underneath it — so re-shaping st is a one-place edit here, and grepping the

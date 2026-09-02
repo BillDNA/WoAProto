@@ -2,7 +2,7 @@
 /* dev/claude-plays.test.js — the honest-info invariant + prompt-surface tests.
    Run: node dev/claude-plays.test.js   (offline; no claude spawns)
 
-   THE test the V1 spec demands: plant a sentinel card in the ENEMY's hidden
+   The honesty invariant: plant a sentinel card in the ENEMY's hidden
    hand and prove it cannot leak into any prompt surface the LLM sees. The
    sentinel is a card id/name that exists nowhere else, so a single string
    match is a proof, not a heuristic. */

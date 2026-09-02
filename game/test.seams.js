@@ -1,4 +1,4 @@
-/* Seam-test tracer (WoAProto#222). The verification pattern the later refactors
+/* Seam-test tracer. The verification pattern the refactors
    reuse: pick ONE seam, test it ALONE, and assert the MECHANISM (a limit can be
    set and is enforced) — never the VALUE (not "the cap is 72", not any card's or
    deck's point total). Tuning game content, or the cap itself, reds nothing here;

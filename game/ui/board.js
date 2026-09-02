@@ -47,8 +47,8 @@ function hl(g, k, cls, handler){
   return p;
 }
 
-/* hover a unit -> preview the attack math on every hex it could hit (V0
-   combat-clarity). Uses the engine's computeAttack — the same numbers the
+/* hover a unit -> preview the attack math on every hex it could hit.
+   Uses the engine's computeAttack — the same numbers the
    confirm dialog and resolution use, so they can never disagree. Hover-only,
    so it costs no screen space when unwanted. */
 function attackPreviewsFor(st, fromHex){
@@ -101,7 +101,7 @@ function renderHighlights(g){
     if (!ui.sel){
       o.targets.forEach(function(h){ hl(g, h, 'hl-target', function(){ ui.sel = h; renderAll(); }); });
     } else {
-      // one action (V0 combat-clarity): every legal orientation is a brass
+      // one action: every legal orientation is a brass
       // corner knob — hovering it previews the two covered edges, one click digs
       hl(g, ui.sel, 'hl-selected', function(){ ui.sel = null; renderAll(); });
       var pairs = E.trenchOrientations(st, ui.sel);

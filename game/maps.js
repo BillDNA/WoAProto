@@ -5,8 +5,8 @@
    refresh the browser. `node test.js` validates everything and will point at
    exactly what is wrong. `node balance.js` shows what your change did.
 
-   NOTE (Feedback Round 4, Pass 2): the MAP LIBRARY and the CARD DECK no longer
-   live here — they are per-item files under game/content/ (maps/<slug>.js,
+   NOTE: the MAP LIBRARY and the CARD DECK do not live here — they are per-item
+   files under game/content/ (maps/<slug>.js,
    decks/<slug>.js) that each register into a WOA_CONTENT global, so you can
    delete a map or a deck by deleting its file (no more localStorage tombstones).
    The engine assembles the full data set from THIS file (shapes/units/stock/ai)
@@ -61,8 +61,8 @@ var WOA_BUILTIN =
         "unitOnBoard": 28, "advance": 3.25, "myThreatKill": 5, "threatKill": 5, "threatTie": 0.5
       }
     },
-    /* sweep-2 survivors (2026-07-10, rules 1.1) — REJECTED for AI_WEIGHTS: lost the
-       matchup gate to hard (44% of 192). Kept as an inactive pit-able personality. */
+    /* A weight-sweep survivor, REJECTED for the AI_WEIGHTS defaults: it lost the
+       matchup gate to hard. Kept as an inactive pit-able personality. */
     "tuned": { "noise": 0, "breadth": 3, "replySamples": 2, "replyWeight": 0.7,
       "weights": { "enemyDist": 2.4, "fsDiff": 4, "threatTie": 1.88 } }
   },

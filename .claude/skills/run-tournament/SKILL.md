@@ -48,7 +48,7 @@ findings meant to feed `create-card`/`create-map`).
    - North-star scoreboard: each metric, current value, target band, verdict.
    - Per-map flags: SIDE-BIASED / mover-strong / attrition-only / STALEMATES rows,
      with the numbers.
-   - Pacing (Feedback Round 2): the Drag column (trailing kill-less turns before
+   - Pacing: the Drag column (trailing kill-less turns before
      the game ends — high = the AIs march in circles) and Swings (field-score
      lead flips per skirmish — high = real back-and-forth). Flag maps that drag.
    - Card watchlist: high Simple%, high 1stSight% + low AvgSeen.

@@ -1,6 +1,6 @@
-/* War of Attrition — ui part: the Balance Dashboard's CARDS pane (WOA-043,
-   design 5a). THE QUESTION: which cards are dead weight, and when do cards
-   actually fire? Three .chcard sections — sight quadrant (x = SPEC §2 doctrine
+/* War of Attrition — ui part: the Balance Dashboard's CARDS pane.
+   THE QUESTION: which cards are dead weight, and when do cards
+   actually fire? Three .chcard sections — sight quadrant (x = the doctrine
    win-slice), the dead-card Simple% dumbbells, and the when-cards-fire strips —
    fed by the SAME two runs' skirmish rows as Overview/Maps
    (dashLoadSkirmishRows/SKIRMISH_CACHE in ui/net.js).
@@ -14,7 +14,7 @@
    solid/filled. */
 'use strict';
 // the Cards strip's swatch — the shared uiSwatch at its 11px size (the .chkey/.sw
-// CSS is scoped under .chcard, GOTCHA WOA-042, and these strips sit in plain
+// CSS is scoped under .chcard, and these strips sit in plain
 // .ov-grid, so they need the inline-styled swatch, not the class).
 function crdSw(css) { return uiSwatch(css, { size: 11, valign: -1 }); }
 
@@ -24,20 +24,20 @@ function crdSw(css) { return uiSwatch(css, { size: 11, valign: -1 }); }
    these functions only draw whatever the model hands them. */
 
 /* =================== Cards §1: sight quadrant ===================
-   x = win % — the SPEC §2 doctrine slice (HQ-capture endings × non-simple
+   x = win % — the doctrine slice (HQ-capture endings × non-simple
    plays only; report-model.js cardHqWinSlice). Pooled card Win% NEVER appears
-   on this axis (WOA-019 / SPEC §2) — this comment IS the "state it's the SPEC
-   §2 slice" the ticket asks for. y = played-on-first-sight % (pooled —
-   Simple%/Noop%/1stSight%/AvgSeen/Plays are explicitly "unchanged" per SPEC
-   §2, so pooled is correct here, unlike Win%).
+   on this axis — the slice is what tells you whether a card wins the games it
+   is meant to. y = played-on-first-sight % (pooled —
+   Simple%/Noop%/1stSight%/AvgSeen/Plays are all pooled, correct here unlike
+   Win%).
    A ghost (hollow ink ring) -> B solid (fill = win % deviation from 50, the
    SAME chDivFill scale from the shared toolkit, chart-primitives.js), joined by
    a plain connector — the map dumbbells' A→B idiom (ovMapDumbbells), not a new
    arrowhead-marker convention. Bubble AREA = plays (max of A/B). Greyed marks
-   + "(n=N)" in the tooltip = the SPEC §8 small-n rule on the SLICE's own n
+   + "(n=N)" in the tooltip = the small-n rule on the SLICE's own n
    (fleet scope: this chart is fleet-wide, never per-map, so SMALL_N.fleet=240
    — deliberately strict; the slice is thin by construction and greying often
-   IS the honest answer, per the ticket's own framing).
+   IS the honest answer).
    Corner: "OP WATCHLIST" moves to top-RIGHT (wins big in HQ endings AND
    always played on sight) — a deliberate reading of design 5a's corner for
    THIS chart's axes: x is win% here (danger = top-RIGHT), not AvgSeen (which
@@ -226,7 +226,7 @@ function crdRenderBody(el, rowsA, rowsB) {
   var h = '<div class="crd-wrap">';
   h += '<div class="chcard"><h3>Which cards are on the overpowered watchlist?</h3>' +
     '<p class="small">' + rows.length + ' card(s) with plays in run A and/or B' +
-    (model.omitted ? '; ' + model.omitted + ' never played in a non-simple HQ-capture ending (omitted here — the SPEC §2 slice)' : '') +
+    (model.omitted ? '; ' + model.omitted + ' never played in a non-simple HQ-capture ending (omitted here — the win-slice)' : '') +
     '. Bubble area = plays; A hollow ghost → B solid.</p>' +
     '<div class="chkey"><span>fill B = win % deviation from 50:</span>' +
     '<span>' + chSwatch(CHART.divBlue[2]) + 'under 50%</span>' +

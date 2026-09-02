@@ -30,18 +30,18 @@ var CHART = {
   divStops: [3, 8, 15],                  // |win-50| < stop -> that arm step
   hq: '#a0522a',                         // winType: HQ capture (copper, chroma-snapped)
   attr: '#3e7dba',                       // winType: attrition   (river, chroma-snapped)
-  // WOA-035 (design 1c/1f/1e — Overview screen): nested T-band shading
+  // Overview screen: nested T-band shading
   // (T2 widest/lightest .. T0 narrowest/darkest), breach/regress/improve
-  // marks. Named per the design tokens (README "Design Tokens") rather than
-  // reused from seq/divRed above, even where the hex happens to match, so a
-  // future repalette of one doesn't silently drag the other along.
+  // marks. Named separately rather than reused from seq/divRed above, even
+  // where the hex happens to match, so a future repalette of one doesn't
+  // silently drag the other along.
   bandT2: '#ded0ab', bandT1: '#d3c294', bandT0: '#bfa96e',
   breach: '#9e2b25', regress: '#9c5449', improve: '#97753f',
   runADot: '#e8dcc0',                    // run-A hollow-dot fill (parchment)
   improveDot: '#77582e'                  // run-B dot fill when a map/metric improved (design 1f)
 };
-// WOA-040 (design 3a tempo lanes + README "Design Tokens" — deploy/attack/
-// swap/march): the four lane colours are the SAME hexes already named above
+// tempo lanes (deploy/attack/swap/march): the four lane colours are the SAME
+// hexes already named above
 // (seq[0]/divRed[1]/divBlue[1]/divMid), just given their tempo-lane reading —
 // no new colour is introduced, so a future repalette of one still drags both.
 CHART.lane = { deploy: CHART.seq[0], attack: CHART.divRed[1], swap: CHART.divBlue[1], march: CHART.divMid };
@@ -125,9 +125,9 @@ function chTipAttrs(name, rows, markIds){
 }
 
 /* CDF polyline points for a pre-SORTED array over a fixed [0,100] domain (the
-   settle-curve idiom, design 1e): 11 points at t=0,10,...,100, y = share of
+   settle-curve idiom): 11 points at t=0,10,...,100, y = share of
    the array <= t. Shared by the Overview fleet-wide mini (ovPacingMinis) and
-   the WOA-040 per-map settle curve — ONE implementation, two callers. */
+   the per-map settle curve — ONE implementation, two callers. */
 function chCdf(sorted, w, h){
   var pts = [];
   for (var t = 0; t <= 100; t += 10){
@@ -284,10 +284,10 @@ function ovDot(domain, v, isA, breached) {
    T0; T1 then T0 at T1; all three at T2) — the band literally widens on
    screen as you retemper (AC6), while the dot x-position (ovTrackDomain,
    fixed to T2) never jumps. Breach = run B outside the SELECTED tier's
-   band, small-n excepted (SPEC §8, fleet-wide n<240 -> greyed, "(n=N)"). */
-// scope ('fleet' default | 'map', WOA-040): which SMALL_N threshold n is
+   band, small-n excepted (fleet-wide n<240 -> greyed, "(n=N)"). */
+// scope ('fleet' default | 'map'): which SMALL_N threshold n is
 // compared against — the Overview's fleet-wide board never passes it (240),
-// the per-map board (WOA-040) passes 'map' (40, SPEC §8).
+// the per-map board passes 'map' (40).
 function ovBandRowHtml(row, aggA, aggB, temperature, scope) {
   var valA = row.val(aggA.agg, aggA.done);
   var valB = row.val(aggB.agg, aggB.done);

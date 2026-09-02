@@ -5,7 +5,7 @@ description: Run the whole balance-iteration loop unattended, start to graded re
 
 # balance-loop
 
-The **unattended** driver for the balance loop (issue #20 / M1): one invocation runs
+The **unattended** driver for the balance loop: one invocation runs
 **sweep → LLM match → graded analysis** and reports where the analysis landed. This is
 just an orchestrator — it reimplements nothing. It runs the two existing skills back to
 back, and adds the one thing they don't do on their own: it **waits for the match** so the

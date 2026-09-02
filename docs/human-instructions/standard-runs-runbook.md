@@ -1,13 +1,10 @@
----
-last-reviewed: 2026-07-10
----
 #human-instructions #game-logs #balance
 
 # Standard runs — the apples-to-apples runbook
 
 Named, repeatable balance runs. The point: **the same recipe always uses the same seeds**, so when
 you run it before and after a content tweak, any number that moved, moved because of your tweak —
-not luck. Every recipe was run and verified 2026-07-07 (rules 1.0). Run from the repo root.
+not luck. Run from the repo root.
 
 ## The two comparison rules
 
@@ -78,7 +75,6 @@ isolates the content change. Launch the match detached (this is what the `genera
 fires). *Optional extras (not the default):* add `--seed 2002` and `--seed 3003` for a deeper
 felt-read on one slot — the v1 three-match set, only when one match's signal is too thin.
 *Cost:* sweep ~2–4 min; the match ~40–90 min wall-clock, real tokens (haiku-low).
-*Verified:* 2026-07-09 (rules 1.0), iterations 1–2 of the balance loop.
 
 *Watch:* the protect-the-baselines list (Recipe 2), the new-card rows of the card table
 (Noop% ≤2, AvgSeen vs the deleted cards), and the match's fallback rate (≲5% = clean).
@@ -91,7 +87,7 @@ felt-read on one slot — the v1 three-match set, only when one match's signal i
 4. **Revert** (or keep, if the numbers say yes). A rerun after a revert must reproduce the
    *before* numbers exactly — if it doesn't, something else changed too.
 
-Live demo from 2026-07-07 — Recipe 1 on The Ford, `attack_plus1` step `mod` 1 → 2
+Worked example — Recipe 1 on The Ford, `attack_plus1` step `mod` 1 → 2
 (`game/content/decks/default.js`):
 
 | | Red% | 1st% | HQ% | Turns | Atk | Swp | Attack +1 AvgSeen |

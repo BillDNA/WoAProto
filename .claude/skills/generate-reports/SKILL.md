@@ -9,8 +9,8 @@ Produce the standard report set for the current rules version, against ANY deck 
 mapset (defaults: the ACTIVE pair). **This only generates data — it changes no game
 files.** Repo-relative paths; run from the repo root.
 
-This is the **gather-data** step of the balance-iteration loop (§ The v2 loop below;
-proven across the July 2026 4-iteration run): one isolated balance sweep + **one**
+This is the **gather-data** step of the balance-iteration loop (§ The v2 loop below):
+one isolated balance sweep + **one**
 seeded LLM match. Loop v2 (B.5.1.2) runs **one feels-match per iteration**, not three —
 the extra two seeds didn't earn their wall-clock. Every command pins its seeds, so the
 same recipe against two content slots is an apples-to-apples diff — the comparison rules
@@ -33,7 +33,7 @@ sync).
    the ids. Capture the `SAVED:` path. `BEST_MAP:` still prints — informational
    (matches no longer pin to it).
 
-2. **Skill premium, on a deck/AI change only** (WOA-030) — `node dev/balance.js matchup 96
+2. **Skill premium, on a deck/AI change only** — `node dev/balance.js matchup 96
    [--mapset <id>]` (all 4 pairings) or `matchup 96 <a> <b>` per pairing (chunked, ~1-5 min
    each) against the ACTIVE deck. Record the 4 %s in the rubric's north star 1 row (adjacent
    ≥60%, two-tier ≥75%, sanity ~50%); skip on report sets that don't touch card/deck/AI
@@ -84,31 +84,28 @@ This skill is step 1 of the balance loop. The full v2 order (B.5.4) is:
    <version>/…-balance-loop-final.md` (see below).
 
 The **v2 levers** the loop can now pull, beyond cards/maps: **unit composition & values
-as slot data** (WOA-011 — infantry/cavalry/artillery mix, worth, atk/def/support, all a
-one-file content diff). Cards, maps, and unit values are the three knobs an iteration
-may turn.
+as slot data** (infantry/cavalry/artillery mix, worth, atk/def/support, all a one-file
+content diff). Cards, maps, and unit values are the three knobs an iteration may turn.
 
-**AI weights are NOT a live knob.** WOA-012 verified and **rejected** the tuner sweep under
-1.1: the tuned personality lost the matchup gate to hard (44% of 192). No weight set is known
-to beat current hard, so `AI_WEIGHTS` defaults stand and the hard AI is a *fixed measuring
-instrument*. Re-opening weights means clearing the beat-hard gate first — and remember that
-tuning the AI to flatter the balance metrics moves the ruler, not the game.
+**AI weights are NOT a live knob.** The tuner sweep was verified and **rejected**: the
+tuned personality lost the matchup gate to hard. No weight set is known to beat current
+hard, so `AI_WEIGHTS` defaults stand and the hard AI is a *fixed measuring instrument*.
+Re-opening weights means clearing the beat-hard gate first — and remember that tuning the
+AI to flatter the balance metrics moves the ruler, not the game.
 
 ## The final report
 
-The loop's culmination (model: `logs/reports/analysis/1.0/2026-07-09-1.0-balance-loop-final.md`).
-Keep what v1 did — the slot table, headline-numbers table, the story, content shipped, a
+The loop's culmination. Keep the slot table, headline-numbers table, the story, content shipped, a
 measurements audit — and **add three new suggestion sections** (B.5.4), each ranked with
 measured evidence, all filed for Bill (he decides):
 
 1. **Suggested RULE changes** — engine-level levers the data argues for (needs a spec +
    `test.js`; bumps `Engine.VERSION`). Shape: the metric it moves, the mechanism, expected
-   direction/size, verification recipe. (Cf. the 1.0 "For Bill — rules-territory" list that
-   became WOA-009.)
+   direction/size, verification recipe.
 2. **Stats to gather or drop** — instruments to add (e.g. the turn-bucketed attack
    histogram v1 kept flagging) or retire (weak columns like per-card Win% that hug 50).
 3. **AI levers to add or drop** — weights/personalities to introduce or cut (grounded in
-   `ai-heuristic-model.md`), now that AI weights are a tunable (WOA-012).
+   `ai-heuristic-model.md`), now that AI weights are a tunable.
 
 Then Bill reviews the picks and decides what to act on.
 

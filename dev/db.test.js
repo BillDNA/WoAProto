@@ -14,8 +14,7 @@ const cp = require('child_process');
 
 const db = require(path.join(__dirname, 'db.js'));
 const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
-// simSkirmish is the batch/measurement layer (game/sim.js), evicted from the
-// engine in #220.
+// simSkirmish is the batch/measurement layer (game/sim.js), separate from the engine.
 const SIM = require(path.join(__dirname, '..', 'game', 'sim.js'));
 
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'woa-db-test-'));
@@ -76,14 +75,14 @@ test('round-trip (real simSkirmish state)', function () {
      b.marches === (st.journal.stats.marches || 0) && b.deploys === (st.journal.stats.deploys || 0),
     'attacks/swaps/marches/deploys copied from st.journal.stats');
   assert.ok(b.first_blood === (st.journal.stats.firstBlood || null), 'first_blood matches (' + b.first_blood + ')');
-  // WOA-016: reserve-held-at-end, computed independently here from st.pieces.reserves
+  // reserve-held-at-end, computed independently here from st.pieces.reserves
   // to prove db.js's own reservesLeft() reads the same source of truth.
   function reservesLeft(sideReserves) {
     var n = 0; Object.keys(E.UNITS).forEach(function (t) { n += sideReserves[t] || 0; }); return n;
   }
   assert.ok(b.res_end_red === reservesLeft(st.pieces.reserves.red) && b.res_end_blue === reservesLeft(st.pieces.reserves.blue),
     'res_end_red/res_end_blue = pieces left in st.pieces.reserves at skirmish end (' + b.res_end_red + '/' + b.res_end_blue + ')');
-  // WOA-038: hexes_red/hexes_blue = hex-ownership tally at skirmish end, computed
+  // hexes_red/hexes_blue = hex-ownership tally at skirmish end, computed
   // independently here from st.pieces.units (the SAME read balanceAdd does live) to
   // prove db.js's hexesHeld() reads the same source of truth.
   function hexTally(units) {
@@ -115,7 +114,7 @@ test('card_plays', function () {
 
 /* ---------- timeline: real skirmishes carry one; absence is tolerated ---------- */
 test('timeline', function () {
-  // simSkirmish states carry fsTimeline since the V1 seams commit — a real skirmish
+  // simSkirmish states carry fsTimeline — a real skirmish
   // should have produced per-turn rows above.
   var tl0 = h.db.prepare('SELECT COUNT(*) c FROM timeline WHERE skirmish_id = ?').get(skirmishId).c;
   assert.ok(tl0 === (st.journal.fsTimeline ? st.journal.fsTimeline.length : 0) && tl0 > 0,
@@ -123,7 +122,7 @@ test('timeline', function () {
   var noTl = JSON.parse(JSON.stringify(st)); noTl.battle = st.battle; delete noTl.journal.fsTimeline;
   var skirmishId0 = db.insertSkirmish(h, runId, noTl, 'red', { seed: 1234 });
   var tlAbsent = h.db.prepare('SELECT COUNT(*) c FROM timeline WHERE skirmish_id = ?').get(skirmishId0).c;
-  assert.ok(tlAbsent === 0, 'a state without fsTimeline (pre-V1 save) -> zero rows, tolerated silently');
+  assert.ok(tlAbsent === 0, 'a state without fsTimeline (an old save) -> zero rows, tolerated silently');
 
   st.journal.fsTimeline = [[2, 2], [4, 2], [4, 5]]; // synthetic, to pin the column mapping
   var skirmishId2 = db.insertSkirmish(h, runId, st, 'blue', { seed: 1234 });
@@ -153,8 +152,8 @@ test('GROUP BY via the handle', function () {
   assert.ok(g[0].avg_turns === st.flow.turnNumber, 'AVG(turns) is sane (' + g[0].avg_turns + ')');
 });
 
-/* ---------- listRuns (WOA-034: the dashboard header's run-A/B pickers) ---------- */
-test('listRuns (WOA-034)', function () {
+/* ---------- listRuns (the dashboard header's run-A/B pickers) ---------- */
+test('listRuns', function () {
   runId2 = db.insertRun(h, { version: E.VERSION, kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 40, tool: 'db.test.js', label: 'r2' });
   var runs = db.listRuns(h);
   assert.ok(runs.length === 2, 'listRuns returns every run on this handle (' + runs.length + ')');
@@ -165,8 +164,8 @@ test('listRuns (WOA-034)', function () {
   assert.ok(db.listRuns(h, 1).length === 1, 'limit is honoured');
 });
 
-/* ---------- listSkirmishes (WOA-035: the Overview screen's skirmish fetch) ---------- */
-test('listSkirmishes (WOA-035)', function () {
+/* ---------- listSkirmishes (the Overview screen's skirmish fetch) ---------- */
+test('listSkirmishes', function () {
   var skirmishesForRun1 = db.listSkirmishes(h, runId);
   assert.ok(skirmishesForRun1.length === 3, 'listSkirmishes returns every skirmish row for the run (' + skirmishesForRun1.length + ')');
   assert.ok(skirmishesForRun1.every(function (r) { return r.id != null; }) && skirmishesForRun1[0].id < skirmishesForRun1[1].id,
@@ -211,10 +210,10 @@ test('db-query.js CLI', function () {
   assert.ok(!wrote, 'CLI connection is read-only (DELETE rejected)');
 });
 
-/* ---------- run identity + trace (WOA-032, SPEC §7 / §4) ---------- */
+/* ---------- run identity + trace ---------- */
 // Separate handle/file from the counts-pinned assertions above (the CLI
 // section just asserted exact row counts on dbFile — don't perturb it).
-test('run identity + trace (WOA-032)', function () {
+test('run identity + trace', function () {
   var dbFile2 = path.join(tmpDir, 'runs.db');
   h2 = db.open(dbFile2);
 
@@ -224,7 +223,7 @@ test('run identity + trace (WOA-032)', function () {
   });
   var rowA = h2.db.prepare('SELECT * FROM runs WHERE id = ?').get(runIdA);
   assert.ok(rowA.deck === 'default' && rowA.mapset === 'core7' && rowA.seed_base === 7919 && rowA.label === 'run A',
-    'runs row carries deck/mapset/seed_base/label (SPEC §7)');
+    'runs row carries deck/mapset/seed_base/label (run identity)');
   assert.ok(rowA.baseline === 0, 'baseline defaults to 0 when not requested');
 
   st2 = SIM.simSkirmish(E.MAPS[0], 4242, 'red', 'normal', 'normal');
@@ -234,18 +233,18 @@ test('run identity + trace (WOA-032)', function () {
   var trace = JSON.parse(bA.trace);
   assert.ok(trace && typeof trace === 'object', 'skirmishes.trace is valid JSON');
   ['v', 'map', 'seed', 'fp', 'winner', 'winType', 'turns', 'trace', 'units'].forEach(function (k) {
-    assert.ok(k in trace, 'trace envelope has "' + k + '" (SPEC §4 shape)');
+    assert.ok(k in trace, 'trace envelope has "' + k + '"');
   });
   assert.ok(Array.isArray(trace.trace) && trace.trace.length === st2.journal.playLog.length,
     'trace.trace = st.journal.playLog verbatim (' + trace.trace.length + ' entries)');
   assert.ok(JSON.stringify(trace.units) === JSON.stringify(st2.journal.unitMetrics),
     'trace.units = st.journal.unitMetrics verbatim');
   assert.ok(Object.keys(trace.units).indexOf('infantry') >= 0,
-    'unitMetrics keyed by FULL unit-type name "infantry" (WOA-031 feed-forward), not "inf" shorthand');
+    'unitMetrics keyed by FULL unit-type name "infantry", not "inf" shorthand');
 });
 
-/* ---------- hexes_red/hexes_blue: known-units column mapping (WOA-038) ---------- */
-test('hex-ownership tally (WOA-038)', function () {
+/* ---------- hexes_red/hexes_blue: known-units column mapping ---------- */
+test('hex-ownership tally', function () {
   var stHex = JSON.parse(JSON.stringify(st2)); stHex.battle = st2.battle;
   stHex.pieces.units = { // a deliberately uneven, hand-known split: 3 red hexes, 1 blue hex
     '0,0': { type: 'infantry', owner: 'red' },
@@ -273,15 +272,15 @@ test('hex-ownership tally (WOA-038)', function () {
   ).run(runIdA, '9.9-test', E.MAPS[0].name, 'red', 'red', 10);
   var legacyRows = db.listSkirmishes(h2, runIdA).filter(function (r) { return r.hexesRed == null; });
   assert.ok(legacyRows.length === 1 && legacyRows[0].hexesBlue == null,
-    'a pre-WOA-038 row (hexes columns never written) round-trips as NULL, not 0');
+    'a legacy row (hexes columns never written) round-trips as NULL, not 0');
 });
 
-/* ---------- slimSkirmishState (WOA-041: the --parallel worker contract) ---------- */
+/* ---------- slimSkirmishState (the --parallel worker contract) ---------- */
 // balance-report's --parallel workers ship slimSkirmishState(st) through a
 // JSON pipe to the parent, which calls insertSkirmish on the other side. Pin
 // that exact trip: the slim state must land a skirmishes row identical to the
 // full state's (same seed/fp), plus the same card_plays and timeline rows.
-test('slimSkirmishState (WOA-041)', function () {
+test('slimSkirmishState', function () {
   var slimSt = JSON.parse(JSON.stringify(db.slimSkirmishState(st2))); // the worker->parent stdout trip
   var skirmishIdSlim = db.insertSkirmish(h2, runIdA, slimSt, 'red', { seed: 4242 });
   var fullRow = h2.db.prepare('SELECT * FROM skirmishes WHERE id = ?').get(skirmishIdA);
@@ -298,8 +297,8 @@ test('slimSkirmishState (WOA-041)', function () {
   assert.ok(tlSlim === tlFull && tlSlim > 0, 'slim state lands the same timeline rows (' + tlSlim + ')');
 });
 
-/* ---------- baseline uniqueness (WOA-032, SPEC §7) ---------- */
-test('baseline uniqueness (WOA-032)', function () {
+/* ---------- baseline uniqueness ---------- */
+test('baseline uniqueness', function () {
   var vBase = '9.9-baseline-test';
   var runX = db.insertRun(h2, { version: vBase, kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 1, tool: 'db.test.js', baseline: true });
   assert.ok(h2.db.prepare('SELECT baseline FROM runs WHERE id = ?').get(runX).baseline === 1,
@@ -308,15 +307,15 @@ test('baseline uniqueness (WOA-032)', function () {
   var runY = db.insertRun(h2, { version: vBase, kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 1, tool: 'db.test.js', baseline: true });
   var flagsAfterY = h2.db.prepare('SELECT id, baseline FROM runs WHERE version = ? ORDER BY id').all(vBase);
   assert.ok(flagsAfterY.filter(function (r) { return r.baseline === 1; }).length === 1,
-    'exactly one baseline=1 row after a SECOND pin (pinning-twice, pin #1)');
+    'exactly one baseline=1 row after a SECOND pin (pinning twice, first pin)');
   assert.ok(flagsAfterY.filter(function (r) { return r.id === runY; })[0].baseline === 1 &&
      flagsAfterY.filter(function (r) { return r.id === runX; })[0].baseline === 0,
     'the newer run (Y) is now baseline; the older one (X) was cleared');
 
-  db.setBaseline(h2, runX); // pinning-twice, pin #2: promote X back over Y via the standalone helper
+  db.setBaseline(h2, runX); // pinning twice, second pin: promote X back over Y via the standalone helper
   var flagsAfterX = h2.db.prepare('SELECT id, baseline FROM runs WHERE version = ? ORDER BY id').all(vBase);
   assert.ok(flagsAfterX.filter(function (r) { return r.baseline === 1; }).length === 1,
-    'exactly one baseline=1 row after re-pinning via setBaseline (pinning-twice, pin #2)');
+    'exactly one baseline=1 row after re-pinning via setBaseline (pinning twice, second pin)');
   assert.ok(flagsAfterX.filter(function (r) { return r.id === runX; })[0].baseline === 1 &&
      flagsAfterX.filter(function (r) { return r.id === runY; })[0].baseline === 0,
     'setBaseline(runX) promotes X and clears Y');
@@ -339,13 +338,13 @@ test('baseline uniqueness (WOA-032)', function () {
 });
 
 /* ---------- factsFromRow ≡ skirmishFacts: the DB read path must not drift from
-   the live path (WoAProto#222). Both folds feed the shared aggregate; if a column
+   the live path. Both folds feed the shared aggregate; if a column
    alias or a derivation ever disagrees, this catches it as a field-level diff. */
-test('factsFromRow ≡ skirmishFacts (WoAProto#222)', function () {
+test('factsFromRow ≡ skirmishFacts', function () {
   var hf = db.open(path.join(tmpDir, 'facts.db'));
   try {
     var st = SIM.simSkirmish(E.MAPS[0], 555, 'red', 'normal', 'normal');
-    var live = SIM.skirmishFacts(st, 'red');               // the LIVE-state fold (sim layer, #220)
+    var live = SIM.skirmishFacts(st, 'red');               // the LIVE-state fold (sim layer)
     var rid = db.insertRun(hf, { version: E.VERSION, kind: 'balance', redAi: 'normal', blueAi: 'normal', n: 1, tool: 'db.test.js' });
     db.insertSkirmish(hf, rid, st, 'red', { seed: 555 });
     var row = db.listSkirmishes(hf, rid)[0];               // round-trip through SQLite

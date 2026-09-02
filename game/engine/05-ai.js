@@ -22,8 +22,8 @@
   // state so I.finishSkirmish never fires persistence hooks for search clones.
   function cloneForSim(st) {
     var m = st.battle, lg = st.journal.log, pl = st.journal.playLog, tl = st.journal.fsTimeline, sd = st.cards.sideDecks;
-    // WOA-055: sideDecks registries are immutable for the skirmish (resolved once
-    // at newSkirmish) — strip them out of the deep clone (the byId maps carry the
+    // sideDecks registries are immutable for the skirmish (resolved once at
+    // newSkirmish) — strip them out of the deep clone (the byId maps carry the
     // whole card catalog) and reattach the SAME reference, like battle/log below.
     st.battle = null; st.journal.log = []; st.journal.playLog = (pl && pl.length) ? [pl[pl.length - 1]] : []; st.journal.fsTimeline = undefined; st.cards.sideDecks = undefined;
     var c = JSON.parse(JSON.stringify(st));
@@ -34,8 +34,8 @@
     return c;
   }
 
-  // AI-side unit valuation — lives in the weight vector since V1 so the tuner
-  // and personalities can sweep it; the old hardcoded 3/4/5 are the defaults.
+  // AI-side unit valuation — lives in the weight vector so the tuner and
+  // personalities can sweep it; 3/4/5 are the defaults.
   var UNIT_VAL_KEY = { infantry: 'unitValInfantry', cavalry: 'unitValCavalry', artillery: 'unitValArtillery' };
   function unitValue(t, w) {
     var k = UNIT_VAL_KEY[t];
@@ -43,7 +43,7 @@
     return { infantry: 3, cavalry: 4, artillery: 5 }[t] || ((I.UNITS[t] ? I.UNITS[t].worth : 1) + 2);
   }
 
-  // ---- AI personalities are DATA (V0 ai-variety) ----
+  // ---- AI personalities are DATA ----
   // One engine, many temperaments: a config is { noise, breadth, replySamples,
   // replyWeight, weights:{...} }. noise = evaluation randomness (mistakes);
   // breadth = how many top candidates get re-scored by the opponent's sampled
@@ -52,8 +52,8 @@
   // Extra personalities can be defined in maps.js as an "ai" block — a new AI
   // is a new row of numbers, not new code. easy/normal/hard are presets here.
   // Guardrails baked in (don't lose them in a new config): the noopPenalty and
-  // antiShuffle weights and the attrition projection are the round-5/6 anti-
-  // degeneracy fixes — zero them and the swap-dance stalemate returns.
+  // antiShuffle weights and the attrition projection are the anti-degeneracy
+  // fixes — zero them and the swap-dance stalemate returns.
   var AI_WEIGHTS = {
     attrWin: 500,      // attrition-projection swing at full urgency
     fsDiff: 8, fsDiffUrgent: 40, // field-score diff, flat + urgency-scaled
@@ -65,12 +65,12 @@
     myThreatHQ: 220, myThreatKill: 3,   // my available attacks next step
     threatHQ: 600, threatKill: 6, threatTie: 2.5, // enemy threats on me
     trenchHome: 6,     // trenches near my HQ
-    trenchFacing: 3,   // V1: per covered trench edge that faces a LIVE enemy lane
-                       // (enemy unit within 2 of the far hex) — orientation matters now
-    noopPenalty: 80,   // dead-turn plans (round 6 — keep > fallbackBias + reply noise)
+    trenchFacing: 3,   // per covered trench edge that faces a LIVE enemy lane
+                       // (enemy unit within 2 of the far hex) — orientation matters
+    noopPenalty: 80,   // dead-turn plans (keep > fallbackBias + reply noise)
     antiShuffle: 10,   // re-swapping the same pair as last turn
     fallbackBias: 12,  // mild preference for printed actions over card-burning
-    // V1 search dial (lives with the weights so personalities/tuner can set it):
+    // Search dial (lives with the weights so personalities/tuner can set it):
     // when a step has more options than this, keep the top N by cheap static
     // pre-rank instead of the old RANDOM shuffle+slice(80) — the cap can no
     // longer discard the best move. Lower = faster + more approximate.
@@ -109,8 +109,7 @@
   // How many of a trench's two covered edges face a LIVE enemy lane — an enemy
   // unit within 2 hexes of the far side of the denied border. Trenches are
   // attacker-support denial, so an edge nobody can attack across is worth
-  // nothing; this is what makes orientation a real choice (V1 — Bill's
-  // "how does the AI pick the facing" answer used to be "it doesn't").
+  // nothing; this is what makes the AI's choice of trench orientation a real one.
   function trenchFacingLive(st, h, dirs, enemyHexes) {
     var v = 0;
     for (var i = 0; i < dirs.length; i++) {
@@ -131,7 +130,7 @@
     // Attrition projection: who wins if the decks ran out right now? Ramps up as
     // they empty, so the side losing the standstill (incl. ties — second player
     // wins those) is pushed to force combat instead of swap-dancing to 0-0.
-    // This replaced a kill-score term when scoring moved to surviving units (June 2026).
+    // Scoring reads surviving units, not kills.
     var fsMe = I.fieldScore(st, me), fsEn = I.fieldScore(st, en);
     var turnsLeft = Math.min(I.cardsRemaining(st, me), I.cardsRemaining(st, en));
     var urgency = Math.max(0, 1 - turnsLeft / 12);
@@ -168,7 +167,7 @@
     // Trenches: proximity to my HQ is nice, but a trench is attacker-support
     // denial — its real worth is FACING somewhere the enemy can actually come
     // from. Count each covered edge on a live lane (my unit's hex, or a hex
-    // shielding my HQ) so orientation stops being an arbitrary tie (V1).
+    // shielding my HQ) so orientation isn't an arbitrary tie.
     var enemyHexes = enUnits.map(function (x) { return x.h; });
     for (var th in st.pieces.trenches) {
       if (I.dist(th, mhq) <= 1) s += w.trenchHome * st.pieces.trenches[th].length;
@@ -247,9 +246,9 @@
       var eo = enumerateWithOptions(sim);
       var opts = eo.choices;
       var best = null, bestScore = -Infinity;
-      // Branching cap (V1): the old cap RANDOM-shuffled and sliced 80 — on a
-      // high-branching step it could discard the best move outright. Now the
-      // cut keeps the top w.shortlist by static pre-rank; skip stays available.
+      // Branching cap: on a high-branching step, keep the top w.shortlist by
+      // static pre-rank rather than a random slice that could discard the best
+      // move; skip stays available.
       if (opts.length > w.shortlist) {
         var ctx = prescoreCtx(sim, me);
         var scored = opts.map(function (c, i) { return { c: c, i: i, p: prescoreChoice(sim, eo.o, c, me, w, ctx) }; });
@@ -330,8 +329,8 @@
     var tried = {};
     // A plan that resolves ZERO actions is a dead turn (Bill: players should
     // always get to act) — penalize harder than the fallbackBias AND the
-    // reply-search noise (round 6: 25 wasn't enough; sampled-hand variance
-    // between candidates flipped it). When truly nothing can act, every plan
+    // reply-search noise (sampled-hand variance between candidates can flip a
+    // smaller penalty). When truly nothing can act, every plan
     // carries the penalty, so it cancels out.
     function noopPenalty(sim) {
       var le = sim.journal.playLog[sim.journal.playLog.length - 1];
@@ -365,10 +364,10 @@
     if (!cfg.breadth) return candidates[0].plan;
     var best = null, bestScore = -Infinity;
     candidates.slice(0, cfg.breadth).forEach(function (cand) {
-      // Common random numbers (round 6): every candidate is scored against the
-      // SAME sampled enemy hands (fresh rng, same seed), otherwise one candidate
-      // randomly eats an Airdrop-by-the-HQ sample that another never saw —
-      // that noise once drowned the dead-turn penalty entirely.
+      // Common random numbers: every candidate is scored against the SAME
+      // sampled enemy hands (fresh rng, same seed), otherwise one candidate
+      // randomly eats an Airdrop-by-the-HQ sample that another never saw — that
+      // noise can drown the dead-turn penalty entirely.
       var s2 = { seed: (st.seed ^ 0x51f15eed) | 0 };
       // cand.score already carries -pen; subtract the reply-side share too so
       // the dead-turn penalty hits the blend at FULL strength (the greedy share
@@ -381,7 +380,7 @@
   }
 
   // Rank the current step's legal choices by the same clone+eval the AI uses.
-  // Built for the LLM harness (V1): show the model the top k of N instead of
+  // Built for the LLM harness: show the model the top k of N instead of
   // every legal move, WITHOUT hiding anything strategic —
   //   - an attack step is never truncated (attacks are the strategic moves),
   //   - any choice touching ground within 1 of either HQ is force-included,

@@ -1,6 +1,6 @@
 # Handoff — Candidate B: one skirmish drive-loop behind a decision seam
 
-> **Updated by #220 (dev/ship seam):** `playToEnd` was already extracted and is
+> **Update (dev/ship seam):** `playToEnd` was already extracted and is
 > now the sole play-orchestration content of `game/engine/06-drive.js` (with
 > `validateMaps`), exported as `Engine.playToEnd`. The balance/sim fold that this
 > doc found beside it (`balanceMap` and friends) was evicted to the batch layer

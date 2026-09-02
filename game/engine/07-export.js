@@ -30,7 +30,7 @@
     AI_PRESETS: I.AI_PRESETS, AI_WEIGHTS: I.AI_WEIGHTS, aiConfig: I.aiConfig, CARD_KEEP: I.CARD_KEEP,
     hooks: I.HOOKS,
     // The batch/measurement layer (skirmish sweeps + balance folds) is NOT on the
-    // engine surface — it lives in game/sim.js (WOA_SIM), built on playToEnd (#220).
+    // engine surface — it lives in game/sim.js (WOA_SIM), built on playToEnd.
     playToEnd: I.playToEnd
   };
   global.Engine = Engine;

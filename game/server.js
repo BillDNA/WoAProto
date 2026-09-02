@@ -3,7 +3,7 @@
    Then open the printed address on both devices (same wifi).
 
    Also the browser's write proxy: content saves (maps/decks), report/debug
-   saves, and — V1 — per-skirmish persistence into logs/woa.db via dev/db.js.
+   saves, and per-skirmish persistence into logs/woa.db via dev/db.js.
    The db require is guarded: a zipped game/ without dev/ still serves and
    plays; /api/recordskirmish just answers 501. */
 'use strict';
@@ -16,7 +16,7 @@ var PORT = process.env.PORT || 8420;
 var ROOT = __dirname;
 var MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.json': 'application/json', '.md': 'text/markdown' };
 
-// --- content files (Feedback Round 4 Pass 2): maps/decks are per-item files
+// --- content files: maps/decks are per-item files
 // under content/, each registering into WOA_CONTENT; content/manifest.js is
 // regenerated (by scanning the dirs) so the browser loads exactly what's there.
 // WOA_CONTENT_DIR: a test points content writes (savemap/deletemap/savemapsets)
@@ -35,7 +35,7 @@ var regenContentManifest = require(path.join(CONTENT_DIR, 'manifest-gen.js')).re
 // (or a git pull) otherwise leave the browser on a stale map library.
 try { regenContentManifest(); } catch (e) { console.log('  (manifest regen failed: ' + e.message + ')'); }
 
-// --- V1 skirmish persistence (guarded: dev/ may be absent from a zip) ---------
+// --- skirmish persistence (guarded: dev/ may be absent from a zip) ---------
 var db = null, dbHandle = null, dbRuns = {}; // runKey -> runId (per server boot)
 try { db = require(path.join(ROOT, '..', 'dev', 'db.js')); } catch (e) { /* persistence off */ }
 function recordSkirmish(body) {
@@ -175,7 +175,7 @@ var ROUTES = {
     });
   },
   'POST /api/savereport': function (req, res, body) {
-    // Balance Dashboard report -> logs/reports/balance/<version>/ (Round 4)
+    // Balance Dashboard report -> logs/reports/balance/<version>/
     if (!body.filename || typeof body.content !== 'string') return json(res, 400, { error: 'bad request' });
     var ver = String(body.version || '0.0');
     if (!/^[A-Za-z0-9._-]+$/.test(ver)) return json(res, 400, { error: 'bad version' });
@@ -183,7 +183,7 @@ var ROUTES = {
   },
   'POST /api/savedebug': function (req, res, body) {
     // game-state snapshot -> logs/debug/ so Bill can point Claude at an exact
-    // situation instead of pasting a screenshot (Round 4)
+    // situation instead of pasting a screenshot
     if (!body.filename || typeof body.content !== 'string') return json(res, 400, { error: 'bad request' });
     saveUnderRepo(res, ['logs', 'debug'], String(body.filename), /^[A-Za-z0-9._-]+\.json$/, body.content);
   },
@@ -211,10 +211,10 @@ var ROUTES = {
     } catch (e) { json(res, 500, { error: e.message }); }
   },
   'POST /api/recordskirmish': function (req, res, body) {
-    // V1: one finished skirmish -> a per-skirmish row in logs/woa.db.
+    // one finished skirmish -> a per-skirmish row in logs/woa.db.
     // body = { run:{version,kind,redAi,blueAi,n,tool,notes,deck,mapset,seedBase,label,baseline},
     //   runKey?, state, firstPlayer, seed } — run is forwarded to db.insertRun as-is
-    // (WOA-032, SPEC §7: run identity); the caller (the dashboard Run loop) stamps
+    // (run identity); the caller (the dashboard Run loop) stamps
     // deck/mapset/seedBase, never this proxy — the server stays a dumb pass-through.
     try {
       var r = recordSkirmish(body);
@@ -222,7 +222,7 @@ var ROUTES = {
     } catch (e) { json(res, 500, { error: e.message }); }
   },
   'GET /api/runs': function (req, res) {
-    // WOA-034: the dashboard header's run-A/B pickers. Guarded like recordSkirmish
+    // the dashboard header's run-A/B pickers. Guarded like recordSkirmish
     // above — a zipped game/ without dev/ (or a db that's never been opened)
     // answers a clean [] rather than 501/error; the dashboard's fetch().catch
     // falls back the same way under file:// where this is never even called.
@@ -233,7 +233,7 @@ var ROUTES = {
     } catch (e) { json(res, 500, { error: e.message }); }
   },
   'GET /api/skirmishes': function (req, res, body, u) {
-    // WOA-035: the Overview screen's fetch — every skirmish row for one run,
+    // the Overview screen's fetch — every skirmish row for one run,
     // scalar columns + the trace TEXT blob (parsed client-side by
     // WOA_REPORT.envelopeFromRow). Guarded like /api/runs above — a zipped
     // game/ without dev/, a db that's never been opened, or a missing/bad
@@ -244,7 +244,7 @@ var ROUTES = {
     try {
       if (!dbHandle) dbHandle = db.open();
       var rows = db.listSkirmishes(dbHandle, runId);
-      // WOA-037: attach each skirmish's per-turn field-score timeline as a
+      // attach each skirmish's per-turn field-score timeline as a
       // sibling `fs: [[fsRed,fsBlue], ...]` (turn-ordered) — env.fs for
       // WOA_REPORT.fsDiffTrack/envelopeFromRow. ONE grouped query over the
       // `timeline` table for this run's skirmish ids (never N+1 per skirmish).

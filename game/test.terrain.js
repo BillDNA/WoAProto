@@ -40,7 +40,7 @@ test('trench/terrain edge exclusivity', () => {
 
 test('multiple trenches per hex', () => {
 (function () {
-  // Powers are expressed relative to the LIVE unit stats (WoAProto#222: mechanism,
+  // Powers are expressed relative to the LIVE unit stats (mechanism,
   // not pinned integers) so retuning a unit stat reds nothing here.
   var U = E.UNITS, Ia = U.infantry.atk, Id = U.infantry.def, Is = U.infantry.sup;
   var st = testSkirmish(60);
@@ -57,7 +57,7 @@ test('multiple trenches per hex', () => {
   assert.ok(st.pieces.trenches['-1,1'].length === 2, 'second trench dug on the same hex');
   st.pieces.units['0,0'] = { type: 'infantry', owner: 'blue' };
   var r = E.computeAttack(st, { from: '0,0', to: '-1,1' });
-  assert.ok(r.defenderPower === Id, 'trenches add no defense under the V0 rules (bare def, got ' + r.defenderPower + ')');
+  assert.ok(r.defenderPower === Id, 'trenches add no defense (bare def, got ' + r.defenderPower + ')');
   st.pieces.units['-1,0'] = { type: 'infantry', owner: 'blue' }; // its border into the hex is trenched (dir 2)
   var r2 = E.computeAttack(st, { from: '0,0', to: '-1,1' });
   assert.ok(r2.attackerPower === Ia, 'second trench denies attacker support across its edges (bare atk, got ' + r2.attackerPower + ')');
@@ -82,7 +82,7 @@ test('terrain attack table (A/B/C)', () => {
   // A top, B = A's SW neighbor, C = A's SE neighbor. Forest in A on edges A|B and A|C.
   // Mountain in B on edges B|A and B|C.
   // Base powers from live stats; terrain adds a flat +1 (a rules constant, not a
-  // unit stat), so retuning unit stats reds nothing here (WoAProto#222).
+  // unit stat), so retuning unit stats reds nothing here.
   var Ia = E.UNITS.infantry.atk, Id = E.UNITS.infantry.def;
   var A = '0,0', B = '-1,1', C = '0,1';
   function fresh() {
@@ -114,7 +114,7 @@ test('terrain attack table (A/B/C)', () => {
 
 test('combat math', () => {
 (function () {
-  // Powers relative to live stats (WoAProto#222): base = infantry atk/def, each
+  // Powers relative to live stats: base = infantry atk/def, each
   // infantry supporter adds its sup, artillery adds its sup; terrain/HQ/card mod
   // are flat +1 rules constants. Retuning a unit stat reds nothing here.
   var U = E.UNITS, Ia = U.infantry.atk, Id = U.infantry.def, Is = U.infantry.sup, As = U.artillery.sup;
@@ -133,7 +133,7 @@ test('combat math', () => {
   st.pieces.units['1,1'] = { type: 'infantry', owner: 'blue' };
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
   assert.ok(res.defenderPower === Id + Is, 'defender gains one infantry support (got ' + res.defenderPower + ')');
-  // trench across the artillery's support border: that support is denied (V0 rules)
+  // trench across the artillery's support border: that support is denied
   st.pieces.trenches['0,1'] = [{ dirs: [2, 3], owner: 'blue' }]; // covers borders toward 0,0 and -1,1
   res = E.computeAttack(st, { from: '0,0', to: '0,1' });
   assert.ok(res.attackerPower === Ia && res.defenderPower === Id + Is,
@@ -170,11 +170,11 @@ test('combat math', () => {
 })();
 });
 
-test('V0 terrain-crossing rules: trench support denial + rivers', () => {
+test('terrain-crossing rules: trench support denial + rivers', () => {
 (function () {
   // Trench on the SUPPORTER's hex blocks just the same (ownership of the
   // border piece is irrelevant): red attacks 0,1 from 0,0; red support at 1,1.
-  // Powers relative to live stats (WoAProto#222).
+  // Powers relative to live stats.
   var Ia = E.UNITS.infantry.atk, Id = E.UNITS.infantry.def, Is = E.UNITS.infantry.sup;
   var st = testSkirmish(130);
   st.pieces.units['0,0'] = { type: 'infantry', owner: 'red' };
@@ -276,7 +276,7 @@ test('deploy / control rules', () => {
 })();
 });
 
-test('rules 1.1: a trench lets the defender survive a combat tie', () => {
+test('a trench lets the defender survive a combat tie', () => {
 (function () {
   fixtureCard('ordered_withdraw'); // fixture, not the active deck (used in (b) below)
   // dirs of a trench covering the attacked border of `defHex` (the side facing

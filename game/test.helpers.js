@@ -3,8 +3,8 @@
    in favour of node:test + node:assert. */
 'use strict';
 var E = require('./engine.js');
-// The batch/measurement layer (sweeps + balance folds), evicted from the engine
-// in #220. simSkirmish/balanceMap/etc live here now, not on E.
+// The batch/measurement layer (sweeps + balance folds), separate from the engine.
+// simSkirmish/balanceMap/etc live here, not on E.
 var SIM = require('./sim.js');
 
 // A bare classic-board map so rules tests are deterministic regardless of the

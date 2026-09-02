@@ -255,7 +255,7 @@ test('fsTimeline: one [fsRed,fsBlue] pair per completed turn', () => {
 })();
 });
 
-test('V1 AI search', () => {
+test('AI search', () => {
 (function () {
   var cmap = E.MAPS.filter(function (m) { return m.shape === 'classic'; })[0];
   assert.ok(!!cmap, 'a classic-shape map exists for the fixture');
@@ -296,7 +296,7 @@ test('V1 AI search', () => {
     '0,0': { type: 'infantry', owner: 'red' }, '1,0': { type: 'infantry', owner: 'red' },
     '0,1': { type: 'cavalry', owner: 'red' }
   };
-  // V1 mapsets: the active set IS the pool, one mapset for every consumer
+  // The active mapset IS the pool, one mapset for every consumer
   assert.ok(E.MAPSETS.length >= 1 && E.activeMapset() && E.activeMapset().id === 'core7',
     'core7 mapset loaded and active');
   assert.ok(E.activeMaps().length === E.activeMapset().maps.length && E.activeMaps().length <= E.MAPS.length,
@@ -336,7 +336,7 @@ test('unit composition & values as content data', () => {
   //    the example units file on disk is genuinely inert (golden-diff safety).
   var base = runUnits({});
   assert.ok(!base.error, 'default units load with no active variant (no error)');
-  // Mechanism, not the shipped numbers (WoAProto#222): the default resolves as
+  // Mechanism, not the shipped numbers: the default resolves as
   // content data with a well-formed shape, honours the total-10 guardrail, and
   // PIECE_TOTALS mirror the composition. Retuning any unit stat reds nothing here.
   ['infantry', 'cavalry', 'artillery'].forEach(function (t) {

@@ -1,8 +1,7 @@
 /* War of Attrition — ui part: the Balance Dashboard — DASH state, report
    rendering, markdown export. Classic script, no wrapper — top-level names
    attach to window (see ui/app.js header). Extracted verbatim from
-   index.html's inline app script; the dash* button wiring (incl. the Run
-   loop) lives in ui/boot.js. */
+   the dash* button wiring (incl. the Run loop) lives in ui/boot.js. */
 'use strict';
 
 /* =================== balance dashboard =================== */
@@ -10,18 +9,16 @@
 // WOA_SIM.balanceAdd — the SAME code the CLI folds skirmishes through — and the
 // seed/first-player schedule is WOA_SIM.balanceSeed/balanceFP, so a run here with
 // the same n/AI/maps reproduces the terminal's numbers exactly.
-// view: 'tables' (today's dashboard, unchanged) | 'overview'|'maps'|'cards'|
-// 'units' (the WOA-034 shell's pill nav — view-only, reads saved runs;
-// content lands in WOA-035+). detail: per-skirmish rows the OLD single-run
-// charts view used ({mapName: {turns:[], winTypes:[]}}), collected by the
-// dashRun loop in ui/boot.js and reset each run — kept for ui/charts.js's
-// primitives, which WOA-035+ reuses (spec README "Cards tab evolves the
-// existing charts.js card quadrant"). chartMap is its histogram map knob.
+// view: 'tables' (the run-loop dashboard) | 'overview'|'maps'|'cards'|
+// 'units' (the shell's pill nav — view-only, reads saved runs). detail:
+// per-skirmish rows the charts view uses ({mapName: {turns:[], winTypes:[]}}),
+// collected by the dashRun loop in ui/boot.js and reset each run — feeds
+// ui/charts.js's primitives. chartMap is its histogram map knob.
 //
-// WOA-034 (spec README "State Management"): runA/runB/mapFocus/abMode/
-// temperature/runs extend this SAME global — the header run-A/B pickers,
-// pill nav and temperature selector read/write these fields; runs is the
-// GET /api/runs listing (empty + a fallback note when there are no runs, AC4).
+// runA/runB/mapFocus/abMode/temperature/runs extend this SAME global — the
+// header run-A/B pickers, pill nav and temperature selector read/write these
+// fields; runs is the GET /api/runs listing (empty + a fallback note when
+// there are no runs).
 var DASH = { running:false, cancel:false, results:[], sort:{key:null, dir:1}, cardSort:{key:'sightPct', dir:-1}, meta:null, adhoc:null,
   view:'tables', detail:{}, chartMap:null,
   runA:null, runB:null, mapFocus:null, abMode:'B', temperature:'T0', runs:[] };
@@ -40,10 +37,10 @@ function openDash(){
   });
   if (cur) sel.value = [].some.call(sel.options, function(o){ return o.value===cur; }) ? cur : 'all';
   show('dashScr');
-  dashLoadRuns(); // WOA-034: (re)populate the header run-A/B pickers every time the screen opens
+  dashLoadRuns(); // (re)populate the header run-A/B pickers every time the screen opens
 }
 
-/* ---- WOA-034: run-A/B pickers (GET /api/runs; view-only, server-mediated) ---
+/* ---- run-A/B pickers (GET /api/runs; view-only, server-mediated) ---
    A defaults to the CURRENT rules version's baseline row; no baseline
    yet in the real db falls back to the most recent run (runs sorted id DESC
    by GET /api/runs) — never an error. */
@@ -103,13 +100,12 @@ function renderDashChrome(){
 }
 
 var DASH_PANE_LABEL = { overview:'Overview', maps:'Maps', cards:'Cards', units:'Units' };
-// Stable mount points for the four pill views — all four filled now
-// (WOA-035 Overview, WOA-040 Maps, WOA-043 Cards, WOA-044 Units):
+// Stable mount points for the four pill views (Overview, Maps, Cards, Units):
 // #dashPaneOverview / #dashPaneMaps / #dashPaneCards / #dashPaneUnits.
 function renderDashPane(view){
   var el = $('dashPane' + view.charAt(0).toUpperCase() + view.slice(1));
   if (!el) return;
-  // WOA-035/WOA-040/WOA-043/WOA-044: every pill gets the real thing (the
+  // every pill gets the real thing (the
   // pane-*.js render modules, reading both runs' DB skirmish rows) once at least one run + both A/B pickers
   // are set — otherwise the no-runs / pick-runs fallback note below.
   if ((view === 'overview' || view === 'maps' || view === 'cards' || view === 'units') && DASH.runs.length && DASH.runA != null && DASH.runB != null){
@@ -187,7 +183,7 @@ function dashSort(rows, key, dir){
 function dbar(redPct, cls){
   return '<span class="dbar"><i class="'+(cls||'red')+'" style="width:'+redPct+'%"></i><i class="'+(cls?'':'blue')+'" style="width:'+(100-redPct)+'%"></i></span>';
 }
-// column tooltips: what each stat means + its healthy target (Feedback Round 1)
+// column tooltips: what each stat means + its healthy target
 var MAP_TIPS = {
   name:'Map name', shape:'Board shape (custom = a carved outline)',
   red:'Red win rate. 50% = balanced; ≥62% or ≤38% flags a side bias (±noise at this n)',
@@ -197,7 +193,7 @@ var MAP_TIPS = {
   fsdiff:'Average field-score margin of victory — higher = more decisive',
   atk:'Attacks per skirmish. Healthy ~5', swp:'Swaps per skirmish. Healthy ~7',
   zk:'Zero-kill skirmishes. Healthy ~4%; ≥20% flags stalemates',
-  tie:'Skirmishes decided by the tie-goes-to-2nd rule — lower is better (10% baseline, rules 1.1)',
+  tie:'Skirmishes decided by the tie-goes-to-2nd rule — lower is better (10% baseline)',
   drag:'Avg trailing turns with no kill before the game ended. 0 = decisive finish; high = the AIs marched in circles',
   swing:'Avg times the field-score lead flipped to the other side per skirmish. High = real back-and-forth; 0 = wire-to-wire'
 };
@@ -212,11 +208,11 @@ var CARD_TIPS = {
 };
 function dstat(label, val, tip){ return '<div class="dstat" title="'+tip+'"><span>'+label+'</span><span>'+val+'</span></div>'; }
 
-// WOA-034: the shell dispatcher — chrome (header/pills/temperature) every
-// call, then either the Tables pane (today's dashboard, run controls + save
-// intact — byte-equivalent to pre-shell behaviour) or one of the view-only
-// placeholder panes (Run/Save hidden; AC2/AC4). Every dash* button handler
-// in ui/boot.js keeps calling renderDash() — the entry point doesn't move.
+// the shell dispatcher — chrome (header/pills/temperature) every
+// call, then either the Tables pane (the run-loop dashboard, run controls +
+// save intact) or one of the view-only panes (Run/Save hidden). Every dash*
+// button handler in ui/boot.js keeps calling renderDash() — the entry point
+// doesn't move.
 function renderDash(){
   renderDashChrome();
   var isTables = DASH.view === 'tables';

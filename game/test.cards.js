@@ -64,7 +64,7 @@ test('at least one step of a card must be played', () => {
   st.cards.hands.red = ['mass_assault']; // two attack steps
   E.playCard(st, 'mass_assault');
   assert.ok(!E.mustPlayStep(st), 'step 1 is skippable — a later step can still act');
-  E.applyStep(st, { skip: true }); // allowed: attack #2 remains
+  E.applyStep(st, { skip: true }); // allowed: the second attack remains
   assert.ok(E.mustPlayStep(st), 'the last playable step cannot be skipped while the card has done nothing');
   var threw = false;
   try { E.applyStep(st, { skip: true }); } catch (e) { threw = true; }
@@ -101,7 +101,7 @@ test('deck composition (data-driven from maps.js)', () => {
 })();
 });
 
-test('army-points (WOA #54: computed from steps, weight table pinned)', () => {
+test('army-points (computed from steps, weight table pinned)', () => {
 (function () {
   // Seeding intent: deploy > attack > reposition. Guard the ordering so a weight
   // edit that inverts it is a loud, deliberate diff.
@@ -112,13 +112,13 @@ test('army-points (WOA #54: computed from steps, weight table pinned)', () => {
     'deploy > attack > reposition base costs');
   // Weight-table guardrail via a SYNTHETIC card (steps fixed here, NOT read from a
   // content file), so a POINTS-table edit is reviewed while editing any actual card
-  // or the active deck reds nothing (WoAProto#222: assert the mechanism, never a
+  // or the active deck reds nothing (assert the mechanism, never a
   // content value). deploy inf 3 + attack (base 2, tieSpare +1, noAdvance +0.5) = 6.5.
   var pointsProbe = { steps: [{ type: 'deploy', unit: 'infantry' }, { type: 'attack', tieSpare: true, noAdvance: true }] };
   assert.ok(E.cardPoints(pointsProbe) === 6.5, 'weight table: deploy-inf + tieSpare/noAdvance attack = 6.5 pts');
   assert.ok(E.cardPoints({ steps: [] }) === 0 && E.deckPoints({ cards: [] }) === 0, 'empty card / empty deck = 0');
   assert.ok(E.cardPoints({ steps: 'oops' }) === 0, 'malformed (non-array) steps score 0, not a throw — deckProblems can still report the friendly error');
-  // WOA #56 deck-value cap gate: every shipped deck sits under the budget (the
+  // deck-value cap gate: every shipped deck sits under the budget (the
   // gate lets the deck editor call two asymmetric decks "matched"), and a deck
   // pushed over it is rejected — the same reject-on-validate as an oversized deck.
   var allDecks = (typeof global !== 'undefined' && global.WOA_CONTENT && global.WOA_CONTENT.decks) || [];
@@ -129,7 +129,7 @@ test('army-points (WOA #54: computed from steps, weight table pinned)', () => {
 })();
 });
 
-test('mispricing residual (WOA #57: cardRows points + residual, soft flag)', () => {
+test('mispricing residual (cardRows points + residual, soft flag)', () => {
 (function () {
   var R = require('./report-model.js');
   var cards = [{ id: 'x', name: 'X' }, { id: 'y', name: 'Y' }, { id: 'z', name: 'Z' }, { id: 'w', name: 'W' }];
@@ -222,7 +222,7 @@ test('play metrics (seen / playLog for the card report)', () => {
 })();
 });
 
-test('WOA-055 asymmetric deck binding', () => {
+test('asymmetric deck binding', () => {
 (function () {
   // Deck composition as a sorted "id:count" signature — the fingerprint a side's
   // built deck should match.

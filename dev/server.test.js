@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Real-path server hand-off gate (WoAProto#222). Drives the ACTUAL game/server.js
+/* Real-path server hand-off gate. Drives the ACTUAL game/server.js
    over REAL HTTP on an ephemeral port — nothing mocked — so every producer->consumer
    boundary on the /api/* surface is exercised with real data, not a described shape.
    Persistence targets a throwaway db via WOA_DB_PATH; LAN rooms are in-memory.
@@ -28,7 +28,7 @@ process.env.WOA_DB_PATH = path.join(tmpDir, 'srv.db');
 
 const server = require(path.join(__dirname, '..', 'game', 'server.js'));
 const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
-const SIM = require(path.join(__dirname, '..', 'game', 'sim.js')); // simSkirmish moved out of the engine in #220
+const SIM = require(path.join(__dirname, '..', 'game', 'sim.js')); // the batch/measurement layer, outside the engine
 const R = require(path.join(__dirname, '..', 'game', 'report-model.js'));
 
 let srv, port;

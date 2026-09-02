@@ -48,8 +48,7 @@ if (/screen=/.test(location.search)) setTimeout(function(){
   if (s==='deck') openDeck();
   else if (s==='dash'){
     openDash();
-    // &charts auto-opens the view-only pane (WOA-034: Overview, closest analog
-    // to the old single-run Charts tab — screenshots & quick testing)
+    // &charts auto-opens the view-only Overview pane (screenshots & quick testing)
     var wantCharts = /[?&]charts/.test(location.search);
     if (wantCharts){ DASH.view = 'overview'; renderDash(); }
     if (/[?&]run/.test(location.search)){
@@ -73,8 +72,8 @@ if (/screen=/.test(location.search)) setTimeout(function(){
 }, 60);
 $('btnWatch').onclick = function(){ startLocal('watch'); };
 $('btnHotseat').onclick = function(){ startLocal('hotseat'); };
-// the Field Manual now opens through ui/manual.js (V1 diagram player renders
-// its current example/beat before the overlay shows)
+// the Field Manual opens through ui/manual.js (its diagram player renders
+// the current example/beat before the overlay shows)
 $('btnManual').onclick = function(){ openManual(); };
 $('btnManual2').onclick = function(){ openManual(); };
 $('mpPrev').onclick = function(){ manualStep(-1); };
@@ -98,7 +97,7 @@ $('btnConcede').onclick = function(){
     }
   });
 };
-// Debug snapshot (Feedback Round 4): dump this exact game state to logs/debug/
+// Debug snapshot: dump this exact game state to logs/debug/
 // so Bill can hand Claude the situation without pasting a screenshot. The state
 // carries battle.maps (full board + terrain defs) so the dump is self-contained.
 $('btnDebug').onclick = function(){
@@ -248,7 +247,7 @@ $('dkAdd').onclick = function(){
   renderDeck();
 };
 
-// WOA-036: browser-only deck-override badge — visible in normal play chrome
+// browser-only deck-override badge — visible in normal play chrome
 // (fixed, not buried in the editor), shown only when WOA_APPLIED_DECK is
 // actually live (index.html's override wiring, evaluated before this file
 // runs). No override = no badge. Reset reuses the same clear+reload path as
@@ -326,7 +325,7 @@ $('dkImportFile').onchange = function(){
   rd.readAsText(f);
 };
 
-// V1 persistence: every REAL finished skirmish in this browser becomes a row in
+// persistence: every REAL finished skirmish in this browser becomes a row in
 // logs/woa.db via POST /api/recordskirmish (fail-open: a server without dev/
 // simply skips it). One subscription covers every source —
 // finishSkirmish fires the hook for human play, hotseat, watch, the LAN peer
@@ -348,9 +347,9 @@ E.hooks.onSkirmishEnd.push(function (st) {
       runKey: dash ? DASH.runKey : undefined,
       run: { version: E.VERSION, kind: kind, redAi: aiOf('red'), blueAi: aiOf('blue'),
         n: dash ? DASH.meta.n : 1, tool: dash ? 'dashboard' : 'browser',
-        // WOA-032 (SPEC §7): run identity for the A/B picker. deck reads the
+        // run identity for the A/B picker. deck reads the
         // deck the ENGINE actually resolved THIS load — never content/decks/'s
-        // active flag directly (WOA-036 gotcha: the Deck Editor's applied-deck
+        // active flag directly (gotcha: the Deck Editor's applied-deck
         // sandbox overrides it, see index.html's WOA_APPLIED_DECK wiring).
         deck: E.ACTIVE_DECK && E.ACTIVE_DECK.id,
         mapset: dash ? DASH.meta.mapset : undefined,
@@ -363,9 +362,9 @@ E.hooks.onSkirmishEnd.push(function (st) {
 $('btnDash').onclick = openDash;
 $('dashBack').onclick = function(){ DASH.cancel = true; show('menu'); checkResume(); };
 $('dashStop').onclick = function(){ DASH.cancel = true; };
-// WOA-034: pill nav (Overview|Maps|Cards|Units|Tables) replaces the old
-// Tables|Charts toggle — per-view state stays on DASH, panes re-render from
-// memory/the fetched runs list. Header run-A/B pickers + temperature selector.
+// pill nav (Overview|Maps|Cards|Units|Tables) — per-view state stays on DASH,
+// panes re-render from memory/the fetched runs list. Header run-A/B pickers +
+// temperature selector.
 document.querySelectorAll('#dashPills .dpill').forEach(function(b){
   b.onclick = function(){ DASH.view = b.dataset.view; renderDash(); };
 });
@@ -385,7 +384,7 @@ $('dashRun').onclick = function(){
   var probs = E.validateMaps(maps);
   if (probs.length){ toast('Fix these maps first: '+probs.join('; '), 4500); return; }
   DASH.running = true; DASH.cancel = false;
-  // mapset/seedBase (WOA-032, SPEC §7 run identity): `pick` IS this run's map
+  // mapset/seedBase (run identity): `pick` IS this run's map
   // selection ('all' = the active mapset's pool, a map name, or '@adhoc');
   // 7919 is the SAME seed-schedule base the per-map WOA_SIM.balanceSeed((mi+1)*7919, g)
   // call below already uses — one fact, not a second number invented here.
@@ -433,7 +432,7 @@ $('dashRun').onclick = function(){
   step();
 };
 
-// Save the displayed run to logs/reports/balance/<version>/ (Feedback Round 4) so
+// Save the displayed run to logs/reports/balance/<version>/ so
 // Bill, Claude and the report skills discuss the same numbers. Markdown mirrors
 // the on-screen folds; the server files it under the current rules version.
 $('dashSave').onclick = function(){

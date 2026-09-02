@@ -252,7 +252,7 @@ function renderPrompt(){
   }
   var o = E.stepOptions(st);
   if (!o) return;
-  var canSkip = !E.mustPlayStep(st); // Feedback Round 2: an order must resolve at least one action if it can
+  var canSkip = !E.mustPlayStep(st); // an order must resolve at least one action if it can
   var stepTag = o.stepCount>1 ? ' <span class="small" style="color:#bbb;">(step '+(o.stepIndex+1)+'/'+o.stepCount+')</span>' : '';
   var msg = '';
   if (o.type==='deploy') msg = 'Place your <b>'+E.UNITS[o.unit].name+'</b>' + (APP.ui.sel?'':'');
@@ -435,7 +435,7 @@ function showSkirmishOver(){
   };
 }
 
-// Plain-text campaign journal for the clipboard (Feedback Round 2).
+// Plain-text campaign journal for the clipboard.
 function journalText(st){
   var v = E.view(st);
   var m = v.battle;

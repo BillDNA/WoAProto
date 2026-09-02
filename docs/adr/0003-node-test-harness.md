@@ -1,6 +1,6 @@
 # ADR-0003 — Adopt `node:test` as the one test harness
 
-Status: Accepted (2026-08-25)
+Status: Accepted
 
 ## Context
 
@@ -23,7 +23,7 @@ more divergence over time, not less.
 
 Considered harness choices:
 
-- **Keep flat / status quo** — the god-file the spec (#46) is filed against.
+- **Keep flat / status quo** — the god-file this decision is filed against.
 - **Bespoke shared harness module** — extract `ok()`/`section()` into one
   ~15-line module every file requires. Smallest diff today, still zero-dep, but
   it is a module we keep bolting features onto (isolation, async, filtering) as

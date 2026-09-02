@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* dev/claude-plays.js — an LLM plays War of Attrition (V1 rewrite).
+/* dev/claude-plays.js — an LLM plays War of Attrition.
    Plays a single skirmish or a first-to-N MATCH, printing every decision live
    with timestamps + a scoreboard; appends JSON-lines records as skirmishes
    finish (crash-safe); writes one readable .md transcript per run.
@@ -23,7 +23,7 @@
      --k <n>            step options shown to the LLM: the n most promising of
                         the full legal list, engine-ranked (default 15; attack
                         steps are never truncated). --full-options disables it.
-     --cold             one claude -p process per decision (the V0 transport)
+     --cold             one claude -p process per decision (the cold transport)
                         instead of one persistent session per side per match
      --max-turns <n>    per-skirmish turn cap (default 60)
      --mock             deterministic fake transport (offline loop test)
@@ -31,7 +31,7 @@
      --typical-n <n>    baseline skirmishes for the typicality footer (default 40;
                         0 skips; results cached per map+version+n)
 
-   TRANSPORT (V1): each LLM side gets ONE persistent claude session for the
+   TRANSPORT: each LLM side gets ONE persistent claude session for the
    whole match (dev/llm-session.js) — the rules ride the system prompt once and
    later turns hit the prompt cache; the model remembers its own match. Any
    session failure falls back to the cold per-call transport (dev/llm-client.js)
@@ -121,8 +121,7 @@ function preloadContent(deckId, unitsId) {
 const ARGS = parseArgs(process.argv);
 if (ARGS.deck || ARGS.units || ARGS.mapset) preloadContent(ARGS.deck, ARGS.units);
 const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
-// balanceMap is the batch/measurement layer (game/sim.js), evicted from the
-// engine in #220.
+// balanceMap is the batch/measurement layer (game/sim.js), not the engine.
 const SIM = require(path.join(__dirname, '..', 'game', 'sim.js'));
 const llm = require(path.join(__dirname, 'llm-client.js'));
 const { LlmSession } = require(path.join(__dirname, 'llm-session.js'));
@@ -355,7 +354,7 @@ function numbered(descs) {
   return descs.map(function (d, i) { return i + '. ' + d; }).join('\n');
 }
 
-// The V1 option diet: the K most promising choices of the full legal list,
+// The option diet: the K most promising choices of the full legal list,
 // picked by the engine's own eval (E.rankChoices — attack steps never truncate,
 // HQ-relevant moves force-included, skip always listed when legal). Presented
 // in stable board order, NOT strength order, so the model still has to think.
@@ -601,7 +600,7 @@ async function feltNotes(args, transports, side, prompt, usage) {
 /* ---------- the run ---------- */
 async function main() {
   const args = ARGS;
-  let maps = E.activeMaps(); // the ACTIVE mapset's maps (V1)
+  let maps = E.activeMaps(); // the ACTIVE mapset's maps
   if (args.mapset === 'all') maps = E.MAPS;
   else if (args.mapset) {
     const set = E.MAPSETS.filter(function (s) { return s.id === args.mapset; })[0];

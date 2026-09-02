@@ -12,7 +12,7 @@ assert.ok(probs.length === 0, 'all built-in maps valid' + (probs.length ? ': ' +
 // Maps are per-item files under game/content/maps/. `custom:true` marks Bill's
 // experiments; the shipped map library is the non-custom maps.
 var builtinMaps = E.MAPS.filter(function (m) { return !m.custom; });
-// Mechanism, not a pinned count (WoAProto#222): the shipped library must stay
+// Mechanism, not a pinned count: the shipped library must stay
 // above the 5-map floor so a first-to-3 campaign always has fresh boards. Adding
 // or cutting a shipped map above the floor reds nothing here.
 assert.ok(builtinMaps.length >= 5, 'shipped (non-custom) map library stays above the 5-map floor (got ' + builtinMaps.length + ' of ' + E.MAPS.length + ' total)');
@@ -26,7 +26,7 @@ assert.ok(builtinMaps.length >= 5, 'shipped (non-custom) map library stays above
 })();
 });
 
-test('carved shapeDef map rebuilds its board after a LAN serialize (F1, WoAProto#222)', () => {
+test('carved shapeDef map rebuilds its board after a LAN serialize', () => {
 (function () {
   // The seam: a carved-outline map travels inside battle.maps; the joiner/resumer
   // rebuilds the board from that transmitted shapeDef ALONE (ensureMapShape). Drive

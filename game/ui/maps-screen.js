@@ -8,16 +8,15 @@
 'use strict';
 
 /* =================== map library & pool =================== */
-// Maps are per-item files under content/maps/ (Feedback Round 4 Pass 2). The
+// Maps are per-item files under content/maps/. The
 // engine loads them into E.MAPS at boot; each carries a stable `id` (its
 // filename stem) and an optional `custom:true` flag (a user map — the badge, and
 // exempt from the shipped-library guideline tests). Saving or deleting a map
 // rewrites/removes its file on the server AND updates E.MAPS in place.
 //
-// V1: the match pool is the ACTIVE MAPSET (content/mapsets/*.js — named
+// The match pool is the ACTIVE MAPSET (content/mapsets/*.js — named
 // sets, up to five slots, one active; the deck-slot pattern applied to
-// maps). It replaced the per-browser woa-disabled-maps preference, so the
-// browser, the LAN peer, and every CLI tool finally agree on one mapset.
+// maps), so the browser, the LAN peer, and every CLI tool agree on one mapset.
 // Set edits mutate E.MAPSETS in place and are saved to files via
 // /api/savemapsets (needs the server; without it, edits last the session).
 function slugifyMap(name){ return String(name||'map').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'map'; }

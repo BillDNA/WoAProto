@@ -28,7 +28,7 @@
 var WOA_REPORT = (function () {
 
   // foldSkirmishes is the only fold downstream of the sim layer (delegates to its
-  // single-source factsFromRow/foldFacts, evicted from the engine in #220).
+  // single-source factsFromRow/foldFacts, which live in the sim layer, not the engine).
   // Resolve the sim dual like maps.js.
   var SIM = (typeof window !== 'undefined' && window.WOA_SIM) ? window.WOA_SIM
     : (typeof require === 'function' ? require('./sim.js') : null);
@@ -197,7 +197,7 @@ var WOA_REPORT = (function () {
     return { agg: agg, done: (rows || []).length };
   }
 
-  /* WOA #57 — Mispricing residual soft-flag tunables (see cardRows below). ADVISORY
+  /* Mispricing residual soft-flag tunables (see cardRows below). ADVISORY
      only, never a hard gate (ADR-0002). ONE place to tune; docs/balance,
      card-rubric, and review-reports cite these.
        RESID_PTS   — |residual| in army-points that trips the ⚠ flag. Absolute is
@@ -215,7 +215,7 @@ var WOA_REPORT = (function () {
      plays; seen is the display string ('-' when never played) and seenNum the
      same value as a number for sortable UIs.
 
-     WOA #57 mispricing residual: when `cardPoints` (E.cardPoints) is passed, each
+     Mispricing residual: when `cardPoints` (E.cardPoints) is passed, each
      row also carries `points` (army-points cost, ADR-0002) and `resid` — the card's
      share of the deck's DECISIVE WINS minus its share of the points BUDGET, scaled
      back to points (so the subtraction is in points; no win-rate is fitted to points
@@ -558,7 +558,7 @@ var WOA_REPORT = (function () {
     });
     L.push('');
     if (style === 'report') {
-      L.push('_Balance column: weighted distance outside each metric\'s ideal range (0 = ideal, lower = better) — Red/1st 45–55, HQ 10–40, 0kill ≤5, Tie ≤18, Drag ≤3.0, Swings ≥2.0, Control ≥70. Tie%/Drag over attrition endings only (rules 1.2). SOT: docs/balance/best-map-score.md._');
+      L.push('_Balance column: weighted distance outside each metric\'s ideal range (0 = ideal, lower = better) — Red/1st 45–55, HQ 10–40, 0kill ≤5, Tie ≤18, Drag ≤3.0, Swings ≥2.0, Control ≥70. Tie%/Drag over attrition endings only. SOT: docs/balance/best-map-score.md._');
       L.push('');
       L.push('## Overall');
       L.push('');
@@ -591,7 +591,7 @@ var WOA_REPORT = (function () {
     }
     L.push('');
     // Noop% printed (dead-turn check); Win% deliberately omitted — docs/report-model.md#reporting-doctrine.
-    // WOA #57: Pts (army-points cost) + Resid (mispricing residual) print when cardPoints is supplied.
+    // Pts (army-points cost) + Resid (mispricing residual) print when cardPoints is supplied.
     var withPts = !!model.cardPoints, flagged = false;
     L.push('| Card | Simple% | Noop% | 1stSight% | AvgSeen | ' + (style === 'report' ? 'Plays' : 'plays') +
       (withPts ? ' | Pts | Resid' : '') + ' |');

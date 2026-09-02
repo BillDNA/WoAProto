@@ -164,10 +164,10 @@
   </div>
 </div>
 
-<!-- ============ BALANCE DASHBOARD (WOA-034: shell — dark header run-A/B
-     pickers, pill nav, temperature selector; Tables is the pre-existing
-     dashboard UNCHANGED below the chrome. Overview/Maps/Cards/Units are
-     placeholder mounts — WOA-035 fills Overview next.) ============ -->
+<!-- ============ BALANCE DASHBOARD: shell — dark header run-A/B
+     pickers, pill nav, temperature selector; Tables is the run-loop
+     dashboard below the chrome; Overview/Maps/Cards/Units mount
+     alongside it. ============ -->
 <div id="dashScr" class="screen">
   <div class="panel parchment" id="dashPanel">
     <div id="dashHead">
@@ -240,7 +240,7 @@
 </div></div>
 <div class="overlay" id="manualOvr"><div class="panel parchment">
   <h2>Field Manual</h2>
-  <!-- V1 diagram player: worked examples animated from REAL engine states
+  <!-- Diagram player: worked examples animated from REAL engine states
        (ui/manual.js). The prose below stays the text canon. -->
   <div id="manualPlayer">
     <div id="mpTabs"></div>
@@ -275,7 +275,7 @@
 </div></div>
 
 <div id="toast" class="parchment"></div>
-<!-- WOA-036: browser-only deck-override badge — global chrome, shown only when
+<!-- browser-only deck-override badge — global chrome, shown only when
      an override (localStorage or a dropped custom-deck.js) is actually live;
      populated + wired in ui/boot.js. -->
 <div id="deckBadge" class="parchment" title="This browser is playing a deck override, not the active-flagged deck in content/decks/.">
@@ -287,14 +287,14 @@
 <script src="custom-deck.js"></script>
 <script src="content/manifest.js"></script>
 <script>
-// The map library + card decks are per-item files under content/ (Feedback
-// Round 4 Pass 2). content/manifest.js just above document.write()'d
+// The map library + card decks are per-item files under content/.
+// content/manifest.js just above document.write()'d
 // content/decks/*.js + content/maps/*.js into WOA_CONTENT, synchronously, before
 // this runs. A deck applied in the Deck Editor overrides the active content deck
 // BEFORE the engine snapshots the card list; this browser's saved deck
 // (localStorage) wins over the shipped custom-deck.js file. WOA_DECK_SRC tells
 // the editor what it is editing.
-// custom-deck.js ships as a NO-OP (WOA_CUSTOM_DECK = null, WOA-036) — a fresh
+// custom-deck.js ships as a NO-OP (WOA_CUSTOM_DECK = null) — a fresh
 // checkout has no override, so this block is a no-op and the game plays the
 // active-flagged deck in content/decks/. ui/boot.js shows a badge whenever
 // WOA_APPLIED_DECK below ends up non-null (localStorage or a dropped file).

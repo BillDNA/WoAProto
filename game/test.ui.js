@@ -1,5 +1,5 @@
-/* UI contract backstop (WoAProto#227). The completeness guarantee for the whole
-   UI refactor: nothing in game/ui/ draws SVG by hand — every tile, glyph, chit,
+/* UI contract backstop. The completeness guarantee for the whole
+   UI: nothing in game/ui/ draws SVG by hand — every tile, glyph, chit,
    mark, and pattern is built by a primitives module (board-primitives.js /
    chart-primitives.js / ui-primitives.js), never string-concatenated or
    createElementNS'd in a screen. This is the CONTRACT, not a per-screen check:

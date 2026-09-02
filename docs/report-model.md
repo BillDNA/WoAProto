@@ -97,7 +97,7 @@ temperature-independent by design.
   skirmish was decided by the standoff, not the last card). Pooled `wins` survives
   only for internal bubble-sizing/tooltips. This slice is thin by construction (HQ
   endings ~17% of skirmishes), so expect small-n at ordinary run sizes.
-- **Mispricing residual (WOA #57) rides the same HQ slice.** The card table's
+- **The mispricing residual rides the same HQ slice.** The card table's
   `Resid` column = the card's HQ-slice win *share* minus its army-points *share*,
   scaled back to points (`cardRows`, tunables `MISPRICE_RESID_PTS` /
   `MISPRICE_MIN_HQPLAYS`). It reuses the HQ×printed-play signal above (folded as

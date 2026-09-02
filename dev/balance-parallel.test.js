@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Real-path gate for the balance-report --parallel worker pipe (C1, WoAProto#222).
+/* Real-path gate for the balance-report --parallel worker pipe.
    The seam: each worker process serializes {agg, skirmishes:[{g, st: slimSkirmishState}]}
    to stdout, the parent JSON.parses it and calls insertSkirmish. slimSkirmishState's
    round-trip is pinned in db.test.js, but the WORKER STRING + the parent's parse/insert

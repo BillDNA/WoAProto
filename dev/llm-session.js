@@ -15,7 +15,7 @@
    if you want CLI boot to overlap other work; it is optional and idempotent.
    Asks are serialized: one in flight, the rest queue.
 
-   Wire protocol (verified live 2026-07-06 against `claude` CLI, model haiku):
+   Wire protocol (the `claude` CLI, stream-json):
      spawn: claude -p --input-format stream-json --output-format stream-json --verbose
                    --no-session-persistence --model <m> --system-prompt <s> [--effort <e>]
      - --verbose is REQUIRED: without it the CLI exits with

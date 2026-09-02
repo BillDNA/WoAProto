@@ -1,5 +1,5 @@
 /* War of Attrition — the batch/measurement layer: skirmish simulation + balance
-   aggregation, evicted from the shipped engine (#220). This is NOT the engine —
+   aggregation, kept out of the shipped engine. This is NOT the engine —
    it is measurement built ON the engine's play surface (playToEnd + the play
    primitives). Deleting this file leaves a game that still boots and plays a
    skirmish by hand; only the Balance Dashboard's live sweep and the CLI reporters
@@ -15,8 +15,8 @@ var WOA_SIM = (function () {
     : (typeof require === 'function' ? require('./engine.js') : null);
 
   /* ---------- skirmish simulation (shared by the CLI reporters and the in-browser dashboard) ---------- */
-  // WOA-055: `decks` = {red, blue} per-side selection (each null|deck|id|name).
-  // Omitted -> both sides share the active deck (behaviour unchanged from pre-055).
+  // `decks` = {red, blue} per-side selection (each null|deck|id|name).
+  // Omitted -> both sides share the active deck.
   function simSkirmish(map, seed, firstPlayer, diffRed, diffBlue, decks) {
     var battle = ENG.newBattle({ seed: seed | 0, maps: [map], firstPlayer: firstPlayer || 'red', decks: decks || null });
     var st = ENG.newSkirmish(battle);
@@ -32,18 +32,18 @@ var WOA_SIM = (function () {
   // one finished skirmish in; balanceMap is the synchronous convenience loop.
   function balanceNew(n) {
     var out = { n: n, redWins: 0, firstWins: 0, hqWins: 0, turns: 0, fsDiff: 0, unfinished: 0, cards: {},
-      // behaviour metrics (June 2026): catch degenerate AI play, not just outcomes.
-      // WOA-039 (rules 1.2): deploys joins attacks/swaps/marches so the report can
-      // print Attack/Swap SHARE (attacks / all four action counts) — deck-size-proof.
+      // behaviour metrics: catch degenerate AI play, not just outcomes.
+      // deploys joins attacks/swaps/marches so the report can print Attack/Swap
+      // SHARE (attacks / all four action counts) — deck-size-proof.
       attacks: 0, swaps: 0, marches: 0, deploys: 0, zeroKill: 0, tiebreak: 0,
       firstBloodGames: 0, firstBloodWins: 0, controlGames: 0, controlWins: 0,
       deployedShare: 0,
-      // WOA-016: per-side split of the SAME reserves-at-end read deployedShare
-      // uses above — share (0..1 per skirmish, summed) of THAT side's pieces
-      // still undeployed when the skirmish ended. Instrument for the "hoarding
-      // reserves wins" felt-note (balance-loop-v2 final report §5c.4).
+      // Per-side split of the SAME reserves-at-end read deployedShare uses
+      // above — share (0..1 per skirmish, summed) of THAT side's pieces still
+      // undeployed when the skirmish ended. Instrument for the "hoarding
+      // reserves wins" felt-note.
       reserveEndRed: 0, reserveEndBlue: 0,
-      // WOA-039 (rules 1.2): win-path conditioning. Tie%/Drag report over
+      // Win-path conditioning. Tie%/Drag report over
       // attrition endings only (HQ endings pull Drag to 0 by definition and
       // dilute Tie% by the HQ share); Reserves reports over HQ endings only.
       // These slice counters + slice sums keep the pooled fields intact (the
@@ -51,7 +51,7 @@ var WOA_SIM = (function () {
       // report/dashboard read the sliced versions.
       attritionEndings: 0, attritionKillTail: 0,
       hqEndings: 0, reserveEndRedHQ: 0, reserveEndBlueHQ: 0,
-      // Feedback Round 2 pacing metrics:
+      // pacing metrics:
       killTail: 0,      // trailing kill-less turns (0 = ended on a kill/HQ, ~32 = no-kill grind)
       leadChanges: 0 }; // field-score lead flips per skirmish (higher = more back-and-forth)
     ENG.CARDS.forEach(function (c) { out.cards[c.id] = { plays: 0, wins: 0, simple: 0, firstSight: 0, seenSum: 0, noop: 0, hqPlays: 0, hqWins: 0 }; });
@@ -92,8 +92,8 @@ var WOA_SIM = (function () {
     };
   }
   // A persisted DB skirmish row (listBattles/GET /api/battles alias shape) ->
-  // the same record foldFacts folds. hexes_* are NULL on pre-WOA-038 rows;
-  // pass through as null so foldFacts drops them from control (never a 0/0 tie).
+  // the same record foldFacts folds. hexes_* are NULL on rows with no control
+  // data; pass through as null so foldFacts drops them from control (never a 0/0 tie).
   function factsFromRow(r) {
     return {
       firstPlayer: r.firstPlayer, winner: r.winner, winType: r.winType,
@@ -117,12 +117,12 @@ var WOA_SIM = (function () {
     if (f.zeroKill) agg.zeroKill++;
     if (f.tiebreak) agg.tiebreak++;
     agg.killTail += f.killTail;
-    // WOA-039: Drag/Tie% condition to attrition endings — HQ endings pull Drag
+    // Drag/Tie% condition to attrition endings — HQ endings pull Drag
     // to 0 by definition and dilute Tie% by the HQ share.
     if (f.winType === 'attrition') { agg.attritionEndings++; agg.attritionKillTail += f.killTail; }
     agg.leadChanges += f.leadChanges;
     if (f.firstBlood) { agg.firstBloodGames++; if (f.firstBlood === f.winner) agg.firstBloodWins++; }
-    // WOA-038: a NULL hex pair means "no control data" — never a fabricated tie.
+    // A NULL hex pair means "no control data" — never a fabricated tie.
     if (f.hexesRed != null && f.hexesBlue != null && f.hexesRed !== f.hexesBlue) {
       agg.controlGames++;
       if ((f.winner === 'red') === (f.hexesRed > f.hexesBlue)) agg.controlWins++;
@@ -141,7 +141,7 @@ var WOA_SIM = (function () {
     out.deployedShare += 1 - (f.resEndRed + f.resEndBlue) / (2 * unitTotal);
     out.reserveEndRed += f.resEndRed / unitTotal;
     out.reserveEndBlue += f.resEndBlue / unitTotal;
-    // WOA-039: Reserves-at-end conditions to HQ endings only (an HQ rush ends
+    // Reserves-at-end conditions to HQ endings only (an HQ rush ends
     // before a side commits its reserves — the diagnostic reads meaningfully
     // only there; attrition endings run to deck-out and deploy almost everything).
     if (st.result.winType === 'hq') {
@@ -158,7 +158,7 @@ var WOA_SIM = (function () {
       if (e.seen <= 1) c.firstSight++;          // played the first time it was seen
       if (e.noop) c.noop++;                     // resolved ZERO actions — an effective skipped turn
       c.seenSum += e.seen;
-      // WOA #57 mispricing residual: the axis-worthy card win contribution —
+      // Mispricing residual: the axis-worthy card win contribution —
       // HQ-capture endings × printed (non-simple) plays only, mirroring
       // cardHqWinSlice (report-model.js). Pooled Win% is dead at these n
       // (docs/report-model.md#reporting-doctrine); this slice carries the signal.

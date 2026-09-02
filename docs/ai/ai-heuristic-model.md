@@ -1,12 +1,9 @@
----
-last-reviewed: 2026-07-16
----
 #human-instructions #ai #code-architecture
 # The AI, in plain English — how it thinks and every knob you can turn
 
-This is the human-facing map of the War of Attrition AI. It answers the two
-questions from feedback round 2: **what is the heuristic and what are the
-weights**, and **where are the "5 AIs"**. Everything here lives in
+This is the human-facing map of the War of Attrition AI. It answers two
+questions: **what is the heuristic and what are the weights**, and **where are
+the AIs**. Everything here lives in
 `game/engine/05-ai.js` (the brain — the only engine part AI work touches) and
 `game/maps.js` (the personalities as data).
 
@@ -27,7 +24,7 @@ different *rows of numbers* fed to it. Seven ship today:
 | brawler | `maps.js` `"ai"` block | a normal AI tuned to trade and push forward |
 | turtle  | `maps.js` `"ai"` block | a normal AI tuned to hug its HQ and dig in |
 | hawk    | `maps.js` `"ai"` block | a normal AI that prizes its army and takes even trades |
-| tuned   | `maps.js` `"ai"` block | the WOA-012 weight-tuner's output — **rejected** as the `AI_WEIGHTS` defaults (lost the beat-hard matchup gate, 44% of 192), kept shipped as an inactive pit-able personality |
+| tuned   | `maps.js` `"ai"` block | the weight-tuner's output — **rejected** as the `AI_WEIGHTS` defaults (lost the beat-hard matchup gate), kept shipped as an inactive pit-able personality |
 
 So `AI_PRESETS` in `engine/05-ai.js` holds **3**; the engine then merges in
 every row of the `"ai"` block from `maps.js` (`Object.keys(BUILTIN.ai)…`),
@@ -81,7 +78,7 @@ reading "TODO — describe me" is new and needs a description in
 | `fsDiffUrgent` | 40 | Extra value per point of field-score lead, scaled up as the game nears its end. |
 | `unitOnBoard` | 22 | Value of each of my deployed units (× the unit's worth). |
 | `unitReserve` | 16 | Value of each of my un-deployed reserves. Lower than on-board = mild nudge to actually field them. |
-| `unitValInfantry` | 3 | The AI's worth of one infantry, multiplied into the unit/threat terms. V1: a weight, so the tuner and personalities can sweep it. |
+| `unitValInfantry` | 3 | The AI's worth of one infantry, multiplied into the unit/threat terms. A weight, so the tuner and personalities can sweep it. |
 | `unitValCavalry` | 4 | The AI's worth of one cavalry (see `unitValInfantry`). |
 | `unitValArtillery` | 5 | The AI's worth of one artillery (see `unitValInfantry`). |
 | `advance` | 2.2 | Reward for my units being *closer* to the enemy HQ (per hex). Raise it to make the AI pushy. |
@@ -93,27 +90,21 @@ reading "TODO — describe me" is new and needs a description in
 | `threatKill` | 6 | Penalty per point of my unit the enemy threatens to kill. |
 | `threatTie` | 2.5 | Penalty per point of my unit the enemy could trade with (tie). |
 | `trenchHome` | 6 | Bonus per trench dug near my own HQ. |
-| `trenchFacing` | 3 | V1: bonus per covered trench edge that faces a **live enemy lane** (an enemy unit within 2 hexes of the far side of the denied border). This is what makes trench *orientation* a real choice — see below. |
+| `trenchFacing` | 3 | Bonus per covered trench edge that faces a **live enemy lane** (an enemy unit within 2 hexes of the far side of the denied border). This is what makes trench *orientation* a real choice — see below. |
 | `noopPenalty` | 80 | Penalty for a plan that resolves **zero** actions (a dead turn). Anti-degeneracy — **don't zero it.** |
 | `antiShuffle` | 10 | Penalty for re-swapping the same pair of units it swapped last turn. Anti-degeneracy. |
 | `fallbackBias` | 12 | Mild preference for a card's printed action over burning it. |
-| `shortlist` | 40 | V1 search dial: when a step has more options than this, keep the top N by a cheap static pre-rank (winning attacks first, advances next, swaps last). Replaces the old **random** 80-cap that could discard the best move. Lower = faster + more approximate — lab personalities can crank it down. |
+| `shortlist` | 40 | Search dial: when a step has more options than this, keep the top N by a cheap static pre-rank (winning attacks first, advances next, swaps last). Lower = faster + more approximate — lab personalities can crank it down. |
 <!-- /GEN:weights -->
 
-### How the AI picks a trench's orientation (Bill's Round-3/5 question)
+### How the AI picks a trench's orientation
 
-Before V1 the honest answer was "it doesn't": `trenchHome` was orientation-blind,
-so unless a live enemy attack happened to cross one of the candidate borders
-(where support denial shows up in `threatKill`/`threatHQ`), every facing scored
-the same and the first one in enumeration order won — which is how the
-Feedback-Round-2 "trench facing nowhere" happened.
-
-Since V1 the orientation is explicit: each covered edge that faces a live enemy
+The orientation is explicit: each covered edge that faces a live enemy
 lane (enemy unit within 2 hexes of the hex across the denied border) earns
 `trenchFacing` points, counted for trenches on my units' hexes or shielding my
-HQ. Same-facing ties still fall back to enumeration order, but a trench that
-blocks a real approach now always beats one facing an empty flank. The cheap
-pre-rank (`shortlist`) uses the same signal, so useful facings also survive the
+HQ. Same-facing ties fall back to enumeration order, but a trench that blocks a
+real approach always beats one facing an empty flank. The cheap pre-rank
+(`shortlist`) uses the same signal, so useful facings also survive the
 branching cut.
 
 ### The three dials that aren't weights
@@ -124,14 +115,13 @@ branching cut.
 | `replySamples`| 2   | How many hidden enemy hands to sample when looking ahead. |
 | `replyWeight` | 0.7 | How heavily the enemy's best reply counts against a candidate. |
 
-### The branching shortlist (V1)
+### The branching shortlist
 
 One weight doubles as a search dial: `shortlist`. When a single step offers
 more options than it (default 40), the AI keeps only the top-`shortlist`
 candidates by a cheap static pre-rank — winning attacks first, advances toward
-the enemy HQ next, swaps last — and fully evaluates just those. Before V1 the
-cap was 80 **random** options, which could silently discard the best move; the
-pre-rank keeps the promising ones by construction (and it's the same ranking
+the enemy HQ next, swaps last — and fully evaluates just those. The pre-rank
+keeps the promising ones by construction (and it's the same ranking
 `dev/claude-plays.js --k` uses to shortlist options for the LLM). Turn it down
 in a lab personality for speed, at the cost of occasionally missing a subtle
 reposition.
@@ -189,5 +179,5 @@ examples, not balanced archetypes).
    automatically).
 
 **Guardrail:** never ship a personality that zeroes `noopPenalty`,
-`antiShuffle`, or `attrWin` without re-measuring — those three are the fixes
-that killed the round-5/6 swap-dance stalemate. Zero them and it comes back.
+`antiShuffle`, or `attrWin` without re-measuring — those three are what hold off
+the swap-dance stalemate. Zero them and it comes back.

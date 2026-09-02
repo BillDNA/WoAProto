@@ -1,8 +1,8 @@
-/* War of Attrition — ui part: the Balance Dashboard's UNITS pane (WOA-044,
-   design 5b). THE QUESTION: is each unit doing its job? SAME two runs' skirmish
+/* War of Attrition — ui part: the Balance Dashboard's UNITS pane.
+   THE QUESTION: is each unit doing its job? SAME two runs' skirmish
    rows as Overview/Maps/Cards (dashLoadSkirmishRows/SKIRMISH_CACHE in ui/net.js),
    folded per-unit-type via report-model.js's unitsAggFromRows — one fold, four
-   panels: role map (2c), breakthrough gauge, lifespan bars, exchange. A ghost
+   panels: role map, breakthrough gauge, lifespan bars, exchange. A ghost
    -> B solid throughout; this tab follows the header run-A/B pickers, not the
    map drill-down's A|B|A/B toggle.
 
@@ -11,7 +11,7 @@
    type across all four panels, reusing existing CHART poles, no good/bad
    verdict) and the draw. Draws over the shared toolkit (ui/chart-primitives.js):
    chMakePlacer, chLine/chText/chTipAttrs, and the .chtip/ch-hit hover layer
-   (chBindHits). Small-n (SPEC §8): ONE n per unit type per run
+   (chBindHits). Small-n: ONE n per unit type per run
    (skirmishesFielded) governs every mark; WOA_REPORT.smallN(n, 'fleet') greys
    the mark + appends "(n=N)" to its tooltip, same as Cards. */
 'use strict';
@@ -164,17 +164,16 @@ function unBreakthroughSection(rows) {
   }).join('') + '</div>';
   return h;
 }
-// WOA-044 PINNED PREMISE GAP resolution: lifespan needs dieT (per-death turn),
-// captured starting this ticket — a run recorded BEFORE it has no dieT array
-// on ANY type (report-model.js's unitsAggFromEnvelopes.hasDieT distinguishes
-// that from "no deaths this run"). Legacy rows grey the WHOLE section with a
-// note, the same convention fsDiffTrack established pre-WOA-037, rather than
-// drawing a fabricated zero.
+// lifespan needs dieT (per-death turn): a run recorded before dieT capture
+// has no dieT array on ANY type (report-model.js's
+// unitsAggFromEnvelopes.hasDieT distinguishes that from "no deaths this run").
+// Such rows grey the WHOLE section with a note, the same convention as
+// fsDiffTrack, rather than drawing a fabricated zero.
 function unLifespanSection(rows, hasDieT) {
   var h = '<div style="font-size:13px;font-weight:bold;margin:16px 0 2px;">Lifespan ' +
     '<span class="small" style="font-style:italic;">(median turns alive after deploy — A above, B below)</span></div>';
   if (!hasDieT) {
-    return h + '<p class="small" style="opacity:.6;">predates capture — neither run has per-unit death-turn data (WOA-044). Record a fresh run to see lifespan bars.</p>';
+    return h + '<p class="small" style="opacity:.6;">predates capture — neither run has per-unit death-turn data. Record a fresh run to see lifespan bars.</p>';
   }
   var live = rows.filter(function (r) { return (r.a && r.a.lifespan != null) || (r.b && r.b.lifespan != null); });
   if (!live.length) return h + '<p class="small">No unit deploys recorded for either run yet.</p>';

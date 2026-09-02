@@ -1,12 +1,8 @@
----
-last-reviewed: 2026-07-07
----
 #human-instructions #code-architecture #game-rules
 
-# Field Manual animations — authoring guide for future sessions
+# Field Manual animations — authoring guide
 
-How to add or edit a worked example in the Field Manual's diagram player
-(V1; the retired `v1-field-manual-animations` spec is in git history). Everything
+How to add or edit a worked example in the Field Manual's diagram player. Everything
 lives in **`game/ui/manual.js`**; read that file alongside this doc.
 
 ## The pieces
@@ -57,7 +53,7 @@ var st  = mpState(def, { '0,0':['infantry','blue'], '-1,0':['infantry','red'] },
   `E.newBattle({maps:[def], seed:7, firstPlayer:'red'})` + `E.newSkirmish`, then
   overwrites `st.pieces.units` / `st.pieces.trenches` with the fixture's pieces
   and sets `st.__sim = true` (never fire real-skirmish hooks). The state is
-  block-shaped (WoAProto#221: `board`/`pieces`/`cards`/`flow`/`result`/`journal`);
+  block-shaped (`board`/`pieces`/`cards`/`flow`/`result`/`journal`);
   the manual authors it directly because it constructs and drives engine states,
   rather than through the read-only `Engine.view` play surface.
 - Terrain goes in the **map def** (`pieces`) so `buildTerrain` validates it;

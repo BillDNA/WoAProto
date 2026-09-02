@@ -7,16 +7,13 @@ run is graded against, so a sharp move in any of them signals a regression even 
 rates look fine. **Rubrics are the "is this subjectively fun" layer** (`docs/rubrics/`)
 — they hold the *judgment* and cite this note for their anchors. Numbers here; taste there.
 
-Only the **live rules-1.2** fact set lives here. Superseded lineage (rules-1.1, V0, the
-pre-WOA-020 pool, the `default` 16-card deck rows) is intentionally dropped — **git is the
-archive**; grep-able stale baselines poison a fresh session's onboarding.
+Only the **live rules-1.2** fact set lives here. Superseded lineage is intentionally dropped —
+**git is the archive**; grep-able stale baselines poison a fresh session's onboarding.
 
 ## Provenance
 
-Measured **2026-07-18**, hard-vs-hard, **n=60/map = 360**, **Core Six** (`core7`'s 6-map set),
-deck **`cavsplit17-raid-paid`**. Source run:
-`logs/reports/balance/1.2/2026-07-18-1712-hard-vs-hard-n60.md`. Metric re-baseline **WOA-039**
-(engine rules unchanged — the redefinition is of the *metrics*, not the game).
+Measured hard-vs-hard, **n=60/map = 360**, **Core Six** (`core7`'s 6-map set), deck
+**`cavsplit17-raid-paid`**, rules-1.2. Regenerate with `node dev/balance-report.js --parallel`.
 
 ## Figures (rules-1.2)
 
@@ -35,7 +32,7 @@ deck **`cavsplit17-raid-paid`**. Source run:
 | Swings | **3.5** | |
 | Reserves-at-end (HQ-only) | red **33%** / blue **31%** | n=61, small-n |
 
-**Skill premium** (`matchup 96`, n=96/map = 576/pairing, 2026-07-18):
+**Skill premium** (`matchup 96`, n=96/map = 576/pairing):
 normal>easy **69%**, hard>easy **76%**, hard>normal **56%** (thin, within noise),
 sanity **46%** (thin, within noise).
 

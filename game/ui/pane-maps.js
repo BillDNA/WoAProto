@@ -1,10 +1,10 @@
-/* War of Attrition — ui part: the Balance Dashboard's MAP DRILL-DOWN pane
-   (WOA-040, design 4b; hex lenses WOA-042, SPEC §5). THE QUESTION: on THIS map,
+/* War of Attrition — ui part: the Balance Dashboard's MAP DRILL-DOWN pane.
+   THE QUESTION: on THIS map,
    what changed run A -> run B, and when in the skirmish did it happen?
    Breadcrumb map switcher under the Maps pill; an A|B|A/B segmented toggle
-   (default B) drives the tempo lanes (design 3a), the |FS-diff| track, and the
-   hex lenses; the band board (1c, reusing ovBandRowHtml with the 'map' small-n
-   scope) and the settle curve (1e, chSettleSvg) always show BOTH runs.
+   (default B) drives the tempo lanes, the |FS-diff| track, and the
+   hex lenses; the band board (reusing ovBandRowHtml with the 'map' small-n
+   scope) and the settle curve (chSettleSvg) always show BOTH runs.
 
    Render-only: all shaping is CHART_MODEL.buildMapDrillModel (ui/chart-model.js);
    the cross-skirmish folds it draws over live in report-model.js (WOA_REPORT).
@@ -43,9 +43,9 @@ function mdLaneBars(vals, ghostVals, laneMax, color, barH) {
   return cols;
 }
 
-/* The |FS-diff| sparkline that sits above the lanes (design 3a). Greys
+/* The |FS-diff| sparkline that sits above the lanes. Greys
    honestly with a note instead of drawing anything when vd is null (every
-   skirmish for this map/run predates the fs capture, WOA-037) — never a
+   skirmish for this map/run predates the fs capture) — never a
    fabricated flat line. solidLabel names which run is drawing solid (A or
    B) for the "predates" note. */
 function mdFsDiffTrackHtml(vd, ghostVd, solidLabel) {
@@ -53,7 +53,7 @@ function mdFsDiffTrackHtml(vd, ghostVd, solidLabel) {
   if (!vd) {
     return '<div style="display:flex;gap:8px;opacity:.55;"><div style="flex:none;width:' + LABEL_W + 'px;"></div>' +
       '<p class="small" style="margin:0;flex:1;">|FS-diff| track unavailable for run ' + solidLabel +
-      ' on this map &mdash; this run predates the fs capture (WOA-037).</p></div>';
+      ' on this map &mdash; this run predates the fs capture.</p></div>';
   }
   var maxV = Math.max.apply(null, vd.points.concat(ghostVd ? ghostVd.points : []).concat([0.0001]));
   function poly(pts) {
@@ -102,9 +102,9 @@ function mdTempoSection(mapName, tempo) {
   return h;
 }
 
-/* This-map band board (design 1c filtered to one map): the EXACT Overview
-   row renderer (ovBandRowHtml), just fed this map's own {agg,done} and the
-   'map' small-n scope (SPEC §8: n<40/map greys, not the fleet's n<240) —
+/* This-map band board (the Overview board filtered to one map): the EXACT
+   Overview row renderer (ovBandRowHtml), just fed this map's own {agg,done}
+   and the 'map' small-n scope (n<40/map greys, not the fleet's n<240) —
    always both runs, no A|B|A/B toggle (matches the Overview board, which
    never toggles either). */
 function mdBandBoard(aggA, aggB, temperature) {
@@ -154,16 +154,16 @@ function mdHeaderHtml(mapList, idx, scoreA, scoreB, regressed) {
   '</div>';
 }
 
-/* =================== hex lenses (WOA-042, SPEC §5) ===================
+/* =================== hex lenses ===================
    THREE spatial reads on THIS map's board — occupancy, ownership flips, kills
    — the drill-down's only SPATIAL view (tempo/FS/bands are all temporal or
    aggregate). Rendered as SVG hex boards reusing board.js's GLOBAL
    hexXY/hexPoints/viewBoxFor (the game's OWN board renderer).
 
-   DISCRETIONARY (ticket): SVG polygons, NOT the AC's clip-path divs. Why: the
+   SVG polygons, NOT clip-path divs: the
    avenue-of-attack marker is then a real nested <polygon> stroke and the
-   dead-hex hatch an SVG <pattern> — which structurally kills the failure the
-   AC warns about (a css `outline` on a clip-path element renders broken), and
+   dead-hex hatch an SVG <pattern> — which structurally avoids the broken
+   render of a css `outline` on a clip-path element, and
    it matches how the live game already draws its board (board.js), so the two
    hex renderers stay one visual language. The fold (report-model.js
    foldHexLenses) is pure over the trace; THIS layer owns the map/board join
@@ -217,7 +217,7 @@ function mdLensFill(v, max) {
    toggle's spatial payload). */
 function mdHexLensSection(mapName, hex) {
   var head = '<div style="font-size:13px;font-weight:bold;margin:18px 0 2px;">Hex lenses ' +
-    '<span class="small" style="font-style:italic;">(SPEC §5 &mdash; where the skirmish actually happens on this map)</span></div>';
+    '<span class="small" style="font-style:italic;">(where the skirmish actually happens on this map)</span></div>';
   var map = mdMapDef(mapName);
   if (!map) return head + '<p class="small">No board outline on disk for &ldquo;' + chEsc(mapName) + '&rdquo; &mdash; it may have been deleted since this run.</p>';
   var shape = mdShapeOf(map);
