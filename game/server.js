@@ -19,7 +19,10 @@ var MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
 // --- content files (Feedback Round 4 Pass 2): maps/decks are per-item files
 // under content/, each registering into WOA_CONTENT; content/manifest.js is
 // regenerated (by scanning the dirs) so the browser loads exactly what's there.
-var CONTENT_DIR = path.join(ROOT, 'content');
+// WOA_CONTENT_DIR: a test points content writes (savemap/deletemap/savemapsets)
+// at a throwaway dir; unset in normal use = game/content. manifest-gen honours
+// the same env so writes and the manifest regen agree.
+var CONTENT_DIR = process.env.WOA_CONTENT_DIR || path.join(ROOT, 'content');
 function contentSlug(s) { return String(s || 'map').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'map'; }
 function wrapContent(kind, obj) {
   // defensive: files written before a kind existed init WOA_CONTENT without it,

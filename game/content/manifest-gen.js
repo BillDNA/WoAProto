@@ -5,8 +5,10 @@
 'use strict';
 var fs = require('fs');
 var path = require('path');
-var CONTENT_DIR = __dirname;
-var CONTENT_KINDS = require(path.join(CONTENT_DIR, 'kinds.js')); // single source; sits beside this file
+// WOA_CONTENT_DIR lets a test point the whole content pipeline at a throwaway
+// dir (server writes + this regen agree on it); unset in normal use = game/content.
+var CONTENT_DIR = process.env.WOA_CONTENT_DIR || __dirname;
+var CONTENT_KINDS = require(path.join(__dirname, 'kinds.js')); // single source; sits beside this file (always here, not in the override dir)
 function buildManifest() {
   function list(kind) { try { return fs.readdirSync(path.join(CONTENT_DIR, kind)).filter(function (f) { return /\.js$/.test(f); }).sort(); } catch (e) { return []; } }
   var files = {};

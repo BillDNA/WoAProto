@@ -33,9 +33,17 @@ never a certificate.
 - `game/test.seams.js` — the army-points cap as a settable, enforced limit (mechanism,
   not value).
 
-To make the server driveable, two small production changes (not behaviour changes):
-`game/server.js` guards its `.listen` behind `require.main` and exports
-`listen`/`handler`/`ROUTES`/`recordSkirmish`; `dev/db.js` `open()` honours `WOA_DB_PATH`.
+- `dev/content-api.test.js` — drives the content-write routes over real HTTP against
+  a **throwaway content dir** (`WOA_CONTENT_DIR`, copied from the real one), so the
+  file-write → manifest-regen hand-off runs for real without touching committed content.
+- `dev/db.test.js` — adds `factsFromRow ≡ skirmishFacts`: the live-state fold and the
+  db-row fold of the same skirmish must be field-for-field equal.
+
+To make the server + pipeline driveable, small production changes (no behaviour change):
+`game/server.js` guards its `.listen` behind `require.main`, exports
+`listen`/`handler`/`ROUTES`/`recordSkirmish`, and `.unref`s its cleanup interval;
+`dev/db.js` `open()` honours `WOA_DB_PATH`; `game/server.js` + `content/manifest-gen.js`
+honour `WOA_CONTENT_DIR`.
 
 ## Seam inventory — coverage status
 
@@ -48,15 +56,15 @@ gap. Least-covered, most-load-bearing first.
 | B1/B2/B3 db rows → `/api/runs`+`/api/skirmishes` (timeline join) → `envelopeFromRow` | dev/db.js → server → report-model | **REAL** — `server.test.js` feeds the real row into `envelopeFromRow` |
 | D1/D2/D3 LAN create/join/push/poll + seq-conflict | ui/net.js → server rooms | **REAL** (server side) — `server.test.js`; browser producers still DOM-only |
 | A6/A7 savereport/savedebug path-injection fences | server `saveUnderRepo` | **REAL** (reject side) — `server.test.js` |
-| A3/A8 savemap/deletemap → content file → manifest | server → content/ → manifest-gen | **NONE** — needs a temp content-dir sandbox (server + manifest-gen path override) |
-| A4 savedeck → custom-deck.js | server → game/custom-deck.js | **NONE** — self-restoring (save then null) once content-dir is overridable |
-| A5 savemapsets → destructive dir rewrite | server → content/mapsets/ | **NONE** — destructive; needs the sandbox before it's safe to drive |
+| A3/A8 savemap/deletemap → content file → manifest | server → content/ → manifest-gen | **REAL** — `content-api.test.js` (temp content dir) |
+| A4 savedeck → custom-deck.js | server → game/custom-deck.js | **REAL** — `content-api.test.js` (snapshot+restore) |
+| A5 savemapsets → destructive dir rewrite | server → content/mapsets/ | **REAL** — `content-api.test.js` (sandbox) |
+| H1 `factsFromRow` ≡ `skirmishFacts` | engine live fold ↔ db-row fold | **REAL** — `db.test.js` |
 | C1 `--parallel` worker slim-state → parent → db | balance-report worker string → parent | **ONE-SIDED** — `slimSkirmishState` round-trip pinned; the driver/worker string is not |
 | E3 index.html deck bootstrap → ACTIVE_DECK | inline bootstrap → engine snapshot | **NONE** — localStorage-wins precedence runs only in the page |
 | F1 map.shapeDef → `@id` shape → board (LAN join/resume) | engine ↔ battle.maps serialization | **ONE-SIDED** — built-ins exercised; no carved-shapeDef round-trip through a join |
 | F2 map/deck bundle import parser | boot.js import → libraryReplace | **NONE** — lenient parser is pure node logic |
-| G2 AI hidden-hand resample honesty | engine sampledReplyScore | **NONE** — no "cannot peek at the true hidden order" assertion (the AI analog of G1) |
-| H1 `factsFromRow` ≡ `skirmishFacts` | engine live fold ↔ db-row fold | **NONE** — the identity that keeps the DB read path from drifting is unasserted |
+| G2 AI hidden-hand resample honesty | engine sampledReplyScore | **NONE** — a clean invariant is blocked: the resample shuffles `decks[opp].concat(hands[opp])`, and Fisher-Yates is sensitive to input order (which encodes the split), so "permute the split → same plan" reds on honest code. The honest fix (canonicalise the pool before shuffling) changes AI output → RULES_VERSION bump. Tracked, not shipped. |
 | G1 stateView LLM honesty | claude-plays → prompt | **REAL** — `claude-plays.test.js` sentinel |
 | H2 BANDS/balanceScore, H4 playLog→card_plays/trace | report-model / db | **REAL** — `test.reports.js`, `db.test.js` |
 | E2 manifest-gen ↔ committed manifest | content dirs → manifest.js | **REAL** — `test.maps.js` staleness test |
