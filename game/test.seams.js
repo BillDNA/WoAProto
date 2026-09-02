@@ -29,8 +29,10 @@ test('seam: the army-points cap is a settable, enforced limit', () => {
   assert.ok(E.deckPoints(doubled) === 2 * E.deckPoints(single), 'deckPoints is count-weighted (2 copies = 2x)');
 
   // Build two decks RELATIVE to the live cap so the boundary tracks the limit, not
-  // a literal. One sits under it, one is pushed over it.
-  const underN = Math.max(1, Math.floor((cap / perCard) - 1));
+  // a literal. `floor(cap / perCard) * perCard <= cap` for ANY cap (an empty deck
+  // when the cap is below one card), so `under` is at-or-below the cap by
+  // construction — no coupling to the cap's magnitude. One over is pushed past it.
+  const underN = Math.floor(cap / perCard);
   const under = { cards: [{ id: 'u', name: 'U', count: underN, steps: oneStep.steps }] };
   const over = { cards: [{ id: 'o', name: 'O', count: Math.ceil(cap / perCard) + 2, steps: oneStep.steps }] };
   assert.ok(E.deckPoints(under) <= cap, 'a deck built below the cap passes the cap gate');

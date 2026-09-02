@@ -19,7 +19,7 @@ const { test } = require('node:test');
 const assert = require('node:assert');
 const { E, testSkirmish } = require('./test.helpers.js');
 
-test('integration: a real finished skirmish reaches the persistence seam', () => {
+test('integration: a real finished skirmish reaches the persistence seam', (t) => {
   const seen = [];
   const hook = function (st) { seen.push(st); };
   E.hooks.onSkirmishEnd.push(hook);
@@ -76,6 +76,12 @@ test('integration: a real finished skirmish reaches the persistence seam', () =>
         db.close(h);
         try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {}
       }
+    } else {
+      // Make the skip LOUD, never a silent green: this is the one spot where the
+      // gate's "green stops meaning 80% wired" promise steps down (a zipped game/
+      // without dev/, or Node < 22.5 lacking node:sqlite). The hook-wiring
+      // assertions above still ran; only the db leg did not.
+      t.diagnostic('db persistence leg SKIPPED — dev/db.js unavailable; hook->db assertion did not run');
     }
   } finally {
     const i = E.hooks.onSkirmishEnd.indexOf(hook);
