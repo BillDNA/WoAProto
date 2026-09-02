@@ -18,11 +18,11 @@
      --once    report this run only; do not read or write the accumulator
      --stdout  print the markdown instead of writing a file
      --quiet   suppress the progress dots
-     --mapset <id>  run a specific map-set (default: the ACTIVE set's pool;
+     --mapset <id>  run a specific mapset (default: the ACTIVE set's pool;
                'all' = every map on disk)
      --deck <id>    report on content/decks/<id>.js instead of the ACTIVE deck
      --units <id>   report with content/units/<id>.js unit stats (composition +
-               atk/def/sup/vp) instead of the maps.js default
+               atk/def/sup/worth) instead of the maps.js default
      --parallel [k]  simulate maps in k parallel worker processes (default:
                cores-1). The engine's board state is process-global, so
                parallelism is process-per-map — each worker require()s its own
@@ -117,11 +117,11 @@ async function run() {
   var dr = diffs[0] || 'hard', db = diffs[1] || dr, diffLabel = dr === db ? dr + ' vs ' + dr : dr + ' vs ' + db;
   var ver = E.VERSION;
 
-  var maps = E.mapPool(); // the ACTIVE map-set's roster (V1)
+  var maps = E.activeMaps(); // the ACTIVE mapset's maps (V1)
   if (flags.mapset === 'all') maps = E.MAPS;
   else if (flags.mapset) {
     var mset = E.MAPSETS.filter(function (s) { return s.id === flags.mapset; })[0];
-    if (!mset) { console.error('Unknown map-set "' + flags.mapset + '". Known: ' + (E.MAPSETS.map(function (s) { return s.id; }).join(', ') || 'none') + ', all'); process.exit(1); }
+    if (!mset) { console.error('Unknown mapset "' + flags.mapset + '". Known: ' + (E.MAPSETS.map(function (s) { return s.id; }).join(', ') || 'none') + ', all'); process.exit(1); }
     maps = E.MAPS.filter(function (m) { return mset.maps.indexOf(m.id) >= 0 || mset.maps.indexOf(m.name) >= 0; });
   }
   if (filter) maps = maps.filter(function (m) { return m.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0; });
@@ -158,11 +158,11 @@ async function run() {
   // WOA-045: record the run's content + seed identity so it's reproducible and
   // the A/B picker can tell runs apart. seedBaseFor(0) includes the priorRuns offset.
   var runDeck = DECK || (E.ACTIVE_DECK && E.ACTIVE_DECK.id) || '';
-  // Always resolve the actual roster: --mapset <id> / 'all' verbatim, else the
+  // Always resolve the actual mapset: --mapset <id> / 'all' verbatim, else the
   // active mapset id — so an all-maps run and an active-pool run never collide as ''.
   var actMset = E.activeMapset && E.activeMapset();
   var runMapset = flags.mapset || (actMset && (actMset.id || actMset.name)) || '';
-  // a map-name filter narrows the roster — fold it into the label so a filtered
+  // a map-name filter narrows the mapset — fold it into the label so a filtered
   // run isn't recorded as identical to the full one.
   var runLabel = 'balance ' + diffLabel + ' · ' + (runDeck || 'active') + ' · ' + runMapset +
     (filter ? ' /' + filter : '') + ' · n' + n;

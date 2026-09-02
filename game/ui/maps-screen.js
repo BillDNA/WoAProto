@@ -1,4 +1,4 @@
-/* War of Attrition — ui part: map library & pool (roster files, previews,
+/* War of Attrition — ui part: map library & pool (library files, previews,
    import/export). Classic script, no wrapper — top-level names attach to
    window (see ui/app.js header). Extracted verbatim from index.html's inline
    app script; the maps-screen button wiring lives in ui/boot.js. Balance
@@ -11,13 +11,13 @@
 // Maps are per-item files under content/maps/ (Feedback Round 4 Pass 2). The
 // engine loads them into E.MAPS at boot; each carries a stable `id` (its
 // filename stem) and an optional `custom:true` flag (a user map — the badge, and
-// exempt from the shipped-roster guideline tests). Saving or deleting a map
+// exempt from the shipped-library guideline tests). Saving or deleting a map
 // rewrites/removes its file on the server AND updates E.MAPS in place.
 //
-// V1: the match pool is the ACTIVE MAP-SET (content/mapsets/*.js — named
-// rosters, up to five slots, one active; the deck-slot pattern applied to
+// V1: the match pool is the ACTIVE MAPSET (content/mapsets/*.js — named
+// sets, up to five slots, one active; the deck-slot pattern applied to
 // maps). It replaced the per-browser woa-disabled-maps preference, so the
-// browser, the LAN peer, and every CLI tool finally agree on one roster.
+// browser, the LAN peer, and every CLI tool finally agree on one mapset.
 // Set edits mutate E.MAPSETS in place and are saved to files via
 // /api/savemapsets (needs the server; without it, edits last the session).
 function slugifyMap(name){ return String(name||'map').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'map'; }
@@ -27,7 +27,7 @@ function allMaps(){
 var MAP_FLOOR = 5;   // library floor: keep enough distinct boards on disk
 var MAPSET_SLOTS = 5;
 var MS = { slot: 0 }; // which set the maps screen is viewing/editing
-function getMapPool(){ return E.mapPool(); }
+function getActiveMaps(){ return E.activeMaps(); }
 function msSets(){ return E.MAPSETS; }
 function msCurrent(){ return msSets()[MS.slot] || null; }
 function msSetActive(idx){
@@ -48,15 +48,15 @@ function msNewSet(){
 }
 function msSave(){
   api('savemapsets', { mapsets: msSets() }).then(function(){
-    toast('Map-sets saved to content/mapsets/.', 2500);
-  }).catch(function(){ toast('Could not save the map-sets.', 3500); });
+    toast('Mapsets saved to content/mapsets/.', 2500);
+  }).catch(function(){ toast('Could not save the mapsets.', 3500); });
 }
-// E.MAPS is the engine's live roster array — mutate it in place (never reassign).
-function rosterReplace(def){
+// E.MAPS is the engine's live map-library array — mutate it in place (never reassign).
+function libraryReplace(def){
   for (var i=0;i<E.MAPS.length;i++){ if (E.MAPS[i].id === def.id){ E.MAPS[i] = def; return; } }
   E.MAPS.push(def);
 }
-function rosterRemove(id){
+function libraryRemove(id){
   for (var i=0;i<E.MAPS.length;i++){ if (E.MAPS[i].id === id){ E.MAPS.splice(i,1); return; } }
 }
 // Persist a map to its content file (server writes content/maps/<id>.js and
@@ -68,13 +68,13 @@ function saveMapFile(def){
 }
 function deleteMapById(id){
   api('deletemap', { id: id }).then(function(){
-    rosterRemove(id); renderMapsScr();
+    libraryRemove(id); renderMapsScr();
   }).catch(function(){ toast('Could not delete the map file.', 3500); });
 }
 function updateMapsHint(){
   var el = $('mapsHint');
   if (!el) return;
-  el.innerHTML = 'Maps are files in <b>game/content/maps/</b> — deleting one here deletes its file. Zip the folder and friends get your roster.';
+  el.innerHTML = 'Maps are files in <b>game/content/maps/</b> — deleting one here deletes its file. Zip the folder and friends get your map library.';
 }
 
 /* mini preview svg (self-contained, no global board state) */
@@ -126,7 +126,7 @@ function renderMapsetBar(){
     var chip = document.createElement('button');
     chip.className = 'mschip' + (i === MS.slot ? ' open' : '') + (st.active ? ' active' : '');
     chip.innerHTML = (st.active ? '&#9733; ' : '') + st.name + ' <span class="msn">(' + st.maps.length + ')</span>';
-    chip.title = st.active ? 'The active set — this roster is the match pool everywhere (game, LAN, CLI tools)' : 'View/edit this set';
+    chip.title = st.active ? 'The active set — this mapset is the match pool everywhere (game, LAN, CLI tools)' : 'View/edit this set';
     chip.onclick = function(){ MS.slot = i; renderMapsScr(); };
     bar.appendChild(chip);
   });
@@ -204,11 +204,11 @@ function renderMapsScr(){
     var bd = document.createElement('button'); bd.textContent='Delete';
     bd.onclick = function(){
       if (allMaps().length <= MAP_FLOOR){
-        toast('The roster keeps a floor of '+MAP_FLOOR+' maps so a first-to-3 campaign always has fresh boards. Add a map first.', 4500);
+        toast('The map library keeps a floor of '+MAP_FLOOR+' maps so a first-to-3 campaign always has fresh boards. Add a map first.', 4500);
         return;
       }
       if (!confirm('Delete map "'+m.def.name+'"? This removes its file in content/maps/.')) return;
-      deleteMapById(m.id); // updates the roster + re-renders on success
+      deleteMapById(m.id); // updates the map library + re-renders on success
     };
     btns.appendChild(bd);
     grid.appendChild(d);

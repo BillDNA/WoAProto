@@ -4,7 +4,7 @@
    ranking (game/report-model.js, SOT: docs/balance/best-map-score.md) over the
    fresh 1.1 hard-vs-hard n60 read (logs/reports/balance/1.1/2026-07-10-1823-
    hard-vs-hard-n60.md, 720 skirmishes) — top 7 of `tournament`'s 12 by score,
-   sanity-checked against the 1.0 final report's per-map read. Roster files for
+   sanity-checked against the 1.0 final report's per-map read. Map files for
    every map (kept or cut) stay on disk under content/maps/.
 
    KEPT (balanceScore, lower = better):
@@ -32,7 +32,7 @@
    filled centre is a straight HQ-rush lane — 1st-mover 84% / HQ 78% / 0-kill 42% at
    n50, far worse — so cut per the ticket's fallback. Pool is now 6 (id stays "core7",
    a frozen reference; name -> "Core Six"). Restore to 7 later by redesigning The Void
-   (HQs farther apart) or promoting the-cockpit — a roster call for Bill. */
+   (HQs farther apart) or promoting the-cockpit — a mapset call for Bill. */
 (function(g){var c=g.WOA_CONTENT=g.WOA_CONTENT||{maps:[],cards:[],decks:[],mapsets:[]};(c.mapsets=c.mapsets||[]).push(
 {
  "id": "core7",

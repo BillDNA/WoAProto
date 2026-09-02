@@ -168,7 +168,7 @@ function unBreakthroughSection(rows) {
 // captured starting this ticket — a run recorded BEFORE it has no dieT array
 // on ANY type (report-model.js's unitsAggFromEnvelopes.hasDieT distinguishes
 // that from "no deaths this run"). Legacy rows grey the WHOLE section with a
-// note, the same convention vpDiffTrack established pre-WOA-037, rather than
+// note, the same convention fsDiffTrack established pre-WOA-037, rather than
 // drawing a fabricated zero.
 function unLifespanSection(rows, hasDieT) {
   var h = '<div style="font-size:13px;font-weight:bold;margin:16px 0 2px;">Lifespan ' +

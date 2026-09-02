@@ -1,11 +1,11 @@
 ---
 name: create-map
-description: Propose new War of Attrition maps that fill a measured gap in the roster, graded against the map rubric, in the map data shape (including carved shapeDef outlines). Use when asked to "design a map", "add a map", or "what map is the roster missing".
+description: Propose new War of Attrition maps that fill a measured gap in the map library, graded against the map rubric, in the map data shape (including carved shapeDef outlines). Use when asked to "design a map", "add a map", or "what map the library is missing".
 ---
 
 # create-map
 
-Read the roster and its balance numbers, find the gap, propose maps in the
+Read the map library and its balance numbers, find the gap, propose maps in the
 exact data shape. **Proposals only — Bill saves them via the editor (which
 writes a `game/content/maps/` file).**
 
@@ -16,7 +16,7 @@ writes a `game/content/maps/` file).**
   to ONE hex, contiguous dirs; rivers come in the same 2/3-side lengths as
   forest and mountain).
 - `game/content/maps/<slug>.js` — the map library, one file per map (12 shipped
-  after the V1 trim). Note the match pool is the ACTIVE map-set
+  after the V1 trim). Note the match pool is the ACTIVE mapset
   (`game/content/mapsets/`), so a new map must also be added to a set — or
   measured directly with a name filter / `--mapset all`.
 - `docs/rubrics/map-rubric.md` — the map rubric.
@@ -46,7 +46,7 @@ built-ins), point-symmetric outlines keep Mirror and fair-HQ placement working.
 ## Steps
 
 1. Name the measured gap: e.g. "only the compact dist-4 maps produce healthy
-   HQ-capture rates; the roster lacks a river map; spear maps all read
+   HQ-capture rates; the library lacks a river map; spear maps all read
    2nd-mover-strong." Cite numbers.
 2. Draft 1–3 maps. For each: the JSON, the intent (what fight it forces), and a
    map-rubric self-grade (predicted side balance, HQ-vs-attrition mix, tie-rule
@@ -68,7 +68,7 @@ built-ins), point-symmetric outlines keep Mirror and fair-HQ placement working.
    finalists to a **hard** screen at n=100–200 (a hard screen is ~7× slower —
    ~28 s at n=40 — so it's a finalist verdict, not triage; profile:
    `logs/reports/analysis/1.1/2026-07-10-create-map-profile.md`). To put a survivor
-   in the match pool, tick it into the active map-set on the maps screen. Flag
+   in the match pool, tick it into the active mapset on the maps screen. Flag
    thresholds live in game/report-model.js (side ≥62/38, mover ≥62, HQ% ≤8 =
    attrition-only).
 
@@ -83,7 +83,7 @@ built-ins), point-symmetric outlines keep Mirror and fair-HQ placement working.
   barrageable.
 - Barrage removes forests and trenches anywhere — a forest-dependent map plan
   must survive one barrage.
-- Screen cost is all in the sim, and AI difficulty dominates it (~690 ms/skirmish
+- Screen cost is all in the sim, and AI strength dominates it (~690 ms/skirmish
   hard vs ~100 ms normal; n is near-linear on top). When a finalist is screened
   across the whole active set, `dev/balance-report.js --parallel` is ~3.3× faster
   for identical numbers — prefer it over serial `balance.js` for multi-map screens.

@@ -5,10 +5,10 @@
 var E = require('./engine.js');
 
 // A bare classic-board map so rules tests are deterministic regardless of the
-// built-in roster. HQs in opposite corners, no terrain.
+// built-in map library. HQs in opposite corners, no terrain.
 var TESTMAP = { name: 'Test Range', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2], pieces: [] };
 function testSkirmish(seed) {
-  var m = E.newMatch({ seed: seed, firstPlayer: 'red', maps: [TESTMAP] });
+  var m = E.newBattle({ seed: seed, firstPlayer: 'red', maps: [TESTMAP] });
   return E.newSkirmish(m);
 }
 

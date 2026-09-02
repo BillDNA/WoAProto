@@ -1,4 +1,4 @@
-/* War of Attrition — engine part 04: match/skirmish lifecycle + card-step turn flow + hooks.
+/* War of Attrition — engine part 04: battle/skirmish lifecycle + card-step turn flow + hooks.
    Classic script (browser + node). Engine parts share the internal namespace
    g.WOA_E (alias I) — cross-part calls go through I.* at the CALL SITE (never
    captured at load time), so only filename-sorted load order matters. */
@@ -8,27 +8,27 @@
 
   /* ---------- state ---------- */
 
-  function newMatch(opts) {
+  function newBattle(opts) {
     opts = opts || {};
     var s = { seed: (opts.seed !== undefined ? opts.seed : (Date.now() & 0x7fffffff)) | 0 };
     var maps = (opts.maps && opts.maps.length) ? opts.maps : I.MAPS;
     var order = [];
     for (var i = 0; i < maps.length; i++) order.push(i);
     I.shuffle(s, order);
-    var match = {
+    var battle = {
       seed: s.seed,
-      maps: maps,           // full map definitions travel with the match (LAN-safe)
+      maps: maps,           // full map definitions travel with the battle (LAN-safe)
       mapOrder: order,
       skirmishIndex: 0,
       wins: { red: 0, blue: 0 },
       firstPlayer: opts.firstPlayer || (I.rnd(s) < 0.5 ? 'red' : 'blue'),
       // WOA-055: per-side deck selection {red, blue} (each null|deck|id|name);
-      // travels with the match like maps do. null = both sides share the active deck.
+      // travels with the battle like maps do. null = both sides share the active deck.
       decks: opts.decks || null,
       winner: null
     };
-    match.seed = s.seed;
-    return match;
+    battle.seed = s.seed;
+    return battle;
   }
 
   // WOA-055: the card registry for one side — the skirmish's per-side deck if it
@@ -48,17 +48,17 @@
     return deck;
   }
 
-  function newSkirmish(match) {
-    var maps = match.maps || I.MAPS;
-    var mapIdx = match.mapOrder[match.skirmishIndex % match.mapOrder.length];
+  function newSkirmish(battle) {
+    var maps = battle.maps || I.MAPS;
+    var mapIdx = battle.mapOrder[battle.skirmishIndex % battle.mapOrder.length];
     var map = maps[mapIdx];
     var shapeName = I.ensureMapShape(map);
     I.setBoard(shapeName);
     var terrain = I.buildTerrain(map);
     var st = {
       boardShape: shapeName,
-      seed: match.seed,
-      match: match,
+      seed: battle.seed,
+      battle: battle,
       mapIndex: mapIdx,
       mapName: map.name,
       terrainEdges: terrain.edges,
@@ -68,7 +68,7 @@
       units: {},      // hexKey -> {type, owner}
       trenches: {},   // hexKey -> {dirs:[d1,d2]}
       reserves: { red: copyReserves(), blue: copyReserves() },
-      vp: { red: 0, blue: 0 },
+      kills: { red: 0, blue: 0 },
       decks: {}, discards: { red: [], blue: [] }, removed: { red: [], blue: [] }, hands: { red: [], blue: [] },
       seen: { red: {}, blue: {} },  // cardId -> times it has appeared in p's hand
       playLog: [],                  // {p, id, mode, turn, seen-at-play} per card played
@@ -76,7 +76,7 @@
       lastSwap: { red: null, blue: null }, // p's most recent swap pair (AI anti-I.shuffle)
       stats: { attacks: 0, swaps: 0, marches: 0, deploys: 0, firstBlood: null }, // behaviour counters for the balance lab
       firstTurnDone: { red: false, blue: false },
-      current: match.skirmishIndex === 0 ? match.firstPlayer : match.lastLoser,
+      current: battle.skirmishIndex === 0 ? battle.firstPlayer : battle.lastLoser,
       second: null,
       phase: 'choose-card', // choose-card | step | skirmish-over
       pending: null,
@@ -94,12 +94,12 @@
     // chosen. The default (symmetric) path leaves st.sideDecks absent — sideReg
     // falls back to DEFAULT_REG — so live/synced/persisted state never carries a
     // redundant card catalog on the hot path.
-    var dsel = match.decks;
+    var dsel = battle.decks;
     if (dsel && (dsel.red || dsel.blue))
       st.sideDecks = { red: I.resolveDeck(dsel.red), blue: I.resolveDeck(dsel.blue) };
     st.decks.red = buildDeck(st, 'red');
     st.decks.blue = buildDeck(st, 'blue');
-    log(st, 'Skirmish ' + (match.skirmishIndex + 1) + ' — "' + map.name + '". ' + I.cap(st.current) + ' moves first.');
+    log(st, 'Skirmish ' + (battle.skirmishIndex + 1) + ' — "' + map.name + '". ' + I.cap(st.current) + ' moves first.');
     drawHand(st, st.current);
     return st;
   }
@@ -173,13 +173,13 @@
     if (hand.length === 0) endByAttrition(st);
   }
 
-  // Attrition score (June 2026 rules revision): VP of a player's SURVIVING units
+  // Attrition score (June 2026 rules revision): field score of a player's SURVIVING units
   // on the board. Reserves never deployed count for nothing; kills only matter
-  // because they remove enemy units from the field. (st.vp still tracks kills
+  // because they remove enemy units from the field. (st.kills still tracks kills
   // for stats/journal, but victory reads the board.)
   function fieldScore(st, p) {
     var s = 0;
-    for (var h in st.units) { var u = st.units[h]; if (u.owner === p) s += I.UNITS[u.type].vp; }
+    for (var h in st.units) { var u = st.units[h]; if (u.owner === p) s += I.UNITS[u.type].worth; }
     return s;
   }
 
@@ -202,7 +202,7 @@
     st.skirmishWinner = winner;
     st.winType = how;
     st.pending = null;
-    var m = st.match;
+    var m = st.battle;
     m.wins[winner]++;
     m.lastLoser = I.other(winner);
     m.skirmishIndex++;
@@ -210,13 +210,13 @@
     if (m.wins[winner] >= 3) { m.winner = winner; }
     log(st, I.cap(winner) + ' wins the skirmish by ' + (how === 'hq' ? 'capturing the headquarters!' :
       how === 'concession' ? 'concession.' :
-      'attrition (' + fieldScore(st, 'red') + ' VP vs ' + fieldScore(st, 'blue') + ' VP of surviving units).'));
+      'attrition (field score ' + fieldScore(st, 'red') + ' vs ' + fieldScore(st, 'blue') + ', surviving units).'));
     if (!st.__sim) HOOKS.onSkirmishEnd.forEach(function (fn) {
       try { fn(st); } catch (e) { if (typeof console !== 'undefined') console.error('onSkirmishEnd hook failed: ' + e.message); }
     });
   }
 
-  // A player throws in the towel; the skirmish (not the match) goes to the enemy.
+  // A player throws in the towel; the skirmish (not the battle) goes to the enemy.
   function concede(st, p) {
     if (st.phase === 'skirmish-over') throw new Error('skirmish already over');
     log(st, I.cap(p) + ' concedes the field.');
@@ -228,7 +228,7 @@
   // Truthy ({need, gain, turnsLeft}) when BOTH paths to victory look closed:
   //  - attrition (surviving-units scoring): the field-score gap is bigger than
   //    the most p could plausibly swing it in the turns left. One turn can swing
-  //    at most ~3 VP p's way (deploy or destroy an artillery) — multi-action
+  //    at most ~3 field-score points p's way (deploy or destroy an artillery) — multi-action
   //    cards can beat that, so this is a heuristic, which is why it only advises.
   //  - HQ capture: no unit (fielded, or deployed then marched) can reach the
   //    enemy HQ within the turns p has left; a live Airdrop keeps hope alive.
@@ -238,7 +238,7 @@
     var turnsLeft = cardsRemaining(st, p); // each turn removes exactly 1 card from p's pool
     var need = (fieldScore(st, e) - fieldScore(st, p)) + (st.second === p ? 0 : 1); // second player wins ties
     if (need <= 0) return null;            // p still ahead (or tied as second player)
-    var gain = 3 * turnsLeft;              // best case: a 3-VP swing every remaining turn
+    var gain = 3 * turnsLeft;              // best case: a 3-point swing every remaining turn
     if (gain >= need) return null;         // the gap can still be closed in principle
     if (st.hqAlive[e] && turnsLeft > 0) {
       var hasReserve = Object.keys(I.UNITS).some(function (t) { return st.reserves[p][t] > 0; });
@@ -352,7 +352,7 @@
   }
 
   // Feedback Round 2: a card must accomplish at least one action if it can — you
-  // may skip an individual step, but not skip EVERY step to burn the order for
+  // may skip an individual step, but not skip EVERY step to burn the card for
   // free. A voluntary skip is refused only when nothing has acted yet, this step
   // can act, and no later step can (it's the card's last chance). Steps with no
   // legal option are still auto-skipped by skipImpossible, and a card where no
@@ -497,7 +497,7 @@
     if (st.pending.acted === 0) {
       // The play resolved zero actions — an effective skipped turn. Bill wants
       // these visible in the journal AND measurable in the card report.
-      log(st, I.cap(p) + ' finds no opening — the order is spent to no effect.');
+      log(st, I.cap(p) + ' finds no opening — the card is spent to no effect.');
       if (entry && entry.id === st.pending.cardId) entry.noop = true;
     }
     st.removed[p].push(st.pending.cardId);
@@ -512,7 +512,7 @@
   }
 
   /* shared-namespace exports */
-  I.newMatch = newMatch;
+  I.newBattle = newBattle;
   I.buildDeck = buildDeck;
   I.newSkirmish = newSkirmish;
   I.copyReserves = copyReserves;

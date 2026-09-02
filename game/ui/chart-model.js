@@ -40,13 +40,13 @@ var CHART_MODEL = (function () {
     var envA = R.envelopesForMap(rowsA, mapName), envB = R.envelopesForMap(rowsB, mapName);
 
     // Resolve the A|B|A/B toggle once, here — render draws whatever solid/ghost
-    // say. The tempo lanes + |VP-diff| track follow the toggle.
+    // say. The tempo lanes + |FS-diff| track follow the toggle.
     var solidEnv = abMode === 'A' ? envA : envB, solidLabel = abMode === 'A' ? 'A' : 'B';
     var ghostEnv = abMode === 'AB' ? envA : null;
     var tempo = {
       solidEnv: solidEnv, ghostEnv: ghostEnv, solidLabel: solidLabel,
       laneSolid: R.laneAvg(solidEnv), laneGhost: ghostEnv ? R.laneAvg(ghostEnv) : null,
-      vdSolid: R.vpDiffAvg(solidEnv), vdGhost: ghostEnv ? R.vpDiffAvg(ghostEnv) : null
+      vdSolid: R.fsDiffAvg(solidEnv), vdGhost: ghostEnv ? R.fsDiffAvg(ghostEnv) : null
     };
 
     // Hex lenses follow the toggle too, but the hover always shows A→B, so keep

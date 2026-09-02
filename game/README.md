@@ -33,9 +33,9 @@ Needs Node.js (nodejs.org) on one computer — the server is plain Node and runs
 
 ## Boards, maps, units & cards — built for rapid tinkering
 
-**The tunable knobs live in `maps.js`** as plain JSON: board shapes, **unit stats and piece counts, the trench count, the AI personalities, and the physical terrain stock**. The **map roster and card decks are their own files** under `game/content/` — one file per map (`content/maps/<name>.js`) and per deck (`content/decks/<name>.js`), so you delete a map by deleting its file. Edit any of it in a text editor, save, refresh the browser — the files explain their own format. Want to know what cavalry with 1 defense feels like, or a 20-card deck? Change a number, refresh, play (or run `node balance.js` on it). `node test.js` validates everything and points at exactly what's wrong.
+**The tunable knobs live in `maps.js`** as plain JSON: board shapes, **unit stats and piece counts, the trench count, the AI personalities, and the physical terrain stock**. The **map library and card decks are their own files** under `game/content/` — one file per map (`content/maps/<name>.js`) and per deck (`content/decks/<name>.js`), so you delete a map by deleting its file. Edit any of it in a text editor, save, refresh the browser — the files explain their own format. Want to know what cavalry with 1 defense feels like, or a 20-card deck? Change a number, refresh, play (or run `node balance.js` on it). `node test.js` validates everything and points at exactly what's wrong.
 
-The map roster lives in `game/content/maps/` — one file per map — and is browsable with previews on the **Maps & Map Editor** screen. Every map sits on one of five boards (or carries its own carved outline), all at or under the 24-hex laser-cutter ceiling:
+The map library lives in `game/content/maps/` — one file per map — and is browsable with previews on the **Maps & Map Editor** screen. Every map sits on one of five boards (or carries its own carved outline), all at or under the 24-hex laser-cutter ceiling:
 
 - **Classic** 4-5-6-5-4 (24 hexes) — the physical prototype board
 - **Compact** 3-4-5-4-3 (19) — fast brawls
@@ -47,15 +47,15 @@ The old 37-hex Grand and 29-hex Wide boards are gone: they played slow and empty
 
 **Maps & Map Editor** on the main menu lists every skirmishfield with a preview. **Play** starts a quick AI campaign on just that map; **Balance** opens the Balance Dashboard scoped to it (the same full report as the CLI, run in the browser). **New Map** opens the editor: pick a board, paint terrain (click just inside a hex's border to cycle forest → mountain → river → empty on that hex's side), place both HQs, and **Mirror** to copy everything point-symmetrically — its **Balance** button runs the dashboard on the map as drawn, before you even save. Terrain pieces behave like the physical ones — each piece lives inside one hex and wraps its corners; the editor and engine both enforce it.
 
-**Map-sets** decide which maps are actually in the draw pile. The maps screen holds up to five named sets (like the deck editor's deck slots) — say a rivers-only training set next to the full tournament roster — with exactly one set **active**: campaigns draw from the active set, and so do the balance tools. Tick maps in and out of the set you're viewing, and sets are saved as files (`content/mapsets/*.js`) when the local server runs, so both LAN players and every command-line tool see the same pool.
+**Mapsets** decide which maps are actually in the draw pile. The maps screen holds up to five named sets (like the deck editor's deck slots) — say a rivers-only training set next to the full tournament set — with exactly one set **active**: campaigns draw from the active set, and so do the balance tools. Tick maps in and out of the set you're viewing, and sets are saved as files (`content/mapsets/*.js`) when the local server runs, so both LAN players and every command-line tool see the same pool.
 
 ### Sharing custom maps (zip the folder)
 
-Maps you make or edit are saved as **files in `game/content/maps/`** (one file per map) when you play through the server — delete a map on the maps screen and its file is deleted for good; zip the folder and friends get your exact roster. Editing, adding, or deleting a map needs the local server (it writes the files). If you double-click index.html instead, you can still play and edit map-sets for the session, but nothing persists — no saving or deleting map or set files; **Export maps** downloads the whole roster as a `maps-bundle.json` you can **Import** on another machine (which writes the files there).
+Maps you make or edit are saved as **files in `game/content/maps/`** (one file per map) when you play through the server — delete a map on the maps screen and its file is deleted for good; zip the folder and friends get your exact map library. Editing, adding, or deleting a map needs the local server (it writes the files). If you double-click index.html instead, you can still play and edit mapsets for the session, but nothing persists — no saving or deleting map or set files; **Export maps** downloads the whole map library as a `maps-bundle.json` you can **Import** on another machine (which writes the files there).
 
 ## The balance lab
 
-`node balance.js` runs AI-vs-AI skirmishes on every map in the active map-set (`--mapset <id>` picks another set, `--mapset all` runs every map on disk) and prints a report: win rate by side, by first/second mover, HQ-capture vs attrition share, skirmish length, AI behaviour health (attacks & swaps per skirmish, zero-kill stalemates, share of units fielded), decisiveness (tiebreak share, first-blood conversion, board control vs winning), and how often each card sat in the winner's spent pile.
+`node balance.js` runs AI-vs-AI skirmishes on every map in the active mapset (`--mapset <id>` picks another set, `--mapset all` runs every map on disk) and prints a report: win rate by side, by first/second mover, HQ-capture vs attrition share, skirmish length, AI behaviour health (attacks & swaps per skirmish, zero-kill stalemates, share of units fielded), decisiveness (tiebreak share, first-blood conversion, board control vs winning), and how often each card sat in the winner's spent pile.
 
 - `node balance.js 60` — bigger samples; `node balance.js 60 hard` — with the Field Marshal
 - `node balance.js 40 narrows` — only maps whose name matches "narrows"
@@ -73,7 +73,7 @@ Everything in the rule book: the full 16-card deck, infantry/cavalry/artillery, 
 
 Reading the table at a glance:
 
-- **Player mats** mirror the physical ones: one slot per piece — solid icon = in reserve, dashed empty slot = out on the field, ✕ = destroyed. Below them, all 16 orders as chips that gray out as each side spends them — you always know exactly what the enemy has burned and what might still be coming.
+- **Player mats** mirror the physical ones: one slot per piece — solid icon = in reserve, dashed empty slot = out on the field, ✕ = destroyed. Below them, all 16 cards as chips that gray out as each side spends them — you always know exactly what the enemy has burned and what might still be coming.
 - **Grid references**: every hex wears a faint label (A1…E4) and the campaign journal speaks them — "Red deploys Infantry at D2."
 - The **campaign score card** sits centred in the top bar; the **journal** (lower right) marks skirmishes, turns, and victories.
 - Small animations: hands deal in, deployments pop, marches glide, attacks ring and fallen units fade, the board shakes when an HQ falls.
@@ -88,13 +88,13 @@ A **river** (drawn in blue, in the same 2- and 3-side pieces as forest and mount
 
 ## House rules (per Bill's prototyping)
 
-- **Flexible orders**: any card may resolve as the printed action, a basic Attack, or a basic Reposition — the card is removed from the game regardless. A basic Reposition is only offered when no basic Attack is possible: if you can fight, you can't spend the order just shuffling pieces.
-- **Every order must do something**: you may skip an individual step of a multi-step card, but not skip *every* step — if the card can accomplish any action, at least one must be played (the **Skip step** button hides on the last playable step). An order that genuinely has no legal action anywhere is still spent to no effect.
+- **Flexible orders**: any card may resolve as the printed action, a basic Attack, or a basic Reposition — the card is removed from the game regardless. A basic Reposition is only offered when no basic Attack is possible: if you can fight, you can't spend the card just shuffling pieces.
+- **Every card must do something**: you may skip an individual step of a multi-step card, but not skip *every* step — if the card can accomplish any action, at least one must be played (the **Skip step** button hides on the last playable step). A card that genuinely has no legal action anywhere is still spent to no effect.
 - **Reset turn**: mid-way through a multi-step card you can reset back to the start of your turn (button next to Skip). Once the card fully resolves the turn is final.
 - **No stacking**: a hex side with terrain can't also hold a trench; to place one, pick the hex then click the brass corner knob of the orientation you want (hovering a knob previews its two edges).
 - **Reading a fight**: hover any of your units to see the attack math against every hex it could hit (green = you win, brass = tie, red = you lose — the same numbers the confirm dialog shows). When an attack lands, an arrow shows where it came from (bending through an HQ on a through-HQ strike) and rings mark every unit whose support actually counted — gold for the attacker's, steel for the defender's.
 - **Airdrop nerf**: Airdrop never appears in your opening hand (it returns to the deck for later turns).
-- **Concession**: at the start of your turn you may concede the skirmish (button in the top bar); the enemy takes the skirmish and the campaign moves on. When the maths say the skirmish is decided (the field-score gap is bigger than the best plausible swing — about 3 VP a turn — in the turns you have left, and no unit can reach the enemy HQ in time), the game quietly suggests it — and the AI concedes on its own rather than playing out a foregone conclusion.
+- **Concession**: at the start of your turn you may concede the skirmish (button in the top bar); the enemy takes the skirmish and the campaign moves on. When the maths say the skirmish is decided (the field-score gap is bigger than the best plausible swing — about 3 field-score points a turn — in the turns you have left, and no unit can reach the enemy HQ in time), the game quietly suggests it — and the AI concedes on its own rather than playing out a foregone conclusion.
 
 ## Rulings made where the rule book was silent
 
@@ -107,7 +107,7 @@ A **river** (drawn in blue, in the same 2- and 3-side pieces as forest and mount
 - The attacking unit's own support value is not added to its attack.
 - Moving/attacking "through a headquarters": a unit adjacent to any HQ may move to, swap with, or attack a hex on the far side of that HQ. Terrain on the crossing edge applies.
 - **Same-type swaps are not legal** (Round-3 ruling, enforced in 1.0): swapping two identical units changes nothing on the board — it's a hidden skipped turn — so only units of different types may swap.
-- Attrition VP counts your **surviving units on the board** (1/2/3 for infantry/cavalry/artillery); reserves never deployed count for nothing, and neither do kills as such — destroying a unit matters because it leaves the enemy less on the field. Tie goes to whoever moved second in the skirmish. (June 2026 revision; the rule book is updated. Previously kills were what scored, which let a one-kill turtle beat a side that dominated the board.)
+- Attrition field score counts your **surviving units on the board** (1/2/3 for infantry/cavalry/artillery); reserves never deployed count for nothing, and neither do kills as such — destroying a unit matters because it leaves the enemy less on the field. Tie goes to whoever moved second in the skirmish. (June 2026 revision; the rule book is updated. Previously kills were what scored, which let a one-kill turtle beat a side that dominated the board.)
 - Ordered Withdraw: the attacker survives a tie, and never advances into the target hex — even on a clear win it holds its ground (June 2026 change). A successful attack on the HQ still captures it; entering isn't required. Against a **trenched** defender the tie is a whiff — the card spares the attacker, the trench spares the defender, and nobody falls (rules 1.1).
 - Naval Barrage may remove **any** trench or whole forest piece on the board (June 2026 ruling — the old "in or adjacent to your controlled hexes" zone is gone); the barrage is optional, the attack can still be ordered.
 - Any card step can be skipped if you can't or don't want to complete it ("up to three" marches, etc.).
@@ -119,7 +119,7 @@ A **river** (drawn in blue, in the same 2- and 3-side pieces as forest and mount
 - `engine.js` + `engine/` — the rules engine, loaded as seven ordered parts: all rules, the six AI personalities (the easy/normal/hard presets plus the `maps.js` data rows), and the skirmish simulator (shared by tests and every balance report)
 - `report-model.js` — the one copy of the balance-report scoring/format, shared by the CLI and the Balance Dashboard
 - `maps.js` — **core tunable data, hand-editable JSON**: board shapes, units, terrain stock, AI personalities
-- `content/` — **the map library, card decks, and map-sets, one file each** (`content/maps/*.js`, `content/decks/*.js`, `content/mapsets/*.js`): delete a map/deck by deleting its file. The map editor carves the **board outline itself** (Board hexes tool, add/remove under the 24-hex ceiling) and deletes maps for real (floor of 5); saving/deleting needs the local server.
+- `content/` — **the map library, card decks, and mapsets, one file each** (`content/maps/*.js`, `content/decks/*.js`, `content/mapsets/*.js`): delete a map/deck by deleting its file. The map editor carves the **board outline itself** (Board hexes tool, add/remove under the 24-hex ceiling) and deletes maps for real (floor of 5); saving/deleting needs the local server.
 - `balance.js` — AI-vs-AI balance reports: `node balance.js`, `node balance.js matchup`
   (the same report lives in the browser: **Balance Dashboard** on the main menu)
 - `server.js` / `run-server.bat` / `run-server.command` — tiny zero-dependency LAN + save server

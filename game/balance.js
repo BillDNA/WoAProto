@@ -37,7 +37,7 @@
    - Card report             -> Simple%/1stSight%/AvgSeen per card (per-card Win% is
                                 computed but not printed; see docs/report-model.md)
 
-   Attrition victory (June 2026 rules): the player with more VP of SURVIVING
+   Attrition victory (June 2026 rules): the player with the higher field score of SURVIVING
    units on the board wins when the cards run out; reserves count for nothing.
 */
 var E = require('./engine.js');
@@ -59,15 +59,15 @@ function pad(s, w, right) {
   return s;
 }
 
-// Roster selection (V1 map-sets): default = the ACTIVE map-set's pool (one
-// shared roster across play modes + tools); `--mapset <id>` picks a specific
+// Mapset selection (V1 mapsets): default = the ACTIVE mapset's pool (one
+// shared mapset across play modes + tools); `--mapset <id>` picks a specific
 // set; `--mapset all` = every map on disk.
-function rosterFor(setArg) {
-  if (!setArg) return E.mapPool();
+function mapsForSet(setArg) {
+  if (!setArg) return E.activeMaps();
   if (setArg === 'all') return E.MAPS;
   var set = E.MAPSETS.filter(function (s) { return s.id === setArg; })[0];
   if (!set) {
-    console.log('Unknown map-set "' + setArg + '". Known: ' + (E.MAPSETS.map(function (s) { return s.id; }).join(', ') || 'none') + ', all');
+    console.log('Unknown mapset "' + setArg + '". Known: ' + (E.MAPSETS.map(function (s) { return s.id; }).join(', ') || 'none') + ', all');
     process.exit(1);
   }
   return E.MAPS.filter(function (m) { return set.maps.indexOf(m.id) >= 0 || set.maps.indexOf(m.name) >= 0; });
@@ -140,7 +140,7 @@ function mapReport(n, diff, filter, maps, mapsetArg, decks) {
     (dbh ? '  [persisting to logs/woa.db]' : '') + '\n');
   var header = pad('Map', 16, true) + pad('Shape', 11, true) +
     pad('Red%', 6) + pad('Blue%', 7) + pad('1st%', 6) + pad('2nd%', 6) +
-    pad('HQ%', 6) + pad('Turns', 7) + pad('VPdiff', 8) +
+    pad('HQ%', 6) + pad('Turns', 7) + pad('FSdiff', 8) +
     pad('Atk%', 6) + pad('Swp%', 6) + pad('0kill%', 8) +
     pad('Drag', 7) + pad('Swings', 8) + '  notes';
   console.log(header);
@@ -167,7 +167,7 @@ function mapReport(n, diff, filter, maps, mapsetArg, decks) {
       pad(pct(r.redWins, done), 6) + pad(pct(done - r.redWins, done), 7) +
       pad(pct(r.firstWins, done), 6) + pad(pct(done - r.firstWins, done), 6) +
       pad(pct(r.hqWins, done), 6) + pad((r.turns / Math.max(1, done)).toFixed(1), 7) +
-      pad((r.vpDiff / Math.max(1, done)).toFixed(1), 8) +
+      pad((r.fsDiff / Math.max(1, done)).toFixed(1), 8) +
       pad(pct(r.attacks, act), 6) +
       pad(pct(r.swaps, act), 6) +
       pad(pct(r.zeroKill, done), 8) +
@@ -272,7 +272,7 @@ if (args[0] === 'matchup') {
   rest.forEach(function (a) {
     if (!E.AI_PRESETS[a]) { console.log('Unknown AI "' + a + '". Known: ' + Object.keys(E.AI_PRESETS).join(', ')); process.exit(1); }
   });
-  matchup(Math.max(2, +(args.filter(function (a) { return /^\d+$/.test(a); })[0]) || 12), rest[0], rest[1], rosterFor(setArg), decks);
+  matchup(Math.max(2, +(args.filter(function (a) { return /^\d+$/.test(a); })[0]) || 12), rest[0], rest[1], mapsForSet(setArg), decks);
 } else {
   var n = 24, diff = 'normal', filter = null;
   args.forEach(function (a) {
@@ -280,5 +280,5 @@ if (args[0] === 'matchup') {
     else if (E.AI_PRESETS[a]) diff = a; // easy/normal/hard or a maps.js personality
     else filter = filter ? filter + ' ' + a : a;
   });
-  mapReport(n, diff, filter, rosterFor(setArg), setArg, decks);
+  mapReport(n, diff, filter, mapsForSet(setArg), setArg, decks);
 }

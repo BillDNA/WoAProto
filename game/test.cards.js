@@ -14,7 +14,7 @@ test('noOpener cards never in the opening hand (e.g. Airdrop)', () => {
   var deckTotal = E.CARDS.reduce(function (s, c) { return s + c.count; }, 0);
   var bad = 0;
   for (var seed = 200; seed < 240; seed++) {
-    var m = E.newMatch({ seed: seed, firstPlayer: 'red' });
+    var m = E.newBattle({ seed: seed, firstPlayer: 'red' });
     var st = E.newSkirmish(m);
     noOpenerIds.forEach(function (id) {
       if (st.hands.red.indexOf(id) >= 0) bad++;
@@ -265,7 +265,7 @@ test('WOA-055 asymmetric deck binding', () => {
     return Object.keys(counts).map(function (id) { return id + ':' + counts[id]; }).sort().join('|');
   }
   // Fresh skirmish (no cards drawn yet) so the built deck is the full composition.
-  var m = E.newMatch({ seed: 7, firstPlayer: 'red', maps: [E.MAPS[0]], decks: { red: two[0].id, blue: two[1].id } });
+  var m = E.newBattle({ seed: 7, firstPlayer: 'red', maps: [E.MAPS[0]], decks: { red: two[0].id, blue: two[1].id } });
   var fresh = E.newSkirmish(m);
   assert.ok(deckSigFromState(fresh, 'blue') === sig(two[1].cards),
     'blue is dealt its OWN deck (' + two[1].id + '), not red\'s (blue hasn\'t drawn yet)');
@@ -297,7 +297,7 @@ test('noAdvance attacks (Ordered Withdraw holds its ground)', () => {
   E.applyStep(st, { from: '0,0', to: '1,0' });
   assert.ok(!st.units['1,0'], 'defender destroyed on a clear win');
   assert.ok(st.units['0,0'] && st.units['0,0'].type === 'cavalry', 'attacker did NOT take the hex');
-  assert.ok(st.vp.red === 1, 'VP scored for the kill');
+  assert.ok(st.kills.red === 1, 'kill scored');
   // tie: infantry vs infantry (1 vs 1) — defender dies, attacker survives in place
   var st2 = testSkirmish(71);
   st2.units['0,0'] = { type: 'infantry', owner: 'red' };
@@ -322,7 +322,7 @@ test('Barrage targets ANY trench or forest', () => {
   // forest + trench deep in blue territory, far from anything red controls
   var BARMAP = { name: 'Barrage Range', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2],
     pieces: [{ t: 'F', edges: [[-2, 2, 0], [-2, 2, 1]] }] };
-  var m = E.newMatch({ seed: 31, firstPlayer: 'red', maps: [BARMAP] });
+  var m = E.newBattle({ seed: 31, firstPlayer: 'red', maps: [BARMAP] });
   var st = E.newSkirmish(m);
   st.trenches['-3,1'] = [{ dirs: [0, 1], owner: 'blue' }];
   var b = E.listBarrageTargets(st, 'red');
@@ -343,7 +343,7 @@ test('no-op plays are logged and marked (skipped-turn report)', () => {
   assert.ok(st.current === 'blue', 'impossible card ends the turn immediately');
   var e = st.playLog[st.playLog.length - 1];
   assert.ok(e.id === 'attack_plus1' && e.noop === true, 'playLog entry marked noop: ' + JSON.stringify(e));
-  assert.ok(st.log.some(function (l) { return l.msg.indexOf('no opening') >= 0; }), 'journal says the order was spent to no effect');
+  assert.ok(st.log.some(function (l) { return l.msg.indexOf('no opening') >= 0; }), 'journal says the card was spent to no effect');
   var st2 = testSkirmish(78);
   E.playCard(st2, 'deploy_inf_start');
   E.applyStep(st2, { hex: E.stepOptions(st2).targets ? E.stepOptions(st2).targets[0] : null });

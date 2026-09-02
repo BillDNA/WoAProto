@@ -25,7 +25,7 @@ Suggestions only, like the skills it drives — it never edits maps.js, cards, r
 
 ## Defaults (settle silently, never ask)
 
-- **Content slot:** the ACTIVE deck + map-set. If the caller passed `--deck <id>` / `--mapset <id>`,
+- **Content slot:** the ACTIVE deck + mapset. If the caller passed `--deck <id>` / `--mapset <id>`,
   thread the SAME ids through both the sweep and the match; otherwise omit the flags (active pair).
 - **Version / scope:** newest rules version (`Engine.VERSION`), both report types, T0 unless the
   slot is a candidate change (then review-reports picks T1 per its §Scope) — all its own defaults,

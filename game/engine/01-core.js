@@ -22,7 +22,7 @@
   if (!CORE || !CORE.shapes || !CORE.units)
     throw new Error('War of Attrition: maps.js missing or malformed (must define WOA_BUILTIN with shapes + units)');
 
-  // CONTENT (the map roster + the card decks) lives in per-item files under
+  // CONTENT (the map library + the card decks) lives in per-item files under
   // content/ (Feedback Round 4, Pass 2 — delete a map/deck by deleting its
   // file). In the browser content/manifest.js document.write()'d them into
   // WOA_CONTENT before this script ran; in node we load them from disk here.
@@ -42,7 +42,7 @@
       });
     } catch (e) {
       // don't swallow silently — a bad content file otherwise just vanishes
-      // from the roster until the generic "no content" throw below
+      // from the library until the generic "no content" throw below
       if (typeof console !== 'undefined') console.error('WoA content load failed: ' + e.message);
     }
   })();
@@ -53,8 +53,8 @@
     (CONTENT.decks || [])[0] || null;
   var CARD_LIST = (ACTIVE_DECK && ACTIVE_DECK.cards && ACTIVE_DECK.cards.length) ? ACTIVE_DECK.cards : (CONTENT.cards || []);
   // Unit composition & values as a content lever (WOA-011): a units variant in
-  // content/units/*.js (exactly one flagged active — the deck/map-set pattern)
-  // fully REPLACES the default unit block, so composition (counts), VP, and
+  // content/units/*.js (exactly one flagged active — the deck/mapset pattern)
+  // fully REPLACES the default unit block, so composition (counts), worth, and
   // atk/def/sup are all editable as data. No active variant falls back to
   // maps.js CORE.units — the shipped 7/2/1 default — so this is the ONE place
   // unit stats resolve (every other layer reads I.UNITS).
@@ -69,16 +69,16 @@
   if (!BUILTIN.maps.length || !BUILTIN.cards.length)
     throw new Error('War of Attrition: no content loaded (content/maps/*.js + content/decks/*.js). Check the content/ dirs and content/manifest.js.');
 
-  // Map-sets (V1 content curation): named rosters in content/mapsets/*.js,
+  // Mapsets (V1 content curation): named sets in content/mapsets/*.js,
   // exactly one flagged active — the deck pattern applied to maps. The active
-  // set IS the match/lab pool (one shared roster across play modes and tools;
+  // set IS the match/lab pool (one shared mapset across play modes and tools;
   // it replaced the per-browser woa-disabled-maps preference). No sets, or an
   // active set matching nothing, falls back to the full library.
   var MAPSETS = (CONTENT.mapsets || []).slice();
   function activeMapset() {
     return MAPSETS.filter(function (s) { return s && s.active; })[0] || null;
   }
-  function mapPool() {
+  function activeMaps() {
     var set = activeMapset();
     if (!set || !set.maps || !set.maps.length) return BUILTIN.maps;
     var pool = BUILTIN.maps.filter(function (m) {
@@ -192,7 +192,7 @@
     return cards.reduce(function (s, c) { return s + cardPoints(c) * (c.count == null ? 1 : c.count); }, 0);
   }
   // Army-points budget ceiling (WOA #56): the fairness constraint that lets two
-  // asymmetric decks be called "matched". Seeded above where the shipped roster
+  // asymmetric decks be called "matched". Seeded above where the shipped map library
   // sits today (max iter3 = 70.5); the deck editor's sum(count) band guardrail
   // rejects an over-budget deck the same way it rejects an oversized one.
   var DECK_POINTS_CAP = 72;
@@ -229,7 +229,7 @@
   I.MAPS = MAPS;
   I.MAPSETS = MAPSETS;
   I.activeMapset = activeMapset;
-  I.mapPool = mapPool;
+  I.activeMaps = activeMaps;
   I.other = other;
   I.cap = cap;
 })(typeof window !== 'undefined' ? window : globalThis);

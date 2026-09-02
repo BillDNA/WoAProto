@@ -61,7 +61,7 @@ test('custom board shapes (explicit hex sets)', () => {
   var IRR = { name: 'Irregular', id: 'irr1', redHQ: [0, -1], blueHQ: [0, 1],
     shapeDef: { hexes: [[0, -1], [1, -1], [-1, 0], [0, 0], [1, 0], [-1, 1], [0, 1]] }, pieces: [] };
   assert.ok(E.validateMaps([IRR]).length === 0, 'irregular map validates: ' + E.validateMaps([IRR]).join('; '));
-  var m = E.newMatch({ seed: 5, firstPlayer: 'red', maps: [IRR] });
+  var m = E.newBattle({ seed: 5, firstPlayer: 'red', maps: [IRR] });
   var st = E.newSkirmish(m);
   assert.ok(st.boardShape === '@irr1', 'inline shapeDef registered under @<map id> (got ' + st.boardShape + ')');
   assert.ok(E.hexes().length === 7, 'skirmish runs on the 7-hex board');
@@ -71,7 +71,7 @@ test('custom board shapes (explicit hex sets)', () => {
   // a hole in a row leaves a GAP in the labels (hexes keep their columns)
   var HOLED = { name: 'Holed', id: 'hole1', redHQ: [0, -1], blueHQ: [0, 1],
     shapeDef: { hexes: [[0, -1], [1, -1], [-1, 0], [0, 0], [2, 0], [-1, 1], [0, 1]] }, pieces: [] };
-  var m2 = E.newMatch({ seed: 6, firstPlayer: 'red', maps: [HOLED] });
+  var m2 = E.newBattle({ seed: 6, firstPlayer: 'red', maps: [HOLED] });
   E.newSkirmish(m2);
   assert.ok(E.hexLabel('2,0') === 'B4', 'a hole leaves a gap in the numbering (2,0 stays B4, got ' + E.hexLabel('2,0') + ')');
   assert.ok(E.neighbor('0,0', 0) === null, 'the missing hex is truly off-board');

@@ -8,11 +8,11 @@
 
   /* ---------- AI ---------- */
   function clone(st) {
-    var m = st.match;
-    st.match = null;
+    var m = st.battle;
+    st.battle = null;
     var c = JSON.parse(JSON.stringify(st));
-    st.match = m;
-    c.match = { wins: { red: m.wins.red, blue: m.wins.blue }, skirmishIndex: m.skirmishIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
+    st.battle = m;
+    c.battle = { wins: { red: m.wins.red, blue: m.wins.blue }, skirmishIndex: m.skirmishIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
     return c;
   }
   // The AI's hot-loop clone: identical to clone() except it drops what the
@@ -21,14 +21,14 @@
   // (noopPenalty reads exactly that one), and fsTimeline. __sim marks the
   // state so I.finishSkirmish never fires persistence hooks for search clones.
   function cloneForSim(st) {
-    var m = st.match, lg = st.log, pl = st.playLog, tl = st.fsTimeline, sd = st.sideDecks;
+    var m = st.battle, lg = st.log, pl = st.playLog, tl = st.fsTimeline, sd = st.sideDecks;
     // WOA-055: sideDecks registries are immutable for the skirmish (resolved once
     // at newSkirmish) — strip them out of the deep clone (the byId maps carry the
-    // whole card catalog) and reattach the SAME reference, like match/log below.
-    st.match = null; st.log = []; st.playLog = (pl && pl.length) ? [pl[pl.length - 1]] : []; st.fsTimeline = undefined; st.sideDecks = undefined;
+    // whole card catalog) and reattach the SAME reference, like battle/log below.
+    st.battle = null; st.log = []; st.playLog = (pl && pl.length) ? [pl[pl.length - 1]] : []; st.fsTimeline = undefined; st.sideDecks = undefined;
     var c = JSON.parse(JSON.stringify(st));
-    st.match = m; st.log = lg; st.playLog = pl; st.fsTimeline = tl; st.sideDecks = sd;
-    c.match = { wins: { red: m.wins.red, blue: m.wins.blue }, skirmishIndex: m.skirmishIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
+    st.battle = m; st.log = lg; st.playLog = pl; st.fsTimeline = tl; st.sideDecks = sd;
+    c.battle = { wins: { red: m.wins.red, blue: m.wins.blue }, skirmishIndex: m.skirmishIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
     c.sideDecks = sd;
     c.__sim = true;
     return c;
@@ -40,7 +40,7 @@
   function unitValue(t, w) {
     var k = UNIT_VAL_KEY[t];
     if (k && w && typeof w[k] === 'number') return w[k];
-    return { infantry: 3, cavalry: 4, artillery: 5 }[t] || ((I.UNITS[t] ? I.UNITS[t].vp : 1) + 2);
+    return { infantry: 3, cavalry: 4, artillery: 5 }[t] || ((I.UNITS[t] ? I.UNITS[t].worth : 1) + 2);
   }
 
   // ---- AI personalities are DATA (V0 ai-variety) ----
@@ -131,7 +131,7 @@
     // Attrition projection: who wins if the decks ran out right now? Ramps up as
     // they empty, so the side losing the standstill (incl. ties — second player
     // wins those) is pushed to force combat instead of swap-dancing to 0-0.
-    // This replaced a kill-VP term when scoring moved to surviving units (June 2026).
+    // This replaced a kill-score term when scoring moved to surviving units (June 2026).
     var fsMe = I.fieldScore(st, me), fsEn = I.fieldScore(st, en);
     var turnsLeft = Math.min(I.cardsRemaining(st, me), I.cardsRemaining(st, en));
     var urgency = Math.max(0, 1 - turnsLeft / 12);
@@ -313,14 +313,14 @@
   }
 
   // Decide the AI's whole turn. Returns {cardId, mode, choices:[...]}
-  // `difficulty` is a preset name ('easy' | 'normal' | 'hard' | any maps.js
+  // `personality` is a preset name ('easy' | 'normal' | 'hard' | any maps.js
   // "ai" entry) or a raw config object — see AI_PRESETS/aiConfig above.
   // easy   = greedy with noisy evaluations (makes mistakes)
   // normal = greedy, one turn deep
   // hard   = normal shortlist, then the top `breadth` candidates are re-scored
   //          by what the enemy can do back (sampled hands — never peeks at yours)
-  function aiPlanTurn(st, difficulty) {
-    var cfg = aiConfig(difficulty);
+  function aiPlanTurn(st, personality) {
+    var cfg = aiConfig(personality);
     var w = cfg.w;
     var me = st.current;
     var randomness = cfg.noise;

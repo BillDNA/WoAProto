@@ -139,7 +139,7 @@ function run() {
     suggestions.forEach(function (s) {
       console.log('| ' + s.key + ' | ' + s.from + ' | ' + s.to + ' | ' + s.fitness.toFixed(1) + ' |');
     });
-    console.log('\nVerify on the full roster before adopting: node game/balance.js 60 ' + a.ai);
+    console.log('\nVerify on the full mapset before adopting: node game/balance.js 60 ' + a.ai);
     console.log('Adopt by editing AI_WEIGHTS in game/engine/05-ai.js (and bump the rules version —');
     console.log('weight changes shift the data baseline). Suggestions only — Bill decides.');
   }

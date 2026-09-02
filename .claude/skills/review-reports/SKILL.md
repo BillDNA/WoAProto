@@ -16,9 +16,9 @@ analysis to `logs/reports/analysis/`. Covers both report types:
   `ts, version, map, seed, transport, matchId, skirmishIndex, red, blue,
   redEffort, blueEffort, winner, winType, turns, fallbacks, decisions[], notes`;
   token `usage` is reported on the match row).
-- **balance** reports — `logs/reports/balance/<version>/*.md` (whole-roster
+- **balance** reports — `logs/reports/balance/<version>/*.md` (whole-mapset
   metric tables from the Balance Dashboard or `dev/balance-report.js`: per-map
-  Red%/1st%/HQ%/Turns/VPdiff/Atk/Swp/0kill%/Tie%/Drag/Swings/Balance + card
+  Red%/1st%/HQ%/Turns/FSdiff/Atk/Swp/0kill%/Tie%/Drag/Swings/Balance + card
   table — Simple%/1stSight%/AvgSeen/Plays plus **Pts/Resid** (army-points cost
   and the WOA #57 mispricing residual — a `⚠` marks a **soft** mispricing flag,
   see card rubric axis 5); Win% was dropped from this table,

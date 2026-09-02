@@ -8,7 +8,7 @@
   var Engine = {
     VERSION: I.RULES_VERSION,
     DIRS: I.DIRS, UNITS: I.UNITS, CARDS: I.CARDS, CARD_BY_ID: I.CARD_BY_ID, MAPS: I.MAPS,
-    MAPSETS: I.MAPSETS, activeMapset: I.activeMapset, mapPool: I.mapPool, ACTIVE_DECK: I.ACTIVE_DECK,
+    MAPSETS: I.MAPSETS, activeMapset: I.activeMapset, activeMaps: I.activeMaps, ACTIVE_DECK: I.ACTIVE_DECK,
     DECKS: I.DECKS, resolveDeck: I.resolveDeck,
     cardPoints: I.cardPoints, deckPoints: I.deckPoints, DECK_POINTS_CAP: I.DECK_POINTS_CAP,
     PIECE_TOTALS: I.PIECE_TOTALS, TERRAIN_STOCK: I.TERRAIN_STOCK,
@@ -17,7 +17,7 @@
     currentShape: I.currentShape, rot180: I.rot180, buildTerrain: I.buildTerrain, pieceProblem: I.pieceProblem, hexLabel: I.hexLabel,
     key: I.key, parseKey: I.parseKey, inBoard: I.inBoard, neighbor: I.neighbor, neighbors: I.neighbors,
     dist: I.dist, dirBetween: I.dirBetween, edgeKey: I.edgeKey, edgeFrom: I.edgeFrom, sideKey: I.sideKey, other: I.other,
-    newMatch: I.newMatch, newSkirmish: I.newSkirmish,
+    newBattle: I.newBattle, newSkirmish: I.newSkirmish,
     unitAt: I.unitAt, isHQ: I.isHQ, isEmpty: I.isEmpty, controlledHexes: I.controlledHexes,
     deployTargets: I.deployTargets, riverBetween: I.riverBetween, trenchTargets: I.trenchTargets, trenchOrientations: I.trenchOrientations,
     listAttacks: I.listAttacks, listRepositions: I.listRepositions, listBarrageTargets: I.listBarrageTargets,

@@ -2,7 +2,7 @@
    (WOA-040, design 4b; hex lenses WOA-042, SPEC §5). THE QUESTION: on THIS map,
    what changed run A -> run B, and when in the skirmish did it happen?
    Breadcrumb map switcher under the Maps pill; an A|B|A/B segmented toggle
-   (default B) drives the tempo lanes (design 3a), the |VP-diff| track, and the
+   (default B) drives the tempo lanes (design 3a), the |FS-diff| track, and the
    hex lenses; the band board (1c, reusing ovBandRowHtml with the 'map' small-n
    scope) and the settle curve (1e, chSettleSvg) always show BOTH runs.
 
@@ -17,7 +17,7 @@
    renderer) so the two hex renderers stay one visual language. */
 'use strict';
 /* The cross-skirmish folds these render functions draw over — envelopesForMap,
-   laneAvg, vpDiffAvg — live in report-model.js (WOA_REPORT), and the whole
+   laneAvg, fsDiffAvg — live in report-model.js (WOA_REPORT), and the whole
    pane's display model is assembled by CHART_MODEL.buildMapDrillModel
    (ui/chart-model.js). MD_LANES is the lane draw-order for the tempo section. */
 var MD_LANES = ['deploy', 'attack', 'swap', 'march'];
@@ -43,16 +43,16 @@ function mdLaneBars(vals, ghostVals, laneMax, color, barH) {
   return cols;
 }
 
-/* The |VP-diff| sparkline that sits above the lanes (design 3a). Greys
+/* The |FS-diff| sparkline that sits above the lanes (design 3a). Greys
    honestly with a note instead of drawing anything when vd is null (every
    skirmish for this map/run predates the fs capture, WOA-037) — never a
    fabricated flat line. solidLabel names which run is drawing solid (A or
    B) for the "predates" note. */
-function mdVpDiffTrackHtml(vd, ghostVd, solidLabel) {
+function mdFsDiffTrackHtml(vd, ghostVd, solidLabel) {
   var LABEL_W = 56, W = 400, H = 30;
   if (!vd) {
     return '<div style="display:flex;gap:8px;opacity:.55;"><div style="flex:none;width:' + LABEL_W + 'px;"></div>' +
-      '<p class="small" style="margin:0;flex:1;">|VP-diff| track unavailable for run ' + solidLabel +
+      '<p class="small" style="margin:0;flex:1;">|FS-diff| track unavailable for run ' + solidLabel +
       ' on this map &mdash; this run predates the fs capture (WOA-037).</p></div>';
   }
   var maxV = Math.max.apply(null, vd.points.concat(ghostVd ? ghostVd.points : []).concat([0.0001]));
@@ -64,11 +64,11 @@ function mdVpDiffTrackHtml(vd, ghostVd, solidLabel) {
   svg += '<polyline points="' + poly(vd.points) + '" fill="none" stroke="' + CHART.ink + '" stroke-width="2"/></svg>';
   var note = vd.n < vd.total ? ' (n=' + vd.n + '/' + vd.total + ' skirmishes carry fs data)' : '';
   return '<div style="display:flex;gap:8px;align-items:flex-end;">' +
-    '<div style="flex:none;width:' + LABEL_W + 'px;text-align:right;font-size:9.5px;font-style:italic;color:' + CHART.muted + ';padding-bottom:2px;">avg<br>|VP diff|' + note + '</div>' +
+    '<div style="flex:none;width:' + LABEL_W + 'px;text-align:right;font-size:9.5px;font-style:italic;color:' + CHART.muted + ';padding-bottom:2px;">avg<br>|FS diff|' + note + '</div>' +
     '<div style="flex:1;">' + svg + '</div></div>';
 }
 
-/* Tempo lanes + |VP-diff| track, together (design 3a — the track sits above
+/* Tempo lanes + |FS-diff| track, together (design 3a — the track sits above
    the lanes it shares an x-axis with). abMode: 'A' shows run A solid; 'B'
    (default) shows run B solid; 'AB' shows run B solid with run A as a ghost
    overlay (both toggle branches read the SAME abMode the ticket specifies —
@@ -84,7 +84,7 @@ function mdTempoSection(mapName, tempo) {
     return h + '<p class="small">No skirmishes on ' + chEsc(mapName) + ' for run ' + solidLabel + ' yet.</p>';
   }
   var BAR_H = 46, LABEL_W = 56;
-  h += mdVpDiffTrackHtml(vdSolid, vdGhost, solidLabel);
+  h += mdFsDiffTrackHtml(vdSolid, vdGhost, solidLabel);
   h += '<div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">';
   MD_LANES.forEach(function (a) {
     var vals = laneSolid[a], gvals = laneGhost ? laneGhost[a] : null;
@@ -156,7 +156,7 @@ function mdHeaderHtml(mapList, idx, scoreA, scoreB, regressed) {
 
 /* =================== hex lenses (WOA-042, SPEC §5) ===================
    THREE spatial reads on THIS map's board — occupancy, ownership flips, kills
-   — the drill-down's only SPATIAL view (tempo/VP/bands are all temporal or
+   — the drill-down's only SPATIAL view (tempo/FS/bands are all temporal or
    aggregate). Rendered as SVG hex boards reusing board.js's GLOBAL
    hexXY/hexPoints/viewBoxFor (the game's OWN board renderer).
 
@@ -177,7 +177,7 @@ var MDHEX_R = 40; // hex draw radius; board.js hexXY spacing is S=44 -> ~4px gut
 
 /* map NAME (the DB/trace `map` field IS st.mapName = map.name) -> its map def
    on disk, or null if it's been deleted since the run. Searched over the whole
-   roster (E.MAPS), not just the active pool — a run may predate a pool edit. */
+   map library (E.MAPS), not just the active mapset — a run may predate a pool edit. */
 function mdMapDef(mapName) {
   var maps = E.MAPS || [];
   for (var i = 0; i < maps.length; i++) if (maps[i].name === mapName) return maps[i];

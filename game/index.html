@@ -52,7 +52,7 @@
 <div id="game" class="screen">
   <div id="topbar">
     <span class="title" id="skirmishTitle">War of Attrition</span>
-    <div id="scorecard" title="Solid = VP on the board now; hatched = the ceiling if every reserve deploys; the cream seam is the projected front">
+    <div id="scorecard" title="Solid = field score on the board now; hatched = the ceiling if every reserve deploys; the cream seam is the projected front">
       <span class="pips" id="pipsRed"></span>
       <div class="tug" id="tug"></div>
       <span class="pips" id="pipsBlue"></span>
@@ -199,7 +199,7 @@
 
     <div id="dashTablesIntro">
       <h2 style="font-variant:small-caps;text-align:center;">Balance Dashboard &mdash; Tables</h2>
-      <p class="small" style="text-align:center;">The full <code>balance.js</code> report, in the browser: AI-vs-AI skirmishes across the roster, every metric laid out. Same aggregation as the terminal — the numbers can't disagree.</p>
+      <p class="small" style="text-align:center;">The full <code>balance.js</code> report, in the browser: AI-vs-AI skirmishes across the mapset, every metric laid out. Same aggregation as the terminal — the numbers can't disagree.</p>
     </div>
     <div id="dashRunControls">
       <div class="opt-row" style="align-items:center;">
@@ -254,11 +254,11 @@
   </div>
   <div class="manual">
     <h3>Object</h3>
-    <p>Win skirmishes by <b>capturing the enemy headquarters</b> (attack into it; a tie counts) or by <b>attrition</b> &mdash; when a player has no cards left, the side with more <b>surviving units on the board</b> wins (1&nbsp;VP per infantry, 2 per cavalry, 3 per artillery; reserves left at home count for nothing; tie goes to whoever moved second). First to <b>3 skirmish victories</b> wins the campaign.</p>
+    <p>Win skirmishes by <b>capturing the enemy headquarters</b> (attack into it; a tie counts) or by <b>attrition</b> &mdash; when a player has no cards left, the side with more <b>surviving units on the board</b> wins (1&nbsp;point per infantry, 2 per cavalry, 3 per artillery; reserves left at home count for nothing; tie goes to whoever moved second). First to <b>3 skirmish victories</b> wins the campaign.</p>
     <h3>Your Turn</h3>
     <p>Draw to a hand of 4 (your first turn includes the guaranteed Deploy Infantry card). Play exactly one card and resolve it; the played card is <b>removed from the game</b>, the rest are discarded and recycled. You have only as many plays as your deck holds (16&ndash;17 in the standard decks) per skirmish &mdash; spend them well.</p>
     <h3>Units</h3>
-    <table><tr><th></th><th>Attack</th><th>Defense</th><th>Support</th><th>VP</th></tr>
+    <table><tr><th></th><th>Attack</th><th>Defense</th><th>Support</th><th>Pts</th></tr>
     <tr><td>Infantry</td><td>1</td><td>1</td><td>1</td><td>1</td></tr>
     <tr><td>Cavalry</td><td>3</td><td>0</td><td>0</td><td>2</td></tr>
     <tr><td>Artillery</td><td>0</td><td>0</td><td>2</td><td>3</td></tr></table>
@@ -287,7 +287,7 @@
 <script src="custom-deck.js"></script>
 <script src="content/manifest.js"></script>
 <script>
-// The map roster + card decks are per-item files under content/ (Feedback
+// The map library + card decks are per-item files under content/ (Feedback
 // Round 4 Pass 2). content/manifest.js just above document.write()'d
 // content/decks/*.js + content/maps/*.js into WOA_CONTENT, synchronously, before
 // this runs. A deck applied in the Deck Editor overrides the active content deck

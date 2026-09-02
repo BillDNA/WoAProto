@@ -5,7 +5,7 @@
    refresh the browser. `node test.js` validates everything and will point at
    exactly what is wrong. `node balance.js` shows what your change did.
 
-   NOTE (Feedback Round 4, Pass 2): the MAP ROSTER and the CARD DECK no longer
+   NOTE (Feedback Round 4, Pass 2): the MAP LIBRARY and the CARD DECK no longer
    live here — they are per-item files under game/content/ (maps/<slug>.js,
    decks/<slug>.js) that each register into a WOA_CONTENT global, so you can
    delete a map or a deck by deleting its file (no more localStorage tombstones).
@@ -13,7 +13,7 @@
    plus WOA_CONTENT (maps + the active deck's cards). See content/manifest.js.
 
    UNITS — stats per unit type: atk/def/sup (support given to adjacent
-   fights), vp (bounty the enemy scores for killing it), count (pieces per
+   fights), worth (bounty the enemy scores for killing it), count (pieces per
    player). "trenchCount" is trenches per player. "terrainStock" caps the
    physical terrain pieces per type+length (the editor warns past it).
 
@@ -35,9 +35,9 @@
 var WOA_BUILTIN =
 {
   "units": {
-    "infantry":  { "name": "Infantry",  "atk": 1, "def": 1, "sup": 1, "vp": 1, "count": 7 },
-    "cavalry":   { "name": "Cavalry",   "atk": 3, "def": 0, "sup": 0, "vp": 2, "count": 2 },
-    "artillery": { "name": "Artillery", "atk": 0, "def": 0, "sup": 2, "vp": 3, "count": 1 }
+    "infantry":  { "name": "Infantry",  "atk": 1, "def": 1, "sup": 1, "worth": 1, "count": 7 },
+    "cavalry":   { "name": "Cavalry",   "atk": 3, "def": 0, "sup": 0, "worth": 2, "count": 2 },
+    "artillery": { "name": "Artillery", "atk": 0, "def": 0, "sup": 2, "worth": 3, "count": 1 }
   },
   "trenchCount": 3,
   "terrainStock": { "F3": 2, "F2": 4, "M3": 2, "M2": 4, "R3": 2, "R2": 4 },

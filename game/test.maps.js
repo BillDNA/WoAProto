@@ -10,11 +10,11 @@ test('map validation', () => {
 var probs = E.validateMaps();
 assert.ok(probs.length === 0, 'all built-in maps valid' + (probs.length ? ': ' + probs.join('; ') : ''));
 // Maps are per-item files under game/content/maps/. `custom:true` marks Bill's
-// experiments; the shipped roster is the non-custom maps.
+// experiments; the shipped map library is the non-custom maps.
 var builtinMaps = E.MAPS.filter(function (m) { return !m.custom; });
-assert.ok(builtinMaps.length === 10, '10 shipped (non-custom) maps in the content roster (got ' + builtinMaps.length + ' of ' + E.MAPS.length + ' total)');
+assert.ok(builtinMaps.length === 10, '10 shipped (non-custom) maps in the content map library (got ' + builtinMaps.length + ' of ' + E.MAPS.length + ' total)');
 (function () {
-  // HQ-distance guardrail applies to the SHIPPED roster; custom maps are Bill's
+  // HQ-distance guardrail applies to the SHIPPED map library; custom maps are Bill's
   // experiments (a turn-2 rush map can be intentional) and are exempt.
   builtinMaps.forEach(function (m) {
     var d = E.dist(E.key(m.redHQ[0], m.redHQ[1]), E.key(m.blueHQ[0], m.blueHQ[1]));
@@ -23,11 +23,11 @@ assert.ok(builtinMaps.length === 10, '10 shipped (non-custom) maps in the conten
 })();
 });
 
-test('map pool', () => {
+test('active mapset', () => {
 (function () {
   var one = [E.MAPS[0]];
-  var m = E.newMatch({ seed: 33, maps: one });
-  assert.ok(m.maps.length === 1 && m.mapOrder.length === 1, 'match carries its own 1-map pool');
+  var m = E.newBattle({ seed: 33, maps: one });
+  assert.ok(m.maps.length === 1 && m.mapOrder.length === 1, 'battle carries its own 1-map set');
   var st = E.newSkirmish(m);
   assert.ok(st.mapName === E.MAPS[0].name, 'skirmish 1 uses the pooled map');
   m.skirmishIndex = 3; m.lastLoser = "red";

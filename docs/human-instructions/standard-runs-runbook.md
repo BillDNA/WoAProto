@@ -29,7 +29,7 @@ confirm anything surprising with Recipe 2).
 
 *Watch:* whichever metric your tweak targets, plus HQ% and Atk/Swp for side effects.
 
-## Recipe 2 — Standard sweep (whole roster, a few minutes)
+## Recipe 2 — Standard sweep (whole mapset, a few minutes)
 
 ```
 node dev/balance-report.js 60 hard hard --parallel --once
@@ -63,7 +63,7 @@ pinned-map match remains the right tool for probing ONE map.)
 *Watch:* the felt-notes and fallback counts (high fallback = the model couldn't parse the game —
 a legibility finding).
 
-## Recipe 4 — Iteration set (any deck + map-set; the balance-loop recipe)
+## Recipe 4 — Iteration set (any deck + mapset; the balance-loop recipe)
 
 ```
 node dev/balance-report.js 100 hard hard --once --parallel [--deck <id>] [--mapset <id>]

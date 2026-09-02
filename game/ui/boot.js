@@ -96,13 +96,13 @@ $('btnConcede').onclick = function(){
     E.concede(APP.st, p);
     renderAll(); saveLocal();
     if (APP.mode === 'net') pushState();
-    clearIfMatchOver(); showSkirmishOver();
+    clearIfBattleOver(); showSkirmishOver();
   };
   $('cdNo').onclick = function(){ $('confirmOvr').classList.remove('active'); };
 };
 // Debug snapshot (Feedback Round 4): dump this exact game state to logs/debug/
 // so Bill can hand Claude the situation without pasting a screenshot. The state
-// carries match.maps (full board + terrain defs) so the dump is self-contained.
+// carries battle.maps (full board + terrain defs) so the dump is self-contained.
 $('btnDebug').onclick = function(){
   var st = APP.st;
   if (!st){ toast('No skirmish in progress to snapshot.', 2500); return; }
@@ -165,10 +165,10 @@ $('btnResume').onclick = function(){
 checkResume();
 
 $('btnHost').onclick = function(){
-  var pool = getMapPool();
+  var pool = getActiveMaps();
   if (!pool || !pool.length){ toast('No maps are in play! Enable some in Maps &amp; Map Editor.', 3500); return; }
-  var match = E.newMatch({ maps: pool });
-  var st = E.newSkirmish(match);
+  var battle = E.newBattle({ maps: pool });
+  var st = E.newSkirmish(battle);
   api('create', { state: st }).then(function(d){
     APP.mode='net'; APP.mySide='red'; APP.st = st;
     APP.net.room = d.room; APP.net.seq = d.seq;
@@ -196,7 +196,7 @@ $('btnCardsMenu').onclick = showCards;
 $('btnMaps').onclick = function(){ renderMapsScr(); show('mapsScr'); };
 $('btnMapsBack').onclick = function(){ show('menu'); checkResume(); };
 $('btnNewMap').onclick = function(){ openEditor(null); };
-// Export the whole roster as a shareable bundle (maps are files now, so this is
+// Export the whole map library as a shareable bundle (maps are files now, so this is
 // just a convenient way to hand someone your set); Import writes each map to its
 // own content file via the server.
 $('btnExportMaps').onclick = function(){
@@ -229,7 +229,7 @@ $('importFile').onchange = function(){
         m.custom = true;
         m.id = m.id || slugifyMap(m.name);
         if (m.shapeDef) m.shape = '@' + m.id;
-        rosterReplace(m);
+        libraryReplace(m);
         saveMapFile(m).catch(function(){ toast('Could not save "'+m.name+'" as a file.', 3500); });
         saved++;
       });
@@ -343,7 +343,7 @@ E.hooks.onSkirmishEnd.push(function (st) {
     if (APP.mode === 'ai') return side === APP.mySide ? 'human' : (APP.diff || 'normal');
     return 'human'; // hotseat + LAN
   }
-  var m = st.match; st.match = null; // the cycle never crosses the wire
+  var m = st.battle; st.battle = null; // the cycle never crosses the wire
   try {
     api('recordskirmish', {
       runKey: dash ? DASH.runKey : undefined,
@@ -358,7 +358,7 @@ E.hooks.onSkirmishEnd.push(function (st) {
         seedBase: dash ? DASH.meta.seedBase : undefined },
       state: st, firstPlayer: E.other(st.second), seed: st.seed
     }).catch(function(){ /* persistence is best-effort */ });
-  } finally { st.match = m; }
+  } finally { st.battle = m; }
 });
 
 $('btnDash').onclick = openDash;
@@ -380,14 +380,14 @@ $('dashRun').onclick = function(){
   var dr = $('dashRed').value, db = $('dashBlue').value;
   var pick = $('dashMap').value;
   // '@adhoc' = the map editor's as-drawn (possibly unsaved) def, via openDashDef
-  var maps = pick === '@adhoc' ? (DASH.adhoc ? [DASH.adhoc] : []) : getMapPool();
+  var maps = pick === '@adhoc' ? (DASH.adhoc ? [DASH.adhoc] : []) : getActiveMaps();
   if (pick !== 'all' && pick !== '@adhoc') maps = maps.filter(function(m){ return m.name === pick; });
   if (!maps.length){ toast('No maps in play — enable some in Maps &amp; Map Editor.', 3500); return; }
   var probs = E.validateMaps(maps);
   if (probs.length){ toast('Fix these maps first: '+probs.join('; '), 4500); return; }
   DASH.running = true; DASH.cancel = false;
   // mapset/seedBase (WOA-032, SPEC §7 run identity): `pick` IS this run's map
-  // selection ('all' = the active map-set's pool, a map name, or '@adhoc');
+  // selection ('all' = the active mapset's pool, a map name, or '@adhoc');
   // 7919 is the SAME seed-schedule base the per-map E.balanceSeed((mi+1)*7919, g)
   // call below already uses — one fact, not a second number invented here.
   DASH.results = []; DASH.meta = { n:n, dr:dr, db:db, mapset:pick, seedBase:7919 };

@@ -4,99 +4,125 @@ The domain language of War of Attrition — a two-player hex-and-card wargame, o
 
 This file is a **glossary of concepts** — what each term *is*. It deliberately holds **no tunable values and no rules resolution**: unit stats, terrain bonuses, deck sizes, win thresholds, and combat outcomes all change as the game is balanced, so they live in exactly one place — the content, the code, and the rule book — never here. If a definition below would drift when you retune the game, it has been left out on purpose.
 
+Each term carries a `_Home_:` pointer to the one `file:line` where the concept is **law** — defined, enforced, or (for not-yet-in-code concepts) documented. The pointers are machine-checked: `node dev/check-context.js` fails if any home has moved or any retired alias regressed. When you move the code a home points at, fix the pointer in the same commit.
+
 ## Match structure
 
 **Skirmish**:
 One fight on a single Map, played to a victor. The atomic unit of play and the thing every report logs.
 _Avoid_: Round, match.
+_Home_: `game/engine/04-skirmish.js:51` — `newSkirmish`
 
 **Battle**:
 A best-of contest across Skirmishes — first to a set number of Skirmish wins takes the Battle.
 _Avoid_: Game, match, series.
+_Home_: `game/engine/04-skirmish.js:210` — `wins[winner] >= 3`
 
 **Campaign**:
 The larger roguelite arc across Battles — the deck-building, Commander, progression layer. The nebulous destination, not yet in code.
 _Avoid_: Run, meta, mode.
+_Home_: none yet — Campaign layer, not in code.
 
 **First mover**:
 The side taking the first turn of a Skirmish. Named because a first-mover win-rate skew is a core balance signal.
+_Home_: `game/engine/04-skirmish.js:24` — `firstPlayer`
 
 **Red / Blue**:
 The two sides. A side win-rate skew (independent of first mover) is a balance signal.
+_Home_: `game/engine/01-core.js:201` — `other(p)`
 
 ## The board
 
 **Map**:
 One battlefield — a hex layout with terrain and the two HQ start positions.
 _Avoid_: Board, level, battlefield, Map Card.
+_Home_: `game/content/maps/causeway.js:3` — `"name"`
 
 **Mapset**:
-A named roster of Maps; exactly one is *active* at a time and is the draw pool for every play mode and tool.
-_Avoid_: Map-set, map pool, roster.
+A named, curated list of Maps; exactly one is *active* at a time and is the draw pool for every play mode and tool. Distinct from the **map library** — the full set of content Maps (`E.MAPS`) the sets are drawn from.
+_Avoid_: Map-set, map pool, roster (for the active set — the whole collection is the *map library*, the player's pieces are the *mats*).
+_Home_: `game/engine/01-core.js:81` — `activeMaps`
 
 **Hex**:
 One cell of the board; a piece occupies at most one.
+_Home_: `game/engine/02-board.js:11` — `key(q, r)`
 
 **Control**:
 The reach a side may Deploy adjacent to — extends by adjacency, and is stopped by a River.
+_Home_: `game/engine/03-rules.js:23` — `deployTargets`
 
 **Terrain**:
 A board feature on a hex or its border. **Mountain** favors the defender attacked across it; **Forest** favors the attacker striking across it; **River** blocks Control and Support from crossing while letting movement and attacks through.
+_Home_: `game/engine/02-board.js:158` — `buildTerrain`
 
 ## Pieces
 
 **Unit**:
 A mobile combat piece. Three roles: **Infantry** (the common line piece), **Cavalry** (the fragile hard-hitting striker), **Artillery** (the support piece).
 _Avoid_: Token.
+_Home_: `game/maps.js:37` — `"units"`
 
 **HQ (Headquarters)**:
 A side's home piece — lends Support to its neighbours and is the piece whose capture ends a Skirmish. Pieces may pass through its hex.
 _Avoid_: Base.
+_Home_: `game/engine/03-rules.js:11` — `isHQ`
 
 **Trench**:
 A structure that denies attacking Support across the edges it covers — and nothing else. Serves whichever side holds its hex.
 _Avoid_: Fortification.
+_Home_: `game/engine/03-rules.js:153` — `borderBlocked`
 
 **Reserve**:
 Pieces a side owns but has not placed. Deploying is one-way, and reserve pieces score nothing at Attrition.
+_Home_: `game/engine/04-skirmish.js:106` — `copyReserves`
 
 ## Actions
 
 **Deploy**:
 Place a piece from Reserve onto the board within Control. Called **Build** for a structure.
 _Avoid_: Summon, spawn.
+_Home_: `game/engine/04-skirmish.js:413` — `'deploy'`
 
 **Attack**:
 Order one unit to strike an adjacent occupied hex, resolved by comparing combat power.
+_Home_: `game/engine/03-rules.js:215` — `resolveAttack`
 
 **Support**:
 What adjacent allied pieces contribute to a combat — subject to Trench and River blocking.
+_Home_: `game/engine/03-rules.js:165` — `supportFor`
 
 **Reposition**:
 Reposition a unit: **Move** it to an empty adjacent hex, or **Swap** it with an adjacent unit of a different type.
 _Avoid_: using "Move" for the whole action — Move is one kind of Reposition.
+_Home_: `game/engine/03-rules.js:97` — `listRepositions`
 
 **Swap**:
 The Reposition that exchanges two adjacent different-type units. Its share of all actions is a balance signal.
+_Home_: `game/engine/03-rules.js:108` — `!== myType`
 
 **Card**:
 A one-shot order played from the hand and then spent. Any Card may instead be spent as a basic Attack or Reposition.
 _Avoid_: Order (a Card *is* the order; "order an attack" is the verb).
+_Home_: `game/engine/04-skirmish.js:257` — `playCard`
 
 **Deck**:
 A side's set of Cards for a Skirmish.
+_Home_: `game/engine/04-skirmish.js:42` — `buildDeck`
 
 ## Endings & scoring
 
 **HQ capture**:
 Ending a Skirmish by successfully attacking into the enemy HQ.
+_Home_: `game/engine/03-rules.js:298` — `'hq'`
 
 **Attrition**:
 The Skirmish ending reached when a side can no longer draw a Card; decided by Field score.
+_Home_: `game/engine/04-skirmish.js:186` — `endByAttrition`
 
 **Field score**:
 The standing of a side at Attrition, from its surviving on-board units. Reserve counts nothing.
 _Avoid_: VP, points, victory points.
+_Home_: `game/engine/04-skirmish.js:180` — `fieldScore`
 
 ## Balance & measurement
 
@@ -104,22 +130,28 @@ _Avoid_: VP, points, victory points.
 
 **Balance loop**:
 The iterate cycle: run AI (and LLM) play over the active Mapset, fold the per-Skirmish results into aggregate metrics, grade them, adjust content, repeat.
+_Home_: `docs/human-instructions/standard-runs-runbook.md:66` — `balance-loop recipe`
 
 **Rules era**:
 A regime of rules-plus-AI-strength treated as internally comparable; data across eras is not apples-to-apples.
 _Avoid_: Version (reserve for the era's number).
+_Home_: `game/engine/01-core.js:16` — `RULES_VERSION`
 
 **Baselines to protect**:
 The healthy metric values for the current era; a sharp move away signals a regression even when win rates look fine.
+_Home_: `docs/balance-baselines.md:1` — `figures to protect`
 
 **Drag**:
 Trailing kill-less turns before a Skirmish ends — the "circling without resolving" signal.
+_Home_: `game/report-model.js:56` — `'drag'`
 
 **Swings**:
 Lead changes within a Skirmish — the "back-and-forth" signal.
+_Home_: `game/report-model.js:58` — `'swings'`
 
 **No-op**:
 A played Card that resolved zero actions — a dead turn.
+_Home_: `game/engine/04-skirmish.js:501` — `noop = true`
 
 **Skirmish fact**:
 The flat record of everything the balance layer reads off one finished Skirmish
@@ -128,6 +160,7 @@ left, action counts. Derived in exactly one place (the engine's `skirmishFacts`)
 whether from a live end-state or a persisted row, so the live fold and the
 stored-data fold can never disagree.
 _Avoid_: battle fact, per-battle row (a row is the persisted form of the fact).
+_Home_: `game/engine/06-sim.js:87` — `skirmishFacts`
 
 ## Content iteration & army-points
 
@@ -136,27 +169,35 @@ _Avoid_: battle fact, per-battle row (a row is the persisted form of the fact).
 **Army-points**:
 A Card's *capability cost*, and a Deck's total value as the sum over its Cards. A descriptive yardstick Decks are built under — not a prediction of win-rate; measured balance always overrules it (ADR-0002). Computed additively from a Card's steps via a single weight table, never stored per Card, so a Card that does more counts for more.
 _Avoid_: Cost (a step has a cost; the Card's total is its army-points), Power level.
+_Home_: `game/engine/01-core.js:167` — `POINTS`
 
 **Points cap**:
 The shared army-points budget every Deck is built under. Two Decks at the same cap are "matched" in capability, which is what lets a Skirmish be asymmetric yet fair.
+_Home_: `game/engine/01-core.js:198` — `DECK_POINTS_CAP`
 
 **Tolerance temperature**:
 How far a *measured* metric may sit outside its band before a result is accepted — the existing band-widening dial (strict / explore / hot). A verdict on outputs.
 _Avoid_: bare "temperature" (say which one; the two are different concepts).
+_Home_: `game/report-model.js:96` — `temperature`
 
 **Exploration temperature**:
 How large a *step* content iteration takes through design space — the willingness to try a structurally different but budget-legal candidate to escape a local optimum. An input to the search, realized chiefly *through* the points cap. Distinct from Tolerance temperature.
+_Home_: none yet — search-layer concept, not in code.
 
 **Mispricing residual**:
 The gap between a Card's *measured* win-contribution and its *army-points* cost. A large gap flags an over- or under-priced Card — the anti-slop signal. Advisory only, because of the Timing blind spot.
+_Home_: `game/report-model.js:250` — `r.resid`
 
 **Timing blind spot**:
 The balance scorer's known inability to value a Card whose worth is in *when* it is held or played (e.g. a saved attack buff). Such a Card can read as weak or mispriced without being either. Same class of gap as the AI eval not seeing reserve-hoarding.
+_Home_: `docs/rubrics/card-rubric.md:26` — `Timing blind spot`
 
 **AI personality**:
 A named heuristic weight-set that gives the bot a *character* — a playstyle that is fun to beat and fun to lose to — rather than maximal strength. A personality is one row of data. Distinct from a Commander trait.
 _Avoid_: Difficulty (a personality is a style, not a strength tier), Bot.
+_Home_: `game/engine/05-ai.js:79` — `AI_PRESETS`
 
 **Commander trait**:
 A run-layer ability that *bends the rules* for a side (a guaranteed opening Card, altered stocks, a rules exception). Belongs to the Campaign layer, not yet in code. Distinct from an AI personality — a rule-bender, not a playstyle — though a Commander's theme may guide the personality of the AI that pilots it.
 _Avoid_: Perk, buff.
+_Home_: none yet — Campaign layer, not in code.

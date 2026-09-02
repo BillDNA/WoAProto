@@ -121,7 +121,7 @@ function migrateBattleNames(db) {
    means extending this list in the same diff. A slimmed state survives the
    JSON round-trip into an identical skirmishes row (pinned by db.test.js). */
 var SKIRMISH_ST_FIELDS = ['phase', 'version', 'skirmishWinner', 'winType', 'mapName',
-  'turnNumber', 'seed', 'stats', 'vp', 'playLog', 'unitMetrics', 'leadChanges',
+  'turnNumber', 'seed', 'stats', 'kills', 'playLog', 'unitMetrics', 'leadChanges',
   'lastKillTurn', 'reserves', 'units', 'fsTimeline'];
 function slimSkirmishState(st) {
   var s = {};
