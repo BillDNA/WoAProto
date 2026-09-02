@@ -1,512 +1,242 @@
-<title>Run-Flow Napkin</title>
-<meta name="description" content="Throwaway clickable for WoAProto #247 — campaign map + player run flow, three layouts to react to.">
+<title>Campaign Loop Napkin</title>
+<meta name="description" content="Throwaway clickable for WoAProto #247 — the minimal visible loop: battle → reward → campaign move → battalion set → battle. A home for the campaign map.">
 <style>
 :root{
-  --parch:#e8dcc0; --parch2:#dccfae; --parch3:#cfc09a; --parch-deep:#c3b48c;
-  --ink:#3a2f1d; --ink-soft:#5a4c33; --ink-faint:#8a7c60;
+  --parch:#e8dcc0; --parch2:#dccfae; --parch-deep:#c3b48c;
+  --ink:#3a2f1d; --ink-soft:#5a4c33;
   --brass:#b08d57; --brass-dark:#8a6c3c; --copper:#9c5f3a;
-  --red:#9e2b25; --red-dark:#6f1d19; --blue:#28527a; --blue-dark:#1b3a59;
-  --forest:#4a7c3a; --olive:#6b6b3a;
+  --red:#9e2b25; --red-dark:#6f1d19;
+  --forest:#4a7c3a;
   --paper-shadow:rgba(58,47,29,.22);
-  --sketch:#6b5a38;
 }
 *{box-sizing:border-box;}
 html,body{margin:0;}
 body{
-  font-family:Georgia,'Times New Roman',serif;
-  color:var(--ink);
-  background:
-    radial-gradient(120% 90% at 20% -10%, #efe4c8, transparent 60%),
-    radial-gradient(120% 90% at 90% 110%, #d9caa2, transparent 55%),
-    var(--parch);
-  min-height:100vh;
-  padding:18px 20px 92px;
-  line-height:1.4;
+  font-family:Georgia,'Times New Roman',serif; color:var(--ink);
+  background:radial-gradient(120% 90% at 20% -10%,#efe4c8,transparent 60%),
+    radial-gradient(120% 90% at 90% 110%,#d9caa2,transparent 55%),var(--parch);
+  min-height:100vh; padding:18px 20px 28px; line-height:1.42;
 }
-.wrap{max-width:1180px;margin:0 auto;}
-.label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--brass-dark);font-weight:bold;}
-
-/* header */
-.masthead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:2px solid var(--brass);padding-bottom:10px;margin-bottom:6px;}
-.masthead h1{font-size:26px;margin:0;letter-spacing:.01em;}
-.masthead .sub{font-style:italic;color:var(--ink-soft);font-size:14px;margin-top:2px;}
-.napkin-tag{
-  transform:rotate(-2deg);border:2px dashed var(--copper);color:var(--copper);
-  padding:5px 12px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:bold;
-  background:rgba(255,255,255,.28);white-space:nowrap;
-}
+.wrap{max-width:920px;margin:0 auto;}
+.masthead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:2px solid var(--brass);padding-bottom:10px;}
+.masthead h1{font-size:24px;margin:0;}
+.masthead .sub{font-style:italic;color:var(--ink-soft);font-size:13.5px;margin-top:2px;}
+.napkin-tag{transform:rotate(-2deg);border:2px dashed var(--copper);color:var(--copper);padding:5px 12px;
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:bold;background:rgba(255,255,255,.28);white-space:nowrap;}
 .napkin-tag small{display:block;letter-spacing:.02em;text-transform:none;font-weight:normal;font-style:italic;color:var(--ink-soft);}
 
-/* thread breadcrumb */
-.thread{display:flex;align-items:center;gap:2px;flex-wrap:wrap;margin:14px 0 16px;font-size:12px;}
-.thread .step{padding:4px 9px;border:1px solid var(--brass);border-radius:3px;background:rgba(255,255,255,.2);color:var(--ink-soft);white-space:nowrap;}
-.thread .step.on{background:var(--red);color:#fff;border-color:var(--red-dark);box-shadow:0 1px 4px var(--paper-shadow);}
-.thread .step.done{background:var(--brass);color:#33270f;border-color:var(--brass-dark);}
-.thread .arw{color:var(--brass-dark);font-size:12px;}
-.thread .between{opacity:.55;font-style:italic;}
+/* loop breadcrumb */
+.loop{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:14px 0 4px;font-size:12px;}
+.loop .step{padding:4px 10px;border:1px solid var(--brass);border-radius:3px;background:rgba(255,255,255,.2);color:var(--ink-soft);white-space:nowrap;}
+.loop .step.on{background:var(--red);color:#fff;border-color:var(--red-dark);}
+.loop .arw{color:var(--brass-dark);}
+.loop .repeat{color:var(--brass-dark);font-style:italic;margin-left:4px;}
+.caption{font-size:12px;color:var(--ink-soft);font-style:italic;margin:0 0 14px;}
 
-.stage{display:grid;grid-template-columns:236px 1fr;gap:18px;align-items:start;}
-@media(max-width:820px){.stage{grid-template-columns:1fr;}}
+.stage{display:grid;grid-template-columns:200px 1fr;gap:18px;align-items:start;}
+@media(max-width:760px){.stage{grid-template-columns:1fr;}}
 
-/* ledger */
-.ledger{
-  border:1.5px solid var(--brass-dark);background:linear-gradient(170deg,rgba(255,255,255,.34),rgba(255,255,255,.10));
-  padding:12px 13px 14px;box-shadow:2px 3px 0 var(--paper-shadow);
-}
-.ledger h2{font-size:13px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 8px;color:var(--brass-dark);border-bottom:1px solid var(--brass);padding-bottom:5px;}
+.ledger{border:1.5px solid var(--brass-dark);background:linear-gradient(170deg,rgba(255,255,255,.34),rgba(255,255,255,.10));padding:11px 13px 13px;box-shadow:2px 3px 0 var(--paper-shadow);}
+.ledger h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 8px;color:var(--brass-dark);border-bottom:1px solid var(--brass);padding-bottom:5px;}
 .stat{display:flex;justify-content:space-between;align-items:baseline;padding:3px 0;font-size:14px;border-bottom:1px dotted var(--parch-deep);}
 .stat b{font-variant-numeric:tabular-nums;}
 .stat.changed b{color:var(--red);animation:flash 1.1s ease-out;}
 @keyframes flash{0%{background:rgba(158,43,37,.25);}100%{background:transparent;}}
-.pips{letter-spacing:2px;font-size:13px;}
 .ledger .note{font-size:12px;font-style:italic;color:var(--ink-soft);margin-top:10px;border-top:1px solid var(--parch-deep);padding-top:8px;min-height:34px;}
-.legend{margin-top:12px;font-size:11.5px;}
-.legend div{display:flex;align-items:center;gap:6px;padding:2px 0;}
-.dot{width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(0,0,0,.35);flex:none;}
 
-/* device frame */
-.device{
-  border:2px solid var(--ink-soft);background:var(--parch2);
-  box-shadow:3px 4px 0 var(--paper-shadow);min-height:470px;position:relative;overflow:hidden;
-}
-.device .bezel{background:linear-gradient(180deg,#3d3424,#2c2517);color:var(--parch);font-size:11px;letter-spacing:.1em;
-  text-transform:uppercase;padding:5px 12px;display:flex;justify-content:space-between;align-items:center;}
-.device .bezel .v{color:var(--brass);}
-.screen{padding:18px 20px 22px;}
-.screen h3{margin:0 0 2px;font-size:20px;}
+.device{border:2px solid var(--ink-soft);background:var(--parch2);box-shadow:3px 4px 0 var(--paper-shadow);min-height:360px;position:relative;overflow:hidden;}
+.bezel{background:linear-gradient(180deg,#3d3424,#2c2517);color:var(--parch);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;display:flex;justify-content:space-between;}
+.bezel .v{color:var(--brass);}
+.screen{padding:16px 18px 20px;}
+.screen h3{margin:0 0 2px;font-size:19px;}
 .screen .screen-sub{color:var(--ink-soft);font-style:italic;font-size:13px;margin-bottom:14px;}
 
-/* buttons */
 button{font-family:inherit;cursor:pointer;}
-.btn{display:block;width:100%;text-align:left;padding:11px 14px;margin:8px 0;font-size:15px;
-  border:1.5px solid var(--brass-dark);background:linear-gradient(180deg,#e6d5ac,#d3c096);color:var(--ink);
-  box-shadow:1px 2px 0 var(--paper-shadow);transition:transform .08s;}
+.btn{display:block;width:100%;text-align:left;padding:10px 14px;margin:8px 0;font-size:15px;border:1.5px solid var(--brass-dark);
+  background:linear-gradient(180deg,#e6d5ac,#d3c096);color:var(--ink);box-shadow:1px 2px 0 var(--paper-shadow);transition:transform .08s;}
 .btn:hover{transform:translate(-1px,-1px);}
 .btn.primary{background:linear-gradient(180deg,#b5382f,var(--red));color:#fdeede;border-color:var(--red-dark);}
-.btn small{display:block;font-size:12px;font-style:italic;opacity:.85;margin-top:2px;font-weight:normal;}
 .btn.ghost{background:transparent;box-shadow:none;font-size:13px;}
-.btn.disabled{opacity:.4;pointer-events:none;filter:grayscale(.5);}
-.rowbtns{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.btn small{display:block;font-size:12px;font-style:italic;opacity:.85;margin-top:2px;font-weight:normal;}
+.rowbtns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
 .rowbtns .btn{width:auto;margin:0;}
 
-/* map */
-.mapwrap{position:relative;width:100%;height:392px;border:1px dashed var(--brass);background:
-  repeating-linear-gradient(0deg,transparent 0 26px,rgba(139,108,60,.06) 26px 27px),
-  repeating-linear-gradient(90deg,transparent 0 26px,rgba(139,108,60,.06) 26px 27px);
-  overflow:hidden;}
-.mapwrap svg{position:absolute;inset:0;width:100%;height:100%;}
-.node{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;
-  cursor:pointer;user-select:none;width:74px;}
-.node .glyph{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-size:18px;border:2px solid var(--ink-soft);background:var(--parch);box-shadow:1px 1px 0 var(--paper-shadow);}
-.node.hex .glyph{border-radius:0;clip-path:polygon(25% 3%,75% 3%,100% 50%,75% 97%,25% 97%,0 50%);width:46px;height:42px;box-shadow:none;}
-.node .cap{font-size:10.5px;text-align:center;color:var(--ink-soft);max-width:80px;line-height:1.15;}
-.node .glyph{color:#fff;}
-.node.t-muster  .glyph{background:var(--forest);}
-.node.t-skirmish .glyph{background:var(--ink-soft);}
-.node.t-dispatch .glyph{background:var(--blue);}
-.node.t-supply  .glyph{background:var(--brass);color:#33270f;}
-.node.t-elite   .glyph{background:var(--copper);}
-.node.t-decisive .glyph{background:var(--red);}
-.node.cleared .glyph{outline:none;opacity:.85;}
-.node.cleared .glyph::after{content:'✓';position:absolute;font-size:11px;color:#2c5;transform:translate(15px,-15px);
-  background:#fff;border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;border:1px solid var(--forest);}
-.node.current .glyph{box-shadow:0 0 0 3px var(--parch),0 0 0 6px var(--red);}
-.node.reachable .glyph{box-shadow:0 0 0 3px var(--parch),0 0 0 5px var(--brass);animation:pulse 1.6s infinite;}
-.node.locked{opacity:.4;pointer-events:none;filter:grayscale(.6);}
+/* the campaign map: a linear chain of battles */
+.chain{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin:6px 0 12px;padding:14px 6px;
+  border:1px dashed var(--brass);background:repeating-linear-gradient(90deg,transparent 0 30px,rgba(139,108,60,.06) 30px 31px);}
+.bnode{display:flex;flex-direction:column;align-items:center;gap:5px;width:96px;cursor:default;}
+.bnode .dot{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;
+  border:2px solid var(--ink-soft);background:var(--parch);color:#fff;position:relative;box-shadow:1px 1px 0 var(--paper-shadow);}
+.bnode.battle .dot{background:var(--ink-soft);}
+.bnode.final .dot{background:var(--red);}
+.bnode.cleared .dot{background:var(--forest);}
+.bnode.current .dot{box-shadow:0 0 0 3px var(--parch),0 0 0 6px var(--red);}
+.bnode.next{cursor:pointer;}
+.bnode.next .dot{box-shadow:0 0 0 3px var(--parch),0 0 0 5px var(--brass);animation:pulse 1.6s infinite;}
+.bnode.locked{opacity:.4;}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 3px var(--parch),0 0 0 5px var(--brass);}50%{box-shadow:0 0 0 3px var(--parch),0 0 0 8px rgba(176,141,87,.5);}}
-.maplabel{position:absolute;top:8px;left:12px;font-size:12px;font-style:italic;color:var(--ink-soft);}
-.maptip{position:absolute;bottom:8px;left:12px;right:12px;font-size:11.5px;font-style:italic;color:var(--brass-dark);}
+.bnode .cap{font-size:11px;text-align:center;color:var(--ink-soft);line-height:1.15;}
+.link{width:26px;height:2px;background:var(--brass-dark);opacity:.5;margin-bottom:22px;}
+.link.done{background:var(--forest);opacity:.8;}
 
-/* summary/meta lists */
-.tally{list-style:none;padding:0;margin:12px 0;}
-.tally li{display:flex;justify-content:space-between;border-bottom:1px dotted var(--parch-deep);padding:5px 0;font-size:14px;}
-.locklist{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
-.unlock{border:1px solid var(--brass-dark);padding:8px 10px;font-size:13px;background:rgba(255,255,255,.2);}
-.unlock.claimed{border-style:dashed;opacity:.7;}
-.reward-cards{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;}
-.card{width:112px;border:1.5px solid var(--ink-soft);background:var(--parch);padding:8px;font-size:12px;box-shadow:2px 2px 0 var(--paper-shadow);cursor:pointer;transition:transform .08s;}
+.stub{border:2px dashed var(--brass-dark);padding:11px 13px;background:rgba(255,255,255,.16);margin:10px 0;font-size:14px;}
+.stub.solid{border-style:solid;}
+.stub .tag{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper);font-weight:bold;}
+.reward-cards{display:flex;gap:12px;margin:6px 0 4px;flex-wrap:wrap;}
+.card{width:120px;border:1.5px solid var(--ink-soft);background:var(--parch);padding:8px;font-size:12px;box-shadow:2px 2px 0 var(--paper-shadow);cursor:pointer;transition:transform .08s;}
 .card:hover{transform:translateY(-3px);}
 .card b{display:block;font-size:13px;margin-bottom:3px;}
-.card .cost{float:right;color:var(--copper);font-weight:bold;}
 
-.stub{border:2px dashed var(--brass-dark);padding:12px 14px;background:rgba(255,255,255,.16);margin:10px 0;}
-.stub .tag{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper);font-weight:bold;}
-
-/* dock */
-.dock{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,#332b1b,#241d12);color:var(--parch);
-  border-top:2px solid var(--brass);padding:8px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;z-index:20;box-shadow:0 -3px 8px rgba(0,0,0,.3);}
-.dock .lbl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass);}
-.variant-btns{display:flex;gap:8px;flex-wrap:wrap;}
-.vbtn{padding:6px 12px;border:1px solid var(--brass);background:transparent;color:var(--parch);font-size:13px;}
-.vbtn small{display:block;font-size:10.5px;color:#c9b98f;font-style:italic;}
-.vbtn.on{background:var(--brass);color:#241d12;}
-.dock .spacer{flex:1;}
-.dock button.mini{padding:6px 10px;border:1px solid var(--brass);background:transparent;color:var(--parch);font-size:12px;}
-.dock a{color:var(--brass);font-size:12px;}
-
-/* marginalia notes */
-.margin-note{position:relative;}
 #notes{margin-top:16px;border:1.5px dashed var(--copper);background:rgba(156,95,58,.07);padding:12px 15px;}
 #notes h4{margin:0 0 6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--copper);}
 #notes ol{margin:0;padding-left:20px;font-size:13px;}
 #notes li{margin:4px 0;}
-#notes.hidden{display:none;}
 </style>
 
 <div class="wrap">
   <div class="masthead">
     <div>
-      <h1>War of Attrition — Run-Flow Napkin</h1>
-      <div class="sub">a field commander's journal · #247 · the run threads every screen; the map is the spine</div>
+      <h1>War of Attrition — Campaign Loop</h1>
+      <div class="sub">a home for the campaign map · #247 · only the phases we can already see</div>
     </div>
-    <div class="napkin-tag">Napkin — react, don't polish<small>throwaway · rough on purpose</small></div>
+    <div class="napkin-tag">Napkin v2 — descoped<small>no meta · no economy · just the loop</small></div>
   </div>
 
-  <div class="thread" id="thread"></div>
+  <div class="loop" id="loop"></div>
+  <p class="caption">The whole cycle, and nothing past it. The <b>campaign map</b> is just the "move to the next battle" step — that's the home this ticket is finding.</p>
 
   <div class="stage">
     <aside class="ledger">
-      <h2>Run Ledger</h2>
-      <div class="stat" id="st-act"><span>Act</span><b>—</b></div>
-      <div class="stat" id="st-node"><span>Position</span><b>—</b></div>
-      <div class="stat" id="st-str"><span>Strength</span><b class="pips"></b></div>
-      <div class="stat" id="st-supply"><span>Supply</span><b>0</b></div>
-      <div class="stat" id="st-deck"><span>Battalion</span><b>0 cards</b></div>
-      <div class="stat" id="st-cleared"><span>Engagements won</span><b>0</b></div>
-      <div class="note" id="ledgerNote">Start a new campaign from the front door.</div>
-      <div class="legend">
-        <div class="label" style="margin-bottom:4px;">Node types</div>
-        <div><span class="dot" style="background:var(--forest)"></span>Muster (rest / heal)</div>
-        <div><span class="dot" style="background:var(--ink-soft)"></span>Skirmish (battle)</div>
-        <div><span class="dot" style="background:var(--copper)"></span>Elite (veteran regiment)</div>
-        <div><span class="dot" style="background:var(--blue)"></span>Dispatch (event / choice)</div>
-        <div><span class="dot" style="background:var(--brass)"></span>Supply depot (reward)</div>
-        <div><span class="dot" style="background:var(--red)"></span>Decisive battle (boss)</div>
-      </div>
+      <h2>Campaign</h2>
+      <div class="stat" id="st-battle"><span>At</span><b>—</b></div>
+      <div class="stat" id="st-won"><span>Battles won</span><b>0</b></div>
+      <div class="stat" id="st-deck"><span>Battalion</span><b>12 cards</b></div>
+      <div class="note" id="note">Start the campaign to walk the loop.</div>
     </aside>
 
     <main class="device">
-      <div class="bezel"><span>node game/server.js</span><span class="v" id="bezelScreen">front door</span></div>
+      <div class="bezel"><span>node game/server.js</span><span class="v" id="bezel">campaign map</span></div>
       <div class="screen" id="screen"></div>
     </main>
   </div>
 
   <div id="notes">
-    <h4>What to react to (the open questions this napkin exists to settle)</h4>
+    <h4>The only calls this napkin needs</h4>
     <ol>
-      <li><b>Which map layout?</b> The Front (attrition-native, but linear), The Climb (legible, generic), or The Theater (hex, echoes the battle board — richest but heaviest to build). Pick one to carry into the build ticket, or a hybrid.</li>
-      <li><b>Is the front door a run?</b> New Campaign drops you straight onto the map — no flat hub. Right feel, or do you want a between-runs home first?</li>
-      <li><b>Node → Battalion builder every battle, or only at the start of a run?</b> Right now every node re-opens the builder. Tedious, or the point?</li>
-      <li><b>How much branching?</b> This graph forks twice per act. More agency, or more paralysis?</li>
-      <li><b>What does "attrition" cost between nodes?</b> Strength carries over and only Muster heals — does the map need to show that pressure, not just the ledger?</li>
+      <li><b>Is this the whole loop?</b> battle → reward → campaign (move to next) → battalion set → battle. Anything missing, or anything here still too much?</li>
+      <li><b>Campaign map = a linear chain of battles?</b> Just advance to the next one — no branching, no node types yet. Right home to reserve?</li>
+      <li><b>Battalion set every battle</b>, or set once at the start and only revisit if you want? (kept as a stub either way)</li>
     </ol>
   </div>
 </div>
 
-<div class="dock">
-  <span class="lbl">Campaign map layout</span>
-  <div class="variant-btns" id="variantBtns"></div>
-  <div class="spacer"></div>
-  <button class="mini" id="btnReset">↺ Restart run</button>
-  <button class="mini" id="btnNotes">Toggle notes</button>
-</div>
-
 <script>
-/* ---- run graph: one act, shared by all three layouts (compare layout, not content) ---- */
-const NODES = [
-  {id:'n0', type:'muster',   label:'Staging Camp', col:0, row:1, to:['n1a','n1b']},
-  {id:'n1a',type:'skirmish', label:'Border Raid',  col:1, row:0, to:['n2a','n2b']},
-  {id:'n1b',type:'dispatch', label:'Envoy',        col:1, row:2, to:['n2b','n2c']},
-  {id:'n2a',type:'supply',   label:'Supply Depot', col:2, row:0, to:['n3a']},
-  {id:'n2b',type:'elite',    label:'Veteran Line', col:2, row:1, to:['n3a','n3b']},
-  {id:'n2c',type:'skirmish', label:'Ford Clash',   col:2, row:2, to:['n3b']},
-  {id:'n3a',type:'skirmish', label:'Ridge Assault',col:3, row:0, to:['n4']},
-  {id:'n3b',type:'muster',   label:'Field Muster', col:3, row:2, to:['n4']},
-  {id:'n4', type:'decisive', label:'Decisive Battle',col:4,row:1, to:[]},
+const BATTLES = [
+  {id:0, label:'Battle I',  final:false},
+  {id:1, label:'Battle II', final:false},
+  {id:2, label:'Battle III',final:false},
+  {id:3, label:'Final Battle', final:true},
 ];
-const NMAP = Object.fromEntries(NODES.map(n=>[n.id,n]));
-const GLYPH = {muster:'⚑',skirmish:'⚔',dispatch:'✉',supply:'❖',elite:'★',decisive:'☠'};
-const TYPENAME = {muster:'Muster',skirmish:'Skirmish',dispatch:'Dispatch',supply:'Supply Depot',elite:'Elite',decisive:'Decisive Battle'};
+const LOOP = ['Campaign map','Battalion set','Battle','Reward'];
 
-/* hex hand-placed positions for The Theater (x%,y%) */
-const HEX = {n0:[12,50],n1a:[30,26],n1b:[30,74],n2a:[50,16],n2b:[50,50],n2c:[50,84],n3a:[70,30],n3b:[70,70],n4:[88,50]};
-
-const VARIANTS = {
-  front:  {name:'The Front',  tip:'Advancing front line — attrition-native, left→right. Held ground shades red behind you.', sub:'front line'},
-  climb:  {name:'The Climb',  tip:'Slay-the-Spire branching climb — most legible, most generic.', sub:'branching'},
-  theater:{name:'The Theater',tip:'Hex territory — echoes the battle board. Richest, heaviest to build.', sub:'hex map'},
-};
-
-let S; // run state
-function fresh(){
-  S={variant:'front', screen:'frontdoor', current:'n0', cleared:new Set(), pending:null,
-     strength:10, maxStr:10, supply:0, deck:12, changed:new Set(), threadPos:0};
-}
+let S;
+function fresh(){ S={screen:'map', pos:0, cleared:new Set(), deck:12, phase:0, pending:null, changed:new Set(), note:''}; }
 fresh();
 
-/* thread breadcrumb model */
-const THREAD = ['Front door','New Campaign','Campaign map','Node','Battalion builder','Battle','Rewards / draft','Run summary','Meta'];
-function threadIndexForScreen(){
-  return {frontdoor:0,newcampaign:1,map:2,node:3,builder:4,battle:5,rewards:6,summary:7,meta:8}[S.screen] ?? 2;
-}
-
-/* ---- reachability ---- */
-function reachable(id){
-  if(S.cleared.has(id)) return false;
-  const cur=NMAP[S.current];
-  if(!S.cleared.has(S.current)) return false; // must clear current before advancing
-  return cur.to.includes(id);
-}
-function anyReachable(){return NODES.some(n=>reachable(n.id));}
-
-/* ---- render ---- */
 const screenEl=document.getElementById('screen');
-const bezelEl=document.getElementById('bezelScreen');
+const bezelEl=document.getElementById('bezel');
+const loopPhaseForScreen={map:0,builder:1,battle:2,reward:3};
 
 function render(){
-  renderThread(); renderLedger(); renderVariantBtns();
-  bezelEl.textContent = ({frontdoor:'front door',newcampaign:'new campaign',map:VARIANTS[S.variant].name.toLowerCase(),node:'engagement',builder:'battalion builder',battle:'battle',rewards:'rewards',summary:'run summary',meta:'headquarters'})[S.screen];
-  const fn = SCREENS[S.screen]; screenEl.innerHTML = fn();
-  wire();
-  S.changed.clear();
+  renderLoop(); renderLedger();
+  bezelEl.textContent=({map:'campaign map',builder:'battalion set',battle:'battle',reward:'reward'})[S.screen];
+  screenEl.innerHTML=SCREENS[S.screen]();
+  wire(); S.changed.clear();
 }
-
-function renderThread(){
-  const cur=threadIndexForScreen();
-  document.getElementById('thread').innerHTML = THREAD.map((t,i)=>{
-    let cls='step'; if(i<cur)cls+=' done'; if(i===cur)cls+=' on';
-    const between = (i===7)?'<span class="between">(run ends)</span> ':(i===8?'<span class="between">(between runs)</span> ':'');
-    return (i? '<span class="arw">›</span>':'')+between+`<span class="${cls}">${t}</span>`;
-  }).join(' ');
+function renderLoop(){
+  const cur=loopPhaseForScreen[S.screen];
+  document.getElementById('loop').innerHTML =
+    LOOP.map((t,i)=>(i?'<span class="arw">→</span>':'')+`<span class="step ${i===cur?'on':''}">${t}</span>`).join(' ')
+    + '<span class="repeat">↻ repeat</span>';
 }
-
 function renderLedger(){
-  const g=(id)=>document.getElementById(id);
-  const mark=(id,on)=>g(id).classList.toggle('changed',on);
-  g('st-act').querySelector('b').textContent='I — The Border';
-  g('st-node').querySelector('b').textContent = S.screen==='frontdoor'?'—':NMAP[S.current].label;
-  g('st-str').querySelector('b').innerHTML = '❤'.repeat(S.strength)+'<span style="opacity:.25">❤</span>'.repeat(S.maxStr-S.strength)+` ${S.strength}/${S.maxStr}`;
-  g('st-supply').querySelector('b').textContent=S.supply;
-  g('st-deck').querySelector('b').textContent=S.deck+' cards';
-  g('st-cleared').querySelector('b').textContent=S.cleared.size;
-  ['st-str','st-supply','st-deck','st-cleared','st-node'].forEach(id=>mark(id,false));
-  S.changed.forEach(k=>mark('st-'+k,true));
-  document.getElementById('ledgerNote').textContent=S.note||'';
+  const g=id=>document.getElementById(id);
+  const set=(id,v)=>{g(id).querySelector('b').textContent=v;};
+  set('st-battle', S.cleared.has(3)?'Campaign won':BATTLES[S.pos].label);
+  set('st-won', S.cleared.size);
+  set('st-deck', S.deck+' cards');
+  ['st-battle','st-won','st-deck'].forEach(id=>g(id).classList.remove('changed'));
+  S.changed.forEach(k=>g('st-'+k)&&g('st-'+k).classList.add('changed'));
+  g('note').textContent=S.note||'';
 }
 
-function renderVariantBtns(){
-  document.getElementById('variantBtns').innerHTML=Object.entries(VARIANTS).map(([k,v])=>
-    `<button class="vbtn ${S.variant===k?'on':''}" data-v="${k}">${v.name}<small>${v.sub}</small></button>`).join('');
-}
-
-/* ---- map layout ---- */
-function pos(n){
-  if(S.variant==='theater'){const[x,y]=HEX[n.id];return{x,y};}
-  if(S.variant==='climb'){ // bottom→top, boss at top
-    const x=12+n.row*38; const y=90-n.col*20; return{x,y};
-  }
-  // front: left→right, boss at right
-  const x=8+n.col*21; const y=20+n.row*30; return{x,y};
-}
-function mapScreen(){
-  const V=VARIANTS[S.variant];
-  // edges
-  let edges='';
-  NODES.forEach(n=>n.to.forEach(t=>{
-    const a=pos(n),b=pos(NMAP[t]);
-    const live = S.cleared.has(n.id) && !S.cleared.has(t);
-    edges+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${live?'#9e2b25':'#8a6c3c'}" stroke-width="${live?'0.7':'0.35'}" stroke-dasharray="${live?'0':'1.4 1.2'}" opacity="${live?'0.9':'0.5'}"/>`;
-  }));
-  // held-ground wash for front variant
-  let wash='';
-  if(S.variant==='front'){
-    const maxClearedCol=Math.max(-1,...[...S.cleared].map(id=>NMAP[id].col));
-    if(maxClearedCol>=0){const w=8+maxClearedCol*21+4;wash=`<rect x="0" y="0" width="${w}" height="100" fill="rgba(158,43,37,0.10)"/>`;}
-  }
-  const nodesHtml=NODES.map(n=>{
-    const p=pos(n);
-    let cls='node t-'+n.type+(S.variant==='theater'?' hex':'');
-    if(S.cleared.has(n.id))cls+=' cleared';
-    else if(n.id===S.current && !S.cleared.has(S.current))cls+=' current';
-    else if(reachable(n.id))cls+=' reachable';
-    else cls+=' locked';
-    return `<div class="${cls}" data-node="${n.id}" style="left:${p.x}%;top:${p.y}%;">
-      <div class="glyph" style="position:relative;">${GLYPH[n.type]}</div>
-      <div class="cap">${n.label}</div></div>`;
-  }).join('');
-  const hint = anyReachable()? 'Choose your next engagement — glowing nodes are in reach.' :
-     (S.cleared.has('n4')? 'The act is won.' : 'Clear the current engagement to advance the line.');
-  return `<h3>Campaign Map · ${V.name}</h3>
-    <div class="screen-sub">Act I — The Border · progressive-disclosure run, not a flat hub</div>
-    <div class="mapwrap">
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none">${wash}${edges}</svg>
-      <div class="maplabel">${V.name}</div>
-      ${nodesHtml}
-      <div class="maptip">${hint}</div>
-    </div>`;
-}
-
-/* ---- screens ---- */
 const SCREENS={
-  frontdoor(){return `
-    <h3>War of Attrition</h3>
-    <div class="screen-sub">The front door is a <em>run</em>, not a hub. Play drops you onto the campaign map.</div>
-    <button class="btn primary" data-go="newcampaign">▶ New Campaign<small>begin a fresh run — Act I, The Border</small></button>
-    <button class="btn ${S.cleared.size?'':'disabled'}" data-go="map">Continue<small>${S.cleared.size?'resume your run':'no run in progress'}</small></button>
-    <button class="btn ghost" data-stub="Settings">Settings<small>side, enemy general, options — moved off the old menu</small></button>
-    <div class="stub"><span class="tag">Reserved · dev seam</span><br>Press <b>\`</b> to reveal the Dev Hub (Deck Editor, Maps, Balance). Off by default — a stranger sees only Play.</div>`;
+  map(){
+    let chain='';
+    BATTLES.forEach((b,i)=>{
+      if(i)chain+=`<div class="link ${S.cleared.has(i-1)?'done':''}"></div>`;
+      let cls='bnode '+(b.final?'final':'battle');
+      if(S.cleared.has(b.id))cls+=' cleared';
+      else if(isTakeable(b.id))cls+=' next current';
+      else cls+=' locked';
+      chain+=`<div class="${cls}" data-battle="${b.id}">
+        <div class="dot">${S.cleared.has(b.id)?'✓':(b.final?'★':b.id+1)}</div>
+        <div class="cap">${b.label}</div></div>`;
+    });
+    const done=S.cleared.has(3);
+    return `<h3>Campaign Map</h3>
+      <div class="screen-sub">Move to the next battle. ${done?'The campaign is won.':'The glowing battle is next.'}</div>
+      <div class="chain">${chain}</div>
+      ${done
+        ? `<button class="btn" data-reset="1">↺ Run it again</button>`
+        : `<p class="screen-sub">This screen is the campaign map's whole job for now: pick up at the next battle. A chain, not a web.</p>`}`;
   },
-  newcampaign(){return `
-    <h3>New Campaign</h3>
-    <div class="screen-sub">One choice to start the run, then straight to the front.</div>
-    <button class="btn" data-go="map" data-side="Red">March as Red<small>your veterans hold the eastern border</small></button>
-    <button class="btn" data-go="map" data-side="Blue">March as Blue<small>the western coalition advances</small></button>
-    <div class="stub"><span class="tag">Reserved · commanders (#241)</span><br>A Commander picker slot lands here later — bends the run's rules.</div>`;
-  },
-  map(){return mapScreen();},
-  node(){const n=NMAP[S.pending];return `
-    <h3>${n.label}</h3>
-    <div class="screen-sub">${TYPENAME[n.type]} · what happens when you commit to this node</div>
-    ${nodeBody(n)}`;
-  },
-  builder(){return `
-    <h3>Battalion Builder</h3>
-    <div class="screen-sub">Assemble the force you take into this battle.</div>
-    <div class="stub"><span class="tag">Stub · own build ticket · graduates from Deck Editor</span>
-      <br>Curated player-facing builder (not raw card authoring). Your battalion: <b>${S.deck} cards</b>.</div>
+  builder(){return `<h3>Battalion Set</h3>
+    <div class="screen-sub">Choose the force for ${BATTLES[S.pending].label}.</div>
+    <div class="stub"><span class="tag">Stub · own build ticket · graduates from Deck Editor</span><br>
+      Player-facing battalion (not raw card authoring). Currently <b>${S.deck} cards</b>.</div>
     <div class="rowbtns">
       <button class="btn primary" data-go="battle">Deploy to battle →</button>
       <button class="btn ghost" data-go="map">← Back to map</button>
-    </div>
-    <p class="screen-sub" style="margin-top:14px;">Open question: re-open the builder <em>every</em> node, or lock the battalion at run start?</p>`;
-  },
-  battle(){const n=NMAP[S.pending];return `
-    <h3>Battle</h3>
-    <div class="screen-sub">${n.label} · ${TYPENAME[n.type]}</div>
-    <div class="stub" style="border-style:solid;"><span class="tag">Exists · the real skirmish screen (game/ui/skirmish.js)</span>
-      <br>The one screen already built. Everything else in this flow threads around it.</div>
-    <p>Resolve the engagement on the hex board. Attrition carries out: you'll return to the map with whatever Strength survives.</p>
-    <div class="rowbtns">
-      <button class="btn primary" data-win="1">Victory →</button>
-      <button class="btn ghost" data-win="0">Retreat (costly)</button>
     </div>`;
   },
-  rewards(){const n=NMAP[S.pending];const supply = n.type==='supply'?18:(n.type==='elite'?14:(n.type==='decisive'?30:8));return `
-    <h3>Rewards · Card Draft</h3>
-    <div class="screen-sub">Spoils of ${n.label}. Draft one to strengthen your battalion.</div>
+  battle(){return `<h3>Battle</h3>
+    <div class="screen-sub">${BATTLES[S.pending].label}</div>
+    <div class="stub solid"><span class="tag">Exists · the real skirmish screen (game/ui/skirmish.js)</span><br>
+      The one screen already built. The loop just threads around it.</div>
+    <div class="rowbtns"><button class="btn primary" data-win="1">Win the battle →</button></div>`;
+  },
+  reward(){return `<h3>Reward</h3>
+    <div class="screen-sub">Spoils of ${BATTLES[S.pending].label}. Take one into the battalion.</div>
     <div class="reward-cards">
-      <div class="card" data-draft="Entrench"><span class="cost">2</span><b>Entrench</b>Hold a hex; +1 defense while you stay.</div>
-      <div class="card" data-draft="Forced March"><span class="cost">1</span><b>Forced March</b>Move an extra hex this turn.</div>
-      <div class="card" data-draft="Conscript"><span class="cost">3</span><b>Conscript</b>Add a fresh unit to the line.</div>
+      <div class="card" data-draft="Entrench"><b>Entrench</b>Hold a hex; +1 defense while you stay.</div>
+      <div class="card" data-draft="Forced March"><b>Forced March</b>Move an extra hex this turn.</div>
+      <div class="card" data-draft="Conscript"><b>Conscript</b>Add a fresh unit to the line.</div>
     </div>
-    <div class="stub" style="margin-top:14px;"><span class="tag">Reserved · in-run draft vs dev card catalog</span>
-      <br>+${supply} supply banked.</div>
-    <button class="btn ghost" data-draft="__skip">Skip the draft →</button>`;
-  },
-  summary(){return `
-    <h3>Run Summary</h3>
-    <div class="screen-sub">Act I resolved — the ledger of a campaign.</div>
-    <ul class="tally">
-      <li><span>Engagements won</span><b>${S.cleared.size}</b></li>
-      <li><span>Strength remaining</span><b>${S.strength}/${S.maxStr}</b></li>
-      <li><span>Supply banked</span><b>${S.supply}</b></li>
-      <li><span>Battalion size</span><b>${S.deck} cards</b></li>
-      <li><span>Outcome</span><b style="color:var(--red)">${S.cleared.has('n4')?'Border held':'Line broken'}</b></li>
-    </ul>
-    <button class="btn primary" data-go="meta">To Headquarters →</button>`;
-  },
-  meta(){return `
-    <h3>Headquarters</h3>
-    <div class="screen-sub">Between runs — spend what the campaign earned.</div>
-    <div class="locklist">
-      <div class="unlock claimed">✓ Old Veteran · unlocked</div>
-      <div class="unlock">Field Marshal AI · <b>${S.supply>=20?'claim':'20 supply'}</b></div>
-      <div class="unlock">2nd Commander slot · <b>40 supply</b></div>
-      <div class="unlock">New starter card · <b>15 supply</b></div>
-    </div>
-    <div class="stub" style="margin-top:14px;"><span class="tag">Reserved · meta-progression (#243)</span>
-      <br>Persistent unlock layer + a nav slot for surfacing new parts. Parked idea — this is just its home.</div>
-    <button class="btn" data-go="frontdoor">↺ New run from the front door</button>`;
+    <button class="btn ghost" data-draft="__skip">Take nothing →</button>`;
   },
 };
 
-function nodeBody(n){
-  const map={
-    muster:'Rest the column. Recover Strength — the only place attrition heals.',
-    skirmish:'A standing engagement. Build your battalion, then fight.',
-    dispatch:'A choice, not a fight — a courier arrives with a decision.',
-    supply:'A depot. Draft the richest spoils of the act.',
-    elite:'A veteran regiment. Harder, but the reward is worth the blood.',
-    decisive:'The battle that decides the act. No retreat.',
-  }[n.type];
-  let btns;
-  if(n.type==='muster'){btns=`<button class="btn primary" data-rest="1">Make camp — heal →</button>`;}
-  else if(n.type==='dispatch'){btns=`<button class="btn primary" data-event="1">Hear the envoy →</button>`;}
-  else{btns=`<button class="btn primary" data-go="builder">Assemble battalion →</button>`;}
-  return `<p>${map}</p>${btns}
-    <button class="btn ghost" data-go="map">← Back to map</button>`;
-}
-
-/* ---- transitions ---- */
-function go(screen){S.screen=screen;render();}
-function enterNode(id){S.pending=id;S.current=id;go('node');}
-function clearPending(gain){
-  S.cleared.add(S.pending);S.changed.add('cleared');
-  if(gain){S.supply+=gain;S.changed.add('supply');}
-  if(S.pending==='n4'){S.note='Decisive battle won — the act is yours.';go('summary');return;}
-}
+// the one battle you can advance to: the first uncleared one in the chain
+function isTakeable(id){ return !S.cleared.has(id) && (id===0 || S.cleared.has(id-1)); }
+function toBattle(id){ S.pending=id; S.pos=id; S.note=`Advancing to ${BATTLES[id].label}.`; S.screen='builder'; render(); }
 
 function wire(){
-  screenEl.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{
-    const d=b.dataset;
-    if(d.side)S.note=`Marching as ${d.side}.`;
-    if(d.go==='newcampaign'){S.note='New run — pick your side.';}
-    go(d.go);
+  screenEl.querySelectorAll('[data-battle]').forEach(el=>el.onclick=()=>{
+    const id=+el.dataset.battle;
+    if(isTakeable(id)) toBattle(id);
   });
-  screenEl.querySelectorAll('[data-node]').forEach(el=>el.onclick=()=>{
-    const id=el.dataset.node;
-    if(!(reachable(id)|| (id===S.current&&!S.cleared.has(id)&&S.screen==='map'&&S.cleared.size===0))) {
-      if(id===S.current && !S.cleared.has(id)){enterNode(id);} // allow entering the start node
-      else if(reachable(id)){enterNode(id);}
-      return;
-    }
-    enterNode(id);
-  });
-  screenEl.querySelectorAll('[data-win]').forEach(b=>b.onclick=()=>{
-    const win=b.dataset.win==='1';
-    if(!win){S.strength=Math.max(1,S.strength-3);S.changed.add('str');}
-    else{S.strength=Math.max(1,S.strength-1);S.changed.add('str');}
-    S.note=win?'Victory — attrition took its toll (−1 Strength).':'Retreat — the line bled (−3 Strength).';
-    go('rewards');
-  });
+  screenEl.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{S.screen=b.dataset.go;render();});
+  screenEl.querySelectorAll('[data-win]').forEach(b=>b.onclick=()=>{S.note=`Won ${BATTLES[S.pending].label}.`;S.screen='reward';render();});
   screenEl.querySelectorAll('[data-draft]').forEach(c=>c.onclick=()=>{
     const pick=c.dataset.draft;
-    if(pick!=='__skip'){S.deck+=1;S.changed.add('deck');S.note=`Drafted "${pick}" into the battalion.`;}
-    else S.note='Skipped the draft.';
-    const n=NMAP[S.pending];const gain=n.type==='supply'?18:(n.type==='elite'?14:(n.type==='decisive'?30:8));
-    clearPending(gain);
-    if(S.screen!=='summary')go('map');
+    if(pick!=='__skip'){S.deck++;S.changed.add('deck');S.note=`Drafted "${pick}".`;}
+    else S.note='Took nothing.';
+    S.cleared.add(S.pending);S.changed.add('won');S.changed.add('battle');
+    S.screen='map'; render();
   });
-  screenEl.querySelectorAll('[data-rest]').forEach(b=>b.onclick=()=>{
-    S.strength=Math.min(S.maxStr,S.strength+3);S.changed.add('str');S.note='Made camp — +3 Strength.';
-    clearPending(0);if(S.screen!=='summary')go('map');
-  });
-  screenEl.querySelectorAll('[data-event]').forEach(b=>b.onclick=()=>{
-    S.supply+=6;S.changed.add('supply');S.note='The envoy brought supply (+6).';
-    clearPending(0);if(S.screen!=='summary')go('map');
-  });
-  screenEl.querySelectorAll('[data-stub]').forEach(b=>b.onclick=()=>{S.note=`${b.dataset.stub} — reserved stub, own build ticket.`;renderLedger();});
+  screenEl.querySelectorAll('[data-reset]').forEach(b=>b.onclick=()=>{fresh();S.note='Campaign reset.';render();});
 }
-
-/* dock + notes */
-document.getElementById('variantBtns').addEventListener('click',e=>{
-  const b=e.target.closest('[data-v]');if(!b)return;
-  S.variant=b.dataset.v;if(S.screen!=='map'&&S.screen!=='frontdoor')S.screen='map';
-  S.note=`Layout: ${VARIANTS[S.variant].name}. ${VARIANTS[S.variant].tip}`;render();
-});
-document.getElementById('btnReset').onclick=()=>{const v=S.variant;fresh();S.variant=v;S.note='Run restarted.';render();};
-document.getElementById('btnNotes').onclick=()=>document.getElementById('notes').classList.toggle('hidden');
 
 render();
 </script>
