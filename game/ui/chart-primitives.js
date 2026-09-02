@@ -56,8 +56,50 @@ function chDivFill(dev){ // dev = win% - 50
 }
 
 /* ---- tiny svg builders (keep the concat readable) ---- */
-function chLine(x1, y1, x2, y2, stroke, w, dash){
-  return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+stroke+'" stroke-width="'+(w||1)+'"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/>';
+// the ONE <svg> root open. o: {id, vb, w, h, role, aria (escaped here), hidden, style}.
+function chSvgOpen(o){
+  o = o || {};
+  return '<svg xmlns="http://www.w3.org/2000/svg"'+
+    (o.id ? ' id="'+o.id+'"' : '')+
+    (o.vb != null ? ' viewBox="'+o.vb+'"' : '')+
+    (o.w != null ? ' width="'+o.w+'"' : '')+
+    (o.h != null ? ' height="'+o.h+'"' : '')+
+    (o.role ? ' role="'+o.role+'"' : '')+
+    (o.aria != null ? ' aria-label="'+chEsc(o.aria)+'"' : '')+
+    (o.hidden ? ' aria-hidden="true"' : '')+
+    (o.style ? ' style="'+o.style+'"' : '')+'>';
+}
+function chLine(x1, y1, x2, y2, stroke, w, dash, op){
+  return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+stroke+'" stroke-width="'+(w||1)+'"'+
+    (dash ? ' stroke-dasharray="'+dash+'"' : '')+(op != null ? ' opacity="'+op+'"' : '')+'/>';
+}
+function chPolyline(points, o){
+  o = o || {};
+  return '<polyline points="'+points+'" fill="'+(o.fill != null ? o.fill : 'none')+'"'+
+    (o.stroke ? ' stroke="'+o.stroke+'"' : '')+(o.sw != null ? ' stroke-width="'+o.sw+'"' : '')+
+    (o.dash ? ' stroke-dasharray="'+o.dash+'"' : '')+'/>';
+}
+function chRect(x, y, w, h, o){
+  o = o || {};
+  return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+(o.fill != null ? o.fill : 'none')+'"'+
+    (o.rx != null ? ' rx="'+o.rx+'"' : '')+(o.stroke ? ' stroke="'+o.stroke+'"' : '')+
+    (o.sw != null ? ' stroke-width="'+o.sw+'"' : '')+(o.opacity != null ? ' opacity="'+o.opacity+'"' : '')+'/>';
+}
+// a circle mark. o: {id, cls, cx, cy, r, fill, stroke, sw, dash, opacity, ring
+// (=data-ring for chBindHits), extra (a pre-built attr string e.g. chTipAttrs)}.
+function chCircle(o){
+  return '<circle'+(o.id ? ' id="'+o.id+'"' : '')+(o.cls ? ' class="'+o.cls+'"' : '')+
+    ' cx="'+o.cx+'" cy="'+o.cy+'" r="'+o.r+'" fill="'+(o.fill != null ? o.fill : 'none')+'"'+
+    (o.stroke ? ' stroke="'+o.stroke+'"' : '')+(o.sw != null ? ' stroke-width="'+o.sw+'"' : '')+
+    (o.dash ? ' stroke-dasharray="'+o.dash+'"' : '')+(o.opacity != null ? ' opacity="'+o.opacity+'"' : '')+
+    (o.ring != null ? ' data-ring="'+o.ring+'"' : '')+(o.extra || '')+'/>';
+}
+// a polygon mark. o: {cls, fill, stroke ('none' to force it), sw, dash, extra}.
+function chPolygon(points, o){
+  o = o || {};
+  return '<polygon'+(o.cls ? ' class="'+o.cls+'"' : '')+' points="'+points+'" fill="'+(o.fill != null ? o.fill : 'none')+'"'+
+    (o.stroke != null ? ' stroke="'+o.stroke+'"' : '')+(o.sw != null ? ' stroke-width="'+o.sw+'"' : '')+
+    (o.dash ? ' stroke-dasharray="'+o.dash+'"' : '')+(o.extra || '')+'/>';
 }
 function chText(x, y, s, o){
   o = o || {};
@@ -87,10 +129,10 @@ function chCdf(sorted, w, h){
 }
 function chSettleSvg(settleA, settleB, w, h){
   w = w || 200; h = h || 64;
-  return '<svg viewBox="0 0 ' + w + ' ' + h + '" style="display:block;width:100%;height:auto;">' +
+  return chSvgOpen({ vb: '0 0 ' + w + ' ' + h, style: 'display:block;width:100%;height:auto;' }) +
     chLine(0, h, w, h, CHART.axis, 1) +
-    '<polyline points="' + chCdf(settleA, w, h) + '" fill="none" stroke="' + CHART.inkSoft + '" stroke-width="1.5" stroke-dasharray="4 2"/>' +
-    '<polyline points="' + chCdf(settleB, w, h) + '" fill="none" stroke="#77582e" stroke-width="2"/></svg>';
+    chPolyline(chCdf(settleA, w, h), { stroke: CHART.inkSoft, sw: 1.5, dash: '4 2' }) +
+    chPolyline(chCdf(settleB, w, h), { stroke: '#77582e', sw: 2 }) + '</svg>';
 }
 
 /* Greedy direct-label placement: candidates around the mark, first that fits

@@ -17,10 +17,13 @@ function uiEsc(s){
   return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// a 12×12 legend swatch (inline-styled so it works OUTSIDE .chcard, where the
-// scoped .sw class can't reach). `css` sets its own background/border.
-function uiSwatch(css){
-  return '<span style="display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:4px;box-sizing:border-box;' + css + '"></span>';
+// a legend swatch (inline-styled so it works OUTSIDE .chcard, where the scoped
+// .sw class can't reach). `css` sets its own background/border; o = {size, valign}
+// defaults to the 12×12 / -2px box (the Cards strip passes 11 / -1).
+function uiSwatch(css, o){
+  o = o || {};
+  var sz = o.size != null ? o.size : 12, va = o.valign != null ? o.valign : -2;
+  return '<span style="display:inline-block;width:'+sz+'px;height:'+sz+'px;border-radius:2px;vertical-align:'+va+'px;margin-right:4px;box-sizing:border-box;' + css + '"></span>';
 }
 
 // one sortable table header cell. col = [key, label]; keyAttr picks the sort
