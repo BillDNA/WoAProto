@@ -38,6 +38,13 @@ never a certificate.
   file-write → manifest-regen hand-off runs for real without touching committed content.
 - `dev/db.test.js` — adds `factsFromRow ≡ skirmishFacts`: the live-state fold and the
   db-row fold of the same skirmish must be field-for-field equal.
+- `dev/balance-parallel.test.js` — runs `balance-report.js --parallel` as a real
+  subprocess (temp db) so the worker-string → parent-parse → insert pipe is driven.
+- `dev/boot.test.js` — jsdom boots the real page: E3 (localStorage deck override →
+  ACTIVE_DECK) and F2 (a maps-bundle file → the lenient import parser → E.MAPS).
+
+Only **G2** (AI hidden-hand resample honesty) is left open, and it is blocked on a
+production design call (canonicalising the resample pool), not on test effort.
 
 To make the server + pipeline driveable, small production changes (no behaviour change):
 `game/server.js` guards its `.listen` behind `require.main`, exports
@@ -60,10 +67,10 @@ gap. Least-covered, most-load-bearing first.
 | A4 savedeck → custom-deck.js | server → game/custom-deck.js | **REAL** — `content-api.test.js` (snapshot+restore) |
 | A5 savemapsets → destructive dir rewrite | server → content/mapsets/ | **REAL** — `content-api.test.js` (sandbox) |
 | H1 `factsFromRow` ≡ `skirmishFacts` | engine live fold ↔ db-row fold | **REAL** — `db.test.js` |
-| C1 `--parallel` worker slim-state → parent → db | balance-report worker string → parent | **ONE-SIDED** — `slimSkirmishState` round-trip pinned; the driver/worker string is not |
-| E3 index.html deck bootstrap → ACTIVE_DECK | inline bootstrap → engine snapshot | **NONE** — localStorage-wins precedence runs only in the page |
-| F1 map.shapeDef → `@id` shape → board (LAN join/resume) | engine ↔ battle.maps serialization | **ONE-SIDED** — built-ins exercised; no carved-shapeDef round-trip through a join |
-| F2 map/deck bundle import parser | boot.js import → libraryReplace | **NONE** — lenient parser is pure node logic |
+| C1 `--parallel` worker slim-state → parent → db | balance-report worker string → parent | **REAL** — `balance-parallel.test.js` (real subprocess, temp db) |
+| E3 index.html deck bootstrap → ACTIVE_DECK | inline bootstrap → engine snapshot | **REAL** — `boot.test.js` (jsdom, localStorage seeded) |
+| F1 map.shapeDef → `@id` shape → board (LAN join/resume) | engine ↔ battle.maps serialization | **REAL** — `test.maps.js` (carved-shapeDef round-trip) |
+| F2 map/deck bundle import parser | boot.js import → libraryReplace | **REAL** — `boot.test.js` (jsdom, real onchange + File) |
 | G2 AI hidden-hand resample honesty | engine sampledReplyScore | **NONE** — a clean invariant is blocked: the resample shuffles `decks[opp].concat(hands[opp])`, and Fisher-Yates is sensitive to input order (which encodes the split), so "permute the split → same plan" reds on honest code. The honest fix (canonicalise the pool before shuffling) changes AI output → RULES_VERSION bump. Tracked, not shipped. |
 | G1 stateView LLM honesty | claude-plays → prompt | **REAL** — `claude-plays.test.js` sentinel |
 | H2 BANDS/balanceScore, H4 playLog→card_plays/trace | report-model / db | **REAL** — `test.reports.js`, `db.test.js` |
