@@ -18,6 +18,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert');
 const { E, testSkirmish } = require('./test.helpers.js');
+const SIM = require('../sim.js');
 
 test('integration: a real finished skirmish reaches the persistence seam', (t) => {
   const seen = [];
@@ -87,4 +88,39 @@ test('integration: a real finished skirmish reaches the persistence seam', (t) =
     const i = E.hooks.onSkirmishEnd.indexOf(hook);
     if (i >= 0) E.hooks.onSkirmishEnd.splice(i, 1);
   }
+});
+
+// The in-browser parallel Balance Dashboard (game/sweep-worker.js, issue #274)
+// runs each skirmish in a Web Worker and postMessage()s the finished state to the
+// main thread, which folds (WOA_SIM.balanceAdd) + reads it (E.view) + persists it
+// (recordSkirmish) EXACTLY as the serial loop does. postMessage is a structured
+// clone, so the byte-identical guarantee rests on the finished state being pure,
+// losslessly-cloneable data — no functions, no class instances with behaviour the
+// fold reads. This pins that: if engine state ever grows a field structuredClone
+// drops (or throws DataCloneError on), the parallel aggregate would diverge from
+// the serial one with no other test catching it (jsdom smoke takes the serial
+// fallback). The worker nulls st.battle before posting (the identity handle, a
+// clone cycle the fold never reads); mirror that here.
+test('seam: a finished skirmish survives the worker structured-clone boundary and folds byte-identically', () => {
+  const st = testSkirmish(70);
+  st.pieces.units['-2,2'] = { type: 'cavalry', owner: 'red' };
+  E.playCard(st, st.cards.hands.red[0], 'attack');
+  E.applyStep(st, { from: '-2,2', to: '-3,2' });
+  assert.ok(st.flow.phase === 'skirmish-over', 'a real finished skirmish to clone across the worker boundary');
+
+  st.battle = null;                                   // what sweep-worker.js posts
+  const clone = structuredClone(st);                  // the worker -> main-thread hop; throws if st holds a function
+
+  // E.view (the dashboard's detail read) works on the clone — it reads st.seed +
+  // st.flow, never st.battle, so nulling battle is safe.
+  const vOrig = E.view(st), vClone = E.view(clone);
+  assert.strictEqual(vClone.phase, vOrig.phase, 'view() reads the cloned phase');
+  assert.strictEqual(vClone.turnNumber, vOrig.turnNumber, 'view() reads the cloned turn count');
+  assert.strictEqual(vClone.seed, vOrig.seed, 'view() reads the cloned seed (not from st.battle)');
+
+  // The fold of the clone equals the fold of the original — the whole point.
+  const aggOrig = SIM.balanceNew(1); SIM.balanceAdd(aggOrig, st, 'red');
+  const aggClone = SIM.balanceNew(1); SIM.balanceAdd(aggClone, clone, 'red');
+  assert.strictEqual(JSON.stringify(aggClone), JSON.stringify(aggOrig),
+    'balanceAdd folds the structured-clone identically to the original (parallel == serial aggregate)');
 });

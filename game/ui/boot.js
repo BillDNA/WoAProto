@@ -502,14 +502,36 @@ $('dashRun').onclick = function(){
     var workers = [], byIndex = new Array(maps.length);
     var nextTask = 0, mapsDone = 0, doneCount = 0, total = maps.length * n, guard = false, cancelPoll = null;
 
-    function results(){ // DASH.results in strict map-index order — completion order must not leak in
-      DASH.results = byIndex.filter(function(x){ return x; }).map(function(x){ return { map: x.map, out: x.out }; });
+    function killAll(){ workers.forEach(function(w){ try{ w.terminate(); }catch(e){} }); }
+    function results(){
+      // DASH.results = COMPLETED maps only, in strict map-index order. A map's
+      // slot exists from the moment it is dispatched (partial `out`), so filter
+      // on `complete` — never publish an in-flight or half-folded map. The
+      // serial loop likewise pushes a map only once its full n skirmishes fold.
+      DASH.results = byIndex.filter(function(x){ return x && x.complete; }).map(function(x){ return { map: x.map, out: x.out }; });
     }
     function done(){
       if (guard) return; guard = true;
       if (cancelPoll) clearInterval(cancelPoll);
-      workers.forEach(function(w){ try{ w.terminate(); }catch(e){} });
-      results(); finish();
+      killAll(); results(); finish();
+    }
+    // A worker that dies without having folded a single skirmish means Web
+    // Workers aren't usable here (script 404 / CSP block / init throw) — restart
+    // the WHOLE sweep on the serial loop, honouring the fallback AC beyond the
+    // constructor-throw case. Once any skirmish has persisted a clean restart
+    // would double-record, so keep the finished maps and stop instead.
+    function workerFailed(why){
+      if (guard) return;
+      if (doneCount === 0){
+        guard = true;
+        if (cancelPoll) clearInterval(cancelPoll);
+        killAll();
+        DASH.results = []; DASH.detail = {};      // discard the aborted attempt, run clean
+        step();
+        return;
+      }
+      toast('Sweep worker '+why+' — showing the maps that finished.', 5000);
+      done();
     }
     function status(){
       $('dashStatus').textContent = 'Running '+total+' skirmishes on '+workers.length+' worker(s) — '+doneCount+'/'+total+' done…'+
@@ -518,7 +540,7 @@ $('dashRun').onclick = function(){
     function assign(w){
       if (guard || DASH.cancel || nextTask >= maps.length) return;
       var mi = nextTask++;
-      byIndex[mi] = { map: maps[mi], out: WOA_SIM.balanceNew(n) };
+      byIndex[mi] = { map: maps[mi], out: WOA_SIM.balanceNew(n), complete: false };
       w.postMessage({ type:'run', task:{ mapIndex: mi, map: maps[mi], n: n, seedBase: (mi+1)*7919, dr: dr, db: db } });
     }
     function onSkirmish(m){
@@ -532,7 +554,8 @@ $('dashRun').onclick = function(){
       }
       doneCount++; status();
     }
-    function onMapDone(w){
+    function onMapDone(w, mi){
+      if (byIndex[mi]) byIndex[mi].complete = true;
       results(); renderDash();                    // show finished maps as they complete, in map order
       if (++mapsDone >= maps.length){ done(); return; }
       assign(w);
@@ -547,15 +570,15 @@ $('dashRun').onclick = function(){
           var m = ev.data||{};
           if (m.type==='ready') return assign(w);
           if (m.type==='skirmish') return onSkirmish(m);
-          if (m.type==='done') return onMapDone(w);
-          if (m.type==='error'){ toast('Sweep worker error — '+m.error, 5000); done(); }
+          if (m.type==='done') return onMapDone(w, m.mapIndex);
+          if (m.type==='error') return workerFailed('error: '+m.error);
         };
-        w.onerror = function(ev){ if (ev && ev.preventDefault) ev.preventDefault(); toast('Sweep worker crashed.', 5000); done(); };
+        w.onerror = function(ev){ if (ev && ev.preventDefault) ev.preventDefault(); workerFailed('crashed'); };
         w.postMessage({ type:'init', appliedBattalion: applied });
       })(w);
       workers.push(w);
     }
-    if (initFailed || !workers.length){ workers.forEach(function(w){ try{ w.terminate(); }catch(e){} }); step(); return; }
+    if (initFailed || !workers.length){ killAll(); step(); return; }
     // Stop / Back set DASH.cancel; poll it to tear the pool down.
     cancelPoll = setInterval(function(){ if (DASH.cancel) done(); }, 120);
   }
