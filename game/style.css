@@ -406,9 +406,12 @@
   .dkpts{color:var(--ink-soft); font-weight:normal;}
   .dkpts b{color:var(--ink); font-weight:bold;}
   .dkpts.over, .dkpts.over b{color:#8a3324;}
-  /* player battalion builder (Muster) — two facing columns: pool → battalion */
-  #pbWrap{display:flex; gap:14px; align-items:stretch; margin:10px 0;}
-  #pbPoolPane, #pbBattalionPane{flex:1 1 0; display:flex; flex-direction:column; max-height:58vh; border:1px solid var(--brass-dark); border-radius:8px; background:rgba(255,255,255,.18); overflow:hidden;}
+  /* player battalion builder (Muster) — two facing columns: pool → battalion.
+     Panel fits the viewport (like the other tall screens); the two columns absorb
+     the overflow so the March Out / Back bar is always reachable, any window height. */
+  #buildBattalionScr .panel{width:min(1040px,97vw); max-height:94vh; padding:16px 24px; display:flex; flex-direction:column;}
+  #pbWrap{display:flex; gap:14px; align-items:stretch; margin:10px 0; flex:1 1 auto; min-height:0;}
+  #pbPoolPane, #pbBattalionPane{flex:1 1 0; display:flex; flex-direction:column; min-height:0; border:1px solid var(--brass-dark); border-radius:8px; background:rgba(255,255,255,.18); overflow:hidden;}
   #pbPoolPane h4, #pbBattalionPane h4{margin:0; padding:7px 10px; font-variant:small-caps; letter-spacing:.5px; text-align:center; border-bottom:1px solid var(--brass-dark); background:rgba(176,141,87,.14); color:var(--ink);}
   #pbPool, #pbList{overflow-y:auto; flex:1 1 auto;}
   .pbpool-row, .pbli{display:flex; align-items:center; gap:8px; padding:6px 10px; border-bottom:1px solid rgba(139,111,71,.22); font-size:13.5px;}
