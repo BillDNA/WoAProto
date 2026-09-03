@@ -30,11 +30,13 @@ function syncRostersOverlay(){
   var sp = $('rostersBody').querySelector('.spent'); if (sp) sp.onclick = showCards;
 }
 
-function startLocal(mode, mapsOverride){
+function startLocal(mode, mapsOverride, battalionsOverride){
   var pool = mapsOverride || getActiveMaps();
   if (!pool || !pool.length){ toast('No maps are in play! Enable some in Maps &amp; Map Editor.', 3500); return; }
   APP.mode = mode;
-  var battle = E.newBattle({ maps: pool });
+  // battalionsOverride {red,blue} seats asymmetric battalions (the player builder);
+  // absent = both sides share the active battalion (the symmetric default).
+  var battle = E.newBattle(battalionsOverride ? { maps: pool, battalions: battalionsOverride } : { maps: pool });
   try { APP.st = E.newSkirmish(battle); }
   catch(e){ APP.mode = null; toast('A map in the pool cannot be played: '+e.message+'<br><span class="small">Untick it in Maps &amp; Map Editor.</span>', 5000); return; }
   APP.ui = { sel:null, stage:null, busy:false, handoffPending: mode==='hotseat' };

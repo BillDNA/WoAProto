@@ -85,7 +85,8 @@
     <h2 style="font-variant:small-caps;text-align:center;">The Campaign</h2>
     <p class="small" style="text-align:center;">A campaign is a run of battles with screens between them. The campaign map, rewards, and run summary are reserved here — the run system that fills them arrives in a later build. For now, march into the next battle.</p>
     <div class="ovr-btns" style="justify-content:center;">
-      <button id="btnNextBattle" class="btn-primary">Next Battle</button>
+      <button id="btnMuster" class="btn-primary">Muster Battalion</button>
+      <button id="btnNextBattle" class="ghost btn-ghost-dark" title="Quick skirmish — the active battalion fights on both sides">Quick battle</button>
     </div>
     <div class="rule"></div>
     <p class="small" style="text-align:center;">Reserved run-flow homes:
@@ -94,6 +95,33 @@
       <button id="btnPeekSummary" class="linklike">Run summary</button>
     </p>
     <div class="ovr-btns"><button id="btnCampaignBack" class="ghost btn-ghost-dark">Back</button></div>
+  </div>
+</div>
+
+<!-- ============ MUSTER — player battalion builder ============
+     Assemble a battalion from the shared card pool under the army-points cap,
+     then march out. Assembly only; authoring a card's steps is the dev editor. -->
+<div id="buildBattalionScr" class="screen">
+  <div class="panel parchment">
+    <h2 style="font-variant:small-caps;text-align:center;">Muster Your Battalion</h2>
+    <p class="small" style="text-align:center;">Draft cards from the shared pool into your battalion. A legal battalion is <b>16&ndash;19 cards</b> with exactly one <b>&#9733; starting</b> card, kept under the army-points cap. Your army marches against a seated enemy battalion.</p>
+    <div id="pbWrap">
+      <div id="pbPoolPane">
+        <h4>Card Pool</h4>
+        <div id="pbPool"></div>
+      </div>
+      <div id="pbBattalionPane">
+        <h4>Your Battalion</h4>
+        <div id="pbList"></div>
+        <div id="pbFoot"></div>
+      </div>
+    </div>
+    <div id="pbWarn" class="warn" style="text-align:left;"></div>
+    <div id="pbOpponent" class="small" style="text-align:center;"></div>
+    <div class="ovr-btns">
+      <button id="pbMarch" class="btn-primary">March Out</button>
+      <button id="pbBack" class="ghost btn-ghost-dark">Back</button>
+    </div>
   </div>
 </div>
 
@@ -220,7 +248,7 @@
 <div id="battalionScr" class="screen">
   <div class="panel parchment">
     <h2 style="font-variant:small-caps;text-align:center;">Quartermaster's Ledger &mdash; Battalion Editor</h2>
-    <p class="small" style="text-align:center;">Cards live in a shared pool (<code>content/cards/*.js</code>); a battalion (<code>content/battalions/*.js</code>) references them by id and sets each <b>count</b>. Assemble one here: <b>+ From pool</b> pulls an existing card, <b>Add Card</b> authors a fresh one. 16&ndash;17 copies per battalion, exactly one <b>starting</b> card (guaranteed in the opening hand; count 1). <b>Five battalion slots</b> live in this browser &mdash; pick one to edit, name it, and mark the &#9733; one you want the game to use. Tick a card off to bench it. Pick a card on the left to edit it on the right; build its steps with the dropdowns. Card art is looked up by id (<code>art/&lt;id&gt;.jpg</code>) &mdash; a new id simply renders as a clean text card.</p>
+    <p class="small" style="text-align:center;">Cards live in a shared pool (<code>content/cards/*.js</code>); a battalion (<code>content/battalions/*.js</code>) references them by id and sets each <b>count</b>. Assemble one here: <b>+ From pool</b> pulls an existing card, <b>Add Card</b> authors a fresh one. 16&ndash;19 copies per battalion, exactly one <b>starting</b> card (guaranteed in the opening hand; count 1). <b>Five battalion slots</b> live in this browser &mdash; pick one to edit, name it, and mark the &#9733; one you want the game to use. Tick a card off to bench it. Pick a card on the left to edit it on the right; build its steps with the dropdowns. Card art is looked up by id (<code>art/&lt;id&gt;.jpg</code>) &mdash; a new id simply renders as a clean text card.</p>
     <p class="small" id="battalionHdr" style="text-align:center;font-weight:bold;"></p>
     <div id="dkSlots" title="Five battalion slots — pick one to edit; the ★ battalion is the one the game uses"></div>
     <div id="dkWrap">
@@ -414,6 +442,7 @@ try {
 <script src="ui/maps-screen.js"></script>
 <script src="ui/map-editor.js"></script>
 <script src="ui/battalion-editor.js"></script>
+<script src="ui/build-battalion.js"></script>
 <script src="ui/chart-primitives.js"></script>
 <script src="ui/pane-overview.js"></script>
 <script src="ui/pane-maps.js"></script>
