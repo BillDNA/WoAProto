@@ -50,3 +50,37 @@ test('--parallel worker slim-state -> parent -> db (C1)', function () {
     try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {}
   }
 });
+
+// The balance loop grows the LLN pool by running the sweep parallel BY DEFAULT:
+// no --parallel flag must still spawn workers, and its output must stay byte-identical
+// to a forced --serial run on the same seeds — report AND db.
+test('parallel is the default; --serial matches it byte-for-byte (C1)', function () {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'woa-def-'));
+  const parDb = path.join(dir, 'par.db'), serDb = path.join(dir, 'ser.db');
+  const SKCOLS = 'version,config_digest,map,seed,first_player,winner,win_type,turns,' +
+    'fs_red,fs_blue,first_blood,lead_changes,attacks,swaps,marches,deploys,res_end_red,res_end_blue,trace';
+  function sweep(dbFile, extraArgs) {
+    // spawnSync captures stdout AND stderr — stderr carries the worker banner, stdout the report.
+    const r = cp.spawnSync(process.execPath,
+      ['dev/balance-report.js', '--stdout', '--once', '--mapset', 'all', '2'].concat(extraArgs),
+      { cwd: ROOT, encoding: 'utf8', env: Object.assign({}, process.env, { WOA_DB_PATH: dbFile }) });
+    assert.strictEqual(r.status, 0, 'sweep exited clean (' + (r.stderr || '').trim() + ')');
+    return r;
+  }
+  function skirmishRows(dbFile) {
+    const h = db.open(dbFile);
+    try { return JSON.stringify(h.db.prepare('SELECT ' + SKCOLS + ' FROM skirmishes ORDER BY map,seed').all()); }
+    finally { db.close(h); }
+  }
+  try {
+    const par = sweep(parDb, []);           // default: parallel, no flag
+    const ser = sweep(serDb, ['--serial']); // forced in-process
+    assert.match(par.stderr, /\(\d+ workers?\)/, 'the no-flag run announced parallel workers (' + par.stderr.trim() + ')');
+    assert.doesNotMatch(ser.stderr, /workers?\)/, '--serial ran in-process, no worker banner (' + ser.stderr.trim() + ')');
+    assert.strictEqual(par.stdout, ser.stdout, 'default-parallel and --serial produced byte-identical reports');
+    assert.strictEqual(skirmishRows(parDb), skirmishRows(serDb),
+      'default-parallel and --serial wrote byte-identical per-skirmish db rows');
+  } finally {
+    try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {}
+  }
+});

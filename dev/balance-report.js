@@ -23,13 +23,16 @@
      --battalion <id>    report on content/battalions/<id>.js instead of the ACTIVE deck
      --units <id>   report with content/units/<id>.js unit stats (composition +
                atk/def/sup/worth) instead of the maps.js default
-     --parallel [k]  simulate maps in k parallel worker processes (default:
-               cores-1). The engine's board state is process-global, so
-               parallelism is process-per-map — each worker require()s its own
-               engine. Workers ship every finished skirmish back to the parent,
-               which writes ALL per-skirmish DB rows itself under the one run id
-               (single woa.db writer; report, accumulator AND DB rows
-               are identical to a serial run on the same seeds).
+     PARALLEL BY DEFAULT — maps simulate in k = cores-1 worker processes with no
+     flag, so growing the LLN pool is fast out of the box. The engine's board state
+     is process-global, so parallelism is process-per-map — each worker require()s
+     its own engine. Workers ship every finished skirmish back to the parent, which
+     writes ALL per-skirmish DB rows itself under the one run id (single woa.db
+     writer; report, accumulator AND DB rows are byte-identical to serial on the
+     same seeds).
+     --parallel [k]  set the worker count explicitly (default: cores-1)
+     --serial        force the in-process path (k=1, no workers) for the
+               golden-diff and debugging
 
    It also ranks maps by a balance-quality score and prints `BEST_MAP: <name>`
    (closest to fair + most back-and-forth) so generate-reports knows which map
@@ -102,15 +105,20 @@ async function run() {
   var flags = {};
   var mi = argv.indexOf('--mapset');
   if (mi >= 0) { flags.mapset = argv[mi + 1]; argv.splice(mi, 2); }
+  function defaultWorkers() { return Math.max(1, (require('os').availableParallelism ? require('os').availableParallelism() : 4) - 1); }
   var pi = argv.indexOf('--parallel');
   if (pi >= 0) {
-    flags.parallel = /^\d+$/.test(argv[pi + 1] || '') ? +argv.splice(pi + 1, 1)[0]
-      : Math.max(1, (require('os').availableParallelism ? require('os').availableParallelism() : 4) - 1);
+    flags.parallel = /^\d+$/.test(argv[pi + 1] || '') ? +argv.splice(pi + 1, 1)[0] : defaultWorkers();
     argv.splice(pi, 1);
   }
-  ['--stdout', '--quiet', '--fresh', '--once'].forEach(function (f) {
+  ['--stdout', '--quiet', '--fresh', '--once', '--serial'].forEach(function (f) {
     if (argv.indexOf(f) >= 0) { flags[f.slice(2)] = true; argv = argv.filter(function (a) { return a !== f; }); }
   });
+  // Parallel by default (k = cores-1): the balance loop grows the LLN pool fast with
+  // no extra flag. --serial forces the in-process path for the golden-diff / debugging.
+  // Report, accumulator AND per-skirmish DB rows stay byte-identical to serial.
+  if (flags.serial) flags.parallel = 0;
+  else if (flags.parallel == null) flags.parallel = defaultWorkers();
   var n = 60, diffs = [], filter = null;
   argv.forEach(function (a) {
     if (/^\d+$/.test(a)) n = Math.max(2, +a);
