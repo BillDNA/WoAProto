@@ -234,14 +234,19 @@ The shared army-points budget every Battalion is built under. Two Battalions at 
 _Home_: `game/engine/01-core.js:208` — `BATTALION_POINTS_CAP`
 
 **Game config**:
-The single home for a rules-facing game-setting *dial* — a tunable that is neither content nor a bare literal (points cap, the weight table, piece stocks, trench count, the map hex ceiling — anything the engine enforces). One namespace object (`Engine.CONFIG`) owns them; the flat exports alias into it; adding a dial is a one-place edit. Its UI-tier twin (`UI_CONFIG`, same pattern) owns *genuinely* UI-only guardrails — the battalion size band, which the engine never checks. The governing rule: a game value lives in either content or config, never as a dangling magic number.
+The single home for a rules-facing game-setting *dial* — a tunable that is neither content nor a bare literal (points cap, the weight table, piece stocks, trench count, the map hex ceiling — anything the engine enforces). One namespace object (`Engine.CONFIG`), made by the shared `defineConfigHome` helper, owns them; the flat exports alias into it; adding a dial is a one-place edit. Its UI-tier twin (`UI_CONFIG`, same helper) owns *genuinely* UI-only guardrails — the battalion size band, which the engine never checks. The governing rule: a game value lives in either content or config, never as a dangling magic number.
 _Avoid_: Setting (too broad — this is the dials, not app state), Constant.
-_Home_: `game/engine/00-config.js:30` — `GAME_CONFIG`
+_Home_: `game/engine/00-config.js:39` — `I.CONFIG`
 
 **Config digest**:
 A deterministic fingerprint of a config home's live dial values — order-independent, value-driven, stable across runs and platforms, changing iff a value changes. It is the slice key that tells *which dials were in force* for a batch of games (the engine digest is stamped on each skirmish row) — rules version alone can't.
 _Avoid_: Hash (say config digest; a hash is the mechanism, this is the identity it yields).
-_Home_: `game/engine/00-config.js:76` — `configDigest`
+_Home_: `game/engine/00-config.js:23` — `configDigest`
+
+**defineConfigHome**:
+The one helper every config home is made by: attaches the non-enumerable `digest` getter (via the one digest util; no freeze — digest tests mutate a home) and returns the dials. Its getter is a single shared function, so the seam catches a home not made here by identity. Both `Engine.CONFIG` and `UI_CONFIG` use it.
+_Avoid_: Config factory, home builder (say defineConfigHome).
+_Home_: `game/engine/00-config.js:32` — `defineConfigHome`
 
 **Config bug**:
 The small, read-only screen-corner overlay that stamps the live config identity (rules version + both digests) onto every screenshot, so a shot of any run carries a retrievable record of the dials behind it. Display only — editing dials stays a code/data edit.
