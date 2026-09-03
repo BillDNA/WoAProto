@@ -246,8 +246,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "dev_balance_report",
-      "community": 6,
-      "community_name": "dashboard.js",
+      "community": 1,
+      "community_name": "chart-model.js",
       "norm_label": "balance-report.js"
     },
     {
@@ -257,8 +257,8 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "dev_balance_report_take",
-      "community": 6,
-      "community_name": "dashboard.js",
+      "community": 1,
+      "community_name": "chart-model.js",
       "norm_label": "take()"
     },
     {
@@ -268,8 +268,8 @@
       "source_location": "L95",
       "_origin": "ast",
       "id": "dev_balance_report_accfilepath",
-      "community": 6,
-      "community_name": "dashboard.js",
+      "community": 1,
+      "community_name": "chart-model.js",
       "norm_label": "accfilepath()"
     },
     {
@@ -279,8 +279,8 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "dev_balance_report_readacc",
-      "community": 6,
-      "community_name": "dashboard.js",
+      "community": 1,
+      "community_name": "chart-model.js",
       "norm_label": "readacc()"
     },
     {
@@ -290,8 +290,8 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "dev_balance_report_run",
-      "community": 6,
-      "community_name": "dashboard.js",
+      "community": 1,
+      "community_name": "chart-model.js",
       "norm_label": "run()"
     },
     {
@@ -3405,6 +3405,50 @@
       "norm_label": "engine.js"
     },
     {
+      "label": "00-config.js",
+      "file_type": "code",
+      "source_file": "game/engine/00-config.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "game_engine_00_config",
+      "community": 152,
+      "community_name": "00-config.js",
+      "norm_label": "00-config.js"
+    },
+    {
+      "label": "configCanon()",
+      "file_type": "code",
+      "source_file": "game/engine/00-config.js",
+      "source_location": "L70",
+      "_origin": "ast",
+      "id": "game_engine_00_config_configcanon",
+      "community": 152,
+      "community_name": "00-config.js",
+      "norm_label": "configcanon()"
+    },
+    {
+      "label": "configDigest()",
+      "file_type": "code",
+      "source_file": "game/engine/00-config.js",
+      "source_location": "L76",
+      "_origin": "ast",
+      "id": "game_engine_00_config_configdigest",
+      "community": 152,
+      "community_name": "00-config.js",
+      "norm_label": "configdigest()"
+    },
+    {
+      "label": "ADR-0002",
+      "file_type": "concept",
+      "source_file": "game/engine/00-config.js",
+      "source_location": "L36",
+      "_origin": "ast",
+      "id": "docref_adr_0002",
+      "community": 152,
+      "community_name": "00-config.js",
+      "norm_label": "adr-0002"
+    },
+    {
       "label": "01-core.js",
       "file_type": "code",
       "source_file": "game/engine/01-core.js",
@@ -3485,7 +3529,7 @@
       "label": "battalionRegistry()",
       "file_type": "code",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L145",
+      "source_location": "L146",
       "_origin": "ast",
       "id": "game_engine_01_core_battalionregistry",
       "community": 22,
@@ -3496,7 +3540,7 @@
       "label": "resolveBattalion()",
       "file_type": "code",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L161",
+      "source_location": "L162",
       "_origin": "ast",
       "id": "game_engine_01_core_resolvebattalion",
       "community": 22,
@@ -3504,32 +3548,10 @@
       "norm_label": "resolvebattalion()"
     },
     {
-      "label": "configCanon()",
-      "file_type": "code",
-      "source_file": "game/engine/01-core.js",
-      "source_location": "L226",
-      "_origin": "ast",
-      "id": "game_engine_01_core_configcanon",
-      "community": 22,
-      "community_name": "01-core.js",
-      "norm_label": "configcanon()"
-    },
-    {
-      "label": "configDigest()",
-      "file_type": "code",
-      "source_file": "game/engine/01-core.js",
-      "source_location": "L232",
-      "_origin": "ast",
-      "id": "game_engine_01_core_configdigest",
-      "community": 22,
-      "community_name": "01-core.js",
-      "norm_label": "configdigest()"
-    },
-    {
       "label": "comboWeight()",
       "file_type": "code",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L241",
+      "source_location": "L186",
       "_origin": "ast",
       "id": "game_engine_01_core_comboweight",
       "community": 22,
@@ -3540,7 +3562,7 @@
       "label": "stepPoints()",
       "file_type": "code",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L242",
+      "source_location": "L187",
       "_origin": "ast",
       "id": "game_engine_01_core_steppoints",
       "community": 22,
@@ -3551,7 +3573,7 @@
       "label": "cardPoints()",
       "file_type": "code",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L254",
+      "source_location": "L199",
       "_origin": "ast",
       "id": "game_engine_01_core_cardpoints",
       "community": 22,
@@ -3562,7 +3584,7 @@
       "label": "battalionPoints()",
       "file_type": "code",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L258",
+      "source_location": "L203",
       "_origin": "ast",
       "id": "game_engine_01_core_battalionpoints",
       "community": 22,
@@ -3573,7 +3595,7 @@
       "label": "other()",
       "file_type": "code",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L266",
+      "source_location": "L211",
       "_origin": "ast",
       "id": "game_engine_01_core_other",
       "community": 22,
@@ -3584,7 +3606,7 @@
       "label": "cap()",
       "file_type": "code",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L267",
+      "source_location": "L212",
       "_origin": "ast",
       "id": "game_engine_01_core_cap",
       "community": 22,
@@ -5798,8 +5820,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "game_test_test_reports",
-      "community": 1,
-      "community_name": "chart-model.js",
+      "community": 86,
+      "community_name": "pane-maps.js",
       "norm_label": "test.reports.js"
     },
     {
@@ -5809,8 +5831,8 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "game_test_test_reports_test",
-      "community": 1,
-      "community_name": "chart-model.js",
+      "community": 86,
+      "community_name": "pane-maps.js",
       "norm_label": "{ test }"
     },
     {
@@ -5820,8 +5842,8 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "game_test_test_reports_assert",
-      "community": 1,
-      "community_name": "chart-model.js",
+      "community": 86,
+      "community_name": "pane-maps.js",
       "norm_label": "assert"
     },
     {
@@ -5831,8 +5853,8 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "game_test_test_reports_near",
-      "community": 1,
-      "community_name": "chart-model.js",
+      "community": 86,
+      "community_name": "pane-maps.js",
       "norm_label": "near()"
     },
     {
@@ -5842,8 +5864,8 @@
       "source_location": "L320",
       "_origin": "ast",
       "id": "game_test_test_reports_row",
-      "community": 1,
-      "community_name": "chart-model.js",
+      "community": 86,
+      "community_name": "pane-maps.js",
       "norm_label": "row()"
     },
     {
@@ -5853,8 +5875,8 @@
       "source_location": "L349",
       "_origin": "ast",
       "id": "game_test_test_reports_wins",
-      "community": 1,
-      "community_name": "chart-model.js",
+      "community": 86,
+      "community_name": "pane-maps.js",
       "norm_label": "wins()"
     },
     {
@@ -5864,8 +5886,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "game_test_test_reports_js_docref_adr_0003",
-      "community": 1,
-      "community_name": "chart-model.js",
+      "community": 86,
+      "community_name": "pane-maps.js",
       "norm_label": "adr-0003"
     },
     {
@@ -8691,8 +8713,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "game_ui_pane_overview",
-      "community": 1,
-      "community_name": "chart-model.js",
+      "community": 86,
+      "community_name": "pane-maps.js",
       "norm_label": "pane-overview.js"
     },
     {
@@ -8702,8 +8724,8 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "game_ui_pane_overview_ovverdictbanner",
-      "community": 1,
-      "community_name": "chart-model.js",
+      "community": 86,
+      "community_name": "pane-maps.js",
       "norm_label": "ovverdictbanner()"
     },
     {
@@ -8713,8 +8735,8 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "game_ui_pane_overview_ovmapdumbbells",
-      "community": 1,
-      "community_name": "chart-model.js",
+      "community": 86,
+      "community_name": "pane-maps.js",
       "norm_label": "ovmapdumbbells()"
     },
     {
@@ -8724,8 +8746,8 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "game_ui_pane_overview_ovpacingminis",
-      "community": 1,
-      "community_name": "chart-model.js",
+      "community": 86,
+      "community_name": "pane-maps.js",
       "norm_label": "ovpacingminis()"
     },
     {
@@ -8735,8 +8757,8 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "game_ui_pane_overview_ovrenderbody",
-      "community": 1,
-      "community_name": "chart-model.js",
+      "community": 86,
+      "community_name": "pane-maps.js",
       "norm_label": "ovrenderbody()"
     },
     {
@@ -8746,8 +8768,8 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "game_ui_pane_overview_renderoverview",
-      "community": 1,
-      "community_name": "chart-model.js",
+      "community": 86,
+      "community_name": "pane-maps.js",
       "norm_label": "renderoverview()"
     },
     {
@@ -9388,8 +9410,8 @@
       "contributor": null,
       "community": 81,
       "norm_label": "balance-80 normal-ai sweep output",
-      "id": "dev_balance_80_balance_sweep",
-      "community_name": "balance-80 normal-AI sweep output"
+      "community_name": "balance-80 normal-AI sweep output",
+      "id": "dev_balance_80_balance_sweep"
     },
     {
       "label": "matchup-16 skill-premium report",
@@ -9402,8 +9424,8 @@
       "contributor": null,
       "community": 82,
       "norm_label": "matchup-16 skill-premium report",
-      "id": "dev_matchup_16_skill_premium",
-      "community_name": "matchup-16 skill-premium report"
+      "community_name": "matchup-16 skill-premium report",
+      "id": "dev_matchup_16_skill_premium"
     },
     {
       "label": "Domain docs consumption guide",
@@ -9416,8 +9438,8 @@
       "contributor": null,
       "community": 84,
       "norm_label": "domain docs consumption guide",
-      "id": "docs_agents_domain_domain_docs",
-      "community_name": "Domain docs consumption guide"
+      "community_name": "Domain docs consumption guide",
+      "id": "docs_agents_domain_domain_docs"
     },
     {
       "label": "GitHub issue tracker conventions",
@@ -9430,8 +9452,8 @@
       "contributor": null,
       "community": 55,
       "norm_label": "github issue tracker conventions",
-      "id": "docs_agents_issue_tracker_github_issue_tracker",
-      "community_name": "GitHub issue tracker conventions"
+      "community_name": "GitHub issue tracker conventions",
+      "id": "docs_agents_issue_tracker_github_issue_tracker"
     },
     {
       "label": "Triage labels mapping",
@@ -9444,8 +9466,8 @@
       "contributor": null,
       "community": 55,
       "norm_label": "triage labels mapping",
-      "id": "docs_agents_triage_labels_triage_labels",
-      "community_name": "GitHub issue tracker conventions"
+      "community_name": "GitHub issue tracker conventions",
+      "id": "docs_agents_triage_labels_triage_labels"
     },
     {
       "label": "Rubric rubric (meta)",
@@ -9458,8 +9480,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "rubric rubric (meta)",
-      "id": "docs_rubrics_rubric_rubric_rubric_rubric",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_rubrics_rubric_rubric_rubric_rubric"
     },
     {
       "label": "Root index.html redirect",
@@ -9472,8 +9494,8 @@
       "contributor": null,
       "community": 125,
       "norm_label": "root index.html redirect",
-      "id": "index_root_index_html",
-      "community_name": "Root index.html redirect"
+      "community_name": "Root index.html redirect",
+      "id": "index_root_index_html"
     },
     {
       "label": "Hex adjacency clarification diagram (hexes A, B, C sharing edges)",
@@ -9486,8 +9508,8 @@
       "contributor": null,
       "community": 44,
       "norm_label": "hex adjacency clarification diagram (hexes a, b, c sharing edges)",
-      "id": "docs_hexclarificationdiagram_hex_adjacency_diagram",
-      "community_name": "Hex adjacency clarification diagram (hexes A, B, C sharing edges)"
+      "community_name": "Hex adjacency clarification diagram (hexes A, B, C sharing edges)",
+      "id": "docs_hexclarificationdiagram_hex_adjacency_diagram"
     },
     {
       "label": "Hex A (top hex)",
@@ -9500,8 +9522,8 @@
       "contributor": null,
       "community": 44,
       "norm_label": "hex a (top hex)",
-      "id": "docs_hexclarificationdiagram_hex_a",
-      "community_name": "Hex adjacency clarification diagram (hexes A, B, C sharing edges)"
+      "community_name": "Hex adjacency clarification diagram (hexes A, B, C sharing edges)",
+      "id": "docs_hexclarificationdiagram_hex_a"
     },
     {
       "label": "Hex B (lower-left hex)",
@@ -9514,8 +9536,8 @@
       "contributor": null,
       "community": 44,
       "norm_label": "hex b (lower-left hex)",
-      "id": "docs_hexclarificationdiagram_hex_b",
-      "community_name": "Hex adjacency clarification diagram (hexes A, B, C sharing edges)"
+      "community_name": "Hex adjacency clarification diagram (hexes A, B, C sharing edges)",
+      "id": "docs_hexclarificationdiagram_hex_b"
     },
     {
       "label": "Hex C (lower-right hex)",
@@ -9528,8 +9550,8 @@
       "contributor": null,
       "community": 44,
       "norm_label": "hex c (lower-right hex)",
-      "id": "docs_hexclarificationdiagram_hex_c",
-      "community_name": "Hex adjacency clarification diagram (hexes A, B, C sharing edges)"
+      "community_name": "Hex adjacency clarification diagram (hexes A, B, C sharing edges)",
+      "id": "docs_hexclarificationdiagram_hex_c"
     },
     {
       "label": "Hex adjacency / shared-edge clarification",
@@ -9542,8 +9564,8 @@
       "contributor": null,
       "community": 44,
       "norm_label": "hex adjacency / shared-edge clarification",
-      "id": "docs_hexclarificationdiagram_hex_adjacency",
-      "community_name": "Hex adjacency clarification diagram (hexes A, B, C sharing edges)"
+      "community_name": "Hex adjacency clarification diagram (hexes A, B, C sharing edges)",
+      "id": "docs_hexclarificationdiagram_hex_adjacency"
     },
     {
       "label": "Airdrop card art: soldiers parachuting from an airship over a fortress, lead figure with gatling gun",
@@ -9556,8 +9578,8 @@
       "contributor": null,
       "community": 56,
       "norm_label": "airdrop card art: soldiers parachuting from an airship over a fortress, lead figure with gatling gun",
-      "id": "game_art_airdrop_airdrop_card_art",
-      "community_name": "Airdrop card"
+      "community_name": "Airdrop card",
+      "id": "game_art_airdrop_airdrop_card_art"
     },
     {
       "label": "Airdrop card",
@@ -9570,8 +9592,8 @@
       "contributor": null,
       "community": 56,
       "norm_label": "airdrop card",
-      "id": "game_art_airdrop_airdrop_card",
-      "community_name": "Airdrop card"
+      "community_name": "Airdrop card",
+      "id": "game_art_airdrop_airdrop_card"
     },
     {
       "label": "Attack +1 card art: officer with spyglass and saber leading a charging column of soldiers past a fortress, airship overhead",
@@ -9584,8 +9606,8 @@
       "contributor": null,
       "community": 57,
       "norm_label": "attack +1 card art: officer with spyglass and saber leading a charging column of soldiers past a fortress, airship overhead",
-      "id": "game_art_attack_plus1_attack_plus1_card_art",
-      "community_name": "Attack +1 card"
+      "community_name": "Attack +1 card",
+      "id": "game_art_attack_plus1_attack_plus1_card_art"
     },
     {
       "label": "Attack +1 card",
@@ -9598,8 +9620,8 @@
       "contributor": null,
       "community": 57,
       "norm_label": "attack +1 card",
-      "id": "game_art_attack_plus1_attack_plus1_card",
-      "community_name": "Attack +1 card"
+      "community_name": "Attack +1 card",
+      "id": "game_art_attack_plus1_attack_plus1_card"
     },
     {
       "label": "Board background art: aged, stained parchment texture with a thin double-line border",
@@ -9612,8 +9634,8 @@
       "contributor": null,
       "community": 58,
       "norm_label": "board background art: aged, stained parchment texture with a thin double-line border",
-      "id": "game_art_board_board_background_art",
-      "community_name": "Board background art: aged, stained parchment texture with a thin double-line border"
+      "community_name": "Board background art: aged, stained parchment texture with a thin double-line border",
+      "id": "game_art_board_board_background_art"
     },
     {
       "label": "Game board / play surface",
@@ -9626,8 +9648,8 @@
       "contributor": null,
       "community": 58,
       "norm_label": "game board / play surface",
-      "id": "game_art_board_game_board",
-      "community_name": "Board background art: aged, stained parchment texture with a thin double-line border"
+      "community_name": "Board background art: aged, stained parchment texture with a thin double-line border",
+      "id": "game_art_board_game_board"
     },
     {
       "label": "Careful Maneuvers card art: soldiers marching cautiously along a hedgerow toward a fortified gate",
@@ -9640,8 +9662,8 @@
       "contributor": null,
       "community": 59,
       "norm_label": "careful maneuvers card art: soldiers marching cautiously along a hedgerow toward a fortified gate",
-      "id": "game_art_careful_maneuvers_image",
-      "community_name": "Careful Maneuvers (card)"
+      "community_name": "Careful Maneuvers (card)",
+      "id": "game_art_careful_maneuvers_image"
     },
     {
       "label": "Careful Maneuvers (card)",
@@ -9654,8 +9676,8 @@
       "contributor": null,
       "community": 59,
       "norm_label": "careful maneuvers (card)",
-      "id": "game_art_careful_maneuvers_card",
-      "community_name": "Careful Maneuvers (card)"
+      "community_name": "Careful Maneuvers (card)",
+      "id": "game_art_careful_maneuvers_card"
     },
     {
       "label": "Conscription card art: an officer at a recruiting table enrolling a line of civilian men in a town square",
@@ -9668,8 +9690,8 @@
       "contributor": null,
       "community": 60,
       "norm_label": "conscription card art: an officer at a recruiting table enrolling a line of civilian men in a town square",
-      "id": "game_art_conscription_image",
-      "community_name": "Conscription (card)"
+      "community_name": "Conscription (card)",
+      "id": "game_art_conscription_image"
     },
     {
       "label": "Conscription (card)",
@@ -9682,8 +9704,8 @@
       "contributor": null,
       "community": 60,
       "norm_label": "conscription (card)",
-      "id": "game_art_conscription_card",
-      "community_name": "Conscription (card)"
+      "community_name": "Conscription (card)",
+      "id": "game_art_conscription_card"
     },
     {
       "label": "Creeping Barrage card art: infantry advancing through a forest behind a wall of smoke and artillery fire",
@@ -9696,8 +9718,8 @@
       "contributor": null,
       "community": 61,
       "norm_label": "creeping barrage card art: infantry advancing through a forest behind a wall of smoke and artillery fire",
-      "id": "game_art_creeping_barrage_image",
-      "community_name": "Creeping Barrage (card)"
+      "community_name": "Creeping Barrage (card)",
+      "id": "game_art_creeping_barrage_image"
     },
     {
       "label": "Creeping Barrage (card)",
@@ -9710,8 +9732,8 @@
       "contributor": null,
       "community": 61,
       "norm_label": "creeping barrage (card)",
-      "id": "game_art_creeping_barrage_card",
-      "community_name": "Creeping Barrage (card)"
+      "community_name": "Creeping Barrage (card)",
+      "id": "game_art_creeping_barrage_card"
     },
     {
       "label": "Deploy Artillery card art: crew hauling a large steampunk cannon into position before a fortified gate",
@@ -9724,8 +9746,8 @@
       "contributor": null,
       "community": 62,
       "norm_label": "deploy artillery card art: crew hauling a large steampunk cannon into position before a fortified gate",
-      "id": "game_art_deploy_artillery_image",
-      "community_name": "Deploy Artillery (card)"
+      "community_name": "Deploy Artillery (card)",
+      "id": "game_art_deploy_artillery_image"
     },
     {
       "label": "Deploy Artillery (card)",
@@ -9738,8 +9760,8 @@
       "contributor": null,
       "community": 62,
       "norm_label": "deploy artillery (card)",
-      "id": "game_art_deploy_artillery_card",
-      "community_name": "Deploy Artillery (card)"
+      "community_name": "Deploy Artillery (card)",
+      "id": "game_art_deploy_artillery_card"
     },
     {
       "label": "Deploy Cavalry card art",
@@ -9752,8 +9774,8 @@
       "contributor": null,
       "community": 63,
       "norm_label": "deploy cavalry card art",
-      "id": "game_art_deploy_cavalry_image",
-      "community_name": "Deploy Cavalry (card)"
+      "community_name": "Deploy Cavalry (card)",
+      "id": "game_art_deploy_cavalry_image"
     },
     {
       "label": "Deploy Cavalry (card)",
@@ -9766,8 +9788,8 @@
       "contributor": null,
       "community": 63,
       "norm_label": "deploy cavalry (card)",
-      "id": "game_art_deploy_cavalry_card",
-      "community_name": "Deploy Cavalry (card)"
+      "community_name": "Deploy Cavalry (card)",
+      "id": "game_art_deploy_cavalry_card"
     },
     {
       "label": "Deploy Infantry (start) card art",
@@ -9780,8 +9802,8 @@
       "contributor": null,
       "community": 64,
       "norm_label": "deploy infantry (start) card art",
-      "id": "game_art_deploy_inf_start_image",
-      "community_name": "Deploy Infantry (card)"
+      "community_name": "Deploy Infantry (card)",
+      "id": "game_art_deploy_inf_start_image"
     },
     {
       "label": "Deploy Infantry (card)",
@@ -9794,8 +9816,8 @@
       "contributor": null,
       "community": 64,
       "norm_label": "deploy infantry (card)",
-      "id": "game_art_deploy_inf_start_card",
-      "community_name": "Deploy Infantry (card)"
+      "community_name": "Deploy Infantry (card)",
+      "id": "game_art_deploy_inf_start_card"
     },
     {
       "label": "Deploy Infantry (trench) card art",
@@ -9808,8 +9830,8 @@
       "contributor": null,
       "community": 65,
       "norm_label": "deploy infantry (trench) card art",
-      "id": "game_art_deploy_inf_trench_image",
-      "community_name": "Entrench / Deploy Infantry to trench (card)"
+      "community_name": "Entrench / Deploy Infantry to trench (card)",
+      "id": "game_art_deploy_inf_trench_image"
     },
     {
       "label": "Entrench / Deploy Infantry to trench (card)",
@@ -9822,8 +9844,8 @@
       "contributor": null,
       "community": 65,
       "norm_label": "entrench / deploy infantry to trench (card)",
-      "id": "game_art_deploy_inf_trench_card",
-      "community_name": "Entrench / Deploy Infantry to trench (card)"
+      "community_name": "Entrench / Deploy Infantry to trench (card)",
+      "id": "game_art_deploy_inf_trench_card"
     },
     {
       "label": "Forced March card art",
@@ -9836,8 +9858,8 @@
       "contributor": null,
       "community": 66,
       "norm_label": "forced march card art",
-      "id": "game_art_forced_march_image",
-      "community_name": "Forced March (card)"
+      "community_name": "Forced March (card)",
+      "id": "game_art_forced_march_image"
     },
     {
       "label": "Forced March (card)",
@@ -9850,8 +9872,8 @@
       "contributor": null,
       "community": 66,
       "norm_label": "forced march (card)",
-      "id": "game_art_forced_march_card",
-      "community_name": "Forced March (card)"
+      "community_name": "Forced March (card)",
+      "id": "game_art_forced_march_card"
     },
     {
       "label": "Mass Assault card art \u2014 massed infantry columns charging a fortress under airships",
@@ -9864,8 +9886,8 @@
       "contributor": null,
       "community": 67,
       "norm_label": "mass assault card art \u2014 massed infantry columns charging a fortress under airships",
-      "id": "game_art_mass_assault_image",
-      "community_name": "Mass Assault (card concept)"
+      "community_name": "Mass Assault (card concept)",
+      "id": "game_art_mass_assault_image"
     },
     {
       "label": "Mass Assault (card concept)",
@@ -9878,8 +9900,8 @@
       "contributor": null,
       "community": 67,
       "norm_label": "mass assault (card concept)",
-      "id": "game_art_mass_assault_card",
-      "community_name": "Mass Assault (card concept)"
+      "community_name": "Mass Assault (card concept)",
+      "id": "game_art_mass_assault_card"
     },
     {
       "label": "Naval Barrage card art \u2014 soldiers in a forest directing bombardment from an ironclad on the water",
@@ -9892,8 +9914,8 @@
       "contributor": null,
       "community": 68,
       "norm_label": "naval barrage card art \u2014 soldiers in a forest directing bombardment from an ironclad on the water",
-      "id": "game_art_naval_barrage_image",
-      "community_name": "Naval Barrage (card concept)"
+      "community_name": "Naval Barrage (card concept)",
+      "id": "game_art_naval_barrage_image"
     },
     {
       "label": "Naval Barrage (card concept)",
@@ -9906,8 +9928,8 @@
       "contributor": null,
       "community": 68,
       "norm_label": "naval barrage (card concept)",
-      "id": "game_art_naval_barrage_card",
-      "community_name": "Naval Barrage (card concept)"
+      "community_name": "Naval Barrage (card concept)",
+      "id": "game_art_naval_barrage_card"
     },
     {
       "label": "Ordered Withdraw card art \u2014 disciplined infantry column falling back in formation past a fort under airships",
@@ -9920,8 +9942,8 @@
       "contributor": null,
       "community": 69,
       "norm_label": "ordered withdraw card art \u2014 disciplined infantry column falling back in formation past a fort under airships",
-      "id": "game_art_ordered_withdraw_image",
-      "community_name": "Ordered Withdraw (card concept)"
+      "community_name": "Ordered Withdraw (card concept)",
+      "id": "game_art_ordered_withdraw_image"
     },
     {
       "label": "Ordered Withdraw (card concept)",
@@ -9934,8 +9956,8 @@
       "contributor": null,
       "community": 69,
       "norm_label": "ordered withdraw (card concept)",
-      "id": "game_art_ordered_withdraw_card",
-      "community_name": "Ordered Withdraw (card concept)"
+      "community_name": "Ordered Withdraw (card concept)",
+      "id": "game_art_ordered_withdraw_card"
     },
     {
       "label": "Over the Top card art \u2014 an officer leading soldiers charging up out of a trench over open ground",
@@ -9948,8 +9970,8 @@
       "contributor": null,
       "community": 70,
       "norm_label": "over the top card art \u2014 an officer leading soldiers charging up out of a trench over open ground",
-      "id": "game_art_over_the_top_image",
-      "community_name": "Over the Top (card concept)"
+      "community_name": "Over the Top (card concept)",
+      "id": "game_art_over_the_top_image"
     },
     {
       "label": "Over the Top (card concept)",
@@ -9962,8 +9984,8 @@
       "contributor": null,
       "community": 70,
       "norm_label": "over the top (card concept)",
-      "id": "game_art_over_the_top_card",
-      "community_name": "Over the Top (card concept)"
+      "community_name": "Over the Top (card concept)",
+      "id": "game_art_over_the_top_card"
     },
     {
       "label": "Reckless Maneuvers card art \u2014 cavalry charging over a stone wall",
@@ -9976,8 +9998,8 @@
       "contributor": null,
       "community": 71,
       "norm_label": "reckless maneuvers card art \u2014 cavalry charging over a stone wall",
-      "id": "game_art_reckless_maneuvers_image",
-      "community_name": "Reckless Maneuvers (game card)"
+      "community_name": "Reckless Maneuvers (game card)",
+      "id": "game_art_reckless_maneuvers_image"
     },
     {
       "label": "Reckless Maneuvers (game card)",
@@ -9990,8 +10012,8 @@
       "contributor": null,
       "community": 71,
       "norm_label": "reckless maneuvers (game card)",
-      "id": "game_art_reckless_maneuvers_card",
-      "community_name": "Reckless Maneuvers (game card)"
+      "community_name": "Reckless Maneuvers (game card)",
+      "id": "game_art_reckless_maneuvers_card"
     },
     {
       "label": "Sappers card art \u2014 soldiers laying planks across a shelled trench line at night",
@@ -10004,8 +10026,8 @@
       "contributor": null,
       "community": 72,
       "norm_label": "sappers card art \u2014 soldiers laying planks across a shelled trench line at night",
-      "id": "game_art_sappers_image",
-      "community_name": "Sappers (game card)"
+      "community_name": "Sappers (game card)",
+      "id": "game_art_sappers_image"
     },
     {
       "label": "Sappers (game card)",
@@ -10018,8 +10040,8 @@
       "contributor": null,
       "community": 72,
       "norm_label": "sappers (game card)",
-      "id": "game_art_sappers_card",
-      "community_name": "Sappers (game card)"
+      "community_name": "Sappers (game card)",
+      "id": "game_art_sappers_card"
     },
     {
       "label": "Shock Troops card art \u2014 massed infantry charging across a smoke-filled field toward a port",
@@ -10032,8 +10054,8 @@
       "contributor": null,
       "community": 73,
       "norm_label": "shock troops card art \u2014 massed infantry charging across a smoke-filled field toward a port",
-      "id": "game_art_shock_troops_image",
-      "community_name": "Shock Troops (game card)"
+      "community_name": "Shock Troops (game card)",
+      "id": "game_art_shock_troops_image"
     },
     {
       "label": "Shock Troops (game card)",
@@ -10046,8 +10068,8 @@
       "contributor": null,
       "community": 73,
       "norm_label": "shock troops (game card)",
-      "id": "game_art_shock_troops_card",
-      "community_name": "Shock Troops (game card)"
+      "community_name": "Shock Troops (game card)",
+      "id": "game_art_shock_troops_card"
     },
     {
       "label": "Storm and Hold card art \u2014 infantry storming and fighting through a hillside valley",
@@ -10060,8 +10082,8 @@
       "contributor": null,
       "community": 74,
       "norm_label": "storm and hold card art \u2014 infantry storming and fighting through a hillside valley",
-      "id": "game_art_storm_and_hold_image",
-      "community_name": "Storm and Hold (game card)"
+      "community_name": "Storm and Hold (game card)",
+      "id": "game_art_storm_and_hold_image"
     },
     {
       "label": "Storm and Hold (game card)",
@@ -10074,8 +10096,8 @@
       "contributor": null,
       "community": 74,
       "norm_label": "storm and hold (game card)",
-      "id": "game_art_storm_and_hold_card",
-      "community_name": "Storm and Hold (game card)"
+      "community_name": "Storm and Hold (game card)",
+      "id": "game_art_storm_and_hold_card"
     },
     {
       "label": "Table background art: weathered green tactical-map surface",
@@ -10088,8 +10110,8 @@
       "contributor": null,
       "community": 75,
       "norm_label": "table background art: weathered green tactical-map surface",
-      "id": "game_art_table_image",
-      "community_name": "Game table / play surface background"
+      "community_name": "Game table / play surface background",
+      "id": "game_art_table_image"
     },
     {
       "label": "Game table / play surface background",
@@ -10102,8 +10124,8 @@
       "contributor": null,
       "community": 75,
       "norm_label": "game table / play surface background",
-      "id": "game_art_table_concept",
-      "community_name": "Game table / play surface background"
+      "community_name": "Game table / play surface background",
+      "id": "game_art_table_concept"
     },
     {
       "label": "Title plate art: ornate engraved brass nameplate banner",
@@ -10116,8 +10138,8 @@
       "contributor": null,
       "community": 76,
       "norm_label": "title plate art: ornate engraved brass nameplate banner",
-      "id": "game_art_title_image",
-      "community_name": "Game title banner"
+      "community_name": "Game title banner",
+      "id": "game_art_title_image"
     },
     {
       "label": "Game title banner",
@@ -10130,8 +10152,8 @@
       "contributor": null,
       "community": 76,
       "norm_label": "game title banner",
-      "id": "game_art_title_concept",
-      "community_name": "Game title banner"
+      "community_name": "Game title banner",
+      "id": "game_art_title_concept"
     },
     {
       "label": "Vanguard card art: WWI-era infantry column advancing over hills",
@@ -10144,8 +10166,8 @@
       "contributor": null,
       "community": 77,
       "norm_label": "vanguard card art: wwi-era infantry column advancing over hills",
-      "id": "game_art_vanguard_image",
-      "community_name": "Vanguard card"
+      "community_name": "Vanguard card",
+      "id": "game_art_vanguard_image"
     },
     {
       "label": "Vanguard card",
@@ -10158,8 +10180,8 @@
       "contributor": null,
       "community": 77,
       "norm_label": "vanguard card",
-      "id": "game_art_vanguard_concept",
-      "community_name": "Vanguard card"
+      "community_name": "Vanguard card",
+      "id": "game_art_vanguard_concept"
     },
     {
       "label": "balance-loop skill",
@@ -10172,8 +10194,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "balance-loop skill",
-      "id": "_claude_skills_balance_loop_skill_balance_loop",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "_claude_skills_balance_loop_skill_balance_loop"
     },
     {
       "label": "create-card skill",
@@ -10186,8 +10208,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "create-card skill",
-      "id": "_claude_skills_create_card_skill_create_card",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "_claude_skills_create_card_skill_create_card"
     },
     {
       "label": "create-map skill",
@@ -10200,8 +10222,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "create-map skill",
-      "id": "_claude_skills_create_map_skill_create_map",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "_claude_skills_create_map_skill_create_map"
     },
     {
       "label": "generate-reports skill",
@@ -10214,8 +10236,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "generate-reports skill",
-      "id": "_claude_skills_generate_reports_skill_generate_reports",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "_claude_skills_generate_reports_skill_generate_reports"
     },
     {
       "label": "review-reports skill",
@@ -10228,8 +10250,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "review-reports skill",
-      "id": "_claude_skills_review_reports_skill_review_reports",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "_claude_skills_review_reports_skill_review_reports"
     },
     {
       "label": "review-with-rubric skill",
@@ -10242,8 +10264,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "review-with-rubric skill",
-      "id": "_claude_skills_review_with_rubric_skill_review_with_rubric",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "_claude_skills_review_with_rubric_skill_review_with_rubric"
     },
     {
       "label": "run-tournament skill",
@@ -10256,8 +10278,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "run-tournament skill",
-      "id": "_claude_skills_run_tournament_skill_run_tournament",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "_claude_skills_run_tournament_skill_run_tournament"
     },
     {
       "label": "WarOfAttrition project doctrine (CLAUDE.md)",
@@ -10270,8 +10292,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "warofattrition project doctrine (claude.md)",
-      "id": "claude_project_doctrine",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "claude_project_doctrine"
     },
     {
       "label": "War of Attrition domain glossary (CONTEXT.md)",
@@ -10284,8 +10306,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "war of attrition domain glossary (context.md)",
-      "id": "context_glossary",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_glossary"
     },
     {
       "label": "docs/ folder index",
@@ -10298,8 +10320,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "docs/ folder index",
-      "id": "docs_readme_index",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "docs_readme_index"
     },
     {
       "label": "War of Attrition Rule Book (v1.1)",
@@ -10312,8 +10334,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "war of attrition rule book (v1.1)",
-      "id": "docs_war_of_attrition_rule_book_rulebook",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "docs_war_of_attrition_rule_book_rulebook"
     },
     {
       "label": "ADR-0001: file:// double-click not a supported target",
@@ -10326,8 +10348,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "adr-0001: file:// double-click not a supported target",
-      "id": "docs_adr_0001_no_file_protocol_target_adr",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "docs_adr_0001_no_file_protocol_target_adr"
     },
     {
       "label": "ADR-0001: parked ideas as idea-labeled GitHub issues",
@@ -10340,8 +10362,8 @@
       "contributor": null,
       "community": 83,
       "norm_label": "adr-0001: parked ideas as idea-labeled github issues",
-      "id": "docs_adr_0001_parked_ideas_as_idea_labeled_issues_adr",
-      "community_name": "ADR-0001: parked ideas as idea-labeled GitHub issues"
+      "community_name": "ADR-0001: parked ideas as idea-labeled GitHub issues",
+      "id": "docs_adr_0001_parked_ideas_as_idea_labeled_issues_adr"
     },
     {
       "label": "ADR-0002: army-points is a descriptive yardstick",
@@ -10354,8 +10376,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "adr-0002: army-points is a descriptive yardstick",
-      "id": "docs_adr_0002_army_points_descriptive_yardstick_adr",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "docs_adr_0002_army_points_descriptive_yardstick_adr"
     },
     {
       "label": "ADR-0003: adopt node:test as the one test harness",
@@ -10368,8 +10390,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "adr-0003: adopt node:test as the one test harness",
-      "id": "docs_adr_0003_node_test_harness_adr",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "docs_adr_0003_node_test_harness_adr"
     },
     {
       "label": "Balance target bands & north stars",
@@ -10382,8 +10404,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "balance target bands & north stars",
-      "id": "docs_balance_readme_targets",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "docs_balance_readme_targets"
     },
     {
       "label": "Balance baselines \u2014 the figures to protect",
@@ -10396,8 +10418,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "balance baselines \u2014 the figures to protect",
-      "id": "docs_balance_balance_baselines_anchors",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "docs_balance_balance_baselines_anchors"
     },
     {
       "label": "Best-map ideal-range score (bands SOT)",
@@ -10410,8 +10432,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "best-map ideal-range score (bands sot)",
-      "id": "docs_balance_best_map_score_sot",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "docs_balance_best_map_score_sot"
     },
     {
       "label": "Code architecture \u2014 start here (front door)",
@@ -10424,8 +10446,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "code architecture \u2014 start here (front door)",
-      "id": "docs_code_architecture_frontdoor",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "docs_code_architecture_frontdoor"
     },
     {
       "label": "Field Manual animations authoring guide",
@@ -10438,8 +10460,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "field manual animations authoring guide",
-      "id": "docs_human_instructions_manual_animations_authoring_guide",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "docs_human_instructions_manual_animations_authoring_guide"
     },
     {
       "label": "Skirmish",
@@ -10452,8 +10474,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "skirmish",
-      "id": "context_skirmish",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_skirmish"
     },
     {
       "label": "Battle",
@@ -10466,8 +10488,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "battle",
-      "id": "context_battle",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_battle"
     },
     {
       "label": "Campaign",
@@ -10480,8 +10502,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "campaign",
-      "id": "context_campaign",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_campaign"
     },
     {
       "label": "First mover",
@@ -10494,8 +10516,8 @@
       "contributor": null,
       "community": 78,
       "norm_label": "first mover",
-      "id": "context_first_mover",
-      "community_name": "First mover"
+      "community_name": "First mover",
+      "id": "context_first_mover"
     },
     {
       "label": "Map",
@@ -10508,8 +10530,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "map",
-      "id": "context_map",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_map"
     },
     {
       "label": "Mapset",
@@ -10522,8 +10544,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "mapset",
-      "id": "context_mapset",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_mapset"
     },
     {
       "label": "Control (deploy reach)",
@@ -10536,8 +10558,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "control (deploy reach)",
-      "id": "context_control",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_control"
     },
     {
       "label": "Terrain (Mountain/Forest/River)",
@@ -10550,8 +10572,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "terrain (mountain/forest/river)",
-      "id": "context_terrain",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_terrain"
     },
     {
       "label": "Unit (Infantry/Cavalry/Artillery)",
@@ -10564,8 +10586,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "unit (infantry/cavalry/artillery)",
-      "id": "context_unit",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_unit"
     },
     {
       "label": "HQ (Headquarters)",
@@ -10578,8 +10600,8 @@
       "contributor": null,
       "community": 79,
       "norm_label": "hq (headquarters)",
-      "id": "context_hq",
-      "community_name": "HQ (Headquarters)"
+      "community_name": "HQ (Headquarters)",
+      "id": "context_hq"
     },
     {
       "label": "Trench",
@@ -10592,8 +10614,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "trench",
-      "id": "context_trench",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_trench"
     },
     {
       "label": "Reserve",
@@ -10606,8 +10628,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "reserve",
-      "id": "context_reserve",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_reserve"
     },
     {
       "label": "Deploy / Build",
@@ -10620,8 +10642,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "deploy / build",
-      "id": "context_deploy",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_deploy"
     },
     {
       "label": "Attack",
@@ -10634,8 +10656,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "attack",
-      "id": "context_attack",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_attack"
     },
     {
       "label": "Support",
@@ -10648,8 +10670,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "support",
-      "id": "context_support",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_support"
     },
     {
       "label": "Reposition (Move/Swap)",
@@ -10662,8 +10684,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "reposition (move/swap)",
-      "id": "context_reposition",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_reposition"
     },
     {
       "label": "Swap",
@@ -10676,8 +10698,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "swap",
-      "id": "context_swap",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_swap"
     },
     {
       "label": "Card (one-shot order)",
@@ -10690,8 +10712,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "card (one-shot order)",
-      "id": "context_card",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_card"
     },
     {
       "label": "Deck",
@@ -10704,8 +10726,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "deck",
-      "id": "context_deck",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_deck"
     },
     {
       "label": "HQ capture (skirmish ending)",
@@ -10718,8 +10740,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "hq capture (skirmish ending)",
-      "id": "context_hq_capture",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_hq_capture"
     },
     {
       "label": "Attrition (skirmish ending)",
@@ -10732,8 +10754,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "attrition (skirmish ending)",
-      "id": "context_attrition",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_attrition"
     },
     {
       "label": "Field score",
@@ -10746,8 +10768,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "field score",
-      "id": "context_field_score",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_field_score"
     },
     {
       "label": "Balance loop (concept)",
@@ -10760,8 +10782,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "balance loop (concept)",
-      "id": "context_balance_loop",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_balance_loop"
     },
     {
       "label": "Rules era (RULES_VERSION)",
@@ -10774,8 +10796,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "rules era (rules_version)",
-      "id": "context_rules_era",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_rules_era"
     },
     {
       "label": "Drag (trailing kill-less turns)",
@@ -10788,8 +10810,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "drag (trailing kill-less turns)",
-      "id": "context_drag",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_drag"
     },
     {
       "label": "Swings (lead changes)",
@@ -10802,8 +10824,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "swings (lead changes)",
-      "id": "context_swings",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_swings"
     },
     {
       "label": "No-op (dead turn)",
@@ -10816,8 +10838,8 @@
       "contributor": null,
       "community": 2,
       "norm_label": "no-op (dead turn)",
-      "id": "context_noop",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_noop"
     },
     {
       "label": "Skirmish fact",
@@ -10830,8 +10852,8 @@
       "contributor": null,
       "community": 80,
       "norm_label": "skirmish fact",
-      "id": "context_skirmish_fact",
-      "community_name": "Skirmish fact"
+      "community_name": "Skirmish fact",
+      "id": "context_skirmish_fact"
     },
     {
       "label": "Army-points",
@@ -10845,8 +10867,8 @@
       "rationale": "A descriptive capability yardstick decks are built under, not a win-rate prediction; measured balance always overrules it (ADR-0002). Computed additively from a card's steps, never stored per card.",
       "community": 2,
       "norm_label": "army-points",
-      "id": "context_army_points",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_army_points"
     },
     {
       "label": "Points cap (deck budget)",
@@ -10860,8 +10882,8 @@
       "rationale": "A shared army-points budget lets two asymmetric decks be 'matched' in capability so an asymmetric skirmish stays fair.",
       "community": 2,
       "norm_label": "points cap (deck budget)",
-      "id": "context_points_cap",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_points_cap"
     },
     {
       "label": "Tolerance temperature (strict/explore/hot)",
@@ -10875,8 +10897,8 @@
       "rationale": "How far a measured metric may sit outside its band before a result is accepted (a verdict on outputs). Distinct from exploration temperature.",
       "community": 2,
       "norm_label": "tolerance temperature (strict/explore/hot)",
-      "id": "context_tolerance_temperature",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_tolerance_temperature"
     },
     {
       "label": "Exploration temperature",
@@ -10890,8 +10912,8 @@
       "rationale": "How large a step content iteration takes through design space, realized chiefly through the points cap. An input to the search; distinct from tolerance temperature.",
       "community": 2,
       "norm_label": "exploration temperature",
-      "id": "context_exploration_temperature",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_exploration_temperature"
     },
     {
       "label": "Mispricing residual",
@@ -10905,8 +10927,8 @@
       "rationale": "Gap between a card's measured win-contribution and its army-points cost; the anti-slop signal. Advisory only because of the Timing blind spot.",
       "community": 2,
       "norm_label": "mispricing residual",
-      "id": "context_mispricing_residual",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_mispricing_residual"
     },
     {
       "label": "Timing blind spot",
@@ -10920,8 +10942,8 @@
       "rationale": "The balance scorer cannot value a card whose worth is in WHEN it is held/played; such a card can read mispriced without being so.",
       "community": 2,
       "norm_label": "timing blind spot",
-      "id": "context_timing_blind_spot",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_timing_blind_spot"
     },
     {
       "label": "AI personality",
@@ -10935,8 +10957,8 @@
       "rationale": "A named heuristic weight-set giving the bot a character/playstyle rather than maximal strength. Distinct from a Commander trait.",
       "community": 2,
       "norm_label": "ai personality",
-      "id": "context_ai_personality",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_ai_personality"
     },
     {
       "label": "Commander trait",
@@ -10950,8 +10972,8 @@
       "rationale": "A run-layer ability that bends the rules for a side; belongs to the not-yet-in-code Campaign layer. A rule-bender, not a playstyle.",
       "community": 2,
       "norm_label": "commander trait",
-      "id": "context_commander_trait",
-      "community_name": "War of Attrition Rule Book (v1.1)"
+      "community_name": "War of Attrition Rule Book (v1.1)",
+      "id": "context_commander_trait"
     },
     {
       "label": "Standard runs runbook",
@@ -10964,8 +10986,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "standard runs runbook",
-      "id": "docs_human_instructions_standard_runs_runbook_standard_runs",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_human_instructions_standard_runs_runbook_standard_runs"
     },
     {
       "label": "Apples-to-apples determinism",
@@ -10978,8 +11000,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "apples-to-apples determinism",
-      "id": "docs_human_instructions_standard_runs_runbook_apples_to_apples",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_human_instructions_standard_runs_runbook_apples_to_apples"
     },
     {
       "label": "AI heuristic model",
@@ -10992,8 +11014,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "ai heuristic model",
-      "id": "docs_reference_ai_heuristic_model_ai_heuristic_model",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_ai_heuristic_model_ai_heuristic_model"
     },
     {
       "label": "AI_WEIGHTS",
@@ -11006,8 +11028,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "ai_weights",
-      "id": "docs_reference_ai_heuristic_model_ai_weights",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_ai_heuristic_model_ai_weights"
     },
     {
       "label": "AI_PRESETS (easy/normal/hard)",
@@ -11020,8 +11042,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "ai_presets (easy/normal/hard)",
-      "id": "docs_reference_ai_heuristic_model_ai_presets",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_ai_heuristic_model_ai_presets"
     },
     {
       "label": "evalState board scoring",
@@ -11034,8 +11056,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "evalstate board scoring",
-      "id": "docs_reference_ai_heuristic_model_evalstate",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_ai_heuristic_model_evalstate"
     },
     {
       "label": "AI personalities (brawler/turtle/hawk/tuned)",
@@ -11048,8 +11070,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "ai personalities (brawler/turtle/hawk/tuned)",
-      "id": "docs_reference_ai_heuristic_model_personalities",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_ai_heuristic_model_personalities"
     },
     {
       "label": "CARD_KEEP burn priority",
@@ -11062,8 +11084,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "card_keep burn priority",
-      "id": "docs_reference_ai_heuristic_model_card_keep",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_ai_heuristic_model_card_keep"
     },
     {
       "label": "Anti-degeneracy guards (noopPenalty/antiShuffle/attrWin)",
@@ -11076,8 +11098,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "anti-degeneracy guards (nooppenalty/antishuffle/attrwin)",
-      "id": "docs_reference_ai_heuristic_model_anti_degeneracy",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_ai_heuristic_model_anti_degeneracy"
     },
     {
       "label": "Card editing cheat sheet",
@@ -11090,8 +11112,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "card editing cheat sheet",
-      "id": "docs_reference_card_cheatsheet_card_cheatsheet",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_card_cheatsheet_card_cheatsheet"
     },
     {
       "label": "Card step types (deploy/trench/attack/reposition/barrage)",
@@ -11104,8 +11126,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "card step types (deploy/trench/attack/reposition/barrage)",
-      "id": "docs_reference_card_cheatsheet_step_types",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_card_cheatsheet_step_types"
     },
     {
       "label": "Flexible-orders house rule",
@@ -11118,8 +11140,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "flexible-orders house rule",
-      "id": "docs_reference_card_cheatsheet_house_rule",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_card_cheatsheet_house_rule"
     },
     {
       "label": "Comment & doc style guide",
@@ -11132,8 +11154,8 @@
       "contributor": null,
       "community": 51,
       "norm_label": "comment & doc style guide",
-      "id": "docs_reference_code_style_code_style",
-      "community_name": "Comment & doc style guide"
+      "community_name": "Comment & doc style guide",
+      "id": "docs_reference_code_style_code_style"
     },
     {
       "label": "No war stories rule",
@@ -11146,8 +11168,8 @@
       "contributor": null,
       "community": 51,
       "norm_label": "no war stories rule",
-      "id": "docs_reference_code_style_no_war_stories",
-      "community_name": "Comment & doc style guide"
+      "community_name": "Comment & doc style guide",
+      "id": "docs_reference_code_style_no_war_stories"
     },
     {
       "label": "Progressive disclosure in docs",
@@ -11160,8 +11182,8 @@
       "contributor": null,
       "community": 51,
       "norm_label": "progressive disclosure in docs",
-      "id": "docs_reference_code_style_progressive_disclosure",
-      "community_name": "Comment & doc style guide"
+      "community_name": "Comment & doc style guide",
+      "id": "docs_reference_code_style_progressive_disclosure"
     },
     {
       "label": "UI component primitive set",
@@ -11174,8 +11196,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "ui component primitive set",
-      "id": "docs_reference_context_ui_components_ui_components",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_context_ui_components_ui_components"
     },
     {
       "label": "One primitive per fact contract",
@@ -11188,8 +11210,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "one primitive per fact contract",
-      "id": "docs_reference_context_ui_components_one_primitive_per_fact",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_context_ui_components_one_primitive_per_fact"
     },
     {
       "label": "Engine model (rules kernel)",
@@ -11202,8 +11224,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "engine model (rules kernel)",
-      "id": "docs_reference_engine_model_engine_model",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_engine_model_engine_model"
     },
     {
       "label": "Combat resolution (attacker/defender/support)",
@@ -11216,8 +11238,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "combat resolution (attacker/defender/support)",
-      "id": "docs_reference_engine_model_combat",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_engine_model_combat"
     },
     {
       "label": "Trenches (attacker-support denial)",
@@ -11230,8 +11252,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "trenches (attacker-support denial)",
-      "id": "docs_reference_engine_model_trenches",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_engine_model_trenches"
     },
     {
       "label": "Directional hex-owned terrain",
@@ -11244,8 +11266,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "directional hex-owned terrain",
-      "id": "docs_reference_engine_model_terrain",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_engine_model_terrain"
     },
     {
       "label": "Victory conditions (HQ capture / attrition)",
@@ -11258,8 +11280,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "victory conditions (hq capture / attrition)",
-      "id": "docs_reference_engine_model_victory",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_engine_model_victory"
     },
     {
       "label": "Play metrics (playLog / seen / stats)",
@@ -11272,8 +11294,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "play metrics (playlog / seen / stats)",
-      "id": "docs_reference_engine_model_play_metrics",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_engine_model_play_metrics"
     },
     {
       "label": "Golden-diff oracle (determinism)",
@@ -11286,8 +11308,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "golden-diff oracle (determinism)",
-      "id": "docs_reference_engine_model_golden_diff",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_engine_model_golden_diff"
     },
     {
       "label": "Report model (reporting subsystem)",
@@ -11300,8 +11322,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "report model (reporting subsystem)",
-      "id": "docs_reference_report_model_report_model",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_report_model_report_model"
     },
     {
       "label": "Trace envelope data contract",
@@ -11314,8 +11336,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "trace envelope data contract",
-      "id": "docs_reference_report_model_trace_envelope",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_report_model_trace_envelope"
     },
     {
       "label": "Metric bands (BANDS) & balanceScore",
@@ -11328,8 +11350,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "metric bands (bands) & balancescore",
-      "id": "docs_reference_report_model_bands",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_report_model_bands"
     },
     {
       "label": "foldSkirmishes (DB rows to aggregate)",
@@ -11342,8 +11364,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "foldskirmishes (db rows to aggregate)",
-      "id": "docs_reference_report_model_fold_skirmishes",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_report_model_fold_skirmishes"
     },
     {
       "label": "hexLenses spatial reconstruction",
@@ -11356,8 +11378,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "hexlenses spatial reconstruction",
-      "id": "docs_reference_report_model_hex_lenses",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_report_model_hex_lenses"
     },
     {
       "label": "Unit lifespan pairing (FIFO, right-censored)",
@@ -11370,8 +11392,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "unit lifespan pairing (fifo, right-censored)",
-      "id": "docs_reference_report_model_units_agg",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_report_model_units_agg"
     },
     {
       "label": "Hand-off seams & real-path gates",
@@ -11384,8 +11406,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "hand-off seams & real-path gates",
-      "id": "docs_reference_testing_seams_testing_seams",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_testing_seams_testing_seams"
     },
     {
       "label": "Seam (producer/consumer boundary)",
@@ -11398,8 +11420,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "seam (producer/consumer boundary)",
-      "id": "docs_reference_testing_seams_seam",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_testing_seams_seam"
     },
     {
       "label": "Real-path gate (nothing mocked)",
@@ -11412,8 +11434,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "real-path gate (nothing mocked)",
-      "id": "docs_reference_testing_seams_real_path_gate",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_testing_seams_real_path_gate"
     },
     {
       "label": "Assert the mechanism, never the value (AC1)",
@@ -11426,8 +11448,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "assert the mechanism, never the value (ac1)",
-      "id": "docs_reference_testing_seams_mechanism_not_value",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_testing_seams_mechanism_not_value"
     },
     {
       "label": "UI invariants (browser app)",
@@ -11440,8 +11462,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "ui invariants (browser app)",
-      "id": "docs_reference_ui_invariants_ui_invariants",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_ui_invariants_ui_invariants"
     },
     {
       "label": "Whole-state JSON push/poll multiplayer",
@@ -11454,8 +11476,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "whole-state json push/poll multiplayer",
-      "id": "docs_reference_ui_invariants_whole_state_sync",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_ui_invariants_whole_state_sync"
     },
     {
       "label": "Responsive ladder (mats never scroll)",
@@ -11468,8 +11490,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "responsive ladder (mats never scroll)",
-      "id": "docs_reference_ui_invariants_responsive_ladder",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_ui_invariants_responsive_ladder"
     },
     {
       "label": "Board FX layer (pure flourish, never rules)",
@@ -11482,8 +11504,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "board fx layer (pure flourish, never rules)",
-      "id": "docs_reference_ui_invariants_board_fx",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_ui_invariants_board_fx"
     },
     {
       "label": "Game build workflow",
@@ -11496,8 +11518,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "game build workflow",
-      "id": "docs_reference_workflow_workflow",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_workflow_workflow"
     },
     {
       "label": "Server standard dev path (node game/server.js)",
@@ -11510,8 +11532,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "server standard dev path (node game/server.js)",
-      "id": "docs_reference_workflow_server_dev_path",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_workflow_server_dev_path"
     },
     {
       "label": "npm test aggregate gate",
@@ -11524,8 +11546,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "npm test aggregate gate",
-      "id": "docs_reference_workflow_npm_test",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_workflow_npm_test"
     },
     {
       "label": "Golden-diff oracle (refactor discipline)",
@@ -11538,8 +11560,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "golden-diff oracle (refactor discipline)",
-      "id": "docs_reference_workflow_golden_diff",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_reference_workflow_golden_diff"
     },
     {
       "label": "Card rubric",
@@ -11552,8 +11574,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "card rubric",
-      "id": "docs_rubrics_card_rubric_card_rubric",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_rubrics_card_rubric_card_rubric"
     },
     {
       "label": "Map rubric",
@@ -11566,8 +11588,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "map rubric",
-      "id": "docs_rubrics_map_rubric_map_rubric",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_rubrics_map_rubric_map_rubric"
     },
     {
       "label": "Personality rubric",
@@ -11580,8 +11602,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "personality rubric",
-      "id": "docs_rubrics_personality_rubric_personality_rubric",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_rubrics_personality_rubric_personality_rubric"
     },
     {
       "label": "Stronghold (recognizable character)",
@@ -11594,8 +11616,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "stronghold (recognizable character)",
-      "id": "docs_rubrics_personality_rubric_stronghold",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_rubrics_personality_rubric_stronghold"
     },
     {
       "label": "Punch-Out (readable, beatable puzzle)",
@@ -11608,8 +11630,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "punch-out (readable, beatable puzzle)",
-      "id": "docs_rubrics_personality_rubric_punch_out",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_rubrics_personality_rubric_punch_out"
     },
     {
       "label": "UI rubric",
@@ -11622,8 +11644,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "ui rubric",
-      "id": "docs_rubrics_ui_rubric_ui_rubric",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_rubrics_ui_rubric_ui_rubric"
     },
     {
       "label": "Unit rubric",
@@ -11636,8 +11658,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "unit rubric",
-      "id": "docs_rubrics_unit_rubric_unit_rubric",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "docs_rubrics_unit_rubric_unit_rubric"
     },
     {
       "label": "game/ CLAUDE.md pointer stub",
@@ -11650,8 +11672,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "game/ claude.md pointer stub",
-      "id": "game_claude_pointer",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "game_claude_pointer"
     },
     {
       "label": "War of Attrition digital edition manual",
@@ -11664,8 +11686,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "war of attrition digital edition manual",
-      "id": "game_readme_digital_edition",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "game_readme_digital_edition"
     },
     {
       "label": "Three AI generals (Green Recruit/Old Veteran/Field Marshal)",
@@ -11678,8 +11700,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "three ai generals (green recruit/old veteran/field marshal)",
-      "id": "game_readme_three_generals",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "game_readme_three_generals"
     },
     {
       "label": "Five built-in boards (Classic/Compact/Hourglass/Ridge/Spear)",
@@ -11692,8 +11714,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "five built-in boards (classic/compact/hourglass/ridge/spear)",
-      "id": "game_readme_boards",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "game_readme_boards"
     },
     {
       "label": "Balance lab (dev/balance.js + Balance Dashboard)",
@@ -11706,8 +11728,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "balance lab (dev/balance.js + balance dashboard)",
-      "id": "game_readme_balance_lab",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "game_readme_balance_lab"
     },
     {
       "label": "index.html markup + ordered script chain",
@@ -11720,8 +11742,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "index.html markup + ordered script chain",
-      "id": "game_index_index",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "game_index_index"
     },
     {
       "label": "Applied-deck bootstrap (localStorage over custom-deck.js)",
@@ -11734,8 +11756,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "applied-deck bootstrap (localstorage over custom-deck.js)",
-      "id": "game_index_deck_bootstrap",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "game_index_deck_bootstrap"
     },
     {
       "label": "logs/ playtest data (reports by version)",
@@ -11748,8 +11770,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "logs/ playtest data (reports by version)",
-      "id": "logs_readme_playtest_data",
-      "community_name": "Engine model (rules kernel)"
+      "community_name": "Engine model (rules kernel)",
+      "id": "logs_readme_playtest_data"
     }
   ],
   "links": [
@@ -15481,6 +15503,51 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "game/engine/00-config.js",
+      "source_location": "L36",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "game_engine_00_config",
+      "target": "docref_adr_0002",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "game/engine/00-config.js",
+      "source_location": "L70",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "game_engine_00_config",
+      "target": "game_engine_00_config_configcanon",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "game/engine/00-config.js",
+      "source_location": "L76",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "game_engine_00_config",
+      "target": "game_engine_00_config_configdigest",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "game/engine/00-config.js",
+      "source_location": "L77",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "game_engine_00_config_configdigest",
+      "target": "game_engine_00_config_configcanon",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "game/engine/01-core.js",
@@ -15506,7 +15573,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L258",
+      "source_location": "L203",
       "weight": 1.0,
       "_origin": "ast",
       "source": "game_engine_01_core",
@@ -15517,7 +15584,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L145",
+      "source_location": "L146",
       "weight": 1.0,
       "_origin": "ast",
       "source": "game_engine_01_core",
@@ -15528,7 +15595,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L267",
+      "source_location": "L212",
       "weight": 1.0,
       "_origin": "ast",
       "source": "game_engine_01_core",
@@ -15539,7 +15606,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L254",
+      "source_location": "L199",
       "weight": 1.0,
       "_origin": "ast",
       "source": "game_engine_01_core",
@@ -15550,33 +15617,11 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L241",
+      "source_location": "L186",
       "weight": 1.0,
       "_origin": "ast",
       "source": "game_engine_01_core",
       "target": "game_engine_01_core_comboweight",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "game/engine/01-core.js",
-      "source_location": "L226",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "game_engine_01_core",
-      "target": "game_engine_01_core_configcanon",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "game/engine/01-core.js",
-      "source_location": "L232",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "game_engine_01_core",
-      "target": "game_engine_01_core_configdigest",
       "confidence_score": 1.0
     },
     {
@@ -15605,7 +15650,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L266",
+      "source_location": "L211",
       "weight": 1.0,
       "_origin": "ast",
       "source": "game_engine_01_core",
@@ -15616,7 +15661,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L161",
+      "source_location": "L162",
       "weight": 1.0,
       "_origin": "ast",
       "source": "game_engine_01_core",
@@ -15649,7 +15694,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L242",
+      "source_location": "L187",
       "weight": 1.0,
       "_origin": "ast",
       "source": "game_engine_01_core",
@@ -15673,7 +15718,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L259",
+      "source_location": "L204",
       "weight": 1.0,
       "_origin": "ast",
       "source": "game_engine_01_core_battalionpoints",
@@ -15685,7 +15730,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L169",
+      "source_location": "L170",
       "weight": 1.0,
       "_origin": "ast",
       "source": "game_engine_01_core_resolvebattalion",
@@ -15721,7 +15766,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L169",
+      "source_location": "L170",
       "weight": 1.0,
       "_origin": "ast",
       "source": "game_engine_01_core_resolvebattalion",
@@ -15733,19 +15778,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L233",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "game_engine_01_core_configdigest",
-      "target": "game_engine_01_core_configcanon",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "game/engine/01-core.js",
-      "source_location": "L256",
+      "source_location": "L201",
       "weight": 1.0,
       "_origin": "ast",
       "source": "game_engine_01_core_cardpoints",
@@ -15757,7 +15790,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L256",
+      "source_location": "L201",
       "weight": 1.0,
       "_origin": "ast",
       "source": "game_engine_01_core_cardpoints",
@@ -15769,7 +15802,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "game/engine/01-core.js",
-      "source_location": "L260",
+      "source_location": "L205",
       "weight": 1.0,
       "_origin": "ast",
       "source": "game_engine_01_core_battalionpoints",
@@ -28635,5 +28668,5 @@
       "source_file": "docs/human-instructions/standard-runs-runbook.md"
     }
   ],
-  "built_at_commit": "d0cc3ef88aed817838f401a3495141bc2ddb6fbf"
+  "built_at_commit": "ed2510b99e6b2e6ef11e30727f4d4c62a3e17cd3"
 }

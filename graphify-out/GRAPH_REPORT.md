@@ -1,16 +1,16 @@
 # Graph Report - game-config-250  (2026-09-02)
 
 ## Corpus Check
-- 179 files · ~233,140 words
+- 180 files · ~233,425 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1012 nodes · 1486 edges · 152 communities (117 shown, 35 thin omitted)
+- 1014 nodes · 1487 edges · 153 communities (118 shown, 35 thin omitted)
 - Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 121 edges (avg confidence: 0.7)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d0cc3ef8`
+- Built from commit: `ed2510b9`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -101,6 +101,7 @@
 - build-battalion.js
 - check-deck-scope.test.js
 - Root index.html redirect
+- 00-config.js
 
 ## God Nodes (most connected - your core abstractions)
 1. `svgEl()` - 19 edges
@@ -137,15 +138,15 @@
 - **docs/reference how-the-code-works set** — docs_reference_engine_model_engine_model, docs_reference_report_model_report_model, docs_reference_ai_heuristic_model_ai_heuristic_model, docs_reference_card_cheatsheet_card_cheatsheet, docs_reference_ui_invariants_ui_invariants, docs_reference_context_ui_components_ui_components, docs_reference_testing_seams_testing_seams, docs_reference_workflow_workflow [INFERRED 0.80]
 - **Balance measurement pipeline (sweep to graded report)** — docs_human_instructions_standard_runs_runbook_standard_runs, docs_reference_report_model_report_model, game_readme_balance_lab, logs_readme_playtest_data [INFERRED 0.75]
 
-## Communities (152 total, 35 thin omitted)
+## Communities (153 total, 35 thin omitted)
 
 ### Community 0 - "Engine model (rules kernel)"
 Cohesion: 0.05
 Nodes (55): Apples-to-apples determinism, Standard runs runbook, AI heuristic model, AI_PRESETS (easy/normal/hard), AI_WEIGHTS, Anti-degeneracy guards (noopPenalty/antiShuffle/attrWin), CARD_KEEP burn priority, evalState board scoring (+47 more)
 
 ### Community 1 - "chart-model.js"
-Cohesion: 0.07
-Nodes (29): assert, E, fs, http, os, path, R, server (+21 more)
+Cohesion: 0.09
+Nodes (23): accFilePath(), readAcc(), run(), assert, E, fs, http, os (+15 more)
 
 ### Community 2 - "War of Attrition Rule Book (v1.1)"
 Cohesion: 0.06
@@ -164,8 +165,8 @@ Cohesion: 0.07
 Nodes (29): ARGS, cap(), CHOICE_SCHEMA, DIRN, E, feltNotes(), fs, HEURISTIC (+21 more)
 
 ### Community 6 - "dashboard.js"
-Cohesion: 0.10
-Nodes (27): accFilePath(), readAcc(), run(), done(), realSetTimeout(), tick(), ADR-0001, dashFillRunSelect() (+19 more)
+Cohesion: 0.11
+Nodes (24): done(), realSetTimeout(), tick(), ADR-0001, dashFillRunSelect(), dashLoadRuns(), dashPickDefaultRuns(), dashReportMarkdown() (+16 more)
 
 ### Community 7 - "board-primitives.js"
 Cohesion: 0.16
@@ -228,8 +229,8 @@ Cohesion: 0.23
 Nodes (8): cleanup(), handler(), json(), listen(), logRooms(), readBody(), saveUnderRepo(), stamp()
 
 ### Community 22 - "01-core.js"
-Cohesion: 0.19
-Nodes (14): activeMaps(), activeMapset(), battalionPoints(), battalionRegistry(), cardPoints(), comboWeight(), configCanon(), configDigest() (+6 more)
+Cohesion: 0.22
+Nodes (12): activeMaps(), activeMapset(), battalionPoints(), battalionRegistry(), cardPoints(), comboWeight(), hydrateBattalionCards(), hydrateCardRef() (+4 more)
 
 ### Community 24 - "boot.test.js"
 Cohesion: 0.24
@@ -332,8 +333,8 @@ Cohesion: 0.23
 Nodes (9): finish(), step(), applyDevMode(), devHotkey(), devMode(), goScreen(), renderSettings(), screenAllowed() (+1 more)
 
 ### Community 86 - "pane-maps.js"
-Cohesion: 0.27
-Nodes (13): mdBandBoard(), mdFsDiffTrackHtml(), mdHeaderHtml(), mdHexLabelFor(), mdHexLensSection(), mdLaneBars(), mdLensFill(), mdMapDef() (+5 more)
+Cohesion: 0.12
+Nodes (22): assert, ADR-0003, row(), { test }, mdBandBoard(), mdFsDiffTrackHtml(), mdHeaderHtml(), mdHexLabelFor() (+14 more)
 
 ### Community 87 - "build-battalion.js"
 Cohesion: 0.31
@@ -343,25 +344,29 @@ Nodes (12): openBuildBattalion(), pbAdd(), pbBump(), pbCount(), pbLoad(), pbMarc
 Cohesion: 0.38
 Nodes (5): scan(), assert, { scan }, { test }, walk()
 
+### Community 152 - "00-config.js"
+Cohesion: 0.67
+Nodes (3): ADR-0002, configCanon(), configDigest()
+
 ## Knowledge Gaps
-- **234 isolated node(s):** `fs`, `os`, `path`, `{ test }`, `assert` (+229 more)
+- **235 isolated node(s):** `fs`, `os`, `path`, `{ test }`, `assert` (+230 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **35 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `done()` connect `dashboard.js` to `02-board.js`, `report-model.js`?**
-  _High betweenness centrality (0.025) - this node is a cross-community bridge._
-- **Why does `row()` connect `chart-model.js` to `pane-maps.js`, `battalion-editor.js`?**
-  _High betweenness centrality (0.018) - this node is a cross-community bridge._
+- **Why does `done()` connect `dashboard.js` to `chart-model.js`, `02-board.js`, `report-model.js`?**
+  _High betweenness centrality (0.021) - this node is a cross-community bridge._
 - **Why does `mapReport()` connect `report-model.js` to `chart-model.js`, `dashboard.js`, `skirmish.js`?**
   _High betweenness centrality (0.017) - this node is a cross-community bridge._
+- **Why does `row()` connect `pane-maps.js` to `chart-model.js`, `battalion-editor.js`?**
+  _High betweenness centrality (0.016) - this node is a cross-community bridge._
 - **Are the 3 inferred relationships involving `Engine model (rules kernel)` (e.g. with `Anti-degeneracy guards (noopPenalty/antiShuffle/attrWin)` and `Unit rubric`) actually correct?**
   _`Engine model (rules kernel)` has 3 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `fs`, `os`, `path` to the rest of the system?**
-  _234 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _235 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Engine model (rules kernel)` be split into smaller, more focused modules?**
   _Cohesion score 0.050505050505050504 - nodes in this community are weakly interconnected._
 - **Should `chart-model.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.07152496626180836 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09247311827956989 - nodes in this community are weakly interconnected._
