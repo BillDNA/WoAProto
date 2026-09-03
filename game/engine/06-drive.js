@@ -47,13 +47,13 @@
         if (!I.inBoard.apply(null, m.blueHQ)) problems.push(m.name + ': blue HQ off board');
         if (I.key.apply(null, m.redHQ) === I.key.apply(null, m.blueHQ)) problems.push(m.name + ': HQs overlap');
         var stock = {};
-        Object.keys(I.TERRAIN_STOCK).forEach(function (k) { stock[k] = 0; });
+        Object.keys(I.CONFIG.terrainStock).forEach(function (k) { stock[k] = 0; });
         m.pieces.forEach(function (p) {
           var sk = p.t + p.edges.length;
-          if (stock[sk] === undefined) problems.push(m.name + ': piece of length ' + p.edges.length + ' has no physical counterpart (stock: ' + Object.keys(I.TERRAIN_STOCK).join(',') + ')');
+          if (stock[sk] === undefined) problems.push(m.name + ': piece of length ' + p.edges.length + ' has no physical counterpart (stock: ' + Object.keys(I.CONFIG.terrainStock).join(',') + ')');
           else stock[sk]++;
         });
-        var over = Object.keys(I.TERRAIN_STOCK).filter(function (k) { return stock[k] > I.TERRAIN_STOCK[k]; });
+        var over = Object.keys(I.CONFIG.terrainStock).filter(function (k) { return stock[k] > I.CONFIG.terrainStock[k]; });
         if (over.length) problems.push(m.name + ': exceeds terrain stock ' + JSON.stringify(stock));
       } catch (e) { problems.push(e.message); }
     });

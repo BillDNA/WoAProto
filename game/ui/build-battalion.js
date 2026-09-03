@@ -8,7 +8,7 @@
    authoring a card's steps stays in the dev Battalion Editor. Same data, one
    model — the built battalion round-trips through the shared 'woa-battalions'
    active slot, and legality / points reuse the exported engine surface
-   (battalionProblems, battalionPoints, cardPoints, BATTALION_POINTS_CAP). */
+   (battalionProblems, battalionPoints, cardPoints, CONFIG.pointsCap). */
 'use strict';
 
 var PB = { cards: null, opponent: null };
@@ -126,7 +126,7 @@ function renderBuildBattalion(){
 
   // muster readout — reuse the shared cost surface + validity (one model)
   var pts = E.battalionPoints({ cards: inCards });
-  var cap = E.BATTALION_POINTS_CAP;
+  var cap = E.CONFIG.pointsCap;
   var over = pts > cap;
   var total = pbCount();
   $('pbFoot').innerHTML = '<b>' + total + '</b> cards (target ' + UI_CONFIG.battalionBand.min + '&ndash;' + UI_CONFIG.battalionBand.max + ') &middot; ' +

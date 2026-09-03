@@ -130,7 +130,7 @@
     return st;
   }
   function copyReserves() {
-    var r = { trench: I.TRENCH_COUNT };
+    var r = { trench: I.CONFIG.trenchCount };
     Object.keys(I.UNITS).forEach(function (t) { r[t] = I.UNITS[t].count || 0; });
     return r;
   }
