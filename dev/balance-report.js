@@ -105,7 +105,7 @@ async function run() {
   var flags = {};
   var mi = argv.indexOf('--mapset');
   if (mi >= 0) { flags.mapset = argv[mi + 1]; argv.splice(mi, 2); }
-  function defaultWorkers() { return Math.max(1, (require('os').availableParallelism ? require('os').availableParallelism() : 4) - 1); }
+  function defaultWorkers() { var os = require('os'); return Math.max(1, (os.availableParallelism ? os.availableParallelism() : 4) - 1); }
   var pi = argv.indexOf('--parallel');
   if (pi >= 0) {
     flags.parallel = /^\d+$/.test(argv[pi + 1] || '') ? +argv.splice(pi + 1, 1)[0] : defaultWorkers();
@@ -190,8 +190,9 @@ async function run() {
     });
   } catch (e) { dbm = null; console.error('(db off: ' + e.message + ')'); }
 
+  var workers = flags.parallel ? Math.min(flags.parallel, maps.length) : 0; // never more workers than maps
   if (!flags.quiet) process.stderr.write('Simulating ' + n + ' skirmishes/map, ' + diffLabel + ', ' + maps.length + ' maps' +
-    (flags.parallel ? ' (' + flags.parallel + ' workers)' : '') + ' ');
+    (workers ? ' (' + workers + ' worker' + (workers === 1 ? '' : 's') + ')' : '') + ' ');
   var thisRun = {}; // name -> {shape, agg}
   function shapeOf(map) { return map.shape && map.shape.charAt(0) === '@' ? 'custom' : (map.shape || '?'); }
   if (flags.parallel) {
@@ -239,8 +240,12 @@ async function run() {
             launchNext();
           });
       };
-      for (var wk = 0; wk < Math.min(flags.parallel, maps.length); wk++) launchNext();
-    }).catch(function (e) { console.error('worker failed: ' + e.message); process.exit(1); });
+      for (var wk = 0; wk < workers; wk++) launchNext();
+    }).catch(function (e) {
+      // Parallel is the default; a spawn-blocked environment lands here — point at the escape hatch.
+      console.error('worker failed: ' + e.message + '\n(retry with --serial for the in-process path)');
+      process.exit(1);
+    });
   } else {
     maps.forEach(function (map, mi) {
       var seedBase = seedBaseFor(mi);

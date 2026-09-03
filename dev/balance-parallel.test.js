@@ -77,6 +77,8 @@ test('parallel is the default; --serial matches it byte-for-byte (C1)', function
     const ser = sweep(serDb, ['--serial']); // forced in-process
     assert.match(par.stderr, /\(\d+ workers?\)/, 'the no-flag run announced parallel workers (' + par.stderr.trim() + ')');
     assert.doesNotMatch(ser.stderr, /workers?\)/, '--serial ran in-process, no worker banner (' + ser.stderr.trim() + ')');
+    // --stdout returns before the Date-stamped filename block, so the report is pure
+    // aggregate — deterministic, hence safe to compare byte-for-byte.
     assert.strictEqual(par.stdout, ser.stdout, 'default-parallel and --serial produced byte-identical reports');
     assert.strictEqual(skirmishRows(parDb), skirmishRows(serDb),
       'default-parallel and --serial wrote byte-identical per-skirmish db rows');
