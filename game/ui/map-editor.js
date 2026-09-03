@@ -142,8 +142,8 @@ function renderEditor(){
       ED.hexes[k] = true;
       renderEditor();
     });
-    p.addEventListener('mouseenter', function(){ p.setAttribute('fill','rgba(212,175,55,.28)'); });
-    p.addEventListener('mouseleave', function(){ p.setAttribute('fill','rgba(255,255,255,.10)'); });
+    p.addEventListener('mouseenter', function(){ p.setAttribute('fill', BOARD.ghostHover); });
+    p.addEventListener('mouseleave', function(){ p.setAttribute('fill', BOARD.ghostFill); });
   });
   ['red','blue'].forEach(function(side){
     var hq = ED[side];

@@ -111,7 +111,7 @@ function mpDrawFrame(f){
     var parts = sk.split('>'), c = mpXY(parts[0]), aa = cornerAngles(+parts[1]);
     var p1 = cornerPt(c[0],c[1],aa[0],MP_S*0.85), p2 = cornerPt(c[0],c[1],aa[1],MP_S*0.85);
     svg.appendChild(svgEl('line', { x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
-      stroke:'#e8c252','stroke-width':11,'stroke-linecap':'round','class':'medge-glow' }));
+      stroke:'var(--gold-glow)','stroke-width':11,'stroke-linecap':'round','class':'medge-glow' }));
   });
   if (f.glowTrench){
     var gc = mpXY(f.glowTrench.hex);
@@ -119,7 +119,7 @@ function mpDrawFrame(f){
       var aa = cornerAngles(d);
       var p1 = cornerPt(gc[0],gc[1],aa[0],MP_S*0.74), p2 = cornerPt(gc[0],gc[1],aa[1],MP_S*0.74);
       svg.appendChild(svgEl('line', { x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
-        stroke:'#e8c252','stroke-width':10,'stroke-linecap':'round','class':'medge-glow' }));
+        stroke:'var(--gold-glow)','stroke-width':10,'stroke-linecap':'round','class':'medge-glow' }));
     });
   }
 

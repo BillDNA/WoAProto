@@ -12,11 +12,16 @@
    never rides on text — labels stay in ink; marks carry the colour. */
 'use strict';
 var CHART = {
-  surface: '#e8dcc0',                    // --parch: each chart's own solid ground
-  ink: '#3a2f1d',                        // 9.62:1 on surface
-  inkSoft: '#5a4c33',                    // 6.13:1 — axis/tick text
+  // paper + ink + hairline are the shared base — read from :root (they resolve
+  // in the SVG/inline-style DOM) so a repalette of the parchment/ink carries
+  // the charts too. The ramps + marks below stay CHART's own, validated here and
+  // deliberately independent of the faction/side colours (retuning one must
+  // never silently drag the other), even where a hex happens to coincide.
+  surface: 'var(--parch)',               // #e8dcc0 — each chart's own solid ground
+  ink: 'var(--ink)',                     // #3a2f1d — 9.62:1 on surface
+  inkSoft: 'var(--ink-soft)',            // #5a4c33 — 6.13:1 — axis/tick text
   muted: '#75643f',                      // 4.23:1 — quiet annotations (tooltip+table carry the data)
-  grid: '#d8caa2',                       // hairline gridlines, one step off surface
+  grid: 'var(--hairline)',               // #d8caa2 — hairline gridlines, one step off surface
   axis: '#b9a878',                       // baselines + the 50% crosslines
   // sequential brass→ink ramp (magnitude: Balance score, light = good/low).
   // --ordinal validation: monotone L, ΔL≥0.06, light end 2.13:1, hue spread 6°.
@@ -37,7 +42,7 @@ var CHART = {
   // silently drag the other along.
   bandT2: '#ded0ab', bandT1: '#d3c294', bandT0: '#bfa96e',
   breach: '#9e2b25', regress: '#9c5449', improve: '#97753f',
-  runADot: '#e8dcc0',                    // run-A hollow-dot fill (parchment)
+  runADot: 'var(--parch)',               // #e8dcc0 — run-A hollow-dot fill (parchment)
   improveDot: '#77582e'                  // run-B dot fill when a map/metric improved (design 1f)
 };
 // tempo lanes (deploy/attack/swap/march): the four lane colours are the SAME
@@ -147,7 +152,7 @@ function chSettleSvg(settleA, settleB, w, h){
   return chSvgOpen({ vb: '0 0 ' + w + ' ' + h, style: 'display:block;width:100%;height:auto;' }) +
     chLine(0, h, w, h, CHART.axis, 1) +
     chPolyline(chCdf(settleA, w, h), { stroke: CHART.inkSoft, sw: 1.5, dash: '4 2' }) +
-    chPolyline(chCdf(settleB, w, h), { stroke: '#77582e', sw: 2 }) + '</svg>';
+    chPolyline(chCdf(settleB, w, h), { stroke: CHART.improveDot, sw: 2 }) + '</svg>';
 }
 
 /* Greedy direct-label placement: candidates around the mark, first that fits

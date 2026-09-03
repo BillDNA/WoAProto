@@ -31,7 +31,7 @@ function unTrackRow(name, color, domain, va, vb, na, nb, fmtFn, midlineVal) {
   var posA = CHART_MODEL.unPos(domain, va), posB = CHART_MODEL.unPos(domain, vb);
   var smallA = WOA_REPORT.smallN(na, 'fleet'), smallB = WOA_REPORT.smallN(nb, 'fleet');
   var midPos = midlineVal != null ? CHART_MODEL.unPos(domain, midlineVal) : null;
-  var inner = '<div style="position:absolute;top:6px;left:0;right:0;height:2px;background:#d8caa2;"></div>' +
+  var inner = '<div style="position:absolute;top:6px;left:0;right:0;height:2px;background:' + CHART.grid + ';"></div>' +
     (midPos != null ? '<div style="position:absolute;top:0;bottom:0;left:' + midPos.toFixed(1) + '%;width:1px;background:' + CHART.axis + ';"></div>' : '') +
     (posA != null && posB != null ? '<div style="position:absolute;top:6px;height:2px;left:' + Math.min(posA, posB).toFixed(1) +
       '%;width:' + Math.abs(posB - posA).toFixed(1) + '%;background:' + color + ';opacity:.55;"></div>' : '') +
@@ -58,7 +58,7 @@ function unLifespanRow(name, color, domain, va, vb, na, nb) {
     var small = WOA_REPORT.smallN(n, 'fleet');
     var w = Math.max(1, Math.min(100, (v - domain.lo) / (domain.hi - domain.lo) * 100));
     return '<div style="position:relative;height:9px;margin-bottom:2px;' + (small ? 'opacity:.5;' : '') + '">' +
-      '<div style="position:absolute;top:0;left:0;right:0;height:9px;background:#ded0ab;border-radius:2px;"></div>' +
+      '<div style="position:absolute;top:0;left:0;right:0;height:9px;background:' + CHART.bandT2 + ';border-radius:2px;"></div>' +
       '<div style="position:absolute;top:0;left:0;height:9px;width:' + w.toFixed(1) + '%;background:' + color + ';border-radius:2px;"></div></div>';
   }
   var smallA = WOA_REPORT.smallN(na, 'fleet'), smallB = WOA_REPORT.smallN(nb, 'fleet');

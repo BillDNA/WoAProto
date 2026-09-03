@@ -139,7 +139,7 @@ function crdSimpleDumbbells(rows) {
     var av = r.a ? r.a.simple : null, bv = r.b ? r.b.simple : null;
     var regressed = av != null && bv != null && bv > av;
     var improved = av != null && bv != null && bv < av;
-    var connColor = regressed ? CHART.regress : (improved ? CHART.improve : '#d8caa2');
+    var connColor = regressed ? CHART.regress : (improved ? CHART.improve : CHART.grid);
     var bFill = regressed ? CHART.breach : (improved ? CHART.improveDot : CHART.ink);
     var inner = chDumbbell(av, bv, CHART.ink, bFill, connColor);
     var noopV = r.b ? r.b.noop : (r.a ? r.a.noop : 0);

@@ -27,133 +27,133 @@ The pure geometry + the single element factory every board primitive builds on.
 
 **hexXY**:
 Pixel centre of a hex key, at board scale `S`.
-_Home_: `game/ui/board-primitives.js:30` — `hexXY`
+_Home_: `game/ui/board-primitives.js:31` — `hexXY`
 
 **cornerAngles**:
 The two corner-angle degrees bounding a hex edge direction.
-_Home_: `game/ui/board-primitives.js:35` — `cornerAngles`
+_Home_: `game/ui/board-primitives.js:36` — `cornerAngles`
 
 **cornerPt**:
 A hex corner point, from centre + angle + radius.
-_Home_: `game/ui/board-primitives.js:39` — `cornerPt`
+_Home_: `game/ui/board-primitives.js:40` — `cornerPt`
 
 **hexPoints**:
 The six-corner `points` string for a hex polygon at a given radius.
-_Home_: `game/ui/board-primitives.js:43` — `hexPoints`
+_Home_: `game/ui/board-primitives.js:44` — `hexPoints`
 
 **svgEl**:
 The one `createElementNS` in the UI — the SVG element factory board primitives append with.
-_Home_: `game/ui/board-primitives.js:51` — `svgEl`
+_Home_: `game/ui/board-primitives.js:52` — `svgEl`
 
 **viewBoxFor**:
 The `viewBox` that frames a list of hexes.
-_Home_: `game/ui/board-primitives.js:56` — `viewBoxFor`
+_Home_: `game/ui/board-primitives.js:57` — `viewBoxFor`
 
 **bpEdgePts**:
 The two endpoints of an inset hex edge — the base line terrain, trench, and barrage all share.
-_Home_: `game/ui/board-primitives.js:69` — `bpEdgePts`
+_Home_: `game/ui/board-primitives.js:70` — `bpEdgePts`
 
 ## Board primitives
 
 **bpBeginBoard**:
 Reset a board `<svg>` to an empty draw group.
-_Home_: `game/ui/board-primitives.js:105` — `bpBeginBoard`
+_Home_: `game/ui/board-primitives.js:112` — `bpBeginBoard`
 
 **bpHexPoly**:
 A bare hex polygon (the tile fill/stroke shape).
-_Home_: `game/ui/board-primitives.js:120` — `bpHexPoly`
+_Home_: `game/ui/board-primitives.js:127` — `bpHexPoly`
 
 **bpCoordLabel**:
 The small hex-coordinate label.
-_Home_: `game/ui/board-primitives.js:125` — `bpCoordLabel`
+_Home_: `game/ui/board-primitives.js:132` — `bpCoordLabel`
 
 **bpHexTile**:
 A full board hex tile — polygon plus its coordinate label.
-_Home_: `game/ui/board-primitives.js:134` — `bpHexTile`
+_Home_: `game/ui/board-primitives.js:141` — `bpHexTile`
 
 **bpTerrainStroke**:
 The bare coloured terrain edge line (no glyph) — the editor's own paint stroke.
-_Home_: `game/ui/board-primitives.js:147` — `bpTerrainStroke`
+_Home_: `game/ui/board-primitives.js:154` — `bpTerrainStroke`
 
 **bpTerrainEdge**:
 A hex-owned terrain side drawn inset, with its terrain glyph.
-_Home_: `game/ui/board-primitives.js:162` — `bpTerrainEdge`
+_Home_: `game/ui/board-primitives.js:169` — `bpTerrainEdge`
 
 **bpTrenchLine**:
 A dug trench segment on one hex edge.
-_Home_: `game/ui/board-primitives.js:185` — `bpTrenchLine`
+_Home_: `game/ui/board-primitives.js:192` — `bpTrenchLine`
 
 **bpHQMarker**:
 The HQ mark (ring + star) at an explicit centre.
-_Home_: `game/ui/board-primitives.js:197` — `bpHQMarker`
+_Home_: `game/ui/board-primitives.js:204` — `bpHQMarker`
 
 **bpHQ**:
 The HQ mark placed on a hex key.
-_Home_: `game/ui/board-primitives.js:215` — `bpHQ`
+_Home_: `game/ui/board-primitives.js:222` — `bpHQ`
 
 **bpUnitToken**:
 A unit token (circle + chit + type glyph) at an explicit centre — shared by the live board and the manual diagram.
-_Home_: `game/ui/board-primitives.js:221` — `bpUnitToken`
+_Home_: `game/ui/board-primitives.js:228` — `bpUnitToken`
 
 **bpUnit**:
 The live-board unit — a `bpUnitToken` in its own hover group.
-_Home_: `game/ui/board-primitives.js:237` — `bpUnit`
+_Home_: `game/ui/board-primitives.js:244` — `bpUnit`
 
 **bpPieceGlyph**:
 The standalone mini piece glyph (its own `<svg>` string) — the mats twin of `bpUnitToken`.
-_Home_: `game/ui/board-primitives.js:250` — `bpPieceGlyph`
+_Home_: `game/ui/board-primitives.js:257` — `bpPieceGlyph`
 
 **bpAttackLayer**:
 The hover-only attack-math group.
-_Home_: `game/ui/board-primitives.js:261` — `bpAttackLayer`
+_Home_: `game/ui/board-primitives.js:268` — `bpAttackLayer`
 
 **bpAttackPill**:
 One attack-math pill on the hover layer.
-_Home_: `game/ui/board-primitives.js:262` — `bpAttackPill`
+_Home_: `game/ui/board-primitives.js:269` — `bpAttackPill`
 
 **bpHighlight**:
 A hex-fill highlight polygon (caller attaches the click).
-_Home_: `game/ui/board-primitives.js:275` — `bpHighlight`
+_Home_: `game/ui/board-primitives.js:282` — `bpHighlight`
 
 **bpTrenchGhost**:
 The dashed trench-orientation dig preview.
-_Home_: `game/ui/board-primitives.js:284` — `bpTrenchGhost`
+_Home_: `game/ui/board-primitives.js:291` — `bpTrenchGhost`
 
 **bpTrenchKnob**:
 The brass knob at a trench pair's shared corner.
-_Home_: `game/ui/board-primitives.js:293` — `bpTrenchKnob`
+_Home_: `game/ui/board-primitives.js:300` — `bpTrenchKnob`
 
 **bpBarrageTrench**:
 The barrage mark over a trenched edge.
-_Home_: `game/ui/board-primitives.js:301` — `bpBarrageTrench`
+_Home_: `game/ui/board-primitives.js:308` — `bpBarrageTrench`
 
 **bpBarrageForestEdge**:
 The barrage mark over a forest edge.
-_Home_: `game/ui/board-primitives.js:309` — `bpBarrageForestEdge`
+_Home_: `game/ui/board-primitives.js:316` — `bpBarrageForestEdge`
 
 **bpEdgeHitLine**:
 The invisible fat hit-line over a hex edge (editor click target).
-_Home_: `game/ui/board-primitives.js:320` — `bpEdgeHitLine`
+_Home_: `game/ui/board-primitives.js:327` — `bpEdgeHitLine`
 
 **bpGhostHex**:
 A ghost hex outline (the editor's add-hex affordance).
-_Home_: `game/ui/board-primitives.js:328` — `bpGhostHex`
+_Home_: `game/ui/board-primitives.js:335` — `bpGhostHex`
 
 **bpThumbHex**:
 A hex polygon at thumbnail scale.
-_Home_: `game/ui/board-primitives.js:343` — `bpThumbHex`
+_Home_: `game/ui/board-primitives.js:350` — `bpThumbHex`
 
 **bpThumbTerrain**:
 A terrain edge at thumbnail scale.
-_Home_: `game/ui/board-primitives.js:346` — `bpThumbTerrain`
+_Home_: `game/ui/board-primitives.js:353` — `bpThumbTerrain`
 
 **bpThumbHQ**:
 An HQ mark at thumbnail scale.
-_Home_: `game/ui/board-primitives.js:350` — `bpThumbHQ`
+_Home_: `game/ui/board-primitives.js:357` — `bpThumbHQ`
 
 **previewSVG**:
 A whole map preview thumbnail from a map def.
-_Home_: `game/ui/board-primitives.js:354` — `previewSVG`
+_Home_: `game/ui/board-primitives.js:361` — `previewSVG`
 
 ---
 
@@ -161,85 +161,85 @@ _Home_: `game/ui/board-primitives.js:354` — `previewSVG`
 
 **chEsc**:
 The chart HTML-escape (one escape lives in `uiEsc`).
-_Home_: `game/ui/chart-primitives.js:49` — `chEsc`
+_Home_: `game/ui/chart-primitives.js:54` — `chEsc`
 
 **chDivFill**:
 The divergent fill colour for a win%-minus-50 deviation.
-_Home_: `game/ui/chart-primitives.js:50` — `chDivFill`
+_Home_: `game/ui/chart-primitives.js:55` — `chDivFill`
 
 **chSvgOpen**:
 The opening `<svg>` tag for a chart frame (viewBox / size / aria).
-_Home_: `game/ui/chart-primitives.js:60` — `chSvgOpen`
+_Home_: `game/ui/chart-primitives.js:65` — `chSvgOpen`
 
 ## Chart marks
 
 **chLine**:
 A line mark.
-_Home_: `game/ui/chart-primitives.js:72` — `chLine`
+_Home_: `game/ui/chart-primitives.js:77` — `chLine`
 
 **chHatchDefs**:
 A hidden `<defs>` carrying one diagonal-hatch `<pattern>`, referenced by `url(#id)`.
-_Home_: `game/ui/chart-primitives.js:79` — `chHatchDefs`
+_Home_: `game/ui/chart-primitives.js:84` — `chHatchDefs`
 
 **chPolyline**:
 A polyline mark.
-_Home_: `game/ui/chart-primitives.js:86` — `chPolyline`
+_Home_: `game/ui/chart-primitives.js:91` — `chPolyline`
 
 **chRect**:
 A rect mark.
-_Home_: `game/ui/chart-primitives.js:95` — `chRect`
+_Home_: `game/ui/chart-primitives.js:100` — `chRect`
 
 **chCircle**:
 A circle mark.
-_Home_: `game/ui/chart-primitives.js:105` — `chCircle`
+_Home_: `game/ui/chart-primitives.js:110` — `chCircle`
 
 **chPolygon**:
 A polygon mark.
-_Home_: `game/ui/chart-primitives.js:113` — `chPolygon`
+_Home_: `game/ui/chart-primitives.js:118` — `chPolygon`
 
 **chText**:
 A text mark.
-_Home_: `game/ui/chart-primitives.js:119` — `chText`
+_Home_: `game/ui/chart-primitives.js:124` — `chText`
 
 **chSwatch**:
 An inline colour swatch span.
-_Home_: `game/ui/chart-primitives.js:126` — `chSwatch`
+_Home_: `game/ui/chart-primitives.js:131` — `chSwatch`
 
 **chTipAttrs**:
 The `data-tip` hover attributes for a mark (name + rows).
-_Home_: `game/ui/chart-primitives.js:127` — `chTipAttrs`
+_Home_: `game/ui/chart-primitives.js:132` — `chTipAttrs`
 
 **chCdf**:
 The settle-curve CDF path from a sorted series.
-_Home_: `game/ui/chart-primitives.js:136` — `chCdf`
+_Home_: `game/ui/chart-primitives.js:141` — `chCdf`
 
 **chSettleSvg**:
 The two-run settle-curve chart.
-_Home_: `game/ui/chart-primitives.js:145` — `chSettleSvg`
+_Home_: `game/ui/chart-primitives.js:150` — `chSettleSvg`
 
 **chMakePlacer**:
 The greedy non-overlapping label placer.
-_Home_: `game/ui/chart-primitives.js:157` — `chMakePlacer`
+_Home_: `game/ui/chart-primitives.js:162` — `chMakePlacer`
 
 **chBindHits**:
 The chart hover layer — binds `.ch-hit` marks to the shared tooltip.
-_Home_: `game/ui/chart-primitives.js:196` — `chBindHits`
+_Home_: `game/ui/chart-primitives.js:201` — `chBindHits`
 
 **ovBandRect**:
 One band rectangle of a band-board row.
-_Home_: `game/ui/chart-primitives.js:252` — `ovBandRect`
+_Home_: `game/ui/chart-primitives.js:257` — `ovBandRect`
 
 **chDumbbell**:
 An A→B dumbbell mark (two runs on one scale).
-_Home_: `game/ui/chart-primitives.js:264` — `chDumbbell`
+_Home_: `game/ui/chart-primitives.js:269` — `chDumbbell`
 
 **ovDot**:
 A run dot on a band-board row.
-_Home_: `game/ui/chart-primitives.js:275` — `ovDot`
+_Home_: `game/ui/chart-primitives.js:280` — `ovDot`
 
 **ovBandRowHtml**:
 A whole band-board row (bands + dots + labels), shared by the Overview and Maps panes.
-_Home_: `game/ui/chart-primitives.js:296` — `ovBandRowHtml`
+_Home_: `game/ui/chart-primitives.js:301` — `ovBandRowHtml`
 
 ---
 
