@@ -16,7 +16,7 @@ _Home_: `game/engine/04-skirmish.js:51` — `newSkirmish`
 **Battle**:
 A best-of contest across Skirmishes — first to a set number of Skirmish wins takes the Battle.
 _Avoid_: Game, match, series.
-_Home_: `game/engine/04-skirmish.js:234` — `wins[winner] >= 3`
+_Home_: `game/engine/04-skirmish.js:235` — `wins[winner] >= 3`
 
 **Campaign**:
 The larger roguelite arc across Battles — the deck-building, Commander, progression layer. The nebulous destination, not yet in code.
@@ -74,14 +74,14 @@ _Home_: `game/engine/03-rules.js:172` — `borderBlocked`
 
 **Reserve**:
 Pieces a side owns but has not placed. Deploying is one-way, and reserve pieces score nothing at Attrition.
-_Home_: `game/engine/04-skirmish.js:131` — `copyReserves`
+_Home_: `game/engine/04-skirmish.js:132` — `copyReserves`
 
 ## Actions
 
 **Deploy**:
 Place a piece from Reserve onto the board within Control. Called **Build** for a structure.
 _Avoid_: Summon, spawn.
-_Home_: `game/engine/04-skirmish.js:437` — `'deploy'`
+_Home_: `game/engine/04-skirmish.js:464` — `'deploy'`
 
 **Attack**:
 Order one unit to strike an adjacent occupied hex, resolved by comparing combat power.
@@ -103,7 +103,7 @@ _Home_: `game/engine/03-rules.js:128` — `!== myType`
 **Card**:
 A one-shot order played from the hand and then spent. Any Card may instead be spent as a basic Attack or Reposition.
 _Avoid_: Order (a Card *is* the order; "order an attack" is the verb).
-_Home_: `game/engine/04-skirmish.js:281` — `playCard`
+_Home_: `game/engine/04-skirmish.js:301` — `playCard`
 
 **Deck**:
 A side's set of Cards for a Skirmish. The in-skirmish draw pile — stays "Deck" even once the build layer becomes the Battalion.
@@ -148,12 +148,12 @@ _Home_: `game/engine/03-rules.js:315` — `'hq'`
 
 **Attrition**:
 The Skirmish ending reached when a side can no longer draw a Card; decided by Field score.
-_Home_: `game/engine/04-skirmish.js:210` — `endByAttrition`
+_Home_: `game/engine/04-skirmish.js:211` — `endByAttrition`
 
 **Field score**:
 The standing of a side at Attrition, from its surviving on-board units. Reserve counts nothing.
 _Avoid_: VP, points, victory points.
-_Home_: `game/engine/04-skirmish.js:204` — `fieldScore`
+_Home_: `game/engine/04-skirmish.js:205` — `fieldScore`
 
 ## Balance & measurement
 
@@ -182,7 +182,16 @@ _Home_: `game/report-model.js:59` — `'swings'`
 
 **No-op**:
 A played Card that resolved zero actions — a dead turn.
-_Home_: `game/engine/04-skirmish.js:523` — `noop = true`
+_Home_: `game/engine/04-skirmish.js:544` — `noop = true`
+
+**Decision journal**:
+The per-decision event stream on `st.journal` — at each card choice, one event per Card the deciding side holds: the played Card (outcome `played`, tagged with its play mode) and every other held Card (outcome `declined`). Each event carries turn, side, mode, and card id. Capture only, additive to the journal — no play-outcome path reads it, so the golden-diff stays byte-identical. It makes pass-rate and play-timing first-class; the `card_events` fact table consumes it.
+_Avoid_: play log (that's the play-only subset — declines leave no play-log row).
+_Home_: `game/engine/04-skirmish.js:108` — `decisionLog`
+
+**Held Card**:
+A Card passed every turn it sits in hand and never played. Invisible in the play-only log; now traceable as a (side, card) that has `declined` decision events but no `played` one.
+_Home_: none yet (the `card_events` fact table derives it from the decision journal)
 
 **Skirmish fact**:
 The flat record of everything the balance layer reads off one finished Skirmish
@@ -241,7 +250,7 @@ _Home_: `docs/rubrics/card-rubric.md:26` — `Timing blind spot`
 **AI personality**:
 A named heuristic weight-set that gives the bot a *character* — a playstyle that is fun to beat and fun to lose to — rather than maximal strength. A personality is one row of data. Distinct from a Commander trait.
 _Avoid_: Difficulty (a personality is a style, not a strength tier), Bot.
-_Home_: `game/engine/05-ai.js:79` — `AI_PRESETS`
+_Home_: `game/engine/05-ai.js:80` — `AI_PRESETS`
 
 **Commander trait**:
 A run-layer ability that *bends the rules* for a side (a guaranteed opening Card, altered stocks, a rules exception). Belongs to the Campaign layer, not yet in code. Distinct from an AI personality — a rule-bender, not a playstyle — though a Commander's theme may guide the personality of the AI that pilots it.

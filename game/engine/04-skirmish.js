@@ -105,6 +105,7 @@
       journal: {
         log: [],
         playLog: [],                  // {p, id, mode, turn, seen-at-play} per card played
+        decisionLog: [],              // {turn, side, mode, card, outcome:'played'|'declined'} — one per card held at each decision (capture only; feeds the card_events fact table)
         unitMetrics: initUnitMetrics(), // per-unit-type {dep,atk,abs,kill,die} fold
         lastSwap: { red: null, blue: null }, // p's most recent swap pair (AI anti-shuffle)
         stats: { attacks: 0, swaps: 0, marches: 0, deploys: 0, firstBlood: null }, // behaviour counters for the balance lab
@@ -278,6 +279,25 @@
   /* ---------- turn flow ---------- */
   // mode: 'normal' (the card's printed actions) | 'attack' | 'reposition'
   // House rule: any card may always be resolved as a simple attack or reposition instead.
+  // Decision-grain capture: one event per card the deciding side holds at the
+  // moment of choice — the chosen card (outcome 'played', tagged with its play
+  // mode) and every other held card (outcome 'declined', mode null). A card
+  // passed every turn it's in hand thus leaves declined events and is no longer
+  // invisible. Capture only — no play-outcome path reads it, so the golden-diff
+  // stays byte-identical. The card_events fact table consumes this stream.
+  function recordDecision(st, p, playedIdx, mode) {
+    if (st.__sim) return; // AI-search clones discard decisionLog (cloneForSim) — don't pay the per-play allocation on the hot loop
+    if (!st.journal.decisionLog) st.journal.decisionLog = []; // self-heal pre-decision saves
+    var turn = st.flow.turnNumber;
+    // playedIdx (not the id) picks the chosen copy — a hand may hold two of a card,
+    // and exactly one is played.
+    st.cards.hands[p].forEach(function (id, i) {
+      var chosen = i === playedIdx;
+      st.journal.decisionLog.push({ turn: turn, side: p, mode: chosen ? mode : null,
+        card: id, outcome: chosen ? 'played' : 'declined' });
+    });
+  }
+
   function playCard(st, cardId, mode) {
     if (st.flow.phase !== 'choose-card') throw new Error('not in choose-card phase');
     mode = mode || 'normal';
@@ -288,6 +308,7 @@
     // possible — you can't I.shuffle pieces to dodge a fight.
     if (mode === 'reposition' && I.listAttacks(st, p).length > 0)
       throw new Error('cannot reposition while a basic attack is available');
+    recordDecision(st, p, idx, mode); // capture the whole hand as a decision BEFORE the played card leaves it
     st.cards.hands[p].splice(idx, 1);
     if (!st.journal.playLog) st.journal.playLog = []; // self-heal pre-metrics saves
     st.journal.playLog.push({ p: p, id: cardId, mode: mode, turn: st.flow.turnNumber,
