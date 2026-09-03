@@ -15,8 +15,9 @@
 const { spawn, spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const LAB = require('./lab-config.js'); // dev-lab config home; owns the shared LLM timeout
 
-const DEFAULT_TIMEOUT_MS = 180000;
+const DEFAULT_TIMEOUT_MS = LAB.llm.timeoutMs; // one owner; llm-session reads the same home
 
 function errored() {
   return { text: '', inputTokens: 0, outputTokens: 0, finishReason: 'error' };

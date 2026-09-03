@@ -57,6 +57,7 @@ var R = require('../game/report-model.js');
 // The one parallel-sweep pool: the balance lab and run-tournament fan their map
 // sweeps across cores through it, byte-identical to the serial loop.
 var sweep = require('./sweep.js');
+var LAB = require('./lab-config.js'); // dev-lab run defaults (sample count, opponent, matchup n)
 var fs = require('fs');
 var path = require('path');
 // Skirmish persistence: dev/ may carry deps (node:sqlite); game/ stays
@@ -318,12 +319,11 @@ if (dbi >= 0) { battalionBlue = args[dbi + 1]; args.splice(dbi, 2); }
 // Parallel by default (k = cores-1) via the shared sweep pool; --serial forces the
 // in-process loop (throwaway refactor diff / debugging), --parallel [k] sets the count. A
 // per-side --battalion-red/blue run always falls back to serial (see sweepMaps).
-function defaultWorkers() { var os = require('os'); return Math.max(1, (os.availableParallelism ? os.availableParallelism() : 4) - 1); }
 var workers = null, wpi = args.indexOf('--parallel');
-if (wpi >= 0) { workers = /^\d+$/.test(args[wpi + 1] || '') ? +args.splice(wpi + 1, 1)[0] : defaultWorkers(); args.splice(wpi, 1); }
+if (wpi >= 0) { workers = /^\d+$/.test(args[wpi + 1] || '') ? +args.splice(wpi + 1, 1)[0] : sweep.defaultWorkers(); args.splice(wpi, 1); }
 var wsi = args.indexOf('--serial');
 if (wsi >= 0) { workers = 1; args.splice(wsi, 1); }
-if (workers == null) workers = defaultWorkers();
+if (workers == null) workers = sweep.defaultWorkers();
 var battalions = (battalionRed || battalionBlue) ? { red: battalionRed, blue: battalionBlue } : null;
 var activeId = (E.ACTIVE_BATTALION && E.ACTIVE_BATTALION.id) || null;
 if (battalions) {
@@ -340,9 +340,9 @@ if (battalions) {
     rest.forEach(function (a) {
       if (!E.AI_PRESETS[a]) { console.log('Unknown AI "' + a + '". Known: ' + Object.keys(E.AI_PRESETS).join(', ')); process.exit(1); }
     });
-    await matchup(Math.max(2, +(args.filter(function (a) { return /^\d+$/.test(a); })[0]) || 12), rest[0], rest[1], mapsForSet(setArg), battalions, workers);
+    await matchup(Math.max(2, +(args.filter(function (a) { return /^\d+$/.test(a); })[0]) || LAB.balance.matchupSamples), rest[0], rest[1], mapsForSet(setArg), battalions, workers);
   } else {
-    var n = 24, diff = 'normal', filter = null;
+    var n = LAB.balance.samplesPerMap, diff = LAB.balance.ai, filter = null;
     args.forEach(function (a) {
       if (/^\d+$/.test(a)) n = Math.max(2, +a);
       else if (E.AI_PRESETS[a]) diff = a; // easy/normal/hard or a maps.js personality
