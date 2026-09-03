@@ -129,7 +129,7 @@ function renderBuildBattalion(){
   var cap = E.BATTALION_POINTS_CAP;
   var over = pts > cap;
   var total = pbCount();
-  $('pbFoot').innerHTML = '<b>' + total + '</b> cards (target 16&ndash;19) &middot; ' +
+  $('pbFoot').innerHTML = '<b>' + total + '</b> cards (target ' + UI_CONFIG.battalionBand.min + '&ndash;' + UI_CONFIG.battalionBand.max + ') &middot; ' +
     '<span class="pbpts' + (over ? ' over' : '') + '"><b>' + dkPts(pts) + '</b>&thinsp;/&thinsp;' + cap + ' pts</span>';
 
   var probs = battalionProblems(PB.cards);

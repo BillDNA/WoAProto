@@ -713,3 +713,11 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
     font-family:monospace; font-size:12px; padding:0 5px; border:1px solid var(--brass-dark);
     border-radius:4px; background:rgba(255,255,255,.35);
   }
+  /* config bug (issue #250): a persistent screen-corner overlay stamping the live
+     config identity (rules version + digests) onto every screenshot. Read-only. */
+  #configBug{
+    position:fixed; right:6px; bottom:5px; z-index:9999; pointer-events:none;
+    font-family:monospace; font-size:10px; line-height:1.3; letter-spacing:.02em;
+    color:var(--ink-soft); opacity:.5; text-align:right; user-select:none;
+    text-shadow:0 1px 2px rgba(0,0,0,.35);
+  }

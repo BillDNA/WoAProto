@@ -107,9 +107,10 @@ function battalionProblems(cards){
   });
   if (starting !== 1) probs.push('exactly ONE card must be marked starting (got ' + starting + ')');
   // the physical guardrail is a design band, not one exact count — a battalion
-  // must land in the 16-19 card band (the player builder and this editor share
-  // this one legality check).
-  if (total < 16 || total > 19) probs.push('the battalion must total 16-19 cards (got ' + total + ') — add or cut cards to land in the band');
+  // must land in the card band (the player builder and this editor share this one
+  // legality check; the band lives in the UI-config home).
+  var band = UI_CONFIG.battalionBand;
+  if (total < band.min || total > band.max) probs.push('the battalion must total ' + band.min + '-' + band.max + ' cards (got ' + total + ') — add or cut cards to land in the band');
   // army-points budget ceiling — the fairness constraint that lets two
   // asymmetric battalions be called "matched". Same reject-on-validate as the size band.
   var pts = E.battalionPoints({ cards: cards });
@@ -295,7 +296,7 @@ function dkStatus(){
   // dkPts trims float noise (combo exponent may become fractional) while keeping .5 surcharges.
   var pts = E.battalionPoints({ cards: inCards });
   var over = pts > E.BATTALION_POINTS_CAP;
-  $('dkListFoot').innerHTML = inCards.length + ' cards &middot; <b>' + total + '</b> copies (target 16-19)' +
+  $('dkListFoot').innerHTML = inCards.length + ' cards &middot; <b>' + total + '</b> copies (target ' + UI_CONFIG.battalionBand.min + '-' + UI_CONFIG.battalionBand.max + ')' +
     ' &middot; <span class="dkpts' + (over ? ' over' : '') + '"><b>' + dkPts(pts) + '</b>&thinsp;/&thinsp;' + E.BATTALION_POINTS_CAP + ' pts</span>';
   var ptsEl = $('dkCardPts'), c = DK.cards[DK.sel]; // selected card's own cost, while authoring
   if (ptsEl && c){

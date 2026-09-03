@@ -38,8 +38,8 @@
       try { shape = I.ensureMapShape(m); }
       catch (e) { problems.push(m.name + ': ' + e.message); return; }
       if (!I.SHAPES[shape]) { problems.push(m.name + ': unknown board shape "' + shape + '"'); return; }
-      if (m.shapeDef && I.SHAPES[shape].list.length > 24)
-        problems.push(m.name + ': ' + I.SHAPES[shape].list.length + ' hexes exceeds the 24-hex ceiling (laser-cutter max; big empty maps are not fun)');
+      if (m.shapeDef && I.SHAPES[shape].list.length > I.CONFIG.mapHexCeiling)
+        problems.push(m.name + ': ' + I.SHAPES[shape].list.length + ' hexes exceeds the ' + I.CONFIG.mapHexCeiling + '-hex ceiling (laser-cutter max; big empty maps are not fun)');
       I.setBoard(shape);
       try {
         I.buildTerrain(m);
