@@ -38,14 +38,14 @@ var path = require('path');
 // "0" the parent has no DB writer, so the worker skips the slim/collect work
 // entirely and ships an empty skirmishes array. argv (node -e SCRIPT ...args):
 // [1]=enginePath [2]=mapName [3]=gLen [4]=diffRed [5]=diffBlue [6]=seedBase
-// [7]=deckId [8]=unitsId [9]=gStart [10]=collect
+// [7]=battalionId [8]=unitsId [9]=gStart [10]=collect
 var WORKER =
-  'var path=require("path");var deckId=process.argv[7]||"",unitsId=process.argv[8]||"",collect=process.argv[10]!=="0";' +
-  'if(deckId||unitsId){var fs=require("fs");' +
+  'var path=require("path");var battalionId=process.argv[7]||"",unitsId=process.argv[8]||"",collect=process.argv[10]!=="0";' +
+  'if(battalionId||unitsId){var fs=require("fs");' +
   'global.WOA_CONTENT={maps:[],cards:[],battalions:[],mapsets:[],units:[]};' +
   '["battalions","maps","mapsets","units"].forEach(function(kind){var dir=path.join(path.dirname(process.argv[1]),"content",kind);' +
   'try{fs.readdirSync(dir).filter(function(f){return /\\.js$/.test(f)}).sort().forEach(function(f){require(path.join(dir,f))})}catch(e){}});' +
-  'if(deckId)global.WOA_CONTENT.battalions.forEach(function(d){d.active=(d.id===deckId)});' +
+  'if(battalionId)global.WOA_CONTENT.battalions.forEach(function(d){d.active=(d.id===battalionId)});' +
   'if(unitsId)global.WOA_CONTENT.units.forEach(function(u){u.active=(u.id===unitsId)});}' +
   'var E=require(process.argv[1]);var SIM=require(path.join(path.dirname(process.argv[1]),"sim.js"));var m=E.MAPS.filter(function(x){return x.name===process.argv[2]})[0];' +
   'var slim=null;if(collect){try{slim=require(path.join(path.dirname(process.argv[1]),"..","dev","db.js")).slimSkirmishState}catch(e){}}' +
@@ -83,7 +83,7 @@ function planBatches(mapCount, n, workers) {
      maps         [{ name }]  (the map objects; only .name is read here)
      n            games per map
      diffRed, diffBlue   AI presets / maps.js ai row ids
-     deck, units  optional --battalion / --units ids to preload in each worker
+     battalion, units  optional --battalion / --units ids to preload in each worker
      workers      worker-pool size (concurrency cap)
      seedBaseFor  (mapIndex) => seedBase  (the per-map seed base)
      onProgress   optional (batch) => void, fired as each batch completes
@@ -129,7 +129,7 @@ function runParallelSweep(opts) {
       var b = batches[next++], map = maps[b.mapIndex], seedBase = opts.seedBaseFor(b.mapIndex);
       var child = cp.execFile(process.execPath,
         ['-e', WORKER, opts.enginePath, map.name, String(b.gLen), opts.diffRed, opts.diffBlue,
-          String(seedBase), opts.deck || '', opts.units || '', String(b.gStart), collect ? '1' : '0'],
+          String(seedBase), opts.battalion || '', opts.units || '', String(b.gStart), collect ? '1' : '0'],
         { maxBuffer: 256e6 }, function (err, stdout) {
           children.delete(child);
           if (failed) return;

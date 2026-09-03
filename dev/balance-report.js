@@ -23,15 +23,18 @@
      --battalion <id>    report on content/battalions/<id>.js instead of the ACTIVE deck
      --units <id>   report with content/units/<id>.js unit stats (composition +
                atk/def/sup/worth) instead of the maps.js default
-     --parallel [k]  run the sweep across k worker processes (default: cores-1)
-               via the shared dev/sweep.js pool. The engine's board state is
-               process-global, so parallelism is process-per-batch — the unit of
-               work is a (map, game-batch) drained from a flat queue, so all k
-               workers stay busy even on a single map with a huge N. Workers ship
-               every finished skirmish back to the parent, which writes ALL
-               per-skirmish DB rows itself under the one run id (single woa.db
-               writer; report, accumulator AND DB rows are byte-identical to a
-               serial run on the same seeds).
+     PARALLEL BY DEFAULT — the sweep runs across k = cores-1 worker processes with
+     no flag, via the shared dev/sweep.js pool, so growing the LLN pool is fast out
+     of the box. The engine's board state is process-global, so parallelism is
+     process-per-batch — the unit of work is a (map, game-batch) drained from a flat
+     queue, so all k workers stay busy even on a single map with a huge N (never
+     capped at map count). Workers ship every finished skirmish back to the parent,
+     which writes ALL per-skirmish DB rows itself under the one run id (single
+     woa.db writer; report, accumulator AND DB rows are byte-identical to a serial
+     run on the same seeds).
+     --parallel [k]  set the worker count explicitly (default: cores-1)
+     --serial        force the in-process path (no workers) for the golden-diff
+               and debugging
 
    It also ranks maps by a balance-quality score and prints `BEST_MAP: <name>`
    (closest to fair + most back-and-forth) so generate-reports knows which map
@@ -104,15 +107,20 @@ async function run() {
   var flags = {};
   var mi = argv.indexOf('--mapset');
   if (mi >= 0) { flags.mapset = argv[mi + 1]; argv.splice(mi, 2); }
+  function defaultWorkers() { var os = require('os'); return Math.max(1, (os.availableParallelism ? os.availableParallelism() : 4) - 1); }
   var pi = argv.indexOf('--parallel');
   if (pi >= 0) {
-    flags.parallel = /^\d+$/.test(argv[pi + 1] || '') ? +argv.splice(pi + 1, 1)[0]
-      : Math.max(1, (require('os').availableParallelism ? require('os').availableParallelism() : 4) - 1);
+    flags.parallel = /^\d+$/.test(argv[pi + 1] || '') ? +argv.splice(pi + 1, 1)[0] : defaultWorkers();
     argv.splice(pi, 1);
   }
-  ['--stdout', '--quiet', '--fresh', '--once'].forEach(function (f) {
+  ['--stdout', '--quiet', '--fresh', '--once', '--serial'].forEach(function (f) {
     if (argv.indexOf(f) >= 0) { flags[f.slice(2)] = true; argv = argv.filter(function (a) { return a !== f; }); }
   });
+  // Parallel by default (k = cores-1): the balance loop grows the LLN pool fast with
+  // no extra flag. --serial forces the in-process path for the golden-diff / debugging.
+  // Report, accumulator AND per-skirmish DB rows stay byte-identical to serial.
+  if (flags.serial) flags.parallel = 0;
+  else if (flags.parallel == null) flags.parallel = defaultWorkers();
   var n = 60, diffs = [], filter = null;
   argv.forEach(function (a) {
     if (/^\d+$/.test(a)) n = Math.max(2, +a);
@@ -184,8 +192,13 @@ async function run() {
     });
   } catch (e) { dbm = null; console.error('(db off: ' + e.message + ')'); }
 
+  // Parallel work fans across (map, game-batch) units, capped at that count — NOT
+  // at map count — so a single map still saturates every core. Report the workers
+  // that will actually run (the same planBatches split the pool drains).
+  var sweep = flags.parallel ? require(path.join(__dirname, 'sweep.js')) : null;
+  var workers = sweep ? Math.min(flags.parallel, sweep.planBatches(maps.length, n, flags.parallel).length) : 0;
   if (!flags.quiet) process.stderr.write('Simulating ' + n + ' skirmishes/map, ' + diffLabel + ', ' + maps.length + ' maps' +
-    (flags.parallel ? ' (' + flags.parallel + ' workers)' : '') + ' ');
+    (workers ? ' (' + workers + ' worker' + (workers === 1 ? '' : 's') + ')' : '') + ' ');
   var thisRun = {}; // name -> {shape, agg}
   function shapeOf(map) { return map.shape && map.shape.charAt(0) === '@' ? 'custom' : (map.shape || '?'); }
   if (flags.parallel) {
@@ -195,17 +208,20 @@ async function run() {
     // (map, g) order, so the PARENT — the single woa.db writer — inserts rows in
     // exactly the serial order (byte-identical, ids included). --battalion/--units
     // are preloaded inside each worker.
-    var sweep = require(path.join(__dirname, 'sweep.js'));
     var enginePath = path.join(__dirname, '..', 'game', 'engine.js');
     var aggs = await sweep.runParallelSweep({
       enginePath: enginePath, maps: maps, n: n, diffRed: dr, diffBlue: db,
-      deck: DECK, units: UNITSET, workers: flags.parallel, seedBaseFor: seedBaseFor,
+      battalion: DECK, units: UNITSET, workers: flags.parallel, seedBaseFor: seedBaseFor,
       onProgress: function () { if (!flags.quiet) process.stderr.write('.'); },
       onSkirmish: dbm && function (mi, g1, st) {
         try { dbm.insertSkirmish(dbh, runId, st, SIM.balanceFP(g1 - 1), { seed: SIM.balanceSeed(seedBaseFor(mi), g1 - 1), version: ver }); }
         catch (e) { /* a bad row never kills the report */ }
       }
-    }).catch(function (e) { console.error('worker failed: ' + e.message); process.exit(1); });
+    }).catch(function (e) {
+      // Parallel is the default; a spawn-blocked environment lands here — point at the escape hatch.
+      console.error('worker failed: ' + e.message + '\n(retry with --serial for the in-process path)');
+      process.exit(1);
+    });
     maps.forEach(function (map, mi) { thisRun[map.name] = { shape: shapeOf(map), agg: aggs[mi] }; });
   } else {
     maps.forEach(function (map, mi) {

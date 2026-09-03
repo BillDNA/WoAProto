@@ -200,7 +200,7 @@ left, action counts. Derived in exactly one place (the sim layer's `skirmishFact
 whether from a live end-state or a persisted row, so the live fold and the
 stored-data fold can never disagree.
 _Avoid_: battle fact, per-battle row (a row is the persisted form of the fact).
-_Home_: `game/sim.js:73` — `skirmishFacts`
+_Home_: `game/sim.js:76` — `skirmishFacts`
 
 **Star schema**:
 The shape of the balance store (`logs/woa.db`): a few FACT tables at skirmish / decision / turn grain, surrounded by DIMENSION tables they join to. Any new balance question is a join over dimensions already present, never a new table. Dimensions are upserted from loaded content at ingest and stamped with the (rules version, Config digest) slice key, so the DB is self-contained — a terrain- or card-intrinsic question is answered in SQL without reaching into the JS content files. The fold itself is SQL: each cited metric is a named view over the schema (see `docs/adr/0004-fold-moves-to-sql.md`).

@@ -28,7 +28,7 @@ function loadEngine(appliedBattalion) {
   // The page already resolved the override (localStorage 'woa-custom-battalion'
   // or a dropped custom-battalion.js beats the active-flagged battalion). Apply
   // the identical WOA_CONTENT mutation index.html does, so the engine snapshots
-  // the SAME deck — otherwise the sweep would play a different battalion.
+  // the SAME battalion — otherwise the sweep would play a different one.
   if (appliedBattalion && appliedBattalion.length) {
     self.WOA_CONTENT = self.WOA_CONTENT || { maps: [], cards: [], battalions: [] };
     self.WOA_CONTENT.battalions.forEach(function (d) { d.active = false; });

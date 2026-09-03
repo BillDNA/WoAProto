@@ -19,6 +19,13 @@
                                          id/name from content/battalions/. Omit either
                                          flag to leave that side on the active battalion.
 
+   Sweeps run PARALLEL BY DEFAULT (k = cores-1) via the shared dev/sweep.js pool —
+   both the per-map report and matchup — so a tournament saturates every core,
+   byte-identical to serial on the same seeds. --serial forces the in-process loop
+   (golden-diff / debugging); --parallel [k] sets the worker count. A per-side
+   --battalion-red/blue run always falls back to serial (the pool seats one active
+   battalion).
+
    Reading the map report:
    - Red%/Blue% far from 50  -> the map itself favours a side (positions/terrain)
    - 1st%/2nd% far from 50   -> mover advantage on that map
@@ -47,6 +54,9 @@ var SIM = require('../game/sim.js');
 // Shared report model: thresholds, folds, card-row derivation (report-model.js
 // is the ONE copy — this file keeps only its terminal formatting).
 var R = require('../game/report-model.js');
+// The one parallel-sweep pool: the balance lab and run-tournament fan their map
+// sweeps across cores through it, byte-identical to the serial loop.
+var sweep = require('./sweep.js');
 var fs = require('fs');
 var path = require('path');
 // Skirmish persistence: dev/ may carry deps (node:sqlite); game/ stays
@@ -75,38 +85,80 @@ function mapsForSet(setArg) {
   return E.MAPS.filter(function (m) { return set.maps.indexOf(m.id) >= 0 || set.maps.indexOf(m.name) >= 0; });
 }
 
+/* ---------------- one parallel/serial choice for every balance-lab sweep ----------------
+   Fans a map sweep across the shared dev/sweep.js pool so the lab and
+   run-tournament saturate every core, byte-identical to the serial loop on the
+   same seeds. Parallel needs a single active battalion — the pool's worker seats
+   the content-active battalion — so a per-side --battalion-red/blue run (matchup's
+   battalion swap included) can't be expressed and runs serial. Returns aggs[]
+   indexed by mapIndex (a zero-game map -> balanceNew(0)); ALWAYS a Promise.
+   opts: { battalions?, workers?, onSkirmish?(mi,g1,st), onProgress?() }. */
+function sweepMaps(maps, n, diffRed, diffBlue, seedBaseFor, opts) {
+  opts = opts || {};
+  var canParallel = opts.workers > 1 && !opts.battalions;
+  if (canParallel) {
+    return sweep.runParallelSweep({
+      enginePath: path.join(__dirname, '..', 'game', 'engine.js'),
+      maps: maps, n: n, diffRed: diffRed, diffBlue: diffBlue, battalion: '', units: '',
+      workers: opts.workers, seedBaseFor: seedBaseFor,
+      onProgress: opts.onProgress, onSkirmish: opts.onSkirmish
+    });
+  }
+  // serial: the in-process balanceMap loop (unchanged path; also the per-side
+  // battalion case). Wrapped in a Promise so callers await one shape.
+  return Promise.resolve(maps.map(function (map, mi) {
+    var r = SIM.balanceMap(map, n, { diffRed: diffRed, diffBlue: diffBlue, seedBase: seedBaseFor(mi), battalions: opts.battalions,
+      onGame: opts.onSkirmish && function (g1, nn, st) { opts.onSkirmish(mi, g1, st); } });
+    if (opts.onProgress) opts.onProgress();
+    return r;
+  }));
+}
+
+// Workers to actually run for a parallel map sweep (0 = serial): capped at the
+// (map, game-batch) count, so a single big map still fans across every core.
+function sweepWorkers(mapCount, n, workers, battalions) {
+  if (!(workers > 1) || battalions) return 0;
+  return Math.min(workers, sweep.planBatches(mapCount, n, workers).length);
+}
+
 /* ---------------- matchup mode: how much does skill matter? ---------------- */
-function matchup(n, a, b, maps, battalions) {
+async function matchup(n, a, b, maps, battalions, workers) {
   var pairs = (a && b) ? [[a, b]] : [
     ['normal', 'easy'],
     ['hard', 'normal'],
     ['hard', 'easy'],
     ['normal', 'normal'] // sanity baseline, should be ~50
   ];
-  console.log('Skill-vs-luck report: ' + n + ' skirmishes per map per pairing, ' + maps.length + ' maps.');
+  var h1 = Math.ceil(n / 2), h2 = Math.floor(n / 2);
+  var nw = sweepWorkers(maps.length, Math.max(h1, h2), workers, battalions);
+  console.log('Skill-vs-luck report: ' + n + ' skirmishes per map per pairing, ' + maps.length + ' maps' +
+    (nw ? ' (' + nw + ' workers)' : '') + '.');
   console.log('Each pairing also swaps sides so colour bias cancels out.' +
     (battalions ? ' Battalions swap WITH the AI so each keeps a fixed battalion (skill, not battalion, is measured).' : '') + '\n');
   // The strong AI sits red in r1, blue in r2. If battalions stayed seat-bound
   // the strong AI would swap battalions between orientations and the premium would fold
   // in battalion strength — so swap the battalions alongside the sides, pinning each AI to
-  // one battalion across both halves.
+  // one battalion across both halves. Seed bases match the old serial schedule exactly
+  // ((mi+1)*7919 for r1, +31 for r2), so the premium is byte-identical.
   var battalions2 = battalions ? { red: battalions.blue, blue: battalions.red } : null;
+  var seed1 = function (mi) { return (mi + 1) * 7919; };
+  var seed2 = function (mi) { return (mi + 1) * 7919 + 31; };
+  var dot = function () { process.stdout.write('.'); };
   var results = [];
-  pairs.forEach(function (pr) {
-    var strong = pr[0], weak = pr[1];
+  for (var pi = 0; pi < pairs.length; pi++) {
+    var strong = pairs[pi][0], weak = pairs[pi][1];
+    var r1s = await sweepMaps(maps, h1, strong, weak, seed1, { battalions: battalions, workers: workers, onProgress: dot });
+    var r2s = await sweepMaps(maps, h2, weak, strong, seed2, { battalions: battalions2, workers: workers, onProgress: dot });
     var sWins = 0, games = 0;
     maps.forEach(function (map, mi) {
-      var h1 = Math.ceil(n / 2), h2 = Math.floor(n / 2);
-      var r1 = SIM.balanceMap(map, h1, { diffRed: strong, diffBlue: weak, seedBase: (mi + 1) * 7919, battalions: battalions });
-      var r2 = SIM.balanceMap(map, h2, { diffRed: weak, diffBlue: strong, seedBase: (mi + 1) * 7919 + 31, battalions: battalions2 });
+      var r1 = r1s[mi], r2 = r2s[mi];
       sWins += r1.redWins + ((h2 - r2.unfinished) - r2.redWins);
       games += (h1 - r1.unfinished) + (h2 - r2.unfinished);
-      process.stdout.write('.');
     });
     var p = pct(sWins, games);
     results.push({ label: strong + ' vs ' + weak, p: p, games: games });
     console.log('  ' + pad(strong + ' vs ' + weak, 18, true) + ' stronger AI wins ' + p + '% of ' + games);
-  });
+  }
   console.log('\nHow to read it: a clearly better player winning only ~50-55% means the');
   console.log('card draw decides most skirmishes (luck-heavy). 55-65% = luck and skill both');
   console.log('matter. 65%+ = skill dominates. The normal-vs-normal line is the ~50% sanity check.');
@@ -115,7 +167,7 @@ function matchup(n, a, b, maps, battalions) {
 /* ---------------- per-map report ---------------- */
 // mapsetArg: the --mapset value `maps` was resolved from (null = active pool) —
 // a run-identity stamp only, doesn't affect which maps run.
-function mapReport(n, diff, filter, maps, mapsetArg, battalions) {
+async function mapReport(n, diff, filter, maps, mapsetArg, battalions, workers) {
   if (filter) {
     maps = maps.filter(function (m) { return m.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0; });
     if (!maps.length) { console.log('No map matches "' + filter + '".'); return; }
@@ -139,7 +191,9 @@ function mapReport(n, diff, filter, maps, mapsetArg, battalions) {
     } catch (e) { dbh = null; runId = null; }
   }
 
-  console.log('Simulating ' + n + ' skirmishes per map (' + maps.length + ' maps, ' + diff + ' AI)...' +
+  var nw = sweepWorkers(maps.length, n, workers, battalions);
+  console.log('Simulating ' + n + ' skirmishes per map (' + maps.length + ' maps, ' + diff + ' AI' +
+    (nw ? ', ' + nw + ' workers' : '') + ')...' +
     (dbh ? '  [persisting to logs/woa.db]' : '') + '\n');
   var header = pad('Map', 16, true) + pad('Shape', 11, true) +
     pad('Red%', 6) + pad('Blue%', 7) + pad('1st%', 6) + pad('2nd%', 6) +
@@ -150,15 +204,20 @@ function mapReport(n, diff, filter, maps, mapsetArg, battalions) {
   console.log(new Array(header.length + 1).join('-'));
 
   var mapRows = []; // [{agg, done}] for the shared foldGlobal
+  function seedBaseFor(mi) { return (mi + 1) * 7919; }
+  // Sweep (parallel by default) — the parent stays the sole woa.db writer via
+  // onSkirmish, in serial (map, g) order, so rows match a serial run byte-for-byte.
+  var aggs = await sweepMaps(maps, n, diff, diff, seedBaseFor, {
+    battalions: battalions, workers: workers,
+    onSkirmish: dbh && function (mi, g1, st) {
+      try {
+        db.insertSkirmish(dbh, runId, st, SIM.balanceFP(g1 - 1), { seed: SIM.balanceSeed(seedBaseFor(mi), g1 - 1), version: E.VERSION });
+      } catch (e) { /* persistence is best-effort */ }
+    }
+  });
 
   maps.forEach(function (map, mi) {
-    var seedBase = (mi + 1) * 7919;
-    var r = SIM.balanceMap(map, n, { diffRed: diff, diffBlue: diff, seedBase: seedBase, battalions: battalions,
-      onGame: dbh && function (g1, nn, st) {
-        try {
-          db.insertSkirmish(dbh, runId, st, SIM.balanceFP(g1 - 1), { seed: SIM.balanceSeed(seedBase, g1 - 1), version: E.VERSION });
-        } catch (e) { /* persistence is best-effort */ }
-      } });
+    var r = aggs[mi];
     var done = n - r.unfinished;
     mapRows.push({ agg: r, done: done });
     var notes = R.mapNotes(r, done);
@@ -256,6 +315,15 @@ var battalionRed = null, dri = args.indexOf('--battalion-red');
 if (dri >= 0) { battalionRed = args[dri + 1]; args.splice(dri, 2); }
 var battalionBlue = null, dbi = args.indexOf('--battalion-blue');
 if (dbi >= 0) { battalionBlue = args[dbi + 1]; args.splice(dbi, 2); }
+// Parallel by default (k = cores-1) via the shared sweep pool; --serial forces the
+// in-process loop (golden-diff / debugging), --parallel [k] sets the count. A
+// per-side --battalion-red/blue run always falls back to serial (see sweepMaps).
+function defaultWorkers() { var os = require('os'); return Math.max(1, (os.availableParallelism ? os.availableParallelism() : 4) - 1); }
+var workers = null, wpi = args.indexOf('--parallel');
+if (wpi >= 0) { workers = /^\d+$/.test(args[wpi + 1] || '') ? +args.splice(wpi + 1, 1)[0] : defaultWorkers(); args.splice(wpi, 1); }
+var wsi = args.indexOf('--serial');
+if (wsi >= 0) { workers = 1; args.splice(wsi, 1); }
+if (workers == null) workers = defaultWorkers();
 var battalions = (battalionRed || battalionBlue) ? { red: battalionRed, blue: battalionBlue } : null;
 var activeId = (E.ACTIVE_BATTALION && E.ACTIVE_BATTALION.id) || null;
 if (battalions) {
@@ -264,20 +332,25 @@ if (battalions) {
   var redId = battalions.red || activeId, blueId = battalions.blue || activeId;
   console.log('Battalions: red = ' + (redId || 'active') + ', blue = ' + (blueId || 'active') + '\n');
 }
-if (args[0] === 'matchup') {
-  // node dev/balance.js matchup [n] [aiA aiB]  — aiA/aiB may be any AI_PRESETS
-  // name (easy/normal/hard or a maps.js "ai" personality)
-  var rest = args.slice(1).filter(function (a) { return !/^\d+$/.test(a); });
-  rest.forEach(function (a) {
-    if (!E.AI_PRESETS[a]) { console.log('Unknown AI "' + a + '". Known: ' + Object.keys(E.AI_PRESETS).join(', ')); process.exit(1); }
-  });
-  matchup(Math.max(2, +(args.filter(function (a) { return /^\d+$/.test(a); })[0]) || 12), rest[0], rest[1], mapsForSet(setArg), battalions);
-} else {
-  var n = 24, diff = 'normal', filter = null;
-  args.forEach(function (a) {
-    if (/^\d+$/.test(a)) n = Math.max(2, +a);
-    else if (E.AI_PRESETS[a]) diff = a; // easy/normal/hard or a maps.js personality
-    else filter = filter ? filter + ' ' + a : a;
-  });
-  mapReport(n, diff, filter, mapsForSet(setArg), setArg, battalions);
-}
+(async function main() {
+  if (args[0] === 'matchup') {
+    // node dev/balance.js matchup [n] [aiA aiB]  — aiA/aiB may be any AI_PRESETS
+    // name (easy/normal/hard or a maps.js "ai" personality)
+    var rest = args.slice(1).filter(function (a) { return !/^\d+$/.test(a); });
+    rest.forEach(function (a) {
+      if (!E.AI_PRESETS[a]) { console.log('Unknown AI "' + a + '". Known: ' + Object.keys(E.AI_PRESETS).join(', ')); process.exit(1); }
+    });
+    await matchup(Math.max(2, +(args.filter(function (a) { return /^\d+$/.test(a); })[0]) || 12), rest[0], rest[1], mapsForSet(setArg), battalions, workers);
+  } else {
+    var n = 24, diff = 'normal', filter = null;
+    args.forEach(function (a) {
+      if (/^\d+$/.test(a)) n = Math.max(2, +a);
+      else if (E.AI_PRESETS[a]) diff = a; // easy/normal/hard or a maps.js personality
+      else filter = filter ? filter + ' ' + a : a;
+    });
+    await mapReport(n, diff, filter, mapsForSet(setArg), setArg, battalions, workers);
+  }
+})().catch(function (e) {
+  console.error('worker failed: ' + e.message + '\n(retry with --serial for the in-process path)');
+  process.exit(1);
+});

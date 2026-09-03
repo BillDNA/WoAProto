@@ -1,16 +1,16 @@
-# Graph Report - WoAProto  (2026-09-03)
+# Graph Report - parallel-integration-245  (2026-09-03)
 
 ## Corpus Check
-- 183 files · ~240,964 words
+- 186 files · ~249,018 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1048 nodes · 1534 edges · 155 communities (119 shown, 36 thin omitted)
-- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 126 edges (avg confidence: 0.7)
+- 1084 nodes · 1602 edges · 157 communities (122 shown, 35 thin omitted)
+- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 130 edges (avg confidence: 0.69)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a9ba698b`
+- Built from commit: `fb4e83d5`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -22,7 +22,7 @@
 - llm-session.test.js
 - claude-plays.js
 - dashboard.js
-- Board Rendering Primitives
+- board-primitives.js
 - 04-skirmish.js
 - skirmish.js
 - 02-board.js
@@ -44,13 +44,13 @@
 - test.ui.js
 - fx.js
 - sim.js
-- pane-cards.js
+- pane-crosscuts.js
 - balance-parallel.test.js
 - test.maps.js
 - compilerOptions
 - test.cards.js
-- test.terrain.js
 - test.helpers.js
+- test.seams.js
 - test.ai.js
 - board.js
 - check-context.js
@@ -103,7 +103,8 @@
 - Root index.html redirect
 - 00-config.js
 - ADR-0004 — The balance fold moves from JS to SQL
-- sweep.js
+- screens.js
+- Query cookbook — asking the balance store new questions
 
 ## God Nodes (most connected - your core abstractions)
 1. `svgEl()` - 19 edges
@@ -140,23 +141,23 @@
 - **docs/reference how-the-code-works set** — docs_reference_engine_model_engine_model, docs_reference_report_model_report_model, docs_reference_ai_heuristic_model_ai_heuristic_model, docs_reference_card_cheatsheet_card_cheatsheet, docs_reference_ui_invariants_ui_invariants, docs_reference_context_ui_components_ui_components, docs_reference_testing_seams_testing_seams, docs_reference_workflow_workflow [INFERRED 0.80]
 - **Balance measurement pipeline (sweep to graded report)** — docs_human_instructions_standard_runs_runbook_standard_runs, docs_reference_report_model_report_model, game_readme_balance_lab, logs_readme_playtest_data [INFERRED 0.75]
 
-## Communities (155 total, 36 thin omitted)
+## Communities (157 total, 35 thin omitted)
 
 ### Community 0 - "Engine model (rules kernel)"
 Cohesion: 0.05
 Nodes (55): Apples-to-apples determinism, Standard runs runbook, AI heuristic model, AI_PRESETS (easy/normal/hard), AI_WEIGHTS, Anti-degeneracy guards (noopPenalty/antiShuffle/attrWin), CARD_KEEP burn priority, evalState board scoring (+47 more)
 
 ### Community 1 - "chart-model.js"
-Cohesion: 0.06
-Nodes (33): accFilePath(), readAcc(), run(), assert, E, fs, http, os (+25 more)
+Cohesion: 0.09
+Nodes (23): accFilePath(), readAcc(), run(), assert, E, fs, http, os (+15 more)
 
 ### Community 2 - "War of Attrition Rule Book (v1.1)"
 Cohesion: 0.06
 Nodes (52): balance-loop skill, create-card skill, create-map skill, generate-reports skill, review-reports skill, review-with-rubric skill, run-tournament skill, WarOfAttrition project doctrine (CLAUDE.md) (+44 more)
 
 ### Community 3 - "report-model.js"
-Cohesion: 0.09
-Nodes (37): mapReport(), matchup(), pad(), actionOctileLanes(), actionTotal(), balanceScore(), cardAggFromEnvelopes(), cardFleetFireTimes() (+29 more)
+Cohesion: 0.08
+Nodes (41): mapReport(), matchup(), pad(), sweepMaps(), sweepWorkers(), planBatches(), runParallelSweep(), actionOctileLanes() (+33 more)
 
 ### Community 4 - "llm-session.test.js"
 Cohesion: 0.08
@@ -167,10 +168,10 @@ Cohesion: 0.07
 Nodes (29): ARGS, cap(), CHOICE_SCHEMA, DIRN, E, feltNotes(), fs, HEURISTIC (+21 more)
 
 ### Community 6 - "dashboard.js"
-Cohesion: 0.11
-Nodes (27): done(), realSetTimeout(), tick(), ADR-0001, dashFillRunSelect(), dashLoadRuns(), dashPickDefaultRuns(), dashReportMarkdown() (+19 more)
+Cohesion: 0.09
+Nodes (33): done(), realSetTimeout(), tick(), ADR-0001, dashFillRunSelect(), dashLoadRuns(), dashPickDefaultRuns(), dashReportMarkdown() (+25 more)
 
-### Community 7 - "Board Rendering Primitives"
+### Community 7 - "board-primitives.js"
 Cohesion: 0.16
 Nodes (31): bpAttackLayer(), bpAttackPill(), bpBarrageForestEdge(), bpBarrageTrench(), bpBeginBoard(), bpCoordLabel(), bpEdgeHitLine(), bpEdgePts() (+23 more)
 
@@ -187,8 +188,8 @@ Cohesion: 0.14
 Nodes (25): guardrails(), measure(), parseArgs(), pickMaps(), run(), boardHexes(), buildGeo(), buildShape() (+17 more)
 
 ### Community 11 - "manual.js"
-Cohesion: 0.10
-Nodes (25): finish(), step(), manualKey(), manualStep(), manualTabClick(), mpAftermathWords(), mpDrawFrame(), mpDrawHQ() (+17 more)
+Cohesion: 0.17
+Nodes (16): manualKey(), manualStep(), manualTabClick(), mpAftermathWords(), mpDrawFrame(), mpDrawHQ(), mpDrawStrike(), mpDrawUnit() (+8 more)
 
 ### Community 12 - "chart-primitives.js"
 Cohesion: 0.16
@@ -215,8 +216,8 @@ Cohesion: 0.31
 Nodes (16): aiConfig(), aiPlanTurn(), clone(), cloneForSim(), enumerateChoices(), enumerateWithOptions(), evalState(), greedyResolve() (+8 more)
 
 ### Community 18 - "db.js"
-Cohesion: 0.23
-Nodes (13): archiveIfLegacy(), boardHexList(), cardKind(), close(), insertRun(), insertSkirmish(), nz(), open() (+5 more)
+Cohesion: 0.16
+Nodes (18): aggregate(), archiveIfLegacy(), badRequest(), boardHexList(), cardKind(), cardTiming(), close(), insertRun() (+10 more)
 
 ### Community 19 - "db.test.js"
 Cohesion: 0.14
@@ -254,9 +255,9 @@ Nodes (9): fxPieceHex(), fxStrike(), ghostUnit(), playFX(), popUnit(), ringAt(),
 Cohesion: 0.36
 Nodes (8): balanceAdd(), balanceFP(), balanceMap(), balanceNew(), balanceSeed(), foldFacts(), simSkirmish(), skirmishFacts()
 
-### Community 29 - "pane-cards.js"
-Cohesion: 0.43
-Nodes (6): chartCardSightQuadrant(), crdFireStrips(), crdRenderBody(), crdSimpleDumbbells(), crdSw(), renderCards()
+### Community 29 - "pane-crosscuts.js"
+Cohesion: 0.33
+Nodes (15): ccBalanceChart(), ccBalanceMetrics(), ccBarChart(), ccCardChart(), ccControls(), ccDimLabel(), ccFmt(), ccInit() (+7 more)
 
 ### Community 30 - "balance-parallel.test.js"
 Cohesion: 0.18
@@ -274,13 +275,13 @@ Nodes (8): compilerOptions, allowJs, checkJs, module, moduleResolution, target, 
 Cohesion: 0.20
 Nodes (4): assert, { E, SIM, testSkirmish, fixtureCard }, ADR-0003, { test }
 
-### Community 34 - "test.terrain.js"
-Cohesion: 0.25
-Nodes (6): testSkirmish(), assert, { E, testSkirmish, fixtureCard }, fresh(), ADR-0003, { test }
+### Community 34 - "test.helpers.js"
+Cohesion: 0.19
+Nodes (8): fixtureCard(), ADR-0003, testSkirmish(), assert, { E, testSkirmish, fixtureCard }, fresh(), ADR-0003, { test }
 
-### Community 35 - "test.helpers.js"
-Cohesion: 0.25
-Nodes (5): fixtureCard(), ADR-0003, assert, { E }, { test }
+### Community 35 - "test.seams.js"
+Cohesion: 0.50
+Nodes (3): assert, { E }, { test }
 
 ### Community 36 - "test.ai.js"
 Cohesion: 0.25
@@ -323,16 +324,16 @@ Cohesion: 0.83
 Nodes (3): fmt(), printTable(), run()
 
 ### Community 49 - "test.integration.js"
-Cohesion: 0.50
-Nodes (3): assert, { E, testSkirmish }, { test }
+Cohesion: 0.40
+Nodes (4): assert, { E, testSkirmish }, SIM, { test }
 
 ### Community 51 - "Comment & doc style guide"
 Cohesion: 0.67
 Nodes (3): Comment & doc style guide, No war stories rule, Progressive disclosure in docs
 
 ### Community 85 - "pane-maps.js"
-Cohesion: 0.29
-Nodes (12): mdFsDiffTrackHtml(), mdHeaderHtml(), mdHexLabelFor(), mdHexLensSection(), mdLaneBars(), mdLensFill(), mdMapDef(), mdRenderBody() (+4 more)
+Cohesion: 0.12
+Nodes (22): assert, ADR-0003, row(), { test }, mdBandBoard(), mdFsDiffTrackHtml(), mdHeaderHtml(), mdHexLabelFor() (+14 more)
 
 ### Community 86 - "db-query.test.js"
 Cohesion: 0.13
@@ -354,25 +355,33 @@ Nodes (3): ADR-0002, configCanon(), configDigest()
 Cohesion: 0.40
 Nodes (4): ADR-0004 — The balance fold moves from JS to SQL, Consequences, Context, Decision
 
+### Community 154 - "screens.js"
+Cohesion: 0.22
+Nodes (10): finish(), runParallel(), step(), applyDevMode(), devHotkey(), devMode(), goScreen(), renderSettings() (+2 more)
+
+### Community 155 - "Query cookbook — asking the balance store new questions"
+Cohesion: 0.29
+Nodes (6): Adding a question, Over HTTP, Query cookbook — asking the balance store new questions, The grains and dimensions, The litmus, The query surface (`dev/db.js`)
+
 ## Knowledge Gaps
-- **251 isolated node(s):** `fs`, `os`, `path`, `{ test }`, `assert` (+246 more)
+- **258 isolated node(s):** `fs`, `os`, `path`, `{ test }`, `assert` (+253 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **36 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **35 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `done()` connect `dashboard.js` to `chart-model.js`, `02-board.js`, `report-model.js`?**
-  _High betweenness centrality (0.026) - this node is a cross-community bridge._
-- **Why does `row()` connect `chart-model.js` to `battalion-editor.js`?**
-  _High betweenness centrality (0.020) - this node is a cross-community bridge._
+  _High betweenness centrality (0.016) - this node is a cross-community bridge._
+- **Why does `mapReport()` connect `report-model.js` to `chart-model.js`, `dashboard.js`, `skirmish.js`?**
+  _High betweenness centrality (0.015) - this node is a cross-community bridge._
 - **Why does `reportMarkdown()` connect `report-model.js` to `skirmish.js`, `dashboard.js`?**
-  _High betweenness centrality (0.019) - this node is a cross-community bridge._
+  _High betweenness centrality (0.012) - this node is a cross-community bridge._
 - **Are the 3 inferred relationships involving `Engine model (rules kernel)` (e.g. with `Anti-degeneracy guards (noopPenalty/antiShuffle/attrWin)` and `Unit rubric`) actually correct?**
   _`Engine model (rules kernel)` has 3 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `fs`, `os`, `path` to the rest of the system?**
-  _251 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _258 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Engine model (rules kernel)` be split into smaller, more focused modules?**
   _Cohesion score 0.050505050505050504 - nodes in this community are weakly interconnected._
 - **Should `chart-model.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.06262626262626263 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09247311827956989 - nodes in this community are weakly interconnected._

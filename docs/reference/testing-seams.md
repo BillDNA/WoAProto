@@ -34,8 +34,10 @@ doc carries the running inventory; treat it as a backlog, never a certificate.
   file-write → manifest-regen hand-off runs for real without touching committed content.
 - `dev/db.test.js` — adds `factsFromRow ≡ skirmishFacts`: the live-state fold and the
   db-row fold of the same skirmish must be field-for-field equal.
-- `dev/balance-parallel.test.js` — runs `balance-report.js --parallel` as a real
-  subprocess (temp db) so the worker-string → parent-parse → insert pipe is driven.
+- `dev/balance-parallel.test.js` — runs `balance-report.js` as a real subprocess
+  (temp db) so the worker-string → parent-parse → insert pipe is driven; also pins
+  that the sweep is **parallel by default** (no flag spawns workers) and byte-identical
+  to `--serial` in both report and db rows.
 - `dev/boot.test.js` — jsdom boots the real page: E3 (localStorage battalion override →
   ACTIVE_BATTALION) and F2 (a maps-bundle file → the lenient import parser → E.MAPS).
 
@@ -63,7 +65,7 @@ gap. Least-covered, most-load-bearing first.
 | A4 savebattalion → custom-battalion.js | server → game/custom-battalion.js | **REAL** — `content-api.test.js` (snapshot+restore) |
 | A5 savemapsets → destructive dir rewrite | server → content/mapsets/ | **REAL** — `content-api.test.js` (sandbox) |
 | H1 `factsFromRow` ≡ `skirmishFacts` | engine live fold ↔ db-row fold | **REAL** — `db.test.js` |
-| C1 `--parallel` worker slim-state → parent → db | balance-report worker string → parent | **REAL** — `balance-parallel.test.js` (real subprocess, temp db) |
+| C1 `--parallel` worker slim-state → parent → db; parallel-by-default ≡ `--serial` | balance-report worker string → parent | **REAL** — `balance-parallel.test.js` (real subprocess, temp db) |
 | E3 index.html battalion bootstrap → ACTIVE_BATTALION | inline bootstrap → engine snapshot | **REAL** — `boot.test.js` (jsdom, localStorage seeded) |
 | F1 map.shapeDef → `@id` shape → board (LAN join/resume) | engine ↔ battle.maps serialization | **REAL** — `test.maps.js` (carved-shapeDef round-trip) |
 | F2 map/battalion bundle import parser | boot.js import → libraryReplace | **REAL** — `boot.test.js` (jsdom, real onchange + File) |

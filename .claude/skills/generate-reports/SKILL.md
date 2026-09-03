@@ -22,13 +22,15 @@ sync).
 1. **Balance sweep** — 100 skirmishes/map, hard vs hard, isolated from the accumulator:
 
    ```
-   node dev/balance-report.js 100 hard hard --once --parallel [--battalion <id>] [--mapset <id>]
+   node dev/balance-report.js 100 hard hard --once [--battalion <id>] [--mapset <id>]
    ```
 
    `--once` = the original seed schedule, so two sweeps with the same flags are
-   directly comparable (accumulator runs deliberately shift seeds). `--parallel` =
-   ~cores× faster; drop it only if you also want per-skirmish DB rows (serial writes
-   them, parallel skips them). `--battalion` / `--mapset` select content slots
+   directly comparable (accumulator runs deliberately shift seeds). The sweep runs
+   **parallel by default** (k = cores-1 workers, ~cores× faster) with no flag —
+   report, accumulator AND per-skirmish DB rows are byte-identical to serial on the
+   same seeds. Add `--serial` only for the golden-diff or debugging.
+   `--battalion` / `--mapset` select content slots
    (`game/content/{battalions,mapsets}/<id>.js`); the report meta line + filename carry
    the ids. Capture the `SAVED:` path. `BEST_MAP:` still prints — informational
    (matches no longer pin to it).

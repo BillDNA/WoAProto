@@ -129,3 +129,85 @@ test('multi-map parallel keeps rows in serial (map, g) order — the in-order fl
     try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {}
   }
 });
+
+// The balance loop grows the LLN pool by running the sweep parallel BY DEFAULT:
+// no --parallel flag must still spawn workers, and its output must stay byte-identical
+// to a forced --serial run on the same seeds — report AND db.
+test('parallel is the default; --serial matches it byte-for-byte (C1)', function () {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'woa-def-'));
+  const parDb = path.join(dir, 'par.db'), serDb = path.join(dir, 'ser.db');
+  const SKCOLS = 'version,config_digest,map,seed,first_player,winner,win_type,turns,' +
+    'fs_red,fs_blue,first_blood,lead_changes,attacks,swaps,marches,deploys,res_end_red,res_end_blue,trace';
+  function sweep(dbFile, extraArgs) {
+    // spawnSync captures stdout AND stderr — stderr carries the worker banner, stdout the report.
+    const r = cp.spawnSync(process.execPath,
+      ['dev/balance-report.js', '--stdout', '--once', '--mapset', 'all', '2'].concat(extraArgs),
+      { cwd: ROOT, encoding: 'utf8', env: Object.assign({}, process.env, { WOA_DB_PATH: dbFile }) });
+    assert.strictEqual(r.status, 0, 'sweep exited clean (' + (r.stderr || '').trim() + ')');
+    return r;
+  }
+  function skirmishRows(dbFile) {
+    const h = db.open(dbFile);
+    try { return JSON.stringify(h.db.prepare('SELECT ' + SKCOLS + ' FROM skirmishes ORDER BY map,seed').all()); }
+    finally { db.close(h); }
+  }
+  try {
+    const par = sweep(parDb, []);           // default: parallel, no flag
+    const ser = sweep(serDb, ['--serial']); // forced in-process
+    assert.match(par.stderr, /\(\d+ workers?\)/, 'the no-flag run announced parallel workers (' + par.stderr.trim() + ')');
+    assert.doesNotMatch(ser.stderr, /workers?\)/, '--serial ran in-process, no worker banner (' + ser.stderr.trim() + ')');
+    // --stdout returns before the Date-stamped filename block, so the report is pure
+    // aggregate — deterministic, hence safe to compare byte-for-byte.
+    assert.strictEqual(par.stdout, ser.stdout, 'default-parallel and --serial produced byte-identical reports');
+    assert.strictEqual(skirmishRows(parDb), skirmishRows(serDb),
+      'default-parallel and --serial wrote byte-identical per-skirmish db rows');
+  } finally {
+    try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {}
+  }
+});
+
+// INTEGRATION — the parallel-by-default × sub-map fan-out seam that neither half
+// exercises alone: a LONE map must fan across MORE workers than maps,
+// via (map, game-batch) batches, and the banner must report the workers that
+// actually run. Guards against re-introducing a `Math.min(workers, maps.length)`
+// worker cap — that clamp would silently pin a single-map sweep to one worker
+// (back to process-per-map), killing sub-map throughput with every other test green.
+test('a single map fans across more workers than maps — sub-map, not process-per-map (C1)', function () {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'woa-fanout-'));
+  try {
+    // 32 games on ONE map, 4 explicit workers: planBatches(1,32,4) -> 4 batches, so
+    // the pool runs 4 workers on a single map. `easy` keeps the real AI sim quick.
+    const r = cp.spawnSync(process.execPath,
+      ['dev/balance-report.js', '--stdout', '--once', '--parallel', '4', '--mapset', 'all', '32', 'easy', 'Causeway'],
+      { cwd: ROOT, encoding: 'utf8', env: Object.assign({}, process.env, { WOA_DB_PATH: path.join(dir, 'fan.db') }) });
+    assert.strictEqual(r.status, 0, 'the single-map fan-out run exited clean (' + (r.stderr || '').trim() + ')');
+    const m = /\((\d+) workers?\)/.exec(r.stderr);
+    assert.ok(m, 'the banner announced a worker count (' + r.stderr.trim() + ')');
+    assert.ok(+m[1] > 1, 'one map ran on ' + (m && m[1]) + ' workers — sub-map fan-out, not capped at map count (a process-per-map clamp would report 1)');
+  } finally {
+    try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {}
+  }
+});
+
+// dev/balance.js (the balance-lab CLI, the run-tournament sweep path) fans its map
+// sweep across the SAME dev/sweep.js pool. Pin that its default parallel run is
+// byte-identical to --serial — DB skirmish rows match row-for-row on the same seeds —
+// so the run-tournament speedup (the sub-map fan-out wired into balance.js) can't regress.
+test('balance.js mapReport: default parallel DB rows == --serial, byte-for-byte (C1)', function () {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'woa-lab-'));
+  const serDb = path.join(dir, 'ser.db'), parDb = path.join(dir, 'par.db');
+  const runIt = function (dbFile, extra) {
+    cp.execFileSync(process.execPath,
+      ['dev/balance.js', '20', 'easy', 'Causeway', '--mapset', 'all'].concat(extra),
+      { cwd: ROOT, encoding: 'utf8', env: Object.assign({}, process.env, { WOA_DB_PATH: dbFile }) });
+  };
+  try {
+    runIt(serDb, ['--serial']);
+    runIt(parDb, ['--parallel', '4']);   // fan the single map across workers (sub-map)
+    const s = skirmishRows(serDb), p = skirmishRows(parDb);
+    assert.ok(s.length === 20 && p.length === 20, 'both runs persisted all 20 skirmishes (' + s.length + '/' + p.length + ')');
+    assert.deepStrictEqual(p, s, 'balance.js parallel rows (ordered by id) are byte-identical to --serial');
+  } finally {
+    try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {}
+  }
+});
