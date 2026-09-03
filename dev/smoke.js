@@ -88,6 +88,12 @@ realSetTimeout(function () {
   assert.ok(bug.textContent.indexOf(win.Engine.CONFIG.digest) >= 0, 'the config bug shows the engine config digest');
   assert.ok(bug.textContent.indexOf(win.UI_CONFIG.digest) >= 0, 'the config bug shows the UI config digest');
   assert.ok(bug.textContent.indexOf('v' + win.Engine.VERSION) >= 0, 'the config bug shows the rules version');
+  // UI home identity: its digest getter is the SAME function as the engine home's
+  // (both from Engine.defineConfigHome) — a hand-rolled UI home would red here.
+  var uiGet = Object.getOwnPropertyDescriptor(win.UI_CONFIG, 'digest').get;
+  var cfgGet = Object.getOwnPropertyDescriptor(win.Engine.CONFIG, 'digest').get;
+  assert.ok(typeof uiGet === 'function' && uiGet === cfgGet,
+    'UI_CONFIG was made by Engine.defineConfigHome (its digest getter IS the shared one)');
 
   console.log('== muster (player battalion builder) ==');
   doc.getElementById('btnMuster').click();

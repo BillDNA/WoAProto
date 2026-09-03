@@ -54,7 +54,7 @@ test('seam: the army-points cap is a settable, enforced limit', () => {
 // nothing here, only breaking the aliasing does.
 test('seam: the flat exports are aliases into the config home (one owner)', () => {
   assert.ok(E.CONFIG && typeof E.CONFIG === 'object', 'E.CONFIG is the config namespace');
-  // one value, two access paths — the flat frozen exports resolve into E.CONFIG.
+  // one value, two access paths — the flat exports resolve into E.CONFIG.
   assert.ok(E.BATTALION_POINTS_CAP === E.CONFIG.pointsCap, 'BATTALION_POINTS_CAP aliases CONFIG.pointsCap');
   assert.ok(E.POINTS === E.CONFIG.points, 'POINTS aliases CONFIG.points (same object identity)');
   assert.ok(E.TERRAIN_STOCK === E.CONFIG.terrainStock, 'TERRAIN_STOCK aliases CONFIG.terrainStock (same object identity)');
@@ -66,12 +66,24 @@ test('seam: the flat exports are aliases into the config home (one owner)', () =
   assert.ok(overByHome === overByExport, 'the gate reads one owner — home and flat export agree');
 });
 
-// The digest contract, asserted as RELATIONSHIPS, never a specific
-// digest string. Both config homes share the ONE util (E.configDigest), so testing
-// the util's contract covers the engine home and the UI home uniformly.
+// The home maker + the digest contract, asserted as identity + relationships, never a
+// pinned digest string — testing the util covers the engine and UI homes uniformly.
 test('seam: the config digest is stable, value-sensitive, and no-false-split', () => {
   const digest = E.configDigest;
   assert.ok(typeof digest === 'function', 'E.configDigest is the shared digest util');
+  assert.ok(typeof E.defineConfigHome === 'function', 'E.defineConfigHome is the shared home maker');
+
+  // Identity, not value: the maker installs ONE shared getter, so both homes' getter is
+  // the same function and a hand-rolled home (its own getter) fails here. Value changes don't.
+  const homeA = E.defineConfigHome({ x: 1 });
+  const homeB = E.defineConfigHome({ y: 2 });
+  const getA = Object.getOwnPropertyDescriptor(homeA, 'digest').get;
+  const getB = Object.getOwnPropertyDescriptor(homeB, 'digest').get;
+  const cfgDesc = Object.getOwnPropertyDescriptor(E.CONFIG, 'digest');
+  assert.ok(typeof getA === 'function' && getA === getB, 'defineConfigHome installs ONE shared getter, not a per-home closure');
+  assert.ok(cfgDesc.get === getA, 'E.CONFIG was made by defineConfigHome (its digest getter IS the shared one)');
+  assert.ok(cfgDesc.enumerable === false, 'the digest getter is non-enumerable (never feeds its own hash)');
+  assert.ok(!Object.isFrozen(E.CONFIG), 'the config home is not frozen (a dial can be tuned)');
 
   // stable: identical values → identical digest, across separately-built equal
   // objects and across repeated reads (order-independent for object keys).
