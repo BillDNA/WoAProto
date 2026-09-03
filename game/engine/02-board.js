@@ -101,22 +101,75 @@
     var c = SHAPES[shape] && SHAPES[shape].centre;
     return c ? [c[0] - q, c[1] - r] : [-q, -r];
   }
+  // Per-shape geometry cache. Board topology (parsed coords + the six neighbor
+  // keys of each hex) is a pure function of the immutable shape outline, but the
+  // AI search re-derived it from scratch every call — parseKey split a "q,r"
+  // string and key() re-concatenated one on every neighbor/dist/dirBetween, and
+  // the Field Marshal search calls those millions of times per skirmish. Build
+  // the tables once per shape (lazily) and read them instead: same values, no
+  // per-call string churn. ensureMapShape rebuilds the shape object for shapeDef
+  // maps, so the cache never goes stale. Held in a side WeakMap (not a property
+  // on the shape) so a shape stays a pristine {list,set,…} for any enumerate /
+  // serialize path.
+  // Contract: neighbors()/coordOf() hand back the CACHED arrays, not copies —
+  // callers MUST treat them read-only (all in-repo callers do; verified). Not
+  // Object.freeze'd on purpose: freezing forces V8's slow frozen-elements read
+  // path on these hottest-of-hot arrays and measured ~20% off throughput, which
+  // defeats the point — the contract is the guard here, not the freeze.
+  var GEO = new WeakMap();
+  var LAST_SHAPE = null, LAST_GEO = null; // hot-path 1-entry cache (see geo())
+  function buildGeo(s) {
+    var coord = {}, nbr = {}, list = {}, L = s.list, i, d;
+    for (i = 0; i < L.length; i++) coord[L[i]] = parseKey(L[i]);
+    for (i = 0; i < L.length; i++) {
+      var k = L[i], c = coord[k], row = new Array(6), lst = [];
+      for (d = 0; d < 6; d++) {
+        var nk = key(c[0] + DIRS[d][0], c[1] + DIRS[d][1]);
+        if (s.set[nk]) { row[d] = nk; lst.push(nk); } else row[d] = null;
+      }
+      nbr[k] = row; list[k] = lst;
+    }
+    return { coord: coord, nbr: nbr, list: list };
+  }
+  function geo() {
+    // Hot path: geo() runs on every neighbor/dist/coordOf call (millions/skirmish),
+    // so keep a 1-entry cache keyed on the shape OBJECT identity — a bare ref
+    // compare, no per-call WeakMap probe. It auto-invalidates on any shape swap
+    // (setBoard) or rebuild (ensureMapShape makes a fresh object), and the WeakMap
+    // still memoizes per shape so alternating maps never re-derive a seen shape.
+    var s = SHAPES[CURRENT_SHAPE] || SHAPES[DEFAULT_SHAPE];
+    if (s === LAST_SHAPE) return LAST_GEO;
+    var g = GEO.get(s);
+    if (!g) { g = buildGeo(s); GEO.set(s, g); }
+    LAST_SHAPE = s; LAST_GEO = g;
+    return g;
+  }
+  // Parsed [q,r] for a hex on the current board, from the cache; falls back to
+  // parseKey for an off-board / unknown key. One home for the cache/parse rule.
+  function coordOf(k) { return geo().coord[k] || parseKey(k); }
+
   function neighbor(k, d) {
-    var qr = parseKey(k); var q = qr[0] + DIRS[d][0], r = qr[1] + DIRS[d][1];
+    var row = geo().nbr[k];
+    if (row) return row[d];
+    var qr = parseKey(k); var q = qr[0] + DIRS[d][0], r = qr[1] + DIRS[d][1]; // off-board key: original math
     return inBoard(q, r) ? key(q, r) : null;
   }
   function neighbors(k) {
+    // Returns the shape's cached neighbor list (read-only by contract, see the
+    // cache note above) — sharing it skips a 6-way alloc on the search hot path.
+    var lst = geo().list[k];
+    if (lst) return lst;
     var out = [];
     for (var d = 0; d < 6; d++) { var n = neighbor(k, d); if (n) out.push(n); }
     return out;
   }
   function dirBetween(a, b) { // a,b adjacent
-    var pa = parseKey(a), pb = parseKey(b);
+    var pa = coordOf(a), pb = coordOf(b);
     for (var d = 0; d < 6; d++) if (pa[0] + DIRS[d][0] === pb[0] && pa[1] + DIRS[d][1] === pb[1]) return d;
     return -1;
   }
   function dist(a, b) {
-    var pa = parseKey(a), pb = parseKey(b);
+    var pa = coordOf(a), pb = coordOf(b);
     var dq = pa[0] - pb[0], dr = pa[1] - pb[1];
     return (Math.abs(dq) + Math.abs(dr) + Math.abs(dq + dr)) / 2;
   }

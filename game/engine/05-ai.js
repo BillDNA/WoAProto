@@ -7,10 +7,45 @@
   var I = global.WOA_E = global.WOA_E || {};
 
   /* ---------- AI ---------- */
+  // Structural deep clone with JSON.parse(JSON.stringify) semantics but no
+  // string round-trip. The Field Marshal search clones the skirmish state once
+  // per candidate move — thousands of times per skirmish — and the
+  // serialize-then-parse pair dominated that cost. This reproduces JSON exactly
+  // so a cloned search state stays byte-identical to the old JSON clone (the
+  // golden-diff oracle): own enumerable keys in source order (state carries no
+  // integer-like keys, so that is insertion order — same iteration order the
+  // engine's for..in scans depend on); undefined/function/symbol values dropped
+  // from objects and turned to null in arrays; non-finite numbers to null.
+  // The skirmish state is pure JSON data (no Dates/Maps/class instances), which
+  // is why the round-trip was safe to begin with and this stays equivalent.
+  // Both state clones (clone / cloneForSim) route through here — ONE clone
+  // mechanism, so the AI's searched state can never drift from the real state
+  // via a different deep-copy rule; the pure-JSON precondition is theirs to hold.
+  function jsonClone(v) {
+    if (v === null || typeof v !== 'object')
+      return (typeof v === 'number' && !isFinite(v)) ? null : v; // JSON: NaN/Infinity -> null
+    if (Array.isArray(v)) {
+      var n = v.length, a = new Array(n);
+      for (var i = 0; i < n; i++) {
+        var e = v[i];
+        a[i] = (e === undefined || typeof e === 'function' || typeof e === 'symbol') ? null : jsonClone(e);
+      }
+      return a;
+    }
+    var out = {};
+    for (var k in v) {
+      if (!Object.prototype.hasOwnProperty.call(v, k)) continue;
+      var val = v[k];
+      if (val === undefined || typeof val === 'function' || typeof val === 'symbol') continue; // JSON drops these keys
+      out[k] = jsonClone(val);
+    }
+    return out;
+  }
+
   function clone(st) {
     var m = st.battle;
     st.battle = null;
-    var c = JSON.parse(JSON.stringify(st));
+    var c = jsonClone(st);
     st.battle = m;
     c.battle = { wins: { red: m.wins.red, blue: m.wins.blue }, skirmishIndex: m.skirmishIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
     return c;
@@ -27,7 +62,7 @@
     // newSkirmish) — strip them out of the deep clone (the byId maps carry the
     // whole card catalog) and reattach the SAME reference, like battle/log below.
     st.battle = null; st.journal.log = []; st.journal.playLog = (pl && pl.length) ? [pl[pl.length - 1]] : []; st.journal.decisionLog = []; st.journal.fsTimeline = undefined; st.cards.sideDecks = undefined;
-    var c = JSON.parse(JSON.stringify(st));
+    var c = jsonClone(st);
     st.battle = m; st.journal.log = lg; st.journal.playLog = pl; st.journal.decisionLog = dl; st.journal.fsTimeline = tl; st.cards.sideDecks = sd;
     c.battle = { wins: { red: m.wins.red, blue: m.wins.blue }, skirmishIndex: m.skirmishIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
     c.cards.sideDecks = sd;
