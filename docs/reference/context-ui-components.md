@@ -57,103 +57,103 @@ _Home_: `game/ui/board-primitives.js:69` — `bpEdgePts`
 
 **bpBeginBoard**:
 Reset a board `<svg>` to an empty draw group.
-_Home_: `game/ui/board-primitives.js:105` — `bpBeginBoard`
+_Home_: `game/ui/board-primitives.js:110` — `bpBeginBoard`
 
 **bpHexPoly**:
 A bare hex polygon (the tile fill/stroke shape).
-_Home_: `game/ui/board-primitives.js:120` — `bpHexPoly`
+_Home_: `game/ui/board-primitives.js:125` — `bpHexPoly`
 
 **bpCoordLabel**:
 The small hex-coordinate label.
-_Home_: `game/ui/board-primitives.js:125` — `bpCoordLabel`
+_Home_: `game/ui/board-primitives.js:130` — `bpCoordLabel`
 
 **bpHexTile**:
 A full board hex tile — polygon plus its coordinate label.
-_Home_: `game/ui/board-primitives.js:134` — `bpHexTile`
+_Home_: `game/ui/board-primitives.js:139` — `bpHexTile`
 
 **bpTerrainStroke**:
 The bare coloured terrain edge line (no glyph) — the editor's own paint stroke.
-_Home_: `game/ui/board-primitives.js:147` — `bpTerrainStroke`
+_Home_: `game/ui/board-primitives.js:152` — `bpTerrainStroke`
 
 **bpTerrainEdge**:
 A hex-owned terrain side drawn inset, with its terrain glyph.
-_Home_: `game/ui/board-primitives.js:162` — `bpTerrainEdge`
+_Home_: `game/ui/board-primitives.js:167` — `bpTerrainEdge`
 
 **bpTrenchLine**:
 A dug trench segment on one hex edge.
-_Home_: `game/ui/board-primitives.js:185` — `bpTrenchLine`
+_Home_: `game/ui/board-primitives.js:190` — `bpTrenchLine`
 
 **bpHQMarker**:
 The HQ mark (ring + star) at an explicit centre.
-_Home_: `game/ui/board-primitives.js:197` — `bpHQMarker`
+_Home_: `game/ui/board-primitives.js:202` — `bpHQMarker`
 
 **bpHQ**:
 The HQ mark placed on a hex key.
-_Home_: `game/ui/board-primitives.js:215` — `bpHQ`
+_Home_: `game/ui/board-primitives.js:220` — `bpHQ`
 
 **bpUnitToken**:
 A unit token (circle + chit + type glyph) at an explicit centre — shared by the live board and the manual diagram.
-_Home_: `game/ui/board-primitives.js:221` — `bpUnitToken`
+_Home_: `game/ui/board-primitives.js:226` — `bpUnitToken`
 
 **bpUnit**:
 The live-board unit — a `bpUnitToken` in its own hover group.
-_Home_: `game/ui/board-primitives.js:237` — `bpUnit`
+_Home_: `game/ui/board-primitives.js:242` — `bpUnit`
 
 **bpPieceGlyph**:
 The standalone mini piece glyph (its own `<svg>` string) — the mats twin of `bpUnitToken`.
-_Home_: `game/ui/board-primitives.js:250` — `bpPieceGlyph`
+_Home_: `game/ui/board-primitives.js:255` — `bpPieceGlyph`
 
 **bpAttackLayer**:
 The hover-only attack-math group.
-_Home_: `game/ui/board-primitives.js:261` — `bpAttackLayer`
+_Home_: `game/ui/board-primitives.js:266` — `bpAttackLayer`
 
 **bpAttackPill**:
 One attack-math pill on the hover layer.
-_Home_: `game/ui/board-primitives.js:262` — `bpAttackPill`
+_Home_: `game/ui/board-primitives.js:267` — `bpAttackPill`
 
 **bpHighlight**:
 A hex-fill highlight polygon (caller attaches the click).
-_Home_: `game/ui/board-primitives.js:275` — `bpHighlight`
+_Home_: `game/ui/board-primitives.js:280` — `bpHighlight`
 
 **bpTrenchGhost**:
 The dashed trench-orientation dig preview.
-_Home_: `game/ui/board-primitives.js:284` — `bpTrenchGhost`
+_Home_: `game/ui/board-primitives.js:289` — `bpTrenchGhost`
 
 **bpTrenchKnob**:
 The brass knob at a trench pair's shared corner.
-_Home_: `game/ui/board-primitives.js:293` — `bpTrenchKnob`
+_Home_: `game/ui/board-primitives.js:298` — `bpTrenchKnob`
 
 **bpBarrageTrench**:
 The barrage mark over a trenched edge.
-_Home_: `game/ui/board-primitives.js:301` — `bpBarrageTrench`
+_Home_: `game/ui/board-primitives.js:306` — `bpBarrageTrench`
 
 **bpBarrageForestEdge**:
 The barrage mark over a forest edge.
-_Home_: `game/ui/board-primitives.js:309` — `bpBarrageForestEdge`
+_Home_: `game/ui/board-primitives.js:314` — `bpBarrageForestEdge`
 
 **bpEdgeHitLine**:
 The invisible fat hit-line over a hex edge (editor click target).
-_Home_: `game/ui/board-primitives.js:320` — `bpEdgeHitLine`
+_Home_: `game/ui/board-primitives.js:325` — `bpEdgeHitLine`
 
 **bpGhostHex**:
 A ghost hex outline (the editor's add-hex affordance).
-_Home_: `game/ui/board-primitives.js:328` — `bpGhostHex`
+_Home_: `game/ui/board-primitives.js:333` — `bpGhostHex`
 
 **bpThumbHex**:
 A hex polygon at thumbnail scale.
-_Home_: `game/ui/board-primitives.js:343` — `bpThumbHex`
+_Home_: `game/ui/board-primitives.js:348` — `bpThumbHex`
 
 **bpThumbTerrain**:
 A terrain edge at thumbnail scale.
-_Home_: `game/ui/board-primitives.js:346` — `bpThumbTerrain`
+_Home_: `game/ui/board-primitives.js:351` — `bpThumbTerrain`
 
 **bpThumbHQ**:
 An HQ mark at thumbnail scale.
-_Home_: `game/ui/board-primitives.js:350` — `bpThumbHQ`
+_Home_: `game/ui/board-primitives.js:355` — `bpThumbHQ`
 
 **previewSVG**:
 A whole map preview thumbnail from a map def.
-_Home_: `game/ui/board-primitives.js:354` — `previewSVG`
+_Home_: `game/ui/board-primitives.js:359` — `previewSVG`
 
 ---
 

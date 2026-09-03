@@ -71,9 +71,14 @@ function bpEdgePts(hexKey, dir, rad, s){
   return [ cornerPt(c[0], c[1], aa[0], rad), cornerPt(c[0], c[1], aa[1], rad) ];
 }
 
-/* =================== palette =================== */
+/* =================== geometry + stroke tokens =================== */
 // board glyph radii, as a fraction of the hex size S — the inset a mark sits at.
 var BOARD_R = { terrain:S*0.85, trench:S*0.74, hqOuter:S*0.62, hqInner:S*0.5, unit:S*0.5 };
+// line weights reused across marks/consumers (the twin of BOARD_R). A mark's own
+// one-off default width stays inline at the mark; only shared widths live here.
+var BOARD_SW = { unit:2.5 }; // unit-token outline — fx.js's fallen-unit ghost mirrors it
+
+/* =================== palette =================== */
 var BOARD = {
   // terrain strokes live in CSS (the stylesheet themes them); glyph fills don't
   forest:'var(--forest)', river:'var(--river)', mountain:'var(--mountain)',
@@ -222,7 +227,7 @@ function bpUnitToken(g, cx, cy, owner, type, o){
   o = o || {};
   var sc = BOARD.side(owner), col = sc.fill, colD = sc.dark;
   var r = o.r!=null?o.r:BOARD_R.unit, hw = o.chitHW!=null?o.chitHW:13, hh = o.chitHH!=null?o.chitHH:9, gsw = o.glyphSW!=null?o.glyphSW:2;
-  g.appendChild(svgEl('circle',{ cx:cx, cy:cy, r:r, fill:col, stroke:colD, 'stroke-width':o.circSW!=null?o.circSW:2.5 }));
+  g.appendChild(svgEl('circle',{ cx:cx, cy:cy, r:r, fill:col, stroke:colD, 'stroke-width':o.circSW!=null?o.circSW:BOARD_SW.unit }));
   g.appendChild(svgEl('rect',{ x:cx-hw, y:cy-hh, width:hw*2, height:hh*2, fill:BOARD.chit, stroke:colD, 'stroke-width':o.chitSW!=null?o.chitSW:1.4, rx:1.5 }));
   if (type==='infantry'){
     g.appendChild(svgEl('line',{ x1:cx-hw, y1:cy-hh, x2:cx+hw, y2:cy+hh, stroke:colD, 'stroke-width':gsw }));
