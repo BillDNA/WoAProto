@@ -131,7 +131,8 @@ function mapReport(n, diff, filter, maps, mapsetArg, battalions) {
       dbh = db.open();
       runId = db.insertRun(dbh, {
         version: E.VERSION, kind: 'balance', redAi: diff, blueAi: diff, n: n, tool: 'balance.js',
-        deck: battalionLabel, // deck-scope-ok: db run-identity column (migration deferred)
+        battalionRed: (battalions && battalions.red) || activeId,   // both battalions fielded (per side)
+        battalionBlue: (battalions && battalions.blue) || activeId,
         mapset: mapsetArg || (E.activeMapset() && E.activeMapset().id) || 'all',
         seedBase: 7919 // the SAME base the per-map (mi+1)*7919 schedule below multiplies
       });
@@ -257,14 +258,10 @@ var battalionBlue = null, dbi = args.indexOf('--battalion-blue');
 if (dbi >= 0) { battalionBlue = args[dbi + 1]; args.splice(dbi, 2); }
 var battalions = (battalionRed || battalionBlue) ? { red: battalionRed, blue: battalionBlue } : null;
 var activeId = (E.ACTIVE_BATTALION && E.ACTIVE_BATTALION.id) || null;
-// the run-identity id stays a single value in the common case (other writers store one id);
-// only genuinely-different battalions get the "X vs Y" composite.
-var battalionLabel = activeId;
 if (battalions) {
   try { E.resolveBattalion(battalions.red); E.resolveBattalion(battalions.blue); }   // fail fast on a bad name
   catch (e) { console.log(e.message); process.exit(1); }
   var redId = battalions.red || activeId, blueId = battalions.blue || activeId;
-  battalionLabel = redId === blueId ? redId : redId + ' vs ' + blueId;
   console.log('Battalions: red = ' + (redId || 'active') + ', blue = ' + (blueId || 'active') + '\n');
 }
 if (args[0] === 'matchup') {

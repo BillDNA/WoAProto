@@ -7,7 +7,7 @@
    from index.html's inline app script. */
 'use strict';
 
-// config bug (issue #250): a small, read-only screen-corner overlay stamping the
+// config identity: a small, read-only screen-corner overlay stamping the
 // config identity — rules version + both config-home digests — so any screenshot
 // carries a retrievable record of which dials were in force. Plain HTML (no SVG),
 // rendered once at load (a reload re-stamps it — the supported way to change a dial
@@ -16,7 +16,7 @@
   var el = document.createElement('div');
   el.id = 'configBug';
   el.textContent = 'WoA v' + E.VERSION + ' · cfg ' + E.CONFIG.digest + ' · ui ' + UI_CONFIG.digest;
-  el.title = 'Live config identity (rules version + engine/UI config digests) — issue #250';
+  el.title = 'Live config identity (rules version + engine/UI config digests)';
   document.body.appendChild(el);
 })();
 
@@ -399,13 +399,13 @@ E.hooks.onSkirmishEnd.push(function (st) {
       runKey: dash ? DASH.runKey : undefined,
       run: { version: E.VERSION, kind: kind, redAi: aiOf('red'), blueAi: aiOf('blue'),
         n: dash ? DASH.meta.n : 1, tool: dash ? 'dashboard' : 'browser',
-        // run identity for the A/B picker. The `battalion` run field maps to the
-        // logs/woa.db `battalion` column (a persisted-schema name, migration deferred):
-        // it reads the battalion the ENGINE actually resolved THIS load — never
-        // content/battalions/'s active flag directly (gotcha: the Battalion
-        // Editor's applied override sandbox overrides it, see index.html's
-        // WOA_APPLIED_BATTALION wiring).
-        deck: E.ACTIVE_BATTALION && E.ACTIVE_BATTALION.id, // deck-scope-ok: db run-identity column
+        // run identity for the A/B picker: both battalions fielded, read from the
+        // battalion the ENGINE actually resolved THIS load — never
+        // content/battalions/'s active flag directly (the Battalion Editor's
+        // applied override sandbox overrides it, see index.html's
+        // WOA_APPLIED_BATTALION wiring). Symmetric today: both sides field it.
+        battalionRed: E.ACTIVE_BATTALION && E.ACTIVE_BATTALION.id,
+        battalionBlue: E.ACTIVE_BATTALION && E.ACTIVE_BATTALION.id,
         mapset: dash ? DASH.meta.mapset : undefined,
         seedBase: dash ? DASH.meta.seedBase : undefined },
       state: st, firstPlayer: E.other(v.second), seed: v.seed

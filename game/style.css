@@ -713,7 +713,7 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
     font-family:monospace; font-size:12px; padding:0 5px; border:1px solid var(--brass-dark);
     border-radius:4px; background:rgba(255,255,255,.35);
   }
-  /* config bug (issue #250): a persistent screen-corner overlay stamping the live
+  /* config identity: a persistent screen-corner overlay stamping the live
      config identity (rules version + digests) onto every screenshot. Read-only.
      Legible over any backdrop — light monospace on a solid dark pill, never the
      green-on-green that vanished against the table felt. */

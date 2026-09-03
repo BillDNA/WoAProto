@@ -212,11 +212,10 @@ var ROUTES = {
   },
   'POST /api/recordskirmish': function (req, res, body) {
     // one finished skirmish -> a per-skirmish row in logs/woa.db.
-    // body = { run:{version,kind,redAi,blueAi,n,tool,notes,deck,mapset,seedBase,label,baseline},
+    // body = { run:{version,kind,redAi,blueAi,n,tool,notes,battalionRed,battalionBlue,mapset,seedBase,label,baseline},
     //   runKey?, state, firstPlayer, seed } — run is forwarded to db.insertRun as-is
-    // (run identity); the caller (the dashboard Run loop) stamps deck/mapset/seedBase,
-    // never this proxy — the server stays a dumb pass-through. (`deck` is the
-    // persisted logs/woa.db run-identity column; its rename rides with report-data.)
+    // (run identity); the caller (the dashboard Run loop) stamps the battalion
+    // refs/mapset/seedBase, never this proxy — the server stays a dumb pass-through.
     try {
       var r = recordSkirmish(body);
       json(res, r.status, r.out);

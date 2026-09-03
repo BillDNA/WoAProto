@@ -642,7 +642,8 @@ async function main() {
     dbm = require(path.join(__dirname, 'db.js'));
     dbh = dbm.open();
     runId = dbm.insertRun(dbh, { version: E.VERSION, kind: 'llm', redAi: args.red, blueAi: args.blue,
-      n: target ? target * 2 - 1 : 1, tool: 'claude-plays' });
+      n: target ? target * 2 - 1 : 1, tool: 'claude-plays',
+      battalion: args.battalion || (E.ACTIVE_BATTALION && E.ACTIVE_BATTALION.id) || undefined });
   } catch (e) { dbm = null; }
 
   const skirmishes = []; // {index, winner, winType, turns, decisions, fallbacks, notes:{red,blue}}
