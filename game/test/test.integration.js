@@ -90,7 +90,7 @@ test('integration: a real finished skirmish reaches the persistence seam', (t) =
   }
 });
 
-// The in-browser parallel Balance Dashboard (game/sweep-worker.js, issue #274)
+// The in-browser parallel Balance Dashboard (game/sweep-worker.js)
 // runs each skirmish in a Web Worker and postMessage()s the finished state to the
 // main thread, which folds (WOA_SIM.balanceAdd) + reads it (E.view) + persists it
 // (recordSkirmish) EXACTLY as the serial loop does. postMessage is a structured

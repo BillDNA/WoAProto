@@ -1,4 +1,4 @@
-/* War of Attrition — Balance Dashboard sweep worker (issue #274).
+/* War of Attrition — Balance Dashboard sweep worker.
 
    Runs one map's AI-vs-AI skirmishes off the main thread and streams each
    finished engine state back. The dashboard (ui/boot.js) folds + persists on the

@@ -488,7 +488,7 @@ $('dashRun').onclick = function(){
     }, 8);
   }
 
-  // ---- parallel path (issue #274): fan the maps across Web Workers ----
+  // ---- parallel path: fan the maps across Web Workers ----
   // Each worker runs one whole map's n skirmishes in seed order and streams the
   // finished states back; the fold + persistence + detail all stay here, on the
   // main thread, through the SAME WOA_SIM code the serial loop uses — so the
@@ -517,9 +517,9 @@ $('dashRun').onclick = function(){
     }
     // A worker that dies without having folded a single skirmish means Web
     // Workers aren't usable here (script 404 / CSP block / init throw) — restart
-    // the WHOLE sweep on the serial loop, honouring the fallback AC beyond the
-    // constructor-throw case. Once any skirmish has persisted a clean restart
-    // would double-record, so keep the finished maps and stop instead.
+    // the WHOLE sweep on the serial loop (covers a runtime load failure, not just
+    // a constructor throw). Once any skirmish has persisted a clean restart would
+    // double-record, so keep the finished maps and stop instead.
     function workerFailed(why){
       if (guard) return;
       if (doneCount === 0){
