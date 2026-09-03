@@ -285,7 +285,7 @@ realSetTimeout(function () {
         assert.ok(doc.getElementById('dashRunA').disabled && doc.getElementById('dashRunA').options[0].textContent === 'No runs yet',
           'no saved runs — run pickers show the "No runs yet" fallback');
       }, 0);
-      assert.ok(doc.querySelectorAll('#dashPills .dpill').length === 5, 'five pills: Overview | Maps | Cards | Units | Tables');
+      assert.ok(doc.querySelectorAll('#dashPills .dpill').length === 6, 'six pills: Overview | Maps | Cards | Units | Cross-cuts | Tables');
       assert.ok(doc.querySelector('#dashPills .dpill[data-view="tables"]').classList.contains('sel'), 'Tables is the selected pill');
       assert.ok(doc.getElementById('dashRunControls').style.display !== 'none', 'Run/Save controls visible on Tables');
       doc.querySelector('#dashPills .dpill[data-view="overview"]').click();
@@ -296,7 +296,16 @@ realSetTimeout(function () {
          /no saved runs yet/i.test(doc.getElementById('dashPaneOverview').textContent),
         'Overview pane: "no saved runs yet" fallback note when the db is empty');
       assert.ok(doc.getElementById('dashPaneMaps').style.display === 'none' && doc.getElementById('dashPaneUnits').style.display === 'none',
-        'the other three panes stay hidden while Overview is active');
+        'the other panes stay hidden while Overview is active');
+
+      // Cross-cuts pill: renders on its own (no run A/B). jsdom has no fetch, so
+      // the pane must show its no-server note, never throw.
+      doc.querySelector('#dashPills .dpill[data-view="crosscuts"]').click();
+      assert.ok(win.DASH.view === 'crosscuts' && doc.getElementById('dashPaneCrosscuts').style.display !== 'none',
+        'clicking Cross-cuts switches to and shows the Cross-cuts pane');
+      assert.ok(/cross-cuts/i.test(doc.getElementById('dashPaneCrosscuts').textContent),
+        'Cross-cuts pane renders its heading without a server (graceful no-data)');
+
       doc.getElementById('dashTemp').value = 'T2';
       doc.getElementById('dashTemp').dispatchEvent(new win.Event('change', { bubbles: true }));
       assert.ok(win.DASH.temperature === 'T2', 'temperature selector writes DASH.temperature');

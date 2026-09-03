@@ -457,10 +457,119 @@ function listRuns(h, limit) { return h.stmts.listRuns.all(limit || 200); }
 function listSkirmishes(h, runId) { return h.stmts.listSkirmishes.all(runId); }
 function close(h) { h.db.close(); }
 
+/* ---------- the query surface: whitelisted sliceable aggregates ----------
+   One re-sliceable aggregate over the star schema, so the dashboard (and an
+   agent, via /api/aggregate) can ask "shadows of what needs changing" without a
+   new view per question. Metric and group-by NAMES are whitelisted -> the only
+   SQL that ever interpolates a request value is a known-safe expression; the
+   slice filters (version, config_digest) are bound parameters. See ADR-0004 and
+   docs/reference/query-cookbook.md. */
+
+// Metric = a SQL aggregate expression over the skirmishes fact (alias s). Same
+// definitions as the v_*_balance views (ADR-0004), reused per-slice on demand.
+var AGG_METRICS = {
+  n:             'COUNT(*)',
+  first_win_pct: "AVG(CASE WHEN s.winner = s.first_player THEN 1.0 ELSE 0.0 END)",
+  red_win_pct:   "AVG(CASE WHEN s.winner = 'red' THEN 1.0 ELSE 0.0 END)",
+  hq_pct:        "AVG(CASE WHEN s.win_type = 'hq' THEN 1.0 ELSE 0.0 END)",
+  avg_turns:     'AVG(s.turns)',
+  drag:          "AVG(CASE WHEN s.win_type = 'attrition' THEN s.kill_tail END)",
+  tie_pct:       "AVG(CASE WHEN s.win_type = 'attrition' THEN CAST(s.tiebreak AS REAL) END)",
+  swings:        'AVG(s.lead_changes)',
+  zero_kill_pct: 'AVG(CAST(s.zero_kill AS REAL))'
+};
+// Group-by = the x-axis dimension. `join` pulls the maps dimension in (terrain
+// features live there); `num` marks a numeric bucket (drives ordering + a
+// numeric x-axis in the chart). The mountain_hexes bucket IS the ADR litmus.
+var AGG_GROUPBYS = {
+  map:            { sql: 's.map',            join: false, num: false },
+  shape:          { sql: 'm.shape',          join: true,  num: false },
+  mountain_hexes: { sql: 'm.mountain_hexes', join: true,  num: true },
+  forest_hexes:   { sql: 'm.forest_hexes',   join: true,  num: true },
+  river_hexes:    { sql: 'm.river_hexes',    join: true,  num: true },
+  hex_total:      { sql: 'm.hex_total',      join: true,  num: true },
+  first_player:   { sql: 's.first_player',   join: false, num: false },
+  win_type:       { sql: 's.win_type',       join: false, num: false },
+  winner:         { sql: 's.winner',         join: false, num: false },
+  battalion_red:  { sql: 's.battalion_red',  join: false, num: false }
+};
+// card_events terrain cross-cut: which maps-dimension terrain column the card's
+// play-timing is bucketed against.
+var CARD_TERRAINS = { mountain: 'm.mountain_hexes', forest: 'm.forest_hexes', river: 'm.river_hexes' };
+
+// maps dimension is keyed by NAME to the fact's `map` column (= st.mapName), and
+// by the (version, config_digest) slice so two configs never cross-join.
+var MAPS_JOIN = ' LEFT JOIN maps m ON m.name = s.map AND m.version = s.version AND m.config_digest = s.config_digest';
+
+// slice filters are ALWAYS bound params, never interpolated.
+function sliceWhere(prefix, version, config, params) {
+  var w = [];
+  if (version != null && version !== '') { w.push(prefix + '.version = ?'); params.push(version); }
+  if (config != null && config !== '') { w.push(prefix + '.config_digest = ?'); params.push(config); }
+  return w;
+}
+
+/* Skirmish-grain aggregate: one row per bucket of `x`, each requested metric a
+   column. opts = { x, metrics?, version?, config? }. Throws on an unknown x or
+   metric (the whitelist is the injection fence). Returns
+   { x, numeric, metrics, rows:[{bucket, <metric>...}] }. */
+function aggregate(h, opts) {
+  opts = opts || {};
+  var gb = AGG_GROUPBYS[opts.x || 'map'];
+  if (!gb) throw new Error('aggregate: unknown group-by "' + opts.x + '"');
+  var metrics = (opts.metrics && opts.metrics.length)
+    ? opts.metrics : ['n', 'first_win_pct', 'red_win_pct', 'hq_pct', 'avg_turns', 'tie_pct', 'drag', 'swings'];
+  metrics.forEach(function (m) { if (!AGG_METRICS[m]) throw new Error('aggregate: unknown metric "' + m + '"'); });
+  var sel = [gb.sql + ' AS bucket'].concat(metrics.map(function (m) { return AGG_METRICS[m] + ' AS ' + m; }));
+  var params = [];
+  var where = sliceWhere('s', opts.version, opts.config, params);
+  var sql = 'SELECT ' + sel.join(', ') + ' FROM skirmishes s' + (gb.join ? MAPS_JOIN : '') +
+    (where.length ? ' WHERE ' + where.join(' AND ') : '') +
+    ' GROUP BY bucket ORDER BY bucket';
+  var stmt = h.db.prepare(sql);
+  return { x: opts.x || 'map', numeric: gb.num, metrics: metrics, rows: stmt.all.apply(stmt, params) };
+}
+
+/* The literal ADR litmus: a card's play-timing vs a map's terrain-hex count —
+   one row per (terrain bucket, card). opts = { terrain?, card?, version?, config? }.
+   Returns { terrain, rows:[{bucket, card_id, avg_play_turn, plays, win_pct}] }. */
+function cardTiming(h, opts) {
+  opts = opts || {};
+  var tcol = CARD_TERRAINS[opts.terrain || 'mountain'];
+  if (!tcol) throw new Error('cardTiming: unknown terrain "' + opts.terrain + '"');
+  var params = [];
+  var where = ["ce.outcome = 'played'"];
+  if (opts.card) { where.push('ce.card_id = ?'); params.push(opts.card); }
+  Array.prototype.push.apply(where, sliceWhere('ce', opts.version, opts.config, params));
+  var sql = 'SELECT ' + tcol + ' AS bucket, ce.card_id AS card_id,' +
+    ' AVG(ce.turn) AS avg_play_turn, COUNT(*) AS plays, AVG(CAST(ce.won AS REAL)) AS win_pct' +
+    ' FROM card_events ce JOIN maps m ON m.name = ce.map AND m.version = ce.version AND m.config_digest = ce.config_digest' +
+    ' WHERE ' + where.join(' AND ') + ' GROUP BY bucket, card_id ORDER BY card_id, bucket';
+  var stmt = h.db.prepare(sql);
+  return { terrain: opts.terrain || 'mountain', rows: stmt.all.apply(stmt, params) };
+}
+
+/* What the dashboard's slice pickers need: the DISTINCT slice keys actually in
+   the DB, plus the whitelisted metric/group-by/terrain names and the card/map
+   lists. All reads, never writes. */
+function dimensions(h) {
+  return {
+    versions: h.db.prepare('SELECT DISTINCT version, config_digest FROM skirmishes ORDER BY version, config_digest').all(),
+    metrics: Object.keys(AGG_METRICS),
+    groupBys: Object.keys(AGG_GROUPBYS),
+    terrains: Object.keys(CARD_TERRAINS),
+    cards: h.db.prepare('SELECT DISTINCT card_id FROM card_events WHERE card_id IS NOT NULL ORDER BY card_id').all().map(function (r) { return r.card_id; }),
+    maps: h.db.prepare('SELECT DISTINCT map FROM skirmishes WHERE map IS NOT NULL ORDER BY map').all().map(function (r) { return r.map; })
+  };
+}
+
 module.exports = {
   open: open, insertRun: insertRun, insertSkirmish: insertSkirmish, setBaseline: setBaseline,
   listRuns: listRuns, listSkirmishes: listSkirmishes, close: close, DEFAULT_DB: DEFAULT_DB,
   slimSkirmishState: slimSkirmishState, // the --parallel worker->parent skirmish envelope
+  // the query surface (sliceable aggregates over the star schema)
+  aggregate: aggregate, cardTiming: cardTiming, dimensions: dimensions,
+  AGG_METRICS: AGG_METRICS, AGG_GROUPBYS: AGG_GROUPBYS, CARD_TERRAINS: CARD_TERRAINS,
   // pure dimension derivations, exported for tests + reuse
   terrainFeatures: terrainFeatures, cardKind: cardKind, upsertDimensions: upsertDimensions,
   SCHEMA_VERSION: SCHEMA_VERSION

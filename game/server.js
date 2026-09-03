@@ -272,6 +272,42 @@ var ROUTES = {
       json(res, 200, rows);
     } catch (e) { json(res, 500, { error: e.message }); }
   },
+  'GET /api/dimensions': function (req, res) {
+    // the Cross-cuts pane's slice pickers: the DISTINCT (version, config_digest)
+    // slices present + the whitelisted metric/group-by/terrain names + card/map
+    // lists. Guarded like /api/runs — no db (zipped game/, or never opened) is a
+    // clean empty shape, not a 501.
+    if (!db) return json(res, 200, { versions: [], metrics: [], groupBys: [], terrains: [], cards: [], maps: [] });
+    try {
+      if (!dbHandle) dbHandle = db.open();
+      json(res, 200, db.dimensions(dbHandle));
+    } catch (e) { json(res, 500, { error: e.message }); }
+  },
+  'GET /api/aggregate': function (req, res, body, u) {
+    // the re-sliceable cross-cut charts. grain=skirmish (default) folds a metric
+    // by a group-by dimension (?x=, ?metrics=csv); grain=card is the ADR litmus,
+    // a card's play-timing by terrain-hex count (?terrain=, ?card=). Slice with
+    // ?version=&config=. Bad x/metric/terrain is a 400 (the db.js whitelist
+    // throws before any SQL). Guarded like /api/runs.
+    if (!db) return json(res, 200, { rows: [] });
+    try {
+      if (!dbHandle) dbHandle = db.open();
+      var version = u.searchParams.get('version') || '';
+      var config = u.searchParams.get('config') || '';
+      if (u.searchParams.get('grain') === 'card') {
+        return json(res, 200, db.cardTiming(dbHandle, {
+          terrain: u.searchParams.get('terrain') || 'mountain',
+          card: u.searchParams.get('card') || '', version: version, config: config
+        }));
+      }
+      var metrics = u.searchParams.get('metrics');
+      json(res, 200, db.aggregate(dbHandle, {
+        x: u.searchParams.get('x') || 'map',
+        metrics: metrics ? metrics.split(',').filter(Boolean) : null,
+        version: version, config: config
+      }));
+    } catch (e) { json(res, 400, { error: e.message }); }
+  },
   'GET /api/poll': function (req, res, body, u) {
     var r = rooms[(u.searchParams.get('room') || '').toUpperCase()];
     if (!r) return json(res, 404, { error: 'room not found' });
