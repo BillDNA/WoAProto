@@ -1,10 +1,12 @@
 /* War of Attrition — ui config home: UI-only guardrails (issue #250).
 
-   The SAME repeatable config pattern as Engine.CONFIG, a DIFFERENT home
-   (progressive disclosure): the rules kernel owns rules-facing dials; this UI
-   tier owns UI-enforced presentation guardrails. Neither leaks constants into
-   the other — the engine never enforces these (only the UI does), so they stay
-   off the engine surface.
+   The SAME config standard as the engine tier (game/engine/00-config.js), one
+   tier down — an object that owns its tunables as named data, plus a digest via
+   the ONE shared util. This is the UI peer of that file; copy either shape for a
+   new config tier. The rules kernel owns rules-facing dials; this UI tier owns
+   UI-enforced presentation guardrails. Neither leaks constants into the other —
+   the engine never enforces these (only the UI does), so they stay off the engine
+   surface.
 
    One object owns each guardrail as named data; consumers read it instead of a
    bare literal (the battalion band was duplicated across two UI files). The digest

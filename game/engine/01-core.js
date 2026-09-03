@@ -134,8 +134,9 @@
   if (UNIT_COUNT !== 10)
     throw new Error('War of Attrition: unit composition must total 10 pieces (got ' + UNIT_COUNT +
       (UNITS_VARIANT ? ' from units variant "' + UNITS_VARIANT.id + '"' : ' in maps.js') + ')');
-  var TRENCH_COUNT = BUILTIN.trenchCount || 3;
-  var TERRAIN_STOCK = BUILTIN.terrainStock || { F3: 2, F2: 4, M3: 2, M2: 4 };
+  // piece stocks are owned by the config home (00-config.js) — alias in
+  var TRENCH_COUNT = I.CONFIG.trenchCount;
+  var TERRAIN_STOCK = I.CONFIG.terrainStock;
   var CARDS = BUILTIN.cards;
   if (!UNITS || !CARDS) throw new Error('War of Attrition: maps.js must define units and cards');
   // A card registry is "everything the skirmish needs to know about one battalion's
@@ -177,67 +178,11 @@
 
   var MAPS = BUILTIN.maps;
 
-  /* ---------- game config (single home for rules-facing tunables) ----------
-     The repeatable config pattern (issue #250): ONE namespace object owns every
-     rules-facing game-setting dial as named data; the pre-existing flat exports
-     become thin aliases INTO it (one value, two access paths); and a deterministic
-     digest fingerprints the live dials. Adding a tunable is a one-place edit — the
-     digest picks it up automatically. The membership is non-exhaustive by design:
-     the object is the home, not a fixed enumeration. AI_WEIGHTS is deliberately
-     NOT here — it lands on this same pattern when #241 (Commanders) gives it a home.
-
-     Army-points weights are a descriptive capability yardstick (ADR-0002): points
-     are COMPUTED from a card's steps against this ONE hand-seeded table, never
-     stored per card. Measured balance always overrules this number. Seeding intent:
-     deploy > attack > reposition; unit tier and the attack flags/mod add capability
-     on top. `combo` escalates action-stacking: the Nth action is priced at its base
-     cost x combo[N] (Fibonacci-shaped, so a second action costs 2x, a third 3x, a
-     fourth 5x, …) — stacking many actions on one card is superlinear, not free. */
-  var GAME_CONFIG = {
-    // army-points budget ceiling: the fairness constraint that lets two asymmetric
-    // battalions be called "matched". The editor's guardrail rejects an over-budget
-    // battalion the same way it rejects an oversized one.
-    pointsCap: 100,
-    // army-points weight table (combo/step/tier/mod/flag surcharges)
-    points: {
-      combo: [1, 2, 3, 5, 8, 13, 21, 34, 55],          // per-action-position multiplier (Fibonacci)
-      step: { deploy: 3, attack: 2, reposition: 1, trench: 1, barrage: 2 },
-      tier: { infantry: 0, cavalry: 1, artillery: 2 },  // deploy unit surcharge
-      mod: 1,                                            // per point of |attack mod|
-      tieSpare: 1, noAdvance: 0.5, anywhere: 1           // flag surcharges
-    },
-    // piece stocks: the terrain chit counts and trench pieces on the player mat
-    terrainStock: TERRAIN_STOCK,
-    trenchCount: TRENCH_COUNT,
-    // map hex ceiling: the physical (laser-cutter) board-size guardrail. Enforced by
-    // the engine's map validator (validateMaps — content integrity) AND the map
-    // editor's UI guards, so it lives HERE where both read one owner. (The battalion
-    // size band, by contrast, is genuinely UI-only — the engine never checks it — so
-    // it stays in the UI-config home.)
-    mapHexCeiling: 24
-  };
-  // Deterministic digest: a canonical, object-key-order-independent serialization
-  // (arrays stay positional — `combo` order is meaningful) hashed with FNV-1a. Stable
-  // across process runs and platforms; changes iff a tunable value changes. It is a
-  // pure fold over primitives, so identical values always yield the same string. The
-  // digest lives on the home as a NON-enumerable getter (so it never feeds its own
-  // hash) and recomputes on read. One implementation, shared by both config homes —
-  // the UI tier calls I.configDigest over its own UI_CONFIG.
-  function configCanon(v) {
-    if (Array.isArray(v)) return '[' + v.map(configCanon).join(',') + ']';
-    if (v && typeof v === 'object')
-      return '{' + Object.keys(v).sort().map(function (k) { return JSON.stringify(k) + ':' + configCanon(v[k]); }).join(',') + '}';
-    return JSON.stringify(v);
-  }
-  function configDigest(obj) {
-    var s = configCanon(obj), h = 0x811c9dc5 | 0;
-    for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); }
-    return (h >>> 0).toString(16).padStart(8, '0');
-  }
-  Object.defineProperty(GAME_CONFIG, 'digest', { enumerable: false, get: function () { return configDigest(GAME_CONFIG); } });
-
-  // Flat frozen exports resolve INTO GAME_CONFIG — one owner, two access paths.
-  var POINTS = GAME_CONFIG.points;
+  /* ---------- army-points (weights owned by the config home, 00-config.js) ----------
+     Points are COMPUTED from a card's steps against I.CONFIG.points; POINTS is the
+     flat alias into that home (one value, two access paths). See 00-config.js for
+     the weight table and the seeding rationale. */
+  var POINTS = I.CONFIG.points;
   function comboWeight(i) { return POINTS.combo[i] != null ? POINTS.combo[i] : POINTS.combo[POINTS.combo.length - 1]; }
   function stepPoints(step) {
     if (!step || !step.type) return 0;
@@ -259,8 +204,8 @@
     var cards = hydrateBattalionCards((battalion && battalion.cards) || []);
     return cards.reduce(function (s, c) { return s + cardPoints(c) * (c.count == null ? 1 : c.count); }, 0);
   }
-  // Alias into the config home (seeded above the shipped battalions).
-  var BATTALION_POINTS_CAP = GAME_CONFIG.pointsCap;
+  // Alias into the config home (00-config.js).
+  var BATTALION_POINTS_CAP = I.CONFIG.pointsCap;
 
   // tiny pure helpers used by every layer
   function other(p) { return p === 'red' ? 'blue' : 'red'; }
@@ -292,10 +237,9 @@
   I.PIECE_TOTALS = PIECE_TOTALS;
   I.cardPoints = cardPoints;
   I.battalionPoints = battalionPoints;
-  // The config home + its digest util (issue #250). BATTALION_POINTS_CAP / POINTS /
-  // TERRAIN_STOCK resolve INTO I.CONFIG — one owner, aliased flat exports.
-  I.CONFIG = GAME_CONFIG;
-  I.configDigest = configDigest;
+  // Flat exports aliased into the config home (00-config.js owns I.CONFIG /
+  // I.configDigest). POINTS / BATTALION_POINTS_CAP / TERRAIN_STOCK / TRENCH_COUNT
+  // are one value, two access paths — the frozen-API compatibility surface.
   I.POINTS = POINTS;
   I.BATTALION_POINTS_CAP = BATTALION_POINTS_CAP;
   I.MAPS = MAPS;
