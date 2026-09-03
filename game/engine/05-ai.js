@@ -11,8 +11,8 @@
   // string round-trip. The Field Marshal search clones the skirmish state once
   // per candidate move — thousands of times per skirmish — and the
   // serialize-then-parse pair dominated that cost. This reproduces JSON exactly
-  // so a cloned search state stays byte-identical to the old JSON clone (the
-  // golden-diff oracle): own enumerable keys in source order (state carries no
+  // so a cloned search state stays byte-identical to the old JSON clone (keeping
+  // a throwaway refactor diff reproducible): own enumerable keys in source order (state carries no
   // integer-like keys, so that is insertion order — same iteration order the
   // engine's for..in scans depend on); undefined/function/symbol values dropped
   // from objects and turned to null in arrays; non-finite numbers to null.

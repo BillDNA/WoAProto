@@ -185,7 +185,7 @@ A played Card that resolved zero actions — a dead turn.
 _Home_: `game/engine/04-skirmish.js:544` — `noop = true`
 
 **Decision journal**:
-The per-decision event stream on `st.journal` — at each card choice, one event per Card the deciding side holds: the played Card (outcome `played`, tagged with its play mode) and every other held Card (outcome `declined`). Each event carries turn, side, mode, and card id. Capture only, additive to the journal — no play-outcome path reads it, so the golden-diff stays byte-identical. It makes pass-rate and play-timing first-class; the `card_events` fact table consumes it.
+The per-decision event stream on `st.journal` — at each card choice, one event per Card the deciding side holds: the played Card (outcome `played`, tagged with its play mode) and every other held Card (outcome `declined`). Each event carries turn, side, mode, and card id. Capture only, additive to the journal — no play-outcome path reads it, so a throwaway refactor diff stays byte-identical. It makes pass-rate and play-timing first-class; the `card_events` fact table consumes it.
 _Avoid_: play log (that's the play-only subset — declines leave no play-log row).
 _Home_: `game/engine/04-skirmish.js:108` — `decisionLog`
 

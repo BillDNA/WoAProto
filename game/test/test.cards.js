@@ -310,7 +310,7 @@ test('asymmetric deck binding', () => {
 
   var active = E.ACTIVE_BATTALION && E.ACTIVE_BATTALION.id;
   // (a) default (no per-side selection) is byte-identical to naming the active
-  //     deck on both sides — the golden-safe path.
+  //     battalion on both sides — the content-safe equivalence.
   var base = SIM.balanceMap(E.MAPS[4], 4, { seedBase: 5 });
   var named = SIM.balanceMap(E.MAPS[4], 4, { seedBase: 5, battalions: { red: active, blue: active } });
   assert.ok(JSON.stringify(base) === JSON.stringify(named),

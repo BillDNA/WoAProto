@@ -32,7 +32,7 @@ findings meant to feed `create-card`/`create-map`).
 1. **Baseline runs** (all from repo root):
    - `node dev/balance.js 60` — per-map report + Behaviour/Decisiveness + card report.
      Sweeps run parallel by default (k = cores-1); add `--serial` only for a
-     golden-diff. (To SAVE the report and fold it into the per-version accumulator,
+     throwaway refactor diff. (To SAVE the report and fold it into the per-version accumulator,
      use `node dev/balance-report.js 60` instead — same numbers, also parallel by
      default.)
    - `node dev/balance.js matchup 16` — skill premium (stronger AI's win rate),

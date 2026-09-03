@@ -79,9 +79,9 @@ Three anti-degeneracy guards (the `noopPenalty` / `antiShuffle` weights and the 
 - **Attrition projection**: `evalState` projects the attrition winner if battalions ran out now (fieldScore diff + tie-goes-to-second, ramping as `cardsRemaining` shrinks). The side losing the standstill is pushed to force combat — this removes the swap-dance stalemate.
 - **Anti-shuffle**: re-swapping the pair a player swapped last turn costs −10 in `greedyResolve` (`st.lastSwap`).
 
-## Refactor discipline — the golden-diff oracle
+## Refactor discipline — the throwaway balance diff
 
-Determinism is the free regression net: the same seed schedule produces **byte-identical `balance.js` aggregates**. Before moving code around, capture golden baselines (`node dev/balance.js 24 normal` and `24 easy` — easy-AI noise is enumeration-order-sensitive); every refactor commit must reproduce them byte-identically, on top of `node game/test/test.js` and `node dev/smoke.js` green. A change that legitimately moves the numbers is not a refactor — it is a rules/AI-strength change: **bump `RULES_VERSION`** (`engine/01-core.js`, tracking the rule book header) atomically with its test-pin updates, so playtest data stays apples-to-apples per version.
+Determinism is the free regression net: the same seed schedule produces **byte-identical `balance.js` aggregates**. Before moving code around, generate a throwaway baseline on demand into the gitignored `dev/baselines/` (`node dev/balance.js 24 normal` and `24 easy` — easy-AI noise is enumeration-order-sensitive) and diff before/after; a pure refactor commit must reproduce it byte-identically, on top of `node game/test/test.js` and `node dev/smoke.js` green. Nothing here is committed or gated — you capture the numbers by hand into `dev/baselines/` (ignored so a forgotten baseline can't leak into main), diff them, and discard them. A change that legitimately moves the numbers is not a refactor — it is a rules/AI-strength change: **bump `RULES_VERSION`** (`engine/01-core.js`, tracking the rule book header) atomically with its test-pin updates, so playtest data stays apples-to-apples per version.
 
 ## Related
 

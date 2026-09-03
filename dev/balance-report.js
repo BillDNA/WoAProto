@@ -33,7 +33,7 @@
      woa.db writer; report, accumulator AND DB rows are byte-identical to a serial
      run on the same seeds).
      --parallel [k]  set the worker count explicitly (default: cores-1)
-     --serial        force the in-process path (no workers) for the golden-diff
+     --serial        force the in-process path (no workers) for a throwaway refactor diff
                and debugging
 
    It also ranks maps by a balance-quality score and prints `BEST_MAP: <name>`
@@ -117,7 +117,7 @@ async function run() {
     if (argv.indexOf(f) >= 0) { flags[f.slice(2)] = true; argv = argv.filter(function (a) { return a !== f; }); }
   });
   // Parallel by default (k = cores-1): the balance loop grows the LLN pool fast with
-  // no extra flag. --serial forces the in-process path for the golden-diff / debugging.
+  // no extra flag. --serial forces the in-process path for a throwaway refactor diff / debugging.
   // Report, accumulator AND per-skirmish DB rows stay byte-identical to serial.
   if (flags.serial) flags.parallel = 0;
   else if (flags.parallel == null) flags.parallel = defaultWorkers();

@@ -31,6 +31,13 @@ logs/woa.db
 logs/woa.db-wal
 logs/woa.db-shm
 
+# Throwaway refactor/balance baselines — generated on demand, diffed before/after
+# a refactor, then discarded (ADR-0005; never committed, never gated). The dir is
+# tracked via its README so the path always exists; everything else dropped in it
+# is ignored, so a forgotten baseline can never leak into main.
+dev/baselines/*
+!dev/baselines/README.md
+
 # DynamicScrum — per-machine/ephemeral (statusLine readout, local settings, hub mutation log)
 .claude-status
 .claude/settings.local.json

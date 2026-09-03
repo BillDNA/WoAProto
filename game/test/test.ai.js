@@ -333,7 +333,7 @@ test('unit composition & values as content data', () => {
   function total(u) { return Object.keys(u).reduce(function (s, t) { return s + (u[t].count || 0); }, 0); }
 
   // 1) No variant active: the shipped default (maps.js 7/2/1) still resolves, so
-  //    the example units file on disk is genuinely inert (golden-diff safety).
+  //    the example units file on disk is genuinely inert (content-safe).
   var base = runUnits({});
   assert.ok(!base.error, 'default units load with no active variant (no error)');
   // Mechanism, not the shipped numbers: the default resolves as

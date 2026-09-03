@@ -52,15 +52,12 @@ designated rules-regression anchor. It **survives deckbuilding**: the anchor rea
 through the slice-keyed view, never the deck label, so swapping the mirrored battalion
 cannot move a rules read (pinned by the mirror test in `dev/db.test.js`).
 
-Two baseline models back it:
-
-- **Golden-diff (refactors):** `node dev/golden.js` — a deterministic 10/map × Core Six =
-  60-game transcript hashed to a committed fixture (`dev/golden/core-six-60.json`), N-
-  independent, DB-free (no `[db]` stderr noise). A refactor that changes any outcome fails
-  it; a change that *legitimately* moves the numbers bumps the rules version and
-  regenerates it (`node dev/golden.js --write`). In the gate via `dev/golden.test.js`.
-- **Accumulating pool (anchors):** the version-sliced views above — LLN convergence, not a
-  fixed-N snapshot.
+The anchor is the **accumulating version-sliced pool** above — LLN convergence, not a
+fixed-N snapshot. It is protected by *invariant* tests (a mirror reads ~50/50 within noise;
+the JS fold ≡ the SQL view on a known pool; no map runs wildly side-biased), **never by a
+byte-frozen transcript over shipping content** — editing a Core Six map or a
+`cavsplit17-raid-paid` card must red **zero** tests ([[testing-seams]]). Only a rules/AI
+change (not a content edit or a refactor) bumps the rules version.
 
 ## Bottom-up card fairness
 

@@ -8,8 +8,8 @@
 
   // The version string keeps playtest data apples-to-apples: it drives the
   // report/version folders, the woa.db row versions, and the persistent-data
-  // reset boundary. Bump it whenever the golden balance diff may legitimately
-  // move (a rules or metric change), atomically with the test-pin updates.
+  // reset boundary. Bump it whenever byte-identical balance aggregates may
+  // legitimately move (a rules or metric change), atomically with the test-pin updates.
   // Must track the rule book header (docs/War Of Attrition rule book.md).
   var RULES_VERSION = '1.2';
 

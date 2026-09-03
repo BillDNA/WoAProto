@@ -29,7 +29,7 @@ sync).
    directly comparable (accumulator runs deliberately shift seeds). The sweep runs
    **parallel by default** (k = cores-1 workers, ~cores× faster) with no flag —
    report, accumulator AND per-skirmish DB rows are byte-identical to serial on the
-   same seeds. Add `--serial` only for the golden-diff or debugging.
+   same seeds. Add `--serial` only for a throwaway refactor diff or debugging.
    `--battalion` / `--mapset` select content slots
    (`game/content/{battalions,mapsets}/<id>.js`); the report meta line + filename carry
    the ids. Capture the `SAVED:` path. `BEST_MAP:` still prints — informational
