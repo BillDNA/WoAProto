@@ -6,8 +6,7 @@
    engine. The unit of parallel work is a (map, game-batch) drained from a flat
    queue by a fixed worker pool (concurrency capped at `workers`), so throughput
    scales with cores REGARDLESS of map count: a single map × huge N still fans out
-   across every worker (the old process-per-map plan left cores idle whenever the
-   run had fewer maps than cores).
+   across every worker.
 
    Order-independence — the properties that make a fan-out byte-identical to a
    serial run on the same seeds:
