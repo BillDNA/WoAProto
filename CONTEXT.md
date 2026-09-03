@@ -191,7 +191,7 @@ _Home_: `game/engine/04-skirmish.js:108` — `decisionLog`
 
 **Held Card**:
 A Card passed every turn it sits in hand and never played. Invisible in the play-only log; now traceable as a (side, card) that has `declined` decision events but no `played` one.
-_Home_: `dev/db.js:80` — `card_events` (a card with declined rows but no played row)
+_Home_: `dev/db.js:82` — `card_events` (a card with declined rows but no played row)
 
 **Skirmish fact**:
 The flat record of everything the balance layer reads off one finished Skirmish
@@ -213,12 +213,12 @@ _Home_: `dev/db.js:68` — `skirmishes`
 
 **Dimension table**:
 A slice-stamped lookup upserted from loaded content at ingest: `maps` (computed terrain features — mountain/forest/river hex counts, hex total, shape), `cards` (intrinsics — steps, points, derived kind, opener flags), `battalions` (identity + composition), `versions` (the slice key with the human-readable dials behind the digest).
-_Home_: `dev/db.js:92` — `maps`
+_Home_: `dev/db.js:94` — `maps`
 
 **Card event**:
-One row of the `card_events` fact table — a single card decision (played / declined / held) carrying turn, side, mode, card ref and the Skirmish's map. Sourced from the Decision journal; never-played Cards leave rows, so pass-rate and play-timing join cleanly against terrain and card intrinsics.
+One row of the `card_events` fact table — a single card decision (played / declined / held) carrying turn, side, mode, card ref, the Skirmish's map, and the (version, Config digest) slice key. Sourced from the Decision journal; never-played Cards leave rows, so pass-rate and play-timing join cleanly (and slice-correctly) against terrain and card intrinsics.
 _Avoid_: card play row (that's the played-only subset; a Card event includes declines).
-_Home_: `dev/db.js:80` — `card_events`
+_Home_: `dev/db.js:82` — `card_events`
 
 ## Content iteration & army-points
 

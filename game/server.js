@@ -43,7 +43,11 @@ function recordSkirmish(body) {
   if (!body || !body.state || !body.state.flow || body.state.flow.phase !== 'skirmish-over' || !body.run)
     return { status: 400, out: { error: 'need a finished state + run info' } };
   if (!dbHandle) dbHandle = db.open();
-  var runKey = String(body.runKey || (body.run.kind + '|' + (body.run.version || '?') + '|' + (body.run.redAi || '?') + '|' + (body.run.blueAi || '?')));
+  // Derived runKey includes the battalion refs so a second in-boot batch with a
+  // different active battalion (same AIs/version) is its own run, not a reuse.
+  var runKey = String(body.runKey || (body.run.kind + '|' + (body.run.version || '?') + '|' +
+    (body.run.redAi || '?') + '|' + (body.run.blueAi || '?') + '|' +
+    (body.run.battalionRed || '?') + '|' + (body.run.battalionBlue || '?')));
   if (!dbRuns[runKey]) dbRuns[runKey] = db.insertRun(dbHandle, body.run);
   var skirmishId = db.insertSkirmish(dbHandle, dbRuns[runKey], body.state, body.firstPlayer || 'red',
     { seed: body.seed, version: body.run.version });

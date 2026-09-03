@@ -106,16 +106,19 @@ test('card_events (decision grain)', function () {
     'one card_events row per decisionLog entry (' + ev.length + ' = ' + st.journal.decisionLog.length + ')');
   var allMatch = ev.every(function (r, i) {
     var d = st.journal.decisionLog[i];
+    var wonExp = d.outcome === 'played' ? (d.side === st.result.skirmishWinner ? 1 : 0) : null; // played-only
     return r.side === d.side && r.card_id === d.card && r.mode === (d.mode == null ? null : d.mode) &&
       r.turn === d.turn && r.outcome === d.outcome && r.map === st.mapName &&
-      r.won === (d.side === st.result.skirmishWinner ? 1 : 0);
+      r.version === E.VERSION && r.config_digest === E.CONFIG.digest && r.won === wonExp;
   });
-  assert.ok(allMatch, 'every row matches its decisionLog entry (side/card/mode/turn/outcome/map/won)');
+  assert.ok(allMatch, 'every row matches its decisionLog entry (side/card/mode/turn/outcome/map/slice/won)');
   var played = ev.filter(function (r) { return r.outcome === 'played'; });
   assert.ok(played.length === st.journal.playLog.length,
     "outcome='played' rows == plays (" + played.length + ' = ' + st.journal.playLog.length + ')');
   var declined = ev.filter(function (r) { return r.outcome === 'declined'; });
   assert.ok(declined.length > 0, 'declined decisions are recorded (held-but-not-played cards leave rows)');
+  assert.ok(declined.every(function (r) { return r.won === null; }),
+    'won is played-only (NULL on a decline) — AVG(won) is a play win-rate without an outcome filter');
   // never-invisible: a card held at some decision but NEVER played still has rows.
   var playedCards = {}; played.forEach(function (r) { playedCards[r.card_id] = true; });
   var declinedOnly = declined.filter(function (r) { return !playedCards[r.card_id]; });
@@ -191,7 +194,9 @@ test('litmus 3-table join (card_events x cards x maps)', function () {
   // slice. A plain 3-table join answers "card X play-timing vs mountain-hex count".
   var rows = h.db.prepare(
     'SELECT c.id AS card, c.kind AS kind, m.mountain_hexes AS mtn, AVG(ce.turn) AS avg_turn, COUNT(*) AS plays' +
-    ' FROM card_events ce JOIN cards c ON c.id = ce.card_id JOIN maps m ON m.name = ce.map' +
+    ' FROM card_events ce' +
+    ' JOIN cards c ON c.id = ce.card_id AND c.version = ce.version AND c.config_digest = ce.config_digest' +
+    ' JOIN maps m ON m.name = ce.map AND m.version = ce.version AND m.config_digest = ce.config_digest' +
     " WHERE ce.outcome = 'played' GROUP BY c.id, m.mountain_hexes ORDER BY c.id").all();
   assert.ok(rows.length > 0, 'the 3-table join returns per-card timing rows');
   var tf = db.terrainFeatures(E.MAPS[0]);
@@ -379,6 +384,22 @@ test('config-digest slices two runs of the same rules version', function () {
     // The versions dimension carries both digests behind the same rules version, with the dials.
     var vdials = hs.db.prepare('SELECT dials FROM versions WHERE version = ? AND config_digest = ?').get('slice-v', digestOther);
     assert.ok(vdials && JSON.parse(vdials.dials).pointsCap === E.CONFIG.pointsCap, 'versions row carries the differing dial value behind the digest');
+
+    // The 3-table litmus must NOT over-count across slices. With 2 slices, each
+    // card_id has 2 `cards` rows and each map name 2 `maps` rows, so a naive
+    // id-only join fans out 4x; the slice predicates (the fix) keep it exact.
+    var anyCard = hs.db.prepare("SELECT config_digest cd, card_id card FROM card_events WHERE outcome='played' LIMIT 1").get();
+    var raw = hs.db.prepare("SELECT COUNT(*) c FROM card_events WHERE outcome='played' AND config_digest=? AND card_id=?").get(anyCard.cd, anyCard.card).c;
+    var sliceCorrect = hs.db.prepare(
+      'SELECT COUNT(*) plays FROM card_events ce' +
+      ' JOIN cards c ON c.id=ce.card_id AND c.version=ce.version AND c.config_digest=ce.config_digest' +
+      ' JOIN maps m ON m.name=ce.map AND m.version=ce.version AND m.config_digest=ce.config_digest' +
+      " WHERE ce.outcome='played' AND ce.config_digest=? AND ce.card_id=?").get(anyCard.cd, anyCard.card).plays;
+    var naive = hs.db.prepare(
+      'SELECT COUNT(*) plays FROM card_events ce JOIN cards c ON c.id=ce.card_id JOIN maps m ON m.name=ce.map' +
+      " WHERE ce.outcome='played' AND ce.config_digest=? AND ce.card_id=?").get(anyCard.cd, anyCard.card).plays;
+    assert.strictEqual(sliceCorrect, raw, 'the slice-keyed 3-table join returns the true per-slice play count (no fan-out)');
+    assert.strictEqual(naive, raw * 4, 'a naive id-only join over 2 slices fans out 4x — the slice predicates are what prevent it');
   } finally {
     E.CONFIG.pointsCap = origCap;
     db.close(hs);

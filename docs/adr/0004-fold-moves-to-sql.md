@@ -48,8 +48,10 @@ narrow and deliberate:
 - `game/report-model.js` — **demoted to rendering.** It still owns report
   scoring/layout and, until the browser dashboard reads server-side aggregates,
   keeps its JS fold of persisted rows (the browser has no SQLite). That JS fold is
-  now the *secondary* path, pinned byte-for-byte against the SQL views by test;
-  the SQL view is the source of truth a disagreement is resolved against.
+  now the *secondary* path; the SQL view is the source of truth a disagreement is
+  resolved against. Today only the per-skirmish extraction is pinned by test
+  (`factsFromRow ≡ skirmishFacts`); the aggregate fold-equivalence pin (the JS
+  aggregate ≡ its view) lands with the follow-up below, not this change.
 
 The migration is incremental by design. The CLI/analysis path reads the views
 today; the dashboard's in-browser fold is retired to server-side aggregation in a
@@ -73,7 +75,8 @@ fold lives, not how points are priced or how tests run.
 - `game/sim.js` keeps the extraction and the sweep, loses the "fold" title. The
   doctrine clause is updated to point the fold at the SQL views.
 - `game/report-model.js` remains for rendering and the browser's transitional JS
-  fold. The two folds are kept in lockstep by test until the browser path moves to
-  server-side aggregation, after which the JS fold is deleted, not maintained.
+  fold. The two folds are intended to converge; the fold-equivalence pin test is
+  part of the follow-up that moves the browser path to server-side aggregation,
+  after which the JS fold is deleted, not maintained.
 - Views are versioned with the schema in `dev/db.js`; adding a cited metric is a
   new view (or a column of one), reviewed like any schema change.

@@ -41,7 +41,9 @@ test('litmus: card timing vs mountain-hex count is a 3-table join through db-que
   seed();
   const out = query(
     'SELECT c.id card, m.mountain_hexes mtn, AVG(ce.turn) avg_turn, COUNT(*) plays' +
-    ' FROM card_events ce JOIN cards c ON c.id = ce.card_id JOIN maps m ON m.name = ce.map' +
+    ' FROM card_events ce' +
+    ' JOIN cards c ON c.id = ce.card_id AND c.version = ce.version AND c.config_digest = ce.config_digest' +
+    ' JOIN maps m ON m.name = ce.map AND m.version = ce.version AND m.config_digest = ce.config_digest' +
     " WHERE ce.outcome = 'played' GROUP BY c.id, m.mountain_hexes");
   assert.ok(out.indexOf('mtn') >= 0 && out.indexOf('avg_turn') >= 0 && out.indexOf('plays') >= 0,
     'the CLI prints the join column header (card/mtn/avg_turn/plays)');

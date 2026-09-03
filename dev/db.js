@@ -75,11 +75,13 @@ var SCHEMA = [
   '  res_end_red INTEGER, res_end_blue INTEGER, trace TEXT,',
   '  hexes_red INTEGER, hexes_blue INTEGER',
   ');',
-  // one row per card decision — played/declined/held. `map` is denormalized from
-  // the skirmish so "card timing vs terrain" is a plain 3-table join to `maps`.
+  // one row per card decision — played/declined/held. `map` + the (version,
+  // config_digest) slice key are denormalized from the skirmish so "card timing
+  // vs terrain" is a plain 3-table join to the slice-keyed `cards`/`maps` dims
+  // WITHOUT fanning out across slices. `won` is played-only (NULL on declines).
   'CREATE TABLE IF NOT EXISTS card_events (',
-  '  id INTEGER PRIMARY KEY, skirmish_id INTEGER, map TEXT, turn INTEGER, side TEXT,',
-  '  card_id TEXT, mode TEXT, outcome TEXT, won INTEGER',
+  '  id INTEGER PRIMARY KEY, skirmish_id INTEGER, version TEXT, config_digest TEXT, map TEXT,',
+  '  turn INTEGER, side TEXT, card_id TEXT, mode TEXT, outcome TEXT, won INTEGER',
   ');',
   'CREATE TABLE IF NOT EXISTS timeline (',
   '  id INTEGER PRIMARY KEY, skirmish_id INTEGER, turn INTEGER, fs_red INTEGER, fs_blue INTEGER',
@@ -118,8 +120,13 @@ var SCHEMA = [
    the star schema (ADR-0004) — report-model.js is demoted to rendering. Sliced
    by (version, config_digest) so two rules-configs never pool. */
 var VIEWS = [
+  // Refreshed on every open (DROP+CREATE, not CREATE IF NOT EXISTS) so an edited
+  // metric's SQL takes effect on an existing carried-over DB, not just a fresh one.
+  'DROP VIEW IF EXISTS v_map_balance;',
+  'DROP VIEW IF EXISTS v_global_balance;',
+  'DROP VIEW IF EXISTS v_card_timing;',
   // per-map balance fold: mirrors game/sim.js foldFacts, one row per (slice, map).
-  'CREATE VIEW IF NOT EXISTS v_map_balance AS SELECT',
+  'CREATE VIEW v_map_balance AS SELECT',
   '  version, config_digest, map, COUNT(*) AS n,',
   "  AVG(CASE WHEN winner='red' THEN 1.0 ELSE 0.0 END) AS red_win_pct,",
   '  AVG(CASE WHEN winner=first_player THEN 1.0 ELSE 0.0 END) AS first_win_pct,',
@@ -132,7 +139,7 @@ var VIEWS = [
   "       THEN (CASE WHEN (winner='red')=(hexes_red>hexes_blue) THEN 1.0 ELSE 0.0 END) END) AS control_pct",
   '  FROM skirmishes GROUP BY version, config_digest, map;',
   // global fold: the same metrics across all maps of a slice.
-  'CREATE VIEW IF NOT EXISTS v_global_balance AS SELECT',
+  'CREATE VIEW v_global_balance AS SELECT',
   '  version, config_digest, COUNT(*) AS n,',
   "  AVG(CASE WHEN winner='red' THEN 1.0 ELSE 0.0 END) AS red_win_pct,",
   '  AVG(CASE WHEN winner=first_player THEN 1.0 ELSE 0.0 END) AS first_win_pct,',
@@ -142,14 +149,14 @@ var VIEWS = [
   "  AVG(CASE WHEN win_type='attrition' THEN CAST(tiebreak AS REAL) END) AS tie_pct,",
   '  AVG(lead_changes) AS swings',
   '  FROM skirmishes GROUP BY version, config_digest;',
-  // card decision timing: plays/declines/avg-play-turn per (slice, card).
-  'CREATE VIEW IF NOT EXISTS v_card_timing AS SELECT',
-  '  s.version, s.config_digest, ce.card_id,',
-  "  SUM(CASE WHEN ce.outcome='played' THEN 1 ELSE 0 END) AS plays,",
-  "  SUM(CASE WHEN ce.outcome='declined' THEN 1 ELSE 0 END) AS declines,",
-  "  AVG(CASE WHEN ce.outcome='played' THEN ce.turn END) AS avg_play_turn",
-  '  FROM card_events ce JOIN skirmishes s ON s.id = ce.skirmish_id',
-  '  GROUP BY s.version, s.config_digest, ce.card_id;'
+  // card decision timing: plays/declines/avg-play-turn per (slice, card) —
+  // card_events carries its own slice key, so no join is needed.
+  'CREATE VIEW v_card_timing AS SELECT',
+  '  version, config_digest, card_id,',
+  "  SUM(CASE WHEN outcome='played' THEN 1 ELSE 0 END) AS plays,",
+  "  SUM(CASE WHEN outcome='declined' THEN 1 ELSE 0 END) AS declines,",
+  "  AVG(CASE WHEN outcome='played' THEN turn END) AS avg_play_turn",
+  '  FROM card_events GROUP BY version, config_digest, card_id;'
 ].join('\n');
 
 // node:sqlite refuses `undefined` params — normalize to NULL.
@@ -171,7 +178,9 @@ function terrainFeatures(map) {
   var byType = { M: {}, F: {}, R: {} };
   (map && map.pieces || []).forEach(function (p) {
     if (!p || !p.edges || !p.edges.length || !byType[p.t]) return;
-    byType[p.t][p.edges[0][0] + ',' + p.edges[0][1]] = true; // all sides of a piece share the hex
+    // A well-formed piece's sides all lie in one hex (pieceProblem enforces it);
+    // count every hex any side touches so a malformed piece is never under-counted.
+    p.edges.forEach(function (e) { byType[p.t][e[0] + ',' + e[1]] = true; });
   });
   return {
     hexTotal: boardHexList(map).length,
@@ -238,9 +247,11 @@ function archiveIfLegacy(file) {
     var uv = probe.prepare('PRAGMA user_version').get();
     var v = uv[Object.keys(uv)[0]];
     var tbls = probe.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(function (r) { return r.name; });
-    legacy = (v < SCHEMA_VERSION) &&
-      (tbls.indexOf('skirmishes') >= 0 || tbls.indexOf('battles') >= 0) &&
-      tbls.indexOf('card_events') < 0;
+    // Archive ANY stale (older-than-current) woa.db, not just the first star bump —
+    // gated on it being one of ours (a known table) so an unrelated file is never
+    // renamed. A fresh/current DB has user_version === SCHEMA_VERSION and is left alone.
+    var OURS = ['skirmishes', 'battles', 'card_events', 'card_plays', 'runs'];
+    legacy = (v < SCHEMA_VERSION) && tbls.some(function (t) { return OURS.indexOf(t) >= 0; });
   } catch (e) { /* unreadable: leave it, the fresh open will surface the error */ }
   finally { probe.close(); }
   if (!legacy) return;
@@ -288,7 +299,8 @@ function open(dbPath) {
       ' attacks, swaps, marches, deploys, res_end_red, res_end_blue, trace, hexes_red, hexes_blue)' +
       ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'),
     insertCardEvent: db.prepare(
-      'INSERT INTO card_events (skirmish_id, map, turn, side, card_id, mode, outcome, won) VALUES (?,?,?,?,?,?,?,?)'),
+      'INSERT INTO card_events (skirmish_id, version, config_digest, map, turn, side, card_id, mode, outcome, won)' +
+      ' VALUES (?,?,?,?,?,?,?,?,?,?)'),
     insertTimeline: db.prepare(
       'INSERT INTO timeline (skirmish_id, turn, fs_red, fs_blue) VALUES (?,?,?,?)'),
     upsertVersion: db.prepare(
@@ -424,8 +436,11 @@ function insertSkirmish(h, runId, st, firstPlayer, extra) {
       ? st.journal.decisionLog
       : (st.journal.playLog || []).map(function (e) { return { turn: e.turn, side: e.p, mode: e.mode, card: e.id, outcome: 'played' }; });
     decisions.forEach(function (d) {
-      h.stmts.insertCardEvent.run(skirmishId, nz(st.mapName), nz(d.turn), d.side, d.card,
-        nz(d.mode), d.outcome, d.side === winner ? 1 : 0);
+      // won is played-only (NULL on a decline) — matches the retired card_plays.won,
+      // so AVG(won) is a play win-rate even without an outcome filter.
+      var won = d.outcome === 'played' ? (d.side === winner ? 1 : 0) : null;
+      h.stmts.insertCardEvent.run(skirmishId, version, digest, nz(st.mapName), nz(d.turn),
+        d.side, d.card, nz(d.mode), d.outcome, won);
     });
     if (Array.isArray(st.journal.fsTimeline)) {
       st.journal.fsTimeline.forEach(function (pair, i) {
