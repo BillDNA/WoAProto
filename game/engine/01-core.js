@@ -182,15 +182,18 @@
      against this ONE hand-seeded weight table, never stored per card (one place
      to tune, no per-card drift). Measured balance always overrules this number.
      Seeding intent: deploy > attack > reposition; unit tier and the attack
-     flags/mod add capability on top. `combo` is a global step-density exponent,
-     flat at 1.0 (nSteps^0 = 1) with room to price multi-step combos later. */
+     flags/mod add capability on top. `combo` escalates action-stacking: the Nth
+     action in a card is priced at its base cost x combo[N] (Fibonacci-shaped, so
+     a second action costs 2x, a third 3x, a fourth 5x, and so on) — stacking many
+     actions on one card is superlinear, not free. */
   var POINTS = {
-    combo: 1.0,
+    combo: [1, 2, 3, 5, 8, 13, 21, 34, 55],            // per-action-position multiplier (Fibonacci)
     step: { deploy: 3, attack: 2, reposition: 1, trench: 1, barrage: 2 },
     tier: { infantry: 0, cavalry: 1, artillery: 2 },   // deploy unit surcharge
     mod: 1,                                             // per point of |attack mod|
     tieSpare: 1, noAdvance: 0.5, anywhere: 1            // flag surcharges
   };
+  function comboWeight(i) { return POINTS.combo[i] != null ? POINTS.combo[i] : POINTS.combo[POINTS.combo.length - 1]; }
   function stepPoints(step) {
     if (!step || !step.type) return 0;
     var p = POINTS.step[step.type] || 0;
@@ -201,11 +204,11 @@
     if (step.anywhere) p += POINTS.anywhere;
     return p;
   }
+  // Each action is priced at its base cost x its position multiplier, so cost
+  // escalates with how many actions a card stacks (the yardstick's density penalty).
   function cardPoints(card) {
     var steps = (card && Array.isArray(card.steps)) ? card.steps : [];
-    if (!steps.length) return 0;
-    var sum = steps.reduce(function (s, st) { return s + stepPoints(st); }, 0);
-    return sum * Math.pow(steps.length, POINTS.combo - 1);
+    return steps.reduce(function (s, st, i) { return s + stepPoints(st) * comboWeight(i); }, 0);
   }
   function battalionPoints(battalion) {
     var cards = hydrateBattalionCards((battalion && battalion.cards) || []);
@@ -215,7 +218,7 @@
   // asymmetric battalions be called "matched". Seeded above the shipped battalions; the
   // battalion editor's sum(count) band guardrail rejects an over-budget battalion the
   // same way it rejects an oversized one.
-  var BATTALION_POINTS_CAP = 72;
+  var BATTALION_POINTS_CAP = 100;
 
   // tiny pure helpers used by every layer
   function other(p) { return p === 'red' ? 'blue' : 'red'; }
