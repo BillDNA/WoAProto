@@ -21,7 +21,7 @@
 // there are no runs).
 var DASH = { running:false, cancel:false, results:[], sort:{key:null, dir:1}, cardSort:{key:'sightPct', dir:-1}, meta:null, adhoc:null,
   view:'tables', detail:{}, chartMap:null,
-  runA:null, runB:null, mapFocus:null, abMode:'B', temperature:'T0', runs:[] };
+  runA:null, runB:null, mapFocus:null, abMode:'B', temperature:'T0', runs:[], cc:null };
 // Scoring/threshold/fold/markdown MODEL is shared with the CLI reporters —
 // one implementation per fact, in report-model.js (global WOA_REPORT).
 var dpct = WOA_REPORT.pct;
@@ -99,12 +99,15 @@ function renderDashChrome(){
   dashFillRunSelect($('dashRunB'), DASH.runB);
 }
 
-var DASH_PANE_LABEL = { overview:'Overview', maps:'Maps', cards:'Cards', units:'Units' };
+var DASH_PANE_LABEL = { overview:'Overview', maps:'Maps', cards:'Cards', units:'Units', crosscuts:'Cross-cuts' };
 // Stable mount points for the four pill views (Overview, Maps, Cards, Units):
 // #dashPaneOverview / #dashPaneMaps / #dashPaneCards / #dashPaneUnits.
 function renderDashPane(view){
   var el = $('dashPane' + view.charAt(0).toUpperCase() + view.slice(1));
   if (!el) return;
+  // Cross-cuts slices the WHOLE store (GET /api/aggregate), so it needs no run
+  // A/B — it renders on its own, guarding the no-server/no-data case internally.
+  if (view === 'crosscuts'){ renderCrosscuts(el); return; }
   // every pill gets the real thing (the
   // pane-*.js render modules, reading both runs' DB skirmish rows) once at least one run + both A/B pickers
   // are set — otherwise the no-runs / pick-runs fallback note below.
@@ -220,7 +223,7 @@ function renderDash(){
   if (runControls) runControls.style.display = isTables ? '' : 'none';
   if (intro) intro.style.display = isTables ? '' : 'none';
   if (out) out.style.display = isTables ? '' : 'none';
-  ['overview','maps','cards','units'].forEach(function(v){
+  ['overview','maps','cards','units','crosscuts'].forEach(function(v){
     var el = $('dashPane' + v.charAt(0).toUpperCase() + v.slice(1));
     if (el) el.style.display = (DASH.view === v) ? '' : 'none';
   });

@@ -216,6 +216,57 @@ test('fold-in-SQL views', function () {
   assert.ok(ct && ct.plays >= 1 && ct.avg_play_turn >= 1, 'v_card_timing folds plays/declines/avg-play-turn per card');
 });
 
+/* ---------- the query surface: sliceable aggregates (aggregate/cardTiming/dimensions) ---------- */
+test('aggregate: sliceable metric-by-dimension over the star schema', function () {
+  // Group by map: the same metrics as v_map_balance, on demand, no new view.
+  var byMap = db.aggregate(h, { x: 'map', metrics: ['n', 'first_win_pct', 'avg_turns'], version: E.VERSION });
+  assert.ok(byMap.rows.length >= 1 && byMap.numeric === false, 'per-map rows come back, map is a non-numeric bucket');
+  assert.ok(byMap.rows.every(function (r) { return r.n >= 1 && r.first_win_pct >= 0 && r.first_win_pct <= 1 && r.avg_turns > 0; }),
+    'each map bucket carries a sane n / first_win_pct fraction / positive avg_turns');
+  // Cross-check the fold against the canonical view for the played map — the
+  // ad-hoc aggregate must not disagree with v_map_balance.
+  var mapName = E.MAPS[0].name;
+  var viaAgg = byMap.rows.filter(function (r) { return r.bucket === mapName; })[0];
+  var viaView = h.db.prepare('SELECT n, first_win_pct FROM v_map_balance WHERE version = ? AND map = ?').get(E.VERSION, mapName);
+  assert.ok(viaAgg && viaView && viaAgg.n === viaView.n && Math.abs(viaAgg.first_win_pct - viaView.first_win_pct) < 1e-9,
+    'aggregate(x=map) matches v_map_balance for the same slice+map (fold agrees)');
+
+  // The litmus dimension: first_win_pct bucketed by mountain-hex count (the maps
+  // JOIN), re-sliceable by simply swapping x to forest_hexes / river_hexes.
+  var litmus = db.aggregate(h, { x: 'mountain_hexes', metrics: ['n', 'first_win_pct'], version: E.VERSION });
+  assert.ok(litmus.numeric === true && litmus.rows.length >= 1, 'the mountain-hex litmus buckets numerically');
+  var tf = db.terrainFeatures(E.MAPS[0]);
+  assert.ok(litmus.rows.some(function (r) { return r.bucket === tf.mountainHexes; }),
+    "the played map's mountain-hex count (" + tf.mountainHexes + ') is one of the litmus buckets');
+  assert.doesNotThrow(function () { db.aggregate(h, { x: 'forest_hexes', metrics: ['n'] }); }, 'reslice to forest_hexes works');
+
+  // The whitelist is the injection fence: an unknown x or metric throws, never
+  // reaches SQL.
+  assert.throws(function () { db.aggregate(h, { x: 'map; DROP TABLE skirmishes' }); }, /unknown group-by/, 'a non-whitelisted x is rejected');
+  assert.throws(function () { db.aggregate(h, { x: 'map', metrics: ['1) OR 1=1'] }); }, /unknown metric/, 'a non-whitelisted metric is rejected');
+});
+
+test('cardTiming: the ADR litmus (card play-timing vs terrain-hex count)', function () {
+  var ct = db.cardTiming(h, { terrain: 'mountain', version: E.VERSION });
+  assert.ok(ct.rows.length >= 1 && ct.terrain === 'mountain', 'card-timing-vs-mountain rows come back');
+  assert.ok(ct.rows.every(function (r) { return r.plays >= 1 && r.avg_play_turn >= 1 && r.card_id; }),
+    'each row carries a card id, a positive play count, and a sane avg play turn');
+  var tf = db.terrainFeatures(E.MAPS[0]);
+  assert.ok(ct.rows.every(function (r) { return r.bucket === tf.mountainHexes; }),
+    "every bucket is the played map's mountain-hex count (" + tf.mountainHexes + '), no reach into JS');
+  assert.throws(function () { db.cardTiming(h, { terrain: 'lava' }); }, /unknown terrain/, 'a non-whitelisted terrain is rejected');
+});
+
+test('dimensions: the slice keys + whitelists the pickers need', function () {
+  var d = db.dimensions(h);
+  assert.ok(d.versions.some(function (v) { return v.version === E.VERSION && v.config_digest === E.CONFIG.digest; }),
+    'the seeded slice (version + config_digest) is listed');
+  assert.ok(d.maps.indexOf(E.MAPS[0].name) >= 0, 'the played map is listed');
+  assert.ok(d.metrics.indexOf('first_win_pct') >= 0 && d.groupBys.indexOf('mountain_hexes') >= 0 && d.terrains.indexOf('mountain') >= 0,
+    'the whitelisted metric / group-by / terrain names are surfaced for the pickers');
+  assert.ok(Array.isArray(d.cards) && d.cards.length >= 1, 'the card list is populated from card_events');
+});
+
 /* ---------- timeline: real skirmishes carry one; absence is tolerated ---------- */
 test('timeline', function () {
   var tl0 = h.db.prepare('SELECT COUNT(*) c FROM timeline WHERE skirmish_id = ?').get(skirmishId).c;

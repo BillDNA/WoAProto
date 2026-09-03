@@ -107,6 +107,40 @@ test('a different run id returns its own slice, never a cross-run leak', async f
   assert.strictEqual(other.json.length, 0, 'an unknown run id yields an empty slice');
 });
 
+test('sliceable aggregates come back correctly from /api/aggregate + /api/dimensions', async function () {
+  // The recordskirmish test above seeded one finished skirmish on E.MAPS[0]
+  // (normal/normal, version E.VERSION). Everything here drives real HTTP.
+  const dims = await req('GET', '/api/dimensions');
+  assert.strictEqual(dims.status, 200, '/api/dimensions answers');
+  assert.ok(dims.json.versions.some(function (v) { return v.version === E.VERSION; }), 'the seeded slice is in dimensions.versions');
+  assert.ok(dims.json.maps.indexOf(E.MAPS[0].name) >= 0, 'the played map is in dimensions.maps');
+  assert.ok(dims.json.metrics.indexOf('first_win_pct') >= 0 && dims.json.groupBys.indexOf('mountain_hexes') >= 0,
+    'the whitelisted metric/group-by names ride along for the pickers');
+
+  // Group-by=map: a real aggregate row for the seeded map, metrics as fractions.
+  const byMap = await req('GET', '/api/aggregate?x=map&metrics=n,first_win_pct,avg_turns&version=' + encodeURIComponent(E.VERSION));
+  assert.strictEqual(byMap.status, 200, '/api/aggregate answers');
+  const mapRow = byMap.json.rows.filter(function (r) { return r.bucket === E.MAPS[0].name; })[0];
+  assert.ok(mapRow && mapRow.n >= 1 && mapRow.first_win_pct >= 0 && mapRow.first_win_pct <= 1 && mapRow.avg_turns > 0,
+    'the seeded map aggregates to a real row (n / first_win_pct fraction / positive avg_turns)');
+
+  // The litmus dimension over HTTP: numeric mountain-hex buckets.
+  const litmus = await req('GET', '/api/aggregate?x=mountain_hexes&metrics=n,first_win_pct');
+  assert.strictEqual(litmus.status, 200, 'the mountain-hex litmus answers');
+  assert.ok(litmus.json.numeric === true && litmus.json.rows.length >= 1, 'litmus buckets numerically over the wire');
+
+  // grain=card: the ADR card-timing-vs-terrain litmus.
+  const card = await req('GET', '/api/aggregate?grain=card&terrain=mountain');
+  assert.strictEqual(card.status, 200, 'grain=card answers');
+  assert.ok(card.json.terrain === 'mountain' && card.json.rows.every(function (r) { return r.plays >= 1 && r.card_id; }),
+    'card-timing rows carry a card id + play count');
+
+  // The whitelist fence is enforced at the HTTP boundary: a bad dimension is a
+  // clean 400, never a 500 or an injected query.
+  const bad = await req('GET', '/api/aggregate?x=map;DROP+TABLE+skirmishes');
+  assert.strictEqual(bad.status, 400, 'a non-whitelisted x is a 400 at the boundary');
+});
+
 test('LAN room sync: create/join/push/poll + the seq-conflict machine (D1/D2/D3)', async function () {
   const st = { phase: 'choose-card', tag: 'lan-seam', battle: { maps: [E.MAPS[0]] } };
   const created = await req('POST', '/api/create', { state: st });

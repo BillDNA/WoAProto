@@ -53,7 +53,7 @@ _Home_: `game/engine/03-rules.js:44` — `deployTargets`
 
 **Terrain**:
 A board feature on a hex or its border. **Mountain** favors the defender attacked across it; **Forest** favors the attacker striking across it; **River** blocks Control and Support from crossing while letting movement and attacks through.
-_Home_: `game/engine/02-board.js:158` — `buildTerrain`
+_Home_: `game/engine/02-board.js:211` — `buildTerrain`
 
 ## Pieces
 
@@ -200,7 +200,7 @@ left, action counts. Derived in exactly one place (the sim layer's `skirmishFact
 whether from a live end-state or a persisted row, so the live fold and the
 stored-data fold can never disagree.
 _Avoid_: battle fact, per-battle row (a row is the persisted form of the fact).
-_Home_: `game/sim.js:73` — `skirmishFacts`
+_Home_: `game/sim.js:76` — `skirmishFacts`
 
 **Star schema**:
 The shape of the balance store (`logs/woa.db`): a few FACT tables at skirmish / decision / turn grain, surrounded by DIMENSION tables they join to. Any new balance question is a join over dimensions already present, never a new table. Dimensions are upserted from loaded content at ingest and stamped with the (rules version, Config digest) slice key, so the DB is self-contained — a terrain- or card-intrinsic question is answered in SQL without reaching into the JS content files. The fold itself is SQL: each cited metric is a named view over the schema (see `docs/adr/0004-fold-moves-to-sql.md`).
@@ -268,7 +268,7 @@ _Home_: `docs/rubrics/card-rubric.md:26` — `Timing blind spot`
 **AI personality**:
 A named heuristic weight-set that gives the bot a *character* — a playstyle that is fun to beat and fun to lose to — rather than maximal strength. A personality is one row of data. Distinct from a Commander trait.
 _Avoid_: Difficulty (a personality is a style, not a strength tier), Bot.
-_Home_: `game/engine/05-ai.js:80` — `AI_PRESETS`
+_Home_: `game/engine/05-ai.js:115` — `AI_PRESETS`
 
 **Commander trait**:
 A run-layer ability that *bends the rules* for a side (a guaranteed opening Card, altered stocks, a rules exception). Belongs to the Campaign layer, not yet in code. Distinct from an AI personality — a rule-bender, not a playstyle — though a Commander's theme may guide the personality of the AI that pilots it.

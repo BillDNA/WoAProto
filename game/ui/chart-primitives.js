@@ -89,11 +89,16 @@ function chPolyline(points, o){
     (o.stroke ? ' stroke="'+o.stroke+'"' : '')+(o.sw != null ? ' stroke-width="'+o.sw+'"' : '')+
     (o.dash ? ' stroke-dasharray="'+o.dash+'"' : '')+'/>';
 }
+// o: {fill, rx, stroke, sw, opacity, cls, style, extra}. cls/style/extra carry a
+// class, inline style, and a pre-built attr string (e.g. chTipAttrs) so a
+// transparent .ch-hit target is a rect through the primitive, not hand-drawn SVG.
 function chRect(x, y, w, h, o){
   o = o || {};
   return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+(o.fill != null ? o.fill : 'none')+'"'+
+    (o.cls ? ' class="'+o.cls+'"' : '')+
     (o.rx != null ? ' rx="'+o.rx+'"' : '')+(o.stroke ? ' stroke="'+o.stroke+'"' : '')+
-    (o.sw != null ? ' stroke-width="'+o.sw+'"' : '')+(o.opacity != null ? ' opacity="'+o.opacity+'"' : '')+'/>';
+    (o.sw != null ? ' stroke-width="'+o.sw+'"' : '')+(o.opacity != null ? ' opacity="'+o.opacity+'"' : '')+
+    (o.style ? ' style="'+o.style+'"' : '')+(o.extra || '')+'/>';
 }
 // a circle mark. o: {id, cls, cx, cy, r, fill, stroke, sw, dash, opacity, ring
 // (=data-ring for chBindHits), extra (a pre-built attr string e.g. chTipAttrs)}.

@@ -187,59 +187,59 @@ _Home_: `game/ui/chart-primitives.js:86` — `chPolyline`
 
 **chRect**:
 A rect mark.
-_Home_: `game/ui/chart-primitives.js:92` — `chRect`
+_Home_: `game/ui/chart-primitives.js:95` — `chRect`
 
 **chCircle**:
 A circle mark.
-_Home_: `game/ui/chart-primitives.js:100` — `chCircle`
+_Home_: `game/ui/chart-primitives.js:105` — `chCircle`
 
 **chPolygon**:
 A polygon mark.
-_Home_: `game/ui/chart-primitives.js:108` — `chPolygon`
+_Home_: `game/ui/chart-primitives.js:113` — `chPolygon`
 
 **chText**:
 A text mark.
-_Home_: `game/ui/chart-primitives.js:114` — `chText`
+_Home_: `game/ui/chart-primitives.js:119` — `chText`
 
 **chSwatch**:
 An inline colour swatch span.
-_Home_: `game/ui/chart-primitives.js:121` — `chSwatch`
+_Home_: `game/ui/chart-primitives.js:126` — `chSwatch`
 
 **chTipAttrs**:
 The `data-tip` hover attributes for a mark (name + rows).
-_Home_: `game/ui/chart-primitives.js:122` — `chTipAttrs`
+_Home_: `game/ui/chart-primitives.js:127` — `chTipAttrs`
 
 **chCdf**:
 The settle-curve CDF path from a sorted series.
-_Home_: `game/ui/chart-primitives.js:131` — `chCdf`
+_Home_: `game/ui/chart-primitives.js:136` — `chCdf`
 
 **chSettleSvg**:
 The two-run settle-curve chart.
-_Home_: `game/ui/chart-primitives.js:140` — `chSettleSvg`
+_Home_: `game/ui/chart-primitives.js:145` — `chSettleSvg`
 
 **chMakePlacer**:
 The greedy non-overlapping label placer.
-_Home_: `game/ui/chart-primitives.js:152` — `chMakePlacer`
+_Home_: `game/ui/chart-primitives.js:157` — `chMakePlacer`
 
 **chBindHits**:
 The chart hover layer — binds `.ch-hit` marks to the shared tooltip.
-_Home_: `game/ui/chart-primitives.js:191` — `chBindHits`
+_Home_: `game/ui/chart-primitives.js:196` — `chBindHits`
 
 **ovBandRect**:
 One band rectangle of a band-board row.
-_Home_: `game/ui/chart-primitives.js:247` — `ovBandRect`
+_Home_: `game/ui/chart-primitives.js:252` — `ovBandRect`
 
 **chDumbbell**:
 An A→B dumbbell mark (two runs on one scale).
-_Home_: `game/ui/chart-primitives.js:259` — `chDumbbell`
+_Home_: `game/ui/chart-primitives.js:264` — `chDumbbell`
 
 **ovDot**:
 A run dot on a band-board row.
-_Home_: `game/ui/chart-primitives.js:270` — `ovDot`
+_Home_: `game/ui/chart-primitives.js:275` — `ovDot`
 
 **ovBandRowHtml**:
 A whole band-board row (bands + dots + labels), shared by the Overview and Maps panes.
-_Home_: `game/ui/chart-primitives.js:291` — `ovBandRowHtml`
+_Home_: `game/ui/chart-primitives.js:296` — `ovBandRowHtml`
 
 ---
 

@@ -36,11 +36,13 @@ Suggestions only, like the skills it drives — it never edits maps.js, cards, r
 1. **Sweep (blocking, fatal on failure).** Run `generate-reports` **Step 1 only**:
 
    ```
-   node dev/balance-report.js 100 hard hard --once --parallel [--battalion <id>] [--mapset <id>]
+   node dev/balance-report.js 100 hard hard --once [--battalion <id>] [--mapset <id>]
    ```
 
-   Capture the `SAVED:` path. If this command errors, **stop** and report the failure —
-   there's no data to grade.
+   The sweep runs **parallel by default** (k = cores-1 workers) — growing the LLN
+   pool is fast with no extra flag; add `--serial` only to debug or reproduce the
+   golden-diff. Capture the `SAVED:` path. If this command errors, **stop** and
+   report the failure — there's no data to grade.
 
 2. **LLM match (blocking, non-fatal).** Run `generate-reports` Step 3, but **in the
    foreground and wait for it** (generate-reports detaches and returns; the loop must not —

@@ -11,7 +11,10 @@
    (report-model's foldSkirmishes delegates to factsFromRow/foldFacts here). */
 var WOA_SIM = (function () {
 
+  // window.Engine on the page; globalThis.Engine inside a Web Worker
+  // (07-export publishes to whichever global it sees); require() under node.
   var ENG = (typeof window !== 'undefined' && window.Engine) ? window.Engine
+    : (typeof globalThis !== 'undefined' && globalThis.Engine) ? globalThis.Engine
     : (typeof require === 'function' ? require('./engine.js') : null);
 
   /* ---------- skirmish simulation (shared by the CLI reporters and the in-browser dashboard) ---------- */
@@ -172,11 +175,18 @@ var WOA_SIM = (function () {
   function balanceFP(g) { return g % 2 === 0 ? 'red' : 'blue'; }
 
   // n AI-vs-AI skirmishes on one map (alternating first player); aggregated stats.
+  // opts.gStart (default 0) offsets the ABSOLUTE game index so a parallel sweep
+  // can run a contiguous slice [gStart, gStart+n) of a map's schedule in its own
+  // process: seed/first-player/onGame all key off the absolute g, so a slice's
+  // rows are byte-identical to the same games in a serial full-map run, and
+  // partial aggregates fold commutatively (report-model addAgg). gStart 0 keeps
+  // the serial path unchanged.
   function balanceMap(map, n, opts) {
     opts = opts || {};
+    var gStart = opts.gStart || 0;
     var out = balanceNew(n);
-    for (var g = 0; g < n; g++) {
-      var fp = balanceFP(g);
+    for (var i = 0; i < n; i++) {
+      var g = gStart + i, fp = balanceFP(g);
       var st = simSkirmish(map, balanceSeed(opts.seedBase, g), fp, opts.diffRed, opts.diffBlue, opts.battalions);
       balanceAdd(out, st, fp);
       if (st.flow.phase === 'skirmish-over' && opts.onGame) opts.onGame(g + 1, n, st);

@@ -595,6 +595,18 @@ button.btn-ghost-dark { color: var(--ink); border-color: var(--brass-dark); }
 .chtip .tv{font-weight:bold; color:#fff;}
 .chtip .tl{color:rgba(232,220,192,.8);}
 
+/* the Cross-cuts pane (#dashPaneCrosscuts): re-slice pickers + a bar chart of
+   the server-side SQL aggregate. Left-aligned like Overview. */
+#dashPaneCrosscuts{text-align:left;}
+.cc-controls{display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; margin:10px 0 6px;}
+.cc-controls .small{display:flex; flex-direction:column; gap:3px; color:var(--ink-soft);}
+.cc-controls select{font-family:inherit; font-size:13px; padding:4px 7px; border:1px solid var(--brass-dark); border-radius:5px; background:rgba(255,255,255,.5); color:var(--ink);}
+.cc-sub{font-size:13px; font-weight:bold; color:var(--ink); margin:8px 0 4px;}
+.cc-chart{border:1px solid var(--brass-dark); border-radius:8px; padding:12px 14px; margin:8px 0; background:rgba(255,255,255,.22); overflow-x:auto;}
+.cc-chart svg .ch-hit{outline:none;}
+.cc-query{color:var(--ink-soft); margin-top:6px;}
+.cc-query code{font-size:11.5px; word-break:break-all;}
+
 /* the Overview screen (band board / map dumbbells / pacing minis) —
    #dashPaneOverview's real content overrides .dash-pane's centered
    placeholder text-align. */
