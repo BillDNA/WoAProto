@@ -506,7 +506,7 @@ async function playSkirmish(st, args, transports, matchInfo, usage) {
     say('T' + turn + ' ' + side + ' [' + diff + ']: plays ' + desc);
     decisions.push({ turn: turn, side: side, kind: 'card', choice: desc, why: '', fallback: false });
     let g = 0;
-    while (st.flow.phase === 'step' && g++ < 12) {
+    while (st.flow.phase === 'step' && g++ < E.CONFIG.limits.stepsPerTurn) {
       const c = plan.choices.shift() || { skip: true };
       try { E.applyStep(st, c); }
       catch (e) { try { E.applyStep(st, { skip: true }); } catch (e2) { break; } }
@@ -545,7 +545,7 @@ async function playSkirmish(st, args, transports, matchInfo, usage) {
     flushLog();
     // 2. step loop
     let g = 0;
-    while (st.flow.phase === 'step' && g++ < 12) {
+    while (st.flow.phase === 'step' && g++ < E.CONFIG.limits.stepsPerTurn) {
       const so = E.stepOptions(st);
       const list = stepChoiceList(st, args.k, args.fullOptions);
       const descs = list.choices.map(function (c) { return describeChoice(st, so, c); });

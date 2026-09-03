@@ -16,7 +16,7 @@ _Home_: `game/engine/04-skirmish.js:51` — `newSkirmish`
 **Battle**:
 A best-of contest across Skirmishes — first to a set number of Skirmish wins takes the Battle.
 _Avoid_: Game, match, series.
-_Home_: `game/engine/04-skirmish.js:235` — `wins[winner] >= 3`
+_Home_: `game/engine/04-skirmish.js:235` — `wins[winner] >= I.CONFIG.skirmish.matchTarget`
 
 **Campaign**:
 The larger roguelite arc across Battles — the deck-building, Commander, progression layer. The nebulous destination, not yet in code.

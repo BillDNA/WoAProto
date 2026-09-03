@@ -278,7 +278,7 @@
     w = w || AI_WEIGHTS;
     var choices = [];
     var guard = 0;
-    while (sim.flow.phase === 'step' && guard++ < 12) {
+    while (sim.flow.phase === 'step' && guard++ < I.CONFIG.limits.stepsPerTurn) {
       var eo = enumerateWithOptions(sim);
       var opts = eo.choices;
       var best = null, bestScore = -Infinity;

@@ -188,7 +188,7 @@
       var giver = null, amount = 0;
       var u = unitAt(st, n);
       if (u && u.owner === p && I.UNITS[u.type].sup > 0) { giver = I.UNITS[u.type].name; amount = I.UNITS[u.type].sup; }
-      else if (isHQ(st, n) === p) { giver = 'HQ'; amount = 1; }
+      else if (isHQ(st, n) === p) { giver = 'HQ'; amount = I.CONFIG.combat.hqSupport; }
       if (!giver) return;
       var block = borderBlocked(st, n, skirmishHex, attacking);
       if (block) { parts.push(giver + ' support blocked by ' + block); return; }
@@ -209,7 +209,7 @@
     var aPow = I.UNITS[au.type].atk;
     var asup = supportFor(st, p, atk.to, atk.from, true);
     aPow += asup.total; aParts = aParts.concat(asup.parts);
-    if (st.board.terrainEdges[atkSide] === 'F') { aPow += 1; aParts.push('Forest +1'); }
+    if (st.board.terrainEdges[atkSide] === 'F') { aPow += I.CONFIG.combat.forestAttack; aParts.push('Forest +' + I.CONFIG.combat.forestAttack); }
     var mod = atk.mod || 0;
     if (mod) { aPow += mod; aParts.push('Card ' + (mod > 0 ? '+' : '') + mod); }
 
@@ -220,7 +220,7 @@
     else { dPow = 0; dParts = ['Headquarters defense 0']; }
     var dsup = supportFor(st, e, atk.to, null, false);
     dPow += dsup.total; dParts = dParts.concat(dsup.parts);
-    if (st.board.terrainEdges[defSide] === 'M') { dPow += 1; dParts.push('Mountain +1'); }
+    if (st.board.terrainEdges[defSide] === 'M') { dPow += I.CONFIG.combat.mountainDefense; dParts.push('Mountain +' + I.CONFIG.combat.mountainDefense); }
     // (trenches no longer add defense — they deny attacker support instead;
     //  the attack itself may always cross a trench or river)
     var outcome = aPow > dPow ? 'attacker' : (dPow > aPow ? 'defender' : 'tie');

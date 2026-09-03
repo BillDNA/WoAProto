@@ -9,7 +9,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { E } = require('./test.helpers.js');
+const { E, TESTMAP, testSkirmish } = require('./test.helpers.js');
 
 // The seam: the army-points budget. A battalion's points are COMPUTED (E.battalionPoints, a
 // pure count-weighted fold over E.cardPoints) and one CAP (E.BATTALION_POINTS_CAP)
@@ -102,4 +102,78 @@ test('seam: the config digest is stable, value-sensitive, and no-false-split', (
   // because it never sees anything but the config object's own values.
   const aCopy = JSON.parse(JSON.stringify(a));
   assert.ok(digest(a) === digest(aCopy), 'no false split (same config values → same digest regardless of surrounding state)');
+});
+
+// The three engine-dial sections (combat / skirmish / limits) exist as NAMED groups,
+// not a flat blob — each holds only dials of its kind.
+test('seam: the engine dials are grouped into named sections, not one flat blob', () => {
+  const C = E.CONFIG;
+  ['combat', 'skirmish', 'limits'].forEach(function (s) {
+    assert.ok(C[s] && typeof C[s] === 'object', 'CONFIG.' + s + ' is a named section');
+  });
+  assert.ok('forestAttack' in C.combat && 'mountainDefense' in C.combat && 'hqSupport' in C.combat,
+    'combat holds the per-fight power bonuses');
+  assert.ok('handDraw' in C.skirmish && 'matchTarget' in C.skirmish, 'skirmish holds the draw + victory dials');
+  assert.ok('turnCap' in C.limits && 'stepsPerTurn' in C.limits, 'limits holds the loop-safety rails');
+});
+
+// Each section's dial is proven tune-and-move RELATIVE to its live value — bump the
+// dial, watch the mechanism it drives move by the same delta; never a pinned number.
+// Restore the dial after so no later test inherits a tuned home.
+test('seam: combat.forestAttack drives the forest attack bonus', () => {
+  const C = E.CONFIG, base = C.combat.forestAttack;
+  const st = testSkirmish(1);
+  E.Pieces.place(st, '0,0', 'infantry', 'red');
+  E.Pieces.place(st, '0,1', 'infantry', 'blue');
+  st.board.terrainEdges[E.sideKey('0,0', E.dirBetween('0,0', '0,1'))] = 'F'; // forest the attack crosses
+  const p0 = E.computeAttack(st, { from: '0,0', to: '0,1' }).attackerPower;
+  try {
+    C.combat.forestAttack = base + 2;
+    const p1 = E.computeAttack(st, { from: '0,0', to: '0,1' }).attackerPower;
+    assert.ok(p1 - p0 === 2, 'raising combat.forestAttack raises attack power by the same delta (got +' + (p1 - p0) + ')');
+  } finally { C.combat.forestAttack = base; }
+});
+
+test('seam: skirmish.handDraw sizes the opening hand', () => {
+  const C = E.CONFIG, base = C.skirmish.handDraw.opener;
+  function openerHandSize(opener) {
+    C.skirmish.handDraw.opener = opener;
+    return testSkirmish(3).cards.hands.red.length;
+  }
+  try {
+    assert.ok(openerHandSize(6) > openerHandSize(1),
+      'raising handDraw.opener draws a bigger opening hand (mechanism tracks the dial)');
+  } finally { C.skirmish.handDraw.opener = base; }
+});
+
+test('seam: skirmish.matchTarget decides the battle at that many wins', () => {
+  const C = E.CONFIG, base = C.skirmish.matchTarget;
+  function battleWinnerAfterOneWin(target) {
+    C.skirmish.matchTarget = target;
+    const st = E.newSkirmish(E.newBattle({ seed: 5, firstPlayer: 'red', maps: [TESTMAP] }));
+    E.concede(st, 'blue'); // red takes this skirmish
+    return st.battle.winner;
+  }
+  try {
+    assert.ok(battleWinnerAfterOneWin(1) === 'red', 'matchTarget 1 → a single skirmish win takes the battle');
+    assert.ok(battleWinnerAfterOneWin(base + 5) === null, 'a higher matchTarget → one win is not yet the battle');
+  } finally { C.skirmish.matchTarget = base; }
+});
+
+test('seam: limits.turnCap bounds the drive loop', () => {
+  const C = E.CONFIG, base = C.limits.turnCap;
+  // A reposition burn on an empty board resolves no actions but spends one card
+  // per turn, so the game ends naturally by attrition — unless the turn cap bites first.
+  function burnGame(turnCap) {
+    C.limits.turnCap = turnCap;
+    const st = testSkirmish(7);
+    return E.playToEnd(st, { decide: function (s) {
+      const h = s.cards.hands[s.flow.current];
+      return h.length ? { cardId: h[0], mode: 'reposition', choices: [] } : null;
+    } });
+  }
+  try {
+    assert.ok(burnGame(base).flow.phase === 'skirmish-over', 'at the real cap the burn game reaches its natural finish');
+    assert.ok(burnGame(2).flow.phase !== 'skirmish-over', 'a cap of 2 stops the loop before that finish (the guard bit)');
+  } finally { C.limits.turnCap = base; }
 });

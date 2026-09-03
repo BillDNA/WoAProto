@@ -126,13 +126,13 @@
 
   /* ---------- static data (all tunable in maps.js) ---------- */
   var UNITS = BUILTIN.units;
-  // Physical-board guardrail: a side always fields exactly 10 pieces (default 7
-  // inf / 2 cav / 1 art). Values are free data; the TOTAL count is the
+  // Physical-board guardrail: a side always fields exactly CONFIG.pieceTotal pieces
+  // (default 7 inf / 2 cav / 1 art). Values are free data; the TOTAL count is the
   // invariant — enforce it at load so a bad units variant fails loud instead of
   // quietly skewing every skirmish.
   var UNIT_COUNT = Object.keys(UNITS).reduce(function (s, t) { return s + (UNITS[t].count || 0); }, 0);
-  if (UNIT_COUNT !== 10)
-    throw new Error('War of Attrition: unit composition must total 10 pieces (got ' + UNIT_COUNT +
+  if (UNIT_COUNT !== I.CONFIG.pieceTotal)
+    throw new Error('War of Attrition: unit composition must total ' + I.CONFIG.pieceTotal + ' pieces (got ' + UNIT_COUNT +
       (UNITS_VARIANT ? ' from units variant "' + UNITS_VARIANT.id + '"' : ' in maps.js') + ')');
   // piece stocks are owned by the config home (00-config.js) — alias in
   var TRENCH_COUNT = I.CONFIG.trenchCount;

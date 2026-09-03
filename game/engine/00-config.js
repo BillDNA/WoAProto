@@ -58,7 +58,39 @@
 
     // Map hex ceiling — the physical board-size guardrail; enforced by validateMaps
     // AND the map editor, so it homes here where both read one owner.
-    mapHexCeiling: 24
+    mapHexCeiling: 24,
+
+    // Player-mat piece total — physical-board guardrail (sibling to mapHexCeiling):
+    // a side always fields exactly this many pieces. A units variant may re-slice
+    // the composition but its counts must sum to this; 01-core enforces it at load.
+    pieceTotal: 10,
+
+    // --- combat: per-fight power bonuses (read in 03-rules) ---
+    // Grouped because each is a flat power swing on one side of a single fight —
+    // the levers for how much terrain and position matter in combat.
+    combat: {
+      forestAttack: 1,     // attacking ACROSS a forest edge adds this to attack
+      mountainDefense: 1,  // defending BEHIND a mountain edge adds this to defense
+      hqSupport: 1         // an adjacent friendly HQ lends this much support to a fight
+    },
+
+    // --- skirmish: per-game draw + victory dials (read in 04-skirmish) ---
+    // The knobs that shape one game's rhythm: hand size and how many wins take the battle.
+    skirmish: {
+      // Cards drawn on the opening turn / every turn after. The "draw all" threshold
+      // is COUPLED, not a separate dial: draw the lot when at most one more than a
+      // full draw remains (want + 1), so tuning a count moves its threshold with it.
+      handDraw: { opener: 3, normal: 4 },
+      matchTarget: 3       // first side to this many skirmish wins wins the battle
+    },
+
+    // --- limits: loop-safety rails (read in 06-drive + 05-ai) ---
+    // Not balance — infinite-loop guards on the drive/step loops, generous enough
+    // never to bite a real game; they only stop a pathological non-terminating one.
+    limits: {
+      turnCap: 400,        // max turns the drive loop plays before bailing out
+      stepsPerTurn: 12     // max steps drained per card before bailing (every step-drain loop reads this)
+    }
   });
   I.configDigest = configDigest;
   I.defineConfigHome = defineConfigHome;
