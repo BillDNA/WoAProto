@@ -1,40 +1,93 @@
 # Balance baselines — the figures to protect
 
-**This note is the single source of truth for the game's *measured* balance anchors.**
+**This note is the single source of truth for what the game's *measured* balance anchors ARE
+and where they live.** The numbers themselves now live in the DB, not in this file.
 
-The boundary: **balance is math** — the numbers below are the empirical anchor a fresh
+The boundary: **balance is math** — the anchors below are the empirical yardstick a fresh
 run is graded against, so a sharp move in any of them signals a regression even when win
 rates look fine. **Rubrics are the "is this subjectively fun" layer** (`docs/rubrics/`)
 — they hold the *judgment* and cite this note for their anchors. Numbers here; taste there.
 
-Only the **live rules-1.2** fact set lives here. Superseded lineage is intentionally dropped —
-**git is the archive**; grep-able stale baselines poison a fresh session's onboarding.
+## The anchors are named SQL views, read from the accumulating pool
 
-## Provenance
+Each cited balance metric is defined **once** as a column of a named view over the star
+schema (`dev/db.js`; ADR-0004) — official numbers and ad-hoc exploration share the one
+definition, and `game/report-model.js` only renders (its browser fold is pinned to the
+views by a parity test, so the two cannot drift). A hand-typed markdown snapshot is *not*
+the source of truth: it goes stale and poisons onboarding.
 
-Measured hard-vs-hard, **n=60/map = 360**, **Core Six** (`core7`'s 6-map set), deck
-**`cavsplit17-raid-paid`**, rules-1.2. Regenerate with `node dev/balance-report.js --parallel`.
+Read the live anchors from the accumulating **version-sliced pool** (sliced by rules
+version + engine config digest — two configs never pool):
 
-## Figures (rules-1.2)
+```
+node dev/db-query.js --anchors            # the cited anchors for the largest-n slice
+```
 
-| Anchor | Value | Notes |
-|---|---|---|
-| First mover win% | **47%** | |
-| Red win% | **49%** | |
-| HQ endings | **17%** | |
-| Tie-goes-to-2nd | **13%** | of **attrition** endings |
-| Attack share | **19%** | of all actions |
-| Swap share | **16%** | of all actions |
-| Zero-kill games | **2%** | |
-| First-blood → win | **66%** | |
-| Control | **93%** | |
-| Drag | **2.4** | **attrition** endings |
-| Swings | **3.5** | |
-| Reserves-at-end (HQ-only) | red **33%** / blue **31%** | n=61, small-n |
+Adding games **converges** the figures (LLN); they are not pinned to a fixed N. Grow the
+pool with `node dev/balance-report.js --parallel` (hard-vs-hard, the active deck + mapset).
 
-**Skill premium** (`matchup 96`, n=96/map = 576/pairing):
-normal>easy **69%**, hard>easy **76%**, hard>normal **56%** (thin, within noise),
-sanity **46%** (thin, within noise).
+### Anchor → view column
+
+| Anchor | View column |
+|---|---|
+| First mover win% | `v_global_balance.first_win_pct` |
+| Red win% | `.red_win_pct` |
+| HQ endings | `.hq_pct` |
+| Zero-kill games | `.zero_kill_pct` |
+| Tie-goes-to-2nd (of **attrition** endings) | `.tie_pct` |
+| Drag (**attrition** endings) | `.drag` |
+| Swings | `.swings` |
+| Attack share (of all actions) | `.attack_share` |
+| Swap share (of all actions) | `.swap_share` |
+| First-blood → win | `.first_blood_win_pct` |
+| Control | `.control_pct` |
+
+Per-map, the identical columns live in `v_map_balance` (add `map`). Fractions are 0..1
+(the renderer prints ×100).
+
+## The protected rules-regression anchor
+
+The **`cavsplit17-raid-paid` mirror over Core Six** (`core7`, hard-vs-hard) is the
+designated rules-regression anchor. It **survives deckbuilding**: the anchor reads outcomes
+through the slice-keyed view, never the deck label, so swapping the mirrored battalion
+cannot move a rules read (pinned by the mirror test in `dev/db.test.js`).
+
+Two baseline models back it:
+
+- **Golden-diff (refactors):** `node dev/golden.js` — a deterministic 10/map × Core Six =
+  60-game transcript hashed to a committed fixture (`dev/golden/core-six-60.json`), N-
+  independent, DB-free (no `[db]` stderr noise). A refactor that changes any outcome fails
+  it; a change that *legitimately* moves the numbers bumps the rules version and
+  regenerates it (`node dev/golden.js --write`). In the gate via `dev/golden.test.js`.
+- **Accumulating pool (anchors):** the version-sliced views above — LLN convergence, not a
+  fixed-N snapshot.
+
+## Bottom-up card fairness
+
+`v_card_timing` carries a per-card signal across the **sampled battalion space** (every
+battalion that fielded the card in the slice pools here — *not* a battalion round-robin,
+ruled out as C(50,17)-impractical):
+
+- `win_contribution` — the card's share of the slice's winning plays;
+- `pass_rate` — declines / offers, over the **decline/held** decision events, not
+  play-only, so a card that is offered but never played still reads (pass-rate 1.0).
+
+It is **advisory, never a gate** (ADR-0002 below).
+
+## ADR-0002 is intact — never refit weights to chase win-rate
+
+Army-points is a **descriptive capability yardstick, not a predictive win-rate proxy**.
+Measured balance always overrules the points score; the mispricing residual (measured
+contribution − points cost) is a **soft flag, never a hard gate**. The card-fairness view
+and the weight table are calibrated against measured play only as an *advisory* nudge —
+**never fitted to reproduce win-rate**. (Full record: `docs/adr/0002`.)
+
+## Skill premium (a separate measured axis)
+
+Skill premium is an AI-strength matchup diagnostic, not part of the hard-vs-hard anchor
+pool — read it per-matchup with `node dev/balance.js matchup 96` (n=96/map = 576/pairing):
+normal>easy, hard>easy, hard>normal, and the sanity (mirror) check. It measures whether
+stronger play wins more, orthogonal to the pooled fairness anchors above.
 
 ## The 1.2 metric-redefinition warning (load-bearing — keep verbatim)
 
@@ -46,4 +99,4 @@ Under rules-1.2 the metrics were redefined:
 
 So a **1.1 count/pooled figure and a 1.2 share/sliced figure are NOT comparable** — grading a
 fresh 1.2 run against an old 1.1 count would flag a healthy deck as broken. If you find a stray
-count-per-skirmish or pooled figure, it is superseded; use the table above.
+count-per-skirmish or pooled figure, it is superseded; use the views above.

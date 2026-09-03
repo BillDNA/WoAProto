@@ -7,10 +7,11 @@ subjective-fun side lives in `docs/rubrics/`.
 Two neighbours, one fact each:
 - **`best-map-score.md`** — the "best map" ideal-range score, the SOT for the
   metric bands (`report-model.js` folds over it).
-- **`docs/balance/balance-baselines.md`** — the current *measured* healthy figures (the
-  baselines to protect) and the rules-1.2 metric-redefinition warning. The
-  numbers below are **targets** (what good looks like); the live readings that
-  currently sit inside them are recorded there, not restated here.
+- **`docs/balance/balance-baselines.md`** — the anchors home: which named SQL view
+  each cited metric is, and the rules-1.2 metric-redefinition warning. The
+  numbers below are **targets** (what good looks like); the live readings come from
+  the version-sliced DB pool (`node dev/db-query.js --anchors`), cited there not
+  restated here.
 
 All bands are targets (tune me). Every figure cited anywhere carries its setup —
 **(AI tier, n, mapset, date)**; a number missing any of the four is unciteable.
@@ -48,8 +49,8 @@ its slice-n and is greyed / excluded from the verdict when that slice is small
 ## North stars — what "good" means
 
 The five headline targets; grade any rules/content/AI change against these first.
-Goal + target + lever below; the current measured readings are in
-`docs/balance/balance-baselines.md`.
+Goal + target + lever below; the current measured readings come from the DB pool
+(`node dev/db-query.js --anchors`; see `docs/balance/balance-baselines.md`).
 
 1. **Skill over luck.** A stronger player wins more. Evidence: the `matchup` skill
    premium. Target: adjacent tiers ≥60%, two apart ≥75%. Lever: AI tier

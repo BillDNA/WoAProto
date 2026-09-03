@@ -58,6 +58,16 @@ test('litmus: card timing vs mountain-hex count is a 3-table join through db-que
   }), 'every row carries the played map\'s computed mountain-hex count (' + mtn + ')');
 });
 
+test('--anchors reads the cited balance anchors from v_global_balance', function () {
+  seed();
+  const out = cp.execFileSync(process.execPath, [CLI, '--db', dbFile, '--anchors'], { encoding: 'utf8' });
+  assert.ok(/from v_global_balance/.test(out), 'the anchors header names the source view (not a markdown snapshot)');
+  assert.ok(new RegExp('slice ' + E.VERSION).test(out), 'the anchors read the live slice (version ' + E.VERSION + ')');
+  ['First mover', 'HQ endings', 'Tie-goes-to-2nd', 'Attack share', 'First-blood', 'Drag', 'Swings'].forEach(function (label) {
+    assert.ok(out.indexOf(label) >= 0, '--anchors prints the cited anchor "' + label + '"');
+  });
+});
+
 test('db-query.js no-arg dump shows the star schema; writes are refused', function () {
   const schema = cp.execFileSync(process.execPath, [CLI, '--db', dbFile], { encoding: 'utf8' });
   ['skirmishes', 'card_events', 'maps', 'cards', 'battalions', 'versions'].forEach(function (t) {

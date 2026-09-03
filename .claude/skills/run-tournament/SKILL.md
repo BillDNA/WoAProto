@@ -65,9 +65,9 @@ findings meant to feed `create-card`/`create-map`).
 - The card report's Simple% carries the CARD_KEEP burn bias (the AI burns its
   least precious card) — say so when citing it.
 - If Behaviour numbers moved sharply vs the dated baseline in
-  docs/balance/balance-baselines.md (the single numbers home — read against the
-  Behaviour-health guard in docs/balance/README.md §Game-level guards) — every
-  figure there carries its AI tier / n / mapset / date;
+  docs/balance/balance-baselines.md (the anchors home; live figures come from the
+  version-sliced pool via `node dev/db-query.js --anchors` — read against the
+  Behaviour-health guard in docs/balance/README.md §Game-level guards;
   don't restate numbers here, they go stale), treat it as an AI regression
   signal even when win rates look fine. Grade like-for-like: match the
   baseline's labeled setup (AI tier + mapset) before comparing.
