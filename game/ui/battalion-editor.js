@@ -254,20 +254,26 @@ function renderSteps(c){
         '<label title="attacker survives ties"><input type="checkbox" class="ds-tie" '+(s.tieSpare?'checked':'')+'> tie-spare</label>' +
         '<label title="attacker never enters the hex, even on a win"><input type="checkbox" class="ds-noadv" '+(s.noAdvance?'checked':'')+'> no-advance</label>';
     }
+    // per-step cost: cardPoints of a one-step card == that step's cost (combo exponent is 1 at n=1),
+    // so the breakout reuses the exported pricing — no second source.
+    var sp = dkPts(E.cardPoints({ steps: [s] }));
     row.innerHTML = '<span class="dkstep-n">'+(si+1)+'</span>' + typeSel + extra +
-      '<button class="ds-del" title="remove step" style="margin-left:auto;font-size:14px;padding:0 8px;">&times;</button>';
+      '<span class="dkstep-pts" title="this step\'s army-points cost">'+sp+' pts</span>' +
+      '<button class="ds-del" title="remove step" style="font-size:14px;padding:0 8px;">&times;</button>';
     row.querySelector('.ds-type').onchange = function(){
       var nt = this.value;
       DK.cards[DK.sel].steps[si] = nt==='deploy' ? { type:'deploy', unit: s.unit||'infantry' } : { type:nt }; // fresh step drops stale flags
       renderSteps(DK.cards[DK.sel]); dkStatus();
     };
+    // mod/flag edits keep focus (no re-render), so refresh this step's own pts inline
+    var stepPts = function(){ row.querySelector('.dkstep-pts').textContent = dkPts(E.cardPoints({ steps: [s] })) + ' pts'; };
     if (s.type === 'deploy'){
-      row.querySelector('.ds-unit').onchange = function(){ s.unit = this.value; dkStatus(); };
-      row.querySelector('.ds-any').onchange = function(){ if (this.checked) s.anywhere = true; else delete s.anywhere; dkStatus(); };
+      row.querySelector('.ds-unit').onchange = function(){ s.unit = this.value; stepPts(); dkStatus(); };
+      row.querySelector('.ds-any').onchange = function(){ if (this.checked) s.anywhere = true; else delete s.anywhere; stepPts(); dkStatus(); };
     } else if (s.type === 'attack'){
-      row.querySelector('.ds-mod').oninput = function(){ var v = +this.value; if (v) s.mod = v; else delete s.mod; dkStatus(); };
-      row.querySelector('.ds-tie').onchange = function(){ if (this.checked) s.tieSpare = true; else delete s.tieSpare; dkStatus(); };
-      row.querySelector('.ds-noadv').onchange = function(){ if (this.checked) s.noAdvance = true; else delete s.noAdvance; dkStatus(); };
+      row.querySelector('.ds-mod').oninput = function(){ var v = +this.value; if (v) s.mod = v; else delete s.mod; stepPts(); dkStatus(); };
+      row.querySelector('.ds-tie').onchange = function(){ if (this.checked) s.tieSpare = true; else delete s.tieSpare; stepPts(); dkStatus(); };
+      row.querySelector('.ds-noadv').onchange = function(){ if (this.checked) s.noAdvance = true; else delete s.noAdvance; stepPts(); dkStatus(); };
     }
     row.querySelector('.ds-del').onclick = function(){ c.steps.splice(si, 1); renderSteps(c); dkStatus(); };
     host.appendChild(row);
