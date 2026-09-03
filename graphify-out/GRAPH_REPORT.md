@@ -1,97 +1,106 @@
-# Graph Report - .  (2026-09-02)
+# Graph Report - game-config-250  (2026-09-02)
 
 ## Corpus Check
-- 180 files · ~228,542 words
+- 179 files · ~233,140 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 952 nodes · 1417 edges · 126 communities (91 shown, 35 thin omitted)
-- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 118 edges (avg confidence: 0.71)
-- Token cost: 262,851 input · 0 output
+- 1012 nodes · 1486 edges · 152 communities (117 shown, 35 thin omitted)
+- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 121 edges (avg confidence: 0.7)
+- Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `d0cc3ef8`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- AI Config & Balance Runs
-- Server Integration Tests
-- Game Content Skills
-- Balance Lab & Reporting
-- LLM Client
-- Claude-Plays Harness
-- Balance Report CLI
-- Board Rendering Primitives
-- Skirmish Engine Core
-- Skirmish UI Screen
-- AI Weight Tuner
-- Boot & Manual Setup
-- Chart Primitives
-- Rules & Combat Resolution
-- Deck Editor
-- Maps Library Screen
-- Content API Tests
-- AI Turn Planner
-- Skirmish Database
-- Database Tests
-- Map Editor
-- Local Server
-- Engine Core & Points
-- App Shell UI
-- Boot Tests
-- Claude-Plays Tests
-- UI Doc-Sync Tests
-- Board FX Animations
-- Simulation & Balance Fold
-- Units Pane UI
-- Parallel Balance Tests
-- Manifest Gen & Map Tests
-- JS Config
-- Card Rules Tests
-- Terrain Tests
-- Engine Surface & Seams
-- AI Tests
-- Board Screen Rendering
-- Context Doc Checker
-- Context Checker Tests
-- Prose Doc Checker
-- Prose Checker Tests
-- Hex Adjacency Diagram
-- Geometry Tests
-- PR Check Script
-- DB Query Tool
-- Integration Tests
-- Art Optimization Script
-- Doc Style Guide
-- Package Config
-- Worktree Prune Script
-- Issue Tracker Conventions
-- Airdrop Card
-- Attack +1 Card
-- Board Background Art
-- Careful Maneuvers Card
-- Conscription Card
-- Creeping Barrage Card
-- Deploy Artillery Card
-- Deploy Cavalry Card
-- Deploy Infantry Card
-- Entrench Card
-- Forced March Card
-- Mass Assault Card
-- Naval Barrage Card
-- Ordered Withdraw Card
-- Over the Top Card
-- Reckless Maneuvers Card
-- Sappers Card
-- Shock Troops Card
-- Storm and Hold Card
-- Table Background Art
-- Title Banner Art
-- Vanguard Card
-- First Mover Concept
-- HQ Concept
-- Skirmish Fact
-- Balance-80 Sweep Output
-- Matchup-16 Report
-- ADR: Parked Ideas
-- Domain Docs Guide
-- Root Redirect Page
+- Engine model (rules kernel)
+- chart-model.js
+- War of Attrition Rule Book (v1.1)
+- report-model.js
+- llm-session.test.js
+- claude-plays.js
+- dashboard.js
+- board-primitives.js
+- 04-skirmish.js
+- skirmish.js
+- 02-board.js
+- manual.js
+- chart-primitives.js
+- 03-rules.js
+- battalion-editor.js
+- maps-screen.js
+- content-api.test.js
+- 05-ai.js
+- db.js
+- db.test.js
+- map-editor.js
+- server.js
+- 01-core.js
+- app.js
+- boot.test.js
+- claude-plays.test.js
+- test.ui.js
+- fx.js
+- sim.js
+- pane-units.js
+- balance-parallel.test.js
+- test.maps.js
+- compilerOptions
+- test.cards.js
+- test.terrain.js
+- test.helpers.js
+- test.ai.js
+- board.js
+- check-context.js
+- check-context.test.js
+- check-prose.js
+- check-prose.test.js
+- Hex adjacency clarification diagram (hexes A, B, C sharing edges)
+- test.geometry.js
+- pr-check.js
+- db-query.js
+- test.integration.js
+- optimize-art.ps1
+- Comment & doc style guide
+- scripts
+- prune-worktrees.sh
+- GitHub issue tracker conventions
+- Airdrop card
+- Attack +1 card
+- Board background art: aged, stained parchment texture with a thin double-line border
+- Careful Maneuvers (card)
+- Conscription (card)
+- Creeping Barrage (card)
+- Deploy Artillery (card)
+- Deploy Cavalry (card)
+- Deploy Infantry (card)
+- Entrench / Deploy Infantry to trench (card)
+- Forced March (card)
+- Mass Assault (card concept)
+- Naval Barrage (card concept)
+- Ordered Withdraw (card concept)
+- Over the Top (card concept)
+- Reckless Maneuvers (game card)
+- Sappers (game card)
+- Shock Troops (game card)
+- Storm and Hold (game card)
+- Game table / play surface background
+- Game title banner
+- Vanguard card
+- First mover
+- HQ (Headquarters)
+- Skirmish fact
+- balance-80 normal-AI sweep output
+- matchup-16 skill-premium report
+- ADR-0001: parked ideas as idea-labeled GitHub issues
+- Domain docs consumption guide
+- screens.js
+- pane-maps.js
+- build-battalion.js
+- check-deck-scope.test.js
+- Root index.html redirect
 
 ## God Nodes (most connected - your core abstractions)
 1. `svgEl()` - 19 edges
@@ -128,215 +137,231 @@
 - **docs/reference how-the-code-works set** — docs_reference_engine_model_engine_model, docs_reference_report_model_report_model, docs_reference_ai_heuristic_model_ai_heuristic_model, docs_reference_card_cheatsheet_card_cheatsheet, docs_reference_ui_invariants_ui_invariants, docs_reference_context_ui_components_ui_components, docs_reference_testing_seams_testing_seams, docs_reference_workflow_workflow [INFERRED 0.80]
 - **Balance measurement pipeline (sweep to graded report)** — docs_human_instructions_standard_runs_runbook_standard_runs, docs_reference_report_model_report_model, game_readme_balance_lab, logs_readme_playtest_data [INFERRED 0.75]
 
-## Communities (126 total, 35 thin omitted)
+## Communities (152 total, 35 thin omitted)
 
-### Community 0 - "AI Config & Balance Runs"
+### Community 0 - "Engine model (rules kernel)"
 Cohesion: 0.05
 Nodes (55): Apples-to-apples determinism, Standard runs runbook, AI heuristic model, AI_PRESETS (easy/normal/hard), AI_WEIGHTS, Anti-degeneracy guards (noopPenalty/antiShuffle/attrWin), CARD_KEEP burn priority, evalState board scoring (+47 more)
 
-### Community 1 - "Server Integration Tests"
-Cohesion: 0.06
-Nodes (42): assert, E, fs, http, os, path, R, server (+34 more)
+### Community 1 - "chart-model.js"
+Cohesion: 0.07
+Nodes (29): assert, E, fs, http, os, path, R, server (+21 more)
 
-### Community 2 - "Game Content Skills"
+### Community 2 - "War of Attrition Rule Book (v1.1)"
 Cohesion: 0.06
 Nodes (52): balance-loop skill, create-card skill, create-map skill, generate-reports skill, review-reports skill, review-with-rubric skill, run-tournament skill, WarOfAttrition project doctrine (CLAUDE.md) (+44 more)
 
-### Community 3 - "Balance Lab & Reporting"
+### Community 3 - "report-model.js"
 Cohesion: 0.09
 Nodes (37): mapReport(), matchup(), pad(), actionOctileLanes(), actionTotal(), balanceScore(), cardAggFromEnvelopes(), cardFleetFireTimes() (+29 more)
 
-### Community 4 - "LLM Client"
+### Community 4 - "llm-session.test.js"
 Cohesion: 0.08
 Nodes (30): buildPrompt(), errored(), fs, parseEnvelope(), path, resolveBinary(), send(), { spawn, spawnSync } (+22 more)
 
-### Community 5 - "Claude-Plays Harness"
+### Community 5 - "claude-plays.js"
 Cohesion: 0.07
 Nodes (29): ARGS, cap(), CHOICE_SCHEMA, DIRN, E, feltNotes(), fs, HEURISTIC (+21 more)
 
-### Community 6 - "Balance Report CLI"
+### Community 6 - "dashboard.js"
 Cohesion: 0.10
 Nodes (27): accFilePath(), readAcc(), run(), done(), realSetTimeout(), tick(), ADR-0001, dashFillRunSelect() (+19 more)
 
-### Community 7 - "Board Rendering Primitives"
+### Community 7 - "board-primitives.js"
 Cohesion: 0.16
 Nodes (31): bpAttackLayer(), bpAttackPill(), bpBarrageForestEdge(), bpBarrageTrench(), bpBeginBoard(), bpCoordLabel(), bpEdgeHitLine(), bpEdgePts() (+23 more)
 
-### Community 8 - "Skirmish Engine Core"
+### Community 8 - "04-skirmish.js"
 Cohesion: 0.15
 Nodes (27): advanceStep(), applyStep(), buildDeck(), cardsRemaining(), concede(), concedeAdvised(), copyReserves(), currentStep() (+19 more)
 
-### Community 9 - "Skirmish UI Screen"
+### Community 9 - "skirmish.js"
 Cohesion: 0.17
 Nodes (25): act(), afterChange(), canReset(), cardAbbr(), checkResume(), clearIfBattleOver(), clearSave(), confirmAttack() (+17 more)
 
-### Community 10 - "AI Weight Tuner"
+### Community 10 - "02-board.js"
 Cohesion: 0.15
 Nodes (22): guardrails(), measure(), parseArgs(), pickMaps(), run(), boardHexes(), buildShape(), buildTerrain() (+14 more)
 
-### Community 11 - "Boot & Manual Setup"
-Cohesion: 0.13
-Nodes (18): finish(), step(), manualKey(), manualStep(), manualTabClick(), mpAftermathWords(), mpDrawFrame(), mpDrawHQ() (+10 more)
+### Community 11 - "manual.js"
+Cohesion: 0.17
+Nodes (16): manualKey(), manualStep(), manualTabClick(), mpAftermathWords(), mpDrawFrame(), mpDrawHQ(), mpDrawStrike(), mpDrawUnit() (+8 more)
 
-### Community 12 - "Chart Primitives"
+### Community 12 - "chart-primitives.js"
 Cohesion: 0.16
 Nodes (12): chCdf(), chEsc(), chHatchDefs(), chLine(), chPolyline(), chSettleSvg(), chSvgOpen(), chText() (+4 more)
 
-### Community 13 - "Rules & Combat Resolution"
+### Community 13 - "03-rules.js"
 Cohesion: 0.27
 Nodes (16): borderBlocked(), computeAttack(), controlledHexes(), deployTargets(), edgeFreeForTrench(), isEmpty(), isHQ(), listAttacks() (+8 more)
 
-### Community 14 - "Deck Editor"
-Cohesion: 0.25
-Nodes (16): deckProblems(), deckToShip(), dkEsc(), dkStatus(), flushSlot(), loadDecks(), loadSlotIntoEditor(), openDeck() (+8 more)
+### Community 14 - "battalion-editor.js"
+Cohesion: 0.22
+Nodes (20): addPoolCard(), battalionProblems(), battalionToShip(), dkEsc(), dkPool(), dkPts(), dkStatus(), flushSlot() (+12 more)
 
-### Community 15 - "Maps Library Screen"
+### Community 15 - "maps-screen.js"
 Cohesion: 0.26
 Nodes (14): allMaps(), deleteMapById(), libraryRemove(), msCurrent(), msNewSet(), msSave(), msSetActive(), msSets() (+6 more)
 
-### Community 16 - "Content API Tests"
+### Community 16 - "content-api.test.js"
 Cohesion: 0.12
-Nodes (13): assert, customDeckBackup, customDeckPath, fs, GAME, http, os, path (+5 more)
+Nodes (13): assert, customBattalionBackup, customBattalionPath, fs, GAME, http, os, path (+5 more)
 
-### Community 17 - "AI Turn Planner"
+### Community 17 - "05-ai.js"
 Cohesion: 0.33
 Nodes (14): aiConfig(), aiPlanTurn(), cloneForSim(), enumerateChoices(), enumerateWithOptions(), evalState(), greedyResolve(), prescoreChoice() (+6 more)
 
-### Community 18 - "Skirmish Database"
+### Community 18 - "db.js"
 Cohesion: 0.25
 Nodes (9): ensureColumn(), insertRun(), insertSkirmish(), migrateBattleNames(), nz(), open(), pinBaseline(), setBaseline() (+1 more)
 
-### Community 19 - "Database Tests"
+### Community 19 - "db.test.js"
 Cohesion: 0.14
 Nodes (11): assert, cp, db, dbFile, E, fs, os, path (+3 more)
 
-### Community 20 - "Map Editor"
+### Community 20 - "map-editor.js"
 Cohesion: 0.29
 Nodes (11): edBuildDef(), edHexPairs(), edHexSet(), edInternalSides(), edLiveShape(), edRemoveHex(), groupEdgesToPieces(), openEditor() (+3 more)
 
-### Community 21 - "Local Server"
+### Community 21 - "server.js"
 Cohesion: 0.23
 Nodes (8): cleanup(), handler(), json(), listen(), logRooms(), readBody(), saveUnderRepo(), stamp()
 
-### Community 22 - "Engine Core & Points"
-Cohesion: 0.24
-Nodes (9): activeMaps(), activeMapset(), cardPoints(), deckPoints(), deckRegistry(), resolveDeck(), rnd(), shuffle() (+1 more)
+### Community 22 - "01-core.js"
+Cohesion: 0.19
+Nodes (14): activeMaps(), activeMapset(), battalionPoints(), battalionRegistry(), cardPoints(), comboWeight(), configCanon(), configDigest() (+6 more)
 
-### Community 24 - "Boot Tests"
+### Community 24 - "boot.test.js"
 Cohesion: 0.24
 Nodes (10): assert, bootHtml(), fs, GAME, { JSDOM }, makeDom(), path, read() (+2 more)
 
-### Community 25 - "Claude-Plays Tests"
+### Community 25 - "claude-plays.test.js"
 Cohesion: 0.18
 Nodes (9): assert, cp, E, match, path, SENTINEL, st, surfaces (+1 more)
 
-### Community 26 - "UI Doc-Sync Tests"
+### Community 26 - "test.ui.js"
 Cohesion: 0.18
 Nodes (8): assert, fs, path, SPINE_DOC, SVG_LITERAL, SVG_TAGS, { test }, UI_DIR
 
-### Community 27 - "Board FX Animations"
+### Community 27 - "fx.js"
 Cohesion: 0.35
 Nodes (9): fxPieceHex(), fxStrike(), ghostUnit(), playFX(), popUnit(), ringAt(), shakeBoard(), slideUnit() (+1 more)
 
-### Community 28 - "Simulation & Balance Fold"
+### Community 28 - "sim.js"
 Cohesion: 0.36
 Nodes (8): balanceAdd(), balanceFP(), balanceMap(), balanceNew(), balanceSeed(), foldFacts(), simSkirmish(), skirmishFacts()
 
-### Community 29 - "Units Pane UI"
+### Community 29 - "pane-units.js"
 Cohesion: 0.40
 Nodes (9): chartUnitsRoleMap(), renderUnits(), unBreakthroughSection(), unColor(), unExchangeSection(), unLifespanRow(), unLifespanSection(), unRenderBody() (+1 more)
 
-### Community 30 - "Parallel Balance Tests"
+### Community 30 - "balance-parallel.test.js"
 Cohesion: 0.22
 Nodes (8): assert, cp, db, fs, os, path, ROOT, { test }
 
-### Community 31 - "Manifest Gen & Map Tests"
+### Community 31 - "test.maps.js"
 Cohesion: 0.25
 Nodes (6): buildManifest(), regen(), assert, { E }, ADR-0003, { test }
 
-### Community 32 - "JS Config"
+### Community 32 - "compilerOptions"
 Cohesion: 0.22
 Nodes (8): compilerOptions, allowJs, checkJs, module, moduleResolution, target, exclude, **/node_modules
 
-### Community 33 - "Card Rules Tests"
+### Community 33 - "test.cards.js"
 Cohesion: 0.22
 Nodes (4): assert, { E, SIM, testSkirmish, fixtureCard }, ADR-0003, { test }
 
-### Community 34 - "Terrain Tests"
+### Community 34 - "test.terrain.js"
 Cohesion: 0.25
 Nodes (6): testSkirmish(), assert, { E, testSkirmish, fixtureCard }, fresh(), ADR-0003, { test }
 
-### Community 35 - "Engine Surface & Seams"
+### Community 35 - "test.helpers.js"
 Cohesion: 0.25
 Nodes (5): fixtureCard(), ADR-0003, assert, { E }, { test }
 
-### Community 36 - "AI Tests"
+### Community 36 - "test.ai.js"
 Cohesion: 0.25
 Nodes (4): assert, { E, SIM, testSkirmish }, ADR-0003, { test }
 
-### Community 37 - "Board Screen Rendering"
+### Community 37 - "board.js"
 Cohesion: 0.67
 Nodes (6): attackPreviewsFor(), hideAttackHints(), hl(), renderBoard(), renderHighlights(), showAttackHints()
 
-### Community 38 - "Context Doc Checker"
+### Community 38 - "check-context.js"
 Cohesion: 0.60
 Nodes (5): checkHomes(), main(), parseTerms(), scanAliases(), walk()
 
-### Community 40 - "Context Checker Tests"
+### Community 40 - "check-context.test.js"
 Cohesion: 0.40
 Nodes (4): assert, path, { spawnSync }, { test }
 
-### Community 41 - "Prose Doc Checker"
+### Community 41 - "check-prose.js"
 Cohesion: 0.70
 Nodes (4): lineHits(), main(), scan(), walk()
 
-### Community 42 - "Prose Checker Tests"
+### Community 42 - "check-prose.test.js"
 Cohesion: 0.40
 Nodes (4): assert, path, { spawnSync }, { test }
 
-### Community 44 - "Hex Adjacency Diagram"
+### Community 44 - "Hex adjacency clarification diagram (hexes A, B, C sharing edges)"
 Cohesion: 0.70
 Nodes (5): Hex A (top hex), Hex adjacency / shared-edge clarification, Hex adjacency clarification diagram (hexes A, B, C sharing edges), Hex B (lower-left hex), Hex C (lower-right hex)
 
-### Community 45 - "Geometry Tests"
+### Community 45 - "test.geometry.js"
 Cohesion: 0.40
 Nodes (4): assert, { E, SIM }, ADR-0003, { test }
 
-### Community 47 - "PR Check Script"
+### Community 47 - "pr-check.js"
 Cohesion: 0.50
 Nodes (3): fs, os, path
 
-### Community 48 - "DB Query Tool"
+### Community 48 - "db-query.js"
 Cohesion: 0.83
 Nodes (3): fmt(), printTable(), run()
 
-### Community 49 - "Integration Tests"
+### Community 49 - "test.integration.js"
 Cohesion: 0.50
 Nodes (3): assert, { E, testSkirmish }, { test }
 
-### Community 51 - "Doc Style Guide"
+### Community 51 - "Comment & doc style guide"
 Cohesion: 0.67
 Nodes (3): Comment & doc style guide, No war stories rule, Progressive disclosure in docs
 
+### Community 85 - "screens.js"
+Cohesion: 0.23
+Nodes (9): finish(), step(), applyDevMode(), devHotkey(), devMode(), goScreen(), renderSettings(), screenAllowed() (+1 more)
+
+### Community 86 - "pane-maps.js"
+Cohesion: 0.27
+Nodes (13): mdBandBoard(), mdFsDiffTrackHtml(), mdHeaderHtml(), mdHexLabelFor(), mdHexLensSection(), mdLaneBars(), mdLensFill(), mdMapDef() (+5 more)
+
+### Community 87 - "build-battalion.js"
+Cohesion: 0.31
+Nodes (12): openBuildBattalion(), pbAdd(), pbBump(), pbCount(), pbLoad(), pbMarchOut(), pbPickOpponent(), pbPool() (+4 more)
+
+### Community 88 - "check-deck-scope.test.js"
+Cohesion: 0.38
+Nodes (5): scan(), assert, { scan }, { test }, walk()
+
 ## Knowledge Gaps
-- **231 isolated node(s):** `fs`, `os`, `path`, `{ test }`, `assert` (+226 more)
+- **234 isolated node(s):** `fs`, `os`, `path`, `{ test }`, `assert` (+229 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **35 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `done()` connect `Balance Report CLI` to `AI Weight Tuner`, `Balance Lab & Reporting`?**
-  _High betweenness centrality (0.031) - this node is a cross-community bridge._
-- **Why does `row()` connect `Server Integration Tests` to `Deck Editor`?**
-  _High betweenness centrality (0.020) - this node is a cross-community bridge._
-- **Why does `mapReport()` connect `Balance Lab & Reporting` to `Server Integration Tests`, `Balance Report CLI`, `Skirmish UI Screen`?**
-  _High betweenness centrality (0.020) - this node is a cross-community bridge._
+- **Why does `done()` connect `dashboard.js` to `02-board.js`, `report-model.js`?**
+  _High betweenness centrality (0.025) - this node is a cross-community bridge._
+- **Why does `row()` connect `chart-model.js` to `pane-maps.js`, `battalion-editor.js`?**
+  _High betweenness centrality (0.018) - this node is a cross-community bridge._
+- **Why does `mapReport()` connect `report-model.js` to `chart-model.js`, `dashboard.js`, `skirmish.js`?**
+  _High betweenness centrality (0.017) - this node is a cross-community bridge._
 - **Are the 3 inferred relationships involving `Engine model (rules kernel)` (e.g. with `Anti-degeneracy guards (noopPenalty/antiShuffle/attrWin)` and `Unit rubric`) actually correct?**
   _`Engine model (rules kernel)` has 3 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `fs`, `os`, `path` to the rest of the system?**
-  _231 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `AI Config & Balance Runs` be split into smaller, more focused modules?**
+  _234 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `Engine model (rules kernel)` be split into smaller, more focused modules?**
   _Cohesion score 0.050505050505050504 - nodes in this community are weakly interconnected._
-- **Should `Server Integration Tests` be split into smaller, more focused modules?**
-  _Cohesion score 0.057329462989840346 - nodes in this community are weakly interconnected._
+- **Should `chart-model.js` be split into smaller, more focused modules?**
+  _Cohesion score 0.07152496626180836 - nodes in this community are weakly interconnected._
