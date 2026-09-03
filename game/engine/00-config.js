@@ -1,4 +1,4 @@
-/* War of Attrition — engine part 00: the game-config home (issue #250).
+/* War of Attrition — engine part 00: the game-config home.
 
    THE config standard, engine tier. A config home is three things:
      1. one namespace object that owns its tunables as named data,
@@ -25,8 +25,8 @@
   // The one namespace object. Every rules-facing game-setting dial lives here as
   // named data. Membership is non-exhaustive by design — the object is the home,
   // not a fixed list; adding a dial is a one-place edit and the digest picks it up.
-  // (AI_WEIGHTS is deliberately NOT here — it lands on this pattern when #241,
-  // Commanders, gives it a considered home.)
+  // (AI_WEIGHTS is deliberately NOT here — it lands on this pattern when
+  // Commanders give it a considered home.)
   var GAME_CONFIG = {
     // Army-points budget ceiling: the fairness constraint that lets two asymmetric
     // battalions be called "matched". The battalion editor rejects an over-budget

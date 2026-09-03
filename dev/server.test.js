@@ -63,7 +63,7 @@ test('recordskirmish persists a real finished skirmish (A1)', async function () 
   finishedState = SIM.simSkirmish(E.MAPS[0], 20250901, 'red', 'normal', 'normal');
   assert.strictEqual(finishedState.flow.phase, 'skirmish-over', 'the sim produced a finished state to hand off');
   const r = await req('POST', '/api/recordskirmish', {
-    run: { version: E.VERSION, kind: 'balance', redAi: 'normal', blueAi: 'normal', n: 1, tool: 'server.test.js', deck: 'default', mapset: 'core7', seedBase: 20250901 },
+    run: { version: E.VERSION, kind: 'balance', redAi: 'normal', blueAi: 'normal', n: 1, tool: 'server.test.js', battalion: 'default', mapset: 'core7', seedBase: 20250901 },
     state: finishedState, firstPlayer: 'red', seed: 20250901
   });
   assert.strictEqual(r.status, 200, 'recordskirmish accepts a finished state (got ' + r.status + ' ' + r.body + ')');
@@ -83,8 +83,8 @@ test('db rows read back through the real routes and parse via envelopeFromRow (B
   const runs = await req('GET', '/api/runs');
   assert.strictEqual(runs.status, 200, '/api/runs answers');
   const mine = runs.json.filter(function (x) { return x.id === runId; })[0];
-  assert.ok(mine && mine.redAi === 'normal' && mine.mapset === 'core7',
-    'the run round-trips through GET /api/runs with its stamped identity (deck/mapset/redAi)');
+  assert.ok(mine && mine.redAi === 'normal' && mine.mapset === 'core7' && mine.battalionRed === 'default',
+    'the run round-trips through GET /api/runs with its stamped identity (battalion/mapset/redAi)');
 
   const sk = await req('GET', '/api/skirmishes?run=' + runId);
   assert.strictEqual(sk.status, 200, '/api/skirmishes answers');

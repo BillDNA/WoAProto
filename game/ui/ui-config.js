@@ -1,4 +1,4 @@
-/* War of Attrition — ui config home: UI-only guardrails (issue #250).
+/* War of Attrition — ui config home: UI-only guardrails.
 
    The SAME config standard as the engine tier (game/engine/00-config.js), one
    tier down — an object that owns its tunables as named data, plus a digest via

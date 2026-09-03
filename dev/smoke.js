@@ -81,7 +81,7 @@ realSetTimeout(function () {
   doc.getElementById('btnPlay').click();
   assert.ok(doc.getElementById('campaignScr').classList.contains('active'),
     'Play opens the campaign run-flow stub, not a battle directly');
-  // config bug (issue #250): a persistent screen-corner overlay stamps the live
+  // config identity: a persistent screen-corner overlay stamps the live
   // config identity onto every screenshot. Assert it renders and carries the digests.
   var bug = doc.getElementById('configBug');
   assert.ok(bug, 'the config bug overlay is present');
@@ -96,7 +96,7 @@ realSetTimeout(function () {
     'the pool lists every pool card (' + doc.querySelectorAll('#pbPool .pbpool-row').length + ')');
   assert.ok(doc.querySelectorAll('#pbList .pbli').length >= 1, 'the battalion is seeded from the active slot');
   assert.ok(/\/\s*100\s*pts/.test(doc.getElementById('pbFoot').textContent), 'the muster readout shows the army-points cap (100)');
-  // config homes (issue #250): the readout is driven by the homes, not bare literals.
+  // config homes: the readout is driven by the homes, not bare literals.
   // The muster footer's cap and band track E.CONFIG.pointsCap and UI_CONFIG.battalionBand
   // — read the live dials and assert the rendered text agrees, so tuning a dial reds nothing.
   var pbFootText = doc.getElementById('pbFoot').textContent;
@@ -222,7 +222,7 @@ realSetTimeout(function () {
     win.edRemoveHex('0,0');
     win.renderEditor();
     assert.ok(Object.keys(win.ED.hexes).length === beforeCarve - 1, 'a hex can be carved out');
-    // the ceiling shown is read from the UI-config home (issue #250), not a bare literal —
+    // the ceiling shown is read from the UI-config home, not a bare literal —
     // both map-editor guards and this readout agree on E.CONFIG.mapHexCeiling.
     assert.ok(new RegExp('23\\/' + win.Engine.CONFIG.mapHexCeiling + ' hexes').test(doc.getElementById('edStock').textContent),
       'hex count shown against the ceiling read from the UI-config home');

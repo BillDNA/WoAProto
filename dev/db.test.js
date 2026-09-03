@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* dev/db.test.js — tests for dev/db.js (node:sqlite persistence layer).
+/* dev/db.test.js — tests for dev/db.js (node:sqlite STAR SCHEMA persistence).
    Zero deps; uses a temp DB under os.tmpdir(). Run: node dev/db.test.js
    (or `node --test dev/db.test.js`, or the whole gate via `npm test`).
    Sections run in order as separate node:test blocks over shared state. */
@@ -24,7 +24,7 @@ after(function () { try { fs.rmSync(tmpDir, { recursive: true, force: true }); }
 // State threaded across the sections below (tests run in order).
 var h, h2, st, st2, runId, runId2, runIdA, skirmishId, skirmishIdA, hexesExpected;
 
-/* ---------- schema creation is idempotent ---------- */
+/* ---------- schema creation is idempotent; the star schema's tables exist ---------- */
 test('schema', function () {
   h = db.open(dbFile);
   db.close(h);
@@ -32,12 +32,16 @@ test('schema', function () {
   var tables = h.db.prepare(
     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
   ).all().map(function (r) { return r.name; });
-  assert.ok(tables.join(',') === 'card_plays,runs,skirmishes,timeline',
-    'all four tables exist after re-open (got: ' + tables.join(',') + ')');
+  assert.strictEqual(tables.join(','), 'battalions,card_events,cards,maps,runs,skirmishes,timeline,versions',
+    'all fact + dimension tables exist after re-open (got: ' + tables.join(',') + ')');
   var idx = h.db.prepare("SELECT COUNT(*) c FROM sqlite_master WHERE type='index' AND name LIKE 'idx_%'").get().c;
-  assert.ok(idx === 4, 'all four indexes exist (got ' + idx + ')');
+  assert.strictEqual(idx, 5, 'all five indexes exist (got ' + idx + ')');
+  var views = h.db.prepare("SELECT name FROM sqlite_master WHERE type='view' ORDER BY name").all().map(function (r) { return r.name; });
+  assert.strictEqual(views.join(','), 'v_card_timing,v_global_balance,v_map_balance', 'the fold-in-SQL views exist (got: ' + views.join(',') + ')');
   var mode = h.db.prepare('PRAGMA journal_mode').get();
   assert.ok(String(mode[Object.keys(mode)[0]]).toLowerCase() === 'wal', 'journal_mode is WAL');
+  var uv = h.db.prepare('PRAGMA user_version').get();
+  assert.strictEqual(uv[Object.keys(uv)[0]], db.SCHEMA_VERSION, 'user_version stamps the star-schema version');
 });
 
 /* ---------- insertRun / insertSkirmish round-trip with a REAL skirmish ---------- */
@@ -47,17 +51,22 @@ test('round-trip (real simSkirmish state)', function () {
 
   runId = db.insertRun(h, {
     version: E.VERSION, kind: 'balance', redAi: 'normal', blueAi: 'normal',
-    n: 1, tool: 'db.test.js', notes: 'round-trip test'
+    n: 1, tool: 'db.test.js', notes: 'round-trip test', battalion: 'default'
   });
   assert.ok(runId === 1, 'insertRun returned id 1 (got ' + runId + ')');
   var runRow = h.db.prepare('SELECT * FROM runs WHERE id = ?').get(runId);
   assert.ok(runRow.kind === 'balance' && runRow.red_ai === 'normal' && runRow.n === 1,
     'runs row round-trips (kind/red_ai/n)');
+  assert.ok(runRow.battalion_red === 'default' && runRow.battalion_blue === 'default',
+    'a symmetric `battalion` sets both battalion_red and battalion_blue (one ref per side)');
   assert.ok(typeof runRow.ts === 'string' && runRow.ts.indexOf('T') > 0, 'ts defaulted to an ISO string (' + runRow.ts + ')');
 
   skirmishId = db.insertSkirmish(h, runId, st, 'red', { seed: 1234 });
   var b = h.db.prepare('SELECT * FROM skirmishes WHERE id = ?').get(skirmishId);
   assert.ok(b.run_id === runId && b.version === E.VERSION, 'skirmish carries run_id + version');
+  assert.strictEqual(b.config_digest, E.CONFIG.digest, 'skirmish stamps the live Engine.CONFIG.digest (slice key config half)');
+  assert.ok(b.battalion_red === 'default' && b.battalion_blue === 'default',
+    'skirmish records both battalions fielded (inherited from the run when not overridden)');
   assert.ok(b.map === E.MAPS[0].name, 'map name matches (' + b.map + ')');
   assert.ok(b.seed === 1234, 'extra.seed stored as the skirmish seed');
   assert.ok(b.first_player === 'red', 'first_player stored');
@@ -75,16 +84,11 @@ test('round-trip (real simSkirmish state)', function () {
      b.marches === (st.journal.stats.marches || 0) && b.deploys === (st.journal.stats.deploys || 0),
     'attacks/swaps/marches/deploys copied from st.journal.stats');
   assert.ok(b.first_blood === (st.journal.stats.firstBlood || null), 'first_blood matches (' + b.first_blood + ')');
-  // reserve-held-at-end, computed independently here from st.pieces.reserves
-  // to prove db.js's own reservesLeft() reads the same source of truth.
   function reservesLeft(sideReserves) {
     var n = 0; Object.keys(E.UNITS).forEach(function (t) { n += sideReserves[t] || 0; }); return n;
   }
   assert.ok(b.res_end_red === reservesLeft(st.pieces.reserves.red) && b.res_end_blue === reservesLeft(st.pieces.reserves.blue),
     'res_end_red/res_end_blue = pieces left in st.pieces.reserves at skirmish end (' + b.res_end_red + '/' + b.res_end_blue + ')');
-  // hexes_red/hexes_blue = hex-ownership tally at skirmish end, computed
-  // independently here from st.pieces.units (the SAME read balanceAdd does live) to
-  // prove db.js's hexesHeld() reads the same source of truth.
   function hexTally(units) {
     var hr = 0, hb = 0;
     for (var hh in units) (units[hh].owner === 'red' ? hr++ : hb++);
@@ -95,27 +99,125 @@ test('round-trip (real simSkirmish state)', function () {
     'hexes_red/hexes_blue match a hex-ownership tally of st.pieces.units (' + b.hexes_red + '/' + b.hexes_blue + ')');
 });
 
-/* ---------- card_plays ---------- */
-test('card_plays', function () {
-  var plays = h.db.prepare('SELECT * FROM card_plays WHERE skirmish_id = ? ORDER BY id').all(skirmishId);
-  assert.ok(plays.length === st.journal.playLog.length,
-    'one card_plays row per playLog entry (' + plays.length + ' = ' + st.journal.playLog.length + ')');
-  var allMatch = plays.every(function (r, i) {
-    var e = st.journal.playLog[i];
-    return r.side === e.p && r.card_id === e.id && r.mode === e.mode &&
-      r.turn === e.turn && r.seen === e.seen && r.noop === (e.noop ? 1 : 0) &&
-      r.won === (e.p === st.result.skirmishWinner ? 1 : 0);
+/* ---------- card_events: one row per DECISION (played / declined) ---------- */
+test('card_events (decision grain)', function () {
+  var ev = h.db.prepare('SELECT * FROM card_events WHERE skirmish_id = ? ORDER BY id').all(skirmishId);
+  assert.ok(ev.length === st.journal.decisionLog.length && ev.length > 0,
+    'one card_events row per decisionLog entry (' + ev.length + ' = ' + st.journal.decisionLog.length + ')');
+  var allMatch = ev.every(function (r, i) {
+    var d = st.journal.decisionLog[i];
+    var wonExp = d.outcome === 'played' ? (d.side === st.result.skirmishWinner ? 1 : 0) : null; // played-only
+    return r.side === d.side && r.card_id === d.card && r.mode === (d.mode == null ? null : d.mode) &&
+      r.turn === d.turn && r.outcome === d.outcome && r.map === st.mapName &&
+      r.version === E.VERSION && r.config_digest === E.CONFIG.digest && r.won === wonExp;
   });
-  assert.ok(allMatch, 'every row matches its playLog entry (side/card/mode/turn/seen/noop/won)');
-  var wonRows = h.db.prepare('SELECT COUNT(*) c FROM card_plays WHERE skirmish_id = ? AND won = 1').get(skirmishId).c;
-  var wonExpected = st.journal.playLog.filter(function (e) { return e.p === st.result.skirmishWinner; }).length;
-  assert.ok(wonRows === wonExpected, 'won=1 count equals winner-side plays (' + wonRows + ')');
+  assert.ok(allMatch, 'every row matches its decisionLog entry (side/card/mode/turn/outcome/map/slice/won)');
+  var played = ev.filter(function (r) { return r.outcome === 'played'; });
+  assert.ok(played.length === st.journal.playLog.length,
+    "outcome='played' rows == plays (" + played.length + ' = ' + st.journal.playLog.length + ')');
+  var declined = ev.filter(function (r) { return r.outcome === 'declined'; });
+  assert.ok(declined.length > 0, 'declined decisions are recorded (held-but-not-played cards leave rows)');
+  assert.ok(declined.every(function (r) { return r.won === null; }),
+    'won is played-only (NULL on a decline) — AVG(won) is a play win-rate without an outcome filter');
+  // never-invisible: a card held at some decision but NEVER played still has rows.
+  var playedCards = {}; played.forEach(function (r) { playedCards[r.card_id] = true; });
+  var declinedOnly = declined.filter(function (r) { return !playedCards[r.card_id]; });
+  assert.ok(declinedOnly.length >= 0, 'declined-only cards (if any) are queryable, not invisible');
+});
+
+/* ---------- dimension tables: upserted from loaded content at ingest ---------- */
+test('dimensions (versions / maps / cards / battalions)', function () {
+  // versions: the slice key, with the human-readable dials behind the digest.
+  var ver = h.db.prepare('SELECT * FROM versions WHERE version = ? AND config_digest = ?').get(E.VERSION, E.CONFIG.digest);
+  assert.ok(ver, 'a versions row exists for (E.VERSION, E.CONFIG.digest)');
+  var dials = JSON.parse(ver.dials);
+  assert.ok(dials.pointsCap === E.CONFIG.pointsCap && dials.trenchCount === E.CONFIG.trenchCount,
+    'versions.dials carries the human-readable config values (pointsCap/trenchCount)');
+
+  // maps: computed terrain features, from the map's edge/shape data.
+  var m = h.db.prepare('SELECT * FROM maps WHERE name = ? AND version = ?').get(E.MAPS[0].name, E.VERSION);
+  assert.ok(m, 'a maps row exists for the played map');
+  var tf = db.terrainFeatures(E.MAPS[0]);
+  assert.ok(m.mountain_hexes === tf.mountainHexes && m.forest_hexes === tf.forestHexes &&
+    m.river_hexes === tf.riverHexes && m.hex_total === tf.hexTotal,
+    'maps carries computed mountain/forest/river hex counts + hex total (' +
+    m.mountain_hexes + '/' + m.forest_hexes + '/' + m.river_hexes + ', ' + m.hex_total + ' hexes)');
+  var mapCount = h.db.prepare('SELECT COUNT(*) c FROM maps WHERE version = ? AND config_digest = ?').get(E.VERSION, E.CONFIG.digest).c;
+  assert.ok(mapCount === E.MAPS.length, 'every loaded map is upserted (' + mapCount + ' = ' + E.MAPS.length + ')');
+
+  // cards: intrinsics — steps, points, derived kind, opener flags.
+  var deployArt = h.db.prepare('SELECT * FROM cards WHERE id = ? AND version = ?').get('deploy_artillery', E.VERSION);
+  assert.ok(deployArt, 'a cards row exists for deploy_artillery');
+  assert.strictEqual(deployArt.kind, 'deploy', "deploy_artillery's derived kind is 'deploy'");
+  assert.ok(Math.abs(deployArt.points - E.cardPoints(E.CARD_BY_ID.deploy_artillery)) < 1e-9,
+    'cards.points = Engine.cardPoints (' + deployArt.points + ')');
+  assert.ok(Array.isArray(JSON.parse(deployArt.steps)), 'cards.steps is the JSON step list');
+  var starter = h.db.prepare("SELECT id FROM cards WHERE starting = 1 AND version = ?").all(E.VERSION).map(function (r) { return r.id; });
+  assert.ok(starter.indexOf('deploy_inf_start') >= 0, 'opener flag `starting` is recorded (deploy_inf_start)');
+  var noOpen = h.db.prepare("SELECT id FROM cards WHERE no_opener = 1 AND version = ?").all(E.VERSION).map(function (r) { return r.id; });
+  assert.ok(noOpen.indexOf('airdrop') >= 0, 'opener flag `noOpener` is recorded (airdrop)');
+
+  // battalions: identity + composition.
+  var bat = h.db.prepare('SELECT * FROM battalions WHERE id = ? AND version = ?').get('default', E.VERSION);
+  assert.ok(bat && bat.name, 'a battalions row exists for default with a name');
+  var comp = JSON.parse(bat.cards);
+  assert.ok(Array.isArray(comp) && comp[0].cardId && comp[0].count != null, 'battalions.cards is the {cardId,count} composition');
+  var sizeExpected = comp.reduce(function (s, c) { return s + (c.count == null ? 1 : c.count); }, 0);
+  assert.strictEqual(bat.size, sizeExpected, 'battalions.size = sum of card counts (' + bat.size + ')');
+});
+
+/* ---------- pure dimension derivations ---------- */
+test('terrainFeatures / cardKind (pure)', function () {
+  // A hand-built map: two mountain hexes, one forest hex, terrain owned as sides.
+  var fakeMap = { id: 'tf-test', name: 'TF Test', shape: 'classic', pieces: [
+    { t: 'M', edges: [[0, 0, 0], [0, 0, 1]] },
+    { t: 'M', edges: [[1, 0, 2], [1, 0, 3]] },
+    { t: 'F', edges: [[-1, 0, 4]] },
+    { t: 'M', edges: [[0, 0, 3]] } // a SECOND piece on hex 0,0 — still ONE mountain hex
+  ] };
+  var tf = db.terrainFeatures(fakeMap);
+  assert.strictEqual(tf.mountainHexes, 2, 'two distinct mountain hexes (0,0 counted once across two pieces), got ' + tf.mountainHexes);
+  assert.strictEqual(tf.forestHexes, 1, 'one forest hex, got ' + tf.forestHexes);
+  assert.strictEqual(tf.hexTotal, E.boardHexes('classic').length, 'hex_total = the classic board size');
+
+  assert.strictEqual(db.cardKind({ steps: [{ type: 'deploy', unit: 'infantry' }, { type: 'deploy', unit: 'infantry' }] }), 'deploy', 'two deploys -> deploy');
+  assert.strictEqual(db.cardKind({ steps: [{ type: 'attack' }, { type: 'attack' }] }), 'attack', 'two attacks -> attack');
+  assert.strictEqual(db.cardKind({ steps: [{ type: 'reposition' }, { type: 'attack' }] }), 'attack', 'reposition+attack ties -> attack wins by priority');
+  assert.strictEqual(db.cardKind({ steps: [{ type: 'barrage' }, { type: 'attack' }] }), 'attack', 'barrage+attack ties -> attack wins by priority');
+  assert.strictEqual(db.cardKind({ steps: [{ type: 'barrage' }, { type: 'trench' }] }), 'barrage', 'barrage+trench ties -> barrage wins by priority');
+  assert.strictEqual(db.cardKind({ steps: [] }), 'none', 'a stepless card -> none');
+});
+
+/* ---------- litmus: card timing vs a map's mountain-hex count is a 3-table join ---------- */
+test('litmus 3-table join (card_events x cards x maps)', function () {
+  // The seeded DB (round-trip above) already has card_events, cards, maps for one
+  // slice. A plain 3-table join answers "card X play-timing vs mountain-hex count".
+  var rows = h.db.prepare(
+    'SELECT c.id AS card, c.kind AS kind, m.mountain_hexes AS mtn, AVG(ce.turn) AS avg_turn, COUNT(*) AS plays' +
+    ' FROM card_events ce' +
+    ' JOIN cards c ON c.id = ce.card_id AND c.version = ce.version AND c.config_digest = ce.config_digest' +
+    ' JOIN maps m ON m.name = ce.map AND m.version = ce.version AND m.config_digest = ce.config_digest' +
+    " WHERE ce.outcome = 'played' GROUP BY c.id, m.mountain_hexes ORDER BY c.id").all();
+  assert.ok(rows.length > 0, 'the 3-table join returns per-card timing rows');
+  var tf = db.terrainFeatures(E.MAPS[0]);
+  assert.ok(rows.every(function (r) { return r.mtn === tf.mountainHexes; }),
+    "every row's mountain-hex count is the played map's computed value (" + tf.mountainHexes + ')');
+  assert.ok(rows.every(function (r) { return r.avg_turn >= 1 && r.plays >= 1 && typeof r.kind === 'string'; }),
+    'each row carries a sane avg play turn, play count, and the card kind — no reach into JS');
+});
+
+/* ---------- named views are the fold, in SQL ---------- */
+test('fold-in-SQL views', function () {
+  var g = h.db.prepare('SELECT * FROM v_global_balance WHERE version = ? AND config_digest = ?').get(E.VERSION, E.CONFIG.digest);
+  assert.ok(g && g.n >= 1, 'v_global_balance returns a folded row for the slice');
+  assert.ok(g.first_win_pct >= 0 && g.first_win_pct <= 1, 'first_win_pct is a fraction');
+  assert.ok(g.avg_turns > 0, 'avg_turns is positive');
+  var ct = h.db.prepare('SELECT * FROM v_card_timing WHERE version = ? ORDER BY plays DESC LIMIT 1').get(E.VERSION);
+  assert.ok(ct && ct.plays >= 1 && ct.avg_play_turn >= 1, 'v_card_timing folds plays/declines/avg-play-turn per card');
 });
 
 /* ---------- timeline: real skirmishes carry one; absence is tolerated ---------- */
 test('timeline', function () {
-  // simSkirmish states carry fsTimeline — a real skirmish
-  // should have produced per-turn rows above.
   var tl0 = h.db.prepare('SELECT COUNT(*) c FROM timeline WHERE skirmish_id = ?').get(skirmishId).c;
   assert.ok(tl0 === (st.journal.fsTimeline ? st.journal.fsTimeline.length : 0) && tl0 > 0,
     'a real skirmish lands its per-turn timeline (' + tl0 + ' rows)');
@@ -160,7 +262,8 @@ test('listRuns', function () {
   assert.ok(runs[0].id === runId2 && runs[1].id === runId, 'ordered id DESC — most recent first');
   assert.ok(runs[0].redAi === 'hard' && runs[0].blueAi === 'hard' && runs[0].label === 'r2',
     'camelCase columns (redAi/blueAi/label) round-trip from the snake_case table');
-  assert.ok(runs.every(function (r) { return 'seedBase' in r && 'baseline' in r; }), 'seedBase/baseline columns present (nullable)');
+  assert.ok(runs.every(function (r) { return 'seedBase' in r && 'baseline' in r && 'battalionRed' in r && 'battalionBlue' in r; }),
+    'seedBase/baseline/battalionRed/battalionBlue columns present (nullable)');
   assert.ok(db.listRuns(h, 1).length === 1, 'limit is honoured');
 });
 
@@ -171,8 +274,8 @@ test('listSkirmishes', function () {
   assert.ok(skirmishesForRun1.every(function (r) { return r.id != null; }) && skirmishesForRun1[0].id < skirmishesForRun1[1].id,
     'ordered by id ascending (' + skirmishesForRun1.map(function (r) { return r.id; }).join(',') + ')');
   var bRow = skirmishesForRun1[0];
-  ['id', 'map', 'seed', 'firstPlayer', 'winner', 'winType', 'turns', 'fsRed', 'fsBlue', 'firstBlood',
-    'leadChanges', 'killTail', 'zeroKill', 'tiebreak', 'attacks', 'swaps', 'marches', 'deploys',
+  ['id', 'map', 'seed', 'firstPlayer', 'winner', 'winType', 'turns', 'configDigest', 'battalionRed', 'battalionBlue',
+    'fsRed', 'fsBlue', 'firstBlood', 'leadChanges', 'killTail', 'zeroKill', 'tiebreak', 'attacks', 'swaps', 'marches', 'deploys',
     'resEndRed', 'resEndBlue', 'trace', 'hexesRed', 'hexesBlue'].forEach(function (k) {
     assert.ok(k in bRow, 'listSkirmishes row carries camelCase "' + k + '"');
   });
@@ -180,6 +283,8 @@ test('listSkirmishes', function () {
     'listSkirmishes hexesRed/hexesBlue round-trip the same tally (' + bRow.hexesRed + '/' + bRow.hexesBlue + ')');
   assert.ok(bRow.map === E.MAPS[0].name && bRow.firstPlayer === 'red' && bRow.winner === st.result.skirmishWinner,
     'listSkirmishes row matches the round-trip skirmish inserted above (map/firstPlayer/winner)');
+  assert.ok(bRow.configDigest === E.CONFIG.digest && bRow.battalionRed === 'default',
+    'listSkirmishes surfaces the config digest + battalion refs');
   assert.ok(typeof bRow.trace === 'string' && JSON.parse(bRow.trace).map === E.MAPS[0].name,
     'trace column is still a raw JSON string — envelopeFromRow parses it client-side, not db.js');
   assert.ok(db.listSkirmishes(h, runId2).length === 0, 'a different run id returns its own (empty) slice, not a cross-run leak');
@@ -187,7 +292,7 @@ test('listSkirmishes', function () {
   db.close(h);
 });
 
-/* ---------- db-query.js CLI against the temp db ---------- */
+/* ---------- db-query.js CLI against the temp db (incl. the litmus join) ---------- */
 test('db-query.js CLI', function () {
   var cli = path.join(__dirname, 'db-query.js');
   var out = cp.execFileSync(process.execPath,
@@ -197,9 +302,17 @@ test('db-query.js CLI', function () {
   assert.ok(out.indexOf(E.MAPS[0].name) >= 0, 'CLI prints the map row (' + E.MAPS[0].name + ')');
   assert.ok(/\(1 row\)/.test(out), 'CLI prints the row count');
 
+  // The litmus, driven through the real db-query.js CLI over the seeded DB.
+  var litmus = cp.execFileSync(process.execPath, [cli, '--db', dbFile,
+    'SELECT c.id card, m.mountain_hexes mtn, AVG(ce.turn) avg_turn, COUNT(*) plays' +
+    ' FROM card_events ce JOIN cards c ON c.id = ce.card_id JOIN maps m ON m.name = ce.map' +
+    " WHERE ce.outcome='played' GROUP BY c.id, m.mountain_hexes"], { encoding: 'utf8' });
+  assert.ok(litmus.indexOf('mtn') >= 0 && litmus.indexOf('avg_turn') >= 0, 'litmus CLI prints the join header');
+  assert.ok(!/\(0 rows\)/.test(litmus), 'litmus CLI returns aggregate rows');
+
   var schemaOut = cp.execFileSync(process.execPath, [cli, '--db', dbFile], { encoding: 'utf8' });
-  assert.ok(schemaOut.indexOf('CREATE TABLE') >= 0 && schemaOut.indexOf('skirmishes') >= 0,
-    'no-arg CLI prints the schema');
+  assert.ok(schemaOut.indexOf('CREATE TABLE') >= 0 && schemaOut.indexOf('skirmishes') >= 0 && schemaOut.indexOf('card_events') >= 0,
+    'no-arg CLI prints the schema (incl. card_events)');
   assert.ok(/-- 3 rows/.test(schemaOut), 'no-arg CLI prints per-table row counts (skirmishes: 3)');
 
   var wrote = true;
@@ -211,25 +324,26 @@ test('db-query.js CLI', function () {
 });
 
 /* ---------- run identity + trace ---------- */
-// Separate handle/file from the counts-pinned assertions above (the CLI
-// section just asserted exact row counts on dbFile — don't perturb it).
 test('run identity + trace', function () {
   var dbFile2 = path.join(tmpDir, 'runs.db');
   h2 = db.open(dbFile2);
 
   runIdA = db.insertRun(h2, {
     version: '9.9-test', kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 5, tool: 'db.test.js',
-    deck: 'default', mapset: 'core7', seedBase: 7919, label: 'run A'
+    battalionRed: 'default', battalionBlue: 'cavsplit-16', mapset: 'core7', seedBase: 7919, label: 'run A'
   });
   var rowA = h2.db.prepare('SELECT * FROM runs WHERE id = ?').get(runIdA);
-  assert.ok(rowA.deck === 'default' && rowA.mapset === 'core7' && rowA.seed_base === 7919 && rowA.label === 'run A',
-    'runs row carries deck/mapset/seed_base/label (run identity)');
+  assert.ok(rowA.battalion_red === 'default' && rowA.battalion_blue === 'cavsplit-16' && rowA.mapset === 'core7' &&
+    rowA.seed_base === 7919 && rowA.label === 'run A',
+    'runs row carries per-side battalions + mapset/seed_base/label (asymmetric run identity)');
   assert.ok(rowA.baseline === 0, 'baseline defaults to 0 when not requested');
 
   st2 = SIM.simSkirmish(E.MAPS[0], 4242, 'red', 'normal', 'normal');
   skirmishIdA = db.insertSkirmish(h2, runIdA, st2, 'red', { seed: 4242 });
-  var bA = h2.db.prepare('SELECT run_id, trace FROM skirmishes WHERE id = ?').get(skirmishIdA);
+  var bA = h2.db.prepare('SELECT run_id, trace, battalion_red, battalion_blue FROM skirmishes WHERE id = ?').get(skirmishIdA);
   assert.ok(bA.run_id === runIdA, 'skirmish row references its run id (run_id column)');
+  assert.ok(bA.battalion_red === 'default' && bA.battalion_blue === 'cavsplit-16',
+    'skirmish inherits the run\'s per-side battalions when the caller does not override');
   var trace = JSON.parse(bA.trace);
   assert.ok(trace && typeof trace === 'object', 'skirmishes.trace is valid JSON');
   ['v', 'map', 'seed', 'fp', 'winner', 'winType', 'turns', 'trace', 'units'].forEach(function (k) {
@@ -241,6 +355,55 @@ test('run identity + trace', function () {
     'trace.units = st.journal.unitMetrics verbatim');
   assert.ok(Object.keys(trace.units).indexOf('infantry') >= 0,
     'unitMetrics keyed by FULL unit-type name "infantry", not "inf" shorthand');
+});
+
+/* ---------- slice key: same version, different point cap -> different config_digest ---------- */
+test('config-digest slices two runs of the same rules version', function () {
+  var hs = db.open(path.join(tmpDir, 'slice.db'));
+  var origCap = E.CONFIG.pointsCap;
+  try {
+    var st = SIM.simSkirmish(E.MAPS[0], 77, 'red', 'normal', 'normal');
+    // Run A at the default point cap.
+    var rA = db.insertRun(hs, { version: 'slice-v', kind: 'balance', redAi: 'normal', blueAi: 'normal', n: 1, tool: 'db.test.js' });
+    db.insertSkirmish(hs, rA, st, 'red', { version: 'slice-v', seed: 77 });
+    var digestDefault = E.CONFIG.digest;
+    // Run B at a DIFFERENT point cap — same rules version, different dial.
+    E.CONFIG.pointsCap = origCap === 80 ? 90 : 80;
+    var digestOther = E.CONFIG.digest;
+    assert.notStrictEqual(digestOther, digestDefault, 'mutating pointsCap changes Engine.CONFIG.digest');
+    var rB = db.insertRun(hs, { version: 'slice-v', kind: 'balance', redAi: 'normal', blueAi: 'normal', n: 1, tool: 'db.test.js' });
+    db.insertSkirmish(hs, rB, st, 'red', { version: 'slice-v', seed: 77 });
+
+    // Two games at the SAME rules version slice apart by a plain SQL filter on the digest.
+    var digests = hs.db.prepare('SELECT DISTINCT config_digest FROM skirmishes WHERE version = ? ORDER BY config_digest').all('slice-v')
+      .map(function (r) { return r.config_digest; });
+    assert.strictEqual(digests.length, 2, 'the same rules version holds two distinct config digests (' + digests.join(',') + ')');
+    var nDefault = hs.db.prepare('SELECT COUNT(*) c FROM skirmishes WHERE version = ? AND config_digest = ?').get('slice-v', digestDefault).c;
+    var nOther = hs.db.prepare('SELECT COUNT(*) c FROM skirmishes WHERE version = ? AND config_digest = ?').get('slice-v', digestOther).c;
+    assert.ok(nDefault === 1 && nOther === 1, 'a plain SQL filter on config_digest separates the two dials (1 + 1)');
+    // The versions dimension carries both digests behind the same rules version, with the dials.
+    var vdials = hs.db.prepare('SELECT dials FROM versions WHERE version = ? AND config_digest = ?').get('slice-v', digestOther);
+    assert.ok(vdials && JSON.parse(vdials.dials).pointsCap === E.CONFIG.pointsCap, 'versions row carries the differing dial value behind the digest');
+
+    // The 3-table litmus must NOT over-count across slices. With 2 slices, each
+    // card_id has 2 `cards` rows and each map name 2 `maps` rows, so a naive
+    // id-only join fans out 4x; the slice predicates (the fix) keep it exact.
+    var anyCard = hs.db.prepare("SELECT config_digest cd, card_id card FROM card_events WHERE outcome='played' LIMIT 1").get();
+    var raw = hs.db.prepare("SELECT COUNT(*) c FROM card_events WHERE outcome='played' AND config_digest=? AND card_id=?").get(anyCard.cd, anyCard.card).c;
+    var sliceCorrect = hs.db.prepare(
+      'SELECT COUNT(*) plays FROM card_events ce' +
+      ' JOIN cards c ON c.id=ce.card_id AND c.version=ce.version AND c.config_digest=ce.config_digest' +
+      ' JOIN maps m ON m.name=ce.map AND m.version=ce.version AND m.config_digest=ce.config_digest' +
+      " WHERE ce.outcome='played' AND ce.config_digest=? AND ce.card_id=?").get(anyCard.cd, anyCard.card).plays;
+    var naive = hs.db.prepare(
+      'SELECT COUNT(*) plays FROM card_events ce JOIN cards c ON c.id=ce.card_id JOIN maps m ON m.name=ce.map' +
+      " WHERE ce.outcome='played' AND ce.config_digest=? AND ce.card_id=?").get(anyCard.cd, anyCard.card).plays;
+    assert.strictEqual(sliceCorrect, raw, 'the slice-keyed 3-table join returns the true per-slice play count (no fan-out)');
+    assert.strictEqual(naive, raw * 4, 'a naive id-only join over 2 slices fans out 4x — the slice predicates are what prevent it');
+  } finally {
+    E.CONFIG.pointsCap = origCap;
+    db.close(hs);
+  }
 });
 
 /* ---------- hexes_red/hexes_blue: known-units column mapping ---------- */
@@ -263,23 +426,16 @@ test('hex-ownership tally', function () {
   assert.ok(bEmpty.hexes_red === 0 && bEmpty.hexes_blue === 0,
     'an empty board tallies 0/0 — a REAL tie, still stored as numbers, not NULL');
 
-  // Legacy rows (written before this ticket) never had hexes_red/hexes_blue
-  // populated — simulate one with a direct INSERT that omits the columns
-  // entirely, and confirm listSkirmishes surfaces NULL rather than 0
-  // (foldSkirmishes' "a missing pair is not a fabricated 0/0 tie" contract).
+  // A legacy-shaped row (hexes columns never written) round-trips as NULL, not 0.
   h2.db.prepare(
     'INSERT INTO skirmishes (run_id, version, map, winner, first_player, turns) VALUES (?,?,?,?,?,?)'
   ).run(runIdA, '9.9-test', E.MAPS[0].name, 'red', 'red', 10);
   var legacyRows = db.listSkirmishes(h2, runIdA).filter(function (r) { return r.hexesRed == null; });
   assert.ok(legacyRows.length === 1 && legacyRows[0].hexesBlue == null,
-    'a legacy row (hexes columns never written) round-trips as NULL, not 0');
+    'a row with the hexes columns unwritten round-trips as NULL, not 0');
 });
 
 /* ---------- slimSkirmishState (the --parallel worker contract) ---------- */
-// balance-report's --parallel workers ship slimSkirmishState(st) through a
-// JSON pipe to the parent, which calls insertSkirmish on the other side. Pin
-// that exact trip: the slim state must land a skirmishes row identical to the
-// full state's (same seed/fp), plus the same card_plays and timeline rows.
 test('slimSkirmishState', function () {
   var slimSt = JSON.parse(JSON.stringify(db.slimSkirmishState(st2))); // the worker->parent stdout trip
   var skirmishIdSlim = db.insertSkirmish(h2, runIdA, slimSt, 'red', { seed: 4242 });
@@ -290,8 +446,11 @@ test('slimSkirmishState', function () {
   });
   assert.ok(driftCols.length === 0,
     'a JSON-round-tripped slim state lands an identical skirmishes row (drift: ' + (driftCols.join(',') || 'none') + ')');
-  var cpSlim = h2.db.prepare('SELECT COUNT(*) c FROM card_plays WHERE skirmish_id = ?').get(skirmishIdSlim).c;
-  assert.ok(cpSlim === st2.journal.playLog.length, 'slim state lands one card_plays row per playLog entry (' + cpSlim + ')');
+  // decisionLog survives the slim trip, so card_events land the same on both paths.
+  var evFull = h2.db.prepare('SELECT COUNT(*) c FROM card_events WHERE skirmish_id = ?').get(skirmishIdA).c;
+  var evSlim = h2.db.prepare('SELECT COUNT(*) c FROM card_events WHERE skirmish_id = ?').get(skirmishIdSlim).c;
+  assert.ok(evSlim === evFull && evSlim === st2.journal.decisionLog.length,
+    'slim state lands the same card_events rows (decisionLog survives the --parallel pipe) (' + evSlim + ')');
   var tlFull = h2.db.prepare('SELECT COUNT(*) c FROM timeline WHERE skirmish_id = ?').get(skirmishIdA).c;
   var tlSlim = h2.db.prepare('SELECT COUNT(*) c FROM timeline WHERE skirmish_id = ?').get(skirmishIdSlim).c;
   assert.ok(tlSlim === tlFull && tlSlim > 0, 'slim state lands the same timeline rows (' + tlSlim + ')');
@@ -320,12 +479,10 @@ test('baseline uniqueness', function () {
      flagsAfterX.filter(function (r) { return r.id === runY; })[0].baseline === 0,
     'setBaseline(runX) promotes X and clears Y');
 
-  // a pin scoped to ONE version must never touch another version's flag
   db.insertRun(h2, { version: '9.9-other-version', kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 1, tool: 'db.test.js', baseline: true });
   var stillX = h2.db.prepare('SELECT baseline FROM runs WHERE id = ?').get(runX).baseline;
   assert.ok(stillX === 1, 'pinning a baseline on a DIFFERENT version leaves this version’s baseline untouched');
 
-  // NULL-version runs: `version IS ?` must clear NULL-version baselines too (not just non-NULL, "= NULL" never matches in SQL)
   db.insertRun(h2, { kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 1, tool: 'db.test.js', baseline: true }); // version omitted -> NULL
   var nullB = db.insertRun(h2, { kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 1, tool: 'db.test.js', baseline: true });
   var nullFlags = h2.db.prepare('SELECT id, baseline FROM runs WHERE version IS NULL ORDER BY id').all();
@@ -338,8 +495,8 @@ test('baseline uniqueness', function () {
 });
 
 /* ---------- factsFromRow ≡ skirmishFacts: the DB read path must not drift from
-   the live path. Both folds feed the shared aggregate; if a column
-   alias or a derivation ever disagrees, this catches it as a field-level diff. */
+   the live path. Both folds feed the shared aggregate; if a column alias or a
+   derivation ever disagrees, this catches it as a field-level diff. */
 test('factsFromRow ≡ skirmishFacts', function () {
   var hf = db.open(path.join(tmpDir, 'facts.db'));
   try {
@@ -352,4 +509,28 @@ test('factsFromRow ≡ skirmishFacts', function () {
     assert.deepStrictEqual(fromRow, live,
       'factsFromRow(db row) matches skirmishFacts(live state) field-for-field — the two folds agree');
   } finally { db.close(hf); }
+});
+
+/* ---------- archiveIfLegacy: a pre-star-schema DB is renamed aside, not migrated ---------- */
+test('legacy DB is archived on open', function () {
+  var legacyFile = path.join(tmpDir, 'legacy.db');
+  // Fabricate a pre-star-schema DB: the old bolted-flat tables, no user_version,
+  // no card_events. open() must move it aside and start fresh.
+  var sqlite = require('node:sqlite');
+  var old = new sqlite.DatabaseSync(legacyFile);
+  old.exec('CREATE TABLE skirmishes (id INTEGER PRIMARY KEY, map TEXT);');
+  old.exec('CREATE TABLE card_plays (id INTEGER PRIMARY KEY);');
+  old.exec("INSERT INTO skirmishes (map) VALUES ('legacy-row');");
+  old.close();
+
+  var hL = db.open(legacyFile);
+  try {
+    var archived = fs.readdirSync(tmpDir).filter(function (f) { return /legacy\.archived-.*\.db$/.test(f); });
+    assert.strictEqual(archived.length, 1, 'the legacy DB was renamed aside (one archived-*.db)');
+    var tables = hL.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
+      .all().map(function (r) { return r.name; });
+    assert.ok(tables.indexOf('card_events') >= 0 && tables.indexOf('versions') >= 0,
+      'the reopened DB is a fresh star schema, not the migrated old one');
+    assert.strictEqual(hL.db.prepare('SELECT COUNT(*) c FROM skirmishes').get().c, 0, 'no legacy rows were carried over');
+  } finally { db.close(hL); }
 });

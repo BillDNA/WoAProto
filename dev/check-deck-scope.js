@@ -8,8 +8,9 @@
      1. the IN-SKIRMISH DRAW PILE — buildDeck + st.cards.decks + sideDecks, the
         pile a battalion instantiates at skirmish start (draw → run out →
         Attrition). Its home is the skirmish engine and the tests that drive it.
-     2. the PERSISTED run-identity `deck` COLUMN in logs/woa.db — a schema name,
-        not a pure rename (a data migration, deferred with report-data).
+     2. the balance-report ACCUMULATOR's battalion field, still named `deck` in
+        the logs/reports/.../accumulated.json report data (a report-data rename
+        still pending; the star-schema DB column has been retired).
 
    Every OTHER .js "deck" is build-layer drift that a grep missed. This scan is
    the guard: it FAILS on any `deck`/`Deck` in a .js file outside the allowlist
@@ -32,14 +33,14 @@ var RUNTIME = [
   'game/test/test.cards.js',      // draw / reshuffle / opening-hand mechanics
   'game/test/test.ai.js',         // AI over the draw pile
   'dev/claude-plays.test.js',     // sentinel seeded into the draw pile
+  'dev/smoke.js',                 // March Out threads a built battalion into sideDecks
 ];
-// The persistence layer: "deck" is the logs/woa.db run-identity column.
+// The report-data layer: "deck" is the accumulator's battalion field name in
+// logs/reports/.../accumulated.json (a report-data rename still pending). The
+// star-schema DB column has been retired — db.js/db.test.js/server.js/
+// server.test.js are deck-free now and no longer allowlisted.
 var PERSISTENCE = [
-  'dev/db.js',                    // schema + insert/select of the `deck` column
-  'dev/db.test.js',
-  'dev/server.test.js',
-  'dev/balance-report.js',        // report tooling that stamps the column
-  'game/server.js',              // /api/recordskirmish proxy forwards it
+  'dev/balance-report.js',        // reads/writes the accumulated.json `deck` field + report filenames
 ];
 // Lint scanners that necessarily NAME the token (this file included).
 var SCANNERS = [

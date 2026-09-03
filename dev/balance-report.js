@@ -178,7 +178,7 @@ async function run() {
     dbh = dbm.open();
     runId = dbm.insertRun(dbh, {
       version: ver, kind: 'balance', redAi: dr, blueAi: db, n: n, tool: 'balance-report',
-      deck: runDeck, mapset: runMapset, seedBase: seedBaseFor(0), label: runLabel
+      battalion: runDeck || null, mapset: runMapset, seedBase: seedBaseFor(0), label: runLabel
     });
   } catch (e) { dbm = null; console.error('(db off: ' + e.message + ')'); }
 

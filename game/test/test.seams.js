@@ -48,7 +48,7 @@ test('seam: the army-points cap is a settable, enforced limit', () => {
     'enforcement tracks the limit it is given (lower the limit below the battalion and the same battalion fails)');
 });
 
-// The seam: the config home (issue #250). One namespace object (E.CONFIG) owns the
+// The seam: the config home. One namespace object (E.CONFIG) owns the
 // rules-facing tunables; the pre-existing flat exports resolve INTO it. Asserted as
 // IDENTITY (one value, two paths), never as a pinned value — retuning a dial reds
 // nothing here, only breaking the aliasing does.
@@ -66,7 +66,7 @@ test('seam: the flat exports are aliases into the config home (one owner)', () =
   assert.ok(overByHome === overByExport, 'the gate reads one owner — home and flat export agree');
 });
 
-// The digest contract (issue #250), asserted as RELATIONSHIPS, never a specific
+// The digest contract, asserted as RELATIONSHIPS, never a specific
 // digest string. Both config homes share the ONE util (E.configDigest), so testing
 // the util's contract covers the engine home and the UI home uniformly.
 test('seam: the config digest is stable, value-sensitive, and no-false-split', () => {

@@ -191,7 +191,7 @@ _Home_: `game/engine/04-skirmish.js:108` — `decisionLog`
 
 **Held Card**:
 A Card passed every turn it sits in hand and never played. Invisible in the play-only log; now traceable as a (side, card) that has `declined` decision events but no `played` one.
-_Home_: none yet (the `card_events` fact table derives it from the decision journal)
+_Home_: `dev/db.js:82` — `card_events` (a card with declined rows but no played row)
 
 **Skirmish fact**:
 The flat record of everything the balance layer reads off one finished Skirmish
@@ -201,6 +201,24 @@ whether from a live end-state or a persisted row, so the live fold and the
 stored-data fold can never disagree.
 _Avoid_: battle fact, per-battle row (a row is the persisted form of the fact).
 _Home_: `game/sim.js:73` — `skirmishFacts`
+
+**Star schema**:
+The shape of the balance store (`logs/woa.db`): a few FACT tables at skirmish / decision / turn grain, surrounded by DIMENSION tables they join to. Any new balance question is a join over dimensions already present, never a new table. Dimensions are upserted from loaded content at ingest and stamped with the (rules version, Config digest) slice key, so the DB is self-contained — a terrain- or card-intrinsic question is answered in SQL without reaching into the JS content files. The fold itself is SQL: each cited metric is a named view over the schema (see `docs/adr/0004-fold-moves-to-sql.md`).
+_Avoid_: bolted-flat (the retired predecessor — one wide table per grain, dimensions inlined as repeated columns).
+_Home_: `dev/db.js:60` — `SCHEMA`
+
+**Fact table**:
+A table at one measured grain: `skirmishes` (one row per Skirmish — the Skirmish fact plus both battalion refs and the slice key), `card_events` (one row per card decision — a Card event), `timeline` (one row per turn's field score). Facts point at the dimensions by id and carry the (version, digest) slice key.
+_Home_: `dev/db.js:68` — `skirmishes`
+
+**Dimension table**:
+A slice-stamped lookup upserted from loaded content at ingest: `maps` (computed terrain features — mountain/forest/river hex counts, hex total, shape), `cards` (intrinsics — steps, points, derived kind, opener flags), `battalions` (identity + composition), `versions` (the slice key with the human-readable dials behind the digest).
+_Home_: `dev/db.js:94` — `maps`
+
+**Card event**:
+One row of the `card_events` fact table — a single card decision (played / declined / held) carrying turn, side, mode, card ref, the Skirmish's map, and the (version, Config digest) slice key. Sourced from the Decision journal; never-played Cards leave rows, so pass-rate and play-timing join cleanly (and slice-correctly) against terrain and card intrinsics.
+_Avoid_: card play row (that's the played-only subset; a Card event includes declines).
+_Home_: `dev/db.js:82` — `card_events`
 
 ## Content iteration & army-points
 
@@ -221,7 +239,7 @@ _Avoid_: Setting (too broad — this is the dials, not app state), Constant.
 _Home_: `game/engine/00-config.js:30` — `GAME_CONFIG`
 
 **Config digest**:
-A deterministic fingerprint of a config home's live dial values — order-independent, value-driven, stable across runs and platforms, changing iff a value changes. It is the slice key that tells *which dials were in force* for a batch of games (#245 stamps the engine digest on each skirmish row) — rules version alone can't.
+A deterministic fingerprint of a config home's live dial values — order-independent, value-driven, stable across runs and platforms, changing iff a value changes. It is the slice key that tells *which dials were in force* for a batch of games (the engine digest is stamped on each skirmish row) — rules version alone can't.
 _Avoid_: Hash (say config digest; a hash is the mechanism, this is the identity it yields).
 _Home_: `game/engine/00-config.js:76` — `configDigest`
 
