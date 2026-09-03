@@ -254,9 +254,11 @@ function renderSteps(c){
         '<label title="attacker survives ties"><input type="checkbox" class="ds-tie" '+(s.tieSpare?'checked':'')+'> tie-spare</label>' +
         '<label title="attacker never enters the hex, even on a win"><input type="checkbox" class="ds-noadv" '+(s.noAdvance?'checked':'')+'> no-advance</label>';
     }
-    // per-step cost: cardPoints of a one-step card == that step's cost (combo exponent is 1 at n=1),
-    // so the breakout reuses the exported pricing — no second source.
-    var sp = dkPts(E.cardPoints({ steps: [s] }));
+    // per-step cost: this action's marginal contribution at its position (base x combo[si]),
+    // taken as a prefix-difference of the exported cardPoints — so the rows sum to the card
+    // total under escalation, with no second pricing source.
+    var marginalPts = function(){ return E.cardPoints({ steps: c.steps.slice(0, si+1) }) - E.cardPoints({ steps: c.steps.slice(0, si) }); };
+    var sp = dkPts(marginalPts());
     row.innerHTML = '<span class="dkstep-n">'+(si+1)+'</span>' + typeSel + extra +
       '<span class="dkstep-pts" title="this step\'s army-points cost">'+sp+' pts</span>' +
       '<button class="ds-del" title="remove step" style="font-size:14px;padding:0 8px;">&times;</button>';
@@ -266,7 +268,7 @@ function renderSteps(c){
       renderSteps(DK.cards[DK.sel]); dkStatus();
     };
     // mod/flag edits keep focus (no re-render), so refresh this step's own pts inline
-    var stepPts = function(){ row.querySelector('.dkstep-pts').textContent = dkPts(E.cardPoints({ steps: [s] })) + ' pts'; };
+    var stepPts = function(){ row.querySelector('.dkstep-pts').textContent = dkPts(marginalPts()) + ' pts'; };
     if (s.type === 'deploy'){
       row.querySelector('.ds-unit').onchange = function(){ s.unit = this.value; stepPts(); dkStatus(); };
       row.querySelector('.ds-any').onchange = function(){ if (this.checked) s.anywhere = true; else delete s.anywhere; stepPts(); dkStatus(); };

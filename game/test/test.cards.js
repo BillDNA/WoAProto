@@ -112,10 +112,15 @@ test('army-points (computed from steps, weight table pinned)', () => {
     'deploy > attack > reposition base costs');
   // Weight-table guardrail via a SYNTHETIC card (steps fixed here, NOT read from a
   // content file), so a POINTS-table edit is reviewed while editing any actual card
-  // or the active deck reds nothing (assert the mechanism, never a
-  // content value). deploy inf 3 + attack (base 2, tieSpare +1, noAdvance +0.5) = 6.5.
+  // or the active deck reds nothing (assert the mechanism, never a content value).
+  // Base: deploy-inf 3, attack (base 2, tieSpare +1, noAdvance +0.5) = 3.5. The 2nd
+  // action escalates at combo[1]=2, so 3x1 + 3.5x2 = 10.
   var pointsProbe = { steps: [{ type: 'deploy', unit: 'infantry' }, { type: 'attack', tieSpare: true, noAdvance: true }] };
-  assert.ok(E.cardPoints(pointsProbe) === 6.5, 'weight table: deploy-inf + tieSpare/noAdvance attack = 6.5 pts');
+  assert.ok(E.cardPoints(pointsProbe) === 10, 'weight table + escalation: deploy-inf(x1) + tieSpare/noAdvance attack(x2) = 10 pts');
+  // Action-stacking escalates superlinearly: N identical base-1 actions cost the running
+  // Fibonacci sum (1, 1+2, 1+2+3, 1+2+3+5 = 1,3,6,11), never a flat N. A curve edit is a loud diff.
+  var rep = function (n) { return E.cardPoints({ steps: Array.from({ length: n }, function () { return { type: 'reposition' }; }) }); };
+  assert.ok(rep(1) === 1 && rep(2) === 3 && rep(3) === 6 && rep(4) === 11, 'combo escalation: 1/2/3/4 reposition = 1/3/6/11 pts (Fibonacci-weighted)');
   assert.ok(E.cardPoints({ steps: [] }) === 0 && E.battalionPoints({ cards: [] }) === 0, 'empty card / empty deck = 0');
   assert.ok(E.cardPoints({ steps: 'oops' }) === 0, 'malformed (non-array) steps score 0, not a throw — battalionProblems can still report the friendly error');
   // deck-value cap gate: every shipped deck sits under the budget (the
