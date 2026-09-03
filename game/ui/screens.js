@@ -17,6 +17,7 @@ var SCREENS = {
   frontdoor:  { kind: 'player', dom: 'menu',          label: 'Menu',              entry: function(){ show('menu'); checkResume(); } },
   settings:   { kind: 'player', dom: 'settingsScr',   label: 'Settings',          entry: function(){ renderSettings(); show('settingsScr'); } },
   campaign:   { kind: 'player', dom: 'campaignScr',   label: 'Campaign',          entry: function(){ show('campaignScr'); } },
+  buildbattalion: { kind: 'player', dom: 'buildBattalionScr', label: 'Muster Battalion', entry: function(){ openBuildBattalion(); } },
   rewards:    { kind: 'player', dom: 'rewardsScr',    label: 'Rewards / card draft', entry: function(){ show('rewardsScr'); } },
   runsummary: { kind: 'player', dom: 'runSummaryScr', label: 'Run summary',       entry: function(){ show('runSummaryScr'); } },
   battle:     { kind: 'player', dom: 'game',          label: 'Battle' },

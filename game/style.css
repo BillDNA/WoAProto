@@ -406,6 +406,24 @@
   .dkpts{color:var(--ink-soft); font-weight:normal;}
   .dkpts b{color:var(--ink); font-weight:bold;}
   .dkpts.over, .dkpts.over b{color:#8a3324;}
+  /* player battalion builder (Muster) — two facing columns: pool → battalion */
+  #pbWrap{display:flex; gap:14px; align-items:stretch; margin:10px 0;}
+  #pbPoolPane, #pbBattalionPane{flex:1 1 0; display:flex; flex-direction:column; max-height:58vh; border:1px solid var(--brass-dark); border-radius:8px; background:rgba(255,255,255,.18); overflow:hidden;}
+  #pbPoolPane h4, #pbBattalionPane h4{margin:0; padding:7px 10px; font-variant:small-caps; letter-spacing:.5px; text-align:center; border-bottom:1px solid var(--brass-dark); background:rgba(176,141,87,.14); color:var(--ink);}
+  #pbPool, #pbList{overflow-y:auto; flex:1 1 auto;}
+  .pbpool-row, .pbli{display:flex; align-items:center; gap:8px; padding:6px 10px; border-bottom:1px solid rgba(139,111,71,.22); font-size:13.5px;}
+  .pbpool-name, .pbli-name{flex:1; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .pbpool-pts, .pbli-pts{font-size:11.5px; color:var(--ink-soft); white-space:nowrap;}
+  .pbpool-have{font-size:11.5px; color:var(--brass-dark); font-weight:bold;}
+  .pbpool-add, .pbli-minus, .pbli-plus{width:24px; height:22px; padding:0; font-size:15px; line-height:1; border:1px solid var(--brass-dark); border-radius:4px; background:rgba(255,255,255,.4); color:var(--ink); cursor:pointer;}
+  .pbpool-add:hover, .pbli-minus:hover, .pbli-plus:hover{background:var(--brass);}
+  .pbli.starter{background:rgba(176,141,87,.16);}
+  .pbli-start{cursor:pointer; color:var(--brass-dark); display:flex; align-items:center; gap:2px;}
+  .pbli-ct{display:flex; align-items:center; gap:5px; min-width:74px; justify-content:flex-end;}
+  #pbFoot{padding:7px 10px; font-weight:bold; text-align:center; border-top:1px solid var(--brass-dark); background:rgba(176,141,87,.14); font-size:12.5px;}
+  .pbpts{color:var(--ink-soft); font-weight:normal;}
+  .pbpts b{color:var(--ink);} .pbpts.over, .pbpts.over b{color:#8a3324;}
+  #pbOpponent{margin:6px 0;}
   #dkDetail{flex:1 1 auto; min-width:0; border:1px solid var(--brass-dark); border-radius:8px; padding:12px 14px; background:rgba(255,255,255,.22);}
   /* Art previews over the text input at the real card aspect ratio (contain, so
      the whole picture shows without cropping). */

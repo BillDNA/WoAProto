@@ -57,6 +57,10 @@ $('btnNextBattle').onclick = function(){ startLocal('ai'); };
 $('btnSettings').onclick = function(){ SCREENS.settings.entry(); };
 $('btnSettingsBack').onclick = function(){ SCREENS.frontdoor.entry(); };
 $('btnCampaignBack').onclick = function(){ SCREENS.frontdoor.entry(); };
+// Muster: the player battalion builder, on the run flow between campaign and battle
+$('btnMuster').onclick = function(){ SCREENS.buildbattalion.entry(); };
+$('pbMarch').onclick = function(){ pbMarchOut(); };
+$('pbBack').onclick = function(){ SCREENS.campaign.entry(); };
 $('btnPeekRewards').onclick = function(){ SCREENS.rewards.entry(); };
 $('btnPeekSummary').onclick = function(){ SCREENS.runsummary.entry(); };
 $('btnRewardsBack').onclick = function(){ SCREENS.campaign.entry(); };
@@ -74,6 +78,7 @@ if (/screen=/.test(location.search)) setTimeout(function(){
   if (SCREENS[s] && SCREENS[s].kind === 'dev') setDevMode(true);
   if (s==='settings') SCREENS.settings.entry();
   else if (s==='campaign') SCREENS.campaign.entry();
+  else if (s==='buildbattalion' || s==='muster') SCREENS.buildbattalion.entry();
   else if (s==='rewards') SCREENS.rewards.entry();
   else if (s==='runsummary') SCREENS.runsummary.entry();
   else if (s==='devhub') SCREENS.devhub.entry();

@@ -81,8 +81,29 @@ realSetTimeout(function () {
   doc.getElementById('btnPlay').click();
   assert.ok(doc.getElementById('campaignScr').classList.contains('active'),
     'Play opens the campaign run-flow stub, not a battle directly');
+  console.log('== muster (player battalion builder) ==');
+  doc.getElementById('btnMuster').click();
+  assert.ok(doc.getElementById('buildBattalionScr').classList.contains('active'), 'Muster opens the player battalion builder');
+  assert.ok(doc.querySelectorAll('#pbPool .pbpool-row').length === win.Engine.CARD_POOL.length,
+    'the pool lists every pool card (' + doc.querySelectorAll('#pbPool .pbpool-row').length + ')');
+  assert.ok(doc.querySelectorAll('#pbList .pbli').length >= 1, 'the battalion is seeded from the active slot');
+  assert.ok(/\/\s*100\s*pts/.test(doc.getElementById('pbFoot').textContent), 'the muster readout shows the army-points cap (100)');
+  assert.ok(!doc.getElementById('pbMarch').disabled, 'March Out is enabled on a legal battalion');
+  var pbN = win.pbCount();
+  doc.querySelector('#pbPool .pbpool-add').click();
+  assert.ok(win.pbCount() === pbN + 1, 'adding a pool card raises the muster count');
+  // the seam March Out threads through: the built battalion + a seated opponent → sideDecks
+  var pbBuilt = win.shipCards(win.PB.cards);
+  var pbBattle = win.Engine.newBattle({ maps: [win.Engine.MAPS[0]],
+    battalions: { red: { cards: pbBuilt }, blue: (win.PB.opponent && win.PB.opponent.b.id) || null } });
+  var pbSk = win.Engine.newSkirmish(pbBattle);
+  assert.ok(pbSk.cards.sideDecks && pbSk.cards.sideDecks.red.cards.length >= 1,
+    'the built battalion threads into a real skirmish via sideDecks (asymmetric seat)');
+  doc.getElementById('pbBack').click();
+  assert.ok(doc.getElementById('campaignScr').classList.contains('active'), 'Back returns to the campaign');
+
   doc.getElementById('btnNextBattle').click();
-  assert.ok(doc.getElementById('game').classList.contains('active'), 'Next Battle drops into a battle');
+  assert.ok(doc.getElementById('game').classList.contains('active'), 'Quick battle drops into a battle');
   assert.ok(doc.querySelectorAll('#board polygon.hex').length >= 19, 'board hexes rendered');
   assert.ok(doc.querySelectorAll('#board .coordlbl').length >= 19, 'grid labels rendered on hexes');
   var lblTexts = Array.prototype.map.call(doc.querySelectorAll('#board .coordlbl'), function (t) { return t.textContent; });
@@ -482,17 +503,17 @@ realSetTimeout(function () {
         'one list row per card (' + doc.querySelectorAll('#dkList .dkli').length + ')');
       assert.ok(doc.querySelector('#dkDetail .dkd-name') && doc.querySelectorAll('#dkStepList .dkstep').length >= 1,
         'detail panel + GUI step builder render for the selected card');
-      // battalionProblems() accepts a 16-17 band (design ceiling, not one exact count;
+      // battalionProblems() accepts a 16-19 band (design ceiling, not one exact count;
       // every shipped content/battalions/*.js battalion lands in that band), so "clean" and
       // the break-it thresholds below are proved against the real band, not a
       // hardcoded count.
       assert.ok(win.battalionProblems(win.Engine.CARDS).length === 0, 'built-in battalion validates clean');
       assert.ok(!doc.getElementById('dkSave').disabled, 'Save enabled on a valid battalion');
-      // break it: bump the selected card's count so the total exceeds the 16-17 band -> validation refuses
+      // break it: bump the selected card's count so the total exceeds the 16-19 band -> validation refuses
       var cnt = doc.querySelector('#dkDetail .dkd-count');
-      cnt.value = String(+cnt.value + 1);
+      cnt.value = String(+cnt.value + 4);
       cnt.dispatchEvent(new win.Event('input', { bubbles: true }));
-      assert.ok(/must total 16-17/.test(doc.getElementById('dkWarn').textContent), 'over-band (>17) battalion flagged');
+      assert.ok(/must total 16-19/.test(doc.getElementById('dkWarn').textContent), 'over-band (>19) battalion flagged');
       assert.ok(doc.getElementById('dkSave').disabled, 'Save disabled while invalid');
       // two starting cards / bad step type are refused too
       var broken = JSON.parse(JSON.stringify(win.Engine.CARDS));
@@ -502,8 +523,8 @@ realSetTimeout(function () {
       badStep[0].steps = [{ type: 'heal' }];
       assert.ok(win.battalionProblems(badStep).some(function (p) { return /unknown type/.test(p); }), 'unknown step type refused');
       var benched = JSON.parse(JSON.stringify(win.Engine.CARDS));
-      benched[2].out = true; // benched cards drop from the total (here 17 -> 14, under the 16-17 band)
-      assert.ok(win.battalionProblems(benched).some(function (p) { return /must total 16-17/.test(p); }), 'benching a card drops it below the 16-17 band');
+      benched[2].out = true; // benched cards drop from the total (here 17 -> 14, under the 16-19 band)
+      assert.ok(win.battalionProblems(benched).some(function (p) { return /must total 16-19/.test(p); }), 'benching a card drops it below the 16-19 band');
       // An over-army-points battalion is refused by the same validation pass.
       // Swap the cheapest card for a maxed-out one so the total blows past the cap
       // without changing the card count (isolates the points gate from the size band).
