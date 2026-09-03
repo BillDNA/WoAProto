@@ -33,8 +33,8 @@ Considered harness choices:
   timeouts, and setup/teardown for free; `node --test` is itself the aggregate
   runner and single entry point.
 
-An earlier objection — that `node:test` would break the golden-balance-diff's
-byte-identical contract — was wrong: the golden diff oracles
+An earlier objection — that `node:test` would break the throwaway refactor
+diff's byte-identical contract — was wrong: the throwaway diff reads
 `node dev/balance.js` output, **not** `test.js` output. The functional gate's
 console format is free to change as long as it still exits non-zero on failure.
 
@@ -61,9 +61,9 @@ sweep is triggered by the runner itself. `jsdom` stays declared in
 remains so the frozen-API path still resolves; its subsystem doc/skill sweep
 lands in the same commit as the split.
 
-### Out of scope: the balance oracle stays a discipline, not a gate
+### Out of scope: the balance diff stays a discipline, not a gate
 
-The golden-balance-diff is **not** promoted to a first-class test here. Tests
+The throwaway refactor diff is **not** promoted to a first-class test here. Tests
 answer *"does it function"*; balance answers *"is this fair"*. Content and
 functional work does not care whether the meta is fair, so the fairness oracle
 does not belong in the functional gate — coupling it would add a slow test and
@@ -80,8 +80,8 @@ to the test suite) is a parked idea, not this work.
 - `game/test/test.js` stays a resolvable path via a thin shim, so skills and docs
   that pin it keep working; the split lands with its same-commit doc sweep.
 - Test console output changes format (TAP). This is cosmetic: the gate contract
-  is only the non-zero exit on failure, and the golden diff never read test
-  output. `node game/test/test.js` still runs standalone under `node:test`.
+  is only the non-zero exit on failure, and the throwaway refactor diff never
+  read test output. `node game/test/test.js` still runs standalone under `node:test`.
 - Conversion is file-by-file, each riding its own green gate; a temporary mixed
   state (some files converted, some not) is harmless because a plain `ok()`
   file still runs under `node --test` as one implicit test.

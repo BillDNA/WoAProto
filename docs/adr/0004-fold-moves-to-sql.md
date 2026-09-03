@@ -33,9 +33,12 @@ live path and the stored row.
 
 **The canonical home of a cited balance metric is a named SQL view over the star
 schema, not a JS reduction.** `dev/db.js` ships the views (`v_map_balance`,
-`v_global_balance`, `v_card_timing`); each cited metric — first-mover %, HQ %,
-Tie %, Drag, Swings, control %, card play-timing — is a column of one, sliced by
-(version, config_digest) so two rules-configs never pool.
+`v_global_balance`, `v_card_timing` — the last carrying both card timing and the
+per-card fairness signal, one grain, one definition of plays/declines); every cited
+metric — first-mover %, Red %, HQ %, zero-kill %, Tie %, Drag, Swings, Attack/Swap
+share, first-blood→win %, control %, card play-timing, and the per-card fairness
+signal (win contribution + pass-rate) — is a column of one, sliced by (version,
+config_digest) so two rules-configs never pool.
 
 This **supersedes the "fold in `game/sim.js`" clause** of one-implementation-per-
 fact. The single home of a *cited metric* is its SQL view. What stays in JS is
@@ -46,12 +49,13 @@ narrow and deliberate:
 - `game/sim.js`'s `balanceMap` — the sweep loop that *runs* skirmishes. Producing
   games is not folding them.
 - `game/report-model.js` — **demoted to rendering.** It still owns report
-  scoring/layout and, until the browser dashboard reads server-side aggregates,
-  keeps its JS fold of persisted rows (the browser has no SQLite). That JS fold is
-  now the *secondary* path; the SQL view is the source of truth a disagreement is
-  resolved against. Today only the per-skirmish extraction is pinned by test
-  (`factsFromRow ≡ skirmishFacts`); the aggregate fold-equivalence pin (the JS
-  aggregate ≡ its view) lands with the follow-up below, not this change.
+  scoring/layout and keeps its JS fold of persisted rows (the browser has no
+  SQLite). That JS fold is the *secondary* path; the SQL view is the source of
+  truth a disagreement is resolved against. Both the per-skirmish extraction
+  (`factsFromRow ≡ skirmishFacts`) **and** the aggregate fold-equivalence
+  (`R.foldSkirmishes` ≡ `v_global_balance` on a known pool) are now pinned by test
+  (`dev/db.test.js`) — so the transitional browser fold cannot drift from the
+  views while it remains.
 
 The migration is incremental by design. The CLI/analysis path reads the views
 today; the dashboard's in-browser fold is retired to server-side aggregation in a
@@ -75,8 +79,9 @@ fold lives, not how points are priced or how tests run.
 - `game/sim.js` keeps the extraction and the sweep, loses the "fold" title. The
   doctrine clause is updated to point the fold at the SQL views.
 - `game/report-model.js` remains for rendering and the browser's transitional JS
-  fold. The two folds are intended to converge; the fold-equivalence pin test is
-  part of the follow-up that moves the browser path to server-side aggregation,
-  after which the JS fold is deleted, not maintained.
+  fold. The two folds are pinned equal by test; the fold is retained (the
+  browser has no SQLite), not deleted, until the dashboard reads server-side
+  aggregates — at which point the JS fold retires. Retained ≠ unpinned: the parity
+  test is the guard.
 - Views are versioned with the schema in `dev/db.js`; adding a cited metric is a
   new view (or a column of one), reviewed like any schema change.

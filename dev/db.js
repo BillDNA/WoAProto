@@ -24,7 +24,7 @@
    the same rules version but a different point cap slice apart in plain SQL.
 
    The fold is SQL: each cited balance metric is a named VIEW over the star schema
-   (v_map_balance, v_global_balance, v_card_timing). See docs/adr/0004.
+   (v_map_balance, v_global_balance, v_card_timing — the last also carries fairness). See docs/adr/0004.
 
    Usage:
      var db = require('./db.js');
@@ -125,37 +125,67 @@ var VIEWS = [
   'DROP VIEW IF EXISTS v_map_balance;',
   'DROP VIEW IF EXISTS v_global_balance;',
   'DROP VIEW IF EXISTS v_card_timing;',
-  // per-map balance fold: mirrors game/sim.js foldFacts, one row per (slice, map).
+  // per-map balance fold: mirrors game/report-model.js BANDS, one row per (slice,
+  // map). Every cited balance metric is a column here — official numbers and
+  // ad-hoc exploration share the definition (ADR-0004). Fractions 0..1 (the JS
+  // fold's pct() renders ×100); NULL where a conditioned slice is empty.
   'CREATE VIEW v_map_balance AS SELECT',
   '  version, config_digest, map, COUNT(*) AS n,',
   "  AVG(CASE WHEN winner='red' THEN 1.0 ELSE 0.0 END) AS red_win_pct,",
   '  AVG(CASE WHEN winner=first_player THEN 1.0 ELSE 0.0 END) AS first_win_pct,',
   "  AVG(CASE WHEN win_type='hq' THEN 1.0 ELSE 0.0 END) AS hq_pct,",
+  '  AVG(CAST(zero_kill AS REAL)) AS zero_kill_pct,',
   '  AVG(turns) AS avg_turns,',
   "  AVG(CASE WHEN win_type='attrition' THEN kill_tail END) AS drag,",
   "  AVG(CASE WHEN win_type='attrition' THEN CAST(tiebreak AS REAL) END) AS tie_pct,",
   '  AVG(lead_changes) AS swings,',
+  // shares over ALL actions in the slice (SUM/SUM, not a per-game average) —
+  // matches report-model actionTotal(); NULL only when no actions were taken.
+  '  CAST(SUM(COALESCE(attacks,0)) AS REAL) / NULLIF(SUM(COALESCE(attacks,0)+COALESCE(swaps,0)+COALESCE(marches,0)+COALESCE(deploys,0)), 0) AS attack_share,',
+  '  CAST(SUM(COALESCE(swaps,0)) AS REAL) / NULLIF(SUM(COALESCE(attacks,0)+COALESCE(swaps,0)+COALESCE(marches,0)+COALESCE(deploys,0)), 0) AS swap_share,',
+  // first-blood -> win: conditioned on games that drew first blood (first_blood side won).
+  '  AVG(CASE WHEN first_blood IS NOT NULL THEN (CASE WHEN first_blood=winner THEN 1.0 ELSE 0.0 END) END) AS first_blood_win_pct,',
   '  AVG(CASE WHEN hexes_red IS NOT NULL AND hexes_blue IS NOT NULL AND hexes_red<>hexes_blue',
   "       THEN (CASE WHEN (winner='red')=(hexes_red>hexes_blue) THEN 1.0 ELSE 0.0 END) END) AS control_pct",
   '  FROM skirmishes GROUP BY version, config_digest, map;',
-  // global fold: the same metrics across all maps of a slice.
+  // global fold: the SAME metric columns across all maps of a slice — the cited
+  // anchors read from here (docs/balance/balance-baselines.md).
   'CREATE VIEW v_global_balance AS SELECT',
   '  version, config_digest, COUNT(*) AS n,',
   "  AVG(CASE WHEN winner='red' THEN 1.0 ELSE 0.0 END) AS red_win_pct,",
   '  AVG(CASE WHEN winner=first_player THEN 1.0 ELSE 0.0 END) AS first_win_pct,',
   "  AVG(CASE WHEN win_type='hq' THEN 1.0 ELSE 0.0 END) AS hq_pct,",
+  '  AVG(CAST(zero_kill AS REAL)) AS zero_kill_pct,',
   '  AVG(turns) AS avg_turns,',
   "  AVG(CASE WHEN win_type='attrition' THEN kill_tail END) AS drag,",
   "  AVG(CASE WHEN win_type='attrition' THEN CAST(tiebreak AS REAL) END) AS tie_pct,",
-  '  AVG(lead_changes) AS swings',
+  '  AVG(lead_changes) AS swings,',
+  '  CAST(SUM(COALESCE(attacks,0)) AS REAL) / NULLIF(SUM(COALESCE(attacks,0)+COALESCE(swaps,0)+COALESCE(marches,0)+COALESCE(deploys,0)), 0) AS attack_share,',
+  '  CAST(SUM(COALESCE(swaps,0)) AS REAL) / NULLIF(SUM(COALESCE(attacks,0)+COALESCE(swaps,0)+COALESCE(marches,0)+COALESCE(deploys,0)), 0) AS swap_share,',
+  '  AVG(CASE WHEN first_blood IS NOT NULL THEN (CASE WHEN first_blood=winner THEN 1.0 ELSE 0.0 END) END) AS first_blood_win_pct,',
+  '  AVG(CASE WHEN hexes_red IS NOT NULL AND hexes_blue IS NOT NULL AND hexes_red<>hexes_blue',
+  "       THEN (CASE WHEN (winner='red')=(hexes_red>hexes_blue) THEN 1.0 ELSE 0.0 END) END) AS control_pct",
   '  FROM skirmishes GROUP BY version, config_digest;',
-  // card decision timing: plays/declines/avg-play-turn per (slice, card) —
-  // card_events carries its own slice key, so no join is needed.
+  // per-(slice, card) decision view: timing AND the bottom-up fairness signal, one
+  // grain, one definition of plays/declines. card_events carries its own slice key,
+  // so no join is needed. pass_rate uses the decline/held events (a card offered
+  // every turn but never played reads pass 1.0), NOT play-only. win_contribution =
+  // the card's share of the slice's winning plays (a window SUM over the grouped
+  // rows) across the SAMPLED battalion space (every battalion that fielded the card
+  // pools here). Fairness is advisory, not a gate (ADR-0002) — exposure-weighted,
+  // so a more-drawn card accrues more wins.
   'CREATE VIEW v_card_timing AS SELECT',
   '  version, config_digest, card_id,',
   "  SUM(CASE WHEN outcome='played' THEN 1 ELSE 0 END) AS plays,",
   "  SUM(CASE WHEN outcome='declined' THEN 1 ELSE 0 END) AS declines,",
-  "  AVG(CASE WHEN outcome='played' THEN turn END) AS avg_play_turn",
+  '  COUNT(*) AS offers,',
+  "  AVG(CASE WHEN outcome='played' THEN turn END) AS avg_play_turn,",
+  "  CAST(SUM(CASE WHEN outcome='declined' THEN 1 ELSE 0 END) AS REAL) / NULLIF(COUNT(*), 0) AS pass_rate,",
+  "  SUM(CASE WHEN outcome='played' AND won=1 THEN 1 ELSE 0 END) AS won_plays,",
+  "  CAST(SUM(CASE WHEN outcome='played' AND won=1 THEN 1 ELSE 0 END) AS REAL)",
+  "    / NULLIF(SUM(CASE WHEN outcome='played' THEN 1 ELSE 0 END), 0) AS play_win_pct,",
+  "  CAST(SUM(CASE WHEN outcome='played' AND won=1 THEN 1 ELSE 0 END) AS REAL)",
+  "    / NULLIF(SUM(SUM(CASE WHEN outcome='played' AND won=1 THEN 1 ELSE 0 END)) OVER (PARTITION BY version, config_digest), 0) AS win_contribution",
   '  FROM card_events GROUP BY version, config_digest, card_id;'
 ].join('\n');
 
@@ -476,7 +506,12 @@ var AGG_METRICS = {
   drag:          "AVG(CASE WHEN s.win_type = 'attrition' THEN s.kill_tail END)",
   tie_pct:       "AVG(CASE WHEN s.win_type = 'attrition' THEN CAST(s.tiebreak AS REAL) END)",
   swings:        'AVG(s.lead_changes)',
-  zero_kill_pct: 'AVG(CAST(s.zero_kill AS REAL))'
+  zero_kill_pct: 'AVG(CAST(s.zero_kill AS REAL))',
+  attack_share:  'CAST(SUM(COALESCE(s.attacks,0)) AS REAL) / NULLIF(SUM(COALESCE(s.attacks,0)+COALESCE(s.swaps,0)+COALESCE(s.marches,0)+COALESCE(s.deploys,0)), 0)',
+  swap_share:    'CAST(SUM(COALESCE(s.swaps,0)) AS REAL) / NULLIF(SUM(COALESCE(s.attacks,0)+COALESCE(s.swaps,0)+COALESCE(s.marches,0)+COALESCE(s.deploys,0)), 0)',
+  first_blood_win_pct: 'AVG(CASE WHEN s.first_blood IS NOT NULL THEN (CASE WHEN s.first_blood=s.winner THEN 1.0 ELSE 0.0 END) END)',
+  control_pct:   'AVG(CASE WHEN s.hexes_red IS NOT NULL AND s.hexes_blue IS NOT NULL AND s.hexes_red<>s.hexes_blue' +
+                 " THEN (CASE WHEN (s.winner='red')=(s.hexes_red>s.hexes_blue) THEN 1.0 ELSE 0.0 END) END)"
 };
 // Group-by = the x-axis dimension. `join` pulls the maps dimension in (terrain
 // features live there); `num` marks a numeric bucket (drives ordering + a

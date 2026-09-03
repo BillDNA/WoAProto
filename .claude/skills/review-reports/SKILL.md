@@ -143,9 +143,9 @@ Then tell Bill the saved path and give a 3-line verbal summary.
   read the rubric's ⚠ box before grading a card an auto-play or a dead hoard
   off those two columns alone.
 - If Behaviour numbers moved sharply vs the dated baseline in
-  `docs/balance/balance-baselines.md` (the single numbers home — every figure there
-  carries its AI tier / n / mapset / date; don't restate numbers here, they go
-  stale), read against the Behaviour-health guard in `docs/balance/README.md`
+  `docs/balance/balance-baselines.md` (the anchors home — read the live figures from
+  the version-sliced pool via `node dev/db-query.js --anchors`; don't restate numbers
+  here, they go stale), read against the Behaviour-health guard in `docs/balance/README.md`
   §Game-level guards, treat it as an AI
   regression signal even when win rates look fine — after confirming the
   setups actually match (see "Match setup" above).

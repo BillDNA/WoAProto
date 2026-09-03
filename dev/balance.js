@@ -22,7 +22,7 @@
    Sweeps run PARALLEL BY DEFAULT (k = cores-1) via the shared dev/sweep.js pool —
    both the per-map report and matchup — so a tournament saturates every core,
    byte-identical to serial on the same seeds. --serial forces the in-process loop
-   (golden-diff / debugging); --parallel [k] sets the worker count. A per-side
+   (throwaway refactor diff / debugging); --parallel [k] sets the worker count. A per-side
    --battalion-red/blue run always falls back to serial (the pool seats one active
    battalion).
 
@@ -316,7 +316,7 @@ if (dri >= 0) { battalionRed = args[dri + 1]; args.splice(dri, 2); }
 var battalionBlue = null, dbi = args.indexOf('--battalion-blue');
 if (dbi >= 0) { battalionBlue = args[dbi + 1]; args.splice(dbi, 2); }
 // Parallel by default (k = cores-1) via the shared sweep pool; --serial forces the
-// in-process loop (golden-diff / debugging), --parallel [k] sets the count. A
+// in-process loop (throwaway refactor diff / debugging), --parallel [k] sets the count. A
 // per-side --battalion-red/blue run always falls back to serial (see sweepMaps).
 function defaultWorkers() { var os = require('os'); return Math.max(1, (os.availableParallelism ? os.availableParallelism() : 4) - 1); }
 var workers = null, wpi = args.indexOf('--parallel');

@@ -139,8 +139,8 @@
   // st.pieces.units already means the hexKey->{type,owner} board map.
   // dieT is a death-TURN list, symmetric to dep[] — pushed wherever die++ is
   // tallied (engine/03-rules.js killDefender/killAttacker). Capture only: no
-  // existing field is renamed or removed, so golden-diff aggregates are
-  // untouched. report-model.js's unitsAggFromEnvelopes pairs dep[]/dieT[] per
+  // existing field is renamed or removed, so byte-identical balance aggregates
+  // stay untouched. report-model.js's unitsAggFromEnvelopes pairs dep[]/dieT[] per
   // skirmish to derive lifespan.
   function initUnitMetrics() {
     var u = {};
@@ -283,8 +283,8 @@
   // moment of choice — the chosen card (outcome 'played', tagged with its play
   // mode) and every other held card (outcome 'declined', mode null). A card
   // passed every turn it's in hand thus leaves declined events and is no longer
-  // invisible. Capture only — no play-outcome path reads it, so the golden-diff
-  // stays byte-identical. The card_events fact table consumes this stream.
+  // invisible. Capture only — no play-outcome path reads it, so a throwaway
+  // refactor diff stays byte-identical. The card_events fact table consumes this stream.
   function recordDecision(st, p, playedIdx, mode) {
     if (st.__sim) return; // AI-search clones discard decisionLog (cloneForSim) — don't pay the per-play allocation on the hot loop
     if (!st.journal.decisionLog) st.journal.decisionLog = []; // self-heal pre-decision saves

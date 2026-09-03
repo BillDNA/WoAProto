@@ -212,8 +212,138 @@ test('fold-in-SQL views', function () {
   assert.ok(g && g.n >= 1, 'v_global_balance returns a folded row for the slice');
   assert.ok(g.first_win_pct >= 0 && g.first_win_pct <= 1, 'first_win_pct is a fraction');
   assert.ok(g.avg_turns > 0, 'avg_turns is positive');
+  // Every CITED balance metric is a column of the view — official numbers and
+  // ad-hoc exploration share the one definition.
+  ['red_win_pct', 'first_win_pct', 'hq_pct', 'zero_kill_pct', 'drag', 'tie_pct', 'swings',
+    'attack_share', 'swap_share', 'first_blood_win_pct', 'control_pct'].forEach(function (col) {
+    assert.ok(col in g, 'v_global_balance carries the cited metric column "' + col + '"');
+  });
+  assert.ok(g.attack_share == null || (g.attack_share >= 0 && g.attack_share <= 1), 'attack_share is a fraction (or NULL)');
   var ct = h.db.prepare('SELECT * FROM v_card_timing WHERE version = ? ORDER BY plays DESC LIMIT 1').get(E.VERSION);
   assert.ok(ct && ct.plays >= 1 && ct.avg_play_turn >= 1, 'v_card_timing folds plays/declines/avg-play-turn per card');
+});
+
+/* ---------- the JS fold (report-model, the transitional browser fold) is PINNED
+   to the SQL views on a known pool, so the two definitions cannot drift (the
+   "views authoritative + parity test" resolution). ---------- */
+test('parity: report-model JS fold ≡ v_global_balance on a known pool', function () {
+  var R = require(path.join(__dirname, '..', 'game', 'report-model.js'));
+  var pf = path.join(tmpDir, 'parity.db');
+  var ph = db.open(pf);
+  var maps = E.MAPS.slice(0, 3);
+  var rid = db.insertRun(ph, { version: E.VERSION, kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 8, tool: 'parity', battalion: 'default' });
+  maps.forEach(function (map, mi) {
+    for (var g = 0; g < 8; g++) {
+      var fp = SIM.balanceFP(g), seed = SIM.balanceSeed((mi + 1) * 7919, g);
+      var st = SIM.simSkirmish(map, seed, fp, 'hard', 'hard');
+      if (st.flow.phase === 'skirmish-over') db.insertSkirmish(ph, rid, st, fp, { seed: seed });
+    }
+  });
+  var view = ph.db.prepare('SELECT * FROM v_global_balance WHERE version = ? AND config_digest = ?').get(E.VERSION, E.CONFIG.digest);
+  var rows = db.listSkirmishes(ph, rid);
+  var folded = R.foldSkirmishes(rows), a = folded.agg, done = folded.done;
+  assert.strictEqual(view.n, done, 'view n == JS fold done (same pool)');
+
+  // Each cited metric: the view fraction equals the JS-fold ratio to floating
+  // point — one definition, pinned. Conditioned metrics use their own denominator.
+  function near(v, j, label) {
+    if (v == null) { assert.ok(j == null || isNaN(j), label + ': view NULL only when the JS denom is empty'); return; }
+    assert.ok(Math.abs(v - j) < 1e-9, label + ' view=' + v + ' js=' + j);
+  }
+  var actionTotal = a.attacks + a.swaps + a.marches + a.deploys;
+  near(view.red_win_pct, a.redWins / done, 'red_win_pct');
+  near(view.first_win_pct, a.firstWins / done, 'first_win_pct');
+  near(view.hq_pct, a.hqWins / done, 'hq_pct');
+  near(view.zero_kill_pct, a.zeroKill / done, 'zero_kill_pct');
+  near(view.avg_turns, a.turns / done, 'avg_turns');
+  near(view.swings, a.leadChanges / done, 'swings');
+  near(view.drag, a.attritionEndings ? a.attritionKillTail / a.attritionEndings : null, 'drag');
+  near(view.tie_pct, a.attritionEndings ? a.tiebreak / a.attritionEndings : null, 'tie_pct');
+  near(view.attack_share, actionTotal ? a.attacks / actionTotal : null, 'attack_share');
+  near(view.swap_share, actionTotal ? a.swaps / actionTotal : null, 'swap_share');
+  near(view.first_blood_win_pct, a.firstBloodGames ? a.firstBloodWins / a.firstBloodGames : null, 'first_blood_win_pct');
+  near(view.control_pct, a.controlGames ? a.controlWins / a.controlGames : null, 'control_pct');
+
+  // The rendered figure (BANDS.val, integer %) equals the view rounded to a
+  // percent — the number a human reads is the view's number.
+  var byKey = {}; R.BANDS.forEach(function (b) { byKey[b.key] = b; });
+  assert.strictEqual(byKey.red.val(a, done), Math.round(view.red_win_pct * 100), 'BANDS Red% == round(view)');
+  assert.strictEqual(byKey.first.val(a, done), Math.round(view.first_win_pct * 100), 'BANDS 1st% == round(view)');
+
+  // The pool must actually exercise the conditioned metrics (else parity is vacuous).
+  assert.ok(a.attritionEndings > 0 && actionTotal > 0 && a.firstBloodGames > 0,
+    'the pool exercises attrition / action-share / first-blood slices (n=' + done + ')');
+  db.close(ph);
+});
+
+/* ---------- per-card fairness signal (columns of v_card_timing): win
+   contribution + pass-rate from the decline/held events, not play-only. ---------- */
+test('v_card_timing fairness: win contribution + pass-rate over the sampled battalion space', function () {
+  var ff = path.join(tmpDir, 'fairness.db');
+  var fh = db.open(ff);
+  var rid = db.insertRun(fh, { version: E.VERSION, kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 10, tool: 'fairness', battalion: 'default' });
+  for (var g = 0; g < 10; g++) {
+    var fp = SIM.balanceFP(g), seed = SIM.balanceSeed(7919, g);
+    var st = SIM.simSkirmish(E.MAPS[0], seed, fp, 'hard', 'hard');
+    if (st.flow.phase === 'skirmish-over') db.insertSkirmish(fh, rid, st, fp, { seed: seed });
+  }
+  var rows = fh.db.prepare('SELECT * FROM v_card_timing WHERE version = ? AND config_digest = ? ORDER BY offers DESC').all(E.VERSION, E.CONFIG.digest);
+  assert.ok(rows.length >= 1, 'v_card_timing returns per-card rows');
+  rows.forEach(function (r) {
+    assert.strictEqual(r.offers, r.plays + r.declines, 'offers = plays + declines (every decision the card faced)');
+    // pass-rate is over the DECLINE/held events, not play-only.
+    var expectPass = r.offers ? r.declines / r.offers : null;
+    assert.ok(Math.abs(r.pass_rate - expectPass) < 1e-9, 'pass_rate = declines / offers (decline/held events)');
+    assert.ok(r.pass_rate >= 0 && r.pass_rate <= 1, 'pass_rate is a fraction');
+    if (r.plays) assert.ok(Math.abs(r.play_win_pct - r.won_plays / r.plays) < 1e-9, 'play_win_pct = won_plays / plays');
+  });
+  // A card that is NEVER played but offered reads pass-rate 1.0 — the play-only
+  // view would omit it entirely; the decline events keep it visible.
+  var declinedOnly = rows.filter(function (r) { return r.plays === 0 && r.declines > 0; });
+  declinedOnly.forEach(function (r) { assert.ok(r.pass_rate === 1, 'a never-played but offered card reads pass-rate 1.0 (' + r.card_id + ')'); });
+  // win_contribution is each card's SHARE of the slice's winning plays — sums to
+  // ~1 across the cards that had a winning play.
+  var sumContrib = rows.reduce(function (s, r) { return s + (r.win_contribution || 0); }, 0);
+  var anyWins = rows.some(function (r) { return r.won_plays > 0; });
+  if (anyWins) assert.ok(Math.abs(sumContrib - 1) < 1e-9, 'win_contribution shares sum to 1 over the slice (got ' + sumContrib + ')');
+  db.close(fh);
+});
+
+/* ---------- the cavsplit17-raid-paid mirror over Core Six is the designated
+   rules-regression anchor, and it is stable across battalion choice: the anchor
+   is a function of OUTCOMES, read from the slice-keyed view — never the battalion
+   label — so it survives battalion-building. ---------- */
+test('mirror anchor is stable across battalion choice (survives battalion-building)', function () {
+  var mf = path.join(tmpDir, 'mirror.db');
+  var mh = db.open(mf);
+  // Simulate one real Core-Six mirror pool (the active battalion IS cavsplit17-raid-paid).
+  var maps = E.MAPS.slice(0, 3), states = [];
+  var rid = db.insertRun(mh, { version: E.VERSION, kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 6, tool: 'mirror', battalion: 'cavsplit17-raid-paid' });
+  maps.forEach(function (map, mi) {
+    for (var g = 0; g < 6; g++) {
+      var fp = SIM.balanceFP(g), seed = SIM.balanceSeed((mi + 1) * 7919, g);
+      var st = SIM.simSkirmish(map, seed, fp, 'hard', 'hard');
+      if (st.flow.phase === 'skirmish-over') { states.push({ st: st, fp: fp, seed: seed }); db.insertSkirmish(mh, rid, st, fp, { seed: seed }); }
+    }
+  });
+  var anchor = mh.db.prepare('SELECT n, first_win_pct, red_win_pct, tie_pct, drag FROM v_global_balance WHERE version = ? AND config_digest = ?').get(E.VERSION, E.CONFIG.digest);
+  assert.ok(anchor && anchor.n === states.length, 'the mirror anchor reads from v_global_balance (n=' + anchor.n + ')');
+  assert.ok(anchor.first_win_pct != null, 'the designated anchor (first-mover %) is defined');
+
+  // Re-ingest the IDENTICAL outcomes under a DIFFERENT battalion label into a
+  // fresh slice-equal DB. Because the view slices by (version, config_digest)
+  // and reads only outcomes, the anchor is byte-identical — battalion choice cannot
+  // move a rules-regression read.
+  var mf2 = path.join(tmpDir, 'mirror2.db');
+  var mh2 = db.open(mf2);
+  var rid2 = db.insertRun(mh2, { version: E.VERSION, kind: 'balance', redAi: 'hard', blueAi: 'hard', n: 6, tool: 'mirror', battalion: 'default' });
+  states.forEach(function (x) { db.insertSkirmish(mh2, rid2, x.st, x.fp, { seed: x.seed }); });
+  var anchor2 = mh2.db.prepare('SELECT n, first_win_pct, red_win_pct, tie_pct, drag FROM v_global_balance WHERE version = ? AND config_digest = ?').get(E.VERSION, E.CONFIG.digest);
+  ['n', 'first_win_pct', 'red_win_pct', 'tie_pct', 'drag'].forEach(function (k) {
+    assert.ok((anchor[k] == null && anchor2[k] == null) || Math.abs(anchor[k] - anchor2[k]) < 1e-12,
+      'anchor.' + k + ' is invariant to the battalion label (' + anchor[k] + ' vs ' + anchor2[k] + ')');
+  });
+  db.close(mh); db.close(mh2);
 });
 
 /* ---------- the query surface: sliceable aggregates (aggregate/cardTiming/dimensions) ---------- */

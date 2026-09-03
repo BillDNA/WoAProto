@@ -34,7 +34,7 @@ Every gameplay change goes in the engine, never in the UI. Any card/map/unit/per
 
 ## Drill-downs
 
-- [[engine-model]] — the rules kernel: board, terrain, trenches, combat, cards, victory, AI, the golden-diff refactor oracle.
+- [[engine-model]] — the rules kernel: board, terrain, trenches, combat, cards, victory, AI, the throwaway refactor diff.
 - [[ui-invariants]] — what the browser app guarantees; the constraints a UI change must not break.
 - [[workflow]] — build/test/tooling: the server, `npm test`, the balance CLIs, `gen-docs.js`.
 - [[report-model]] — the reporting subsystem: score, metric bands, trace envelope, the one balance fold.
