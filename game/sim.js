@@ -11,7 +11,10 @@
    (report-model's foldSkirmishes delegates to factsFromRow/foldFacts here). */
 var WOA_SIM = (function () {
 
+  // window.Engine on the page; globalThis.Engine inside a Web Worker
+  // (07-export publishes to whichever global it sees); require() under node.
   var ENG = (typeof window !== 'undefined' && window.Engine) ? window.Engine
+    : (typeof globalThis !== 'undefined' && globalThis.Engine) ? globalThis.Engine
     : (typeof require === 'function' ? require('./engine.js') : null);
 
   /* ---------- skirmish simulation (shared by the CLI reporters and the in-browser dashboard) ---------- */

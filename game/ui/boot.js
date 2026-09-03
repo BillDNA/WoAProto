@@ -383,7 +383,11 @@ $('dkImportFile').onchange = function(){
 // finishSkirmish fires the hook for human play, hotseat, watch, the LAN peer
 // that dealt the final blow (exactly one of the two), and each dashboard
 // simulation skirmish. Search clones never fire it (__sim).
-E.hooks.onSkirmishEnd.push(function (st) {
+// One implementation of "turn a finished skirmish into a DB row": the live hook
+// (human/hotseat/watch/LAN + the serial dashboard loop) AND the parallel sweep's
+// main-thread result handler both call this. The parallel workers run the engine
+// with no onSkirmishEnd subscriber, so persistence happens exactly once — here.
+function recordSkirmish(st) {
   var v = E.view(st);
   var dash = (typeof DASH !== 'undefined') && DASH.running;
   var kind = dash ? 'balance' : APP.mode === 'watch' ? 'watch' : 'human';
@@ -411,7 +415,8 @@ E.hooks.onSkirmishEnd.push(function (st) {
       state: st, firstPlayer: E.other(v.second), seed: v.seed
     }).catch(function(){ /* persistence is best-effort */ });
   } finally { st.battle = m; }
-});
+}
+E.hooks.onSkirmishEnd.push(recordSkirmish);
 
 $('dashBack').onclick = function(){ DASH.cancel = true; SCREENS.devhub.entry(); };
 $('dashStop').onclick = function(){ DASH.cancel = true; };
@@ -482,7 +487,81 @@ $('dashRun').onclick = function(){
       step();
     }, 8);
   }
-  step();
+
+  // ---- parallel path (issue #274): fan the maps across Web Workers ----
+  // Each worker runs one whole map's n skirmishes in seed order and streams the
+  // finished states back; the fold + persistence + detail all stay here, on the
+  // main thread, through the SAME WOA_SIM code the serial loop uses — so the
+  // aggregates (and the saved report, which iterates DASH.results) are
+  // byte-identical. One worker per map keeps each map's fold in seed order; the
+  // UI thread only folds, so it stays responsive. Falls back to step() where
+  // Web Workers are unavailable (jsdom smoke, ancient browsers).
+  function runParallel(){
+    var applied = (typeof WOA_APPLIED_BATTALION !== 'undefined') ? WOA_APPLIED_BATTALION : null;
+    var NW = Math.max(1, Math.min((navigator.hardwareConcurrency || 4), maps.length));
+    var workers = [], byIndex = new Array(maps.length);
+    var nextTask = 0, mapsDone = 0, doneCount = 0, total = maps.length * n, guard = false, cancelPoll = null;
+
+    function results(){ // DASH.results in strict map-index order — completion order must not leak in
+      DASH.results = byIndex.filter(function(x){ return x; }).map(function(x){ return { map: x.map, out: x.out }; });
+    }
+    function done(){
+      if (guard) return; guard = true;
+      if (cancelPoll) clearInterval(cancelPoll);
+      workers.forEach(function(w){ try{ w.terminate(); }catch(e){} });
+      results(); finish();
+    }
+    function status(){
+      $('dashStatus').textContent = 'Running '+total+' skirmishes on '+workers.length+' worker(s) — '+doneCount+'/'+total+' done…'+
+        (dr==='hard'||db==='hard' ? ' (Field Marshal thinks ~1s per skirmish)' : '');
+    }
+    function assign(w){
+      if (guard || DASH.cancel || nextTask >= maps.length) return;
+      var mi = nextTask++;
+      byIndex[mi] = { map: maps[mi], out: WOA_SIM.balanceNew(n) };
+      w.postMessage({ type:'run', task:{ mapIndex: mi, map: maps[mi], n: n, seedBase: (mi+1)*7919, dr: dr, db: db } });
+    }
+    function onSkirmish(m){
+      var slot = byIndex[m.mapIndex]; if (!slot) return;
+      recordSkirmish(m.st);                       // persistence, same path as serial (best-effort)
+      WOA_SIM.balanceAdd(slot.out, m.st, m.fp);    // fold in seed order (one worker per map)
+      var v = E.view(m.st);
+      if (v.phase === 'skirmish-over'){
+        var det = DASH.detail[slot.map.name] || (DASH.detail[slot.map.name] = { turns: [], winTypes: [] });
+        det.turns.push(v.turnNumber); det.winTypes.push(v.winType);
+      }
+      doneCount++; status();
+    }
+    function onMapDone(w){
+      results(); renderDash();                    // show finished maps as they complete, in map order
+      if (++mapsDone >= maps.length){ done(); return; }
+      assign(w);
+    }
+
+    var initFailed = false;
+    for (var i=0;i<NW;i++){
+      var w;
+      try { w = new Worker('sweep-worker.js'); } catch(e){ initFailed = true; break; }
+      (function(w){
+        w.onmessage = function(ev){
+          var m = ev.data||{};
+          if (m.type==='ready') return assign(w);
+          if (m.type==='skirmish') return onSkirmish(m);
+          if (m.type==='done') return onMapDone(w);
+          if (m.type==='error'){ toast('Sweep worker error — '+m.error, 5000); done(); }
+        };
+        w.onerror = function(ev){ if (ev && ev.preventDefault) ev.preventDefault(); toast('Sweep worker crashed.', 5000); done(); };
+        w.postMessage({ type:'init', appliedBattalion: applied });
+      })(w);
+      workers.push(w);
+    }
+    if (initFailed || !workers.length){ workers.forEach(function(w){ try{ w.terminate(); }catch(e){} }); step(); return; }
+    // Stop / Back set DASH.cancel; poll it to tear the pool down.
+    cancelPoll = setInterval(function(){ if (DASH.cancel) done(); }, 120);
+  }
+
+  if (typeof Worker !== 'undefined' && maps.length) runParallel();
+  else step();
 };
 
 // Save the displayed run to logs/reports/balance/<version>/ so
