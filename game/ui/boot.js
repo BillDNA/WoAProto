@@ -7,6 +7,19 @@
    from index.html's inline app script. */
 'use strict';
 
+// config bug (issue #250): a small, read-only screen-corner overlay stamping the
+// config identity — rules version + both config-home digests — so any screenshot
+// carries a retrievable record of which dials were in force. Plain HTML (no SVG),
+// rendered once at load (a reload re-stamps it — the supported way to change a dial
+// is to edit its value in the config home and reload).
+(function(){
+  var el = document.createElement('div');
+  el.id = 'configBug';
+  el.textContent = 'WoA v' + E.VERSION + ' · cfg ' + E.CONFIG.digest + ' · ui ' + UI_CONFIG.digest;
+  el.title = 'Live config identity (rules version + engine/UI config digests) — issue #250';
+  document.body.appendChild(el);
+})();
+
 // AI personalities beyond easy/normal/hard come from maps.js as data — offer
 // them wherever an AI is picked (enemy general + dashboard sides)
 (function(){

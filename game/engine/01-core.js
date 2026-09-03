@@ -134,8 +134,9 @@
   if (UNIT_COUNT !== 10)
     throw new Error('War of Attrition: unit composition must total 10 pieces (got ' + UNIT_COUNT +
       (UNITS_VARIANT ? ' from units variant "' + UNITS_VARIANT.id + '"' : ' in maps.js') + ')');
-  var TRENCH_COUNT = BUILTIN.trenchCount || 3;
-  var TERRAIN_STOCK = BUILTIN.terrainStock || { F3: 2, F2: 4, M3: 2, M2: 4 };
+  // piece stocks are owned by the config home (00-config.js) — alias in
+  var TRENCH_COUNT = I.CONFIG.trenchCount;
+  var TERRAIN_STOCK = I.CONFIG.terrainStock;
   var CARDS = BUILTIN.cards;
   if (!UNITS || !CARDS) throw new Error('War of Attrition: maps.js must define units and cards');
   // A card registry is "everything the skirmish needs to know about one battalion's
@@ -177,22 +178,11 @@
 
   var MAPS = BUILTIN.maps;
 
-  /* ---------- army-points ----------
-     A descriptive capability yardstick: points are COMPUTED from a card's steps
-     against this ONE hand-seeded weight table, never stored per card (one place
-     to tune, no per-card drift). Measured balance always overrules this number.
-     Seeding intent: deploy > attack > reposition; unit tier and the attack
-     flags/mod add capability on top. `combo` escalates action-stacking: the Nth
-     action in a card is priced at its base cost x combo[N] (Fibonacci-shaped, so
-     a second action costs 2x, a third 3x, a fourth 5x, and so on) — stacking many
-     actions on one card is superlinear, not free. */
-  var POINTS = {
-    combo: [1, 2, 3, 5, 8, 13, 21, 34, 55],            // per-action-position multiplier (Fibonacci)
-    step: { deploy: 3, attack: 2, reposition: 1, trench: 1, barrage: 2 },
-    tier: { infantry: 0, cavalry: 1, artillery: 2 },   // deploy unit surcharge
-    mod: 1,                                             // per point of |attack mod|
-    tieSpare: 1, noAdvance: 0.5, anywhere: 1            // flag surcharges
-  };
+  /* ---------- army-points (weights owned by the config home, 00-config.js) ----------
+     Points are COMPUTED from a card's steps against I.CONFIG.points; POINTS is the
+     flat alias into that home (one value, two access paths). See 00-config.js for
+     the weight table and the seeding rationale. */
+  var POINTS = I.CONFIG.points;
   function comboWeight(i) { return POINTS.combo[i] != null ? POINTS.combo[i] : POINTS.combo[POINTS.combo.length - 1]; }
   function stepPoints(step) {
     if (!step || !step.type) return 0;
@@ -214,11 +204,8 @@
     var cards = hydrateBattalionCards((battalion && battalion.cards) || []);
     return cards.reduce(function (s, c) { return s + cardPoints(c) * (c.count == null ? 1 : c.count); }, 0);
   }
-  // Army-points budget ceiling: the fairness constraint that lets two
-  // asymmetric battalions be called "matched". Seeded above the shipped battalions; the
-  // battalion editor's sum(count) band guardrail rejects an over-budget battalion the
-  // same way it rejects an oversized one.
-  var BATTALION_POINTS_CAP = 100;
+  // Alias into the config home (00-config.js).
+  var BATTALION_POINTS_CAP = I.CONFIG.pointsCap;
 
   // tiny pure helpers used by every layer
   function other(p) { return p === 'red' ? 'blue' : 'red'; }
@@ -250,6 +237,10 @@
   I.PIECE_TOTALS = PIECE_TOTALS;
   I.cardPoints = cardPoints;
   I.battalionPoints = battalionPoints;
+  // Flat exports aliased into the config home (00-config.js owns I.CONFIG /
+  // I.configDigest). POINTS / BATTALION_POINTS_CAP / TERRAIN_STOCK / TRENCH_COUNT
+  // are one value, two access paths — the frozen-API compatibility surface.
+  I.POINTS = POINTS;
   I.BATTALION_POINTS_CAP = BATTALION_POINTS_CAP;
   I.MAPS = MAPS;
   I.MAPSETS = MAPSETS;

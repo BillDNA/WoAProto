@@ -81,6 +81,14 @@ realSetTimeout(function () {
   doc.getElementById('btnPlay').click();
   assert.ok(doc.getElementById('campaignScr').classList.contains('active'),
     'Play opens the campaign run-flow stub, not a battle directly');
+  // config bug (issue #250): a persistent screen-corner overlay stamps the live
+  // config identity onto every screenshot. Assert it renders and carries the digests.
+  var bug = doc.getElementById('configBug');
+  assert.ok(bug, 'the config bug overlay is present');
+  assert.ok(bug.textContent.indexOf(win.Engine.CONFIG.digest) >= 0, 'the config bug shows the engine config digest');
+  assert.ok(bug.textContent.indexOf(win.UI_CONFIG.digest) >= 0, 'the config bug shows the UI config digest');
+  assert.ok(bug.textContent.indexOf('v' + win.Engine.VERSION) >= 0, 'the config bug shows the rules version');
+
   console.log('== muster (player battalion builder) ==');
   doc.getElementById('btnMuster').click();
   assert.ok(doc.getElementById('buildBattalionScr').classList.contains('active'), 'Muster opens the player battalion builder');
@@ -88,6 +96,17 @@ realSetTimeout(function () {
     'the pool lists every pool card (' + doc.querySelectorAll('#pbPool .pbpool-row').length + ')');
   assert.ok(doc.querySelectorAll('#pbList .pbli').length >= 1, 'the battalion is seeded from the active slot');
   assert.ok(/\/\s*100\s*pts/.test(doc.getElementById('pbFoot').textContent), 'the muster readout shows the army-points cap (100)');
+  // config homes (issue #250): the readout is driven by the homes, not bare literals.
+  // The muster footer's cap and band track E.CONFIG.pointsCap and UI_CONFIG.battalionBand
+  // — read the live dials and assert the rendered text agrees, so tuning a dial reds nothing.
+  var pbFootText = doc.getElementById('pbFoot').textContent;
+  assert.ok(win.UI_CONFIG && win.UI_CONFIG.battalionBand, 'UI_CONFIG is the UI-config home');
+  // the cap is rendered with thin-space separators, so match on the number + "pts"
+  // (\s spans the thin space); read the live dial so tuning the cap reds nothing.
+  assert.ok(new RegExp('\\/\\s*' + win.Engine.CONFIG.pointsCap + '\\s*pts').test(pbFootText),
+    'the muster cap readout is read from the engine config home (CONFIG.pointsCap)');
+  assert.ok(pbFootText.indexOf('target ' + win.UI_CONFIG.battalionBand.min) >= 0,
+    'the muster band readout is read from the UI-config home (UI_CONFIG.battalionBand)');
   assert.ok(!doc.getElementById('pbMarch').disabled, 'March Out is enabled on a legal battalion');
   var pbN = win.pbCount();
   doc.querySelector('#pbPool .pbpool-add').click();
@@ -197,13 +216,16 @@ realSetTimeout(function () {
     assert.ok(firstTileBtns && firstTileBtns.textContent.indexOf('Delete') >= 0, 'built-in map tiles offer Delete (floor of 5 enforced on click)');
     var hexTool = doc.querySelector('.edtools button[data-tool="hexes"]');
     hexTool.dispatchEvent(new win.Event('click', { bubbles: true }));
-    assert.ok(win.ED.hexes && Object.keys(win.ED.hexes).length === 24, 'Board-hexes tool converts to a custom outline seeded from the template');
+    assert.ok(win.ED.hexes && Object.keys(win.ED.hexes).length === win.Engine.CONFIG.mapHexCeiling, 'Board-hexes tool converts to a custom outline seeded from the template');
     assert.ok(doc.getElementById('edShape').value === '@custom', 'shape dropdown flips to Custom');
     var beforeCarve = Object.keys(win.ED.hexes).length;
     win.edRemoveHex('0,0');
     win.renderEditor();
     assert.ok(Object.keys(win.ED.hexes).length === beforeCarve - 1, 'a hex can be carved out');
-    assert.ok(/23\/24 hexes/.test(doc.getElementById('edStock').textContent), 'hex count shown against the 24 ceiling');
+    // the ceiling shown is read from the UI-config home (issue #250), not a bare literal —
+    // both map-editor guards and this readout agree on E.CONFIG.mapHexCeiling.
+    assert.ok(new RegExp('23\\/' + win.Engine.CONFIG.mapHexCeiling + ' hexes').test(doc.getElementById('edStock').textContent),
+      'hex count shown against the ceiling read from the UI-config home');
     win.ED.red = [2, -2]; win.ED.blue = [-3, 2];
     win.ED.edges = {}; // the stray single side painted above has no physical piece
     doc.getElementById('edName').value = 'Carved Smoke Test';

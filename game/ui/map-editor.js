@@ -138,7 +138,7 @@ function renderEditor(){
     var p = bpGhostHex(gHex, xy[0], xy[1], S-4);
     p.style.cursor = 'pointer';
     p.addEventListener('click', function(){
-      if (hexList.length >= 24){ toast('24 hexes is the ceiling (laser-cutter max — and big empty maps are not fun).', 3600); return; }
+      if (hexList.length >= E.CONFIG.mapHexCeiling){ toast(E.CONFIG.mapHexCeiling + ' hexes is the ceiling (laser-cutter max — and big empty maps are not fun).', 3600); return; }
       ED.hexes[k] = true;
       renderEditor();
     });
@@ -243,7 +243,7 @@ function renderEdStock(){
     return Object.keys(cnt).sort().map(function(l){ return cnt[l]+'&times;len'+l; }).join(', ');
   }
   var stockNote = Object.keys(E.TERRAIN_STOCK).map(function(k){ return E.TERRAIN_STOCK[k]+'&times;len'+k.slice(1)+' '+(k[0]==='F'?'forest':k[0]==='R'?'river':'mountain'); }).join(', ');
-  $('edStock').innerHTML = (ED.hexes ? '<b>'+Object.keys(ED.hexes).length+'/24 hexes</b> &nbsp;|&nbsp; ' : '') +
+  $('edStock').innerHTML = (ED.hexes ? '<b>'+Object.keys(ED.hexes).length+'/'+E.CONFIG.mapHexCeiling+' hexes</b> &nbsp;|&nbsp; ' : '') +
     'Forest pieces: '+summary('F')+' &nbsp;|&nbsp; Mountain pieces: '+summary('M')+' &nbsp;|&nbsp; River pieces: '+summary('R')+
     ' <span class="small">(physical stock: '+stockNote+')</span>';
   var over = pieces.some(function(p){
@@ -265,7 +265,7 @@ function edBuildDef(){
   };
   if (ED.hexes){
     var pairs = edHexPairs();
-    if (pairs.length > 24){ toast('24 hexes is the ceiling (laser-cutter max) — remove '+(pairs.length-24)+'.', 3800); return null; }
+    if (pairs.length > E.CONFIG.mapHexCeiling){ toast(E.CONFIG.mapHexCeiling + ' hexes is the ceiling (laser-cutter max) — remove '+(pairs.length-E.CONFIG.mapHexCeiling)+'.', 3800); return null; }
     def.shapeDef = { label: 'Custom board ('+pairs.length+' hexes)', hexes: pairs };
     delete def.shape; // the engine registers it as '@<id>' from shapeDef
   }
