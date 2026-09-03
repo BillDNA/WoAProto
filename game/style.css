@@ -403,6 +403,9 @@
   .dkli .dkli-name{flex:1; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .dkli .dkli-ct{font-size:12px; color:var(--ink-soft); min-width:24px; text-align:right;}
   #dkListFoot{padding:7px 9px; font-weight:bold; text-align:center; border-top:1px solid var(--brass-dark); background:rgba(176,141,87,.14); font-size:12.5px;}
+  .dkpts{color:var(--ink-soft); font-weight:normal;}
+  .dkpts b{color:var(--ink); font-weight:bold;}
+  .dkpts.over, .dkpts.over b{color:#8a3324;}
   #dkDetail{flex:1 1 auto; min-width:0; border:1px solid var(--brass-dark); border-radius:8px; padding:12px 14px; background:rgba(255,255,255,.22);}
   /* Art previews over the text input at the real card aspect ratio (contain, so
      the whole picture shows without cropping). */

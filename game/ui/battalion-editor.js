@@ -146,6 +146,7 @@ function addPoolCard(id){
 }
 
 function dkEsc(s){ return uiEsc(s); } // one html-escape lives in ui-primitives.js
+function dkPts(n){ return Math.round(n * 100) / 100; } // trim float noise; keeps .5 surcharges
 function battalionToShip(){ return shipCards(DK.cards); } // the open battalion, benched cards stripped
 // LEFT: the selectable card list with in/out (bench) checkboxes
 function renderBattalion(){
@@ -194,7 +195,7 @@ function renderDetail(){
     '</div>' +
     '<div class="dkart-box" id="dkArtBox"></div>' +
     '<textarea class="dkd-text" placeholder="Card text shown to players">'+dkEsc(c.text)+'</textarea>' +
-    '<div class="dksteps"><h4>Steps &mdash; resolved in order</h4><div id="dkStepList"></div>' +
+    '<div class="dksteps"><h4>Steps &mdash; resolved in order <span id="dkCardPts" class="dkpts"></span></h4><div id="dkStepList"></div>' +
       '<button id="dkAddStep" class="ghost btn-ghost-dark" style="font-size:12px;padding:2px 10px;margin-top:5px;">+ Add step</button></div>';
   renderDkArt(c);
   renderSteps(c);
@@ -282,7 +283,17 @@ function dkStatus(){
   $('battalionHdr').innerHTML = 'Editing <b>' + dkEsc(openName) + '</b>' +
     (DK.slot === DK.active ? ' &middot; this is the active battalion' : ' &middot; active battalion is <b>'+dkEsc((DK.slots[DK.active]&&DK.slots[DK.active].name)||('Battalion '+(DK.active+1)))+'</b>') +
     ' &middot; game currently runs ' + applied;
-  $('dkListFoot').innerHTML = inCards.length + ' cards &middot; <b>' + total + '</b> copies (target 16-17)';
+  // live army-points readouts — exported engine functions only, no second source.
+  // dkPts trims float noise (combo exponent may become fractional) while keeping .5 surcharges.
+  var pts = E.battalionPoints({ cards: inCards });
+  var over = pts > E.BATTALION_POINTS_CAP;
+  $('dkListFoot').innerHTML = inCards.length + ' cards &middot; <b>' + total + '</b> copies (target 16-17)' +
+    ' &middot; <span class="dkpts' + (over ? ' over' : '') + '"><b>' + dkPts(pts) + '</b>&thinsp;/&thinsp;' + E.BATTALION_POINTS_CAP + ' pts</span>';
+  var ptsEl = $('dkCardPts'), c = DK.cards[DK.sel]; // selected card's own cost, while authoring
+  if (ptsEl && c){
+    var cp = E.cardPoints(c), n = (+c.count >= 1) ? Math.floor(+c.count) : 1;
+    ptsEl.innerHTML = '&middot; <b>' + dkPts(cp) + '</b> pts' + (n > 1 ? ' &times;' + n + ' = <b>' + dkPts(cp * n) + '</b>' : '');
+  }
   var probs = battalionProblems(DK.cards);
   $('dkWarn').innerHTML = probs.length ? '&#9888; ' + probs.join('<br>&#9888; ') : '';
   $('dkSave').disabled = probs.length > 0;
