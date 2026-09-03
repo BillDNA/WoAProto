@@ -51,9 +51,9 @@ Every turn the AI does a small greedy search:
    normal and hard.
 5. **Play the highest-scoring candidate.**
 
-A full hard skirmish simulates in about a second, so it's fine both live and in
-the Balance Dashboard / `dev/balance.js` runs. Keep new personalities in that
-ballpark.
+A full hard skirmish simulates in a fraction of a second, so it's fine both live
+and in the Balance Dashboard / `dev/balance.js` runs. Keep new personalities in
+that ballpark.
 
 ### The tie-breaker for burning cards (CARD_KEEP)
 If the best play is to ignore a card's printed action and just use it as a
