@@ -306,7 +306,7 @@ var ROUTES = {
         metrics: metrics ? metrics.split(',').filter(Boolean) : null,
         version: version, config: config
       }));
-    } catch (e) { json(res, 400, { error: e.message }); }
+    } catch (e) { json(res, e.badRequest ? 400 : 500, { error: e.message }); } // 400 = bad slice/metric; 500 = real db fault
   },
   'GET /api/poll': function (req, res, body, u) {
     var r = rooms[(u.searchParams.get('room') || '').toUpperCase()];

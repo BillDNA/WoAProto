@@ -501,6 +501,10 @@ var CARD_TERRAINS = { mountain: 'm.mountain_hexes', forest: 'm.forest_hexes', ri
 // by the (version, config_digest) slice so two configs never cross-join.
 var MAPS_JOIN = ' LEFT JOIN maps m ON m.name = s.map AND m.version = s.version AND m.config_digest = s.config_digest';
 
+// A rejected request value (a non-whitelisted x/metric/terrain) is the caller's
+// fault -> tag it so the HTTP layer answers 400, not 500.
+function badRequest(msg) { var e = new Error(msg); e.badRequest = true; return e; }
+
 // slice filters are ALWAYS bound params, never interpolated.
 function sliceWhere(prefix, version, config, params) {
   var w = [];
@@ -516,10 +520,10 @@ function sliceWhere(prefix, version, config, params) {
 function aggregate(h, opts) {
   opts = opts || {};
   var gb = AGG_GROUPBYS[opts.x || 'map'];
-  if (!gb) throw new Error('aggregate: unknown group-by "' + opts.x + '"');
+  if (!gb) throw badRequest('aggregate: unknown group-by "' + opts.x + '"');
   var metrics = (opts.metrics && opts.metrics.length)
     ? opts.metrics : ['n', 'first_win_pct', 'red_win_pct', 'hq_pct', 'avg_turns', 'tie_pct', 'drag', 'swings'];
-  metrics.forEach(function (m) { if (!AGG_METRICS[m]) throw new Error('aggregate: unknown metric "' + m + '"'); });
+  metrics.forEach(function (m) { if (!AGG_METRICS[m]) throw badRequest('aggregate: unknown metric "' + m + '"'); });
   var sel = [gb.sql + ' AS bucket'].concat(metrics.map(function (m) { return AGG_METRICS[m] + ' AS ' + m; }));
   var params = [];
   var where = sliceWhere('s', opts.version, opts.config, params);
@@ -536,7 +540,7 @@ function aggregate(h, opts) {
 function cardTiming(h, opts) {
   opts = opts || {};
   var tcol = CARD_TERRAINS[opts.terrain || 'mountain'];
-  if (!tcol) throw new Error('cardTiming: unknown terrain "' + opts.terrain + '"');
+  if (!tcol) throw badRequest('cardTiming: unknown terrain "' + opts.terrain + '"');
   var params = [];
   var where = ["ce.outcome = 'played'"];
   if (opts.card) { where.push('ce.card_id = ?'); params.push(opts.card); }

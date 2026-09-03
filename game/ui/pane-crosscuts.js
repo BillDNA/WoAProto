@@ -24,7 +24,7 @@
 // aggregate responses. `pending` guards against a fetch storm while re-rendering.
 function ccState() {
   if (!DASH.cc) DASH.cc = {
-    dims: null, pending: false, err: null,
+    dims: null, pending: false, err: null, reqSeq: 0,
     cut: 'balance',                       // 'balance' | 'card'
     x: 'mountain_hexes', metric: 'first_win_pct',   // balance cut
     terrain: 'mountain', card: '',                  // card cut
@@ -45,6 +45,14 @@ var CC_DIM_LABEL = {
   forest_hexes: 'forest-hex count', river_hexes: 'river-hex count', hex_total: 'board size (hexes)',
   first_player: 'first player', win_type: 'win type', winner: 'winner', battalion_red: 'red battalion'
 };
+// The balance cut asks for the selected metric PLUS this informative set, so a
+// bar's hover shows the whole per-bucket breakdown (not just the bar's metric).
+var CC_TIP_METRICS = ['n', 'first_win_pct', 'hq_pct', 'avg_turns', 'tie_pct', 'drag', 'swings'];
+function ccBalanceMetrics(cc) {
+  var set = [cc.metric];
+  CC_TIP_METRICS.forEach(function (m) { if (set.indexOf(m) < 0) set.push(m); });
+  return set;
+}
 function ccMetricLabel(k) { return CC_METRIC_LABEL[k] || k; }
 function ccDimLabel(k) { return CC_DIM_LABEL[k] || k; }
 function ccIsPct(k) { return /_pct$/.test(k); }
@@ -152,7 +160,7 @@ function ccQueryUrl(cc) {
   var slice = (cc.version ? '&version=' + encodeURIComponent(cc.version) : '') + (cc.config ? '&config=' + encodeURIComponent(cc.config) : '');
   return cc.cut === 'card'
     ? '/api/aggregate?grain=card&terrain=' + cc.terrain + (cc.card ? '&card=' + encodeURIComponent(cc.card) : '') + slice
-    : '/api/aggregate?x=' + cc.x + '&metrics=' + cc.metric + slice;
+    : '/api/aggregate?x=' + cc.x + '&metrics=' + ccBalanceMetrics(cc).join(',') + slice;
 }
 
 function ccOption(value, label, sel) {
@@ -166,10 +174,15 @@ function ccReload() {
   var cc = ccState();
   if (typeof fetch !== 'function') { cc.err = 'no-server'; renderDash(); return; }
   cc.pending = true; cc.err = null;
+  // Sequence the fetches: file the response against the cut it was ISSUED for,
+  // and drop it if a newer request has since fired — an out-of-order resolve
+  // must never leave cc.data mismatched with the current cut/metric.
+  var myId = ++cc.reqSeq, myCut = cc.cut;
   fetch(ccQueryUrl(cc)).then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); }).then(function (j) {
-    if (cc.cut === 'card') cc.cardData = j; else cc.data = j;
+    if (myId !== cc.reqSeq) return;               // superseded — a later request owns the view
+    if (myCut === 'card') cc.cardData = j; else cc.data = j;
     cc.pending = false; renderDash();
-  }).catch(function () { cc.pending = false; cc.err = 'fetch'; renderDash(); });
+  }).catch(function () { if (myId !== cc.reqSeq) return; cc.pending = false; cc.err = 'fetch'; renderDash(); });
 }
 
 // One-time slice-picker load: GET /api/dimensions, then the first cross-cut.
@@ -200,7 +213,9 @@ function ccControls(cc) {
       d.cards.map(function (c) { return ccOption(c, c, cc.card); }).join('') + '</select></label>';
   }
   // slice picker: one entry per (version, config_digest) present, plus "all".
-  h += '<label class="small">Slice <select id="ccSlice">' + ccOption('', 'all slices', cc.version + '|' + cc.config);
+  // every option's value is the `version|config` encoding; "all slices" is the
+  // empty pair '|', so it marks selected when no slice is active.
+  h += '<label class="small">Slice <select id="ccSlice">' + ccOption('|', 'all slices', cc.version + '|' + cc.config);
   (d.versions || []).forEach(function (v) {
     var val = v.version + '|' + v.config_digest;
     var lbl = (v.version || '?') + (v.config_digest ? ' · ' + String(v.config_digest).slice(0, 8) : '');
