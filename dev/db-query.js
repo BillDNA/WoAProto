@@ -11,9 +11,9 @@
    is opened read-only, so any statement that writes is rejected by SQLite.
 
    --anchors is the official balance-anchor read (docs/balance/balance-baselines.md):
-   it reads v_global_balance for the largest-n slice (the accumulating
-   version-sliced pool) so the cited figures come from the DB, never a hand-typed
-   markdown snapshot — more games converge them (LLN). */
+   it reads v_global_balance for the live rules version's largest slice (the
+   accumulating version-sliced pool) so the cited figures come from the DB, never a
+   hand-typed markdown snapshot — more games converge them (LLN). */
 'use strict';
 
 var fs = require('fs');
