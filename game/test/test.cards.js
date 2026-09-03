@@ -227,6 +227,73 @@ test('play metrics (seen / playLog for the card report)', () => {
 })();
 });
 
+test('decision journal (per-decision stream: played + declined at st.journal)', () => {
+(function () {
+  var st = testSkirmish(101);
+  var p = st.flow.current;
+  var hand = st.cards.hands[p].slice();           // full hand at the decision point
+  var chosen = 'deploy_inf_start';
+  assert.ok(hand.indexOf(chosen) >= 0, 'chosen card is in the opening hand');
+  E.playCard(st, chosen, 'normal');
+
+  // one event per held card this turn, all tagged turn/side and well-formed
+  var events = st.journal.decisionLog.filter(function (e) { return e.turn === st.flow.turnNumber && e.side === p; });
+  assert.ok(events.length === hand.length,
+    'one event per card held at the decision (' + events.length + ' = ' + hand.length + ')');
+  events.forEach(function (e) {
+    assert.ok(typeof e.turn === 'number' && (e.side === 'red' || e.side === 'blue') &&
+      typeof e.card === 'string' && 'mode' in e && 'outcome' in e,
+      'event carries turn/side/card/mode/outcome: ' + JSON.stringify(e));
+  });
+
+  // exactly one played, the rest declined; played carries the play mode
+  var played = events.filter(function (e) { return e.outcome === 'played'; });
+  var declined = events.filter(function (e) { return e.outcome === 'declined'; });
+  assert.ok(played.length === 1 && played[0].card === chosen && played[0].mode === 'normal',
+    'exactly one played event, the chosen card, with its mode: ' + JSON.stringify(played));
+  assert.ok(declined.length === hand.length - 1, 'every other held card is declined');
+  var declinedIds = declined.map(function (e) { return e.card; }).sort();
+  var expectDeclined = hand.filter(function (id) { return id !== chosen; }).sort();
+  assert.ok(JSON.stringify(declinedIds) === JSON.stringify(expectDeclined),
+    'declined events name exactly the un-played hand cards');
+})();
+});
+
+test('decision journal (a never-played card is no longer invisible)', () => {
+(function () {
+  // Structural invariant, seed-independent: over a full game every play is also a
+  // 'played' decision event (plays ⊆ the decision stream), and declines are
+  // recorded on top — so "was (side, card) passed?" is answerable from the
+  // journal alone, where the play-only log left passes and never-played cards
+  // invisible.
+  function decisions(st) {
+    var played = {}, declined = {};
+    (st.journal.decisionLog || []).forEach(function (e) {
+      (e.outcome === 'played' ? played : declined)[e.side + ':' + e.card] = true;
+    });
+    return { played: played, declined: declined };
+  }
+  var st = SIM.simSkirmish(E.MAPS[0], 4242, 'red', 'normal', 'normal');
+  assert.ok(st.journal.decisionLog && st.journal.decisionLog.length > (st.journal.playLog || []).length,
+    'decision stream carries more than the play-only log (declines recorded)');
+  var d = decisions(st);
+  (st.journal.playLog || []).forEach(function (e) {
+    assert.ok(d.played[e.p + ':' + e.id], 'every play (' + e.p + ':' + e.id + ') is also a played decision event');
+  });
+  assert.ok(Object.keys(d.declined).length > 0, 'passes are recorded (declined events exist)');
+
+  // The never-played case is real, not just possible: across a fixed spread of
+  // deterministic games at least one (side, card) is held every turn it's in hand
+  // and never played — invisible in the play-only log, now traceable.
+  var everHeldOnly = false;
+  [4242, 101, 7, 55, 999].forEach(function (seed) {
+    var s = decisions(SIM.simSkirmish(E.MAPS[0], seed, 'red', 'normal', 'normal'));
+    if (Object.keys(s.declined).some(function (k) { return !s.played[k]; })) everHeldOnly = true;
+  });
+  assert.ok(everHeldOnly, 'a card passed every turn it was in hand still leaves a trace (held-only across the seed spread)');
+})();
+});
+
 test('asymmetric deck binding', () => {
 (function () {
   // Deck composition as a sorted "id:count" signature — the fingerprint a side's

@@ -18,16 +18,17 @@
   // The AI's hot-loop clone: identical to clone() except it drops what the
   // search never reads — the journal prose (st.journal.log grows every turn and was
   // dominating clone cost late-skirmish), all playLog entries but the LAST
-  // (noopPenalty reads exactly that one), and fsTimeline. __sim marks the
-  // state so I.finishSkirmish never fires persistence hooks for search clones.
+  // (noopPenalty reads exactly that one), the decisionLog (capture only, never
+  // read by search), and fsTimeline. __sim marks the state so I.finishSkirmish
+  // never fires persistence hooks for search clones.
   function cloneForSim(st) {
-    var m = st.battle, lg = st.journal.log, pl = st.journal.playLog, tl = st.journal.fsTimeline, sd = st.cards.sideDecks;
+    var m = st.battle, lg = st.journal.log, pl = st.journal.playLog, dl = st.journal.decisionLog, tl = st.journal.fsTimeline, sd = st.cards.sideDecks;
     // sideDecks registries are immutable for the skirmish (resolved once at
     // newSkirmish) — strip them out of the deep clone (the byId maps carry the
     // whole card catalog) and reattach the SAME reference, like battle/log below.
-    st.battle = null; st.journal.log = []; st.journal.playLog = (pl && pl.length) ? [pl[pl.length - 1]] : []; st.journal.fsTimeline = undefined; st.cards.sideDecks = undefined;
+    st.battle = null; st.journal.log = []; st.journal.playLog = (pl && pl.length) ? [pl[pl.length - 1]] : []; st.journal.decisionLog = []; st.journal.fsTimeline = undefined; st.cards.sideDecks = undefined;
     var c = JSON.parse(JSON.stringify(st));
-    st.battle = m; st.journal.log = lg; st.journal.playLog = pl; st.journal.fsTimeline = tl; st.cards.sideDecks = sd;
+    st.battle = m; st.journal.log = lg; st.journal.playLog = pl; st.journal.decisionLog = dl; st.journal.fsTimeline = tl; st.cards.sideDecks = sd;
     c.battle = { wins: { red: m.wins.red, blue: m.wins.blue }, skirmishIndex: m.skirmishIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
     c.cards.sideDecks = sd;
     c.__sim = true;
