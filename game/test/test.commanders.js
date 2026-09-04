@@ -24,13 +24,18 @@ function synthCommander(delta, drawDelta) {
   };
 }
 
-// Seat a fight: red infantry attacks blue infantry across the 0,0|0,1 border,
-// optionally with a mountain edge on the defended side.
-function fightSkirmish(seed, mountain) {
+// Seat a fight: red infantry ('0,0') attacks blue infantry ('0,1') across their
+// border. `place` puts a mountain: 'attacked' = the defender's attacked edge,
+// 'other' = a DIFFERENT edge of the defender's hex, 'attacker' = the attacker's
+// edge, else none.
+function fightSkirmish(seed, place) {
   const st = testSkirmish(seed);
   E.Pieces.place(st, '0,0', 'infantry', 'red');
   E.Pieces.place(st, '0,1', 'infantry', 'blue');
-  if (mountain) st.board.terrainEdges[E.sideKey('0,1', E.dirBetween('0,1', '0,0'))] = 'M'; // mountain on the defended edge
+  const atkDir = E.dirBetween('0,1', '0,0'); // the defender's edge toward the attacker
+  if (place === 'attacked') st.board.terrainEdges[E.sideKey('0,1', atkDir)] = 'M';
+  else if (place === 'other') st.board.terrainEdges[E.sideKey('0,1', (atkDir + 3) % 6)] = 'M'; // a non-attacked edge of the DEFENDER hex
+  else if (place === 'attacker') st.board.terrainEdges[E.sideKey('0,0', E.dirBetween('0,0', '0,1'))] = 'M'; // the ATTACKER's edge
   return st;
 }
 
@@ -62,29 +67,31 @@ test('seam: selection routes to the correct per-side seat; None is a no-op', () 
   assert.strictEqual(E.resolveCommander('none'), null, "'none' resolves to the None baseline");
 });
 
-test('seam: a passive combatMod applies at the combat hook, only in its declared context', () => {
+test('seam: a passive combatMod applies at the combat hook, gated by the DEFENDER HEX terrain', () => {
   const D = 2; // synthetic delta — the relationship, not a shipped number
-  // Baseline: same fight, no Commander seated.
-  const base = E.computeAttack(fightSkirmish(11, true), { from: '0,0', to: '0,1' }).defenderPower;
+  const cmd = synthCommander(D, -1); // a defense combatMod gated to mountain
+  const defPow = (st) => E.computeAttack(st, { from: '0,0', to: '0,1' }).defenderPower;
+  // The Commander's contribution = same board WITH minus WITHOUT it, so base
+  // per-edge terrain cancels and only the Commander delta remains.
+  const contrib = (place) => {
+    const on = fightSkirmish(11, place); on.commanders = { red: null, blue: cmd };
+    return defPow(on) - defPow(fightSkirmish(11, place));
+  };
 
-  // Defender carries a defense combatMod gated to mountain; the defended edge IS
-  // mountain → defenderPower rises by exactly D.
-  const stD = fightSkirmish(11, true);
-  stD.commanders = { red: null, blue: synthCommander(D, -1) };
-  assert.strictEqual(E.computeAttack(stD, { from: '0,0', to: '0,1' }).defenderPower - base, D,
-    'defense combatMod raises defender power by its delta in its terrain');
-
-  // Same Commander, NO mountain edge → the terrain gate blocks it (no change).
-  const stFlat = fightSkirmish(11, false);
-  const baseFlat = E.computeAttack(fightSkirmish(11, false), { from: '0,0', to: '0,1' }).defenderPower;
-  stFlat.commanders = { red: null, blue: synthCommander(D, -1) };
-  assert.strictEqual(E.computeAttack(stFlat, { from: '0,0', to: '0,1' }).defenderPower, baseFlat,
-    'off its terrain, the combatMod does not apply (context gate)');
+  // Mountain on the attacked edge → applies (+D).
+  assert.strictEqual(contrib('attacked'), D, 'applies when the attacked edge is the terrain');
+  // Mountain on a DIFFERENT edge of the defender hex → STILL applies. This is the
+  // rule: the bonus keys on the HELD HEX, not the single attacked edge.
+  assert.strictEqual(contrib('other'), D, 'applies from ANY edge of the defender hex (dug-in / hex rule, not attacked-edge)');
+  // Terrain only on the ATTACKER's hex → the defender hex is bare → no bonus.
+  assert.strictEqual(contrib('attacker'), 0, "does not apply for the attacker's terrain (ownership/context gate)");
+  // No terrain in the defender hex at all → no bonus.
+  assert.strictEqual(contrib('none'), 0, 'no terrain in the defender hex → no bonus (context gate)');
 
   // The modifier is when-scoped: a defense mod on the ATTACKER never touches attack power.
-  const stWhen = fightSkirmish(11, true);
-  const baseAtk = E.computeAttack(fightSkirmish(11, true), { from: '0,0', to: '0,1' }).attackerPower;
-  stWhen.commanders = { red: synthCommander(D, -1), blue: null }; // attacker holds a DEFENSE mod
+  const stWhen = fightSkirmish(11, 'attacked');
+  const baseAtk = E.computeAttack(fightSkirmish(11, 'attacked'), { from: '0,0', to: '0,1' }).attackerPower;
+  stWhen.commanders = { red: cmd, blue: null }; // attacker holds a DEFENSE mod
   assert.strictEqual(E.computeAttack(stWhen, { from: '0,0', to: '0,1' }).attackerPower, baseAtk,
     "a when:'defense' mod on the attacker does not raise attack power (when gate)");
 });

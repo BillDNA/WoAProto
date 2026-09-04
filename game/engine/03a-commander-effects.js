@@ -20,14 +20,17 @@
   'use strict';
   var I = global.WOA_E = global.WOA_E || {};
 
-  // A trait's terrain gate names game terrain; combat reads the edge as a letter.
+  // A trait's terrain gate names game terrain; combat reads terrain as letters.
   var TERRAIN_LETTER = { forest: 'F', mountain: 'M', river: 'R' };
-  // A trait with no terrain applies everywhere; one with terrain applies only
-  // when the fight's edge is one of the named terrains ('forest|mountain' → F or M).
-  function terrainMatches(trait, edgeLetter) {
+  // A trait with no terrain applies everywhere; one with terrain applies when the
+  // fight's terrain set holds one of the named terrains ('forest|mountain' → F or M).
+  // The set is the HELD hex's terrain (its owned edges), not one edge — a Fortress
+  // is dug into its whole position, so its bonus keys on the hex, not the attacked
+  // edge. `terrain` may arrive as a single letter (normalized to a one-item set).
+  function terrainMatches(trait, terrainLetters) {
     if (!trait.terrain) return true;
     return String(trait.terrain).split('|').some(function (name) {
-      return TERRAIN_LETTER[name] === edgeLetter;
+      return terrainLetters.indexOf(TERRAIN_LETTER[name]) >= 0;
     });
   }
   // Only always-on sources contribute through this layer today (passives). A
@@ -41,14 +44,16 @@
   }
 
   // combatMod fold for one side of one fight: sum the deltas of the Commander's
-  // live combatMod traits that match this `when` (attack|defense) and the fight's
-  // terrain edge, with a labelled part per contributor for the combat breakdown.
-  function commanderCombat(commander, when, edgeLetter) {
+  // live combatMod traits that match this `when` (attack|defense) and the held
+  // hex's terrain, with a labelled part per contributor for the combat breakdown.
+  // `terrain` is the terrain-letter set of the side's hex (array), or a lone letter.
+  function commanderCombat(commander, when, terrain) {
+    var letters = Array.isArray(terrain) ? terrain : (terrain ? [terrain] : []);
     var delta = 0, parts = [];
     if (!commander || !commander.traits) return { delta: delta, parts: parts };
     commander.traits.forEach(function (t) {
       if (t.primitive !== 'combatMod' || !traitLive(t) || t.when !== when) return;
-      if (!terrainMatches(t, edgeLetter)) return;
+      if (!terrainMatches(t, letters)) return;
       delta += t.delta || 0;
       parts.push((t.name || commander.name || 'Commander') + ' ' + (t.delta > 0 ? '+' : '') + (t.delta || 0));
     });

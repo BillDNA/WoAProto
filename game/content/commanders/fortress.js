@@ -13,7 +13,7 @@
    "when": "defense",
    "delta": 1,
    "name": "Dug In",
-   "text": "+1 defense when defending across a forest or mountain edge."
+   "text": "+1 defense while defending in a hex that holds a forest or mountain."
   },
   {
    "primitive": "drawMod",
