@@ -168,6 +168,16 @@ realSetTimeout(function () {
     'a full battle plays to completion with Fortress seated on both sides (passive-aware AI, weights merge)');
   win.renderAll();
 
+  // Next-skirmish transition (the "Next Skirmish" button path): a fresh skirmish
+  // off the SAME battle, APP.ui reset with no commander cache — the panel must
+  // survive because renderAll re-derives it from st.commanders, not a forgotten sync.
+  win.APP.st = win.Engine.newSkirmish(cbBattle);
+  win.APP.ui = { sel: null, stage: null, busy: false, handoffPending: false };
+  win.renderAll(); // NOTE: no syncCommandersFromState() here — that is the bug this pins
+  assert.ok(doc.querySelector('#matRed .cmd-panel') && /Fortress/.test(doc.querySelector('#matRed .cmd-panel').textContent),
+    'the Commander panel survives into the next skirmish without an explicit sync (renderAll self-heals)');
+  assert.ok(doc.querySelector('#matBlue .cmd-panel'), 'both mats keep their Commander panel across the skirmish boundary');
+
   console.log('== mustered/pool card in hand renders (no mid-turn render crash) ==');
   // Regression: E.CARD_BY_ID indexes only the default battalion, but a mustered or
   // asymmetric battalion draws from the wider pool. A pool card in the rendered hand
@@ -264,7 +274,7 @@ realSetTimeout(function () {
   } else {
     assert.ok(abil.disabled, 'ability button gated off your turn');
   }
-  win.APP.ui.commander = null; // clear the demo; the play-through below is Commander-free
+  win.APP.st.commanders = null; win.APP.ui.commander = null; // clear the demo at the source; the play-through below is Commander-free
   win.renderAll();
   assert.ok(!doc.querySelector('#matRed .cmd-panel'), 'no Commander selected -> no panel (real play is untouched)');
 

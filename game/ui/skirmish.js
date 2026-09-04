@@ -304,6 +304,7 @@ function renderAll(){
     E.setBoard(v.boardShape);
   }
   ensureSnapshot();
+  ensureCommanderRuntime(); // panel derives from st.commanders every render — no seat is ever left un-synced
   commanderTurnSync();
   renderTop(); renderMat('red'); renderMat('blue'); renderBoard(); renderHand(); renderPrompt(); renderLog();
 }
