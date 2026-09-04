@@ -49,6 +49,10 @@ function pbPickOpponent(playerPts){
 }
 
 function openBuildBattalion(){
+  // Normally the picker (before this screen) seats the enemy Commander; if the
+  // builder is reached directly (a screen= deep link), seed it here so the enemy
+  // still fields one rather than silently defaulting to None.
+  if (typeof PICK !== 'undefined' && !PICK.opponent && typeof pickOpponentCommander === 'function') PICK.opponent = pickOpponentCommander();
   pbLoad();
   var inCards = PB.cards.filter(function(c){ return !c.out; });
   PB.opponent = pbPickOpponent(E.battalionPoints({ cards: inCards }));

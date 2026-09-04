@@ -126,13 +126,16 @@
     var dsel = battle.battalions;
     if (dsel && (dsel.red || dsel.blue))
       st.cards.sideDecks = { red: I.resolveBattalion(dsel.red), blue: I.resolveBattalion(dsel.blue) };
-    // Seat per-side Commanders only when a side picks one — the plain battle
-    // leaves st.commanders absent (sideCommander falls back to null), so live/
-    // synced/persisted state never carries a redundant Commander block. Resolved
-    // records are immutable for the skirmish (cloneForSim shares the reference).
+    // Seat per-side Commanders only when a side actually fields one — resolve
+    // first so the 'none'/null baseline (a truthy sentinel included) leaves
+    // st.commanders absent (sideCommander falls back to null), and live/synced/
+    // persisted state never carries a redundant Commander block. Resolved records
+    // are immutable for the skirmish (cloneForSim shares the reference).
     var csel = battle.commanders;
-    if (csel && (csel.red || csel.blue))
-      st.commanders = { red: I.resolveCommander(csel.red), blue: I.resolveCommander(csel.blue) };
+    if (csel) {
+      var rcmd = I.resolveCommander(csel.red), bcmd = I.resolveCommander(csel.blue);
+      if (rcmd || bcmd) st.commanders = { red: rcmd, blue: bcmd };
+    }
     st.cards.decks.red = buildDeck(st, 'red');
     st.cards.decks.blue = buildDeck(st, 'blue');
     log(st, 'Skirmish ' + (battle.skirmishIndex + 1) + ' — "' + map.name + '". ' + I.cap(st.flow.current) + ' moves first.');

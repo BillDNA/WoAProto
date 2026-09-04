@@ -33,7 +33,7 @@ function openPickCommander(){
 }
 
 function pickCommanderSet(id){
-  PICK.commander = id || null; // '' / 'none' → the None baseline
+  PICK.commander = (id && id !== 'none') ? id : null; // '' / 'none' → the None baseline (stored as null)
   renderPickCommander();
 }
 

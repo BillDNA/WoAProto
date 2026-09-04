@@ -341,7 +341,7 @@
     // AI_WEIGHTS, so the enemy Commander plays its own numbers. The passive-aware
     // eval comes for free — evalState/threatScan score through computeAttack, which
     // already reads the Commander's combatMod off the seated st.commanders.
-    var w = cfg.w = I.mergeCommanderWeights(cfg.w, I.sideCommander(st, me));
+    var w = I.mergeCommanderWeights(cfg.w, I.sideCommander(st, me));
     var randomness = cfg.noise;
     var s = { seed: (st.seed ^ 0x9e3779b9) | 0 };
     var hand = st.cards.hands[me].slice();

@@ -52,6 +52,11 @@ test('seam: selection routes to the correct per-side seat; None is a no-op', () 
   assert.strictEqual(E.sideCommander(plain, 'red'), null, 'no selection → no Commander (both seats)');
   assert.strictEqual(E.sideCommander(plain, 'blue'), null, 'no selection → no Commander (both seats)');
 
+  // an all-None selection is the baseline too: it resolves to nothing, so no
+  // redundant Commander block is seated (the 'none' sentinel is not a real pick)
+  const allNone = E.newSkirmish(E.newBattle({ seed: 4, firstPlayer: 'red', maps: [TESTMAP], commanders: { red: 'none', blue: 'none' } }));
+  assert.ok(!allNone.commanders, 'an all-None selection seats no Commander block (baseline, not a pick)');
+
   // resolveCommander: null and the "none" sentinel both mean the baseline
   assert.strictEqual(E.resolveCommander(null), null, 'null resolves to the None baseline');
   assert.strictEqual(E.resolveCommander('none'), null, "'none' resolves to the None baseline");
