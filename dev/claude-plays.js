@@ -93,13 +93,15 @@ function parseArgs(argv) {
 // Fill the flags left unset with the dev-lab run defaults (LAB.claudePlays). Called
 // once the engine — and thus the home — is loaded; the values then flow via ARGS to
 // their sites (newBattle seed, makeSideTransport models, the turn loop, pruning).
+// --k is the exception: the option cap is the engine's rankChoices default, so it has
+// ONE owner in the engine (E.AI_TUNING.optionCap) that this reads — no lab-config copy.
 function applyRunDefaults(a, cp) {
   if (a.red == null) a.red = cp.redModel;
   if (a.blue == null) a.blue = cp.blueModel;
   if (a.seed == null) a.seed = cp.seed;
   if (a.maxTurns == null) a.maxTurns = cp.maxTurns;
   if (a.typicalN == null) a.typicalN = cp.typicalN;
-  if (a.k == null) a.k = cp.optionCap;
+  if (a.k == null) a.k = E.AI_TUNING.optionCap;
   if (a.matchWins === -1) a.matchWins = cp.matchTarget; // --match with no number
 }
 

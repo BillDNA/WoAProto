@@ -29,7 +29,7 @@
     enumerateChoices: I.enumerateChoices,
     concede: I.concede, concedeAdvised: I.concedeAdvised, fieldScore: I.fieldScore,
     aiPlanTurn: I.aiPlanTurn, rankChoices: I.rankChoices, clone: I.clone, cloneForSim: I.cloneForSim, evalState: I.evalState, validateMaps: I.validateMaps,
-    AI_PRESETS: I.AI_PRESETS, AI_WEIGHTS: I.AI_WEIGHTS, aiConfig: I.aiConfig, CARD_KEEP: I.CARD_KEEP,
+    AI_PRESETS: I.AI_PRESETS, AI_WEIGHTS: I.AI_WEIGHTS, AI_TUNING: I.AI_TUNING, aiConfig: I.aiConfig, CARD_KEEP: I.CARD_KEEP,
     hooks: I.HOOKS,
     // The batch/measurement layer (skirmish sweeps + balance folds) is NOT on the
     // engine surface — it lives in game/sim.js (WOA_SIM), built on playToEnd.

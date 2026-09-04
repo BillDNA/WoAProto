@@ -71,12 +71,13 @@
   }
 
   // AI-side unit valuation — lives in the weight vector so the tuner and
-  // personalities can sweep it; 3/4/5 are the defaults.
+  // personalities can sweep it; the defaults are the unitVal* weights in AI_WEIGHTS.
   var UNIT_VAL_KEY = { infantry: 'unitValInfantry', cavalry: 'unitValCavalry', artillery: 'unitValArtillery' };
   function unitValue(t, w) {
     var k = UNIT_VAL_KEY[t];
     if (k && w && typeof w[k] === 'number') return w[k];
-    return { infantry: 3, cavalry: 4, artillery: 5 }[t] || ((I.UNITS[t] ? I.UNITS[t].worth : 1) + 2);
+    if (k) return AI_WEIGHTS[k];
+    return (I.UNITS[t] ? I.UNITS[t].worth : 1) + 2;
   }
 
   // ---- AI personalities are DATA ----
@@ -90,7 +91,10 @@
   // Guardrails baked in (don't lose them in a new config): the noopPenalty and
   // antiShuffle weights and the attrition projection are the anti-degeneracy
   // fixes — zero them and the swap-dance stalemate returns.
-  var AI_WEIGHTS = {
+  // A config home (shared defineConfigHome helper → non-enumerable `digest`): the
+  // SOLE owner of the eval weights, and the one surface a per-Commander weight
+  // override merges over. Only weights live here, so the digest moves iff a weight does.
+  var AI_WEIGHTS = I.defineConfigHome({
     attrWin: 500,      // attrition-projection swing at full urgency
     fsDiff: 8, fsDiffUrgent: 40, // field-score diff, flat + urgency-scaled
     unitOnBoard: 22, unitReserve: 16, // unitValue multipliers
@@ -111,7 +115,24 @@
     // pre-rank instead of the old RANDOM shuffle+slice(80) — the cap can no
     // longer discard the best move. Lower = faster + more approximate.
     shortlist: 40
-  };
+  });
+
+  // The AI's other tunable dials — a sibling config home (same shared helper) for the
+  // numbers that shape the search + eval but are NOT per-personality weights (a
+  // personality overrides AI_WEIGHTS terms, never these). Its own digest. Read by
+  // nested name at each site; no flat copies.
+  var AI_TUNING = I.defineConfigHome({
+    // aiConfig's base personality shape, merged UNDER any preset/maps.js row.
+    // noise = evaluation randomness; breadth = look-ahead candidates re-scored by
+    // the sampled enemy reply; replySamples/replyWeight tune that reply search.
+    defaults: { noise: 0, breadth: 0, replySamples: 2, replyWeight: 0.7 },
+    urgencyWindow: 12,   // turnsLeft window over which the attrition-projection urgency ramps to full
+    laneRange: 2,        // hexes: an enemy this close to a trench edge's far side makes it a LIVE lane
+    threatCardMod: 1,    // attack mod the threat scan assumes the enemy could add from a card
+    skipBias: 1,         // score nudge subtracted from a skip so the AI mildly prefers acting
+    optionCap: 15        // rankChoices default k: options shown to the LLM harness before
+                         // pruning. The ONE owner — dev/claude-plays.js reads it for its --k default.
+  });
   var AI_PRESETS = {
     easy:   { noise: 60, breadth: 0 },                                  // greedy + mistakes
     normal: { noise: 0,  breadth: 0 },                                  // greedy
@@ -120,7 +141,7 @@
   Object.keys(I.BUILTIN.ai || {}).forEach(function (n) { AI_PRESETS[n] = I.BUILTIN.ai[n]; });
   function aiConfig(d) {
     var base = (typeof d === 'string' || d === undefined) ? (AI_PRESETS[d] || AI_PRESETS.normal) : d;
-    var cfg = Object.assign({ noise: 0, breadth: 0, replySamples: 2, replyWeight: 0.7 }, base);
+    var cfg = Object.assign({}, AI_TUNING.defaults, base);
     cfg.w = Object.assign({}, AI_WEIGHTS, base.weights || {});
     return cfg;
   }
@@ -130,7 +151,7 @@
     var en = I.other(me);
     var score = 0;
     I.listAttacks(st, en).forEach(function (a) {
-      var res = I.computeAttack(st, Object.assign({}, a, { mod: 1 }));
+      var res = I.computeAttack(st, Object.assign({}, a, { mod: AI_TUNING.threatCardMod }));
       var tgt = st.pieces.units[a.to];
       if (res.defenderIsHQ) {
         if (res.outcome !== 'defender') score -= w.threatHQ; // enemy can take our HQ
@@ -152,7 +173,7 @@
       var n = I.neighbor(h, dirs[i]);
       if (!n) continue;
       for (var j = 0; j < enemyHexes.length; j++) {
-        if (I.dist(n, enemyHexes[j]) <= 2) { v++; break; }
+        if (I.dist(n, enemyHexes[j]) <= AI_TUNING.laneRange) { v++; break; }
       }
     }
     return v;
@@ -169,7 +190,7 @@
     // Scoring reads surviving units, not kills.
     var fsMe = I.fieldScore(st, me), fsEn = I.fieldScore(st, en);
     var turnsLeft = Math.min(I.cardsRemaining(st, me), I.cardsRemaining(st, en));
-    var urgency = Math.max(0, 1 - turnsLeft / 12);
+    var urgency = Math.max(0, 1 - turnsLeft / AI_TUNING.urgencyWindow);
     var attrWin = fsMe > fsEn || (fsMe === fsEn && st.flow.second === me);
     s += (attrWin ? 1 : -1) * w.attrWin * urgency;
     s += (fsMe - fsEn) * (w.fsDiff + w.fsDiffUrgent * urgency);
@@ -296,7 +317,7 @@
         var sim2 = cloneForSim(sim);
         try { I.applyStep(sim2, c); } catch (e) { return; }
         var sc = evalState(sim2, me, w) + (randomness ? I.rnd(s) * randomness : 0);
-        if (c.skip) sc -= 1; // mild bias toward acting
+        if (c.skip) sc -= AI_TUNING.skipBias; // mild bias toward acting
         // anti-shuffle: re-swapping the pair I swapped last time is ping-ponging
         if (c.swap && sim.journal.lastSwap && sim.journal.lastSwap[me] === I.swapKey(c.a, c.b)) sc -= w.antiShuffle;
         if (sc > bestScore) { bestScore = sc; best = c; }
@@ -425,7 +446,7 @@
   // score = evalState of the resulting position (the honest heuristic number).
   function rankChoices(st, opts) {
     opts = opts || {};
-    var k = opts.k || 15;
+    var k = opts.k || AI_TUNING.optionCap;
     var w = aiConfig(opts.config).w;
     var me = st.flow.current;
     var eo = enumerateWithOptions(st);
@@ -456,6 +477,7 @@
   I.cloneForSim = cloneForSim;
   I.unitValue = unitValue;
   I.AI_WEIGHTS = AI_WEIGHTS;
+  I.AI_TUNING = AI_TUNING;
   I.AI_PRESETS = AI_PRESETS;
   I.aiConfig = aiConfig;
   I.threatScan = threatScan;

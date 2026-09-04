@@ -165,6 +165,39 @@ test('seam: skirmish.matchTarget decides the battle at that many wins', () => {
   } finally { C.skirmish.matchTarget = base; }
 });
 
+// The AI dials sit on the SAME config-home pattern as E.CONFIG: two sibling homes
+// (AI_WEIGHTS = the personality-overridable eval weights; AI_TUNING = the search/eval
+// dials that aren't weights), each made by the shared maker so its digest getter is the
+// shared one. AI_WEIGHTS holds ONLY weights, so its digest moves iff a weight moves.
+test('seam: the AI dials are config homes on the shared pattern (no flat aliases)', () => {
+  const shared = Object.getOwnPropertyDescriptor(E.CONFIG, 'digest').get;
+  ['AI_WEIGHTS', 'AI_TUNING'].forEach(function (name) {
+    const home = E[name];
+    assert.ok(home && typeof home === 'object', name + ' is published');
+    const d = Object.getOwnPropertyDescriptor(home, 'digest');
+    assert.ok(d && d.get === shared, name + ' was made by defineConfigHome (its digest getter IS the shared one)');
+    assert.strictEqual(d.enumerable, false, name + "'s digest getter is non-enumerable (never feeds its own hash)");
+    assert.ok(!Object.isFrozen(home), name + ' is not frozen (a dial can be tuned)');
+    assert.strictEqual(home.digest, E.configDigest(home), name + ' digest is the util over the home');
+  });
+
+  // AI_WEIGHTS: a weight change moves the digest; nothing else feeds it (digest is
+  // non-enumerable, so it never hashes itself). Bump-and-restore, never a pinned string.
+  const before = E.AI_WEIGHTS.digest, base = E.AI_WEIGHTS.attrWin;
+  try {
+    E.AI_WEIGHTS.attrWin = base + 1;
+    assert.notStrictEqual(E.AI_WEIGHTS.digest, before, 'a changed weight → a different AI_WEIGHTS digest');
+  } finally { E.AI_WEIGHTS.attrWin = base; }
+  assert.strictEqual(E.AI_WEIGHTS.digest, before, 'restoring the weight restores the digest (pure function of the values)');
+
+  // AI_TUNING owns its dials by nested name; no flat value-alias escaped to the surface.
+  assert.ok(E.AI_TUNING.defaults && typeof E.AI_TUNING.defaults === 'object', 'AI_TUNING.defaults owns the base personality shape');
+  ['urgencyWindow', 'laneRange', 'threatCardMod', 'skipBias', 'optionCap'].forEach(function (dial) {
+    assert.strictEqual(typeof E.AI_TUNING[dial], 'number', 'AI_TUNING.' + dial + ' owns its dial');
+    assert.strictEqual(E[dial], undefined, dial + ' has no flat alias on the surface (read AI_TUNING.' + dial + ')');
+  });
+});
+
 test('seam: limits.turnCap bounds the drive loop', () => {
   const C = E.CONFIG, base = C.limits.turnCap;
   // A reposition burn on an empty board resolves no actions but spends one card
