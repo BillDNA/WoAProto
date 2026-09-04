@@ -11,10 +11,11 @@ test('shapes (data-driven from maps.js)', () => {
   var names = Object.keys(E.SHAPES);
   assert.ok(names.length >= 4, names.length + ' board shapes defined');
   assert.ok(!E.SHAPES.grand && !E.SHAPES.wide, 'grand and wide boards are gone');
+  var floor = E.CONFIG.mapHexFloor, ceiling = E.CONFIG.mapHexCeiling;
   names.forEach(function (n) {
     var hexes = E.boardHexes(n);
-    assert.ok(hexes.length >= 16 && hexes.length <= 24,
-      n + ': ' + hexes.length + ' hexes (laser-cutter ceiling is 24)');
+    assert.ok(hexes.length >= floor && hexes.length <= ceiling,
+      n + ': ' + hexes.length + ' hexes (physical band is ' + floor + '-' + ceiling + ')');
     assert.ok(E.SHAPES[n].centre !== null, n + ': point-symmetric (Mirror & fair HQs work)');
     var set = {};
     hexes.forEach(function (k) { set[k] = true; });
@@ -78,13 +79,13 @@ test('custom board shapes (explicit hex sets)', () => {
   E.setBoard('@irr1');
   var asym = E.buildShape('asym', { hexes: [[0, 0], [1, 0], [0, 1]] });
   assert.ok(asym.centre === null, 'asymmetric hex set has no centre (Mirror disabled)');
-  // the 24-hex ceiling is enforced for edited shapes
+  // the hex ceiling is enforced for edited shapes
   var big = [];
   for (var q = 0; q < 5; q++) for (var r = 0; r < 5; r++) big.push([q, r]);
   var BIGMAP = { name: 'Too Big', id: 'big1', redHQ: [0, 0], blueHQ: [4, 4],
     shapeDef: { hexes: big }, pieces: [] };
-  assert.ok(E.validateMaps([BIGMAP]).some(function (p) { return p.indexOf('24-hex ceiling') >= 0; }),
-    '25-hex edited shape rejected by validateMaps');
+  assert.ok(E.validateMaps([BIGMAP]).some(function (p) { return p.indexOf(E.CONFIG.mapHexCeiling + '-hex ceiling') >= 0; }),
+    'edited shape past the hex ceiling rejected by validateMaps');
   // an edited shape can play a full AI skirmish
   var sim = SIM.simSkirmish(IRR, 99, 'red', 'normal', 'normal');
   assert.ok(sim.flow.phase === 'skirmish-over', 'AI skirmish completes on an irregular board (winner ' + sim.result.skirmishWinner + ')');

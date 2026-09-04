@@ -30,6 +30,15 @@
 
 var cp = require('child_process');
 var path = require('path');
+var LAB = require('./lab-config.js'); // dev-lab home; owns the pool's core-reserve knob
+
+// Default parallel worker count: every core but the reserve (LAB.sweep.workerReserve).
+// The one owner — balance.js and balance-report.js both read it here (no per-file copy).
+function defaultWorkers() {
+  var os = require('os');
+  var cores = os.availableParallelism ? os.availableParallelism() : 4;
+  return Math.max(1, cores - LAB.sweep.workerReserve);
+}
 
 // Worker: require()s a fresh engine (+ --battalion/--units preload), runs one
 // contiguous game slice of ONE map, and serializes {agg, skirmishes:[{g, st}]}
@@ -151,4 +160,4 @@ function runParallelSweep(opts) {
   });
 }
 
-module.exports = { runParallelSweep: runParallelSweep, planBatches: planBatches };
+module.exports = { runParallelSweep: runParallelSweep, planBatches: planBatches, defaultWorkers: defaultWorkers };

@@ -2,8 +2,9 @@
 
    Engine-tier config: rules-facing dials as named data, made by the shared
    defineConfigHome helper (attaches the digest getter). Published as I.CONFIG /
-   Engine.CONFIG. Loads FIRST (before 01-core) so 01-core aliases its flat exports
-   into it. Classic script (browser + node), g.WOA_E alias I. UI peer: ui/ui-config.js. */
+   Engine.CONFIG — the SOLE owner of each dial, read by its nested name at every site
+   (no flat value-aliases). Loads FIRST so later parts read I.CONFIG.* directly.
+   Classic script (browser + node), g.WOA_E alias I. UI peer: ui/ui-config.js. */
 (function (global) {
   'use strict';
   var I = global.WOA_E = global.WOA_E || {};
@@ -56,10 +57,50 @@
     terrainStock: CORE.terrainStock || { F3: 2, F2: 4, M3: 2, M2: 4 },
     trenchCount: CORE.trenchCount || 3,
 
-    // Map hex ceiling — the physical board-size guardrail; enforced by validateMaps
-    // AND the map editor, so it homes here where both read one owner.
-    mapHexCeiling: 24
+    // Map hex-count band — the physical board-size guardrail. Ceiling is the
+    // laser-cutter max, enforced by validateMaps AND the map editor; floor is the
+    // smallest board still worth playing, asserted over the shipped shapes.
+    mapHexFloor: 16,
+    mapHexCeiling: 24,
+
+    // Player-mat piece total — physical-board guardrail (sibling to mapHexCeiling):
+    // a side always fields exactly this many pieces. A units variant may re-slice
+    // the composition but its counts must sum to this; 01-core enforces it at load.
+    pieceTotal: 10,
+
+    // --- combat: per-fight power bonuses (read in 03-rules) ---
+    // Grouped because each is a flat power swing on one side of a single fight —
+    // the levers for how much terrain and position matter in combat.
+    combat: {
+      forestAttack: 1,     // attacking ACROSS a forest edge adds this to attack
+      mountainDefense: 1,  // defending BEHIND a mountain edge adds this to defense
+      hqSupport: 1         // an adjacent friendly HQ lends this much support to a fight
+    },
+
+    // --- skirmish: per-game draw + victory dials (read in 04-skirmish) ---
+    // The knobs that shape one game's rhythm: hand size and how many wins take the battle.
+    skirmish: {
+      // Cards drawn on the opening turn / every turn after. The "draw all" threshold
+      // is COUPLED, not a separate dial: draw the lot when at most one more than a
+      // full draw remains (want + 1), so tuning a count moves its threshold with it.
+      handDraw: { opener: 3, normal: 4 },
+      matchTarget: 3       // first side to this many skirmish wins wins the battle
+    },
+
+    // --- limits: loop-safety rails (read in 06-drive + 05-ai) ---
+    // Not balance — infinite-loop guards on the drive/step loops, generous enough
+    // never to bite a real game; they only stop a pathological non-terminating one.
+    limits: {
+      turnCap: 400,        // max turns the drive loop plays before bailing out
+      stepsPerTurn: 12     // max steps drained per card before bailing (every step-drain loop reads this)
+    }
   });
   I.configDigest = configDigest;
   I.defineConfigHome = defineConfigHome;
+  // Node: also expose the maker as a module export so a node-only peer home
+  // (dev/lab-config.js) can require JUST this part for defineConfigHome — same cached
+  // module the full engine loads, so the shared digest getter's identity holds — without
+  // pulling the whole engine + content I/O. The browser has no `module`; the global above serves it.
+  if (typeof module !== 'undefined' && module.exports)
+    module.exports = { defineConfigHome: defineConfigHome, configDigest: configDigest };
 })(typeof window !== 'undefined' ? window : globalThis);

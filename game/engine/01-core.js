@@ -126,17 +126,14 @@
 
   /* ---------- static data (all tunable in maps.js) ---------- */
   var UNITS = BUILTIN.units;
-  // Physical-board guardrail: a side always fields exactly 10 pieces (default 7
-  // inf / 2 cav / 1 art). Values are free data; the TOTAL count is the
+  // Physical-board guardrail: a side always fields exactly CONFIG.pieceTotal pieces
+  // (default 7 inf / 2 cav / 1 art). Values are free data; the TOTAL count is the
   // invariant — enforce it at load so a bad units variant fails loud instead of
   // quietly skewing every skirmish.
   var UNIT_COUNT = Object.keys(UNITS).reduce(function (s, t) { return s + (UNITS[t].count || 0); }, 0);
-  if (UNIT_COUNT !== 10)
-    throw new Error('War of Attrition: unit composition must total 10 pieces (got ' + UNIT_COUNT +
+  if (UNIT_COUNT !== I.CONFIG.pieceTotal)
+    throw new Error('War of Attrition: unit composition must total ' + I.CONFIG.pieceTotal + ' pieces (got ' + UNIT_COUNT +
       (UNITS_VARIANT ? ' from units variant "' + UNITS_VARIANT.id + '"' : ' in maps.js') + ')');
-  // piece stocks are owned by the config home (00-config.js) — alias in
-  var TRENCH_COUNT = I.CONFIG.trenchCount;
-  var TERRAIN_STOCK = I.CONFIG.terrainStock;
   var CARDS = BUILTIN.cards;
   if (!UNITS || !CARDS) throw new Error('War of Attrition: maps.js must define units and cards');
   // A card registry is "everything the skirmish needs to know about one battalion's
@@ -173,25 +170,24 @@
     return battalionRegistry(hydrateBattalionCards(sel.cards));
   }
   // one slot per physical piece on the player mat
-  var PIECE_TOTALS = { trench: TRENCH_COUNT };
+  var PIECE_TOTALS = { trench: I.CONFIG.trenchCount };
   Object.keys(UNITS).forEach(function (t) { PIECE_TOTALS[t] = UNITS[t].count || 0; });
 
   var MAPS = BUILTIN.maps;
 
   /* ---------- army-points (weights owned by the config home, 00-config.js) ----------
-     Points are COMPUTED from a card's steps against I.CONFIG.points; POINTS is the
-     flat alias into that home (one value, two access paths). See 00-config.js for
-     the weight table and the seeding rationale. */
-  var POINTS = I.CONFIG.points;
-  function comboWeight(i) { return POINTS.combo[i] != null ? POINTS.combo[i] : POINTS.combo[POINTS.combo.length - 1]; }
+     Points are COMPUTED from a card's steps against I.CONFIG.points — read directly
+     from the home at each site. See 00-config.js for the weight table and rationale. */
+  function comboWeight(i) { var combo = I.CONFIG.points.combo; return combo[i] != null ? combo[i] : combo[combo.length - 1]; }
   function stepPoints(step) {
     if (!step || !step.type) return 0;
-    var p = POINTS.step[step.type] || 0;
-    p += POINTS.tier[step.unit] || 0;                  // 0 when the step has no unit
-    if (step.mod) p += Math.abs(step.mod) * POINTS.mod;
-    if (step.tieSpare) p += POINTS.tieSpare;
-    if (step.noAdvance) p += POINTS.noAdvance;
-    if (step.anywhere) p += POINTS.anywhere;
+    var pts = I.CONFIG.points;
+    var p = pts.step[step.type] || 0;
+    p += pts.tier[step.unit] || 0;                     // 0 when the step has no unit
+    if (step.mod) p += Math.abs(step.mod) * pts.mod;
+    if (step.tieSpare) p += pts.tieSpare;
+    if (step.noAdvance) p += pts.noAdvance;
+    if (step.anywhere) p += pts.anywhere;
     return p;
   }
   // Each action is priced at its base cost x its position multiplier, so cost
@@ -204,8 +200,6 @@
     var cards = hydrateBattalionCards((battalion && battalion.cards) || []);
     return cards.reduce(function (s, c) { return s + cardPoints(c) * (c.count == null ? 1 : c.count); }, 0);
   }
-  // Alias into the config home (00-config.js).
-  var BATTALION_POINTS_CAP = I.CONFIG.pointsCap;
 
   // tiny pure helpers used by every layer
   function other(p) { return p === 'red' ? 'blue' : 'red'; }
@@ -229,19 +223,12 @@
   I.rnd = rnd;
   I.shuffle = shuffle;
   I.UNITS = UNITS;
-  I.TRENCH_COUNT = TRENCH_COUNT;
-  I.TERRAIN_STOCK = TERRAIN_STOCK;
   I.CARDS = CARDS;
   I.CARD_BY_ID = CARD_BY_ID;
   I.STARTING_CARD = STARTING_CARD;
   I.PIECE_TOTALS = PIECE_TOTALS;
   I.cardPoints = cardPoints;
   I.battalionPoints = battalionPoints;
-  // Flat exports aliased into the config home (00-config.js owns I.CONFIG /
-  // I.configDigest). POINTS / BATTALION_POINTS_CAP / TERRAIN_STOCK / TRENCH_COUNT
-  // are one value, two access paths — the frozen-API compatibility surface.
-  I.POINTS = POINTS;
-  I.BATTALION_POINTS_CAP = BATTALION_POINTS_CAP;
   I.MAPS = MAPS;
   I.MAPSETS = MAPSETS;
   I.activeMapset = activeMapset;

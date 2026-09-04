@@ -8,19 +8,19 @@
 
   /* The one skirmish drive-loop: decide a turn, play the card, drain the step
      queue. `decide` is the only thing that varies (which AI/plan drives the turn)
-     — one implementation per fact. The 400-turn / 12-step caps are load-bearing
-     infinite-loop guards. This composes only play primitives (playCard/applyStep),
-     so it ships with the engine; the hand-driven UI drives turns directly and does
-     not use it. */
+     — one implementation per fact. The turn / step caps are load-bearing
+     infinite-loop guards, homed in Engine.CONFIG.limits. This composes only play
+     primitives (playCard/applyStep), so it ships with the engine; the hand-driven
+     UI drives turns directly and does not use it. */
   function playToEnd(st, opts) {
     opts = opts || {};
     var guard = 0;
-    while (st.flow.phase !== 'skirmish-over' && guard++ < 400) {
+    while (st.flow.phase !== 'skirmish-over' && guard++ < I.CONFIG.limits.turnCap) {
       var plan = opts.decide(st);
       if (!plan) break;
       I.playCard(st, plan.cardId, plan.mode || 'normal');
       var g2 = 0;
-      while (st.flow.phase === 'step' && g2++ < 12) {
+      while (st.flow.phase === 'step' && g2++ < I.CONFIG.limits.stepsPerTurn) {
         var c = plan.choices.shift() || { skip: true };
         try { I.applyStep(st, c); }
         catch (e) { try { I.applyStep(st, { skip: true }); } catch (e2) { break; } }
@@ -47,13 +47,13 @@
         if (!I.inBoard.apply(null, m.blueHQ)) problems.push(m.name + ': blue HQ off board');
         if (I.key.apply(null, m.redHQ) === I.key.apply(null, m.blueHQ)) problems.push(m.name + ': HQs overlap');
         var stock = {};
-        Object.keys(I.TERRAIN_STOCK).forEach(function (k) { stock[k] = 0; });
+        Object.keys(I.CONFIG.terrainStock).forEach(function (k) { stock[k] = 0; });
         m.pieces.forEach(function (p) {
           var sk = p.t + p.edges.length;
-          if (stock[sk] === undefined) problems.push(m.name + ': piece of length ' + p.edges.length + ' has no physical counterpart (stock: ' + Object.keys(I.TERRAIN_STOCK).join(',') + ')');
+          if (stock[sk] === undefined) problems.push(m.name + ': piece of length ' + p.edges.length + ' has no physical counterpart (stock: ' + Object.keys(I.CONFIG.terrainStock).join(',') + ')');
           else stock[sk]++;
         });
-        var over = Object.keys(I.TERRAIN_STOCK).filter(function (k) { return stock[k] > I.TERRAIN_STOCK[k]; });
+        var over = Object.keys(I.CONFIG.terrainStock).filter(function (k) { return stock[k] > I.CONFIG.terrainStock[k]; });
         if (over.length) problems.push(m.name + ': exceeds terrain stock ' + JSON.stringify(stock));
       } catch (e) { problems.push(e.message); }
     });

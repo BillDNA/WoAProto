@@ -111,7 +111,7 @@ test('army-points (computed from steps, weight table pinned)', () => {
      E.cardPoints({ steps: [{ type: 'reposition' }] }),
     'deploy > attack > reposition base costs');
   // Weight-table guardrail via a SYNTHETIC card (steps fixed here, NOT read from a
-  // content file), so a POINTS-table edit is reviewed while editing any actual card
+  // content file), so a CONFIG.points weight-table edit is reviewed while editing any actual card
   // or the active deck reds nothing (assert the mechanism, never a content value).
   // Base: deploy-inf 3, attack (base 2, tieSpare +1, noAdvance +0.5) = 3.5. The 2nd
   // action escalates at combo[1]=2, so 3x1 + 3.5x2 = 10.
@@ -127,10 +127,10 @@ test('army-points (computed from steps, weight table pinned)', () => {
   // gate lets the deck editor call two asymmetric decks "matched"), and a deck
   // pushed over it is rejected — the same reject-on-validate as an oversized deck.
   var allDecks = (typeof global !== 'undefined' && global.WOA_CONTENT && global.WOA_CONTENT.battalions) || [];
-  assert.ok(allDecks.length > 0 && allDecks.every(function (d) { return E.battalionPoints(d) <= E.BATTALION_POINTS_CAP; }),
-    'all ' + allDecks.length + ' shipped decks are within the army-points cap (' + E.BATTALION_POINTS_CAP + ')');
+  assert.ok(allDecks.length > 0 && allDecks.every(function (d) { return E.battalionPoints(d) <= E.CONFIG.pointsCap; }),
+    'all ' + allDecks.length + ' shipped decks are within the army-points cap (' + E.CONFIG.pointsCap + ')');
   var overBudget = { cards: E.ACTIVE_BATTALION.cards.concat([{ id: 'gild', name: 'Gild', count: 1, steps: [{ type: 'deploy', unit: 'artillery' }, { type: 'attack', mod: 3 }] }]) };
-  assert.ok(E.battalionPoints(overBudget) > E.BATTALION_POINTS_CAP, 'a deck pushed over the cap is over budget (gate rejects it)');
+  assert.ok(E.battalionPoints(overBudget) > E.CONFIG.pointsCap, 'a deck pushed over the cap is over budget (gate rejects it)');
 })();
 });
 

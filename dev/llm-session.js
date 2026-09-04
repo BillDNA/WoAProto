@@ -51,8 +51,9 @@
 
 const { spawn } = require('child_process');
 const { resolveBinary } = require('./llm-client.js'); // shared Windows .cmd-shim workaround
+const LAB = require('./lab-config.js'); // dev-lab config home; owns the shared LLM timeout
 
-const DEFAULT_TIMEOUT_MS = 180000;
+const DEFAULT_TIMEOUT_MS = LAB.llm.timeoutMs; // one owner; llm-client reads the same home
 
 function errored() {
   return { text: '', inputTokens: 0, outputTokens: 0, finishReason: 'error' };

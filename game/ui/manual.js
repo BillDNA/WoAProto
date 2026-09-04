@@ -26,6 +26,10 @@
    scale-tuned line widths + the manual's own overlays (glow halos, ghost ✕,
    support rings, A-vs-D pill) stay local. */
 var MP_S = 34; // mini hex radius (live board: S = 44)
+// the mini-board's own scale-tuned line weights (board-primitives keeps mini-boards
+// local by design). Named here so the glow/ghost widths are read by name, not re-typed.
+var MP_GLOW_SW = { side:11, trench:10 }; // attention-halo widths (.medge-glow)
+var MP_GHOST_SW = 2.5;                   // the ✕ struck over a fallen unit / HQ
 
 function mpXY(k){ return hexXY(k, MP_S); }
 function mpViewBox(hexList){ return viewBoxFor(hexList, MP_S); }
@@ -111,7 +115,7 @@ function mpDrawFrame(f){
     var parts = sk.split('>'), c = mpXY(parts[0]), aa = cornerAngles(+parts[1]);
     var p1 = cornerPt(c[0],c[1],aa[0],MP_S*0.85), p2 = cornerPt(c[0],c[1],aa[1],MP_S*0.85);
     svg.appendChild(svgEl('line', { x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
-      stroke:'#e8c252','stroke-width':11,'stroke-linecap':'round','class':'medge-glow' }));
+      stroke:'var(--gold-glow)','stroke-width':MP_GLOW_SW.side,'stroke-linecap':'round','class':'medge-glow' }));
   });
   if (f.glowTrench){
     var gc = mpXY(f.glowTrench.hex);
@@ -119,7 +123,7 @@ function mpDrawFrame(f){
       var aa = cornerAngles(d);
       var p1 = cornerPt(gc[0],gc[1],aa[0],MP_S*0.74), p2 = cornerPt(gc[0],gc[1],aa[1],MP_S*0.74);
       svg.appendChild(svgEl('line', { x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
-        stroke:'#e8c252','stroke-width':10,'stroke-linecap':'round','class':'medge-glow' }));
+        stroke:'var(--gold-glow)','stroke-width':MP_GLOW_SW.trench,'stroke-linecap':'round','class':'medge-glow' }));
     });
   }
 
@@ -184,8 +188,8 @@ function mpDrawUnit(svg, hex, u, ghost){
   // same token as the live board, at MP_S sizes (see bpUnitToken)
   bpUnitToken(g, xy[0], xy[1], u.owner, u.type, { r:MP_S*0.5, circSW:2, chitHW:10, chitHH:7, chitSW:1.2, glyphSW:1.7, artR:3.6 });
   if (ghost){ // fallen: the ✕ over the counter
-    g.appendChild(svgEl('line',{x1:xy[0]-12,y1:xy[1]-12,x2:xy[0]+12,y2:xy[1]+12,stroke:BOARD.outline,'stroke-width':2.5}));
-    g.appendChild(svgEl('line',{x1:xy[0]-12,y1:xy[1]+12,x2:xy[0]+12,y2:xy[1]-12,stroke:BOARD.outline,'stroke-width':2.5}));
+    g.appendChild(svgEl('line',{x1:xy[0]-12,y1:xy[1]-12,x2:xy[0]+12,y2:xy[1]+12,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));
+    g.appendChild(svgEl('line',{x1:xy[0]-12,y1:xy[1]+12,x2:xy[0]+12,y2:xy[1]-12,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));
   }
   svg.appendChild(g);
 }
@@ -194,8 +198,8 @@ function mpDrawHQ(svg, hex, p, ghost){
   var g = svgEl('g', ghost ? {'class':'mghost'} : {});
   bpHQMarker(g, xy[0], xy[1], p, { rOuter:MP_S*0.62, outerSW:1.6, rInner:MP_S*0.5, brassSW:1.3, starFS:15, starDY:5.5 });
   if (ghost){
-    g.appendChild(svgEl('line',{x1:xy[0]-13,y1:xy[1]-13,x2:xy[0]+13,y2:xy[1]+13,stroke:BOARD.outline,'stroke-width':2.5}));
-    g.appendChild(svgEl('line',{x1:xy[0]-13,y1:xy[1]+13,x2:xy[0]+13,y2:xy[1]-13,stroke:BOARD.outline,'stroke-width':2.5}));
+    g.appendChild(svgEl('line',{x1:xy[0]-13,y1:xy[1]-13,x2:xy[0]+13,y2:xy[1]+13,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));
+    g.appendChild(svgEl('line',{x1:xy[0]-13,y1:xy[1]+13,x2:xy[0]+13,y2:xy[1]-13,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));
   }
   svg.appendChild(g);
 }

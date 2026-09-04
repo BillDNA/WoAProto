@@ -95,6 +95,10 @@ var SIM = require(path.join(__dirname, '..', 'game', 'sim.js'));
 // (game/report-model.js) — one implementation per fact; this file keeps only
 // the run/accumulate/save plumbing.
 var R = require(path.join(__dirname, '..', 'game', 'report-model.js'));
+// The shared parallel-sweep pool (also owns the default worker count) and the
+// dev-lab run defaults (sample count, opponent). Loaded after the engine.
+var sweep = require(path.join(__dirname, 'sweep.js'));
+var LAB = require(path.join(__dirname, 'lab-config.js'));
 
 var balanceScore = R.balanceScore, addAgg = R.addAgg;
 function accFilePath(ver) { return path.join(__dirname, '..', 'logs', 'reports', 'balance', ver, 'accumulated.json'); }
@@ -107,10 +111,9 @@ async function run() {
   var flags = {};
   var mi = argv.indexOf('--mapset');
   if (mi >= 0) { flags.mapset = argv[mi + 1]; argv.splice(mi, 2); }
-  function defaultWorkers() { var os = require('os'); return Math.max(1, (os.availableParallelism ? os.availableParallelism() : 4) - 1); }
   var pi = argv.indexOf('--parallel');
   if (pi >= 0) {
-    flags.parallel = /^\d+$/.test(argv[pi + 1] || '') ? +argv.splice(pi + 1, 1)[0] : defaultWorkers();
+    flags.parallel = /^\d+$/.test(argv[pi + 1] || '') ? +argv.splice(pi + 1, 1)[0] : sweep.defaultWorkers();
     argv.splice(pi, 1);
   }
   ['--stdout', '--quiet', '--fresh', '--once', '--serial'].forEach(function (f) {
@@ -120,14 +123,14 @@ async function run() {
   // no extra flag. --serial forces the in-process path for a throwaway refactor diff / debugging.
   // Report, accumulator AND per-skirmish DB rows stay byte-identical to serial.
   if (flags.serial) flags.parallel = 0;
-  else if (flags.parallel == null) flags.parallel = defaultWorkers();
-  var n = 60, diffs = [], filter = null;
+  else if (flags.parallel == null) flags.parallel = sweep.defaultWorkers();
+  var n = LAB.balanceReport.samplesPerMap, diffs = [], filter = null;
   argv.forEach(function (a) {
     if (/^\d+$/.test(a)) n = Math.max(2, +a);
     else if (E.AI_PRESETS[a]) diffs.push(a);
     else filter = filter ? filter + ' ' + a : a;
   });
-  var dr = diffs[0] || 'hard', db = diffs[1] || dr, diffLabel = dr === db ? dr + ' vs ' + dr : dr + ' vs ' + db;
+  var dr = diffs[0] || LAB.balanceReport.ai, db = diffs[1] || dr, diffLabel = dr === db ? dr + ' vs ' + dr : dr + ' vs ' + db;
   var ver = E.VERSION;
 
   var maps = E.activeMaps(); // the ACTIVE mapset's maps
@@ -195,8 +198,7 @@ async function run() {
   // Parallel work fans across (map, game-batch) units, capped at that count — NOT
   // at map count — so a single map still saturates every core. Report the workers
   // that will actually run (the same planBatches split the pool drains).
-  var sweep = flags.parallel ? require(path.join(__dirname, 'sweep.js')) : null;
-  var workers = sweep ? Math.min(flags.parallel, sweep.planBatches(maps.length, n, flags.parallel).length) : 0;
+  var workers = flags.parallel ? Math.min(flags.parallel, sweep.planBatches(maps.length, n, flags.parallel).length) : 0;
   if (!flags.quiet) process.stderr.write('Simulating ' + n + ' skirmishes/map, ' + diffLabel + ', ' + maps.length + ' maps' +
     (workers ? ' (' + workers + ' worker' + (workers === 1 ? '' : 's') + ')' : '') + ' ');
   var thisRun = {}; // name -> {shape, agg}

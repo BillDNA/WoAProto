@@ -108,7 +108,7 @@ function renderHighlights(g){
       pairs.forEach(function(pr){
         var segs = pr.map(function(d){ return bpTrenchGhost(g, ui.sel, d); });
         var knob = bpTrenchKnob(g, ui.sel, pr[0]);
-        knob.style.animation = 'pulse 1.1s infinite';
+        knob.classList.add('pulse'); // duration reads the --dur-pulse token
         knob.addEventListener('mouseenter', function(){
           segs.forEach(function(s2){ s2.setAttribute('opacity','1'); s2.removeAttribute('stroke-dasharray'); });
         });

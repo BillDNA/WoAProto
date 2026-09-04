@@ -130,7 +130,7 @@
     return st;
   }
   function copyReserves() {
-    var r = { trench: I.TRENCH_COUNT };
+    var r = { trench: I.CONFIG.trenchCount };
     Object.keys(I.UNITS).forEach(function (t) { r[t] = I.UNITS[t].count || 0; });
     return r;
   }
@@ -171,9 +171,9 @@
       st.flow.firstTurnDone[p] = true;
       hand.push(sideReg(st, p).starting);
     }
-    var want = first ? 3 : 4;
+    var want = first ? I.CONFIG.skirmish.handDraw.opener : I.CONFIG.skirmish.handDraw.normal;
     var total = st.cards.decks[p].length + st.cards.discards[p].length;
-    if (total <= (first ? 4 : 5)) want = total; // 5 or fewer remain: draw all
+    if (total <= want + 1) want = total; // one more than a full draw remains: draw the lot, strand none
     var held = [];
     if (first) { // house rule: cards flagged noOpener (e.g. Airdrop) never open
       for (var hi = st.cards.decks[p].length - 1; hi >= 0; hi--) {
@@ -232,7 +232,7 @@
     m.lastLoser = I.other(winner);
     m.skirmishIndex++;
     m.seed = st.seed;
-    if (m.wins[winner] >= 3) { m.winner = winner; }
+    if (m.wins[winner] >= I.CONFIG.skirmish.matchTarget) { m.winner = winner; }
     log(st, I.cap(winner) + ' wins the skirmish by ' + (how === 'hq' ? 'capturing the headquarters!' :
       how === 'concession' ? 'concession.' :
       'attrition (field score ' + fieldScore(st, 'red') + ' vs ' + fieldScore(st, 'blue') + ', surviving units).'));

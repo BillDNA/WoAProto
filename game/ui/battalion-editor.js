@@ -114,7 +114,7 @@ function battalionProblems(cards){
   // army-points budget ceiling — the fairness constraint that lets two
   // asymmetric battalions be called "matched". Same reject-on-validate as the size band.
   var pts = E.battalionPoints({ cards: cards });
-  if (pts > E.BATTALION_POINTS_CAP) probs.push('the battalion is over the army-points budget (' + pts + ' > ' + E.BATTALION_POINTS_CAP + ') — cut a card or a step');
+  if (pts > E.CONFIG.pointsCap) probs.push('the battalion is over the army-points budget (' + pts + ' > ' + E.CONFIG.pointsCap + ') — cut a card or a step');
   return probs;
 }
 
@@ -281,7 +281,7 @@ function renderSteps(c){
     row.querySelector('.ds-del').onclick = function(){ c.steps.splice(si, 1); renderSteps(c); dkStatus(); };
     host.appendChild(row);
   });
-  if (!c.steps.length) host.innerHTML = '<p class="small" style="color:#8a3324;margin:2px 0;">A card needs at least one step.</p>';
+  if (!c.steps.length) host.innerHTML = '<p class="small" style="color:var(--warn);margin:2px 0;">A card needs at least one step.</p>';
 }
 function dkStatus(){
   var inCards = DK.cards.filter(function(c){ return !c.out; });
@@ -295,9 +295,9 @@ function dkStatus(){
   // live army-points readouts — exported engine functions only, no second source.
   // dkPts trims float noise (combo exponent may become fractional) while keeping .5 surcharges.
   var pts = E.battalionPoints({ cards: inCards });
-  var over = pts > E.BATTALION_POINTS_CAP;
+  var over = pts > E.CONFIG.pointsCap;
   $('dkListFoot').innerHTML = inCards.length + ' cards &middot; <b>' + total + '</b> copies (target ' + UI_CONFIG.battalionBand.min + '-' + UI_CONFIG.battalionBand.max + ')' +
-    ' &middot; <span class="dkpts' + (over ? ' over' : '') + '"><b>' + dkPts(pts) + '</b>&thinsp;/&thinsp;' + E.BATTALION_POINTS_CAP + ' pts</span>';
+    ' &middot; <span class="dkpts' + (over ? ' over' : '') + '"><b>' + dkPts(pts) + '</b>&thinsp;/&thinsp;' + E.CONFIG.pointsCap + ' pts</span>';
   var ptsEl = $('dkCardPts'), c = DK.cards[DK.sel]; // selected card's own cost, while authoring
   if (ptsEl && c){
     var cp = E.cardPoints(c), n = (+c.count >= 1) ? Math.floor(+c.count) : 1;
