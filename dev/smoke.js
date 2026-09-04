@@ -567,7 +567,7 @@ realSetTimeout(function () {
       // without changing the card count (isolates the points gate from the size band).
       var overPts = JSON.parse(JSON.stringify(win.Engine.CARDS));
       overPts.forEach(function (c) { if (!c.starting) c.steps = [{ type: 'deploy', unit: 'artillery' }, { type: 'attack', mod: 5, tieSpare: true, anywhere: true }]; });
-      assert.ok(win.Engine.battalionPoints({ cards: overPts.filter(function (c) { return !c.out; }) }) > win.Engine.BATTALION_POINTS_CAP &&
+      assert.ok(win.Engine.battalionPoints({ cards: overPts.filter(function (c) { return !c.out; }) }) > win.Engine.CONFIG.pointsCap &&
          win.battalionProblems(overPts).some(function (p) { return /over the army-points budget/.test(p); }), 'over-budget battalion refused by the points gate');
       // five battalion slots, exactly one active
       assert.ok(doc.querySelectorAll('#dkSlots .dkslot[data-slot]').length === 5, 'five battalion slots offered');

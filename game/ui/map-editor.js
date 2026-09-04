@@ -242,12 +242,12 @@ function renderEdStock(){
     lens.forEach(function(l){ cnt[l] = (cnt[l]||0)+1; });
     return Object.keys(cnt).sort().map(function(l){ return cnt[l]+'&times;len'+l; }).join(', ');
   }
-  var stockNote = Object.keys(E.TERRAIN_STOCK).map(function(k){ return E.TERRAIN_STOCK[k]+'&times;len'+k.slice(1)+' '+(k[0]==='F'?'forest':k[0]==='R'?'river':'mountain'); }).join(', ');
+  var stockNote = Object.keys(E.CONFIG.terrainStock).map(function(k){ return E.CONFIG.terrainStock[k]+'&times;len'+k.slice(1)+' '+(k[0]==='F'?'forest':k[0]==='R'?'river':'mountain'); }).join(', ');
   $('edStock').innerHTML = (ED.hexes ? '<b>'+Object.keys(ED.hexes).length+'/'+E.CONFIG.mapHexCeiling+' hexes</b> &nbsp;|&nbsp; ' : '') +
     'Forest pieces: '+summary('F')+' &nbsp;|&nbsp; Mountain pieces: '+summary('M')+' &nbsp;|&nbsp; River pieces: '+summary('R')+
     ' <span class="small">(physical stock: '+stockNote+')</span>';
   var over = pieces.some(function(p){
-    var cap = E.TERRAIN_STOCK[p.t + p.edges.length];
+    var cap = E.CONFIG.terrainStock[p.t + p.edges.length];
     if (cap === undefined) return true; // no physical piece of this size
     return pieces.filter(function(o){ return o.t===p.t && o.edges.length===p.edges.length; }).length > cap;
   });

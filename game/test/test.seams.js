@@ -12,11 +12,11 @@ const assert = require('node:assert');
 const { E, TESTMAP, testSkirmish } = require('./test.helpers.js');
 
 // The seam: the army-points budget. A battalion's points are COMPUTED (E.battalionPoints, a
-// pure count-weighted fold over E.cardPoints) and one CAP (E.BATTALION_POINTS_CAP)
+// pure count-weighted fold over E.cardPoints) and one CAP (E.CONFIG.pointsCap)
 // gates them — the same reject the battalion editor makes on an over-budget battalion.
 test('seam: the army-points cap is a settable, enforced limit', () => {
-  const cap = E.BATTALION_POINTS_CAP;
-  assert.ok(typeof cap === 'number' && cap > 0, 'a positive cap is set (E.BATTALION_POINTS_CAP)');
+  const cap = E.CONFIG.pointsCap;
+  assert.ok(typeof cap === 'number' && cap > 0, 'a positive cap is set (E.CONFIG.pointsCap)');
 
   // battalionPoints is additive and count-weighted — asserted as a RELATIONSHIP on a
   // synthetic card, so no printed point value is pinned. (Two copies cost twice
@@ -48,22 +48,27 @@ test('seam: the army-points cap is a settable, enforced limit', () => {
     'enforcement tracks the limit it is given (lower the limit below the battalion and the same battalion fails)');
 });
 
-// The seam: the config home. One namespace object (E.CONFIG) owns the
-// rules-facing tunables; the pre-existing flat exports resolve INTO it. Asserted as
-// IDENTITY (one value, two paths), never as a pinned value — retuning a dial reds
-// nothing here, only breaking the aliasing does.
-test('seam: the flat exports are aliases into the config home (one owner)', () => {
+// The seam: the config home is the SOLE owner. One namespace object (E.CONFIG) owns
+// every rules-facing tunable, read by its nested name at each site; the old flat
+// value-exports are gone, so grepping a config name lands on the home and its readers,
+// never a renamed copy. Asserted as ownership + absence, never as a pinned value.
+test('seam: E.CONFIG is the sole owner — no flat value-aliases survive', () => {
   assert.ok(E.CONFIG && typeof E.CONFIG === 'object', 'E.CONFIG is the config namespace');
-  // one value, two access paths — the flat exports resolve into E.CONFIG.
-  assert.ok(E.BATTALION_POINTS_CAP === E.CONFIG.pointsCap, 'BATTALION_POINTS_CAP aliases CONFIG.pointsCap');
-  assert.ok(E.POINTS === E.CONFIG.points, 'POINTS aliases CONFIG.points (same object identity)');
-  assert.ok(E.TERRAIN_STOCK === E.CONFIG.terrainStock, 'TERRAIN_STOCK aliases CONFIG.terrainStock (same object identity)');
-  // the home is the single owner the enforcement reads: the cap the gate uses IS
-  // the value in the home (proven via the alias identity above + the gate below).
-  const bat = { cards: [{ id: 'x', name: 'X', count: 1, steps: [{ type: 'attack' }] }] };
-  const overByHome = E.battalionPoints(bat) > E.CONFIG.pointsCap;
-  const overByExport = E.battalionPoints(bat) > E.BATTALION_POINTS_CAP;
-  assert.ok(overByHome === overByExport, 'the gate reads one owner — home and flat export agree');
+  // the dials live on the home, addressed by their nested name.
+  assert.ok(typeof E.CONFIG.pointsCap === 'number', 'CONFIG.pointsCap owns the army-points cap');
+  assert.ok(E.CONFIG.points && typeof E.CONFIG.points === 'object', 'CONFIG.points owns the weight table');
+  assert.ok(E.CONFIG.terrainStock && typeof E.CONFIG.terrainStock === 'object', 'CONFIG.terrainStock owns the terrain chit counts');
+  assert.ok(typeof E.CONFIG.trenchCount === 'number', 'CONFIG.trenchCount owns the trench piece count');
+  // the retired flat value-exports resolve to nothing — no second path to the same value.
+  assert.strictEqual(E.BATTALION_POINTS_CAP, undefined, 'BATTALION_POINTS_CAP is gone (read E.CONFIG.pointsCap)');
+  assert.strictEqual(E.POINTS, undefined, 'POINTS is gone (read E.CONFIG.points)');
+  assert.strictEqual(E.TERRAIN_STOCK, undefined, 'TERRAIN_STOCK is gone (read E.CONFIG.terrainStock)');
+  assert.strictEqual(E.TRENCH_COUNT, undefined, 'TRENCH_COUNT is gone (read E.CONFIG.trenchCount)');
+  // the enforcement reads that one owner: a battalion built past the home cap is
+  // over budget, tracking the home dial with no second path in play.
+  const perCard = E.cardPoints({ steps: [{ type: 'attack' }] });
+  const over = { cards: [{ id: 'o', name: 'O', count: Math.ceil(E.CONFIG.pointsCap / perCard) + 2, steps: [{ type: 'attack' }] }] };
+  assert.ok(E.battalionPoints(over) > E.CONFIG.pointsCap, 'the gate reads the home dial (a battalion past CONFIG.pointsCap is over budget)');
 });
 
 // The home maker + the digest contract, asserted as identity + relationships, never a

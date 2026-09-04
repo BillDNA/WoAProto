@@ -2,8 +2,9 @@
 
    Engine-tier config: rules-facing dials as named data, made by the shared
    defineConfigHome helper (attaches the digest getter). Published as I.CONFIG /
-   Engine.CONFIG. Loads FIRST (before 01-core) so 01-core aliases its flat exports
-   into it. Classic script (browser + node), g.WOA_E alias I. UI peer: ui/ui-config.js. */
+   Engine.CONFIG — the SOLE owner of each dial, read by its nested name at every site
+   (no flat value-aliases). Loads FIRST so later parts read I.CONFIG.* directly.
+   Classic script (browser + node), g.WOA_E alias I. UI peer: ui/ui-config.js. */
 (function (global) {
   'use strict';
   var I = global.WOA_E = global.WOA_E || {};
@@ -56,8 +57,10 @@
     terrainStock: CORE.terrainStock || { F3: 2, F2: 4, M3: 2, M2: 4 },
     trenchCount: CORE.trenchCount || 3,
 
-    // Map hex ceiling — the physical board-size guardrail; enforced by validateMaps
-    // AND the map editor, so it homes here where both read one owner.
+    // Map hex-count band — the physical board-size guardrail. Ceiling is the
+    // laser-cutter max, enforced by validateMaps AND the map editor; floor is the
+    // smallest board still worth playing, asserted over the shipped shapes.
+    mapHexFloor: 16,
     mapHexCeiling: 24,
 
     // Player-mat piece total — physical-board guardrail (sibling to mapHexCeiling):
