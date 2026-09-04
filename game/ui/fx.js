@@ -28,7 +28,7 @@ function ghostUnit(hex, unit){
   if (!svg.firstChild || !unit) return;
   var xy = hexXY(hex), sc = BOARD.side(unit.owner);
   var g = svgEl('g',{'class':'fx-ghost'});
-  g.appendChild(svgEl('circle',{cx:xy[0], cy:xy[1], r:BOARD_R.unit, fill:sc.fill, stroke:sc.dark, 'stroke-width':2.5}));
+  g.appendChild(svgEl('circle',{cx:xy[0], cy:xy[1], r:BOARD_R.unit, fill:sc.fill, stroke:sc.dark, 'stroke-width':BOARD_SW.unit}));
   svg.appendChild(g);
   setTimeout(function(){ if (g.parentNode) g.parentNode.removeChild(g); }, 750);
 }
