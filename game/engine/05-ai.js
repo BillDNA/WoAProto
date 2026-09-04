@@ -71,12 +71,13 @@
   }
 
   // AI-side unit valuation — lives in the weight vector so the tuner and
-  // personalities can sweep it; 3/4/5 are the defaults.
+  // personalities can sweep it; the defaults are the unitVal* weights in AI_WEIGHTS.
   var UNIT_VAL_KEY = { infantry: 'unitValInfantry', cavalry: 'unitValCavalry', artillery: 'unitValArtillery' };
   function unitValue(t, w) {
     var k = UNIT_VAL_KEY[t];
     if (k && w && typeof w[k] === 'number') return w[k];
-    return { infantry: 3, cavalry: 4, artillery: 5 }[t] || ((I.UNITS[t] ? I.UNITS[t].worth : 1) + 2);
+    if (k) return I.AI_WEIGHTS[k];
+    return (I.UNITS[t] ? I.UNITS[t].worth : 1) + 2;
   }
 
   // ---- AI personalities are DATA ----
@@ -87,31 +88,9 @@
   // replyWeight tune that reply search. weights override AI_WEIGHTS terms.
   // Extra personalities can be defined in maps.js as an "ai" block — a new AI
   // is a new row of numbers, not new code. easy/normal/hard are presets here.
-  // Guardrails baked in (don't lose them in a new config): the noopPenalty and
-  // antiShuffle weights and the attrition projection are the anti-degeneracy
-  // fixes — zero them and the swap-dance stalemate returns.
-  var AI_WEIGHTS = {
-    attrWin: 500,      // attrition-projection swing at full urgency
-    fsDiff: 8, fsDiffUrgent: 40, // field-score diff, flat + urgency-scaled
-    unitOnBoard: 22, unitReserve: 16, // unitValue multipliers
-    unitValInfantry: 3, unitValCavalry: 4, unitValArtillery: 5, // the AI's own worth-per-unit
-    advance: 2.2,      // pressure toward the enemy HQ (per hex of distance)
-    hqGuard: 4,        // bonus for sitting next to my own HQ
-    enemyDist: 1.6,    // keep enemy units far from my HQ
-    myThreatHQ: 220, myThreatKill: 3,   // my available attacks next step
-    threatHQ: 600, threatKill: 6, threatTie: 2.5, // enemy threats on me
-    trenchHome: 6,     // trenches near my HQ
-    trenchFacing: 3,   // per covered trench edge that faces a LIVE enemy lane
-                       // (enemy unit within 2 of the far hex) — orientation matters
-    noopPenalty: 80,   // dead-turn plans (keep > fallbackBias + reply noise)
-    antiShuffle: 10,   // re-swapping the same pair as last turn
-    fallbackBias: 12,  // mild preference for printed actions over card-burning
-    // Search dial (lives with the weights so personalities/tuner can set it):
-    // when a step has more options than this, keep the top N by cheap static
-    // pre-rank instead of the old RANDOM shuffle+slice(80) — the cap can no
-    // longer discard the best move. Lower = faster + more approximate.
-    shortlist: 40
-  };
+  // The weights + tuning dials are config homes in engine/00a-ai-config.js (guardrails:
+  // never zero noopPenalty / antiShuffle / attrWin in a new personality — they hold off
+  // the swap-dance stalemate). Read below as I.AI_WEIGHTS / I.AI_TUNING at each site.
   var AI_PRESETS = {
     easy:   { noise: 60, breadth: 0 },                                  // greedy + mistakes
     normal: { noise: 0,  breadth: 0 },                                  // greedy
@@ -120,8 +99,8 @@
   Object.keys(I.BUILTIN.ai || {}).forEach(function (n) { AI_PRESETS[n] = I.BUILTIN.ai[n]; });
   function aiConfig(d) {
     var base = (typeof d === 'string' || d === undefined) ? (AI_PRESETS[d] || AI_PRESETS.normal) : d;
-    var cfg = Object.assign({ noise: 0, breadth: 0, replySamples: 2, replyWeight: 0.7 }, base);
-    cfg.w = Object.assign({}, AI_WEIGHTS, base.weights || {});
+    var cfg = Object.assign({}, I.AI_TUNING.defaults, base);
+    cfg.w = Object.assign({}, I.AI_WEIGHTS, base.weights || {});
     return cfg;
   }
 
@@ -130,7 +109,7 @@
     var en = I.other(me);
     var score = 0;
     I.listAttacks(st, en).forEach(function (a) {
-      var res = I.computeAttack(st, Object.assign({}, a, { mod: 1 }));
+      var res = I.computeAttack(st, Object.assign({}, a, { mod: I.AI_TUNING.threatCardMod }));
       var tgt = st.pieces.units[a.to];
       if (res.defenderIsHQ) {
         if (res.outcome !== 'defender') score -= w.threatHQ; // enemy can take our HQ
@@ -152,14 +131,14 @@
       var n = I.neighbor(h, dirs[i]);
       if (!n) continue;
       for (var j = 0; j < enemyHexes.length; j++) {
-        if (I.dist(n, enemyHexes[j]) <= 2) { v++; break; }
+        if (I.dist(n, enemyHexes[j]) <= I.AI_TUNING.laneRange) { v++; break; }
       }
     }
     return v;
   }
 
   function evalState(st, me, w) {
-    w = w || AI_WEIGHTS;
+    w = w || I.AI_WEIGHTS;
     var en = I.other(me);
     if (st.flow.phase === 'skirmish-over') return st.result.skirmishWinner === me ? 1e6 : -1e6;
     var s = 0;
@@ -169,7 +148,7 @@
     // Scoring reads surviving units, not kills.
     var fsMe = I.fieldScore(st, me), fsEn = I.fieldScore(st, en);
     var turnsLeft = Math.min(I.cardsRemaining(st, me), I.cardsRemaining(st, en));
-    var urgency = Math.max(0, 1 - turnsLeft / 12);
+    var urgency = Math.max(0, 1 - turnsLeft / I.AI_TUNING.urgencyWindow);
     var attrWin = fsMe > fsEn || (fsMe === fsEn && st.flow.second === me);
     s += (attrWin ? 1 : -1) * w.attrWin * urgency;
     s += (fsMe - fsEn) * (w.fsDiff + w.fsDiffUrgent * urgency);
@@ -275,7 +254,7 @@
 
   // Greedily resolve the pending card on a cloned state; returns {score, choices}
   function greedyResolve(sim, me, randomness, s, w) {
-    w = w || AI_WEIGHTS;
+    w = w || I.AI_WEIGHTS;
     var choices = [];
     var guard = 0;
     while (sim.flow.phase === 'step' && guard++ < I.CONFIG.limits.stepsPerTurn) {
@@ -296,7 +275,7 @@
         var sim2 = cloneForSim(sim);
         try { I.applyStep(sim2, c); } catch (e) { return; }
         var sc = evalState(sim2, me, w) + (randomness ? I.rnd(s) * randomness : 0);
-        if (c.skip) sc -= 1; // mild bias toward acting
+        if (c.skip) sc -= I.AI_TUNING.skipBias; // mild bias toward acting
         // anti-shuffle: re-swapping the pair I swapped last time is ping-ponging
         if (c.swap && sim.journal.lastSwap && sim.journal.lastSwap[me] === I.swapKey(c.a, c.b)) sc -= w.antiShuffle;
         if (sc > bestScore) { bestScore = sc; best = c; }
@@ -321,7 +300,7 @@
   // legitimately public (deck + hand contents are known, order is not), let
   // them play their best reply, and average over a few sampled hands.
   function sampledReplyScore(endSt, me, s, samples, w) {
-    w = w || AI_WEIGHTS;
+    w = w || I.AI_WEIGHTS;
     if (endSt.flow.phase === 'skirmish-over') return evalState(endSt, me, w);
     var opp = endSt.flow.current;
     var total = 0;
@@ -425,7 +404,7 @@
   // score = evalState of the resulting position (the honest heuristic number).
   function rankChoices(st, opts) {
     opts = opts || {};
-    var k = opts.k || 15;
+    var k = opts.k || I.AI_TUNING.optionCap;
     var w = aiConfig(opts.config).w;
     var me = st.flow.current;
     var eo = enumerateWithOptions(st);
@@ -455,7 +434,6 @@
   I.clone = clone;
   I.cloneForSim = cloneForSim;
   I.unitValue = unitValue;
-  I.AI_WEIGHTS = AI_WEIGHTS;
   I.AI_PRESETS = AI_PRESETS;
   I.aiConfig = aiConfig;
   I.threatScan = threatScan;

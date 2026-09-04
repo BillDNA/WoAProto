@@ -52,3 +52,11 @@ test('both transports reference LAB.llm.timeoutMs — the duplicated literal is 
     assert.ok(src.indexOf('= 180000') < 0, f + ' still hardcodes the timeout literal');
   });
 });
+
+/* ---- the LLM option cap has ONE owner: the engine home, read by claude-plays ---- */
+test('the --k option cap owner is Engine.AI_TUNING.optionCap, not a lab-config copy', function () {
+  assert.strictEqual(LAB.claudePlays.optionCap, undefined, 'lab-config no longer carries an optionCap copy');
+  assert.strictEqual(typeof E.AI_TUNING.optionCap, 'number', 'the engine home owns the option-cap default');
+  const src = fs.readFileSync(path.join(__dirname, 'claude-plays.js'), 'utf8');
+  assert.ok(src.indexOf('E.AI_TUNING.optionCap') >= 0, 'claude-plays defaults --k from the engine home');
+});

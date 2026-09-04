@@ -11,7 +11,9 @@
      · llm           — transport timeout shared by the cold (llm-client) and session
                        (llm-session) call paths; one owner, both reference it.
      · claudePlays   — run defaults for dev/claude-plays.js (a single skirmish or a
-                       first-to-N series); each CLI flag falls back to the value here.
+                       first-to-N series); each CLI flag falls back to the value here,
+                       EXCEPT --k (the option cap), which reads the engine's one owner
+                       Engine.AI_TUNING.optionCap — the rankChoices default lives there.
      · balance       — dev/balance.js run defaults (sweep sample count, opponent, the
                        matchup luck-o-meter sample count).
      · balanceReport — dev/balance-report.js run defaults (its own heavier sample count
@@ -43,8 +45,9 @@ module.exports = defineConfigHome({
     seed: 1234,          // --seed default: the series seed (drives map order + shuffles)
     maxTurns: 60,        // --max-turns default: per-skirmish turn cap (a runaway guard)
     matchTarget: 3,      // --match with no number: first-to-N series target
-    typicalN: 40,        // typicality-baseline sample size for the felt-notes read
-    optionCap: 15        // move-option cap shown to the model before pruning (the `k` knob)
+    typicalN: 40         // typicality-baseline sample size for the felt-notes read
+    // --k option cap is NOT here: its one owner is Engine.AI_TUNING.optionCap (the
+    // rankChoices default), which claude-plays reads directly — no duplicate literal.
   },
 
   balance: {
