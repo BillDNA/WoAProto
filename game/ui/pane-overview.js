@@ -45,7 +45,7 @@ function ovMapDumbbells(rows) {
     var posB = r.scoreB == null ? null : Math.max(0, Math.min(100, r.scoreB / 20 * 100));
     var regressed = posA != null && posB != null && r.scoreB > r.scoreA;
     var improved = posA != null && posB != null && r.scoreB < r.scoreA;
-    var connColor = regressed ? CHART.regress : (improved ? CHART.improve : '#d8caa2');
+    var connColor = regressed ? CHART.regress : (improved ? CHART.improve : CHART.grid);
     var bFill = regressed ? CHART.breach : (improved ? CHART.improveDot : CHART.ink);
     var inner = chDumbbell(posA, posB, CHART.inkSoft, bFill, connColor);
     var valText = (r.scoreA == null ? '—' : WOA_REPORT.f1(r.scoreA)) + ' → ' + (r.scoreB == null ? '—' : WOA_REPORT.f1(r.scoreB));
@@ -70,14 +70,14 @@ function ovPacingMinis(pacing) {
   var NBINS = iv.nbins, nA = iv.nA, nB = iv.nB, maxShare = iv.maxShare;
 
   // ---- deploy interleave: 6-bin histogram over [0,1], A hollow / B solid ----
-  var bars = '<div style="display:flex;gap:6px;align-items:flex-end;height:52px;border-bottom:1.5px solid #b9a878;padding:0 2px;">';
+  var bars = '<div style="display:flex;gap:6px;align-items:flex-end;height:52px;border-bottom:1.5px solid ' + CHART.axis + ';padding:0 2px;">';
   for (var i = 0; i < NBINS; i++) {
     var haH = Math.max(1, Math.round(iv.shareA[i] / maxShare * 46)), hbH = Math.max(1, Math.round(iv.shareB[i] / maxShare * 46));
     bars += '<div style="flex:1;display:flex;gap:2px;align-items:flex-end;height:100%;">' +
       '<div style="flex:1;height:' + (nA ? haH : 0) + 'px;border:1.5px solid ' + CHART.inkSoft + ';box-sizing:border-box;"></div>' +
-      '<div style="flex:1;height:' + (nB ? hbH : 0) + 'px;background:#77582e;"></div></div>';
+      '<div style="flex:1;height:' + (nB ? hbH : 0) + 'px;background:' + CHART.improveDot + ';"></div></div>';
   }
-  bars += '</div><div style="display:flex;justify-content:space-between;font-size:10px;color:#75643f;margin-top:3px;font-style:italic;"><span>all up-front</span><span>all after contact</span></div>';
+  bars += '</div><div style="display:flex;justify-content:space-between;font-size:10px;color:' + CHART.muted + ';margin-top:3px;font-style:italic;"><span>all up-front</span><span>all after contact</span></div>';
   var interMini = '<div class="ov-mini"><h4>deploy interleave <b>' + Math.round(iv.avgA * 100) + '%→' + Math.round(iv.avgB * 100) +
     '%</b></h4>' + bars + '<p class="small" style="margin:6px 0 0;">share of each skirmish&rsquo;s deploys landing before vs after first contact &mdash; A ' +
     nA + ' skirmishes (hollow), B ' + nB + ' (solid)</p></div>';
@@ -113,7 +113,7 @@ function ovRenderBody(el, rowsA, rowsB) {
       '<span><span class="dot" style="background:' + CHART.breach + ';"></span>run B outside ' + temp + '</span>' +
     '</div>' +
     '<div class="ov-grid">' + scoredRows.map(function (row) { return ovBandRowHtml(row, aggA, aggB, temp); }).join('') + '</div>' +
-    '<div style="font-size:11px;font-weight:bold;margin:14px 0 6px;color:#75643f;">Guards <span class="small" style="font-style:italic;">(shaded, not scored)</span></div>' +
+    '<div style="font-size:11px;font-weight:bold;margin:14px 0 6px;color:' + CHART.muted + ';">Guards <span class="small" style="font-style:italic;">(shaded, not scored)</span></div>' +
     '<div class="ov-grid">' + guardRows.map(function (row) { return ovBandRowHtml(row, aggA, aggB, temp); }).join('') + '</div>' +
   '</div>';
   h += '<div class="ov-col-r">' + ovMapDumbbells(model.dumbbells) + ovPacingMinis(model.pacing) + '</div>';

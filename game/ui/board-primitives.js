@@ -17,10 +17,11 @@
    BOARD — so restyling a terrain glyph, a side colour, or the unit token is
    one edit reflected on every board in the game. The mini-boards keep their
    own scale-tuned line widths + editing/animation overlays; only the marks and
-   the palette are shared. Colours
-   that live in CSS stay CSS vars here (var(--forest) etc.); the inline glyph
-   hexes the stylesheet never sees (river current, forest dots, mountain peak,
-   trench, barrage, chit/star/outline ink) are named once in BOARD. */
+   the palette are shared. A colour the stylesheet also paints stays a CSS var
+   here (terrain, sides, brass; the board ink + star + attack red read
+   var(--ink-plate)/var(--star)/var(--attack)); the glyph inks the stylesheet
+   never sees (river current, forest dots, mountain peak, trench, chit) — plus
+   the ghost-hex wash — are named once in BOARD. */
 'use strict';
 
 /* =================== hex geometry (shared) =================== */
@@ -79,6 +80,10 @@ var BOARD_R = { terrain:S*0.85, trench:S*0.74, hqOuter:S*0.62, hqInner:S*0.5, un
 var BOARD_SW = { unit:2.5 }; // unit-token outline — fx.js's fallen-unit ghost mirrors it
 
 /* =================== palette =================== */
+// The board palette: the twin of :root for the board's SVG. A colour the
+// stylesheet also paints lives in :root once and is read here as var(--…)
+// (resolves in an SVG attribute, same as the unit fills). The glyph inks the
+// stylesheet never sees are named once here.
 var BOARD = {
   // terrain strokes live in CSS (the stylesheet themes them); glyph fills don't
   forest:'var(--forest)', river:'var(--river)', mountain:'var(--mountain)',
@@ -86,17 +91,19 @@ var BOARD = {
   // side colours (units + HQ) also from CSS
   red:'var(--red)', redDark:'var(--red-dark)', blue:'var(--blue)', blueDark:'var(--blue-dark)',
   brass:'var(--brass)',
-  outline:'#2b2113',    // the near-black board ink (piece + pill strokes)
+  outline:'var(--ink-plate)',   // the near-black board ink (piece + pill strokes)
   chit:'#ece1c4',       // the unit chit
-  star:'#f0e6cc',       // HQ star + pill text
+  star:'var(--star)',   // HQ star + pill text
   trench:'#5a4326',     // dug-in earthwork
-  barrage:'#c0392b',    // barrage action marks
-  thumbTile:'#d9cca8', thumbTileStroke:'#4a3d26', // maps-screen preview tiles (own look, not the live .hex class)
+  barrage:'var(--attack)',      // barrage action marks
+  thumbTile:'var(--hex)', thumbTileStroke:'var(--hex-stroke)', // maps-screen preview tiles (own look, not the live .hex class)
   // attack-math pill fill by combat outcome (neutral = manual's "no clear side")
   hint:{ attacker:'rgba(58,99,48,.92)', tie:'rgba(138,108,60,.94)', defender:'rgba(111,29,25,.92)', neutral:'rgba(74,61,38,.92)' },
+  // the editor/dig ghost-hex affordance (own board-only wash + gold hover)
+  ghostFill:'rgba(255,255,255,.10)', ghostStroke:'rgba(74,61,38,.5)', ghostHover:'rgba(212,175,55,.28)',
   // fx.js transient support-ring accents (drawn on the live board, not marks)
-  supportAlly:'#d4af37',   // gold — an allied unit whose support counted
-  supportEnemy:'#8ea8be'   // slate — a defender's support that counted
+  supportAlly:'var(--gold)',    // gold — an allied unit whose support counted
+  supportEnemy:'var(--steel)'   // slate — a defender's support that counted
 };
 BOARD.side = function(owner){
   return owner==='red' ? { fill:BOARD.red, dark:BOARD.redDark } : { fill:BOARD.blue, dark:BOARD.blueDark };
@@ -332,7 +339,7 @@ function bpEdgeHitLine(g, hexKey, dir, rad, s){
 // the polygon so the editor wires its own hover/click (fill defined here).
 function bpGhostHex(g, cx, cy, rad){
   var p = svgEl('polygon', { points: hexPoints(cx, cy, rad),
-    fill:'rgba(255,255,255,.10)', stroke:'rgba(74,61,38,.5)', 'stroke-width':1.4, 'stroke-dasharray':'6 5' });
+    fill:BOARD.ghostFill, stroke:BOARD.ghostStroke, 'stroke-width':1.4, 'stroke-dasharray':'6 5' });
   g.appendChild(p);
   return p;
 }

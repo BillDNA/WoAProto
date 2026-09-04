@@ -281,7 +281,7 @@ function renderSteps(c){
     row.querySelector('.ds-del').onclick = function(){ c.steps.splice(si, 1); renderSteps(c); dkStatus(); };
     host.appendChild(row);
   });
-  if (!c.steps.length) host.innerHTML = '<p class="small" style="color:#8a3324;margin:2px 0;">A card needs at least one step.</p>';
+  if (!c.steps.length) host.innerHTML = '<p class="small" style="color:var(--warn);margin:2px 0;">A card needs at least one step.</p>';
 }
 function dkStatus(){
   var inCards = DK.cards.filter(function(c){ return !c.out; });
