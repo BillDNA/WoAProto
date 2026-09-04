@@ -188,6 +188,29 @@ realSetTimeout(function () {
   assert.ok(doc.getElementById('hand').textContent.indexOf(poolOnly.name) >= 0,
     'the pool card renders in the hand by its real name (' + poolOnly.name + ')');
 
+  console.log('== a thrown AI planner surfaces an error, never a fake concede ==');
+  // A planner bug must read AS a bug, not as the AI choosing to yield — a fake
+  // concede would libel the AI as playing badly. maybeAI logs + shows the error
+  // and clears busy; it does NOT concede or fabricate a move.
+  (function () {
+    var errBattle = win.Engine.newBattle({ seed: 9, maps: [win.Engine.MAPS[0]], commanders: { red: 'fortress', blue: 'fortress' } });
+    win.APP.mode = 'ai'; win.APP.diff = 'normal';
+    win.APP.st = win.Engine.newSkirmish(errBattle);
+    var aiSide = win.Engine.view(win.APP.st).current; // whoever moves first
+    win.APP.mySide = win.Engine.other(aiSide);        // human is the OTHER side, so this turn is the AI's
+    win.APP.ui = { sel: null, stage: null, busy: false, handoffPending: false };
+    win.syncCommandersFromState(); win.show('game'); win.renderAll();
+    var realST = win.setTimeout, realPlan = win.Engine.aiPlanTurn;
+    win.setTimeout = function (fn) { try { fn(); } catch (e) {} return 0; }; // run the async driver inline
+    win.Engine.aiPlanTurn = function () { throw new Error('smoke: forced planner failure'); };
+    try { win.maybeAI(); } finally { win.setTimeout = realST; win.Engine.aiPlanTurn = realPlan; }
+    var vErr = win.Engine.view(win.APP.st);
+    assert.ok(!vErr.battle.winner, 'a thrown planner does NOT concede (no fabricated winner)');
+    assert.ok(vErr.current === aiSide, 'the AI turn is not fabricated — the turn stays on the erroring side');
+    assert.ok(win.APP.ui.busy === false, 'busy is cleared so the turn does not sit silently on "thinking…"');
+    assert.ok(/error/i.test(doc.getElementById('promptbar').innerHTML), 'the error is surfaced on-screen AS an error, not a concession');
+  })();
+
   win.SCREENS.campaign.entry(); // hand back to the campaign for the rest of the smoke
 
   doc.getElementById('btnNextBattle').click();

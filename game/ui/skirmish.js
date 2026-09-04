@@ -570,27 +570,33 @@ function maybeAI(){
   if (!aiTurn || v.phase !== 'choose-card') return;
   APP.ui.busy = true;
   renderPrompt();
-  // The AI turn must always resolve — a null/failed plan or a thrown planner
-  // concedes rather than leaving the human frozen on "thinking…".
-  function aiConcede(loser, msg){
-    E.concede(st, loser);
-    toast(msg, 3200);
+  // A planner error is a BUG, not gameplay: surface it loudly (console stack + a
+  // clear on-screen error) instead of masking it as a concession — a fake concede
+  // reads as the AI just playing badly. Clears busy so the turn doesn't sit
+  // silently on "thinking…", but does NOT fabricate a move or a yield.
+  function aiError(err){
+    if (typeof console !== 'undefined' && console.error) console.error('AI turn error (' + v.current + '):', err);
     APP.ui.busy = false;
-    renderAll(); saveLocal();
-    clearIfBattleOver(); showSkirmishOver();
+    var el = $('promptbar');
+    if (el) el.innerHTML = '<span style="color:var(--amber);">&#9888; The enemy AI hit an <b>error</b> and could not take its turn — this is a bug, not a concession. Open the console (F12) for the stack.</span>';
+    toast('&#9888; AI error &mdash; this is a bug, not a concession. See the console (F12).', 6000);
   }
   setTimeout(function(){
     // a beaten general yields rather than playing out a foregone conclusion
     if (E.concedeAdvised(st, v.current)){
-      aiConcede(v.current, capName(v.current)+' <b>concedes the field</b> — the outcome was beyond doubt.');
+      E.concede(st, v.current);
+      toast(capName(v.current)+' <b>concedes the field</b> — the outcome was beyond doubt.', 3200);
+      APP.ui.busy = false;
+      renderAll(); saveLocal();
+      clearIfBattleOver(); showSkirmishOver();
       return;
     }
     var plan;
     try { plan = E.aiPlanTurn(st, APP.diff); }
-    catch(e){ plan = null; }
-    if (!plan){ aiConcede(v.current, capName(v.current)+' <b>concedes the field</b> — no move to make.'); return; }
+    catch(e){ aiError(e); return; }
+    if (!plan){ aiError(new Error('aiPlanTurn returned no plan')); return; }
     try { E.playCard(st, plan.cardId, plan.mode || 'normal'); }
-    catch(e){ aiConcede(v.current, capName(v.current)+' <b>concedes the field</b> — no move to make.'); return; }
+    catch(e){ aiError(e); return; }
     var modeTxt = plan.mode==='attack' ? ' as a direct attack' : plan.mode==='reposition' ? ' as a simple maneuver' : '';
     toast(capName(v.current)+' plays <b>'+cardDef(plan.cardId).name+'</b>'+modeTxt, 2200);
     renderAll();
