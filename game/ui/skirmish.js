@@ -30,16 +30,23 @@ function syncRostersOverlay(){
   var sp = $('rostersBody').querySelector('.spent'); if (sp) sp.onclick = showCards;
 }
 
-function startLocal(mode, mapsOverride, battalionsOverride){
+function startLocal(mode, mapsOverride, battalionsOverride, commandersOverride){
   var pool = mapsOverride || getActiveMaps();
   if (!pool || !pool.length){ toast('No maps are in play! Enable some in Maps &amp; Map Editor.', 3500); return; }
   APP.mode = mode;
-  // battalionsOverride {red,blue} seats asymmetric battalions (the player builder);
-  // absent = both sides share the active battalion (the symmetric default).
-  var battle = E.newBattle(battalionsOverride ? { maps: pool, battalions: battalionsOverride } : { maps: pool });
+  // battalionsOverride/commandersOverride {red,blue} seat the muster picks (asymmetric
+  // battalions + per-side Commanders); absent = the symmetric default / no Commander.
+  var bopts = { maps: pool };
+  if (battalionsOverride) bopts.battalions = battalionsOverride;
+  if (commandersOverride) bopts.commanders = commandersOverride;
+  var battle = E.newBattle(bopts);
   try { APP.st = E.newSkirmish(battle); }
   catch(e){ APP.mode = null; toast('A map in the pool cannot be played: '+e.message+'<br><span class="small">Untick it in Maps &amp; Map Editor.</span>', 5000); return; }
   APP.ui = { sel:null, stage:null, busy:false, handoffPending: mode==='hotseat' };
+  // Seed the Commander panel from the seated engine state — the panel's
+  // commanderFor reads APP.ui.commander, and this is where the real per-side
+  // selection (not the demo fixture) drives it.
+  syncCommandersFromState();
   APP.snap = null;
   show('game');
   renderAll();
@@ -218,7 +225,7 @@ function renderHand(){
   var deal = APP.ui.dealtKey !== dealKey && v.phase==='choose-card';
   if (deal) APP.ui.dealtKey = dealKey;
   hand.forEach(function(cid, i){
-    var c = E.CARD_BY_ID[cid];
+    var c = cardDef(cid);
     var d = document.createElement('div');
     d.className = 'card' + (live ? '' : ' disabled') + (deal ? ' deal' : '');
     if (deal) d.style.animationDelay = (i*60)+'ms';
@@ -264,7 +271,7 @@ function renderPrompt(){
   else if (o.type==='attack') msg = APP.ui.sel ? 'Choose a target' : 'Choose an attacker' + (o.mod ? ' <b>('+(o.mod>0?'+':'')+o.mod+' support)</b>':'') + (o.tieSpare?' <b>(tie spares your unit)</b>':'');
   else if (o.type==='reposition') msg = APP.ui.sel ? 'Move to a gold hex, or swap with a violet unit' : 'Choose a unit to <b>reposition</b>';
   else if (o.type==='barrage') msg = 'Barrage: click <b>any trench</b> or <b>forest</b> on the board to destroy' + (canSkip ? ' — or skip straight to the attack' : '');
-  el.innerHTML = '<b>'+E.CARD_BY_ID[v.pending.cardId].name+'</b>: '+msg+stepTag +
+  el.innerHTML = '<b>'+cardDef(v.pending.cardId).name+'</b>: '+msg+stepTag +
     (canSkip ? '' : ' <span class="small" style="color:var(--amber);">(this order must accomplish at least one action)</span>');
   if (canSkip){
     var sk = document.createElement('button');
@@ -297,6 +304,7 @@ function renderAll(){
     E.setBoard(v.boardShape);
   }
   ensureSnapshot();
+  ensureCommanderRuntime(); // panel derives from st.commanders every render — no seat is ever left un-synced
   commanderTurnSync();
   renderTop(); renderMat('red'); renderMat('blue'); renderBoard(); renderHand(); renderPrompt(); renderLog();
 }
@@ -478,7 +486,7 @@ function showHandoff(){
 // House rule: any card can instead be resolved as a basic attack or a basic reposition.
 function playCardUI(cid){
   var st = APP.st, v = E.view(st);
-  var c = E.CARD_BY_ID[cid];
+  var c = cardDef(cid);
   var side = v.current;
   var canAtk = E.listAttacks(st, side).length > 0;
   var rp = E.listRepositions(st, side);
@@ -563,22 +571,35 @@ function maybeAI(){
   if (!aiTurn || v.phase !== 'choose-card') return;
   APP.ui.busy = true;
   renderPrompt();
+  // A planner error is a BUG, not gameplay: surface it loudly (console stack + a
+  // clear on-screen error) instead of masking it as a concession — a fake concede
+  // reads as the AI just playing badly. Clears busy so the turn doesn't sit
+  // silently on "thinking…", but does NOT fabricate a move or a yield.
+  function aiError(err){
+    if (typeof console !== 'undefined' && console.error) console.error('AI turn error (' + v.current + '):', err);
+    APP.ui.busy = false;
+    var el = $('promptbar');
+    if (el) el.innerHTML = '<span style="color:var(--amber);">&#9888; The enemy AI hit an <b>error</b> and could not take its turn — this is a bug, not a concession. Open the console (F12) for the stack.</span>';
+    toast('&#9888; AI error &mdash; this is a bug, not a concession. See the console (F12).', 6000);
+  }
   setTimeout(function(){
     // a beaten general yields rather than playing out a foregone conclusion
     if (E.concedeAdvised(st, v.current)){
-      var loser = v.current;
-      E.concede(st, loser);
-      toast(capName(loser)+' <b>concedes the field</b> — the outcome was beyond doubt.', 3200);
+      E.concede(st, v.current);
+      toast(capName(v.current)+' <b>concedes the field</b> — the outcome was beyond doubt.', 3200);
       APP.ui.busy = false;
       renderAll(); saveLocal();
       clearIfBattleOver(); showSkirmishOver();
       return;
     }
-    var plan = E.aiPlanTurn(st, APP.diff);
-    if (!plan){ APP.ui.busy=false; return; }
-    E.playCard(st, plan.cardId, plan.mode || 'normal');
+    var plan;
+    try { plan = E.aiPlanTurn(st, APP.diff); }
+    catch(e){ aiError(e); return; }
+    if (!plan){ aiError(new Error('aiPlanTurn returned no plan')); return; }
+    try { E.playCard(st, plan.cardId, plan.mode || 'normal'); }
+    catch(e){ aiError(e); return; }
     var modeTxt = plan.mode==='attack' ? ' as a direct attack' : plan.mode==='reposition' ? ' as a simple maneuver' : '';
-    toast(capName(v.current)+' plays <b>'+E.CARD_BY_ID[plan.cardId].name+'</b>'+modeTxt, 2200);
+    toast(capName(v.current)+' plays <b>'+cardDef(plan.cardId).name+'</b>'+modeTxt, 2200);
     renderAll();
     var i = 0;
     function nextStep(){

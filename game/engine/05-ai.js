@@ -57,15 +57,16 @@
   // read by search), and fsTimeline. __sim marks the state so I.finishSkirmish
   // never fires persistence hooks for search clones.
   function cloneForSim(st) {
-    var m = st.battle, lg = st.journal.log, pl = st.journal.playLog, dl = st.journal.decisionLog, tl = st.journal.fsTimeline, sd = st.cards.sideDecks;
-    // sideDecks registries are immutable for the skirmish (resolved once at
-    // newSkirmish) — strip them out of the deep clone (the byId maps carry the
-    // whole card catalog) and reattach the SAME reference, like battle/log below.
-    st.battle = null; st.journal.log = []; st.journal.playLog = (pl && pl.length) ? [pl[pl.length - 1]] : []; st.journal.decisionLog = []; st.journal.fsTimeline = undefined; st.cards.sideDecks = undefined;
+    var m = st.battle, lg = st.journal.log, pl = st.journal.playLog, dl = st.journal.decisionLog, tl = st.journal.fsTimeline, sd = st.cards.sideDecks, cm = st.commanders;
+    // sideDecks registries + commanders are immutable for the skirmish (resolved
+    // once at newSkirmish) — strip them out of the deep clone and reattach the
+    // SAME reference, like battle/log below.
+    st.battle = null; st.journal.log = []; st.journal.playLog = (pl && pl.length) ? [pl[pl.length - 1]] : []; st.journal.decisionLog = []; st.journal.fsTimeline = undefined; st.cards.sideDecks = undefined; st.commanders = undefined;
     var c = jsonClone(st);
-    st.battle = m; st.journal.log = lg; st.journal.playLog = pl; st.journal.decisionLog = dl; st.journal.fsTimeline = tl; st.cards.sideDecks = sd;
+    st.battle = m; st.journal.log = lg; st.journal.playLog = pl; st.journal.decisionLog = dl; st.journal.fsTimeline = tl; st.cards.sideDecks = sd; st.commanders = cm;
     c.battle = { wins: { red: m.wins.red, blue: m.wins.blue }, skirmishIndex: m.skirmishIndex, mapOrder: m.mapOrder, firstPlayer: m.firstPlayer, winner: null };
     c.cards.sideDecks = sd;
+    if (cm) c.commanders = cm;
     c.__sim = true;
     return c;
   }
@@ -335,8 +336,12 @@
   //          by what the enemy can do back (sampled hands — never peeks at yours)
   function aiPlanTurn(st, personality) {
     var cfg = aiConfig(personality);
-    var w = cfg.w;
     var me = st.flow.current;
+    // The side's Commander weight override merges OVER the personality-blended
+    // AI_WEIGHTS, so the enemy Commander plays its own numbers. The passive-aware
+    // eval comes for free — evalState/threatScan score through computeAttack, which
+    // already reads the Commander's combatMod off the seated st.commanders.
+    var w = I.mergeCommanderWeights(cfg.w, I.sideCommander(st, me));
     var randomness = cfg.noise;
     var s = { seed: (st.seed ^ 0x9e3779b9) | 0 };
     var hand = st.cards.hands[me].slice();

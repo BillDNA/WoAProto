@@ -15,7 +15,7 @@ function read(f) { return fs.readFileSync(path.join(GAME, f), 'utf8'); }
 // window.WOA_CONTENT the same way) plus the core scripts.
 function readContent() {
   var out = '';
-  ['cards', 'battalions', 'maps'].forEach(function (kind) {
+  ['cards', 'battalions', 'maps', 'commanders'].forEach(function (kind) {
     var d = path.join(GAME, 'content', kind);
     fs.readdirSync(d).filter(function (f) { return /\.js$/.test(f); }).sort().forEach(function (f) {
       out += fs.readFileSync(path.join(d, f), 'utf8') + '\n';
@@ -95,9 +95,22 @@ realSetTimeout(function () {
   assert.ok(typeof uiGet === 'function' && uiGet === cfgGet,
     'UI_CONFIG was made by Engine.defineConfigHome (its digest getter IS the shared one)');
 
-  console.log('== muster (player battalion builder) ==');
+  console.log('== choose Commander (pre-muster pick) ==');
   doc.getElementById('btnMuster').click();
-  assert.ok(doc.getElementById('buildBattalionScr').classList.contains('active'), 'Muster opens the player battalion builder');
+  assert.ok(doc.getElementById('pickCommanderScr').classList.contains('active'), 'Muster opens the Commander picker first (before the builder)');
+  var cmdCards = doc.querySelectorAll('#cmdChoices .cmdpick');
+  assert.ok(cmdCards.length === (win.Engine.COMMANDERS.length + 1), 'the picker lists every shipped Commander + None (' + cmdCards.length + ')');
+  var fortressCard = Array.prototype.filter.call(cmdCards, function (b) { return b.dataset.id === 'fortress'; })[0];
+  assert.ok(fortressCard && /defending/.test(fortressCard.textContent), 'the Fortress card shows its defense strength');
+  fortressCard.click();
+  assert.ok(doc.querySelector('#cmdChoices .cmdpick.sel').dataset.id === 'fortress', 'clicking Fortress selects it');
+  assert.ok(win.PICK.commander === 'fortress', 'the pick is carried in PICK.commander');
+  doc.getElementById('cmdContinue').click();
+
+  console.log('== muster (player battalion builder) ==');
+  assert.ok(doc.getElementById('buildBattalionScr').classList.contains('active'), 'Continue opens the player battalion builder');
+  assert.ok(/Your Commander:/.test(doc.getElementById('pbCommanders').textContent) && /Fortress/.test(doc.getElementById('pbCommanders').textContent),
+    'the muster screen shows the chosen Commander');
   assert.ok(doc.querySelectorAll('#pbPool .pbpool-row').length === win.Engine.CARD_POOL.length,
     'the pool lists every pool card (' + doc.querySelectorAll('#pbPool .pbpool-row').length + ')');
   assert.ok(doc.querySelectorAll('#pbList .pbli').length >= 1, 'the battalion is seeded from the active slot');
@@ -117,15 +130,98 @@ realSetTimeout(function () {
   var pbN = win.pbCount();
   doc.querySelector('#pbPool .pbpool-add').click();
   assert.ok(win.pbCount() === pbN + 1, 'adding a pool card raises the muster count');
-  // the seam March Out threads through: the built battalion + a seated opponent → sideDecks
+  // the seam March Out threads through: the built battalion + a seated opponent →
+  // sideDecks, and the per-side Commander pick → st.commanders (same route).
   var pbBuilt = win.shipCards(win.PB.cards);
   var pbBattle = win.Engine.newBattle({ maps: [win.Engine.MAPS[0]],
-    battalions: { red: { cards: pbBuilt }, blue: (win.PB.opponent && win.PB.opponent.b.id) || null } });
+    battalions: { red: { cards: pbBuilt }, blue: (win.PB.opponent && win.PB.opponent.b.id) || null },
+    commanders: { red: 'fortress', blue: 'none' } });
   var pbSk = win.Engine.newSkirmish(pbBattle);
   assert.ok(pbSk.cards.sideDecks && pbSk.cards.sideDecks.red.cards.length >= 1,
     'the built battalion threads into a real skirmish via sideDecks (asymmetric seat)');
+  assert.ok(pbSk.commanders && win.Engine.sideCommander(pbSk, 'red').id === 'fortress',
+    'the Commander pick threads into the skirmish on the same per-side route');
+  assert.strictEqual(win.Engine.sideCommander(pbSk, 'blue'), null, 'the None seat applies no Commander');
   doc.getElementById('pbBack').click();
-  assert.ok(doc.getElementById('campaignScr').classList.contains('active'), 'Back returns to the campaign');
+  assert.ok(doc.getElementById('pickCommanderScr').classList.contains('active'), 'Back returns to the Commander picker (the step before the builder)');
+  doc.getElementById('cmdBack').click();
+  assert.ok(doc.getElementById('campaignScr').classList.contains('active'), 'Back from the picker returns to the campaign');
+
+  console.log('== full battle with a Commander selected (engine-sourced panel + play to completion) ==');
+  var cbBattle = win.Engine.newBattle({ seed: 4242, maps: [win.Engine.MAPS[4]], commanders: { red: 'fortress', blue: 'fortress' } });
+  win.APP.mode = 'ai'; win.APP.mySide = 'red'; win.APP.diff = 'normal';
+  win.APP.st = win.Engine.newSkirmish(cbBattle);
+  win.APP.ui = { sel: null, stage: null, busy: false, handoffPending: false };
+  win.syncCommandersFromState(); // repoint the panel at the seated Commanders
+  win.show('game'); win.renderAll();
+  ['matRed', 'matBlue'].forEach(function (mid) {
+    var side = mid === 'matRed' ? 'red' : 'blue';
+    var panel = doc.querySelector('#' + mid + ' .cmd-panel');
+    assert.ok(panel && /Fortress/.test(panel.textContent), side + ' mat shows the real Fortress Commander (engine-sourced, not the demo)');
+    assert.ok(doc.querySelector('#' + mid + ' .cmd-trait.weak'), side + ' Fortress panel renders its weakness chip');
+    assert.ok(!doc.querySelector('#' + mid + ' .cmd-btn') && !doc.querySelector('#' + mid + ' .cmd-toggle'),
+      side + ' Fortress is passive-only — no ability button or arm toggle');
+    assert.ok(win.Engine.sideCommander(win.APP.st, side).id === 'fortress', side + ' seat carries Fortress on the live skirmish state');
+  });
+  win.Engine.playToEnd(win.APP.st, { decide: function (s) { return win.Engine.aiPlanTurn(s, 'normal'); } });
+  assert.ok(win.APP.st.flow.phase === 'skirmish-over',
+    'a full battle plays to completion with Fortress seated on both sides (passive-aware AI, weights merge)');
+  win.renderAll();
+
+  // Next-skirmish transition (the "Next Skirmish" button path): a fresh skirmish
+  // off the SAME battle, APP.ui reset with no commander cache — the panel must
+  // survive because renderAll re-derives it from st.commanders, not a forgotten sync.
+  win.APP.st = win.Engine.newSkirmish(cbBattle);
+  win.APP.ui = { sel: null, stage: null, busy: false, handoffPending: false };
+  win.renderAll(); // NOTE: no syncCommandersFromState() here — that is the bug this pins
+  assert.ok(doc.querySelector('#matRed .cmd-panel') && /Fortress/.test(doc.querySelector('#matRed .cmd-panel').textContent),
+    'the Commander panel survives into the next skirmish without an explicit sync (renderAll self-heals)');
+  assert.ok(doc.querySelector('#matBlue .cmd-panel'), 'both mats keep their Commander panel across the skirmish boundary');
+
+  console.log('== mustered/pool card in hand renders (no mid-turn render crash) ==');
+  // Regression: E.CARD_BY_ID indexes only the default battalion, but a mustered or
+  // asymmetric battalion draws from the wider pool. A pool card in the rendered hand
+  // must resolve through cardDef — before, renderHand hit undefined.name and the
+  // crash killed the AI-turn renderAll chain, freezing the game on "thinking…".
+  var poolOnly = (win.Engine.CARD_POOL || []).filter(function (c) { return !win.Engine.CARD_BY_ID[c.id]; })[0];
+  assert.ok(poolOnly, 'the pool carries cards beyond the default battalion (the crash precondition exists)');
+  assert.ok(win.cardDef(poolOnly.id) && win.cardDef(poolOnly.id).name, 'cardDef resolves a pool card outside CARD_BY_ID');
+  assert.ok(win.cardDef('__no_such_card__').name === '__no_such_card__', 'cardDef degrades an unknown id to a placeholder, never undefined');
+  var poolBattle = win.Engine.newBattle({ seed: 77, maps: [win.Engine.MAPS[0]], commanders: { red: 'fortress', blue: 'fortress' } });
+  win.APP.mode = 'ai'; win.APP.mySide = 'red'; win.APP.diff = 'normal';
+  win.APP.st = win.Engine.newSkirmish(poolBattle);
+  win.APP.ui = { sel: null, stage: null, busy: false, handoffPending: false };
+  win.syncCommandersFromState();
+  win.APP.st.cards.hands.red.push(poolOnly.id); // force the pool card into the human's hand
+  win.show('game');
+  assert.doesNotThrow(function () { win.renderAll(); }, 'renderAll does not crash with a pool card in the human hand');
+  assert.ok(doc.getElementById('hand').textContent.indexOf(poolOnly.name) >= 0,
+    'the pool card renders in the hand by its real name (' + poolOnly.name + ')');
+
+  console.log('== a thrown AI planner surfaces an error, never a fake concede ==');
+  // A planner bug must read AS a bug, not as the AI choosing to yield — a fake
+  // concede would libel the AI as playing badly. maybeAI logs + shows the error
+  // and clears busy; it does NOT concede or fabricate a move.
+  (function () {
+    var errBattle = win.Engine.newBattle({ seed: 9, maps: [win.Engine.MAPS[0]], commanders: { red: 'fortress', blue: 'fortress' } });
+    win.APP.mode = 'ai'; win.APP.diff = 'normal';
+    win.APP.st = win.Engine.newSkirmish(errBattle);
+    var aiSide = win.Engine.view(win.APP.st).current; // whoever moves first
+    win.APP.mySide = win.Engine.other(aiSide);        // human is the OTHER side, so this turn is the AI's
+    win.APP.ui = { sel: null, stage: null, busy: false, handoffPending: false };
+    win.syncCommandersFromState(); win.show('game'); win.renderAll();
+    var realST = win.setTimeout, realPlan = win.Engine.aiPlanTurn;
+    win.setTimeout = function (fn) { try { fn(); } catch (e) {} return 0; }; // run the async driver inline
+    win.Engine.aiPlanTurn = function () { throw new Error('smoke: forced planner failure'); };
+    try { win.maybeAI(); } finally { win.setTimeout = realST; win.Engine.aiPlanTurn = realPlan; }
+    var vErr = win.Engine.view(win.APP.st);
+    assert.ok(!vErr.battle.winner, 'a thrown planner does NOT concede (no fabricated winner)');
+    assert.ok(vErr.current === aiSide, 'the AI turn is not fabricated — the turn stays on the erroring side');
+    assert.ok(win.APP.ui.busy === false, 'busy is cleared so the turn does not sit silently on "thinking…"');
+    assert.ok(/error/i.test(doc.getElementById('promptbar').innerHTML), 'the error is surfaced on-screen AS an error, not a concession');
+  })();
+
+  win.SCREENS.campaign.entry(); // hand back to the campaign for the rest of the smoke
 
   doc.getElementById('btnNextBattle').click();
   assert.ok(doc.getElementById('game').classList.contains('active'), 'Quick battle drops into a battle');
@@ -178,7 +274,7 @@ realSetTimeout(function () {
   } else {
     assert.ok(abil.disabled, 'ability button gated off your turn');
   }
-  win.APP.ui.commander = null; // clear the demo; the play-through below is Commander-free
+  win.APP.st.commanders = null; win.APP.ui.commander = null; // clear the demo at the source; the play-through below is Commander-free
   win.renderAll();
   assert.ok(!doc.querySelector('#matRed .cmd-panel'), 'no Commander selected -> no panel (real play is untouched)');
 

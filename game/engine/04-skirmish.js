@@ -25,6 +25,9 @@
       // Per-side battalion selection {red, blue} (each null|battalion|id|name);
       // null = both sides share the active battalion (which instantiates the deck).
       battalions: opts.battalions || null,
+      // Per-side Commander selection {red, blue} (each null|'none'|id|record) —
+      // the same route as battalions; null/absent = neither side has a Commander.
+      commanders: opts.commanders || null,
       winner: null
     };
     battle.seed = s.seed;
@@ -123,6 +126,16 @@
     var dsel = battle.battalions;
     if (dsel && (dsel.red || dsel.blue))
       st.cards.sideDecks = { red: I.resolveBattalion(dsel.red), blue: I.resolveBattalion(dsel.blue) };
+    // Seat per-side Commanders only when a side actually fields one — resolve
+    // first so the 'none'/null baseline (a truthy sentinel included) leaves
+    // st.commanders absent (sideCommander falls back to null), and live/synced/
+    // persisted state never carries a redundant Commander block. Resolved records
+    // are immutable for the skirmish (cloneForSim shares the reference).
+    var csel = battle.commanders;
+    if (csel) {
+      var rcmd = I.resolveCommander(csel.red), bcmd = I.resolveCommander(csel.blue);
+      if (rcmd || bcmd) st.commanders = { red: rcmd, blue: bcmd };
+    }
     st.cards.decks.red = buildDeck(st, 'red');
     st.cards.decks.blue = buildDeck(st, 'blue');
     log(st, 'Skirmish ' + (battle.skirmishIndex + 1) + ' — "' + map.name + '". ' + I.cap(st.flow.current) + ' moves first.');
@@ -172,6 +185,9 @@
       hand.push(sideReg(st, p).starting);
     }
     var want = first ? I.CONFIG.skirmish.handDraw.opener : I.CONFIG.skirmish.handDraw.normal;
+    // Commander passive: a drawMod bends this draw's size (Fortress draws one fewer
+    // on a normal turn). Clamp at zero — a modifier never draws a negative hand.
+    want = Math.max(0, want + I.commanderDrawDelta(I.sideCommander(st, p), first ? 'opener' : 'normal'));
     var total = st.cards.decks[p].length + st.cards.discards[p].length;
     if (total <= want + 1) want = total; // one more than a full draw remains: draw the lot, strand none
     var held = [];

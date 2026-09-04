@@ -82,10 +82,34 @@ function commanderInit(commander){
 function commanderFor(side){
   return (APP.ui && APP.ui.commander && APP.ui.commander[side]) || null;
 }
-// Load a Commander onto a side for this session (selection flow is a later slice).
+// Load a Commander onto a side for this session.
 function commanderSet(side, commander){
   if (!APP.ui.commander) APP.ui.commander = {};
   APP.ui.commander[side] = commanderInit(commander);
+}
+// Keep the panel runtime in step with the seated Commanders (st.commanders) as
+// part of the render, so NO caller (start, resume, join, next skirmish) has to
+// remember a separate sync — one render path, one source of truth. A side is
+// (re)seeded only when the live seat differs from what the panel holds, so trait
+// runtime (cooldowns/charges) survives an ordinary render; a battle/skirmish
+// boundary resets APP.ui (dropping the cache), which reseeds fresh here.
+function ensureCommanderRuntime(){
+  var st = APP.st;
+  if (!st || !st.commanders){ if (APP.ui) APP.ui.commander = null; return; }
+  if (!APP.ui.commander) APP.ui.commander = {};
+  ['red', 'blue'].forEach(function(side){
+    var want = st.commanders[side] || null;
+    var have = APP.ui.commander[side];
+    if (!want){ if (have) APP.ui.commander[side] = null; return; }
+    if (!have || have.commander !== want) commanderSet(side, want); // (re)seed on change only
+  });
+}
+// A hard reset of the panel runtime, then reseed from state — used at a battle
+// start (fresh cooldowns/charges). renderAll's ensureCommanderRuntime keeps it live
+// after; this is only the explicit "wipe trait runtime" entry point.
+function syncCommandersFromState(){
+  APP.ui.commander = null;
+  ensureCommanderRuntime();
 }
 // True when the local human drives this side and may work its controls.
 function commanderInteractive(side){
@@ -219,8 +243,12 @@ var COMMANDER_SAMPLE = {
       name: 'Last Stand', text: 'arm on your turn; the next tied attack resolves in your favour. Once per battle.' }
   ]
 };
-// Put the sample on both sides of the live battle and repaint.
+// Put the sample on both sides of the live battle and repaint. Seats it on
+// st.commanders (the authoritative source renderAll derives from), so the fixture
+// flows through the one render path like a real pick — not a side cache the next
+// render would wipe.
 function commanderDemoLoad(){
+  if (APP.st) APP.st.commanders = { red: COMMANDER_SAMPLE, blue: COMMANDER_SAMPLE };
   commanderSet('red', COMMANDER_SAMPLE);
   commanderSet('blue', COMMANDER_SAMPLE);
   if (APP.st) renderAll();

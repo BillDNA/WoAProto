@@ -98,6 +98,21 @@
   </div>
 </div>
 
+<!-- ============ CHOOSE COMMANDER ============
+     The Commander pick sits BEFORE the battalion builder: a Commander's traits
+     bend a side's rules, so you choose one (or None) and then muster to suit it. -->
+<div id="pickCommanderScr" class="screen">
+  <div class="panel parchment">
+    <h2 style="font-variant:small-caps;text-align:center;">Choose Your Commander</h2>
+    <p class="small" style="text-align:center;">A <b>Commander</b> bends your side&rsquo;s rules with an always-on strength and a real weakness. Pick one &mdash; or <b>None</b> for the plain baseline &mdash; then muster a battalion to suit. Your enemy fields a Commander of their own.</p>
+    <div id="cmdChoices"></div>
+    <div class="ovr-btns">
+      <button id="cmdContinue" class="btn-primary">Continue to Muster</button>
+      <button id="cmdBack" class="ghost btn-ghost-dark">Back</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ MUSTER — player battalion builder ============
      Assemble a battalion from the shared card pool under the army-points cap,
      then march out. Assembly only; authoring a card's steps is the dev editor. -->
@@ -117,6 +132,7 @@
       </div>
     </div>
     <div id="pbWarn" class="warn" style="text-align:left;"></div>
+    <div id="pbCommanders" class="small" style="text-align:center;"></div>
     <div id="pbOpponent" class="small" style="text-align:center;"></div>
     <div class="ovr-btns">
       <button id="pbMarch" class="btn-primary">March Out</button>
@@ -428,6 +444,7 @@ try {
 <script src="engine/01-core.js"></script>
 <script src="engine/02-board.js"></script>
 <script src="engine/03-rules.js"></script>
+<script src="engine/03a-commander-effects.js"></script>
 <script src="engine/04-skirmish.js"></script>
 <script src="engine/05-ai.js"></script>
 <script src="engine/06-drive.js"></script>
@@ -444,6 +461,7 @@ try {
 <script src="ui/fx.js"></script>
 <script src="ui/skirmish.js"></script>
 <script src="ui/commander-panel.js"></script>
+<script src="ui/commander-picker.js"></script>
 <script src="ui/net.js"></script>
 <script src="ui/maps-screen.js"></script>
 <script src="ui/map-editor.js"></script>
