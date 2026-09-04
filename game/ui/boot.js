@@ -430,8 +430,11 @@ $('dashStop').onclick = function(){ DASH.cancel = true; };
 // pill nav (Overview|Maps|Cards|Units|Tables) — per-view state stays on DASH,
 // panes re-render from memory/the fetched runs list. Header run-A/B pickers +
 // temperature selector.
-document.querySelectorAll('#dashPills .dpill').forEach(function(b){
-  b.onclick = function(){ DASH.view = b.dataset.view; renderDash(); };
+// delegated — the pills are built from the pane registry, not written in index.html
+$('dashPills').addEventListener('click', function(e){
+  var b = e.target.closest('.dpill');
+  if (!b) return;
+  DASH.view = b.dataset.view; renderDash();
 });
 $('dashTemp').onchange = function(){ DASH.temperature = this.value; renderDash(); };
 $('dashRunA').onchange = function(){ DASH.runA = this.value ? +this.value : null; renderDash(); };

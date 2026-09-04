@@ -400,12 +400,20 @@ realSetTimeout(function () {
         assert.ok(doc.getElementById('dashRunA').disabled && doc.getElementById('dashRunA').options[0].textContent === 'No runs yet',
           'no saved runs — run pickers show the "No runs yet" fallback');
       }, 0);
-      assert.ok(doc.querySelectorAll('#dashPills .dpill').length === 6, 'six pills: Overview | Maps | Cards | Units | Cross-cuts | Tables');
+      // the mechanism, not the roster: one pill per registered pane, in
+      // registration order, each with the mount the factory named for it.
+      assert.ok(win.DASH_PANES.length >= 2, 'panes registered');
+      assert.strictEqual(
+        [].map.call(doc.querySelectorAll('#dashPills .dpill'), function (b) { return b.dataset.view; }).join(' | '),
+        [].map.call(win.DASH_PANES, function (p) { return p.id; }).join(' | '),
+        'the pill nav is built from the pane registry, in registration order');
+      assert.ok(win.DASH_PANES.every(function (p) { return doc.getElementById(p.mount); }),
+        'every registered pane has the mount element the factory named');
       assert.ok(doc.querySelector('#dashPills .dpill[data-view="tables"]').classList.contains('sel'), 'Tables is the selected pill');
       assert.ok(doc.getElementById('dashRunControls').style.display !== 'none', 'Run/Save controls visible on Tables');
       doc.querySelector('#dashPills .dpill[data-view="overview"]').click();
       assert.ok(win.DASH.view === 'overview', 'clicking Overview switches DASH.view');
-      assert.ok(doc.getElementById('dashRunControls').style.display === 'none' && doc.getElementById('dashOut').style.display === 'none',
+      assert.ok(doc.getElementById('dashRunControls').style.display === 'none' && doc.getElementById('dashPaneTables').style.display === 'none',
         'Run/Save + the Tables output hide outside Tables (charts context is view-only)');
       assert.ok(doc.getElementById('dashPaneOverview').style.display !== 'none' &&
          /no saved runs yet/i.test(doc.getElementById('dashPaneOverview').textContent),
@@ -426,7 +434,7 @@ realSetTimeout(function () {
       assert.ok(win.DASH.temperature === 'T2', 'temperature selector writes DASH.temperature');
       doc.querySelector('#dashPills .dpill[data-view="tables"]').click();
       assert.ok(win.DASH.view === 'tables' && doc.getElementById('dashRunControls').style.display !== 'none' &&
-         doc.getElementById('dashOut').style.display !== 'none',
+         doc.getElementById('dashPaneTables').style.display !== 'none',
         'back on Tables: run controls + output reappear');
 
       doc.getElementById('dashN').value = '20';
@@ -436,9 +444,9 @@ realSetTimeout(function () {
       (function waitDash() {
         if (!win.DASH.running && win.DASH.results.length) {
           assert.ok(win.DASH.results.length === 1, 'dashboard run finished on the chosen map');
-          assert.ok(doc.querySelectorAll('#dashOut table').length === 2, 'map table + card report rendered');
-          assert.ok(doc.querySelectorAll('#dashOut th.sortable').length > 10, 'columns are sortable');
-          var dashTxt = doc.getElementById('dashOut').textContent;
+          assert.ok(doc.querySelectorAll('#dashPaneTables table').length === 2, 'map table + card report rendered');
+          assert.ok(doc.querySelectorAll('#dashPaneTables th.sortable').length > 10, 'columns are sortable');
+          var dashTxt = doc.getElementById('dashPaneTables').textContent;
           assert.ok(/Aggression/.test(dashTxt) && /Decisiveness/.test(dashTxt), 'behaviour + decisiveness metrics shown');
           // dashboard numbers must equal the CLI's: same fold, same seeds.
           // balanceMap is the sim layer (WOA_SIM), separate from the engine.
@@ -446,9 +454,9 @@ realSetTimeout(function () {
           var gui = win.DASH.results[0].out;
           assert.ok(cli.redWins === gui.redWins && cli.turns === gui.turns && cli.attacks === gui.attacks,
             'GUI and CLI agree exactly (red ' + gui.redWins + '/' + cli.redWins + ', turns ' + gui.turns + '/' + cli.turns + ')');
-          var th = doc.querySelector('#dashOut th[data-key="red"]');
+          var th = doc.querySelector('#dashPaneTables th[data-key="red"]');
           th.dispatchEvent(new win.Event('click', { bubbles: true }));
-          assert.ok(doc.querySelector('#dashOut th.sorted'), 'clicking a header sorts');
+          assert.ok(doc.querySelector('#dashPaneTables th.sorted'), 'clicking a header sorts');
           // save-report builder produces a full markdown report
           var rpt = win.dashReportMarkdown();
           assert.ok(doc.getElementById('dashSave') && /## Maps/.test(rpt) && /## Card report/.test(rpt) && /Drag \| Swings/.test(rpt),
@@ -464,7 +472,7 @@ realSetTimeout(function () {
           console.log('== view-only panes: pill switch keeps the last run in memory ==');
           doc.querySelector('#dashPills .dpill[data-view="maps"]').click();
           assert.ok(win.DASH.view === 'maps', 'Maps pill selected');
-          assert.ok(doc.getElementById('dashRunControls').style.display === 'none' && doc.getElementById('dashOut').style.display === 'none',
+          assert.ok(doc.getElementById('dashRunControls').style.display === 'none' && doc.getElementById('dashPaneTables').style.display === 'none',
             'Run/Save + the Tables table hide on the Maps pane');
           var mapsTxt = doc.getElementById('dashPaneMaps').textContent;
           assert.ok(/no saved runs yet/i.test(mapsTxt),
@@ -474,8 +482,8 @@ realSetTimeout(function () {
              doc.getElementById('dashPaneMaps').style.display === 'none',
             'Cards pill shows its own pane and hides Maps');
           doc.querySelector('#dashPills .dpill[data-view="tables"]').click();
-          assert.ok(doc.querySelectorAll('#dashOut table').length === 2, 'back on Tables: map table + card report still render');
-          assert.ok(doc.querySelector('#dashOut th.sorted'), 'sort state survived the pill round-trip');
+          assert.ok(doc.querySelectorAll('#dashPaneTables table').length === 2, 'back on Tables: map table + card report still render');
+          assert.ok(doc.querySelector('#dashPaneTables th.sorted'), 'sort state survived the pill round-trip');
           return overviewSmoke(startWatch);
         }
         if ((dw += 100) > 60000) { assert.ok(false, 'dashboard run never finished'); return startWatch(); }

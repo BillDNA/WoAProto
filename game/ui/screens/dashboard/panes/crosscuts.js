@@ -260,3 +260,6 @@ function renderCrosscuts(el) {
     var parts = slice.value.split('|'); cc.version = parts[0] || ''; cc.config = parts[1] || ''; ccReload();
   };
 }
+
+// Cross-cuts slices the WHOLE store (GET /api/aggregate), so it needs no run A/B.
+dashPane({ id:'crosscuts', label:'Cross-cuts', needsRuns:false, render: renderCrosscuts });

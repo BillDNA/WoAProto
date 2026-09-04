@@ -305,24 +305,12 @@
       <div class="dash-head-cap small">view-only &middot; reads saved runs from woa.db</div>
     </div>
     <div id="dashNav">
-      <div id="dashPills">
-        <button class="dpill" data-view="overview" type="button">Overview</button>
-        <button class="dpill" data-view="maps" type="button">Maps</button>
-        <button class="dpill" data-view="cards" type="button">Cards</button>
-        <button class="dpill" data-view="units" type="button">Units</button>
-        <button class="dpill" data-view="crosscuts" type="button">Cross-cuts</button>
-        <button class="dpill sel" data-view="tables" type="button">Tables</button>
-      </div>
+      <!-- pills and pane mounts are built from the pane registry (ui/screens/dashboard/pane.js) -->
+      <div id="dashPills"></div>
       <label class="small dash-temp">Temperature
         <select id="dashTemp"><option value="T0">T0</option><option value="T1">T1</option><option value="T2">T2</option></select>
       </label>
     </div>
-
-    <div id="dashPaneOverview" class="dash-pane" style="display:none;"></div>
-    <div id="dashPaneMaps" class="dash-pane" style="display:none;"></div>
-    <div id="dashPaneCards" class="dash-pane" style="display:none;"></div>
-    <div id="dashPaneUnits" class="dash-pane" style="display:none;"></div>
-    <div id="dashPaneCrosscuts" class="dash-pane" style="display:none;"></div>
 
     <div id="dashTablesIntro">
       <h2 style="font-variant:small-caps;text-align:center;">Balance Dashboard &mdash; Tables</h2>
@@ -340,7 +328,7 @@
       </div>
       <p class="small" id="dashStatus" style="text-align:center;"></p>
     </div>
-    <div id="dashOut" class="manual"></div>
+    <div id="dashPanes" class="manual"></div>
     <div class="ovr-btns"><button id="dashBack" class="ghost btn-ghost-dark">Back</button></div>
   </div>
 </div>

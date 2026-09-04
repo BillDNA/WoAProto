@@ -2,7 +2,7 @@
    import/export). Classic script, no wrapper — top-level names attach to
    window (see ui/app.js header). Extracted verbatim from index.html's inline
    app script; the maps-screen button wiring lives in ui/boot.js. Balance
-   checks all route to the Balance Dashboard (ui/dashboard.js) — the old
+   checks all route to the Balance Dashboard (ui/screens/dashboard/dashboard.js) — the old
    in-game balance lab was deleted in restructure step 9 so exactly one
    aggregation pipeline (WOA_SIM.balanceNew/balanceAdd) remains. */
 'use strict';

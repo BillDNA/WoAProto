@@ -250,3 +250,5 @@ function renderCards(el) {
   });
   if (!loaded) el.innerHTML = '<p class="small">Loading skirmish rows for run A &amp; B&hellip;</p>';
 }
+
+dashPane({ id:'cards', label:'Cards', needsRuns:true, render: renderCards });
