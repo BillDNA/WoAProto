@@ -135,6 +135,16 @@ function renderBuildBattalion(){
   var probs = battalionProblems(PB.cards);
   $('pbWarn').innerHTML = probs.length ? '&#9888; ' + probs.join('<br>&#9888; ') : '';
 
+  // Commander readout: the pre-muster pick (yours + the enemy's auto-seat), so
+  // the muster screen shows which rules are bent before March Out.
+  var myCmdSel = (typeof PICK !== 'undefined') ? PICK.commander : null;
+  var oppCmdSel = (typeof PICK !== 'undefined') ? PICK.opponent : null;
+  function cmdName(sel){ var c = sel && E.resolveCommander(sel); return (c && c.name) || 'None'; }
+  $('pbCommanders').innerHTML = 'Your Commander: <b>' + uiEsc(cmdName(myCmdSel)) + '</b> ' +
+    '<button id="pbCmdChange" class="linklike" title="go back and choose a different Commander">change</button>' +
+    ' &middot; Enemy Commander: <b>' + uiEsc(cmdName(oppCmdSel)) + '</b>';
+  if ($('pbCmdChange')) $('pbCmdChange').onclick = function(){ SCREENS.pickcommander.entry(); };
+
   // opponent (prioritized-random seat)
   var opp = PB.opponent;
   $('pbOpponent').innerHTML = opp
@@ -154,5 +164,7 @@ function pbMarchOut(){
   var battalions = {};
   battalions[mySide] = { name: 'Your Battalion', cards: shipCards(PB.cards) };
   battalions[E.other(mySide)] = (PB.opponent && PB.opponent.b) ? PB.opponent.b.id : null;
-  startLocal('ai', undefined, battalions);
+  // The Commander pick made on the pre-muster screen rides out on the same seat.
+  var commanders = (typeof pickedCommanders === 'function') ? pickedCommanders(mySide) : null;
+  startLocal('ai', undefined, battalions, commanders);
 }

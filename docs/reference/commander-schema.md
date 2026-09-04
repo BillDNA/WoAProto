@@ -1,10 +1,25 @@
-# Commander schema — the rendering contract
+# Commander schema
 
-The shape the Commander UI panel (`game/ui/commander-panel.js`, drawn inside
-`renderMat`) reads. A Commander loaded onto a side renders as a compact identity
-header plus one chip per trait; whoever supplies Commanders — the sample fixture
-here, or a later content/selection slice — builds them to this shape so the panel
-renders them unchanged.
+The shape a Commander is authored, selected, applied, and rendered against. A
+Commander is a content kind (`content/commanders/*.js`, resolved by
+`Engine.resolveCommander` the way a battalion is) that a player picks for their
+side before mustering; the enemy seat carries one too. The UI panel
+(`game/ui/commander-panel.js`, drawn inside `renderMat`) renders it as a compact
+identity header plus one chip per trait.
+
+## Selection → application → render
+
+- **Select** — the picker (before the battalion builder) sets a per-side
+  `commanders: {red, blue}` selection (each `null`/`'none'`/id), carried
+  `newBattle` → `newSkirmish` exactly as `battalions` is; `newSkirmish` seats
+  the resolved records on `st.commanders`.
+- **Apply** — traits compile to source-agnostic effect primitives applied at the
+  built-in modifier sites: `combatMod` at combat resolution
+  (`computeAttack`), `drawMod` at the draw hook (`drawHand`). The AI plays them
+  for free — its eval scores through `computeAttack` — and merges a Commander's
+  inline `weights` over `AI_WEIGHTS`.
+- **Render** — the panel reads the per-side runtime via `commanderFor`, seeded
+  from `st.commanders` by `syncCommandersFromState` when a battle starts/resumes.
 
 ## Commander
 
@@ -61,6 +76,8 @@ separate from the authored Commander:
   armed }    // pre-armed reactive is live
 ```
 
-This slice owns the runtime in the UI so the components are drivable against the
-sample fixture. `commanderFor` is the seam: a later slice repoints it at
-engine-sourced trait state without changing the components above it.
+`commanderFor` is the seam between the panel and its source:
+`syncCommandersFromState` seeds it from the engine-sourced `st.commanders` on
+battle start/resume, so the panel renders the real per-side selection. The demo
+fixture (`?commanders=demo`) still drives the same seam for exercising every
+render path.

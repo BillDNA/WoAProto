@@ -275,7 +275,16 @@ A named heuristic weight-set that gives the bot a *character* — a playstyle th
 _Avoid_: Difficulty (a personality is a style, not a strength tier), Bot.
 _Home_: `game/engine/05-ai.js` — `AI_PRESETS`
 
+**Commander**:
+A first-class content kind (`content/commanders/*.js`, resolved per side the way a Battalion is) a player picks for their side before mustering — and the enemy seat carries too. Bundles an identity/story (reserved), a traits list (its strengths + a real weakness), and an inline AI weights override. Selected before the battalion builder; `null`/`'none'` is the plain baseline. Adding one is a content edit, not engine code.
+_Home_: `game/engine/01-core.js` — `resolveCommander`
+
 **Commander trait**:
-A run-layer ability that *bends the rules* for a side (a guaranteed opening Card, altered stocks, a rules exception). Belongs to the Campaign layer, not yet in code. Distinct from an AI personality — a rule-bender, not a playstyle — though a Commander's theme may guide the personality of the AI that pilots it.
+One ability a Commander carries — an effect primitive plus a source (`passive` today; `cooldown`/`charge` later) and a role (`strength`|`weakness`). A trait *bends a side's rules* (Fortress: +1 defense in forest/mountain; a normal-draw weakness). Distinct from an AI personality — a rule-bender, not a playstyle — though a Commander's theme may guide the personality of the AI that pilots it.
 _Avoid_: Perk, buff.
-_Home_: none yet — Campaign layer, not in code.
+_Home_: `game/content/commanders/fortress.js` — `traits`
+
+**Effect primitive**:
+The small, *source-agnostic* vocabulary a trait compiles to (`combatMod`, `drawMod`, …) — read by primitive + params, never by where the effect came from, so a later map point-of-interest can grant the same effect from a hex without a rewrite. Applied at the built-in modifier sites (combat resolution, the draw hook).
+_Avoid_: Effect (too broad — say effect primitive), rule-bender (that's the trait).
+_Home_: `game/engine/03a-commander-effects.js` — `commanderCombat`

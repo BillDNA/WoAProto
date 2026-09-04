@@ -82,10 +82,22 @@ function commanderInit(commander){
 function commanderFor(side){
   return (APP.ui && APP.ui.commander && APP.ui.commander[side]) || null;
 }
-// Load a Commander onto a side for this session (selection flow is a later slice).
+// Load a Commander onto a side for this session.
 function commanderSet(side, commander){
   if (!APP.ui.commander) APP.ui.commander = {};
   APP.ui.commander[side] = commanderInit(commander);
+}
+// Repoint the panel at engine-sourced selection: seed each side's runtime from
+// the Commander seated on the live skirmish (st.commanders). A side with no
+// Commander (None, or a plain battle) shows no panel. Called once when a battle
+// starts / resumes — not per render, so trait runtime is not clobbered.
+function syncCommandersFromState(){
+  APP.ui.commander = null;
+  var st = APP.st;
+  if (!st || !st.commanders) return;
+  ['red', 'blue'].forEach(function(side){
+    if (st.commanders[side]) commanderSet(side, st.commanders[side]);
+  });
 }
 // True when the local human drives this side and may work its controls.
 function commanderInteractive(side){

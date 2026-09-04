@@ -71,9 +71,11 @@ $('btnSettings').onclick = function(){ SCREENS.settings.entry(); };
 $('btnSettingsBack').onclick = function(){ SCREENS.frontdoor.entry(); };
 $('btnCampaignBack').onclick = function(){ SCREENS.frontdoor.entry(); };
 // Muster: the player battalion builder, on the run flow between campaign and battle
-$('btnMuster').onclick = function(){ SCREENS.buildbattalion.entry(); };
+$('btnMuster').onclick = function(){ SCREENS.pickcommander.entry(); };
+$('cmdContinue').onclick = function(){ SCREENS.buildbattalion.entry(); };
+$('cmdBack').onclick = function(){ SCREENS.campaign.entry(); };
 $('pbMarch').onclick = function(){ pbMarchOut(); };
-$('pbBack').onclick = function(){ SCREENS.campaign.entry(); };
+$('pbBack').onclick = function(){ SCREENS.pickcommander.entry(); };
 $('btnPeekRewards').onclick = function(){ SCREENS.rewards.entry(); };
 $('btnPeekSummary').onclick = function(){ SCREENS.runsummary.entry(); };
 $('btnRewardsBack').onclick = function(){ SCREENS.campaign.entry(); };
@@ -208,6 +210,7 @@ $('btnResume').onclick = function(){
     APP.mode = d.mode; APP.mySide = d.mySide; APP.diff = d.diff; APP.st = d.st;
     $('diffSel').value = d.diff || 'normal';
     APP.ui = { sel:null, stage:null, busy:false, handoffPending: d.mode==='hotseat' };
+    syncCommandersFromState(); // a resumed battle re-seeds the Commander panel from its saved state
     show('game'); renderAll();
     if (E.view(APP.st).phase === 'skirmish-over') showSkirmishOver();
     else if (d.mode==='hotseat') showHandoff();
@@ -236,6 +239,7 @@ $('btnJoin').onclick = function(){
     APP.mode='net'; APP.mySide='blue'; APP.st = d.state;
     APP.net.room = code; APP.net.seq = d.seq;
     APP.ui = { sel:null, stage:null, busy:false };
+    syncCommandersFromState(); // the joined state may seat Commanders — seed the panel from it
     show('game'); renderAll(); startPolling();
     toast('Joined! You are Blue.', 3000);
     if (E.view(APP.st).phase==='skirmish-over') showSkirmishOver();

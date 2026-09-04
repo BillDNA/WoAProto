@@ -212,6 +212,9 @@
     if (st.board.terrainEdges[atkSide] === 'F') { aPow += I.CONFIG.combat.forestAttack; aParts.push('Forest +' + I.CONFIG.combat.forestAttack); }
     var mod = atk.mod || 0;
     if (mod) { aPow += mod; aParts.push('Card ' + (mod > 0 ? '+' : '') + mod); }
+    // Commander passive: an attack-side combatMod, gated by this attack edge's terrain.
+    var aCmd = I.commanderCombat(I.sideCommander(st, p), 'attack', st.board.terrainEdges[atkSide]);
+    aPow += aCmd.delta; aParts = aParts.concat(aCmd.parts);
 
     var du = unitAt(st, atk.to);
     var dHQ = isHQ(st, atk.to);
@@ -221,6 +224,9 @@
     var dsup = supportFor(st, e, atk.to, null, false);
     dPow += dsup.total; dParts = dParts.concat(dsup.parts);
     if (st.board.terrainEdges[defSide] === 'M') { dPow += I.CONFIG.combat.mountainDefense; dParts.push('Mountain +' + I.CONFIG.combat.mountainDefense); }
+    // Commander passive: a defense-side combatMod, gated by the defended edge's terrain.
+    var dCmd = I.commanderCombat(I.sideCommander(st, e), 'defense', st.board.terrainEdges[defSide]);
+    dPow += dCmd.delta; dParts = dParts.concat(dCmd.parts);
     // (trenches no longer add defense — they deny attacker support instead;
     //  the attack itself may always cross a trench or river)
     var outcome = aPow > dPow ? 'attacker' : (dPow > aPow ? 'defender' : 'tie');

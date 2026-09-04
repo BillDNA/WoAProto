@@ -27,10 +27,10 @@
   (function loadContentNode() {
     if (global.WOA_CONTENT) return;                 // browser already populated it
     if (typeof require !== 'function') return;
-    global.WOA_CONTENT = { maps: [], cards: [], battalions: [], mapsets: [], units: [] };
+    global.WOA_CONTENT = { maps: [], cards: [], battalions: [], mapsets: [], units: [], commanders: [] };
     try {
       var fs = require('fs'), path = require('path');
-      var kinds = ['cards', 'battalions', 'maps', 'mapsets', 'units'];
+      var kinds = ['cards', 'battalions', 'maps', 'mapsets', 'units', 'commanders'];
       try { kinds = require('../content/kinds.js'); } catch (e2) { /* kinds.js is the source of truth when present */ }
       kinds.forEach(function (kind) {
         var dir = path.join(__dirname, '..', 'content', kind);
@@ -46,7 +46,7 @@
       if (typeof console !== 'undefined') console.error('WoA content load failed: ' + e.message);
     }
   })();
-  var CONTENT = global.WOA_CONTENT || { maps: [], cards: [], battalions: [], mapsets: [], units: [] };
+  var CONTENT = global.WOA_CONTENT || { maps: [], cards: [], battalions: [], mapsets: [], units: [], commanders: [] };
   // Shared card pool: content/cards/*.js each push one card def (id -> intrinsics:
   // name, text, steps, opener behaviour, a reserved `faction` stub). A battalion
   // references pool cards by id and carries only the battalion-scoped `count`, so the
@@ -169,6 +169,26 @@
     if (!sel.cards || !sel.cards.length) throw new Error('War of Attrition: battalion "' + (sel.id || sel) + '" has no cards');
     return battalionRegistry(hydrateBattalionCards(sel.cards));
   }
+  // Commanders: a content kind (content/commanders/*.js each push one record),
+  // resolved per-side by a SELECTION the same way battalions are — mirroring
+  // resolveBattalion so a Commander is a content edit, not engine code. A record
+  // carries id/name, a reserved story flavor, a traits list (source-agnostic
+  // effect primitives), and an inline AI weights override. null/'none' = the
+  // baseline (no Commander), so both a plain battle and a per-side pick share one path.
+  var COMMANDERS = (CONTENT.commanders || []).slice();
+  var COMMANDER_BY_ID = {};
+  COMMANDERS.forEach(function (c) { COMMANDER_BY_ID[c.id] = c; });
+  function resolveCommander(sel) {
+    if (!sel || sel === 'none') return null;
+    if (typeof sel === 'string') {
+      var found = COMMANDER_BY_ID[sel];
+      if (!found) throw new Error('War of Attrition: no Commander "' + sel + '" (known: ' +
+        (COMMANDERS.map(function (c) { return c.id; }).join(', ') || 'none') + ')');
+      return found;
+    }
+    return sel; // an inline Commander object (tests / a custom pick)
+  }
+
   // one slot per physical piece on the player mat
   var PIECE_TOTALS = { trench: I.CONFIG.trenchCount };
   Object.keys(UNITS).forEach(function (t) { PIECE_TOTALS[t] = UNITS[t].count || 0; });
@@ -220,6 +240,8 @@
   I.DEFAULT_REG = DEFAULT_REG;
   I.battalionRegistry = battalionRegistry;
   I.resolveBattalion = resolveBattalion;
+  I.COMMANDERS = COMMANDERS;
+  I.resolveCommander = resolveCommander;
   I.rnd = rnd;
   I.shuffle = shuffle;
   I.UNITS = UNITS;

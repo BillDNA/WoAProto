@@ -22,7 +22,9 @@ function loadEngine(appliedBattalion) {
   importScripts('maps.js');                 // WOA_BUILTIN (units / shapes / stock / ai rows)
   importScripts('content/manifest.js');     // sets self.WOA_CONTENT_MANIFEST (no document.write here)
   var files = self.WOA_CONTENT_MANIFEST || {};
-  ['cards', 'battalions', 'maps', 'mapsets', 'units'].forEach(function (kind) {
+  // Load every kind the manifest lists (kinds.js is its source of truth), so a
+  // new content kind never leaves a stale hardcoded list behind here.
+  Object.keys(files).forEach(function (kind) {
     (files[kind] || []).forEach(function (f) { importScripts('content/' + kind + '/' + f); });
   });
   // The page already resolved the override (localStorage 'woa-custom-battalion'
