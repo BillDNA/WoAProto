@@ -77,4 +77,8 @@ Alternatives weighed:
   copy, and that the three load-time edges hold; `dev/boot.test.js` L1 asserts the
   page's one tag actually emits the chain.
 - `game/` stays zero-dependency classic scripts. This ADR removes no constraint from
-  ADR-0001; it only stops filenames from carrying the schedule.
+  ADR-0001; it only stops filenames from carrying the schedule. `document.write` is
+  the chain's mechanism, not a fragility awaiting removal.
+- The enforced statement lives in the CLAUDE.md doctrine clause, loaded every
+  session; this ADR is the record — its job is holding the rejected alternatives so
+  they are not re-proposed.

@@ -18,9 +18,8 @@ the features it was meant to protect:
   artifact silently ships with 4 of 5 dashboard panes non-functional. The
   constraint that keeps double-click alive guarantees the double-click build is
   a degraded product.
-- Content loads via `document.write()` in `game/content/manifest.js` — the most
-  fragile mechanism in the codebase — *only* because `file://` has no module
-  loader.
+- Content loads via `document.write()` in `game/content/manifest.js` *only*
+  because `file://` has no module loader.
 - The bare-global UI cross-referencing style (`ui/*` files referencing each
   other by bare name, no wrapper) is a direct consequence of "no modules".
 
@@ -41,17 +40,12 @@ The one guarantee dropped is "zip + double-click `index.html` keeps working".
 
 The engine already proves modularity survives without a bundler and without
 `file://`: `engine/*` parts are IIFE-UMD (`window` in the browser, `require`
-re-export via `game/engine.js` in node). The UI may adopt the same pattern.
+re-export via `game/engine.js` in node).
 
 ## Consequences
 
-- Unblocks: removing `canNet` branching, replacing the `document.write` content
-  loader, and letting UI logic adopt the engine's testable IIFE/`require`
-  pattern. These make the deferred UI refactors (charts.js split; shape↔render
-  seam) materially cheaper.
-- The load-order contract (the `index.html` script chain, mirrored in
-  `dev/smoke.js`) can eventually be simplified rather than guarded by a single
-  assertion.
+- `canNet` branching is removable, and the dashboard panes that need
+  `fetch('/api/battles')` are no longer a degraded second mode.
 - A future architecture review should **not** re-propose keeping `file://`
   support — this decision is deliberate. Reopen only if a genuine no-server
   distribution path reappears (it has no destination today).

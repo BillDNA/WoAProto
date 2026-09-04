@@ -1,6 +1,6 @@
-# ADR-0001 — Un-ready intent lives as `idea`-labeled issues, not a parking-lot doc
+# ADR-0007 — Un-ready intent lives as `idea`-labeled issues, not a parking-lot doc
 
-**Status:** Accepted
+Status: Accepted
 
 ## Context
 
