@@ -410,71 +410,8 @@
   <button id="battalionBadgeReset" class="ghost btn-ghost-dark">[reset]</button>
 </div>
 
-<script src="maps.js"></script>
-<script src="custom-battalion.js"></script>
-<script src="content/manifest.js"></script>
-<script>
-// The map library + card battalions are per-item files under content/.
-// content/manifest.js just above document.write()'d
-// content/battalions/*.js + content/maps/*.js into WOA_CONTENT, synchronously, before
-// this runs. A battalion applied in the Battalion Editor overrides the active content battalion
-// BEFORE the engine snapshots the card list; this browser's saved battalion
-// (localStorage) wins over the shipped custom-battalion.js file. WOA_BATTALION_SRC tells
-// the editor what it is editing.
-// custom-battalion.js ships as a NO-OP (WOA_CUSTOM_BATTALION = null) — a fresh
-// checkout has no override, so this block is a no-op and the game plays the
-// active-flagged battalion in content/battalions/. ui/boot.js shows a badge whenever
-// WOA_APPLIED_BATTALION below ends up non-null (localStorage or a dropped file).
-var WOA_BATTALION_SRC = 'builtin';
-try {
-  window.WOA_CONTENT = window.WOA_CONTENT || { maps: [], cards: [], battalions: [] };
-  var WOA_LOCAL_BATTALION = null;
-  try { WOA_LOCAL_BATTALION = JSON.parse(localStorage.getItem('woa-custom-battalion')); } catch(e){}
-  var WOA_APPLIED_BATTALION = (WOA_LOCAL_BATTALION && WOA_LOCAL_BATTALION.length) ? WOA_LOCAL_BATTALION
-    : (window.WOA_CUSTOM_BATTALION && window.WOA_CUSTOM_BATTALION.length) ? window.WOA_CUSTOM_BATTALION : null;
-  if (WOA_APPLIED_BATTALION){
-    window.WOA_CONTENT.battalions.forEach(function(d){ d.active = false; });
-    window.WOA_CONTENT.battalions.push({ id: '__applied', name: 'Applied battalion', active: true, cards: WOA_APPLIED_BATTALION });
-    WOA_BATTALION_SRC = (WOA_LOCAL_BATTALION && WOA_LOCAL_BATTALION.length) ? 'local' : 'file';
-  }
-} catch(e){}
-</script>
-<script src="engine/00-config.js"></script>
-<script src="engine/00a-ai-config.js"></script>
-<script src="engine/01-core.js"></script>
-<script src="engine/02-board.js"></script>
-<script src="engine/03-rules.js"></script>
-<script src="engine/03a-commander-effects.js"></script>
-<script src="engine/04-skirmish.js"></script>
-<script src="engine/05-ai.js"></script>
-<script src="engine/06-drive.js"></script>
-<script src="engine/07-export.js"></script>
-<script src="sim.js"></script>
-<script src="report-model.js"></script>
-<script src="ui/chart-model.js"></script>
-<script src="ui/app.js"></script>
-<script src="ui/ui-config.js"></script>
-<script src="ui/screens.js"></script>
-<script src="ui/ui-primitives.js"></script>
-<script src="ui/board-primitives.js"></script>
-<script src="ui/board.js"></script>
-<script src="ui/fx.js"></script>
-<script src="ui/skirmish.js"></script>
-<script src="ui/commander-panel.js"></script>
-<script src="ui/commander-picker.js"></script>
-<script src="ui/net.js"></script>
-<script src="ui/maps-screen.js"></script>
-<script src="ui/map-editor.js"></script>
-<script src="ui/battalion-editor.js"></script>
-<script src="ui/build-battalion.js"></script>
-<script src="ui/chart-primitives.js"></script>
-<script src="ui/pane-overview.js"></script>
-<script src="ui/pane-maps.js"></script>
-<script src="ui/pane-cards.js"></script>
-<script src="ui/pane-units.js"></script>
-<script src="ui/pane-crosscuts.js"></script>
-<script src="ui/dashboard.js"></script>
-<script src="ui/manual.js"></script>
-<script src="ui/boot.js"></script>
+<!-- The whole script chain is declared in load-order.js and written from there;
+     this is the only <script src> the page hand-lists. -->
+<script src="load-order.js"></script>
 </body>
 </html>
