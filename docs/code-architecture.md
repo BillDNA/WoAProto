@@ -35,6 +35,10 @@ A digital version of Bill's physical board game **War of Attrition**: a browser 
 
 Every gameplay change goes in the engine, never in the UI. Any card/map/unit/personality/rubric change gets a rubric pass (`docs/rubrics/`) before it's done — a code review can't see a checklist hiding in prose.
 
+## How the code is organised
+
+The words for talking about where code lives. A **concept** is a thing the system has; its **address** is the file, directory or doc it lives at. A **household** is one concept with its own address, earned when something outside needs to call it and nothing outside needs to see inside it. A **lodger** is a concept crammed into another concept's file because a session judged a new home out of scope — the defect. A **dialect** is how one shape is materialised per runtime: `game/` is browser classic scripts, `dev/` is node CommonJS, and a birch and an elm both still read as a tree.
+
 ## Drill-downs
 
 - [[engine-model]] — the rules kernel: board, terrain, trenches, combat, cards, victory, AI, the throwaway refactor diff.

@@ -140,3 +140,25 @@ _Home_: none yet — search-layer concept, not in code.
 **Timing blind spot**:
 The scorer's inability to value a Card whose worth is in when it is held or played.
 _Home_: `docs/rubrics/card-rubric.md` — `Timing blind spot`
+
+## Organising the code
+
+**Concept**:
+A thing the system has.
+_Home_: `docs/code-architecture.md` — `A **concept** is a thing the system has`
+
+**Address**:
+Where a concept lives — its file, its directory, its doc.
+_Home_: `docs/code-architecture.md` — `its **address** is the file`
+
+**Household**:
+One concept with its own address, earned when something outside needs to call it and nothing outside needs to see inside it.
+_Home_: `docs/code-architecture.md` — `A **household** is one concept`
+
+**Lodger**:
+A concept crammed into another concept's file because a session judged a new home out of scope.
+_Home_: `docs/code-architecture.md` — `A **lodger** is a concept crammed`
+
+**Dialect**:
+How one shape is materialised per runtime, so two households can differ in form and still read as the same thing.
+_Home_: `docs/code-architecture.md` — `A **dialect** is how one shape`
