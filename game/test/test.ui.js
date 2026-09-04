@@ -11,7 +11,7 @@
         for a raw SVG element built as a string literal or via createElementNS.
      2. The component spine resolves. Every primitive named in
         docs/reference/context-ui-components.md resolves to a real file:line home with its
-        anchor on that line (the companion of CONTEXT.md's home gate, for UI).
+        anchor on that line (the companion of the address book's home gate, for UI).
 
    Both assert the MECHANISM, never a value: adding a screen, glyph, or mark reds
    nothing as long as it is drawn through a primitive and (if named) homed; only
@@ -105,6 +105,6 @@ test('UI contract: the scanner catches string-built SVG and ignores look-alikes'
   assert.ok(hit(stripComments('var re = /["\\047]/; var svg = "<svg>";')), 'a <svg> after a quote-bearing regex is still detected');
 });
 
-// The spine-doc home pointers (CONTEXT.md + context-ui-components.md) are validated
+// The spine-doc home pointers (docs/context/ + context-ui-components.md) are validated
 // in ONE place — dev/check-context.js (symbol-in-file, line-number-free), with its
 // own tests. This file keeps only the raw-SVG backstop above, its distinct contract.

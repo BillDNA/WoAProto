@@ -12,6 +12,7 @@
 | `balance/` | The Monte-Carlo grading side: target bands, the "best map" score, and the measured baselines to protect. |
 | `rubrics/` | The subjective-fun grading side: one rubric per content kind (card, map, unit, personality, ui) + the rubric-rubric. |
 | `human-instructions/` | Step-by-step runbooks for a human (standard balance runs, authoring Field Manual animations). |
+| `context/` | The concept address book, one page per area. Indexed by the root `CONTEXT.md`. |
 | `agents/` | Conventions for agents working this repo (issue tracker, triage labels, domain docs). |
 | `adr/` | Architecture decision records — the "why we chose this" for settled calls. |
 
@@ -31,4 +32,4 @@
 | `workflow.md` | Build / test / tooling conventions (the server, `npm test`, the balance CLIs). |
 | `code-style.md` | The style guide — what a comment and a doc are allowed to say. |
 
-The domain glossary is the repo-root `CONTEXT.md`.
+The concept address book is the repo-root `CONTEXT.md`, indexing the area pages in `context/`.

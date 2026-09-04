@@ -5,7 +5,7 @@
 `card-cheatsheet.md`, `report-model.md`, …); grading lives in `docs/rubrics/` + `docs/balance/`; the
 rule book sits beside `code-architecture.md`. These are read by the local game skills (`create-card`,
 `create-map`, `run-tournament`, `review-reports`, `generate-reports`, `balance-loop`). `CONTEXT.md` is
-the domain glossary; measured balance baselines live in `docs/balance/balance-baselines.md`.
+the concept address book (area pages in `docs/context/`); measured balance baselines live in `docs/balance/balance-baselines.md`.
 
 ---
 
@@ -15,7 +15,7 @@ the domain glossary; measured balance baselines live in `docs/balance/balance-ba
 
 we are taking a board game prototype and turning it into a playable prototype in the web browser, the goal of this project is to have something that allows me to playtest and rapidly iterate on balance in the game.
 
-Start in [[code-architecture]] (`docs/`) — it is the orientation file for this project and stays current; `CONTEXT.md` is the domain glossary. `game/README.md` is the player-facing manual. [[workflow]] has the build/test conventions.
+Start in [[code-architecture]] (`docs/`) — it is the orientation file for this project and stays current; `CONTEXT.md` is the concept address book. `game/README.md` is the player-facing manual. [[workflow]] has the build/test conventions.
 
 ## Standing goals
 
@@ -56,4 +56,4 @@ The five canonical triage roles map to identically-named labels. See `docs/agent
 
 ### Domain docs
 
-Single-context: root `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
+Single-context: root `CONTEXT.md` (indexing `docs/context/`) + `docs/adr/`. See `docs/agents/domain.md`.

@@ -8,7 +8,7 @@ A Personality is one AI opponent — a shallow `AI_WEIGHTS` override that makes 
 seat *play like someone*. It grades the one matter of taste the balance sweep
 can't settle: is this opponent **fun to play against**? A **Stronghold** (a
 character you recognize) that is also a **Punch-Out** (a puzzle you read and beat
-on purpose) — in a good design, one thing. Both defined in `CONTEXT.md`. The
+on purpose) — in a good design, one thing. Both defined in `docs/context/heuristic-ai-context.md`. The
 win-rate and balance math is the balance sweep's job; this doc asks whether the
 opponent is *someone worth beating*.
 

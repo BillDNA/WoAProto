@@ -60,7 +60,7 @@
     var terrain = I.buildTerrain(map);
     // De-flattened skirmish state: the ~30 top-level keys are
     // grouped into composable blocks so a change to one seam does not ripple
-    // across unrelated ones. Blocks mirror the CONTEXT.md sections —
+    // across unrelated ones. Blocks group by concept —
     // board / pieces / cards / flow (turn) / result / journal. Identity keys
     // (seed, battle, mapIndex, mapName) stay top-level. Piece storage is
     // reached only through the I.Pieces accessors, never poked directly, so its
