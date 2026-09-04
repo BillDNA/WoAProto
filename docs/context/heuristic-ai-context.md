@@ -53,7 +53,7 @@ _Home_: `game/engine/00a-ai-config.js` — `antiShuffle`
 
 **No-op penalty**:
 The guard against a turn that resolves nothing.
-_Home_: `game/engine/00a-ai-config.js` — `noop`
+_Home_: `game/engine/00a-ai-config.js` — `noopPenalty`
 
 ## The dials
 

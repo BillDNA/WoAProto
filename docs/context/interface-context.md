@@ -33,12 +33,12 @@ _Home_: `game/ui/manual.js` — `Field Manual`
 
 **Mats**:
 The overlay showing the physical pieces a side is holding.
-_Avoid_: roster (a Mapset is not a roster either).
+_Avoid_: roster.
 _Home_: `game/ui/skirmish.js` — `syncRostersOverlay`
 
 **Card art**:
 The illustration looked up for a Card by its id.
-_Home_: `game/ui/app.js` — `card art is looked up BY CARD ID`
+_Home_: `game/ui/app.js` — `artImg`
 
 ## Staying in the game
 
@@ -74,6 +74,6 @@ _Home_: `game/ui/ui-primitives.js` — `uiSortableTh`
 That all HTML escaping in the UI routes through a single function.
 _Home_: `game/ui/ui-primitives.js` — `uiEsc`
 
-**No hand-drawn SVG**:
+**Raw-SVG rule**:
 That a screen never builds an SVG element itself; it calls a primitive.
 _Home_: `game/test/test.ui.js` — `SVG_LITERAL`

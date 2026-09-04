@@ -2,7 +2,7 @@
 
 Does it ship with the game, or is it built to help develop the game? Everything used to run games in bulk, record what happened, and judge what came back.
 
-The words for judging live here; what "good" currently measures does not — those numbers live with the rubrics, so they can move without editing a glossary.
+The words for judging live here; what "good" currently measures does not — those numbers live with the rubrics, so they can move without editing a glossary. The dev screens themselves are interface; what identifies a run is integration.
 
 ## The loop
 

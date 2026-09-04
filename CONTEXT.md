@@ -2,7 +2,7 @@
 
 The words we use for this system, and where each one is law. This page says which area a concept belongs to; the area pages hold the concepts.
 
-The lexicon names things and never enumerates them. Which cards, maps and battalions exist is `ls content/`; what "good" currently measures is `docs/balance/`. A definition that would drift when the game is retuned does not belong in either.
+The lexicon names things and never enumerates them. Which cards, maps and battalions exist is `ls content/`; what "good" currently measures is `docs/balance/`. A definition that would drift when the game is retuned belongs on neither this page nor an area page.
 
 Every term carries a `_Home_:` — a file plus a greppable anchor where the concept is defined or enforced, never a line number. `node dev/check-context.js` fails when a home stops resolving.
 
