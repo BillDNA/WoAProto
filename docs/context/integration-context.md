@@ -45,8 +45,8 @@ The Battalion Editor's override, which beats the authored active one on load.
 _Home_: `game/custom-battalion.js` — `WOA_CUSTOM_BATTALION`
 
 **Load order**:
-That the browser's script chain is hand-ordered, and load-time wiring happens in one file at the end of it.
-_Home_: `game/index.html` — `boot.js`
+That every runtime loads the game's scripts in one declared order, and load-time wiring happens in one file at the end of it.
+_Home_: `game/load-order.js` — `WOA_LOAD_ORDER`
 
 ## Across the wire
 

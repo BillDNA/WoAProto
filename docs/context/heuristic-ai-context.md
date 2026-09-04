@@ -45,22 +45,22 @@ _Home_: `game/engine/04-skirmish.js` — `concedeAdvised`
 
 **Attrition projection**:
 The bot looking ahead to how a Skirmish ends if nobody breaks through.
-_Home_: `game/engine/00a-ai-config.js` — `attrWin`
+_Home_: `game/engine/ai/ai-config.js` — `attrWin`
 
 **Anti-shuffle**:
 The guard against pointless back-and-forth Repositions.
-_Home_: `game/engine/00a-ai-config.js` — `antiShuffle`
+_Home_: `game/engine/ai/ai-config.js` — `antiShuffle`
 
 **No-op penalty**:
 The guard against a turn that resolves nothing.
-_Home_: `game/engine/00a-ai-config.js` — `noopPenalty`
+_Home_: `game/engine/ai/ai-config.js` — `noopPenalty`
 
 ## The dials
 
 **AI weights**:
 The eval weight table, and the surface a Commander's override merges over.
-_Home_: `game/engine/00a-ai-config.js` — `AI_WEIGHTS`
+_Home_: `game/engine/ai/ai-config.js` — `AI_WEIGHTS`
 
 **AI tuning**:
 The search and eval dials that are not per-personality weights.
-_Home_: `game/engine/00a-ai-config.js` — `AI_TUNING`
+_Home_: `game/engine/ai/ai-config.js` — `AI_TUNING`

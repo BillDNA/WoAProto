@@ -2,45 +2,33 @@
 
 Status: Accepted
 
+The rule itself is in the CLAUDE.md "tests are the contract" clause, loaded every
+session. This is the record of why the obvious alternative loses.
+
 ## Context
 
-Refactor-safety for sim behaviour was expressed for a while as a "golden balance
-diff." Read literally, that invites a **committed, gated fixture** that hashes the
-current game's outcomes over shipping content (the active battalion, the Core Six
-maps). Such a fixture has **no oracle** — it only knows "different from last time."
-When content is the thing under active iteration (the whole point of this build),
-"different" is the expected, correct result of every edit, so the fixture fires on
-every content change and its only maintenance is to re-bless the recording. That
-freezes content and forces the game to stand still — the opposite of rapid balance
-iteration. A committed 60-game fixture shipped once and contradicted the
-mechanism-not-value doctrine ([[testing-seams]]) that had just removed
-content-value pins from the suite.
+"Golden balance diff" read literally invites a **committed, gated fixture** that
+hashes the current game's outcomes over shipping content. One shipped once.
 
 ## Decision
 
-Balance-regression checking is a **throwaway diff generated on demand — never a
-committed artifact, never in the gate.** The determinism of the sim (same seed
-schedule → byte-identical `dev/balance.js` aggregates) is the free regression net:
-before a refactor you generate a baseline, do the work, generate again, diff, and
-**discard both**. Only the *tooling* that produces the numbers is kept; the numbers
-themselves are never frozen into the repo. Baselines are captured into the
-**gitignored `dev/baselines/`** so a forgotten one can never leak into main.
+Rejected: **a committed outcome fixture, in any form** — a recorded aggregate, a
+hashed transcript set, a pinned win-rate. Do not re-propose it.
 
-Tests assert the **mechanism, never the content value** ([[testing-seams]]): tuning
-an in-bounds card/map/unit number reds zero tests. Balance is protected instead by
-*invariant* tests (a mirror reads ~50/50 within noise; the JS fold ≡ the SQL view;
-no map runs wildly side-biased) and by the version-sliced anchor pool in the DB (LLN
-convergence, read via `node dev/db-query.js --anchors`). Only a **rules/AI** change —
-not a content edit, not a refactor — bumps `RULES_VERSION`.
+It has **no oracle**. It only knows "different from last time", and when content is
+the thing under active iteration — the entire point of this build — "different" is
+the expected, correct result of every edit. So it fires on every content change and
+its only maintenance is re-blessing the recording. That freezes content and makes
+the game stand still, which is the opposite of what the fixture was meant to protect.
+It also contradicts the mechanism-not-value doctrine ([[testing-seams]]) that had
+just finished removing content-value pins from the suite.
+
+What replaces it: the sim is deterministic, so a before/after `dev/balance.js` diff
+you generate, read, and **discard** is a free regression net. Baselines go in the
+gitignored `dev/baselines/` so a forgotten one cannot leak into main.
 
 ## Consequences
 
-- Editing content (a map, a card, a unit stat) never reds the gate; content
-  iteration stays friction-free.
-- No committed golden fixture and no golden gate test. Refactor drift is caught by
-  an on-demand `dev/balance.js` before/after diff you run yourself, plus the
-  invariant tests and the JS-fold ≡ SQL-view parity pin.
-- The *enforced* statement of this lives in the CLAUDE.md "tests are the contract"
-  clause (loaded every session); this ADR is the record, not the mechanism.
-- ADR-0002 (points are a descriptive yardstick) and ADR-0004 (the balance fold is
-  SQL views) are unaffected.
+- Editing a map, a card or a unit stat reds nothing. Content iteration stays free.
+- Refactor drift is caught by that on-demand diff plus *invariant* tests — a mirror
+  reads ~50/50 within noise, the JS fold ≡ the SQL view — never by a frozen number.

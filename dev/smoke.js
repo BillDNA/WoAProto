@@ -7,34 +7,10 @@ var fs = require('fs');
 var path = require('path');
 var { JSDOM } = require(path.join(__dirname, 'node_modules', 'jsdom'));
 
-var GAME = path.join(__dirname, '..', 'game');
-function read(f) { return fs.readFileSync(path.join(GAME, f), 'utf8'); }
-
-// content/ is loaded in the browser by content/manifest.js via document.write;
-// jsdom has no external loader, so inline every content file (they populate
-// window.WOA_CONTENT the same way) plus the core scripts.
-function readContent() {
-  var out = '';
-  ['cards', 'battalions', 'maps', 'commanders'].forEach(function (kind) {
-    var d = path.join(GAME, 'content', kind);
-    fs.readdirSync(d).filter(function (f) { return /\.js$/.test(f); }).sort().forEach(function (f) {
-      out += fs.readFileSync(path.join(d, f), 'utf8') + '\n';
-    });
-  });
-  return out;
-}
-var html = read('index.html');
-// inline EVERY <script src> so jsdom needs no loader — the manifest tag expands
-// to the content files (same document.write effect), everything else reads
-// straight from disk. Any tag left un-replaced is a loud failure, not a silent
-// no-op, so a changed tag can't quietly drop a script.
-html = html.replace(/<script src="([^"]+)"><\/script>/g, function (tag, src) {
-  if (src === 'content/manifest.js') return '<script>' + readContent() + '</script>';
-  return '<script>' + read(src) + '</script>';
-});
-if (/<script [^>]*src=/.test(html)) {
-  throw new Error('un-inlined <script src> tag survived (inliner regex mismatch)');
-}
+var harness = require('./page-harness.js');
+var GAME = harness.GAME;
+var read = harness.read;
+var html = harness.pageHtml(['cards', 'battalions', 'maps', 'commanders']);
 
 // One async node:test: the whole play-through is a single linear flow, so any
 // failed assertion (or app error) thrown in a scheduled callback rejects this

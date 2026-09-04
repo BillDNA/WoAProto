@@ -17,27 +17,24 @@
 
 var READY = false;
 
-// Mirror index.html's script chain + applied-battalion wiring, but for a worker.
+// The page's chain, minus what a worker has no use for (no DOM, no UI). The
+// engine parts come from load-order.js, so this cannot drift out of step with
+// the page's engine.
 function loadEngine(appliedBattalion) {
+  importScripts('load-order.js');           // sets self.WOA_LOAD_ORDER (no document.write here)
   importScripts('maps.js');                 // WOA_BUILTIN (units / shapes / stock / ai rows)
   importScripts('content/manifest.js');     // sets self.WOA_CONTENT_MANIFEST (no document.write here)
+  importScripts('applied-battalion.js');    // WOA_APPLY_BATTALION (resolution is page-only)
   var files = self.WOA_CONTENT_MANIFEST || {};
   // Load every kind the manifest lists (kinds.js is its source of truth), so a
   // new content kind never leaves a stale hardcoded list behind here.
   Object.keys(files).forEach(function (kind) {
     (files[kind] || []).forEach(function (f) { importScripts('content/' + kind + '/' + f); });
   });
-  // The page already resolved the override (localStorage 'woa-custom-battalion'
-  // or a dropped custom-battalion.js beats the active-flagged battalion). Apply
-  // the identical WOA_CONTENT mutation index.html does, so the engine snapshots
-  // the SAME battalion — otherwise the sweep would play a different one.
-  if (appliedBattalion && appliedBattalion.length) {
-    self.WOA_CONTENT = self.WOA_CONTENT || { maps: [], cards: [], battalions: [] };
-    self.WOA_CONTENT.battalions.forEach(function (d) { d.active = false; });
-    self.WOA_CONTENT.battalions.push({ id: '__applied', name: 'Applied battalion', active: true, cards: appliedBattalion });
-  }
-  ['00-config', '01-core', '02-board', '03-rules', '04-skirmish', '05-ai', '06-drive', '07-export']
-    .forEach(function (p) { importScripts('engine/' + p + '.js'); });
+  // A worker cannot read the page's localStorage, so the page resolves the
+  // override and hands the winner over; the rule itself lives in one place.
+  self.WOA_APPLY_BATTALION(appliedBattalion);
+  self.WOA_LOAD_ORDER.ENGINE.forEach(function (src) { importScripts(src); });
   importScripts('sim.js');                  // WOA_SIM (folds on the main thread; here just simSkirmish)
   READY = true;
 }

@@ -37,7 +37,7 @@
 
   // The engine config home. Non-exhaustive by design — add a dial here and the digest
   // picks it up. (The AI dials are their OWN sibling homes — AI_WEIGHTS + AI_TUNING in
-  // engine/00a-ai-config.js, via this same helper — kept out of the rules home on purpose:
+  // engine/ai/ai-config.js, via this same helper — kept out of the rules home on purpose:
   // only Engine.CONFIG.digest is stamped onto DB rows, so AI-side tuning never reshuffles it.)
   I.CONFIG = defineConfigHome({
     // Army-points budget ceiling — the fairness constraint that lets two asymmetric

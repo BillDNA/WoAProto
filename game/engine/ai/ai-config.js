@@ -1,10 +1,10 @@
-/* War of Attrition — engine part 00a: the AI-config home.
+/* War of Attrition — the AI-config home.
 
    The AI's tunable dials as named data, made by the shared defineConfigHome helper
    (attaches the digest getter). Two sibling homes, published as I.AI_WEIGHTS /
    I.AI_TUNING (Engine.AI_WEIGHTS / Engine.AI_TUNING) and read by nested name at every
-   site in 05-ai.js (no flat value-aliases). Loads right after 00-config (needs its
-   defineConfigHome) and before 05-ai reads these — the `00a` prefix is only load order.
+   site in 05-ai.js (no flat value-aliases). load-order.js schedules it after
+   00-config, whose defineConfigHome it calls while loading.
 
    Kept OUT of the rules home (I.CONFIG) on purpose: only Engine.CONFIG.digest is stamped
    onto DB rows, so AI-side tuning must never live there or it would reshuffle the data.

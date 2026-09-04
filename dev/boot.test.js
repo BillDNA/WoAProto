@@ -1,6 +1,6 @@
 /* Real-path gates for two browser-inline hand-offs, driven through
    the actual page in jsdom (same inline-every-script boot as dev/smoke.js):
-   - E3: localStorage['woa-custom-battalion'] -> the index.html battalion bootstrap ->
+   - E3: localStorage['woa-custom-battalion'] -> applied-battalion.js ->
      WOA_CONTENT.battalions -> the engine's ACTIVE_BATTALION snapshot (localStorage wins).
    - F2: a maps-bundle file -> the importFile lenient parser (bare array /
      assignment prefix / trailing semicolon / single map) -> libraryReplace -> E.MAPS.
@@ -12,29 +12,10 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require(path.join(__dirname, 'node_modules', 'jsdom'));
 
-const GAME = path.join(__dirname, '..', 'game');
-function read(f) { return fs.readFileSync(path.join(GAME, f), 'utf8'); }
-function readContent() {
-  let out = '';
-  ['cards', 'battalions', 'maps'].forEach(function (kind) {
-    const d = path.join(GAME, 'content', kind);
-    fs.readdirSync(d).filter(function (f) { return /\.js$/.test(f); }).sort().forEach(function (f) {
-      out += fs.readFileSync(path.join(d, f), 'utf8') + '\n';
-    });
-  });
-  return out;
-}
-// Inline every <script src> (manifest -> the content files) so jsdom needs no
-// loader — the same technique dev/smoke.js uses. `prefix` is injected before the
-// whole chain (used to seed localStorage ahead of the inline battalion bootstrap).
-function bootHtml(prefix) {
-  let html = read('index.html').replace(/<script src="([^"]+)"><\/script>/g, function (tag, src) {
-    if (src === 'content/manifest.js') return '<script>' + readContent() + '</script>';
-    return '<script>' + read(src) + '</script>';
-  });
-  if (/<script [^>]*src=/.test(html)) throw new Error('un-inlined <script src> survived');
-  return (prefix || '') + html;
-}
+const harness = require('./page-harness.js');
+const GAME = harness.GAME;
+const bootHtml = function (prefix) { return harness.pageHtml(['cards', 'battalions', 'maps'], prefix); };
+
 function makeDom(prefix) {
   const dom = new JSDOM(bootHtml(prefix), { runScripts: 'dangerously', pretendToBeVisual: true, url: 'http://localhost/game/index.html' });
   dom.window.confirm = function () { return true; };
@@ -91,4 +72,36 @@ test('F2: maps-bundle import lenient parser lands the map in E.MAPS', function (
       setTimeout(poll, 10);
     })();
   });
+});
+
+// L1: the page's one <script src> really writes the chain. Every other gate
+// inlines load-order.js's PAGE list itself, so the document.write step the whole
+// scheme rests on would otherwise go unexercised: index.html could stop loading
+// load-order.js, or load-order.js stop writing, and every test would still pass.
+// document.write is captured rather than read back off the DOM — jsdom's
+// insertion point for a write outside the parser is not the browser's, so DOM
+// order there is a jsdom artifact. What load-order.js EMITS is the real fact.
+test('L1: index.html + load-order.js emit the declared chain, in order', function () {
+  const ORDER = require(path.join(GAME, 'load-order.js'));
+  const html = harness.read('index.html');
+  assert.match(html, /<script src="load-order\.js"><\/script>/,
+    'index.html loads load-order.js');
+  assert.strictEqual((html.match(/<script src=/g) || []).length, 1,
+    'and hand-lists nothing else');
+
+  const dom = new JSDOM('<!doctype html><body>', { runScripts: 'dangerously', url: 'http://localhost/game/index.html' });
+  const win = dom.window;
+  const emitted = [];
+  win.document.write = function (s) {
+    const m = /<script src="([^"]+)">/.exec(s);
+    if (m) emitted.push(m[1]);
+  };
+  win.eval(harness.read('load-order.js'));
+
+  assert.deepStrictEqual(emitted, ORDER.PAGE,
+    'load-order.js writes exactly PAGE, in declared order');
+  assert.strictEqual(emitted[emitted.length - 1], 'ui/boot.js', 'boot.js is written last');
+  assert.ok(emitted.indexOf('engine/ai/ai-config.js') > emitted.indexOf('engine/00-config.js'),
+    'the nested part is written after the config it reads at load time');
+  try { win.close(); } catch (e) {}
 });

@@ -89,7 +89,7 @@
   // replyWeight tune that reply search. weights override AI_WEIGHTS terms.
   // Extra personalities can be defined in maps.js as an "ai" block — a new AI
   // is a new row of numbers, not new code. easy/normal/hard are presets here.
-  // The weights + tuning dials are config homes in engine/00a-ai-config.js (guardrails:
+  // The weights + tuning dials are config homes in engine/ai/ai-config.js (guardrails:
   // never zero noopPenalty / antiShuffle / attrWin in a new personality — they hold off
   // the swap-dance stalemate). Read below as I.AI_WEIGHTS / I.AI_TUNING at each site.
   var AI_PRESETS = {
