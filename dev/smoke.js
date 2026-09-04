@@ -145,6 +145,43 @@ realSetTimeout(function () {
   assert.ok(doc.querySelectorAll('#matRed .slot svg').length === 13, 'reserve slots carry piece glyphs at skirmish start');
   assert.ok(!!doc.getElementById('scorecard'), 'campaign score card present in top bar');
 
+  console.log('== Commander panel (sample Commander, both sides, every trait kind) ==');
+  win.commanderDemoLoad(); // loads the schema-contract sample onto red + blue
+  ['matRed', 'matBlue'].forEach(function (mid) {
+    var side = mid === 'matRed' ? 'red' : 'blue';
+    assert.ok(doc.querySelector('#' + mid + ' .cmd-panel'), side + ' mat shows a Commander panel');
+    assert.ok(doc.querySelectorAll('#' + mid + ' .cmd-trait').length === win.COMMANDER_SAMPLE.traits.length,
+      side + ' panel renders one chip per trait (' + win.COMMANDER_SAMPLE.traits.length + ')');
+    // every render path is present: a weakness accent, cooldown pips + ability
+    // button, and charge pips + pre-arm toggle
+    assert.ok(doc.querySelector('#' + mid + ' .cmd-trait.weak'), side + ' panel renders the weakness chip');
+    assert.ok(doc.querySelectorAll('#' + mid + ' .cmd-pips.cd .cmd-pip').length === 3, side + ' cooldown ability shows 3 cooldown pips');
+    assert.ok(doc.querySelectorAll('#' + mid + ' .cmd-pips.charge .cmd-pip').length === 1, side + ' charge trait shows 1 charge pip');
+    assert.ok(doc.querySelector('#' + mid + ' .cmd-btn'), side + ' panel has an on-turn ability button');
+    assert.ok(doc.querySelector('#' + mid + ' .cmd-toggle'), side + ' panel has a pre-arm toggle');
+    // tooltips carry the full trait text (not permanent on-screen prose)
+    assert.ok(/defending in forest/.test(doc.querySelector('#' + mid + ' .cmd-trait').getAttribute('title') || ''),
+      side + ' trait chip carries its full explanation in a tooltip');
+  });
+  // drive the on-turn controls on the human side when it is that side's turn;
+  // otherwise the ability button is gated off-turn (also a real contract)
+  var me = win.APP.mySide, cur = win.Engine.view(win.APP.st).current;
+  var abil = doc.querySelector('#matRed .cmd-btn');
+  if (me === 'red' && cur === 'red') {
+    assert.ok(!abil.disabled, 'ability button live on your own turn');
+    abil.click();
+    var abil2 = doc.querySelector('#matRed .cmd-btn');
+    assert.ok(abil2.disabled && doc.querySelectorAll('#matRed .cmd-pips.cd .cmd-pip.on').length === 3,
+      'using the ability engages the cooldown (button disabled, all cooldown pips lit)');
+    doc.querySelector('#matRed .cmd-toggle').click();
+    assert.ok(doc.querySelector('#matRed .cmd-toggle.armed'), 'the pre-arm toggle arms the charge');
+  } else {
+    assert.ok(abil.disabled, 'ability button gated off your turn');
+  }
+  win.APP.ui.commander = null; // clear the demo; the play-through below is Commander-free
+  win.renderAll();
+  assert.ok(!doc.querySelector('#matRed .cmd-panel'), 'no Commander selected -> no panel (real play is untouched)');
+
   // play like a (random but legal) human until the skirmish ends or 80 turns pass
   var steps = 0;
   function tick() {

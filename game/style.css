@@ -269,6 +269,36 @@
     display:flex; align-items:center; justify-content:center;
   }
   .scard.gone{background:var(--gone); color:rgba(var(--parch-rgb),.5); border-color:var(--gone-edge); text-decoration:line-through;}
+
+  /* ===== Commander panel (inside the mat) — compact identity + trait chips.
+     Icons + pips carry the persistent read; the full text lives in each chip's
+     tooltip. Sits in the fixed-width mat column, so every row stays within it. */
+  .cmd-panel{ display:flex; flex-direction:column; gap:3px; margin:1px 0 3px; padding-bottom:4px; border-bottom:1px dashed var(--brass-dark); }
+  .cmd-head{ font-variant:small-caps; letter-spacing:.8px; text-align:center; font-size:11px; font-weight:bold; color:var(--brass-dark); }
+  .cmd-traits{ display:flex; flex-wrap:wrap; gap:4px; justify-content:center; }
+  .cmd-trait{
+    display:inline-flex; align-items:center; gap:4px; padding:2px 5px;
+    border:1px solid rgba(var(--brass-line-rgb),.7); border-left:3px solid var(--forest);
+    border-radius:var(--radius-inset); background:linear-gradient(150deg,var(--parch),var(--parch3));
+    cursor:help;
+  }
+  .cmd-trait.weak{ border-left-color:var(--warn); }
+  .cmd-ico{ font-size:13px; line-height:1; color:var(--forest); flex:0 0 auto; }
+  .cmd-trait.weak .cmd-ico{ color:var(--warn); }
+  .cmd-pips{ display:flex; gap:2px; flex:0 0 auto; }
+  .cmd-pip{ width:8px; height:8px; border:1px solid var(--brass-dark); border-radius:2px; background:rgba(var(--ink-rgb),.08); }
+  .cmd-pips.cd .cmd-pip.on{ background:var(--amber); border-color:var(--copper); }      /* turns still to wait */
+  .cmd-pips.charge .cmd-pip.on{ background:var(--gold); border-color:var(--brass-dark); } /* charges still in hand */
+  .cmd-btn, .cmd-toggle{
+    flex:0 0 auto; font-size:9.5px; font-weight:bold; letter-spacing:.3px;
+    padding:2px 7px; border-radius:var(--radius-pill); cursor:pointer; border:1px solid var(--copper-edge);
+  }
+  .cmd-btn{ color:var(--cream-lit); background:linear-gradient(var(--copper-hi),var(--copper-lo)); }
+  .cmd-toggle{ color:var(--ink); background:linear-gradient(var(--brass-light),var(--brass)); border-color:var(--brass-edge); }
+  .cmd-toggle.armed{ color:var(--ink-plate); background:linear-gradient(var(--gold-glow),var(--gold)); border-color:var(--copper); }
+  .cmd-btn:disabled, .cmd-toggle:disabled{ opacity:.5; cursor:default; background:var(--gone); color:var(--ink-soft); border-color:var(--gone-edge); }
+  @keyframes cmdfire{ 0%{ box-shadow:0 0 0 0 rgba(var(--gold-rgb),.9); } 100%{ box-shadow:0 0 0 8px rgba(var(--gold-rgb),0); } }
+  .cmd-trait.cmd-fire{ animation:cmdfire .8s ease-out; }
   #boardwrap{flex:1 1 auto; display:flex; align-items:center; justify-content:center; min-width:0; min-height:0; padding:8px 4px; position:relative;}
   /* the parchment sheet is bounded by its own hex geometry (--board-ar set from
      the viewBox in renderBoard) so a tall/diamond map no longer stretches
