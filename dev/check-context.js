@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /* dev/check-context.js — the run that keeps the term→code spine honest.
 
-   Two spine docs carry `_Home_:` pointers: CONTEXT.md (domain terms) and
-   docs/reference/context-ui-components.md (UI primitives). Two checks:
+   The spine carries `_Home_:` pointers: every area page under docs/context/
+   (the address book) plus docs/reference/context-ui-components.md (the UI
+   primitive catalog). Root CONTEXT.md is the index and holds no terms. Two checks:
 
      1. HOME POINTERS (hard gate). Every term carries a `_Home_:` line. A code
         home is a backticked `file` + a backticked anchor (a symbol or
@@ -31,9 +32,12 @@ var fs = require('fs');
 var path = require('path');
 
 var ROOT = path.resolve(__dirname, '..');
-var CONTEXT = path.join(ROOT, 'CONTEXT.md');
-// The spine docs whose _Home_ pointers are gated (domain terms + UI primitives).
-var SPINE = [CONTEXT, path.join(ROOT, 'docs', 'reference', 'context-ui-components.md')];
+var CONTEXT_DIR = path.join(ROOT, 'docs', 'context');
+// The spine: every area page of the address book, plus the UI primitive catalog.
+// A new area page is gated by existing — there is no list here to keep in step.
+var SPINE = fs.readdirSync(CONTEXT_DIR).filter(function (f) { return path.extname(f) === '.md'; })
+  .sort().map(function (f) { return path.join(CONTEXT_DIR, f); })
+  .concat([path.join(ROOT, 'docs', 'reference', 'context-ui-components.md')]);
 
 /* ---- the tree we scan for alias residuals ------------------------------- */
 var SCAN_EXT = ['.js', '.md', '.css', '.html'];
@@ -120,7 +124,7 @@ function scanAliases(files) {
   ALIASES.forEach(function (a) { byTerm[a.term] = { spec: a, hits: [] }; });
   files.forEach(function (abs) {
     var rel = path.relative(ROOT, abs);
-    if (rel === 'CONTEXT.md') return;                 // the _Avoid_ list lives here
+    if (rel === 'CONTEXT.md' || rel.indexOf(path.join('docs', 'context') + path.sep) === 0) return; // the _Avoid_ lists live here
     if (rel === path.relative(ROOT, __filename)) return; // this scanner names them all
     var text = fs.readFileSync(abs, 'utf8').split('\n');
     text.forEach(function (ln, i) {
