@@ -570,20 +570,27 @@ function maybeAI(){
   if (!aiTurn || v.phase !== 'choose-card') return;
   APP.ui.busy = true;
   renderPrompt();
+  // The AI turn must always resolve — a null/failed plan or a thrown planner
+  // concedes rather than leaving the human frozen on "thinking…".
+  function aiConcede(loser, msg){
+    E.concede(st, loser);
+    toast(msg, 3200);
+    APP.ui.busy = false;
+    renderAll(); saveLocal();
+    clearIfBattleOver(); showSkirmishOver();
+  }
   setTimeout(function(){
     // a beaten general yields rather than playing out a foregone conclusion
     if (E.concedeAdvised(st, v.current)){
-      var loser = v.current;
-      E.concede(st, loser);
-      toast(capName(loser)+' <b>concedes the field</b> — the outcome was beyond doubt.', 3200);
-      APP.ui.busy = false;
-      renderAll(); saveLocal();
-      clearIfBattleOver(); showSkirmishOver();
+      aiConcede(v.current, capName(v.current)+' <b>concedes the field</b> — the outcome was beyond doubt.');
       return;
     }
-    var plan = E.aiPlanTurn(st, APP.diff);
-    if (!plan){ APP.ui.busy=false; return; }
-    E.playCard(st, plan.cardId, plan.mode || 'normal');
+    var plan;
+    try { plan = E.aiPlanTurn(st, APP.diff); }
+    catch(e){ plan = null; }
+    if (!plan){ aiConcede(v.current, capName(v.current)+' <b>concedes the field</b> — no move to make.'); return; }
+    try { E.playCard(st, plan.cardId, plan.mode || 'normal'); }
+    catch(e){ aiConcede(v.current, capName(v.current)+' <b>concedes the field</b> — no move to make.'); return; }
     var modeTxt = plan.mode==='attack' ? ' as a direct attack' : plan.mode==='reposition' ? ' as a simple maneuver' : '';
     toast(capName(v.current)+' plays <b>'+E.CARD_BY_ID[plan.cardId].name+'</b>'+modeTxt, 2200);
     renderAll();
