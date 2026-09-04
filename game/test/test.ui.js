@@ -27,7 +27,6 @@ const fs = require('fs');
 const path = require('path');
 
 const UI_DIR = path.join(__dirname, '..', 'ui');
-const SPINE_DOC = path.join(__dirname, '..', '..', 'docs', 'reference', 'context-ui-components.md');
 
 // SVG element tags — every one is SVG-only (none is a valid HTML element), so a
 // literal `<tag` in a string that survives comment/regex-stripping is hand-drawn
@@ -106,31 +105,6 @@ test('UI contract: the scanner catches string-built SVG and ignores look-alikes'
   assert.ok(hit(stripComments('var re = /["\\047]/; var svg = "<svg>";')), 'a <svg> after a quote-bearing regex is still detected');
 });
 
-test('UI contract: every primitive in context-ui-components.md resolves to its home', () => {
-  const md = fs.readFileSync(SPINE_DOC, 'utf8').split('\n');
-  const root = path.join(__dirname, '..', '..');
-  const terms = [];
-  let cur = null;
-  md.forEach((ln) => {
-    const m = ln.match(/^\*\*(.+?)\*\*:\s*$/);
-    if (m) { cur = { name: m[1].trim(), home: null }; terms.push(cur); return; }
-    const h = ln.match(/^_Home_:\s*(.+?)\s*$/);
-    if (h && cur && !cur.home) cur.home = h[1];
-  });
-  assert.ok(terms.length > 0, 'parsed primitive entries from the spine doc');
-  const fails = [];
-  terms.forEach((t) => {
-    if (!t.home) { fails.push(t.name + ' — no _Home_ line'); return; }
-    const m = t.home.match(/^`([^`]+):(\d+)`\s*—\s*`([^`]+)`/);
-    if (!m) { fails.push(t.name + ' — malformed _Home_: ' + t.home); return; }
-    const abs = path.join(root, m[1]), want = parseInt(m[2], 10), anchor = m[3];
-    if (!fs.existsSync(abs)) { fails.push(t.name + ' — file gone: ' + m[1]); return; }
-    const flines = fs.readFileSync(abs, 'utf8').split('\n');
-    if (flines[want - 1] !== undefined && flines[want - 1].indexOf(anchor) >= 0) return;
-    const at = [];
-    flines.forEach((fl, i) => { if (fl.indexOf(anchor) >= 0) at.push(i + 1); });
-    fails.push(t.name + ' — anchor `' + anchor + '` not at ' + m[1] + ':' + want +
-      (at.length ? ' (found at :' + at.join(',') + ' — update the pointer)' : ' (anchor not in file)'));
-  });
-  assert.strictEqual(fails.length, 0, 'stale home pointers in docs/reference/context-ui-components.md:\n' + fails.join('\n'));
-});
+// The spine-doc home pointers (CONTEXT.md + context-ui-components.md) are validated
+// in ONE place — dev/check-context.js (symbol-in-file, line-number-free), with its
+// own tests. This file keeps only the raw-SVG backstop above, its distinct contract.

@@ -1,15 +1,17 @@
 #!/usr/bin/env node
-/* dev/check-context.js — the run that keeps CONTEXT.md honest.
+/* dev/check-context.js — the run that keeps the term→code spine honest.
 
-   Two checks over CONTEXT.md's term→code spine:
+   Two spine docs carry `_Home_:` pointers: CONTEXT.md (domain terms) and
+   docs/reference/context-ui-components.md (UI primitives). Two checks:
 
      1. HOME POINTERS (hard gate). Every term carries a `_Home_:` line. A code
-        home is `file:line` + a backticked anchor that must sit ON that line;
-        a not-yet-in-code concept is `none yet — <reason>`. Fails if any term
-        lacks a home, any pointed file:line is gone, or an anchor has drifted
-        off its line (reporting the line it drifted to, so the fix is a
-        one-liner). This is what "every term resolves to a real file:line home"
-        is checked by.
+        home is a backticked `file` + a backticked anchor (a symbol or
+        expression) that must APPEAR SOMEWHERE in that file; a not-yet-in-code
+        concept is `none yet — <reason>`. Fails if any term lacks a home, a
+        pointed file is gone, or an anchor no longer appears in its file
+        (renamed, moved to another file, or deleted — fix it in that commit).
+        Deliberately line-number-free: a line shift is not drift, so editing a
+        file never churns these pointers. The anchor is the greppable key.
 
      2. ALIAS RESIDUALS. The retired names on each term's `_Avoid_` list, scanned
         across the whole codebase. `locked` aliases are canonical-clean and any
@@ -30,6 +32,8 @@ var path = require('path');
 
 var ROOT = path.resolve(__dirname, '..');
 var CONTEXT = path.join(ROOT, 'CONTEXT.md');
+// The spine docs whose _Home_ pointers are gated (domain terms + UI primitives).
+var SPINE = [CONTEXT, path.join(ROOT, 'docs', 'reference', 'context-ui-components.md')];
 
 /* ---- the tree we scan for alias residuals ------------------------------- */
 var SCAN_EXT = ['.js', '.md', '.css', '.html'];
@@ -63,17 +67,17 @@ function checkHomes(terms) {
   terms.forEach(function (t) {
     if (!t.home) { fails.push('· ' + t.name + ' — no _Home_ line'); return; }
     if (/^none yet\b/i.test(t.home)) { concepts++; return; }
-    var m = t.home.match(/^`([^`]+):(\d+)`\s*—\s*`([^`]+)`/);
+    // A home is `file` — `anchor`; the anchor must appear somewhere in the file.
+    // No line number: only a rename / move-out / delete of the anchor is drift.
+    var m = t.home.match(/^`([^`]+)`\s*—\s*`([^`]+)`/);
     if (!m) { fails.push('· ' + t.name + ' — malformed _Home_: ' + t.home); return; }
-    var file = m[1], want = parseInt(m[2], 10), anchor = m[3];
+    var file = m[1], anchor = m[2];
+    if (/:\d+$/.test(file)) { fails.push('· ' + t.name + ' — home carries a line number (`' + file + '`); drop it, the anchor is the key'); return; }
     var abs = path.join(ROOT, file);
     if (!fs.existsSync(abs)) { fails.push('· ' + t.name + ' — file gone: ' + file); return; }
-    var flines = fs.readFileSync(abs, 'utf8').split('\n');
-    if (flines[want - 1] !== undefined && flines[want - 1].indexOf(anchor) >= 0) { resolved++; return; }
-    var at = [];
-    flines.forEach(function (fl, i) { if (fl.indexOf(anchor) >= 0) at.push(i + 1); });
-    fails.push('· ' + t.name + ' — anchor `' + anchor + '` not at ' + file + ':' + want +
-      (at.length ? ' (found at ' + file + ':' + at.join(',') + ' — update the pointer)' : ' (anchor not in file)'));
+    if (fs.readFileSync(abs, 'utf8').indexOf(anchor) >= 0) { resolved++; return; }
+    fails.push('· ' + t.name + ' — anchor `' + anchor + '` no longer in ' + file +
+      ' (renamed, moved to another file, or removed — fix the pointer)');
   });
   return { fails: fails, concepts: concepts, resolved: resolved, total: terms.length };
 }
@@ -134,17 +138,19 @@ function scanAliases(files) {
 /* ---- run ----------------------------------------------------------------- */
 function main() {
   var only = process.argv[2];
-  var md = fs.readFileSync(CONTEXT, 'utf8');
-  var terms = parseTerms(md);
   var ok = true;
 
   if (only !== '--aliases') {
-    var h = checkHomes(terms);
-    console.log('HOME POINTERS — ' + h.resolved + ' code homes resolved, ' +
-      h.concepts + ' concept-only, ' + h.total + ' terms total');
-    if (h.fails.length) { ok = false; console.log(h.fails.join('\n')); }
-    else console.log('· all pointers resolve');
-    console.log('');
+    SPINE.forEach(function (doc) {
+      var rel = path.relative(ROOT, doc);
+      var terms = parseTerms(fs.readFileSync(doc, 'utf8'));
+      var h = checkHomes(terms);
+      console.log('HOME POINTERS (' + rel + ') — ' + h.resolved + ' code homes resolved, ' +
+        h.concepts + ' concept-only, ' + h.total + ' terms total');
+      if (h.fails.length) { ok = false; console.log(h.fails.join('\n')); }
+      else console.log('· all pointers resolve');
+      console.log('');
+    });
   }
 
   if (only !== '--homes') {
@@ -164,4 +170,6 @@ function main() {
   console.log(ok ? 'check-context: PASS' : 'check-context: FAIL');
   process.exit(ok ? 0 : 1);
 }
-main();
+
+if (require.main === module) main();
+else module.exports = { parseTerms: parseTerms, checkHomes: checkHomes, ROOT: ROOT };

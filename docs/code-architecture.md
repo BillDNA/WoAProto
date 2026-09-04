@@ -94,7 +94,7 @@ Every gameplay change goes in the engine, never in the UI. Any card/map/unit/per
 - `balance-report.js` — runs the balance report and SAVES it under `logs/reports/balance/<version>/`, folding into the per-version `accumulated.json` (`--fresh` resets, `--once` skips); `--parallel [k]` = process-per-map workers; `--mapset`; prints `BEST_MAP:`.
 - `tune-weights.js` — offline `AI_WEIGHTS` sweeper (coordinate descent, common random numbers, fitness = the shared balance score). Suggestions only — never writes engine files.
 - `gen-docs.js` — regenerates the drift-prone doc tables between `<!-- GEN:x -->` markers (the AI weights table + personalities in [[ai-heuristic-model]], and the content block below). Run it after touching `AI_WEIGHTS`, personalities, or `content/`.
-- `check-context.js` — keeps `CONTEXT.md`'s term→code spine honest (every term resolves to a real `file:line` home; retired aliases stay at zero).
+- `check-context.js` — keeps the term→code spine (`CONTEXT.md` + `context-ui-components.md`) honest (every term's anchor still appears in its `file` — no line numbers, so only a rename/move/delete drifts; retired aliases stay at zero).
 - `check-prose.js` — the grep-clean backstop: docs and comments stay free of war-story residue (ticket refs, round/dated narration, era labels). See [[code-style]].
 - `smoke.js` — jsdom UI harness (`node dev/smoke.js`; `npm i --prefix dev jsdom` once). Boots `index.html` (inlining every `<script src>` and asserting none survived), plays a skirmish through the real DOM.
 - Focused test files: `db.test.js`, `llm-session.test.js`, `llm-client.test.js`, `claude-plays.test.js`, `content-api.test.js`, `server.test.js`, `boot.test.js`, `balance-parallel.test.js` — run the ones matching the area you touched.
