@@ -144,6 +144,7 @@ function renderMat(p){
   var gen = aiHere ? '<span style="font-weight:normal;font-size:.72em;opacity:.72;"> &middot; '+aiDisplayName(APP.diff)+'</span>' : '';
   el.innerHTML =
     '<h3>'+capName(p)+you+gen+'</h3>' +
+    renderCommanderPanel(p) +
     rowsHtml +
     '<div class="row" style="margin-top:2px;"><span>Orders left</span><b>'+E.cardsRemaining(st,p)+'</b></div>' +
     '<div class="spentlbl">orders spent &mdash; gone from the game</div>' +
@@ -151,6 +152,7 @@ function renderMat(p){
     '<div class="fs">'+E.fieldScore(st,p)+' pts</div>' +
     '<div class="small" style="text-align:center;">surviving units on the field</div>';
   el.querySelector('.spent').onclick = showCards;
+  bindCommanderPanel(p);
 }
 function renderTop(){
   var st = APP.st, v = E.view(st), m = v.battle;
@@ -295,6 +297,7 @@ function renderAll(){
     E.setBoard(v.boardShape);
   }
   ensureSnapshot();
+  commanderTurnSync();
   renderTop(); renderMat('red'); renderMat('blue'); renderBoard(); renderHand(); renderPrompt(); renderLog();
 }
 function renderLog(){

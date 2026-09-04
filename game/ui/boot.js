@@ -83,6 +83,9 @@ $('btnDevHubBack').onclick = function(){ SCREENS.frontdoor.entry(); };
 
 // deep link straight into a game: index.html?autostart=ai (handy for screenshots & sharing)
 if (/autostart=ai/.test(location.search)) setTimeout(function(){ startLocal('ai'); }, 60);
+// deep link to load the sample Commander onto both sides of a live battle
+// (screenshots & the panel smoke): index.html?autostart=ai&commanders=demo
+if (/[?&]commanders=demo/.test(location.search)) setTimeout(commanderDemoLoad, 120);
 // deep link to a screen: index.html?screen=battalion|dash|maps|manual|settings|campaign
 // (screenshots & quick testing). Dev screens arm dev mode first so the deep link
 // works even from a fresh (dev-off) browser.
