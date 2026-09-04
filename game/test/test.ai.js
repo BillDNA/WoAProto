@@ -175,7 +175,7 @@ test('AI dead-turn regression (hard AI must not skip turn 1)', () => {
       var plan = E.aiPlanTurn(st, diff);
       E.playCard(st, plan.cardId, plan.mode || 'normal');
       var g = 0;
-      while (st.flow.phase === 'step' && g++ < 12) {
+      while (st.flow.phase === 'step' && g++ < E.CONFIG.limits.stepsPerTurn) {
         var c = plan.choices.shift() || { skip: true };
         try { E.applyStep(st, c); } catch (e) { E.applyStep(st, { skip: true }); }
       }
