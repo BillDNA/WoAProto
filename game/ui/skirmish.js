@@ -225,7 +225,7 @@ function renderHand(){
   var deal = APP.ui.dealtKey !== dealKey && v.phase==='choose-card';
   if (deal) APP.ui.dealtKey = dealKey;
   hand.forEach(function(cid, i){
-    var c = E.CARD_BY_ID[cid];
+    var c = cardDef(cid);
     var d = document.createElement('div');
     d.className = 'card' + (live ? '' : ' disabled') + (deal ? ' deal' : '');
     if (deal) d.style.animationDelay = (i*60)+'ms';
@@ -271,7 +271,7 @@ function renderPrompt(){
   else if (o.type==='attack') msg = APP.ui.sel ? 'Choose a target' : 'Choose an attacker' + (o.mod ? ' <b>('+(o.mod>0?'+':'')+o.mod+' support)</b>':'') + (o.tieSpare?' <b>(tie spares your unit)</b>':'');
   else if (o.type==='reposition') msg = APP.ui.sel ? 'Move to a gold hex, or swap with a violet unit' : 'Choose a unit to <b>reposition</b>';
   else if (o.type==='barrage') msg = 'Barrage: click <b>any trench</b> or <b>forest</b> on the board to destroy' + (canSkip ? ' — or skip straight to the attack' : '');
-  el.innerHTML = '<b>'+E.CARD_BY_ID[v.pending.cardId].name+'</b>: '+msg+stepTag +
+  el.innerHTML = '<b>'+cardDef(v.pending.cardId).name+'</b>: '+msg+stepTag +
     (canSkip ? '' : ' <span class="small" style="color:var(--amber);">(this order must accomplish at least one action)</span>');
   if (canSkip){
     var sk = document.createElement('button');
@@ -485,7 +485,7 @@ function showHandoff(){
 // House rule: any card can instead be resolved as a basic attack or a basic reposition.
 function playCardUI(cid){
   var st = APP.st, v = E.view(st);
-  var c = E.CARD_BY_ID[cid];
+  var c = cardDef(cid);
   var side = v.current;
   var canAtk = E.listAttacks(st, side).length > 0;
   var rp = E.listRepositions(st, side);
@@ -592,7 +592,7 @@ function maybeAI(){
     try { E.playCard(st, plan.cardId, plan.mode || 'normal'); }
     catch(e){ aiConcede(v.current, capName(v.current)+' <b>concedes the field</b> — no move to make.'); return; }
     var modeTxt = plan.mode==='attack' ? ' as a direct attack' : plan.mode==='reposition' ? ' as a simple maneuver' : '';
-    toast(capName(v.current)+' plays <b>'+E.CARD_BY_ID[plan.cardId].name+'</b>'+modeTxt, 2200);
+    toast(capName(v.current)+' plays <b>'+cardDef(plan.cardId).name+'</b>'+modeTxt, 2200);
     renderAll();
     var i = 0;
     function nextStep(){

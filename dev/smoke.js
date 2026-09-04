@@ -167,6 +167,27 @@ realSetTimeout(function () {
   assert.ok(win.APP.st.flow.phase === 'skirmish-over',
     'a full battle plays to completion with Fortress seated on both sides (passive-aware AI, weights merge)');
   win.renderAll();
+
+  console.log('== mustered/pool card in hand renders (no mid-turn render crash) ==');
+  // Regression: E.CARD_BY_ID indexes only the default battalion, but a mustered or
+  // asymmetric battalion draws from the wider pool. A pool card in the rendered hand
+  // must resolve through cardDef — before, renderHand hit undefined.name and the
+  // crash killed the AI-turn renderAll chain, freezing the game on "thinking…".
+  var poolOnly = (win.Engine.CARD_POOL || []).filter(function (c) { return !win.Engine.CARD_BY_ID[c.id]; })[0];
+  assert.ok(poolOnly, 'the pool carries cards beyond the default battalion (the crash precondition exists)');
+  assert.ok(win.cardDef(poolOnly.id) && win.cardDef(poolOnly.id).name, 'cardDef resolves a pool card outside CARD_BY_ID');
+  assert.ok(win.cardDef('__no_such_card__').name === '__no_such_card__', 'cardDef degrades an unknown id to a placeholder, never undefined');
+  var poolBattle = win.Engine.newBattle({ seed: 77, maps: [win.Engine.MAPS[0]], commanders: { red: 'fortress', blue: 'fortress' } });
+  win.APP.mode = 'ai'; win.APP.mySide = 'red'; win.APP.diff = 'normal';
+  win.APP.st = win.Engine.newSkirmish(poolBattle);
+  win.APP.ui = { sel: null, stage: null, busy: false, handoffPending: false };
+  win.syncCommandersFromState();
+  win.APP.st.cards.hands.red.push(poolOnly.id); // force the pool card into the human's hand
+  win.show('game');
+  assert.doesNotThrow(function () { win.renderAll(); }, 'renderAll does not crash with a pool card in the human hand');
+  assert.ok(doc.getElementById('hand').textContent.indexOf(poolOnly.name) >= 0,
+    'the pool card renders in the hand by its real name (' + poolOnly.name + ')');
+
   win.SCREENS.campaign.entry(); // hand back to the campaign for the rest of the smoke
 
   doc.getElementById('btnNextBattle').click();

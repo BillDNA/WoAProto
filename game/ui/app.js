@@ -30,6 +30,18 @@ function aiDisplayName(diff){
   return opt ? opt.textContent : capName(diff||'ai');
 }
 
+// A card def for ANY in-play card id. E.CARD_BY_ID indexes only the default
+// battalion; a mustered or asymmetric battalion draws from the wider pool, so
+// fall back to it — and never return undefined, so a card the UI doesn't know
+// degrades to a readable placeholder instead of crashing a mid-turn render.
+var UI_CARD_POOL_BY_ID = null;
+function cardDef(cid){
+  var c = E.CARD_BY_ID[cid];
+  if (c) return c;
+  if (!UI_CARD_POOL_BY_ID){ UI_CARD_POOL_BY_ID = {}; (E.CARD_POOL || []).forEach(function(x){ UI_CARD_POOL_BY_ID[x.id] = x; }); }
+  return UI_CARD_POOL_BY_ID[cid] || { id: cid, name: cid, text: '' };
+}
+
 var SAVE_V = 6; // bumped when old saves can no longer be loaded (board shapes, trench arrays, block-shaped state, ...)
 
 function api(path, body){
