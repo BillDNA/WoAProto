@@ -3,9 +3,9 @@
 
 This is the human-facing map of the War of Attrition AI. It answers two
 questions: **what is the heuristic and what are the weights**, and **where are
-the AIs**. Everything here lives in
-`game/engine/05-ai.js` (the brain — the only engine part AI work touches) and
-`game/maps.js` (the personalities as data).
+the AIs**. The heuristic lives in `game/engine/05-ai.js` (the brain); the tunable
+numbers are the config homes `AI_WEIGHTS` + `AI_TUNING` in
+`game/engine/00a-ai-config.js`; the shipped personalities are data in `game/maps.js`.
 
 > The tables marked with `<!-- GEN:… -->` comments are **generated** from the
 > engine by `node dev/gen-docs.js` — edit the code (or gen-docs' description
@@ -64,8 +64,8 @@ biased: cheap cards get burned more.
 
 ## Every weight (the `AI_WEIGHTS` table)
 
-These are the multipliers in `evalState`. Defaults live in `engine/05-ai.js`
-(`AI_WEIGHTS`); a personality overrides any of them in its `weights:{}`.
+These are the multipliers in `evalState`. Defaults live in the `AI_WEIGHTS` config
+home in `engine/00a-ai-config.js`; a personality overrides any of them in its `weights:{}`.
 Higher = the AI cares more about that thing. (Generated table — a weight
 reading "TODO — describe me" is new and needs a description in
 `dev/gen-docs.js`.)
@@ -111,8 +111,8 @@ branching cut.
 
 `AI_WEIGHTS` (above) is a config home — the sole owner of the eval weights and the one
 surface a per-Commander weight override merges over. Its sibling home `AI_TUNING` (same
-`engine/05-ai.js`, same shared `defineConfigHome` helper, its own digest) owns the AI's
-*other* tunable numbers — the ones that shape the search and the eval but aren't
+`engine/00a-ai-config.js`, same shared `defineConfigHome` helper, its own digest) owns the
+AI's *other* tunable numbers — the ones that shape the search and the eval but aren't
 per-personality weights (a personality overrides `AI_WEIGHTS` terms, never these).
 
 `AI_TUNING.defaults` is the base personality shape merged **under** any preset/`maps.js`
