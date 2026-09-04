@@ -34,11 +34,15 @@ var SIM = require(path.join(__dirname, '..', 'game', 'sim.js'));
 // implementation dev/balance-report.js ranks maps with, not a drifting copy.
 var R = require(path.join(__dirname, '..', 'game', 'report-model.js'));
 var pct = R.pct, balanceScore = R.balanceScore;
+var LAB = require(path.join(__dirname, 'lab-config.js')); // dev-lab run defaults (sample count, opponent, passes)
 
+// The keys / scales / DEFAULT_MAPS below are the sweep's ALGORITHM shape (which weights,
+// step multipliers, anti-overfit map subset) — the tool's design, not run knobs — so they
+// stay inline. Only the run defaults (n, ai, iters) come from the home.
 function parseArgs(argv) {
   var a = {
     keys: ['advance', 'enemyDist', 'trenchHome', 'trenchFacing', 'fsDiff', 'unitReserve', 'myThreatKill', 'threatTie'],
-    maps: null, n: 16, ai: 'normal', scales: [0.5, 0.75, 1.5, 2], iters: 1
+    maps: null, n: LAB.tuneWeights.samplesPerMap, ai: LAB.tuneWeights.ai, scales: [0.5, 0.75, 1.5, 2], iters: LAB.tuneWeights.iters
   };
   for (var i = 2; i < argv.length; i++) {
     var k = argv[i];

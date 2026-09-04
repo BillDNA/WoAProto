@@ -97,4 +97,10 @@
   });
   I.configDigest = configDigest;
   I.defineConfigHome = defineConfigHome;
+  // Node: also expose the maker as a module export so a node-only peer home
+  // (dev/lab-config.js) can require JUST this part for defineConfigHome — same cached
+  // module the full engine loads, so the shared digest getter's identity holds — without
+  // pulling the whole engine + content I/O. The browser has no `module`; the global above serves it.
+  if (typeof module !== 'undefined' && module.exports)
+    module.exports = { defineConfigHome: defineConfigHome, configDigest: configDigest };
 })(typeof window !== 'undefined' ? window : globalThis);

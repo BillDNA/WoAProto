@@ -49,10 +49,14 @@
 const fs = require('fs');
 const path = require('path');
 
-/* ---------- CLI args (parsed before the engine loads: --battalion needs it) ---------- */
+/* ---------- CLI args (parsed before the engine loads: --battalion needs it) ----------
+   Run-default fields (red/blue/seed/maxTurns/typicalN/k/match target) start null here —
+   parseArgs must stay engine-free (it runs before preloadContent), and the dev-lab home
+   that owns those defaults loads the engine. applyRunDefaults fills the nulls from the
+   home once the engine is up. -1 marks --match given without a number. */
 function parseArgs(argv) {
-  const a = { map: '', red: 'haiku', blue: 'normal', seed: 1234, maxTurns: 60, mock: false, typicalN: 40,
-    effort: '', redEffort: '', blueEffort: '', battalion: '', units: '', mapset: '', k: 15, fullOptions: false,
+  const a = { map: '', red: null, blue: null, seed: null, maxTurns: null, mock: false, typicalN: null,
+    effort: '', redEffort: '', blueEffort: '', battalion: '', units: '', mapset: '', k: null, fullOptions: false,
     cold: false, matchWins: 0, out: '' };
   for (let i = 2; i < argv.length; i++) {
     const k = argv[i];
@@ -60,7 +64,7 @@ function parseArgs(argv) {
     else if (k === '--red') a.red = argv[++i];
     else if (k === '--blue') a.blue = argv[++i];
     else if (k === '--seed') a.seed = Number(argv[++i]) | 0;
-    else if (k === '--max-turns') a.maxTurns = Number(argv[++i]) || 60;
+    else if (k === '--max-turns') a.maxTurns = Number(argv[++i]) || null;
     else if (k === '--typical-n') a.typicalN = Math.max(0, Number(argv[++i]) | 0);
     else if (k === '--effort') a.effort = String(argv[++i] || '').toLowerCase();
     else if (k === '--red-effort') a.redEffort = String(argv[++i] || '').toLowerCase();
@@ -71,7 +75,7 @@ function parseArgs(argv) {
     else if (k === '--k') a.k = Math.max(3, Number(argv[++i]) | 0);
     else if (k === '--full-options') a.fullOptions = true;
     else if (k === '--cold') a.cold = true;
-    else if (k === '--match') a.matchWins = /^\d+$/.test(argv[i + 1] || '') ? +argv[++i] : 3;
+    else if (k === '--match') a.matchWins = /^\d+$/.test(argv[i + 1] || '') ? +argv[++i] : -1;
     else if (k === '--mock') a.mock = true;
     else if (k === '--out') a.out = path.resolve(argv[++i]);
     else { console.error('unknown option: ' + k); process.exit(1); }
@@ -84,6 +88,19 @@ function parseArgs(argv) {
   a.redEffort = a.redEffort || a.effort;
   a.blueEffort = a.blueEffort || a.effort;
   return a;
+}
+
+// Fill the flags left unset with the dev-lab run defaults (LAB.claudePlays). Called
+// once the engine — and thus the home — is loaded; the values then flow via ARGS to
+// their sites (newBattle seed, makeSideTransport models, the turn loop, pruning).
+function applyRunDefaults(a, cp) {
+  if (a.red == null) a.red = cp.redModel;
+  if (a.blue == null) a.blue = cp.blueModel;
+  if (a.seed == null) a.seed = cp.seed;
+  if (a.maxTurns == null) a.maxTurns = cp.maxTurns;
+  if (a.typicalN == null) a.typicalN = cp.typicalN;
+  if (a.k == null) a.k = cp.optionCap;
+  if (a.matchWins === -1) a.matchWins = cp.matchTarget; // --match with no number
 }
 
 // --battalion / --units: the engine snapshots the ACTIVE battalion AND unit stats at
@@ -121,6 +138,10 @@ function preloadContent(battalionId, unitsId) {
 const ARGS = parseArgs(process.argv);
 if (ARGS.battalion || ARGS.units || ARGS.mapset) preloadContent(ARGS.battalion, ARGS.units);
 const E = require(path.join(__dirname, '..', 'game', 'engine.js'));
+// The dev-lab home loads the engine, so it comes in AFTER preloadContent (which must
+// flip active content before the engine snapshots it). Now fill the run defaults.
+const LAB = require(path.join(__dirname, 'lab-config.js'));
+applyRunDefaults(ARGS, LAB.claudePlays);
 // balanceMap is the batch/measurement layer (game/sim.js), not the engine.
 const SIM = require(path.join(__dirname, '..', 'game', 'sim.js'));
 const llm = require(path.join(__dirname, 'llm-client.js'));
