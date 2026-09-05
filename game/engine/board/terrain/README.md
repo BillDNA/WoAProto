@@ -30,11 +30,19 @@ power returns 0 and has no config row.
 
 Write one file here, `defineTerrain({...})` in it, and add it to
 `game/load-order.js`. It is then live in combat, support, deploy, barrage, the
-map editor's paint cycle and stock panel, the commander terrain gate, and the
-`dev/db.js` maps dimension — none of which name a terrain type. Two things are
-not derived and are the new room's own: a `combat.terrain` row if it swings
-power, and a glyph in `BP_TERRAIN_GLYPH` (`game/ui/board-primitives.js`) if it
-draws a mark on its side.
+map editor's paint cycle, stock panel and instructions, the commander terrain
+gate, the dashboard's cross-cut buckets, and the `dev/db.js` maps dimension
+(whose table gains a column on the next open) — none of which name a terrain
+type.
+
+Three things are not derived and are the new room's own:
+
+- `Engine.CONFIG.terrainStock` rows (`<letter>2` / `<letter>3`) — without them
+  the type has no physical piece of any size, so `validateMaps` rejects every
+  map using it.
+- a `combat.terrain` row, if it swings attack or defence power.
+- a glyph in `BP_TERRAIN_GLYPH` (`game/ui/board-primitives.js`), if it draws a
+  mark on its side rather than a bare stroke.
 
 ## Storage is deliberately not unified
 

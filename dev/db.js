@@ -298,6 +298,19 @@ function archiveIfLegacy(file) {
   try { console.error('[db] archived pre-star-schema woa.db -> ' + path.basename(archived) + ' (fresh DB, not migrated)'); } catch (e) {}
 }
 
+// The maps dimension carries one column per map terrain type, so registering a
+// new type widens the table. CREATE TABLE IF NOT EXISTS won't add a column to a
+// table that already exists, and this is not a schema-version bump — old rows
+// stay valid and simply read NULL for the new terrain. Additive and idempotent.
+function addMissingTerrainColumns(db) {
+  var have = {};
+  db.prepare('PRAGMA table_info(maps)').all().forEach(function (c) { have[c.name] = true; });
+  mapTerrains().forEach(function (t) {
+    var col = terrainColumn(t);
+    if (!have[col]) db.exec('ALTER TABLE maps ADD COLUMN ' + col + ' INTEGER');
+  });
+}
+
 /* Open (creating if needed) the DB, ensure the star schema + views, switch on
    WAL, and prepare every statement once. Returns the handle the other calls take. */
 function open(dbPath) {
@@ -307,6 +320,7 @@ function open(dbPath) {
   var db = new sqlite.DatabaseSync(file);
   db.exec('PRAGMA journal_mode = WAL;');
   db.exec(SCHEMA);
+  addMissingTerrainColumns(db);
   db.exec(VIEWS);
   db.exec('PRAGMA user_version = ' + SCHEMA_VERSION + ';');
   var stmts = {

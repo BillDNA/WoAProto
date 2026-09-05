@@ -194,11 +194,13 @@
   // Fortress is dug into its whole position, so its bonus keys on the hex holding
   // terrain — on any facing, not just the attacked edge. A terrain type's own
   // attack/defence answers stay per-edge.
+  // Reads through terrainAt, so a hex's dug trenches count as its terrain here
+  // too — a trait may gate on any registered type, not only the authored ones.
   function hexTerrain(st, hex) {
     var out = [];
     for (var d = 0; d < 6; d++) {
-      var t = st.board.terrainEdges[I.sideKey(hex, d)];
-      if (t && out.indexOf(t) < 0) out.push(t);
+      var t = I.terrainAt(st, hex, d);
+      if (t && out.indexOf(t.letter) < 0) out.push(t.letter);
     }
     return out;
   }
@@ -211,8 +213,8 @@
     var aPow = I.UNITS[au.type].atk;
     var asup = supportFor(st, p, atk.to, atk.from, true);
     aPow += asup.total; aParts = aParts.concat(asup.parts);
-    var atkTerr = I.terrainAt(st, attackEdgeFromHex, I.dirBetween(attackEdgeFromHex, atk.to));
-    if (atkTerr && atkTerr.attack()) { aPow += atkTerr.attack(); aParts.push(atkTerr.label + ' +' + atkTerr.attack()); }
+    var aTer = I.sideEffect(st, attackEdgeFromHex, I.dirBetween(attackEdgeFromHex, atk.to), 'attack');
+    aPow += aTer.delta; if (aTer.part) aParts.push(aTer.part);
     var mod = atk.mod || 0;
     if (mod) { aPow += mod; aParts.push('Card ' + (mod > 0 ? '+' : '') + mod); }
     // Commander passive: an attack-side combatMod, gated by the attacker's hex terrain.
@@ -226,8 +228,8 @@
     else { dPow = 0; dParts = ['Headquarters defense 0']; }
     var dsup = supportFor(st, e, atk.to, null, false);
     dPow += dsup.total; dParts = dParts.concat(dsup.parts);
-    var defTerr = I.terrainAt(st, atk.to, I.dirBetween(atk.to, attackEdgeFromHex));
-    if (defTerr && defTerr.defense()) { dPow += defTerr.defense(); dParts.push(defTerr.label + ' +' + defTerr.defense()); }
+    var dTer = I.sideEffect(st, atk.to, I.dirBetween(atk.to, attackEdgeFromHex), 'defense');
+    dPow += dTer.delta; if (dTer.part) dParts.push(dTer.part);
     // Commander passive: a defense-side combatMod, gated by the defender's hex terrain
     // (any owned terrain edge, not only the attacked one — the "dug in" rule).
     var dCmd = I.commanderCombat(I.sideCommander(st, e), 'defense', hexTerrain(st, atk.to));

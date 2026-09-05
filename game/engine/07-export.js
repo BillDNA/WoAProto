@@ -25,7 +25,7 @@
     // here rather than respelling the list.
     defineTerrain: I.defineTerrain, terrainTypes: I.terrainTypes, terrainOf: I.terrainOf,
     terrainNamed: I.terrainNamed, mapTerrainTypes: I.mapTerrainTypes,
-    terrainAt: I.terrainAt, terrainAcross: I.terrainAcross,
+    terrainAt: I.terrainAt, sideEffect: I.sideEffect,
     pieceProblem: I.pieceProblem, stockCap: I.stockCap, splitPieceRun: I.splitPieceRun,
     PIECE_LENGTHS: I.PIECE_LENGTHS,
     key: I.key, parseKey: I.parseKey, inBoard: I.inBoard, neighbor: I.neighbor, neighbors: I.neighbors,

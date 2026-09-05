@@ -41,10 +41,11 @@ var CC_METRIC_LABEL = {
   tie_pct: 'tie→2nd %', swings: 'lead swings', zero_kill_pct: 'zero-kill %'
 };
 var CC_DIM_LABEL = {
-  map: 'map', shape: 'board shape', mountain_hexes: 'mountain-hex count',
-  forest_hexes: 'forest-hex count', river_hexes: 'river-hex count', hex_total: 'board size (hexes)',
+  map: 'map', shape: 'board shape', hex_total: 'board size (hexes)',
   first_player: 'first player', win_type: 'win type', winner: 'winner', battalion_red: 'red battalion'
 };
+// the per-terrain buckets, off the terrain house — a new type labels itself
+E.mapTerrainTypes().forEach(function (t) { CC_DIM_LABEL[t.name + '_hexes'] = t.name + '-hex count'; });
 // The balance cut asks for the selected metric PLUS this informative set, so a
 // bar's hover shows the whole per-bucket breakdown (not just the bar's metric).
 var CC_TIP_METRICS = ['n', 'first_win_pct', 'hq_pct', 'avg_turns', 'tie_pct', 'drag', 'swings'];

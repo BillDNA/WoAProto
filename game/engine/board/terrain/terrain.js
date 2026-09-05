@@ -82,30 +82,38 @@
     if (t) return byLetter[t] || null;
     return I.trenchCovers(st, hex, dir) ? byName.trench : null;
   }
-  // Whichever of the two hexes' facing sides carries terrain. A border effect
-  // reads both — which hex owns the piece is moot.
-  function terrainAcross(st, a, b) {
-    var dOut = I.dirBetween(a, b), dIn = I.dirBetween(b, a);
-    return terrainAt(st, a, dOut) || terrainAt(st, b, dIn);
+  // Every terrain on the border between two adjacent hexes — up to two, since
+  // each hex owns its own facing side and the two may differ (a forest on one,
+  // a dug trench on the other). A border question must ask BOTH: taking only
+  // the first would let a type that answers "no" mask one that answers "yes".
+  // Which hex owns a piece is otherwise irrelevant.
+  function terrainsAcross(st, a, b) {
+    var out = [];
+    var here = terrainAt(st, a, I.dirBetween(a, b));
+    var there = terrainAt(st, b, I.dirBetween(b, a));
+    if (here) out.push(here);
+    if (there) out.push(there);
+    return out;
   }
 
   /* ---------- the five questions, asked of a side ---------- */
-  function attackBonus(st, hex, dir) {
+  // What the terrain on one side of one hex contributes to a fight, as the
+  // combat breakdown wants it: `when` is 'attack' (the attacker crossing OUT
+  // across this side) or 'defense' (this hex attacked ACROSS it). Both sides of
+  // computeAttack ask this same question.
+  function sideEffect(st, hex, dir, when) {
     var t = terrainAt(st, hex, dir);
-    return t ? t.attack() : 0;
-  }
-  function defenseBonus(st, hex, dir) {
-    var t = terrainAt(st, hex, dir);
-    return t ? t.defense() : 0;
+    var delta = t ? t[when]() : 0;
+    return { delta: delta, part: delta ? t.label + ' +' + delta : null };
   }
   // The terrain denying attacker support across this border, or null.
   function supportBlocker(st, from, to) {
-    var t = terrainAcross(st, from, to);
-    return t && t.blocksSupport ? t : null;
+    var on = terrainsAcross(st, from, to);
+    for (var i = 0; i < on.length; i++) if (on[i].blocksSupport) return on[i];
+    return null;
   }
   function deployBlocked(st, a, b) {
-    var t = terrainAcross(st, a, b);
-    return !!(t && t.blocksDeploy);
+    return terrainsAcross(st, a, b).some(function (t) { return t.blocksDeploy; });
   }
 
   /* ---------- the physical model, written once ---------- */
@@ -176,9 +184,7 @@
   I.terrainNamed = terrainNamed;
   I.mapTerrainTypes = mapTerrainTypes;
   I.terrainAt = terrainAt;
-  I.terrainAcross = terrainAcross;
-  I.attackBonus = attackBonus;
-  I.defenseBonus = defenseBonus;
+  I.sideEffect = sideEffect;
   I.supportBlocker = supportBlocker;
   I.deployBlocked = deployBlocked;
   I.pieceProblem = pieceProblem;

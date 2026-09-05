@@ -354,6 +354,36 @@ test('trench orientations are never fully off-board', () => {
 })();
 });
 
+// A border has TWO facing sides and each hex owns its own, so the two may carry
+// different types. Every border question must ask both — a type answering "no"
+// must never mask the other side's "yes".
+test('both facing sides of a border are asked, not just the first', () => {
+  var st = testSkirmish(88);
+  var A = '0,0', B = E.neighbor(A, 0), C = E.neighbor(A, 1);
+
+  // support: a forest on A's side (blocks nothing) must not hide a trench dug on
+  // the supporter's side of the same border
+  E.Pieces.place(st, A, 'infantry', 'blue');          // the defender under attack
+  E.Pieces.place(st, B, 'infantry', 'red');           // the attacker
+  E.Pieces.place(st, C, 'infantry', 'red');           // C supports the attack on A
+  st.board.terrainEdges[E.sideKey(A, E.dirBetween(A, C))] = 'F';
+  assert.ok(E.supportFor(st, 'red', A, B, true).hexes.indexOf(C) >= 0,
+    'a forest on the border blocks nothing, so C still supports');
+  st.pieces.trenches[C] = [{ dirs: [E.dirBetween(C, A), (E.dirBetween(C, A) + 1) % 6], owner: 'red' }];
+  var sup = E.supportFor(st, 'red', A, B, true);
+  assert.ok(sup.hexes.indexOf(C) < 0 && sup.parts.some(function (p) { return p.indexOf('blocked by trench') >= 0; }),
+    "the trench on the OTHER side of that border still denies support: " + JSON.stringify(sup.parts));
+
+  // deploy: a river on one hex's side must still block when the facing side
+  // carries a trench, which blocks nothing
+  var st2 = testSkirmish(89);
+  st2.board.terrainEdges[E.sideKey(B, E.dirBetween(B, A))] = 'R';
+  assert.ok(E.deployBlocked(st2, A, B), 'the river blocks deploy from A across the border');
+  st2.pieces.trenches[A] = [{ dirs: [E.dirBetween(A, B), (E.dirBetween(A, B) + 1) % 6], owner: 'red' }];
+  assert.ok(E.deployBlocked(st2, A, B),
+    "a trench on A's own side does not cancel the river facing it");
+});
+
 // The house's contract: a fifth type is written once, in one file, and is then
 // live in the physical model, combat, support, deploy, barrage, map validation
 // and the commander terrain gate — none of which names a terrain type.

@@ -169,6 +169,7 @@ function renderEditor(){
       });
     }
   });
+  renderEdTerrainHint();
   renderEdStock();
 }
 
@@ -209,6 +210,32 @@ function groupEdgesToPieces(edges){
   });
   return pieces;
 }
+// The paint tool's own instructions, written from the registry: the cycle in the
+// order the click follows, and each type's rule from the five answers it gives.
+// A fifth terrain type changes this line by existing.
+function edTerrainRule(t){
+  var says = [];
+  if (t.attack())      says.push('+' + t.attack() + ' attacking out across it');
+  if (t.defense())     says.push('+' + t.defense() + ' defending behind it');
+  if (t.blocksSupport) says.push("attacker support can't cross it");
+  // Blocking deploy without blocking support is the counterintuitive pair, so
+  // say the half a player would otherwise assume.
+  if (t.blocksDeploy)  says.push("you can't deploy across it" +
+    (t.blocksSupport ? '' : ' (support still crosses freely)'));
+  return t.label + ' = ' + (says.length ? says.join(', ') : 'no effect on a fight');
+}
+function renderEdTerrainHint(){
+  var types = E.mapTerrainTypes();
+  var cycle = types.map(function(t){
+    return '<span style="color:' + t.colour + ';font-weight:bold;">' + t.name + '</span>';
+  }).join(' &rarr; ') + ' &rarr; empty';
+  $('edTerrainHint').innerHTML =
+    "Terrain belongs to a hex: click just <b>inside</b> a hex's border to cycle " + cycle +
+    " on that hex's side. " + types.map(edTerrainRule).join('; ') +
+    '. Mirror copies everything point-symmetrically. <b>Board hexes</b> carves the outline itself: ' +
+    'click a dashed hex to add it, a solid one to remove it (' + E.CONFIG.mapHexCeiling + '-hex ceiling).';
+}
+
 function renderEdStock(){
   var pieces = groupEdgesToPieces(ED.edges);
   function summary(t){
