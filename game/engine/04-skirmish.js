@@ -142,13 +142,16 @@
     drawHand(st, st.flow.current);
     return st;
   }
+  // A full reserve: every piece a side starts the skirmish holding. Each house
+  // states its own stock — units through I.unitStock(), the trench through the
+  // terrain dial — and this is the only place the two are put in one bag.
   function copyReserves() {
-    var r = { trench: I.CONFIG.terrain.trench.perSide };
-    Object.keys(I.UNITS).forEach(function (t) { r[t] = I.UNITS[t].count || 0; });
+    var r = { trench: I.CONFIG.terrain.trench.perSide }, stock = I.unitStock();
+    Object.keys(stock).forEach(function (t) { r[t] = stock[t]; });
     return r;
   }
-  // Per-skirmish, per-unit-type fold — keyed by I.UNITS' own type keys
-  // (infantry/cavalry/artillery). Named unitMetrics (not "units") because
+  // Per-skirmish, per-unit-type fold — one entry per type the unit house
+  // registers. Named unitMetrics (not "units") because
   // st.pieces.units already means the hexKey->{type,owner} board map.
   // dieT is a death-TURN list, symmetric to dep[] — pushed wherever die++ is
   // tallied (engine/03-rules.js killDefender/killAttacker). Capture only: no
@@ -157,7 +160,7 @@
   // skirmish to derive lifespan.
   function initUnitMetrics() {
     var u = {};
-    Object.keys(I.UNITS).forEach(function (t) { u[t] = { dep: [], atk: 0, abs: 0, kill: 0, die: 0, dieT: [] }; });
+    I.unitTypes().forEach(function (t) { u[t] = { dep: [], atk: 0, abs: 0, kill: 0, die: 0, dieT: [] }; });
     return u;
   }
   function ensureUnitMetrics(st) { // self-heal pre-metrics saves/sims
@@ -165,7 +168,7 @@
     // A save resumed from just before dieT existed has per-type
     // {dep,atk,abs,kill,die} but no dieT array — heal it in place so
     // killDefender/killAttacker's dieT.push never hits undefined.
-    Object.keys(I.UNITS).forEach(function (t) {
+    I.unitTypes().forEach(function (t) {
       var u = st.journal.unitMetrics[t];
       if (u && !Array.isArray(u.dieT)) u.dieT = [];
     });
@@ -282,7 +285,7 @@
     var gain = 3 * turnsLeft;              // best case: a 3-point swing every remaining turn
     if (gain >= need) return null;         // the gap can still be closed in principle
     if (st.board.hqAlive[e] && turnsLeft > 0) {
-      var hasReserve = Object.keys(I.UNITS).some(function (t) { return st.pieces.reserves[p][t] > 0; });
+      var hasReserve = I.unitTypes().some(function (t) { return st.pieces.reserves[p][t] > 0; });
       if (hasReserve && turnsLeft >= 2 && st.cards.removed[p].indexOf('airdrop') < 0) return null; // Airdrop snipe still possible
       var hq = st.board.hq[e], reach = Infinity;
       for (var h2 in st.pieces.units) if (st.pieces.units[h2].owner === p) reach = Math.min(reach, I.dist(h2, hq));
@@ -612,6 +615,8 @@
   I.buildDeck = buildDeck;
   I.newSkirmish = newSkirmish;
   I.copyReserves = copyReserves;
+  // One slot per physical piece on the player mat: a reserve nobody has spent.
+  I.PIECE_TOTALS = copyReserves();
   I.log = log;
   I.cardsRemaining = cardsRemaining;
   I.drawHand = drawHand;

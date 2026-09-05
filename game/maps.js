@@ -12,9 +12,10 @@
    The engine assembles the full data set from THIS file (shapes/units/stock/ai)
    plus WOA_CONTENT (maps + the active battalion's cards). See content/manifest.js.
 
-   UNITS — stats per unit type: atk/def/sup (support given to adjacent
-   fights), worth (bounty the enemy scores for killing it), count (pieces per
-   player). Terrain dials live in "terrain" below.
+   UNITS — one row per unit type, keyed by its game word (the rooms in
+   engine/unit/): atk/def/sup (support given to adjacent fights), worth (bounty
+   the enemy scores for killing it), count (pieces per player). What a type IS
+   is written in its own file. Terrain dials live in "terrain" below.
 
    SHAPES — a board outline. "rows" is a list of [r, qFrom, qTo] spans of
    pointy-top axial coordinates (row r, hexes q=qFrom..qTo inclusive).
@@ -25,8 +26,8 @@
    both sides only ever control 22 hexes.
 
    Card + map field guides now live with the content files and in
-   ../docs/reference/card-cheatsheet.md. What a terrain does is written in its
-   own file in engine/board/terrain/.
+   ../docs/reference/card-cheatsheet.md. What a terrain or a unit does is
+   written in its own file in engine/board/terrain/ and engine/unit/.
    ============================================================================ */
 var WOA_BUILTIN =
 {

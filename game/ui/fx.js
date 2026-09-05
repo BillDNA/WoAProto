@@ -2,7 +2,7 @@
    Classic script, no wrapper — top-level names attach to window (see
    ui/app.js header). These draw transient marks on the SAME live #board as
    board.js, so colours + the unit radius come from board-primitives' BOARD /
-   BOARD_R — restyle a side colour or the unit token once and the flourishes
+   the unit house — restyle a side colour or the unit token once and the flourishes
    follow. */
 'use strict';
 
@@ -28,7 +28,7 @@ function ghostUnit(hex, unit){
   if (!svg.firstChild || !unit) return;
   var xy = hexXY(hex), sc = BOARD.side(unit.owner);
   var g = svgEl('g',{'class':'fx-ghost'});
-  g.appendChild(svgEl('circle',{cx:xy[0], cy:xy[1], r:BOARD_R.unit, fill:sc.fill, stroke:sc.dark, 'stroke-width':BOARD_SW.unit}));
+  g.appendChild(svgEl('circle',{cx:xy[0], cy:xy[1], r:unitTokenR(), fill:sc.fill, stroke:sc.dark, 'stroke-width':UNIT_CONFIG.token.outlineSW}));
   svg.appendChild(g);
   setTimeout(function(){ if (g.parentNode) g.parentNode.removeChild(g); }, 750);
 }

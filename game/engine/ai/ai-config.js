@@ -23,8 +23,7 @@
   I.AI_WEIGHTS = I.defineConfigHome({
     attrWin: 500,      // attrition-projection swing at full urgency
     fsDiff: 8, fsDiffUrgent: 40, // field-score diff, flat + urgency-scaled
-    unitOnBoard: 22, unitReserve: 16, // unitValue multipliers
-    unitValInfantry: 3, unitValCavalry: 4, unitValArtillery: 5, // the AI's own worth-per-unit
+    unitOnBoard: 22, unitReserve: 16, // multipliers over the unit house's own aiValue
     advance: 2.2,      // pressure toward the enemy HQ (per hex of distance)
     hqGuard: 4,        // bonus for sitting next to my own HQ
     enemyDist: 1.6,    // keep enemy units far from my HQ

@@ -71,16 +71,6 @@
     return c;
   }
 
-  // AI-side unit valuation — lives in the weight vector so the tuner and
-  // personalities can sweep it; the defaults are the unitVal* weights in AI_WEIGHTS.
-  var UNIT_VAL_KEY = { infantry: 'unitValInfantry', cavalry: 'unitValCavalry', artillery: 'unitValArtillery' };
-  function unitValue(t, w) {
-    var k = UNIT_VAL_KEY[t];
-    if (k && w && typeof w[k] === 'number') return w[k];
-    if (k) return I.AI_WEIGHTS[k];
-    return (I.UNITS[t] ? I.UNITS[t].worth : 1) + 2;
-  }
-
   // ---- AI personalities are DATA ----
   // One engine, many temperaments: a config is { noise, breadth, replySamples,
   // replyWeight, weights:{...} }. noise = evaluation randomness (mistakes);
@@ -115,8 +105,8 @@
       if (res.defenderIsHQ) {
         if (res.outcome !== 'defender') score -= w.threatHQ; // enemy can take our HQ
       } else if (tgt && tgt.owner === me) {
-        if (res.outcome === 'attacker') score -= unitValue(tgt.type, w) * w.threatKill;
-        else if (res.outcome === 'tie') score -= unitValue(tgt.type, w) * w.threatTie;
+        if (res.outcome === 'attacker') score -= I.unitValue(tgt.type) * w.threatKill;
+        else if (res.outcome === 'tie') score -= I.unitValue(tgt.type) * w.threatTie;
       }
     });
     return score;
@@ -158,12 +148,12 @@
       var u = st.pieces.units[h];
       (u.owner === me ? myUnits : enUnits).push({ h: h, u: u });
     }
-    myUnits.forEach(function (x) { s += unitValue(x.u.type, w) * w.unitOnBoard; });
-    enUnits.forEach(function (x) { s -= unitValue(x.u.type, w) * w.unitOnBoard; });
+    myUnits.forEach(function (x) { s += I.unitValue(x.u.type) * w.unitOnBoard; });
+    enUnits.forEach(function (x) { s -= I.unitValue(x.u.type) * w.unitOnBoard; });
     // reserves slightly less valuable than deployed
-    ['infantry', 'cavalry', 'artillery'].forEach(function (t) {
-      s += st.pieces.reserves[me][t] * unitValue(t, w) * w.unitReserve;
-      s -= st.pieces.reserves[en][t] * unitValue(t, w) * w.unitReserve;
+    I.unitTypes().forEach(function (t) {
+      s += st.pieces.reserves[me][t] * I.unitValue(t) * w.unitReserve;
+      s -= st.pieces.reserves[en][t] * I.unitValue(t) * w.unitReserve;
     });
     // advance toward enemy HQ; keep some defense near own HQ
     var ehq = st.board.hq[en], mhq = st.board.hq[me];
@@ -176,7 +166,7 @@
     I.listAttacks(st, me).forEach(function (a) {
       var res = I.computeAttack(st, a);
       if (res.defenderIsHQ) { if (res.outcome !== 'defender') s += w.myThreatHQ; }
-      else if (res.outcome === 'attacker') s += unitValue(st.pieces.units[a.to].type, w) * w.myThreatKill;
+      else if (res.outcome === 'attacker') s += I.unitValue(st.pieces.units[a.to].type) * w.myThreatKill;
     });
     // enemy threats on mine
     s += threatScan(st, me, w);
@@ -229,8 +219,8 @@
       var res = I.computeAttack(st, { from: c.from, to: c.to, via: c.via || null,
         mod: o.mod || 0, tieSpare: !!o.tieSpare, noAdvance: !!o.noAdvance });
       if (res.defenderIsHQ && res.outcome !== 'defender') return 1e4; // skirmish won
-      var tgt = res.defenderUnit ? unitValue(res.defenderUnit, w) : 0;
-      var mine = unitValue(st.pieces.units[c.from].type, w);
+      var tgt = res.defenderUnit ? I.unitValue(res.defenderUnit) : 0;
+      var mine = I.unitValue(st.pieces.units[c.from].type);
       if (res.outcome === 'attacker') return 100 + tgt * 10;
       if (res.outcome === 'tie') return 50 + (tgt - mine) * 10;
       return -mine * 10; // walking into a repulse
@@ -438,7 +428,6 @@
   /* shared-namespace exports */
   I.clone = clone;
   I.cloneForSim = cloneForSim;
-  I.unitValue = unitValue;
   I.AI_PRESETS = AI_PRESETS;
   I.aiConfig = aiConfig;
   I.threatScan = threatScan;

@@ -13,6 +13,7 @@ uiModalsBuild();
 
 // A terrain type with no mark would draw nothing on the board; fail at load instead.
 terrainMarksCheck();
+unitMarksCheck();
 
 // config identity: a small, read-only screen-corner overlay stamping the
 // config identity — rules version + both config-home digests — so any screenshot

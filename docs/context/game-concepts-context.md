@@ -99,28 +99,28 @@ _Home_: `game/engine/03-rules.js` — `resolveAttack`
 **Unit**:
 A mobile combat piece.
 _Avoid_: Token.
-_Home_: `game/maps.js` — `"units"`
+_Home_: `game/engine/unit/unit.js` — `defineUnit`
 
 **Infantry**:
 The common line Unit.
-_Home_: `game/maps.js` — `"infantry"`
+_Home_: `game/engine/unit/infantry.js` — `infantry`
 
 **Cavalry**:
 The fragile, hard-hitting Unit.
-_Home_: `game/maps.js` — `"cavalry"`
+_Home_: `game/engine/unit/cavalry.js` — `cavalry`
 
 **Artillery**:
 The supporting Unit.
-_Home_: `game/maps.js` — `"artillery"`
+_Home_: `game/engine/unit/artillery.js` — `artillery`
 
 **Unit-set**:
 An authored stat block that replaces the default Units wholesale.
-_Home_: `game/engine/01-core.js` — `content/units/*.js`
+_Home_: `game/engine/unit/unit-config.js` — `variant`
 
 **Bounty**:
 What the enemy scores for destroying a given Unit.
 _Avoid_: worth (the field name), points.
-_Home_: `game/engine/03-rules.js` — `I.UNITS[du.type].worth`
+_Home_: `game/engine/unit/unit-config.js` — `worth`
 
 **Stock**:
 How many pieces of a kind exist to be placed at all.

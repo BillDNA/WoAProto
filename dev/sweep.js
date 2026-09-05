@@ -51,8 +51,8 @@ function defaultWorkers() {
 var WORKER =
   'var path=require("path");var battalionId=process.argv[7]||"",unitsId=process.argv[8]||"",collect=process.argv[10]!=="0";' +
   'if(battalionId||unitsId){var fs=require("fs");' +
-  'global.WOA_CONTENT={maps:[],cards:[],battalions:[],mapsets:[],units:[]};' +
-  '["battalions","maps","mapsets","units"].forEach(function(kind){var dir=path.join(path.dirname(process.argv[1]),"content",kind);' +
+  'global.WOA_CONTENT={maps:[],cards:[],battalions:[],mapsets:[],units:[],commanders:[]};' +
+  'require(path.join(path.dirname(process.argv[1]),"content","kinds.js")).forEach(function(kind){var dir=path.join(path.dirname(process.argv[1]),"content",kind);' +
   'try{fs.readdirSync(dir).filter(function(f){return /\\.js$/.test(f)}).sort().forEach(function(f){require(path.join(dir,f))})}catch(e){}});' +
   'if(battalionId)global.WOA_CONTENT.battalions.forEach(function(d){d.active=(d.id===battalionId)});' +
   'if(unitsId)global.WOA_CONTENT.units.forEach(function(u){u.active=(u.id===unitsId)});}' +

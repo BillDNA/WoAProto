@@ -6,17 +6,16 @@
    -> B solid throughout; this tab follows the header run-A/B pickers, not the
    map drill-down's A|B|A/B toggle.
 
-   Render-only: all shaping is CHART_MODEL.buildUnitsModel (ui/chart-model.js);
-   this file owns only the palette (UNIT_COLOR — one identity colour per unit
-   type across all four panels, reusing existing CHART poles, no good/bad
-   verdict) and the draw. Draws over the shared toolkit (ui/chart-primitives.js):
+   Render-only: all shaping is CHART_MODEL.buildUnitsModel (ui/chart-model.js),
+   and each type's identity colour — one across all four panels, a CHART pole
+   reused with no good/bad verdict — is declared on its own mark in ui/unit/ and
+   read here through unitChartColor. This file owns the draw. Draws over the shared toolkit (ui/chart-primitives.js):
    chMakePlacer, chLine/chText/chTipAttrs, and the .chtip/ch-hit hover layer
    (chBindHits). Small-n: ONE n per unit type per run
    (skirmishesFielded) governs every mark; WOA_REPORT.smallN(n, 'fleet') greys
    the mark + appends "(n=N)" to its tooltip, same as Cards. */
 'use strict';
-var UNIT_COLOR = { cavalry: CHART.divRed[1], infantry: CHART.divBlue[1], artillery: CHART.improve };
-function unColor(t, i) { return UNIT_COLOR[t] || CHART.seq[i % CHART.seq.length]; }
+function unColor(t, i) { return unitChartColor(t) || CHART.seq[i % CHART.seq.length]; }
 
 // The pane's data-shaping lives in CHART_MODEL.buildUnitsModel (ui/chart-model.js):
 // the per-type rows fold (WOA_REPORT.unitsAggFromRows) + linear-domain positioning
@@ -207,7 +206,7 @@ function unRenderBody(el, rowsA, rowsB) {
   // All the pane's data-shaping is one pure call; this function only draws.
   var model = CHART_MODEL.buildUnitsModel(rowsA, rowsB);
   var rows = model.rows, hasDieT = model.hasDieT;
-  rows.forEach(function (r) { r.color = unColor(r.type, r.idx); }); // theme (palette lives here)
+  rows.forEach(function (r) { r.color = unColor(r.type, r.idx); }); // theme (each type's colour is on its mark)
 
   var h = '<div class="un-wrap"><div class="un-grid">';
   h += '<div class="chcard"><h3>Role map</h3>' +

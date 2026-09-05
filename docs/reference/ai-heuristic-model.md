@@ -76,11 +76,8 @@ reading "TODO — describe me" is new and needs a description in
 | `attrWin` | 500 | Huge swing for being the projected attrition winner if the battalions ran out now. Ramps up as cards run low. This is the anti-stalemate term — **don't zero it.** |
 | `fsDiff` | 8 | Value per point of field-score lead (surviving units on board), always on. |
 | `fsDiffUrgent` | 40 | Extra value per point of field-score lead, scaled up as the game nears its end. |
-| `unitOnBoard` | 22 | Value of each of my deployed units (× the unit's worth). |
+| `unitOnBoard` | 22 | Value of each of my deployed units (× the unit's own aiValue, which the unit house owns — `game/engine/unit/unit-config.js`). |
 | `unitReserve` | 16 | Value of each of my un-deployed reserves. Lower than on-board = mild nudge to actually field them. |
-| `unitValInfantry` | 3 | The AI's worth of one infantry, multiplied into the unit/threat terms. A weight, so the tuner and personalities can sweep it. |
-| `unitValCavalry` | 4 | The AI's worth of one cavalry (see `unitValInfantry`). |
-| `unitValArtillery` | 5 | The AI's worth of one artillery (see `unitValInfantry`). |
 | `advance` | 2.2 | Reward for my units being *closer* to the enemy HQ (per hex). Raise it to make the AI pushy. |
 | `hqGuard` | 4 | Bonus for a unit sitting next to my own HQ. |
 | `enemyDist` | 1.6 | Reward for keeping enemy units *far* from my HQ. |

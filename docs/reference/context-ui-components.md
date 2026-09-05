@@ -101,16 +101,24 @@ The HQ mark placed on a hex key.
 _Home_: `game/ui/board-primitives.js` — `bpHQ`
 
 **bpUnitToken**:
-A unit token (circle + chit + type glyph) at an explicit centre — shared by the live board and the manual diagram.
-_Home_: `game/ui/board-primitives.js` — `bpUnitToken`
+A unit token (disc + chit + type glyph) at an explicit centre — shared by the live board, the editor and the manual diagram.
+_Home_: `game/ui/unit/unit-marks.js` — `bpUnitToken`
 
 **bpUnit**:
 The live-board unit — a `bpUnitToken` in its own hover group.
-_Home_: `game/ui/board-primitives.js` — `bpUnit`
+_Home_: `game/ui/unit/unit-marks.js` — `bpUnit`
 
-**bpPieceGlyph**:
-The standalone mini piece glyph (its own `<svg>` string) — the mats twin of `bpUnitToken`.
-_Home_: `game/ui/board-primitives.js` — `bpPieceGlyph`
+**bpUnitGlyph**:
+A unit's mat slot glyph (its own `<svg>` string) — the mats twin of `bpUnitToken`.
+_Home_: `game/ui/unit/unit-marks.js` — `bpUnitGlyph`
+
+**bpTrenchMatGlyph**:
+A trench's mat slot glyph, the terrain house's twin of `bpUnitGlyph`.
+_Home_: `game/ui/board/terrain/trench-mark.js` — `bpTrenchMatGlyph`
+
+**defineUnitMark**:
+Registers how one unit type is drawn — its board glyph, its mat glyph and its dashboard colour.
+_Home_: `game/ui/unit/unit-marks.js` — `defineUnitMark`
 
 **bpAttackLayer**:
 The hover-only attack-math group.

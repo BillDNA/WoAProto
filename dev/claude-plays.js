@@ -110,8 +110,8 @@ function applyRunDefaults(a, cp) {
 // files, same sort order the engine's own node loader uses) and flip the active
 // flag first.
 function preloadContent(battalionId, unitsId) {
-  global.WOA_CONTENT = { maps: [], cards: [], battalions: [], mapsets: [], units: [] };
-  ['battalions', 'maps', 'mapsets', 'units'].forEach(function (kind) {
+  global.WOA_CONTENT = { maps: [], cards: [], battalions: [], mapsets: [], units: [], commanders: [] };
+  require('../game/content/kinds.js').forEach(function (kind) {
     const dir = path.join(__dirname, '..', 'game', 'content', kind);
     let files = [];
     try { files = fs.readdirSync(dir).filter(function (f) { return /\.js$/.test(f); }).sort(); } catch (e) { return; }
@@ -161,13 +161,25 @@ function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 function stamp() { return new Date().toTimeString().slice(0, 8); }
 function say(msg) { console.log('[' + stamp() + '] ' + msg); }
 
-/* ---------- rules blurb (1.0 — keep in lockstep with game/README.md) ---------- */
+/* ---------- rules blurb (1.0 — keep in lockstep with game/README.md) ----------
+   The force and the bounties are read off the live unit house, not retyped: a
+   units variant (--units) changes what the model is told, same as it changes
+   what the engine plays. */
+function forceList() {
+  return E.unitTypes().map(function (t) {
+    var u = E.UNITS[t];
+    return u.count + ' ' + u.name + ' (attack ' + u.atk + ', defense ' + u.def +
+      ', support ' + u.sup + ', worth ' + u.worth + ')';
+  }).join(', ');
+}
+function bountyList() {
+  return E.unitTypes().map(function (t) { return E.UNITS[t].name + ' ' + E.UNITS[t].worth; }).join(' / ');
+}
 const RULES = [
   'WAR OF ATTRITION — RULES IN BRIEF (v' + E.VERSION + ')',
   'Two sides (Red, Blue) fight on a small hex board (grid refs A1, B3, ...). Each side has one',
-  'HQ hex and identical forces: 7 Infantry (attack 1, defense 1, support 1, worth 1 point),',
-  '2 Cavalry (attack 3, defense 0, support 0, 2 points), 1 Artillery (attack 0, defense 0,',
-  'support 2, 3 points), and 3 trenches. One unit per hex; units never stand on HQ hexes.',
+  'HQ hex and identical forces: ' + forceList() + ', and ' + E.PIECE_TOTALS.trench + ' trenches.',
+  'One unit per hex; units never stand on HQ hexes.',
   '',
   'TURNS: each turn you draw a hand of order cards, play exactly ONE (its steps resolve in',
   'order), and discard the rest (discards reshuffle back into your draw pile later; the PLAYED card',
@@ -201,8 +213,8 @@ const RULES = [
   'their only effect is that you cannot DEPLOY to a hex reachable only across the water.',
   '',
   'VICTORY: capture the enemy HQ, or — when a player cannot draw a hand (cards run out) — the',
-  'side with the higher field score of SURVIVING UNITS ON THE BOARD wins (infantry 1 / cavalry 2 /',
-  'artillery 3). Reserves never deployed count for nothing. An attrition TIE goes to whoever',
+  'side with the higher field score of SURVIVING UNITS ON THE BOARD wins (' + bountyList() + ').',
+  'Reserves never deployed count for nothing. An attrition TIE goes to whoever',
   'moved SECOND in that skirmish.'
 ].join('\n');
 
@@ -233,7 +245,7 @@ function unitList(st, p) {
 }
 function reservesStr(st, p) {
   const r = st.pieces.reserves[p];
-  return Object.keys(E.UNITS).map(function (t) { return r[t] + ' ' + E.UNITS[t].name; }).join(', ') +
+  return E.unitTypes().map(function (t) { return r[t] + ' ' + E.UNITS[t].name; }).join(', ') +
     ', ' + r.trench + ' trenches';
 }
 function spentStr(st, p) {

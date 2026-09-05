@@ -3,8 +3,8 @@
 
    The only type the player places during a game, so it is the only one with dig
    affordances — a ghost of each offered orientation and the brass knob at the
-   corner the pair shares. Those live here because they are the trench's look,
-   not the board's. */
+   corner the pair shares — and the only one with a player-mat slot. Those live
+   here because they are the trench's look, not the board's or the mat's. */
 'use strict';
 
 var TRENCH_MARK = {
@@ -15,6 +15,13 @@ var TRENCH_MARK = {
   dash: '7 4'
 };
 defineTerrainMark(TRENCH_MARK);
+
+// The mat slot's mini trench, in its own 20x20 viewBox — the player mat draws a
+// slot per trench a side may still dig, beside its unit slots.
+function bpTrenchMatGlyph(){
+  return '<svg viewBox="0 0 20 20"><path d="M3 13 Q10 5 17 13" stroke="'+TRENCH_MARK.stroke+
+    '" stroke-width="2.6" stroke-dasharray="3.4 2.4" fill="none" stroke-linecap="round"/></svg>';
+}
 
 // A dug trench on one edge. o = {s, rad, sw, dash} lets the manual's mini-board
 // draw the same mark at its scale.

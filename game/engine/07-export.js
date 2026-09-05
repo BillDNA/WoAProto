@@ -5,6 +5,11 @@
   'use strict';
   var I = global.WOA_E = global.WOA_E || {};
 
+  // The unit stock guardrail runs here, where the whole namespace is up: a units
+  // variant that does not total CONFIG.pieceTotal pieces fails at load rather
+  // than quietly skewing every skirmish.
+  I.checkUnitStock();
+
   var Engine = {
     VERSION: I.RULES_VERSION,
     UNITS: I.UNITS, CARDS: I.CARDS, CARD_BY_ID: I.CARD_BY_ID, MAPS: I.MAPS,
@@ -17,6 +22,11 @@
     cardPoints: I.cardPoints, battalionPoints: I.battalionPoints,
     CONFIG: I.CONFIG, configDigest: I.configDigest, defineConfigHome: I.defineConfigHome,
     PIECE_TOTALS: I.PIECE_TOTALS,
+    // The unit house (engine/unit/) — the registry, the stat record and what a
+    // type is worth to each layer. Its screen dialect is game/ui/unit/.
+    defineUnit: I.defineUnit, unitTypes: I.unitTypes, unitOf: I.unitOf,
+    unitStock: I.unitStock, unitValue: I.unitValue, deployPoints: I.deployPoints,
+    unitStockProblem: I.unitStockProblem,
     SHAPES: I.SHAPES, DEFAULT_SHAPE: I.DEFAULT_SHAPE, boardHexes: I.boardHexes, setBoard: I.setBoard, hexes: I.hexes,
     buildShape: I.buildShape, ensureMapShape: I.ensureMapShape,
     currentShape: I.currentShape, rot180: I.rot180, buildTerrain: I.buildTerrain, hexLabel: I.hexLabel,
