@@ -1,8 +1,6 @@
-/* River — a terrain room over terrain.js. Water bends no fight: it adds no
-   power and does NOT block support, which crosses it freely for both sides.
-   What it denies is deploy-CONTROL extension across the border — control creep
-   stops at the water while armies already on the field still support across it.
-   Attacks, repositions and Airdrop cross freely; nothing removes it. */
+/* River. Support crosses it freely — what it stops is deploy control, so an
+   army already on the field fights across the water but a side cannot creep
+   new units over it. Attacks, repositions and Airdrop cross. Nothing removes it. */
 (function (global) {
   'use strict';
   var I = global.WOA_E = global.WOA_E || {};
@@ -16,8 +14,6 @@
     defense: function () { return 0; },
     blocksSupport: false,
     blocksDeploy: true,
-    barrageable: false,
-    colour: 'var(--river)',
-    glyphColour: '#a9c6dd'
+    barrageable: false
   });
 })(typeof window !== 'undefined' ? window : globalThis);

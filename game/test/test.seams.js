@@ -57,13 +57,14 @@ test('seam: E.CONFIG is the sole owner — no flat value-aliases survive', () =>
   // the dials live on the home, addressed by their nested name.
   assert.ok(typeof E.CONFIG.pointsCap === 'number', 'CONFIG.pointsCap owns the army-points cap');
   assert.ok(E.CONFIG.points && typeof E.CONFIG.points === 'object', 'CONFIG.points owns the weight table');
-  assert.ok(E.CONFIG.terrainStock && typeof E.CONFIG.terrainStock === 'object', 'CONFIG.terrainStock owns the terrain chit counts');
-  assert.ok(typeof E.CONFIG.trenchCount === 'number', 'CONFIG.trenchCount owns the trench piece count');
+  assert.ok(E.CONFIG.terrain && typeof E.CONFIG.terrain === 'object', 'CONFIG.terrain owns the terrain house dials');
   // the retired flat value-exports resolve to nothing — no second path to the same value.
   assert.strictEqual(E.BATTALION_POINTS_CAP, undefined, 'BATTALION_POINTS_CAP is gone (read E.CONFIG.pointsCap)');
   assert.strictEqual(E.POINTS, undefined, 'POINTS is gone (read E.CONFIG.points)');
-  assert.strictEqual(E.TERRAIN_STOCK, undefined, 'TERRAIN_STOCK is gone (read E.CONFIG.terrainStock)');
-  assert.strictEqual(E.TRENCH_COUNT, undefined, 'TRENCH_COUNT is gone (read E.CONFIG.trenchCount)');
+  assert.strictEqual(E.TERRAIN_STOCK, undefined, 'TERRAIN_STOCK is gone (read E.CONFIG.terrain)');
+  assert.strictEqual(E.TRENCH_COUNT, undefined, 'TRENCH_COUNT is gone (read E.CONFIG.terrain.trench.perSide)');
+  assert.strictEqual(E.CONFIG.terrainStock, undefined, 'the flat terrainStock is gone (each type has a CONFIG.terrain row)');
+  assert.strictEqual(E.CONFIG.trenchCount, undefined, 'the flat trenchCount is gone (CONFIG.terrain.trench.perSide)');
   // the enforcement reads that one owner: a battalion built past the home cap is
   // over budget, tracking the home dial with no second path in play.
   const perCard = E.cardPoints({ steps: [{ type: 'attack' }] });
@@ -116,12 +117,8 @@ test('seam: the engine dials are grouped into named sections, not one flat blob'
   ['combat', 'skirmish', 'limits'].forEach(function (s) {
     assert.ok(C[s] && typeof C[s] === 'object', 'CONFIG.' + s + ' is a named section');
   });
-  assert.ok('terrain' in C.combat && 'hqSupport' in C.combat,
-    'combat holds the per-fight power bonuses');
-  assert.ok(E.terrainTypes().every(function (t) {
-    var row = C.combat.terrain[t.letter] || {};
-    return Object.keys(row).every(function (k) { return k === 'attack' || k === 'defense'; });
-  }), 'the combat terrain table is keyed by terrain letter, one row per type that swings power');
+  assert.ok('hqSupport' in C.combat, 'combat holds the per-fight power bonuses');
+  assert.ok(!('terrain' in C.combat), "terrain's own dials are its house's file, not the combat section");
   assert.ok('handDraw' in C.skirmish && 'matchTarget' in C.skirmish, 'skirmish holds the draw + victory dials');
   assert.ok('turnCap' in C.limits && 'stepsPerTurn' in C.limits, 'limits holds the loop-safety rails');
 });
@@ -129,18 +126,18 @@ test('seam: the engine dials are grouped into named sections, not one flat blob'
 // Each section's dial is proven tune-and-move RELATIVE to its live value — bump the
 // dial, watch the mechanism it drives move by the same delta; never a pinned number.
 // Restore the dial after so no later test inherits a tuned home.
-test('seam: combat.terrain.F.attack drives the forest attack bonus', () => {
-  const C = E.CONFIG, base = C.combat.terrain.F.attack;
+test('seam: CONFIG.terrain.forest.attack drives the forest attack bonus', () => {
+  const C = E.CONFIG, base = C.terrain.forest.attack;
   const st = testSkirmish(1);
   E.Pieces.place(st, '0,0', 'infantry', 'red');
   E.Pieces.place(st, '0,1', 'infantry', 'blue');
   st.board.terrainEdges[E.sideKey('0,0', E.dirBetween('0,0', '0,1'))] = 'F'; // forest the attack crosses
   const p0 = E.computeAttack(st, { from: '0,0', to: '0,1' }).attackerPower;
   try {
-    C.combat.terrain.F.attack = base + 2;
+    C.terrain.forest.attack = base + 2;
     const p1 = E.computeAttack(st, { from: '0,0', to: '0,1' }).attackerPower;
     assert.ok(p1 - p0 === 2, 'raising the forest row raises attack power by the same delta (got +' + (p1 - p0) + ')');
-  } finally { C.combat.terrain.F.attack = base; }
+  } finally { C.terrain.forest.attack = base; }
 });
 
 test('seam: skirmish.handDraw sizes the opening hand', () => {

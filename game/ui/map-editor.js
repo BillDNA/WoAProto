@@ -227,7 +227,7 @@ function edTerrainRule(t){
 function renderEdTerrainHint(){
   var types = E.mapTerrainTypes();
   var cycle = types.map(function(t){
-    return '<span style="color:' + t.colour + ';font-weight:bold;">' + t.name + '</span>';
+    return '<span style="color:' + BOARD.terrainStroke(t.letter) + ';font-weight:bold;">' + t.name + '</span>';
   }).join(' &rarr; ') + ' &rarr; empty';
   $('edTerrainHint').innerHTML =
     "Terrain belongs to a hex: click just <b>inside</b> a hex's border to cycle " + cycle +

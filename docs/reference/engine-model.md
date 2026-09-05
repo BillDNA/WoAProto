@@ -14,7 +14,7 @@
 
 A side is keyed `sideKey(hex,dir)` = `'q,r>d'`. Map defs list pieces as `{t, edges:[[q,r,d],...]}`.
 
-Every type is a room in the terrain house, `game/engine/board/terrain/` — one file per type, on one base. Each answers the same five questions about a side (`attack`, `defense`, `blocksSupport`, `blocksDeploy`, `barrageable`) and the rules ask them through `terrainAt` / `terrainAcross` / `supportBlocker` / `deployBlocked`; no rules file names a terrain type. See that directory's README.
+Each type is one file in `game/engine/board/terrain/`, over a shared base; its drawing is one file in `game/ui/board/terrain/`. The rules ask through `terrainAt` / `sideEffect` / `supportBlocker` / `deployBlocked` and name no type. Start at `game/engine/board/terrain/terrain.md`.
 
 - **Forest** in hex X: +1 attack when X's occupant attacks out across a covered side; barrageable.
 - **Mountain** in hex X: +1 defense when X is attacked across a covered side.

@@ -74,15 +74,15 @@ _Home_: `game/ui/board-primitives.js` — `bpHexTile`
 
 **bpTerrainStroke**:
 The bare coloured terrain edge line (no glyph) — the editor's own paint stroke.
-_Home_: `game/ui/board-primitives.js` — `bpTerrainStroke`
+_Home_: `game/ui/board/terrain/terrain-marks.js` — `bpTerrainStroke`
 
 **bpTerrainEdge**:
 A hex-owned terrain side drawn inset, with its terrain glyph.
-_Home_: `game/ui/board-primitives.js` — `bpTerrainEdge`
+_Home_: `game/ui/board/terrain/terrain-marks.js` — `bpTerrainEdge`
 
 **bpTrenchLine**:
 A dug trench segment on one hex edge.
-_Home_: `game/ui/board-primitives.js` — `bpTrenchLine`
+_Home_: `game/ui/board/terrain/trench-mark.js` — `bpTrenchLine`
 
 **bpHQMarker**:
 The HQ mark (ring + star) at an explicit centre.
@@ -118,19 +118,19 @@ _Home_: `game/ui/board-primitives.js` — `bpHighlight`
 
 **bpTrenchGhost**:
 The dashed trench-orientation dig preview.
-_Home_: `game/ui/board-primitives.js` — `bpTrenchGhost`
+_Home_: `game/ui/board/terrain/trench-mark.js` — `bpTrenchGhost`
 
 **bpTrenchKnob**:
 The brass knob at a trench pair's shared corner.
-_Home_: `game/ui/board-primitives.js` — `bpTrenchKnob`
+_Home_: `game/ui/board/terrain/trench-mark.js` — `bpTrenchKnob`
 
-**bpBarrageTrench**:
-The barrage mark over a trenched edge.
-_Home_: `game/ui/board-primitives.js` — `bpBarrageTrench`
+**bpBarrageTerrain**:
+The barrage mark over a terrain side, at that type's own inset.
+_Home_: `game/ui/board/terrain/terrain-marks.js` — `bpBarrageTerrain`
 
-**bpBarrageForestEdge**:
-The barrage mark over a forest edge.
-_Home_: `game/ui/board-primitives.js` — `bpBarrageForestEdge`
+**defineTerrainMark**:
+How one terrain type is drawn — stroke, glyph ink, inset, glyph.
+_Home_: `game/ui/board/terrain/terrain-marks.js` — `defineTerrainMark`
 
 **bpEdgeHitLine**:
 The invisible fat hit-line over a hex edge (editor click target).

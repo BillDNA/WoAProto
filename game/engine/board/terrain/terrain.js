@@ -1,46 +1,34 @@
-/* War of Attrition — the TERRAIN kind: the base every terrain type sits on.
-   Classic script (browser + node). The shell lives with its instances — every
-   other file in this directory is one terrain type.
+/* The terrain base. Every other .js file here is one terrain type; each calls
+   defineTerrain() once, and this file holds everything they share.
 
-   A terrain type is a hex-owned directional SIDE. Every type answers the same
-   five questions about that side, and no type answers any other:
+   Terrain sits on a SIDE — one hex's face of a border, keyed sideKey(hex,dir).
+   A type declares what its side does (see FIELDS below) and nothing more; the
+   rules ask through terrainAt / sideEffect / supportBlocker / deployBlocked and
+   never name a type.
 
-     attack        power added when this hex's occupant attacks OUT across it
-     defense       power added when this hex is attacked ACROSS it
-     blocksSupport does it deny ATTACKER support across the border
-     blocksDeploy  does it deny deploy-control extension across the border
-     barrageable   may the naval guns remove it
+   Storage is NOT unified. Map terrain is authored into st.board.terrainEdges;
+   trenches are dug at runtime into st.pieces.trenches. terrainAt reads both.
+   Unifying them would break barrage and edgeFreeForTrench.
 
-   Plus one physical model, shared: 2-3 contiguous sides inside a single hex, a
-   per-length stock cap, a glyph and a colour. Only the answers are the room.
-
-   Storage is deliberately NOT unified. Authored map terrain lives in
-   st.board.terrainEdges keyed by sideKey; a trench is placed at runtime from a
-   per-side reserve and lives in st.pieces.trenches. A room declares which it
-   uses (`storage`) and the base dispatches — collapsing the two would break
-   barrage and edgeFreeForTrench.
-
-   defineTerrain({...}) registers a type and throws at load on a malformed one,
-   so `ls` this directory to read the registry. */
+   Classic script (browser + node), shared namespace g.WOA_E. Prose: terrain.md */
 (function (global) {
   'use strict';
   var I = global.WOA_E = global.WOA_E || {};
 
-  // The physical model, written once: a piece wraps this many adjacent corners.
+  // Side lengths the physical pieces come in.
   var PIECE_LENGTHS = [2, 3];
 
+  // What a room declares. Every field is required; anything else is rejected.
   var FIELDS = {
-    letter:        'string',    // the one-character code carried in state + map data
-    name:          'string',    // lowercase game word ('forest') — the trait/query vocabulary
-    label:         'string',    // player-facing capitalised name
-    storage:       'string',    // 'edges' (authored into the map) | 'pieces' (placed at runtime)
-    attack:        'function',  // () -> power added attacking out across this side
-    defense:       'function',  // () -> power added defending behind this side
-    blocksSupport: 'boolean',
-    blocksDeploy:  'boolean',
-    barrageable:   'boolean',
-    colour:        'string',    // side stroke, a CSS custom property the stylesheet themes
-    glyphColour:   'string'     // the mark drawn on the side (not themed)
+    letter:        'string',    // code stored in map data and st.board.terrainEdges
+    name:          'string',    // game word — the vocabulary traits and queries use
+    label:         'string',    // capitalised, for player-facing text
+    storage:       'string',    // 'edges' = authored into the map | 'pieces' = dug at runtime
+    attack:        'function',  // () -> power added attacking OUT across this side
+    defense:       'function',  // () -> power added defending BEHIND this side
+    blocksSupport: 'boolean',   // deny the attacker's support across this border
+    blocksDeploy:  'boolean',   // deny deploy control across this border
+    barrageable:   'boolean'    // the naval guns can remove it
   };
 
   var all = [], byLetter = {}, byName = {};
@@ -144,9 +132,12 @@
     if (!contiguous) return 'sides of a piece must be contiguous (wrap adjacent corners of the hex)';
     return null;
   }
-  // Physical stock: how many pieces of this type and length the box holds.
-  // undefined = no physical piece of that size exists.
-  function stockCap(letter, length) { return I.CONFIG.terrainStock[letter + length]; }
+  // How many pieces of this type and length the box holds; undefined when the
+  // box has no piece that size.
+  function stockCap(letter, length) {
+    var t = byLetter[letter], row = t && I.CONFIG.terrain[t.name];
+    return row && row.pieces ? row.pieces[length] : undefined;
+  }
 
   // A painted run of contiguous sides longer than the biggest physical piece is
   // cut into pieces the box actually holds — never leaving a remainder below the

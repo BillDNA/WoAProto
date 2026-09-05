@@ -1,10 +1,10 @@
-/* Auto-split from game/test.js (ADR-0003: node:test). Subsystem: terrain.
-   Frozen-API entry game/test.js delegates here; run this file directly with
-   `node game/test.terrain.js` or the whole gate with `node game/test.js`. */
+/* The terrain house's own tests — they live with the code they cover.
+   Run alone with `node game/engine/board/terrain/terrain.test.js`, or as part of
+   the gate with `node game/test/test.js`, which requires this file. */
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { E, testSkirmish, fixtureCard } = require('./test.helpers.js');
+const { E, testSkirmish, fixtureCard } = require('../../../test/test.helpers.js');
 
 test('terrain pieces live inside ONE hex', () => {
 (function () {
@@ -389,14 +389,13 @@ test('both facing sides of a border are asked, not just the first', () => {
 // and the commander terrain gate — none of which names a terrain type.
 // Registered LAST so the shipped four are asserted against a four-type registry.
 test('the terrain house: a fifth type needs only its own answers', () => {
+  E.CONFIG.terrain.marsh = { defense: 3, pieces: { 2: 4 } };
   E.defineTerrain({
     letter: 'X', name: 'marsh', label: 'Marsh', storage: 'edges',
     attack: function () { return 0; },
-    defense: function () { return 3; },
-    blocksSupport: true, blocksDeploy: true, barrageable: true,
-    colour: '#000', glyphColour: '#000'
+    defense: function () { return E.CONFIG.terrain.marsh.defense; },
+    blocksSupport: true, blocksDeploy: true, barrageable: true
   });
-  E.CONFIG.terrainStock.X2 = 4;
 
   assert.ok(E.pieceProblem({ t: 'X', edges: [[0, 0, 0], [0, 0, 1]] }) === null,
     'the shared physical model accepts the new type');

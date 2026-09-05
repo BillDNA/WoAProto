@@ -119,7 +119,7 @@ _Home_: `game/engine/03-rules.js` — `I.UNITS[du.type].worth`
 
 **Stock**:
 How many pieces of a kind exist to be placed at all.
-_Home_: `game/engine/00-config.js` — `terrainStock`
+_Home_: `game/engine/board/terrain/terrain-config.js` — `pieces`
 
 **Piece total**:
 The fixed number of pieces a side's Units must sum to.

@@ -175,7 +175,7 @@ function renderHighlights(g){
   else if (o.type==='barrage'){
     o.trenches.forEach(function(t){
       t.dirs.forEach(function(d){
-        var seg = bpBarrageTrench(g, t.hex, d);
+        var seg = bpBarrageTerrain(g, t.hex, d, 'T');
         seg.addEventListener('mouseenter', function(){ seg.setAttribute('opacity','.9'); });
         seg.addEventListener('mouseleave', function(){ seg.setAttribute('opacity','.55'); });
         seg.addEventListener('click', function(){ act({trenchHex:t.hex, trenchIdx:t.idx}); });
@@ -184,7 +184,7 @@ function renderHighlights(g){
     o.terrainTargets.forEach(function(pc){
       pc.edgeKeys.forEach(function(ek){
         var parts = ek.split('>');
-        var line = bpBarrageForestEdge(g, parts[0], +parts[1]);
+        var line = bpBarrageTerrain(g, parts[0], +parts[1], pc.t);
         line.addEventListener('mouseenter', function(){ line.setAttribute('opacity','.9'); });
         line.addEventListener('mouseleave', function(){ line.setAttribute('opacity','.55'); });
         line.addEventListener('click', function(){ act({pieceId: pc.id}); });

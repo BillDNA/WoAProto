@@ -1,14 +1,11 @@
-/* Trench — a terrain room over terrain.js, and the only one stored as pieces:
-   it is dug during the game from a per-side reserve into st.pieces.trenches,
-   not authored into the map. On the combat and support axis it is a true
-   sibling — it denies ATTACKER support across the border (ownership is
-   irrelevant; lose a trench and the enemy uses it just fine) and grants no
-   defence power of its own. The naval guns can blow it in.
+/* Trench. Dug during the game from a per-player reserve, so it is the one type
+   stored in st.pieces.trenches rather than authored into the map. It denies the
+   attacker's support across its border — ownership is irrelevant, lose a trench
+   and the enemy uses it. The guns can blow it in.
 
-   Two rules key on a trench without going through the side questions, because
-   they are about the FIGHT rather than the border: a trenched defending border
-   spares the defender on a tie, and stops a tie capturing a trenched HQ. Those
-   live with combat in engine/03-rules.js. */
+   Two trench rules are about the FIGHT rather than the border, so they live
+   with combat in engine/03-rules.js: a trenched defending border spares the
+   defender on a tie, and stops a tie taking a trenched HQ. */
 (function (global) {
   'use strict';
   var I = global.WOA_E = global.WOA_E || {};
@@ -22,8 +19,6 @@
     defense: function () { return 0; },
     blocksSupport: true,
     blocksDeploy: false,
-    barrageable: true,
-    colour: '#5a4326',
-    glyphColour: '#5a4326'
+    barrageable: true
   });
 })(typeof window !== 'undefined' ? window : globalThis);

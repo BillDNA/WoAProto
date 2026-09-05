@@ -4,7 +4,7 @@
    engine gate and exits non-zero on failure. */
 'use strict';
 require('./test.geometry.js');
-require('./test.terrain.js');
+require('../engine/board/terrain/terrain.test.js');  // the terrain house keeps its own tests
 require('./test.cards.js');
 require('./test.maps.js');
 require('./test.ai.js');

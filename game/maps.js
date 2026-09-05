@@ -14,8 +14,7 @@
 
    UNITS — stats per unit type: atk/def/sup (support given to adjacent
    fights), worth (bounty the enemy scores for killing it), count (pieces per
-   player). "trenchCount" is trenches per player. "terrainStock" caps the
-   physical terrain pieces per type+length (the editor warns past it).
+   player). Terrain dials live in "terrain" below.
 
    SHAPES — a board outline. "rows" is a list of [r, qFrom, qTo] spans of
    pointy-top axial coordinates (row r, hexes q=qFrom..qTo inclusive).
@@ -26,11 +25,8 @@
    both sides only ever control 22 hexes.
 
    Card + map field guides now live with the content files and in
-   ../docs/reference/card-cheatsheet.md. Terrain reminder (0.3 rules): forest in
-   hex X = +1 attacking OUT across a covered side; mountain in X = +1 defending
-   X across a covered side; river ("R") = support crosses freely but you cannot
-   DEPLOY across it (control does not extend over the water), and it can't be
-   barraged. Terrain pieces come in 2- and 3-side lengths.
+   ../docs/reference/card-cheatsheet.md. What a terrain does is written in its
+   own file in engine/board/terrain/.
    ============================================================================ */
 var WOA_BUILTIN =
 {
@@ -39,8 +35,16 @@ var WOA_BUILTIN =
     "cavalry":   { "name": "Cavalry",   "atk": 3, "def": 0, "sup": 0, "worth": 2, "count": 2 },
     "artillery": { "name": "Artillery", "atk": 0, "def": 0, "sup": 2, "worth": 3, "count": 1 }
   },
-  "trenchCount": 3,
-  "terrainStock": { "F3": 2, "F2": 4, "M3": 2, "M2": 4, "R3": 2, "R2": 4 },
+  /* TERRAIN — one row per type, keyed by its game word (the rooms in
+     engine/board/terrain/). "pieces" is how many physical chits of each side
+     length the box holds; the editor warns past it. Trench "perSide" is
+     trenches per player. A type's combat dials sit in its row too. */
+  "terrain": {
+    "forest":   { "attack": 1,  "pieces": { "2": 4, "3": 2 } },
+    "mountain": { "defense": 1, "pieces": { "2": 4, "3": 2 } },
+    "river":    { "pieces": { "2": 4, "3": 2 } },
+    "trench":   { "perSide": 3 }
+  },
 
   /* AI — extra personalities as data (easy/normal/hard are built in). A config
      is { noise, breadth, replySamples, replyWeight, weights:{...} }: noise =
