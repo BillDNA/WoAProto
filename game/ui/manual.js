@@ -18,21 +18,20 @@
    in ui/boot.js; this file only declares. */
 'use strict';
 
-/* ============ mini-board geometry (the live board's vocabulary at MP_S) ============
-   The manual draws its own tiny board, but through board-primitives' shared
-   helpers at MP_S scale — hexXY(k,MP_S) for position, bpUnitToken / bpHQMarker
-   for the pieces, and the BOARD palette for every colour — so the two boards
-   are literally the same marks, one implementation, just smaller. Only the
-   scale-tuned line widths + the manual's own overlays (glow halos, ghost ✕,
-   support rings, A-vs-D pill) stay local. */
-var MP_S = 34; // mini hex radius (live board: S = 44)
+/* ============ mini-board geometry (the live board's vocabulary at HEX_CONFIG.manual.size) ============
+   The manual draws its own tiny board, but through the shared helpers at HEX_CONFIG.manual.size
+   scale — the hex house's hexXY(k,HEX_CONFIG.manual.size) for position, board-primitives'
+   bpUnitToken / bpHQMarker for the pieces, and the BOARD palette for every
+   colour — so the two boards are literally the same marks, one implementation,
+   just smaller. Only the scale-tuned line widths + the manual's own overlays
+   (glow halos, ghost ✕, support rings, A-vs-D pill) stay local. */
 // the mini-board's own scale-tuned line weights (board-primitives keeps mini-boards
 // local by design). Named here so the glow/ghost widths are read by name, not re-typed.
 var MP_GLOW_SW = { side:11, trench:10 }; // attention-halo widths (.medge-glow)
 var MP_GHOST_SW = 2.5;                   // the ✕ struck over a fallen unit / HQ
 
-function mpXY(k){ return hexXY(k, MP_S); }
-function mpViewBox(hexList){ return viewBoxFor(hexList, MP_S); }
+function mpXY(k){ return hexXY(k, HEX_CONFIG.manual.size); }
+function mpViewBox(hexList){ return viewBoxFor(hexList, HEX_CONFIG.manual.size); }
 
 /* ============ fixture states (real engine states, tiny inline maps) ============ */
 // One 9-hex outline shared by every example: labels A1-A3 / B1-B3 / C1-C3.
@@ -106,38 +105,38 @@ function mpDrawFrame(f){
   // hexes + grid labels (same classes as the live board)
   list.forEach(function(k){
     var xy = mpXY(k), p = E.parseKey(k);
-    svg.appendChild(bpHexPoly(xy[0], xy[1], MP_S-1, ((p[0]-p[1])%2+2)%2));
-    bpCoordLabel(svg, xy[0], xy[1], E.hexLabel(k), MP_S);
+    svg.appendChild(bpHexPoly(xy[0], xy[1], HEX_CONFIG.manual.tile, ((p[0]-p[1])%2+2)%2));
+    bpCoordLabel(svg, xy[0], xy[1], E.hexLabel(k), HEX_CONFIG.manual.size);
   });
 
   // attention halos go UNDER the terrain/trench lines they highlight
   (f.glowSides||[]).forEach(function(sk){
-    var parts = sk.split('>'), c = mpXY(parts[0]), aa = cornerAngles(+parts[1]);
-    var p1 = cornerPt(c[0],c[1],aa[0],MP_S*0.85), p2 = cornerPt(c[0],c[1],aa[1],MP_S*0.85);
+    var parts = E.parseSideKey(sk), c = mpXY(parts[0]), aa = hexCornerAngles(parts[1]);
+    var p1 = hexCornerPt(c[0],c[1],aa[0],HEX_CONFIG.manual.size*0.85), p2 = hexCornerPt(c[0],c[1],aa[1],HEX_CONFIG.manual.size*0.85);
     svg.appendChild(svgEl('line', { x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
       stroke:'var(--gold-glow)','stroke-width':MP_GLOW_SW.side,'stroke-linecap':'round','class':'medge-glow' }));
   });
   if (f.glowTrench){
     var gc = mpXY(f.glowTrench.hex);
     f.glowTrench.dirs.forEach(function(d){
-      var aa = cornerAngles(d);
-      var p1 = cornerPt(gc[0],gc[1],aa[0],MP_S*0.74), p2 = cornerPt(gc[0],gc[1],aa[1],MP_S*0.74);
+      var aa = hexCornerAngles(d);
+      var p1 = hexCornerPt(gc[0],gc[1],aa[0],HEX_CONFIG.manual.size*0.74), p2 = hexCornerPt(gc[0],gc[1],aa[1],HEX_CONFIG.manual.size*0.74);
       svg.appendChild(svgEl('line', { x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
         stroke:'var(--gold-glow)','stroke-width':MP_GLOW_SW.trench,'stroke-linecap':'round','class':'medge-glow' }));
     });
   }
 
-  // terrain sides — the live board's terrain mark (bpTerrainEdge) at MP_S scale,
+  // terrain sides — the live board's terrain mark (bpTerrainEdge) at HEX_CONFIG.manual.size scale,
   // its glyph sizes/line widths tuned for the mini board (no data-edge hover).
   for (var ek in st.board.terrainEdges){
     bpTerrainEdge(svg, ek, st.board.terrainEdges[ek],
-      { s:MP_S, sw:6, riverSW:1.8, riverDash:'5 4', forestR:3.4, forestR2:2.6, edgeData:false });
+      { s:HEX_CONFIG.manual.size, sw:6, riverSW:1.8, riverDash:'5 4', forestR:3.4, forestR2:2.6, edgeData:false });
   }
 
-  // trenches — the live board's trench mark (bpTrenchLine) at MP_S scale
+  // trenches — the live board's trench mark (bpTrenchLine) at HEX_CONFIG.manual.size scale
   for (var th in st.pieces.trenches){
     st.pieces.trenches[th].forEach(function(tr){
-      tr.dirs.forEach(function(d2){ bpTrenchLine(svg, th, d2, { s:MP_S, sw:5, dash:'5.5 3' }); });
+      tr.dirs.forEach(function(d2){ bpTrenchLine(svg, th, d2, { s:HEX_CONFIG.manual.size, sw:5, dash:'5.5 3' }); });
     });
   }
 
@@ -154,7 +153,7 @@ function mpDrawFrame(f){
   // support rings — the live FX colors: gold attacker / steel defender / grey denied
   (f.rings||[]).forEach(function(r){
     var xy = mpXY(r.hex);
-    svg.appendChild(svgEl('circle',{cx:xy[0], cy:xy[1], r:MP_S*0.82, 'class':'mring '+r.cls}));
+    svg.appendChild(svgEl('circle',{cx:xy[0], cy:xy[1], r:HEX_CONFIG.manual.size*0.82, 'class':'mring '+r.cls}));
   });
 
   // strike arrow (the live fxStrike, persistent, bending through a via-HQ)
@@ -163,8 +162,8 @@ function mpDrawFrame(f){
   // "unit fell here but the hex is re-occupied" badge (advance-into-kill)
   (f.badges||[]).forEach(function(h){
     var xy = mpXY(h);
-    svg.appendChild(svgEl('circle',{cx:xy[0]+MP_S*0.55, cy:xy[1]-MP_S*0.6, r:7.5, fill:BOARD.redDark, stroke:BOARD.outline,'stroke-width':1}));
-    var x = svgEl('text',{x:xy[0]+MP_S*0.55, y:xy[1]-MP_S*0.6+3.5,'text-anchor':'middle','font-size':10,'font-weight':'bold',fill:BOARD.star});
+    svg.appendChild(svgEl('circle',{cx:xy[0]+HEX_CONFIG.manual.size*0.55, cy:xy[1]-HEX_CONFIG.manual.size*0.6, r:7.5, fill:BOARD.redDark, stroke:BOARD.outline,'stroke-width':1}));
+    var x = svgEl('text',{x:xy[0]+HEX_CONFIG.manual.size*0.55, y:xy[1]-HEX_CONFIG.manual.size*0.6+3.5,'text-anchor':'middle','font-size':10,'font-weight':'bold',fill:BOARD.star});
     x.textContent = '✕';
     svg.appendChild(x);
   });
@@ -174,9 +173,9 @@ function mpDrawFrame(f){
     var pxy = mpXY(f.pill.at);
     var fill = BOARD.hint[f.pill.tone] || BOARD.hint.neutral;
     var w = f.pill.text.length*6.4 + 14;
-    svg.appendChild(svgEl('rect',{x:pxy[0]-w/2, y:pxy[1]+MP_S*0.52, width:w, height:16, rx:8,
+    svg.appendChild(svgEl('rect',{x:pxy[0]-w/2, y:pxy[1]+HEX_CONFIG.manual.size*0.52, width:w, height:16, rx:8,
       fill:fill, stroke:BOARD.outline,'stroke-width':1, 'class':'mpill'}));
-    var pt = svgEl('text',{x:pxy[0], y:pxy[1]+MP_S*0.52+11.5, 'text-anchor':'middle',
+    var pt = svgEl('text',{x:pxy[0], y:pxy[1]+HEX_CONFIG.manual.size*0.52+11.5, 'text-anchor':'middle',
       'font-size':10.5, 'font-weight':'bold', fill:BOARD.star, 'class':'mpill-t'});
     pt.textContent = f.pill.text;
     svg.appendChild(pt);
@@ -185,8 +184,8 @@ function mpDrawFrame(f){
 function mpDrawUnit(svg, hex, u, ghost){
   var xy = mpXY(hex);
   var g = svgEl('g', ghost ? {'class':'mghost'} : {});
-  // same token as the live board, at MP_S sizes (see bpUnitToken)
-  bpUnitToken(g, xy[0], xy[1], u.owner, u.type, { r:MP_S*0.5, circSW:2, chitHW:10, chitHH:7, chitSW:1.2, glyphSW:1.7, artR:3.6 });
+  // same token as the live board, at HEX_CONFIG.manual.size sizes (see bpUnitToken)
+  bpUnitToken(g, xy[0], xy[1], u.owner, u.type, { r:HEX_CONFIG.manual.size*0.5, circSW:2, chitHW:10, chitHH:7, chitSW:1.2, glyphSW:1.7, artR:3.6 });
   if (ghost){ // fallen: the ✕ over the counter
     g.appendChild(svgEl('line',{x1:xy[0]-12,y1:xy[1]-12,x2:xy[0]+12,y2:xy[1]+12,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));
     g.appendChild(svgEl('line',{x1:xy[0]-12,y1:xy[1]+12,x2:xy[0]+12,y2:xy[1]-12,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));
@@ -196,7 +195,7 @@ function mpDrawUnit(svg, hex, u, ghost){
 function mpDrawHQ(svg, hex, p, ghost){
   var xy = mpXY(hex);
   var g = svgEl('g', ghost ? {'class':'mghost'} : {});
-  bpHQMarker(g, xy[0], xy[1], p, { rOuter:MP_S*0.62, outerSW:1.6, rInner:MP_S*0.5, brassSW:1.3, starFS:15, starDY:5.5 });
+  bpHQMarker(g, xy[0], xy[1], p, { rOuter:HEX_CONFIG.manual.size*0.62, outerSW:1.6, rInner:HEX_CONFIG.manual.size*0.5, brassSW:1.3, starFS:15, starDY:5.5 });
   if (ghost){
     g.appendChild(svgEl('line',{x1:xy[0]-13,y1:xy[1]-13,x2:xy[0]+13,y2:xy[1]+13,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));
     g.appendChild(svgEl('line',{x1:xy[0]-13,y1:xy[1]+13,x2:xy[0]+13,y2:xy[1]-13,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));
@@ -213,7 +212,7 @@ function mpDrawStrike(svg, s){
     'stroke-dasharray':'10 6' }));
   var a = pts[pts.length-2], b = pts[pts.length-1];
   var ang = Math.atan2(b[1]-a[1], b[0]-a[0]);
-  var tip = [b[0]-Math.cos(ang)*MP_S*0.46, b[1]-Math.sin(ang)*MP_S*0.46];
+  var tip = [b[0]-Math.cos(ang)*HEX_CONFIG.manual.size*0.46, b[1]-Math.sin(ang)*HEX_CONFIG.manual.size*0.46];
   var l = 11, wdt = 6.5;
   var p1 = [tip[0]-Math.cos(ang)*l+Math.sin(ang)*wdt, tip[1]-Math.sin(ang)*l-Math.cos(ang)*wdt];
   var p2 = [tip[0]-Math.cos(ang)*l-Math.sin(ang)*wdt, tip[1]-Math.sin(ang)*l+Math.cos(ang)*wdt];

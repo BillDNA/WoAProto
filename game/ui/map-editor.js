@@ -5,6 +5,10 @@
    script; the editor's tool/button wiring lives in ui/boot.js. */
 'use strict';
 
+// the editor paints terrain further out than the live board's marks do, so a
+// bare side is easy to hit and easy to see
+var ED_TERRAIN_INSET = HEX_CONFIG.board.size * 0.8;
+
 /* =================== map editor =================== */
 // ED.hexes: null = a named template shape; {'q,r':true,...} = a custom outline
 // (saved as def.shapeDef, registered by the engine under '@<map id>')
@@ -28,7 +32,7 @@ function openEditor(def, isNewCopy){
     ED.edges = {};
     (def.pieces||[]).forEach(function(pc){
       pc.edges.forEach(function(e){
-        ED.edges[E.key(e[0], e[1]) + '>' + e[2]] = pc.t;
+        ED.edges[E.sideKey(E.key(e[0], e[1]), e[2])] = pc.t;
       });
     });
   } else {
@@ -63,7 +67,10 @@ function edHexSet(){
   return set;
 }
 function edHexPairs(){
-  return Object.keys(edHexSet()).map(E.parseKey).sort(function(a,b){ return a[1]-b[1] || a[0]-b[0]; });
+  // copies, not the house's shared parse results — these become map data the
+  // editor and the save file own (E.parseKey hands back a read-only pair).
+  return Object.keys(edHexSet()).map(function(k){ return E.parseKey(k).slice(); })
+    .sort(function(a,b){ return a[1]-b[1] || a[0]-b[0]; });
 }
 // register the outline being edited so hexLabel / rot180 speak its grid
 function edLiveShape(){
@@ -76,10 +83,8 @@ function edRemoveHex(k){
   delete set[k];
   // a removed hex takes its terrain with it — including neighbours' sides that faced it
   for (var d = 0; d < 6; d++){
-    delete ED.edges[k + '>' + d];
-    var qr = E.parseKey(k);
-    var n = E.key(qr[0] + E.DIRS[d][0], qr[1] + E.DIRS[d][1]);
-    delete ED.edges[n + '>' + ((d + 3) % 6)];
+    delete ED.edges[E.sideKey(k, d)];
+    delete ED.edges[E.facingSide(k, d)];
   }
   if (ED.red && E.key(ED.red[0], ED.red[1]) === k) ED.red = null;
   if (ED.blue && E.key(ED.blue[0], ED.blue[1]) === k) ED.blue = null;
@@ -105,9 +110,8 @@ function renderEditor(){
   if (ED.tool === 'hexes'){
     var set = edHexSet(), seen = {};
     hexList.forEach(function(k){
-      var qr = E.parseKey(k);
       for (var d = 0; d < 6; d++){
-        var n = E.key(qr[0] + E.DIRS[d][0], qr[1] + E.DIRS[d][1]);
+        var n = E.step(k, d);
         if (!set[n] && !seen[n]){ seen[n] = true; ghosts.push(n); }
       }
     });
@@ -117,11 +121,11 @@ function renderEditor(){
   svg.appendChild(gHex); svg.appendChild(gTer); svg.appendChild(gHit);
   hexList.forEach(function(k){
     var xy = hexXY(k);
-    var p = bpHexPoly(xy[0], xy[1], S-1, false); // editor tiles are uniform, no dark parity
+    var p = bpHexPoly(xy[0], xy[1], HEX_CONFIG.board.tile, false); // editor tiles are uniform, no dark parity
     if (ED.tool==='redhq' || ED.tool==='bluehq'){
       p.style.cursor = 'pointer';
       p.addEventListener('click', function(){
-        var qr = E.parseKey(k);
+        var qr = E.parseKey(k).slice(); // editor state owns its pair (see edHexPairs)
         if (ED.tool==='redhq'){ ED.red = qr; if (ED.blue && E.key(ED.blue[0],ED.blue[1])===k) ED.blue=null; }
         else { ED.blue = qr; if (ED.red && E.key(ED.red[0],ED.red[1])===k) ED.red=null; }
         renderEditor();
@@ -131,19 +135,19 @@ function renderEditor(){
       p.addEventListener('click', function(){ edRemoveHex(k); renderEditor(); });
     }
     gHex.appendChild(p);
-    bpCoordLabel(gHex, xy[0], xy[1], E.hexLabel(k), S, 'none');
+    bpCoordLabel(gHex, xy[0], xy[1], E.hexLabel(k), HEX_CONFIG.board.size, 'none');
   });
   ghosts.forEach(function(k){
     var xy = hexXY(k);
-    var p = bpGhostHex(gHex, xy[0], xy[1], S-4);
+    var p = bpGhostHex(gHex, xy[0], xy[1], HEX_CONFIG.board.tile-3);
     p.style.cursor = 'pointer';
     p.addEventListener('click', function(){
       if (hexList.length >= E.CONFIG.mapHexCeiling){ toast(E.CONFIG.mapHexCeiling + ' hexes is the ceiling (laser-cutter max — and big empty maps are not fun).', 3600); return; }
       ED.hexes[k] = true;
       renderEditor();
     });
-    p.addEventListener('mouseenter', function(){ p.setAttribute('fill', BOARD.ghostHover); });
-    p.addEventListener('mouseleave', function(){ p.setAttribute('fill', BOARD.ghostFill); });
+    p.addEventListener('mouseenter', function(){ p.setAttribute('fill', HEX_CONFIG.ink.ghostHover); });
+    p.addEventListener('mouseleave', function(){ p.setAttribute('fill', HEX_CONFIG.ink.ghost); });
   });
   ['red','blue'].forEach(function(side){
     var hq = ED[side];
@@ -153,13 +157,13 @@ function renderEditor(){
     bpHQMarker(gHex, xy[0], xy[1], side, { rInner:false, pe:'none' });
   });
   edInternalSides().forEach(function(e){
-    var ek = e[0] + '>' + e[1];
+    var ek = E.sideKey(e[0], e[1]);
     var t = ED.edges[ek];
-    // the editor draws the bare terrain STROKE (no glyph) at inset S*0.8; the
+    // the editor draws the bare terrain STROKE (no glyph) at ED_TERRAIN_INSET; the
     // shared mark owns colour/width/linecap. Empty sides get only the hit line.
-    if (t) bpTerrainStroke(gTer, e[0], e[1], t, { rad: S*0.8, pe: 'none', edgeData: false });
+    if (t) bpTerrainStroke(gTer, e[0], e[1], t, { rad: ED_TERRAIN_INSET, pe: 'none', edgeData: false });
     if (ED.tool==='terrain'){
-      var hit = bpEdgeHitLine(gHit, e[0], e[1], S*0.8);
+      var hit = bpEdgeHitLine(gHit, e[0], e[1], ED_TERRAIN_INSET);
       hit.addEventListener('click', function(){
         // cycle empty -> each map terrain type in registration order -> empty
         var cycle = E.mapTerrainTypes().map(function(t){ return t.letter; });
@@ -178,12 +182,13 @@ function groupEdgesToPieces(edges){
   // (physical terrain pieces sit inside one hex, wrapping its corners)
   function vkey(h, p){ return h + '@' + Math.round(p[0])+':'+Math.round(p[1]); }
   var items = Object.keys(edges).map(function(ek){
-    var parts = ek.split('>');
-    var d = +parts[1];
+    var parts = E.parseSideKey(ek);
+    var d = parts[1];
     var c = hexXY(parts[0]);
-    var aa = cornerAngles(d);
+    var aa = hexCornerAngles(d);
     return { ek: ek, t: edges[ek], a: parts[0], d: d,
-      v1: vkey(parts[0], cornerPt(c[0],c[1],aa[0],S)), v2: vkey(parts[0], cornerPt(c[0],c[1],aa[1],S)) };
+      v1: vkey(parts[0], hexCornerPt(c[0],c[1],aa[0],HEX_CONFIG.board.size)),
+      v2: vkey(parts[0], hexCornerPt(c[0],c[1],aa[1],HEX_CONFIG.board.size)) };
   });
   var used = {}, pieces = [];
   items.forEach(function(it, i){

@@ -156,7 +156,6 @@ if (!ARGS.out) ARGS.out = path.join(LOG_DIR, 'claude-plays-log.jsonl');
 
 const HEURISTIC = {};
 Object.keys(E.AI_PRESETS).forEach(function (k) { HEURISTIC[k] = true; });
-const DIRN = ['E', 'NE', 'NW', 'W', 'SW', 'SE'];
 
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 function stamp() { return new Date().toTimeString().slice(0, 8); }
@@ -273,13 +272,13 @@ function stateView(st, p, withHand, match) {
   const tr = [];
   Object.keys(st.pieces.trenches).forEach(function (h) {
     st.pieces.trenches[h].forEach(function (t) {
-      tr.push(E.hexLabel(h) + ' (edges ' + t.dirs.map(function (d) { return DIRN[d]; }).join('+') + ')');
+      tr.push(E.hexLabel(h) + ' (edges ' + t.dirs.map(E.dirName).join('+') + ')');
     });
   });
   L.push('Trenches (deny attacker support across their edges): ' + (tr.join('; ') || 'none') + '.');
   const te = st.board.terrainPieces.filter(function (pc) { return !pc.removed; }).map(function (pc) {
-    const hex = pc.edgeKeys[0].split('>')[0];
-    const dirs = pc.edgeKeys.map(function (ek) { return DIRN[+ek.split('>')[1]]; }).join(',');
+    const hex = E.sideHex(pc.edgeKeys[0]);
+    const dirs = pc.edgeKeys.map(function (ek) { return E.dirName(E.sideDir(ek)); }).join(',');
     return (pc.t === 'F' ? 'Forest' : pc.t === 'M' ? 'Mountain' : 'River') + ' in ' + E.hexLabel(hex) + ' (sides ' + dirs + ')';
   });
   L.push('Terrain: ' + (te.join('; ') || 'none') + '.');
@@ -337,7 +336,7 @@ function describeChoice(st, so, c) {
   }
   if (so.type === 'trench') {
     return 'Dig a trench at ' + E.hexLabel(c.hex) + ' covering edges ' +
-      DIRN[c.dirs[0]] + '+' + DIRN[c.dirs[1]];
+      E.dirName(c.dirs[0]) + '+' + E.dirName(c.dirs[1]);
   }
   if (so.type === 'attack') {
     const a = so.attacks.find(function (x) {
@@ -368,7 +367,7 @@ function describeChoice(st, so, c) {
   if (so.type === 'barrage') {
     if (c.trenchHex) return 'Barrage: destroy the trench at ' + E.hexLabel(c.trenchHex);
     const pc = st.board.terrainPieces.find(function (x) { return x.id === c.pieceId; });
-    return 'Barrage: burn away the forest at ' + E.hexLabel(pc.edgeKeys[0].split('>')[0]);
+    return 'Barrage: burn away the forest at ' + E.hexLabel(E.sideHex(pc.edgeKeys[0]));
   }
   return JSON.stringify(c);
 }

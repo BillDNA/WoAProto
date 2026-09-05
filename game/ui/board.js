@@ -1,6 +1,7 @@
 /* War of Attrition — ui part: game-board rendering. Orchestration only —
-   every mark is drawn by a bp* primitive from ui/board-primitives.js (the hex
-   geometry and svgEl live there too); this file decides WHAT to draw and wires
+   every mark is drawn by a bp* primitive from ui/board-primitives.js (svgEl and
+   the BOARD palette live there; where a hex sits is ui/board/hex/hex-screen.js, the
+   hex house's screen dialect); this file decides WHAT to draw and wires
    the interaction (clicks, the attack-math hover), never the raw SVG. Classic
    script, no wrapper — top-level names attach to window (see ui/app.js header). */
 'use strict';
@@ -183,8 +184,8 @@ function renderHighlights(g){
     });
     o.terrainTargets.forEach(function(pc){
       pc.edgeKeys.forEach(function(ek){
-        var parts = ek.split('>');
-        var line = bpBarrageTerrain(g, parts[0], +parts[1], pc.t);
+        var parts = E.parseSideKey(ek);
+        var line = bpBarrageTerrain(g, parts[0], parts[1], pc.t);
         line.addEventListener('mouseenter', function(){ line.setAttribute('opacity','.9'); });
         line.addEventListener('mouseleave', function(){ line.setAttribute('opacity','.55'); });
         line.addEventListener('click', function(){ act({pieceId: pc.id}); });

@@ -6,9 +6,9 @@
    rules ask through terrainAt / sideEffect / supportBlocker / deployBlocked and
    never name a type.
 
-   Map terrain is authored into st.board.terrainEdges, trenches are dug at
-   runtime into st.pieces.trenches; a room says which it uses and terrainAt
-   reads both, so nothing downstream cares.
+   Map terrain is authored into st.board.terrainEdges (buildTerrain loads it),
+   trenches are dug at runtime into st.pieces.trenches; a room says which it
+   uses and terrainAt reads both, so nothing downstream cares.
 
    Classic script (browser + node), shared namespace g.WOA_E. Prose: terrain.md */
 (function (global) {
@@ -112,6 +112,31 @@
     return terrainsAcross(st, a, b).some(function (t) { return t.blocksDeploy; });
   }
 
+  /* ---------- loading a map's terrain ---------- */
+  // Every [q,r,d] a map authors is a SIDE owned by hex (q,r) — the 'edges'
+  // storage above, read back by terrainAt. The board says whether a side is on
+  // it; what the side then DOES is its type's room.
+  // returns { edges: {sideKey: letter}, pieces: [{id, t, edgeKeys:[sideKey…]}] }
+  function buildTerrain(map) {
+    var edges = {}, pieces = [];
+    map.pieces.forEach(function (p, i) {
+      var prob = pieceProblem(p);
+      if (prob) throw new Error('map "' + map.name + '" piece ' + (i + 1) + ': ' + prob);
+      var eks = [];
+      p.edges.forEach(function (e) {
+        var k = I.key(e[0], e[1]);
+        if (!I.inBoard(e[0], e[1]) || !I.neighbor(k, e[2]))
+          throw new Error('map "' + map.name + '" side off board: ' + JSON.stringify(e));
+        var sk = I.sideKey(k, e[2]);
+        if (edges[sk]) throw new Error('map "' + map.name + '" duplicate side: ' + sk);
+        edges[sk] = p.t;
+        eks.push(sk);
+      });
+      pieces.push({ id: 'p' + i, t: p.t, edgeKeys: eks });
+    });
+    return { edges: edges, pieces: pieces };
+  }
+
   /* ---------- the physical model, written once ---------- */
   // A piece sits INSIDE one hex and wraps adjacent corners. Returns a problem
   // string, or null if the piece is well-formed.
@@ -187,6 +212,7 @@
   I.tieHolder = tieHolder;
   I.supportBlocker = supportBlocker;
   I.deployBlocked = deployBlocked;
+  I.buildTerrain = buildTerrain;
   I.pieceProblem = pieceProblem;
   I.stockCap = stockCap;
   I.splitPieceRun = splitPieceRun;

@@ -531,7 +531,7 @@
         if (!pc || b.terrainTargets.indexOf(pc) < 0) throw new Error('invalid barrage');
         pc.removed = true;
         pc.edgeKeys.forEach(function (ek) { delete st.board.terrainEdges[ek]; });
-        log(st, I.cap(p) + "'s naval barrage clears the " + I.terrainOf(pc.t).name + ' at ' + I.hexLabel(pc.edgeKeys[0].split('>')[0]) + '.');
+        log(st, I.cap(p) + "'s naval barrage clears the " + I.terrainOf(pc.t).name + ' at ' + I.hexLabel(I.sideHex(pc.edgeKeys[0])) + '.');
       } else throw new Error('invalid barrage choice');
     }
     if (st.flow.pending) st.flow.pending.acted = (st.flow.pending.acted || 0) + 1;

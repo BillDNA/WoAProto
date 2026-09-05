@@ -1,6 +1,8 @@
-/* War of Attrition — engine part 02: hex geometry, shapes, current-board state.
-   What a terrain side DOES is the terrain house (engine/board/terrain/); this
-   part only lays the authored pieces onto sides.
+/* War of Attrition — engine part 02: board outline, shapes, current-board state.
+   The hex vocabulary it is written in — keys, directions, distance, edge and
+   side names — is the hex house (engine/board/hex/hex.js); this part answers the one
+   question that needs an outline: which of a hex's six neighbours EXIST.
+   Terrain is the terrain house's, sides and all (engine/board/terrain/).
    Classic script (browser + node). Engine parts share the internal namespace
    g.WOA_E (alias I) — cross-part calls go through I.* at the CALL SITE (never
    captured at load time), so only filename-sorted load order matters. */
@@ -8,10 +10,7 @@
   'use strict';
   var I = global.WOA_E = global.WOA_E || {};
 
-  /* ---------- board geometry (pointy-top axial; shapes defined in maps.js) ---------- */
-  var DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]]; // E NE NW W SW SE
-  function key(q, r) { return q + ',' + r; }
-  function parseKey(k) { var p = k.split(','); return [+p[0], +p[1]]; }
+  /* ---------- board outline (shapes defined in maps.js) ---------- */
 
   // A shape def is { label, rows: [[r, qFrom, qTo], ...] } — contiguous spans —
   // OR { label, hexes: [[q, r], ...] } — an explicit hex set, the honest
@@ -22,7 +21,7 @@
     var list = [], set = {}, rowsByR = {}, rs = [];
     var sumQ = 0, sumR = 0;
     function addHex(q, r) {
-      var k = key(q, r);
+      var k = I.key(q, r);
       if (set[k]) throw new Error('shape "' + name + '": duplicate hex ' + k);
       set[k] = true; list.push(k);
       sumQ += q; sumR += r;
@@ -47,8 +46,8 @@
     var cq = (2 * sumQ) / list.length, cr = (2 * sumR) / list.length;
     var symmetric = (cq === Math.round(cq)) && (cr === Math.round(cr)) &&
       list.every(function (k) {
-        var p = parseKey(k);
-        return set[key(cq - p[0], cr - p[1])];
+        var p = I.parseKey(k);
+        return set[I.key(cq - p[0], cr - p[1])];
       });
     return {
       label: def.label || name,
@@ -87,58 +86,55 @@
     }
     return (map && map.shape) || DEFAULT_SHAPE;
   }
-  // Human grid reference on the current board: row letter (A = top) + position
-  // in the row counted from the left, e.g. 'C4'. Falls back to raw coords.
+  // Which row and column a hex is in on the current board — the half of a grid
+  // reference that needs an outline. The NAME it turns into is I.gridName.
+  // An off-board key has no row, so it falls back to raw coords.
   function hexLabel(k) {
     var s = SHAPES[CURRENT_SHAPE];
-    var p = parseKey(k);
+    var p = I.parseKey(k);
     var ri = s.rowRs.indexOf(p[1]);
     if (ri < 0 || !s.set[k]) return k;
-    return String.fromCharCode(65 + ri) + (p[0] - s.rowQFrom[p[1]] + 1);
+    return I.gridName(ri, p[0] - s.rowQFrom[p[1]]);
   }
   function currentShape() { return CURRENT_SHAPE; }
   function hexes() { return HEXES; }
-  function inBoard(q, r) { return !!SHAPES[CURRENT_SHAPE].set[key(q, r)]; }
+  function inBoard(q, r) { return !!SHAPES[CURRENT_SHAPE].set[I.key(q, r)]; }
   function rot180(shape, q, r) {
     var c = SHAPES[shape] && SHAPES[shape].centre;
     return c ? [c[0] - q, c[1] - r] : [-q, -r];
   }
-  // Per-shape geometry cache. Board topology (parsed coords + the six neighbor
-  // keys of each hex) is a pure function of the immutable shape outline, but the
-  // AI search re-derived it from scratch every call — parseKey split a "q,r"
-  // string and key() re-concatenated one on every neighbor/dist/dirBetween, and
-  // the Field Marshal search calls those millions of times per skirmish. Build
-  // the tables once per shape (lazily) and read them instead: same values, no
-  // per-call string churn. ensureMapShape rebuilds the shape object for shapeDef
-  // maps, so the cache never goes stale. Held in a side WeakMap (not a property
-  // on the shape) so a shape stays a pristine {list,set,…} for any enumerate /
-  // serialize path.
-  // Contract: neighbors()/coordOf() hand back the CACHED arrays, not copies —
-  // callers MUST treat them read-only (all in-repo callers do; verified). Not
-  // Object.freeze'd on purpose: freezing forces V8's slow frozen-elements read
-  // path on these hottest-of-hot arrays and measured ~20% off throughput, which
-  // defeats the point — the contract is the guard here, not the freeze.
+  // Per-shape neighbour cache — the outline half of the hex vocabulary. Which
+  // of a hex's six neighbours exist is a pure function of the immutable shape,
+  // but the AI search re-derived it on every call and the Field Marshal asks
+  // millions of times per skirmish. Build the table once per shape (lazily) and
+  // read it instead. ensureMapShape rebuilds the shape object for shapeDef maps,
+  // so the cache never goes stale. Held in a side WeakMap (not a property on the
+  // shape) so a shape stays a pristine {list,set,…} for any enumerate/serialize path.
+  // Contract: neighbors() hands back the CACHED array, not a copy — callers MUST
+  // treat it read-only (all in-repo callers do; verified). Not Object.freeze'd on
+  // purpose: freezing forces V8's slow frozen-elements read path on this
+  // hottest-of-hot array and measured ~20% off throughput, which defeats the
+  // point — the contract is the guard here, not the freeze.
   var GEO = new WeakMap();
   var LAST_SHAPE = null, LAST_GEO = null; // hot-path 1-entry cache (see geo())
   function buildGeo(s) {
-    var coord = {}, nbr = {}, list = {}, L = s.list, i, d;
-    for (i = 0; i < L.length; i++) coord[L[i]] = parseKey(L[i]);
+    var nbr = {}, list = {}, L = s.list, i, d;
     for (i = 0; i < L.length; i++) {
-      var k = L[i], c = coord[k], row = new Array(6), lst = [];
+      var k = L[i], row = new Array(6), lst = [];
       for (d = 0; d < 6; d++) {
-        var nk = key(c[0] + DIRS[d][0], c[1] + DIRS[d][1]);
+        var nk = I.step(k, d);
         if (s.set[nk]) { row[d] = nk; lst.push(nk); } else row[d] = null;
       }
       nbr[k] = row; list[k] = lst;
     }
-    return { coord: coord, nbr: nbr, list: list };
+    return { nbr: nbr, list: list };
   }
   function geo() {
-    // Hot path: geo() runs on every neighbor/dist/coordOf call (millions/skirmish),
-    // so keep a 1-entry cache keyed on the shape OBJECT identity — a bare ref
-    // compare, no per-call WeakMap probe. It auto-invalidates on any shape swap
-    // (setBoard) or rebuild (ensureMapShape makes a fresh object), and the WeakMap
-    // still memoizes per shape so alternating maps never re-derive a seen shape.
+    // Hot path: geo() runs on every neighbor call (millions/skirmish), so keep a
+    // 1-entry cache keyed on the shape OBJECT identity — a bare ref compare, no
+    // per-call WeakMap probe. It auto-invalidates on any shape swap (setBoard) or
+    // rebuild (ensureMapShape makes a fresh object), and the WeakMap still
+    // memoizes per shape so alternating maps never re-derive a seen shape.
     var s = SHAPES[CURRENT_SHAPE] || SHAPES[DEFAULT_SHAPE];
     if (s === LAST_SHAPE) return LAST_GEO;
     var g = GEO.get(s);
@@ -146,15 +142,13 @@
     LAST_SHAPE = s; LAST_GEO = g;
     return g;
   }
-  // Parsed [q,r] for a hex on the current board, from the cache; falls back to
-  // parseKey for an off-board / unknown key. One home for the cache/parse rule.
-  function coordOf(k) { return geo().coord[k] || parseKey(k); }
-
+  // The neighbour in direction d that EXISTS on the current board, or null.
+  // The step itself is the hex house's; the outline filter is this file's.
   function neighbor(k, d) {
     var row = geo().nbr[k];
     if (row) return row[d];
-    var qr = parseKey(k); var q = qr[0] + DIRS[d][0], r = qr[1] + DIRS[d][1]; // off-board key: original math
-    return inBoard(q, r) ? key(q, r) : null;
+    var nk = I.step(k, d);                       // off-board key: no cached row
+    return SHAPES[CURRENT_SHAPE].set[nk] ? nk : null;
   }
   function neighbors(k) {
     // Returns the shape's cached neighbor list (read-only by contract, see the
@@ -165,51 +159,13 @@
     for (var d = 0; d < 6; d++) { var n = neighbor(k, d); if (n) out.push(n); }
     return out;
   }
-  function dirBetween(a, b) { // a,b adjacent
-    var pa = coordOf(a), pb = coordOf(b);
-    for (var d = 0; d < 6; d++) if (pa[0] + DIRS[d][0] === pb[0] && pa[1] + DIRS[d][1] === pb[1]) return d;
-    return -1;
-  }
-  function dist(a, b) {
-    var pa = coordOf(a), pb = coordOf(b);
-    var dq = pa[0] - pb[0], dr = pa[1] - pb[1];
-    return (Math.abs(dq) + Math.abs(dr) + Math.abs(dq + dr)) / 2;
-  }
-  function edgeKey(hexA, hexB) { return hexA < hexB ? hexA + '|' + hexB : hexB + '|' + hexA; }
+  // The border between a hex and its on-board neighbour in direction d, or null.
   function edgeFrom(k, d) {
     var n = neighbor(k, d);
-    return n ? edgeKey(k, n) : null;
-  }
-  // Terrain is hex-owned and directional (see docs/HexClarificationDiagram.png):
-  // a "side" is one hex's face of an edge. Key: 'q,r>d'.
-  function sideKey(h, d) { return h + '>' + d; }
-
-  function buildTerrain(map) {
-    // Each [q,r,d] in a piece is a SIDE owned by hex (q,r); what that side then
-    // does to a fight is its type's room in engine/board/terrain/.
-    // returns { edges: {sideKey: terrain letter}, pieces:[{id,t,edgeKeys:[sideKey...]}] }
-    var edges = {}, pieces = [];
-    map.pieces.forEach(function (p, i) {
-      var prob = I.pieceProblem(p);
-      if (prob) throw new Error('map "' + map.name + '" piece ' + (i + 1) + ': ' + prob);
-      var eks = [];
-      p.edges.forEach(function (e) {
-        var k = key(e[0], e[1]);
-        if (!inBoard(e[0], e[1]) || !neighbor(k, e[2])) throw new Error('map "' + map.name + '" side off board: ' + JSON.stringify(e));
-        var sk = sideKey(k, e[2]);
-        if (edges[sk]) throw new Error('map "' + map.name + '" duplicate side: ' + sk);
-        edges[sk] = p.t;
-        eks.push(sk);
-      });
-      pieces.push({ id: 'p' + i, t: p.t, edgeKeys: eks });
-    });
-    return { edges: edges, pieces: pieces };
+    return n ? I.edgeKey(k, n) : null;
   }
 
   /* shared-namespace exports */
-  I.DIRS = DIRS;
-  I.key = key;
-  I.parseKey = parseKey;
   I.buildShape = buildShape;
   I.SHAPES = SHAPES;
   I.DEFAULT_SHAPE = DEFAULT_SHAPE;
@@ -223,10 +179,5 @@
   I.rot180 = rot180;
   I.neighbor = neighbor;
   I.neighbors = neighbors;
-  I.dirBetween = dirBetween;
-  I.dist = dist;
-  I.edgeKey = edgeKey;
   I.edgeFrom = edgeFrom;
-  I.sideKey = sideKey;
-  I.buildTerrain = buildTerrain;
 })(typeof window !== 'undefined' ? window : globalThis);

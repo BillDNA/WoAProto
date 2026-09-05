@@ -34,12 +34,12 @@ function shippedTypes() {
 // in a new context is how a test gets a clean one.
 function loadMarks() {
   const ctx = {
-    E, S: 44, BOARD: { outline: '#000', brass: '#b5a642', barrage: '#a33' },
+    E, HEX_CONFIG: { board: { size: 44 } }, BOARD: { outline: '#000', brass: '#b5a642', barrage: '#a33' },
     svgEl: (tag, attrs) => ({ tag, attrs, appendChild() {} }),
     hexXY: () => [0, 0],
-    cornerPt: () => [0, 0],
-    cornerAngles: () => [0, 0],
-    bpEdgePts: () => [[0, 0], [1, 1]]
+    hexCornerPt: () => [0, 0],
+    hexCornerAngles: () => [0, 0],
+    hexEdgePts: () => [[0, 0], [1, 1]]
   };
   vm.createContext(ctx);
   ['terrain-marks.js']
@@ -104,4 +104,18 @@ test('the stroke a board draws comes off the mark', () => {
   });
   assert.strictEqual(ctx.BOARD.terrainStroke('?'), ctx.BOARD.outline,
     'an unknown letter falls back to board ink rather than drawing nothing');
+});
+
+test('every terrain colour is defined in the terrain house\'s stylesheet', () => {
+  const page = fs.readFileSync(path.join(HERE, '..', '..', '..', 'style.css'), 'utf8');
+  const mine = fs.readFileSync(path.join(HERE, 'terrain.css'), 'utf8');
+  assert.match(page, /@import url\('ui\/board\/terrain\/terrain\.css'\)/, 'style.css imports it');
+  // a mark either names a CSS var — which must live here — or inks itself inline
+  fs.readdirSync(HERE).filter(f => /-mark\.js$/.test(f)).forEach(f => {
+    const src = fs.readFileSync(path.join(HERE, f), 'utf8');
+    const v = (src.match(/stroke:\s*'var\((--[a-z-]+)\)'/) || [])[1];
+    if (!v) return;
+    assert.ok(mine.includes(v + ':'), f + " names " + v + ', so terrain.css must define it');
+    assert.ok(!page.includes(v + ':'), 'style.css no longer defines ' + v);
+  });
 });

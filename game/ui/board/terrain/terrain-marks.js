@@ -7,8 +7,9 @@
    thumbnails) goes through bpTerrainEdge or bpTerrainStroke, so a type is drawn
    the same everywhere and no caller names one.
 
-   Classic script, no wrapper. Loads after ui/board-primitives.js, whose hex
-   geometry (S, hexXY, cornerPt, bpEdgePts) and svgEl it uses. Prose: terrain.md */
+   Classic script, no wrapper. Loads after ui/board/hex/hex-screen.js, whose geometry
+   (hexXY, hexEdgePts, hex-config's sizes) it draws with, and ui/board-primitives.js, whose svgEl
+   and BOARD palette it uses. Prose: terrain.md */
 'use strict';
 
 var TERRAIN_MARK = {};
@@ -30,7 +31,7 @@ function terrainMark(letter){ return TERRAIN_MARK[letter] || null; }
 // (a barrage target, a dig ghost) read it so their mark lands on the line.
 function terrainInset(letter, s){
   var m = terrainMark(letter);
-  return (m ? m.inset : 0.85) * (s || S);
+  return (m ? m.inset : 0.85) * (s || HEX_CONFIG.board.size);
 }
 // Called once at boot: a registered terrain type with no mark would draw nothing
 // on the board, which is worse to debug than a load-time throw.
@@ -50,23 +51,23 @@ BOARD.terrainStroke = function(letter){
 // o: {s, rad, sw, pe, edgeData} — edgeData:false skips the hover attr.
 function bpTerrainStroke(g, hexKey, dir, letter, o){
   o = o || {};
-  var s = o.s || S, rad = o.rad != null ? o.rad : terrainInset(letter, s);
-  var pt = bpEdgePts(hexKey, dir, rad, s), p1 = pt[0], p2 = pt[1];
+  var s = o.s || HEX_CONFIG.board.size, rad = o.rad != null ? o.rad : terrainInset(letter, s);
+  var pt = hexEdgePts(hexKey, dir, rad, s), p1 = pt[0], p2 = pt[1];
   var attrs = { x1:p1[0], y1:p1[1], x2:p2[0], y2:p2[1], stroke: BOARD.terrainStroke(letter),
     'stroke-width': o.sw != null ? o.sw : 8, 'stroke-linecap':'round' };
   if (o.pe) attrs['pointer-events'] = o.pe;
   var line = svgEl('line', attrs);
-  if (o.edgeData !== false) line.dataset.edge = hexKey + '>' + dir;
+  if (o.edgeData !== false) line.dataset.edge = E.sideKey(hexKey, dir);
   g.appendChild(line);
   return [p1, p2];
 }
 
 // One terrain side, drawn inside its owning hex: the line plus the type's glyph.
-// Board defaults at S; a mini-board passes o = {s, sw, edgeData, …} plus any
+// Board defaults to the live size; a mini-board passes o = {s, sw, edgeData, …} plus any
 // options the glyph reads, so the SAME mark renders at that scale.
-function bpTerrainEdge(g, edgeKey, letter, o){
+function bpTerrainEdge(g, side, letter, o){
   o = o || {};
-  var s = o.s || S, parts = edgeKey.split('>'), d = +parts[1];
+  var s = o.s || HEX_CONFIG.board.size, parts = E.parseSideKey(side), d = parts[1];
   var ep = bpTerrainStroke(g, parts[0], d, letter, { s:s, rad:o.rad, sw:o.sw, edgeData:o.edgeData });
   var mark = terrainMark(letter);
   if (!mark || !mark.glyph) return;
@@ -78,7 +79,7 @@ function bpTerrainEdge(g, edgeKey, letter, o){
 // A barrage target highlight laid over a terrain side, at that type's own inset.
 // Returns the line for the caller's hover/click.
 function bpBarrageTerrain(g, hexKey, dir, letter){
-  var pt = bpEdgePts(hexKey, dir, terrainInset(letter));
+  var pt = hexEdgePts(hexKey, dir, terrainInset(letter));
   var line = svgEl('line',{ x1:pt[0][0], y1:pt[0][1], x2:pt[1][0], y2:pt[1][1],
     stroke:BOARD.barrage, 'stroke-width':12, 'stroke-linecap':'round', opacity:.55, 'class':'hl' });
   g.appendChild(line);

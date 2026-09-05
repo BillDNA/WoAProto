@@ -7,7 +7,7 @@
 
   var Engine = {
     VERSION: I.RULES_VERSION,
-    DIRS: I.DIRS, UNITS: I.UNITS, CARDS: I.CARDS, CARD_BY_ID: I.CARD_BY_ID, MAPS: I.MAPS,
+    UNITS: I.UNITS, CARDS: I.CARDS, CARD_BY_ID: I.CARD_BY_ID, MAPS: I.MAPS,
     MAPSETS: I.MAPSETS, activeMapset: I.activeMapset, activeMaps: I.activeMaps, ACTIVE_BATTALION: I.ACTIVE_BATTALION,
     BATTALIONS: I.BATTALIONS, resolveBattalion: I.resolveBattalion,
     COMMANDERS: I.COMMANDERS, resolveCommander: I.resolveCommander,
@@ -28,8 +28,15 @@
     terrainAt: I.terrainAt, sideEffect: I.sideEffect,
     pieceProblem: I.pieceProblem, stockCap: I.stockCap, splitPieceRun: I.splitPieceRun,
     PIECE_LENGTHS: I.PIECE_LENGTHS,
-    key: I.key, parseKey: I.parseKey, inBoard: I.inBoard, neighbor: I.neighbor, neighbors: I.neighbors,
-    dist: I.dist, dirBetween: I.dirBetween, edgeKey: I.edgeKey, edgeFrom: I.edgeFrom, sideKey: I.sideKey, other: I.other,
+    // The hex house (engine/board/hex/hex.js) — the coordinate vocabulary everything
+    // above is written in. Its screen dialect is game/ui/board/hex/hex-screen.js.
+    DIRS: I.DIRS, DIR_NAMES: I.DIR_NAMES, dirName: I.dirName, oppositeDir: I.oppositeDir,
+    key: I.key, parseKey: I.parseKey, step: I.step, dist: I.dist, dirBetween: I.dirBetween,
+    edgeKey: I.edgeKey, sideKey: I.sideKey, parseSideKey: I.parseSideKey,
+    sideHex: I.sideHex, sideDir: I.sideDir, facingSide: I.facingSide,
+    // The board's outline question: which of a hex's six neighbours exist.
+    inBoard: I.inBoard, neighbor: I.neighbor, neighbors: I.neighbors, edgeFrom: I.edgeFrom,
+    other: I.other,
     newBattle: I.newBattle, newSkirmish: I.newSkirmish, view: I.view,
     Pieces: I.Pieces,
     unitAt: I.unitAt, isHQ: I.isHQ, isEmpty: I.isEmpty, controlledHexes: I.controlledHexes,
