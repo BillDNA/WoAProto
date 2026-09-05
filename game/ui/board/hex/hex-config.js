@@ -11,9 +11,9 @@
 
    `ink` is for the two renderers that cannot use the .hex CSS class — the
    string-built map thumbnails and the editor's ghost hex. The colours themselves
-   live once in ui/hex/hex.css; these are the pointers to them.
+   live once in ui/board/hex/hex.css; these are the pointers to them.
 
-   Classic script, no wrapper; loads after the engine, before ui/hex/hex-screen.js. */
+   Classic script, no wrapper; loads after the engine, before ui/board/hex/hex-screen.js. */
 'use strict';
 
 var HEX_CONFIG = window.Engine.defineConfigHome({

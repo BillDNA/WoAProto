@@ -1,6 +1,6 @@
 /* War of Attrition — engine part 02: board outline, shapes, current-board state.
    The hex vocabulary it is written in — keys, directions, distance, edge and
-   side names — is the hex house (engine/hex/hex.js); this part answers the one
+   side names — is the hex house (engine/board/hex/hex.js); this part answers the one
    question that needs an outline: which of a hex's six neighbours EXIST.
    Terrain is the terrain house's, sides and all (engine/board/terrain/).
    Classic script (browser + node). Engine parts share the internal namespace

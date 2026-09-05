@@ -3,7 +3,7 @@
    board, a palette or the DOM is needed to decide any of this, which is the
    check that the dialect really is only geometry.
 
-   Run alone with `node game/ui/hex/hex-screen.test.js`, or the whole gate with
+   Run alone with `node game/ui/board/hex/hex-screen.test.js`, or the whole gate with
    `node game/test/test.js`. */
 'use strict';
 const { test } = require('node:test');
@@ -11,7 +11,7 @@ const assert = require('node:assert');
 const vm = require('vm');
 const fs = require('fs');
 const path = require('path');
-const E = require('../../engine.js');
+const E = require('../../../engine.js');
 
 // The config home and the dialect are two classic scripts; load both into one
 // context, which is also the check that the dialect really reads the home.
@@ -87,18 +87,17 @@ test('every board that draws hexes takes its size from the config home', () => {
     assert.ok(home[b].tile > 0 && home[b].tile <= home[b].size, b + "'s tile sits inside its hex");
   });
   // no board keeps its own copy of a size: the literals are gone from the files
-  const UI = path.join(__dirname, '..');
+  const UI = path.join(__dirname, '..', '..');   // game/ui
   const owned = [['manual.js', /MP_S/], ['screens/dashboard/panes/maps.js', /MDHEX_R/],
-                 ['board-primitives.js', /\bvar S\b/], ['hex/hex-screen.js', /\bvar S\b/]];
+                 ['board-primitives.js', /\bvar S\b/], ['board/hex/hex-screen.js', /\bvar S\b/]];
   owned.forEach(([f, re]) => assert.ok(!re.test(fs.readFileSync(path.join(UI, f), 'utf8')),
     f + ' reads the home instead of naming its own size'));
 });
 
 test('the hex look is the hex house\'s stylesheet, not the page\'s', () => {
-  const root = path.join(__dirname, '..', '..');
-  const page = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  const page = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'style.css'), 'utf8');
   const mine = fs.readFileSync(path.join(__dirname, 'hex.css'), 'utf8');
-  assert.match(page, /@import url\('ui\/hex\/hex\.css'\)/, 'style.css imports it');
+  assert.match(page, /@import url\('ui\/board\/hex\/hex\.css'\)/, 'style.css imports it');
   ['--hex:', '--hex-dark:', '--hex-stroke:', '--coord:', '.hex{', '.coordlbl{'].forEach(rule => {
     assert.ok(mine.includes(rule), 'hex.css owns ' + rule);
     assert.ok(!page.includes(rule), 'style.css no longer holds ' + rule);

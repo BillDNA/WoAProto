@@ -28,7 +28,7 @@
   // The engine, in dependency order. Page, node and the sweep worker load
   // exactly this list.
   var ENGINE = [
-    'engine/hex/hex.js',
+    'engine/board/hex/hex.js',
     'engine/00-config.js',
     'engine/ai/ai-config.js',
     'engine/board/terrain/terrain-config.js',
@@ -60,8 +60,8 @@
     'ui/kit/kind.js',
     'ui/kit/svg.js',
     'ui/modals/modal.js',
-    'ui/hex/hex-config.js',
-    'ui/hex/hex-screen.js',
+    'ui/board/hex/hex-config.js',
+    'ui/board/hex/hex-screen.js',
     'ui/board-primitives.js',
     'ui/board/terrain/terrain-marks.js',
     'ui/board/terrain/forest-mark.js',

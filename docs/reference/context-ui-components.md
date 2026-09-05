@@ -15,7 +15,7 @@ Five modules, one implementation of each primitive, many callers:
 
 - **hex/hex-screen.js** — where a hex and its faces sit on screen, at any scale,
   with `hex/hex-config.js` holding the size each board draws at. The screen half
-  of the hex house (`game/engine/hex/hex.md`).
+  of the hex house (`game/engine/board/hex/hex.md`).
 - **board-primitives.js** (`BOARD` palette) — the hex board: tiles, terrain,
   trenches, HQs, unit tokens, attack pills, highlights, thumbnails, previews.
 - **chart-primitives.js** (`CHART` palette) — the dashboard: svg frames, marks,
@@ -32,27 +32,27 @@ every board primitive builds on.
 
 **HEX_CONFIG**:
 The size each board draws hexes at, one row per board.
-_Home_: `game/ui/hex/hex-config.js` — `var HEX_CONFIG`
+_Home_: `game/ui/board/hex/hex-config.js` — `var HEX_CONFIG`
 
 **hexXY**:
 Pixel centre of a hex key, at that board's scale.
-_Home_: `game/ui/hex/hex-screen.js` — `function hexXY`
+_Home_: `game/ui/board/hex/hex-screen.js` — `function hexXY`
 
 **hexCornerAngles**:
 The two corner-angle degrees bounding a hex face direction.
-_Home_: `game/ui/hex/hex-screen.js` — `function hexCornerAngles`
+_Home_: `game/ui/board/hex/hex-screen.js` — `function hexCornerAngles`
 
 **hexCornerPt**:
 A hex corner point, from centre + angle + radius.
-_Home_: `game/ui/hex/hex-screen.js` — `function hexCornerPt`
+_Home_: `game/ui/board/hex/hex-screen.js` — `function hexCornerPt`
 
 **hexPoints**:
 The six-corner `points` string for a hex polygon at a given radius.
-_Home_: `game/ui/hex/hex-screen.js` — `function hexPoints`
+_Home_: `game/ui/board/hex/hex-screen.js` — `function hexPoints`
 
 **hexEdgePts**:
 The two endpoints of an inset hex face — the base line terrain, trench, and barrage all share.
-_Home_: `game/ui/hex/hex-screen.js` — `function hexEdgePts`
+_Home_: `game/ui/board/hex/hex-screen.js` — `function hexEdgePts`
 
 **svgEl**:
 The one `createElementNS` in the UI — the SVG element factory board primitives append with.

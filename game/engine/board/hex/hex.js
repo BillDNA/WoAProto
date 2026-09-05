@@ -13,6 +13,8 @@
   var DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
   var DIR_NAMES = ['E', 'NE', 'NW', 'W', 'SW', 'SE'];
 
+  // Pointy-top axial, and the key IS the hex — 'q,r' is what state, map data and
+  // log lines all store. Nothing anywhere holds a hex as a pair of numbers.
   function key(q, r) { return q + ',' + r; }
   // Memoized: a run parses the same few dozen keys millions of times (the AI
   // search asks for a distance or a direction on every node it visits), and the

@@ -55,12 +55,12 @@ _Home_: `game/engine/01-core.js` — `MAPS`
 
 **Hex**:
 One cell of the board; a piece occupies at most one.
-_Home_: `game/engine/hex/hex.js` — `function key(q, r)`
+_Home_: `game/engine/board/hex/hex.js` — `function key(q, r)`
 
 **Hex side**:
 One Hex's face of a border. Both Hexes own their own face, so Terrain is stored per side
 and can differ across one border.
-_Home_: `game/engine/hex/hex.js` — `function sideKey(h, d)`
+_Home_: `game/engine/board/hex/hex.js` — `function sideKey(h, d)`
 
 **Board shape**:
 The outline of hexes a Map is cut from, either a named family or an outline the Map carries itself.

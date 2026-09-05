@@ -5,7 +5,7 @@
 
 ## Board & hexes
 
-The hex itself — the `'q,r'` key, the six directions, distance, and the names of an edge and of one hex's side of it — is the hex house: `game/engine/hex/hex.md`. What follows is the board's outline over that vocabulary.
+The hex itself — the `'q,r'` key, the six directions, distance, and the names of an edge and of one hex's side of it — is the hex house: `game/engine/board/hex/hex.md`. What follows is the board's outline over that vocabulary.
 
 - Board shapes are data from `maps.js`: `rows: [[r,qFrom,qTo],...]` OR an explicit `hexes: [[q,r],...]` set for irregular outlines. The engine builds the hex set, grid labels, and (for point-symmetric outlines) the rot180 centre. Five built-in shapes: classic 24 (the physical board), compact 19, hourglass 21, ridge 20, spear 23. `setBoard()` switches a module-level current shape — always set from `st.boardShape`.
 - **Custom outlines**: a map may carry `shapeDef: {label, hexes:[[q,r],...]}` inline — `ensureMapShape(map)` registers it as `'@<map id>'` (rebuilt every call so edits stick) and normalizes `map.shape`; the def travels with the map, so LAN joins and resumes work. `validateMaps` enforces the **24-hex ceiling** for shapeDef maps (a design guardrail: the physical board is laser-cut to 24).

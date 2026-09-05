@@ -1,4 +1,4 @@
-/* A hex as a POSITION — game/engine/hex/hex.js asked in pixels. Starts from the
+/* A hex as a POSITION — game/engine/board/hex/hex.js asked in pixels. Starts from the
    engine's key and DIRS every time, so the two cannot drift.
 
    Every helper takes a scale; the scales are hex-config.js, one row per board,
@@ -6,7 +6,7 @@
    the board's and calls in here.
 
    Classic script, no wrapper; loads before ui/board-primitives.js.
-   Prose: game/engine/hex/hex.md */
+   Prose: game/engine/board/hex/hex.md */
 'use strict';
 
 var HEX_SQ3 = Math.sqrt(3);

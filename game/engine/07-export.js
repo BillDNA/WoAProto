@@ -28,8 +28,8 @@
     terrainAt: I.terrainAt, sideEffect: I.sideEffect,
     pieceProblem: I.pieceProblem, stockCap: I.stockCap, splitPieceRun: I.splitPieceRun,
     PIECE_LENGTHS: I.PIECE_LENGTHS,
-    // The hex house (engine/hex/hex.js) — the coordinate vocabulary everything
-    // above is written in. Its screen dialect is game/ui/hex/hex-screen.js.
+    // The hex house (engine/board/hex/hex.js) — the coordinate vocabulary everything
+    // above is written in. Its screen dialect is game/ui/board/hex/hex-screen.js.
     DIRS: I.DIRS, DIR_NAMES: I.DIR_NAMES, dirName: I.dirName, oppositeDir: I.oppositeDir,
     key: I.key, parseKey: I.parseKey, step: I.step, dist: I.dist, dirBetween: I.dirBetween,
     edgeKey: I.edgeKey, sideKey: I.sideKey, parseSideKey: I.parseSideKey,

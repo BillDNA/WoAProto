@@ -2,7 +2,7 @@
    where the chain is written, the way load-order.js writes the script chain —
    and it holds every rule and :root var about that one concept. What stays in
    this file is the page: chrome, layout, screens, and the shared palette. */
-@import url('ui/hex/hex.css');
+@import url('ui/board/hex/hex.css');
 @import url('ui/board/terrain/terrain.css');
 
   /* ===== War of Attrition palette =================================
@@ -39,7 +39,7 @@
     --red-ink:#eba9a2; --blue-ink:#a8cbec;   /* side text on the dark journal */
 
     /* — the table the board sits on (terrain colours are ui/board/terrain/
-         terrain.css; the hex tile is ui/hex/hex.css) — */
+         terrain.css; the hex tile is ui/board/hex/hex.css) — */
     --olive:#6b6b3a;
     --felt:#2e3a2e;                     /* the felt green */
     --table:#20281f; --table-rgb:32,40,31;   /* the war-table dark green + its board-sheet wash */

@@ -1,12 +1,12 @@
 /* The hex house's own tests — the coordinate dialect. Pure vocabulary: no
    board, no map, no state is set up here, which is the point of the house.
 
-   Run alone with `node game/engine/hex/hex.test.js`, or the whole gate with
+   Run alone with `node game/engine/board/hex/hex.test.js`, or the whole gate with
    `node game/test/test.js`. */
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
-const E = require('../../engine.js');
+const E = require('../../../engine.js');
 
 test('a hex is its key, and the key round-trips', () => {
   assert.equal(E.key(3, -2), '3,-2');

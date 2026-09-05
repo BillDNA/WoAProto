@@ -7,7 +7,7 @@
    thumbnails) goes through bpTerrainEdge or bpTerrainStroke, so a type is drawn
    the same everywhere and no caller names one.
 
-   Classic script, no wrapper. Loads after ui/hex/hex-screen.js, whose geometry
+   Classic script, no wrapper. Loads after ui/board/hex/hex-screen.js, whose geometry
    (hexXY, hexEdgePts, hex-config's sizes) it draws with, and ui/board-primitives.js, whose svgEl
    and BOARD palette it uses. Prose: terrain.md */
 'use strict';

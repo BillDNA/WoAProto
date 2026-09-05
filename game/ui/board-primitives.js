@@ -7,7 +7,7 @@
    reflected everywhere the board draws it.
 
    WHERE a hex and its faces sit is not here: that is the hex house's screen
-   dialect (ui/hex/hex-screen.js), which loads first and this file calls.
+   dialect (ui/board/hex/hex-screen.js), which loads first and this file calls.
    Terrain marks are NOT here either: each type draws itself in ui/board/terrain/,
    which loads after this file and uses both.
 

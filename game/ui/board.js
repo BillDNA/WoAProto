@@ -1,6 +1,6 @@
 /* War of Attrition — ui part: game-board rendering. Orchestration only —
    every mark is drawn by a bp* primitive from ui/board-primitives.js (svgEl and
-   the BOARD palette live there; where a hex sits is ui/hex/hex-screen.js, the
+   the BOARD palette live there; where a hex sits is ui/board/hex/hex-screen.js, the
    hex house's screen dialect); this file decides WHAT to draw and wires
    the interaction (clicks, the attack-math hover), never the raw SVG. Classic
    script, no wrapper — top-level names attach to window (see ui/app.js header). */

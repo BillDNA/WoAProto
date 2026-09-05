@@ -1,6 +1,6 @@
 /* The board's outline: which hexes a shape has, what a map's own shapeDef adds,
    and the grid reference each hex ends up with. The hex vocabulary these are
-   written in has its own suite (game/engine/hex/hex.test.js) — every test here
+   written in has its own suite (game/engine/board/hex/hex.test.js) — every test here
    needs a board, which is what makes it the board's.
 
    Moves into the board house when that is built. Run alone with
