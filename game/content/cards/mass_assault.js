@@ -2,6 +2,7 @@
 {
  "id": "mass_assault",
  "name": "Mass Assault",
+ "abbr": "MA",
  "faction": null,
  "text": "Order an attack. Then order another attack.",
  "steps": [

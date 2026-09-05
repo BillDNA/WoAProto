@@ -36,12 +36,12 @@ function screenAllowed(id){ var s = SCREENS[id]; return !!s && (s.kind === 'play
 function goScreen(id){ var s = SCREENS[id]; if (s && s.entry && screenAllowed(id)) s.entry(); }
 
 /* =================== dev mode ===================
-   A localStorage flag, off by default — the single hardening seam: a future
+   A stored flag (ui/session/store.js), off by default — the single hardening seam: a future
    player build defaults it off and drops the hotkey, and dev surfaces vanish.
    Toggled by the `/~ hotkey or the Settings row; ?dev=1 sets it on load. */
-function devMode(){ try { return localStorage.getItem('woa-dev') === '1'; } catch(e){ return false; } }
+function devMode(){ return STORE_DEV.read() === true; }
 function setDevMode(on){
-  try { if (on) localStorage.setItem('woa-dev', '1'); else localStorage.removeItem('woa-dev'); } catch(e){}
+  if (on) STORE_DEV.write(true); else STORE_DEV.clear();
   applyDevMode();
 }
 // Reflect the flag into the DOM: body.dev drives every `.dev-only` reveal (CSS),

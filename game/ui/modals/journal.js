@@ -2,4 +2,4 @@
 'use strict';
 
 uiModal({ id:'journal', title:'Campaign Journal', width:560, bodyClass:'journal-feed',
-  render: function(){ syncJournalOverlay(); } });
+  render: function(){ regionMirror('journal'); } });

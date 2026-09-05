@@ -1,9 +1,12 @@
-/* War of Attrition — ui part: game-board rendering. Orchestration only —
-   every mark is drawn by a bp* primitive from ui/board-primitives.js (the hex
-   geometry and svgEl live there too); this file decides WHAT to draw and wires
-   the interaction (clicks, the attack-math hover), never the raw SVG. Classic
-   script, no wrapper — top-level names attach to window (see ui/app.js header). */
+/* The BOARD house's door: the live board a player looks at, and what a click on
+   it means.
+
+   Orchestration and interaction only — every mark comes from the house's mark
+   base (board/mark.js) or its terrain rooms, and every transient mark from
+   board/overlay.js. This file decides WHAT to draw and wires the clicks and the
+   attack-math hover; it never builds raw SVG. Prose: board.md. */
 'use strict';
+
 
 /* =================== board rendering =================== */
 function renderBoard(){
@@ -31,11 +34,7 @@ function renderBoard(){
   // hover (works when idle in choose-card; during the attack step the highlight
   // layer carries the same hover)
   for (var uh in v.units){
-    var g = bpUnit(L.pc, uh, v.units[uh]);
-    (function(fromHex){
-      g.addEventListener('mouseenter', function(){ showAttackHints(fromHex); });
-      g.addEventListener('mouseleave', hideAttackHints);
-    })(uh);
+    attackHoverable(bpUnit(L.pc, uh, v.units[uh]), uh);
   }
 
   renderHighlights(L.hl);
@@ -45,45 +44,6 @@ function hl(g, k, cls, handler){
   var p = bpHighlight(g, k, cls);
   p.addEventListener('click', handler);
   return p;
-}
-
-/* hover a unit -> preview the attack math on every hex it could hit.
-   Uses the engine's computeAttack — the same numbers the
-   confirm dialog and resolution use, so they can never disagree. Hover-only,
-   so it costs no screen space when unwanted. */
-function attackPreviewsFor(st, fromHex){
-  var v = E.view(st);
-  var o = v.phase === 'step' ? E.stepOptions(st) : null;
-  var list;
-  if (o && o.type === 'attack') list = o.attacks.filter(function(a){ return a.from === fromHex; });
-  else list = E.listAttacks(st, v.current).filter(function(a){ return a.from === fromHex; })
-    .map(function(a){ return Object.assign({}, a, { preview: E.computeAttack(st, a) }); });
-  var best = {};
-  list.forEach(function(a){
-    var diff = a.preview.attackerPower - a.preview.defenderPower;
-    if (!(a.to in best) || diff > best[a.to].diff) best[a.to] = { a: a, diff: diff };
-  });
-  return Object.keys(best).map(function(to){ return best[to].a; });
-}
-function showAttackHints(fromHex){
-  hideAttackHints();
-  var st = APP.st, v = E.view(st);
-  if (!st || !inputLive()) return;
-  if (v.phase === 'step'){
-    var o = E.stepOptions(st);
-    if (!o || o.type !== 'attack') return;
-  } else if (v.phase !== 'choose-card') return;
-  var u = v.units[fromHex];
-  if (!u || u.owner !== v.current) return;
-  var g = bpAttackLayer();
-  attackPreviewsFor(st, fromHex).forEach(function(a){
-    var pv = a.preview;
-    bpAttackPill(g, a.to, pv.attackerPower + ' vs ' + pv.defenderPower, pv.outcome);
-  });
-  $('board').appendChild(g);
-}
-function hideAttackHints(){
-  document.querySelectorAll('#board .atk-hints').forEach(function(el){ el.remove(); });
 }
 
 /* highlights depend on UI stage */
@@ -126,23 +86,13 @@ function renderHighlights(g){
   else if (o.type==='attack'){
     var froms = {};
     o.attacks.forEach(function(a){ froms[a.from] = true; });
-    var hoverable = function(p, h){
-      p.addEventListener('mouseenter', function(){ showAttackHints(h); });
-      p.addEventListener('mouseleave', hideAttackHints);
-    };
     if (!ui.sel){
-      Object.keys(froms).forEach(function(h){ hoverable(hl(g, h, 'hl-from', function(){ ui.sel = h; renderAll(); }), h); });
+      Object.keys(froms).forEach(function(h){ attackHoverable(hl(g, h, 'hl-from', function(){ ui.sel = h; renderAll(); }), h); });
     } else {
       showAttackHints(ui.sel);
       hl(g, ui.sel, 'hl-selected', function(){ ui.sel = null; renderAll(); });
-      // group attacks from selected hex by target; if multiple routes, keep the strongest
-      var best = {};
-      o.attacks.filter(function(a){ return a.from===ui.sel; }).forEach(function(a){
-        var diff = a.preview.attackerPower - a.preview.defenderPower;
-        if (!(a.to in best) || diff > best[a.to].diff) best[a.to] = {a:a, diff:diff};
-      });
-      Object.keys(best).forEach(function(to){
-        hl(g, to, 'hl-attack', function(){ confirmAttack(best[to].a); });
+      bestPerTarget(o.attacks.filter(function(a){ return a.from===ui.sel; })).forEach(function(a){
+        hl(g, a.to, 'hl-attack', function(){ confirmAttack(a); });
       });
       Object.keys(froms).filter(function(h){return h!==ui.sel;}).forEach(function(h){
         hl(g, h, 'hl-from', function(){ ui.sel = h; renderAll(); });

@@ -2,6 +2,7 @@
 {
  "id": "careful_maneuvers",
  "name": "Careful Maneuvers",
+ "abbr": "CM",
  "faction": null,
  "text": "Reposition a unit. Then order an attack with −1 support.",
  "steps": [

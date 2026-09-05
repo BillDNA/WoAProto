@@ -112,12 +112,7 @@ function syncCommandersFromState(){
   ensureCommanderRuntime();
 }
 // True when the local human drives this side and may work its controls.
-function commanderInteractive(side){
-  if (!APP.st) return false;
-  if (APP.mode === 'watch') return false;
-  if (APP.mode === 'hotseat') return E.view(APP.st).current === side;
-  return side === APP.mySide;
-}
+function commanderInteractive(side){ return seatDrives(side); }
 // Advance each side's cooldowns once per that side's own turn. Called from
 // renderAll on the post-change pass (not from a render function), keyed on
 // turnNumber so it fires at most once per turn. A later slice sources cooldown

@@ -6,7 +6,7 @@
 'use strict';
 
 /* =================== battalion editor =================== */
-// Five named battalion slots, stored in localStorage 'woa-battalions'
+// Five named battalion slots, kept in the session house's `battalions` record
 // as {active, slots:[{name,cards}|null ×5]}. Editing works on a copy of one
 // slot's cards (DK.cards) so all the per-card render/edit code is unchanged.
 // The APPLY path is deliberately untouched: Save mirrors the ACTIVE slot into
@@ -16,14 +16,14 @@ var DK = { cards: null, sel: 0, stepErr: {}, slots: null, slot: 0, active: 0 };
 var DK_SLOTS = 5;
 function loadBattalions(){
   var d = null;
-  try { d = JSON.parse(localStorage.getItem('woa-battalions')); } catch(e){}
+  d = STORE_BATTALIONS.read();
   if (d && Array.isArray(d.slots) && d.slots.length === DK_SLOTS) return d;
   // First run: seed slot 0 with the currently-applied battalion; rest empty.
   var slots = []; for (var i=0;i<DK_SLOTS;i++) slots.push(null);
   slots[0] = { name: 'Battalion 1', cards: JSON.parse(JSON.stringify(E.CARDS)) };
   return { active: 0, slots: slots };
 }
-function persistBattalions(){ try { localStorage.setItem('woa-battalions', JSON.stringify({ active: DK.active, slots: DK.slots })); } catch(e){} }
+function persistBattalions(){ STORE_BATTALIONS.write({ active: DK.active, slots: DK.slots }); }
 // strip benched cards + the transient `out` flag → what actually ships to the game
 function shipCards(cards){ return cards.filter(function(c){ return !c.out; }).map(function(c){ var d={}; for (var k in c) if (k!=='out') d[k]=c[k]; return d; }); }
 function flushSlot(){ if (DK.slots[DK.slot]) DK.slots[DK.slot].cards = JSON.parse(JSON.stringify(DK.cards)); }

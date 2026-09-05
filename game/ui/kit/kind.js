@@ -1,20 +1,11 @@
-/* War of Attrition — ui part: KIND, the shared half of every registry+factory.
+/* KIND: the shared half of every registry+factory. A family declares itself
+   once and gets a registry in declaration order, field validation that throws
+   while the page loads, a mount id derived from the entry id, and its
+   container's markup. How one is SHOWN belongs to the family, not here.
 
-   A kind is a family of concepts that share a shell — the dashboard's panes,
-   the app's modals. Each family declares itself once here and gets:
-
-     registry    what exists, in declaration order (`ls` the directory to read it)
-     validation  the field spec, checked at registration, so a malformed entry
-                 throws while the page loads and never on a click
-     address     the mount element id, derived from the entry id by a template
-     mounts      the container's markup, written from the registry once
-
-   What differs between families — how one is shown — the household writes over
-   the returned registry. Two households use this; neither owns it.
-
-   spec: { name, mount:'<id>Ovr'|'dashPane<Id>', fields:{name:type}, container, markup }
-   field types: string, boolean, number, function, array, string[]; `|` unions
-   them, a trailing `?` makes the field optional. */
+   spec: { name, mount:'<id>Ovr'|'dashPane<Id>', fields:{name:type}, container,
+   markup }; field types string/boolean/number/function/array/string[], `|`
+   unions them and a trailing `?` makes one optional. */
 'use strict';
 
 function defineKind(spec){

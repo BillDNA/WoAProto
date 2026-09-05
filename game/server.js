@@ -58,31 +58,9 @@ var VERSION = (function () { // engine's rules version, for LAN mismatch warning
   try { return require(path.join(ROOT, 'engine.js')).VERSION; } catch (e) { return null; }
 })();
 
-var rooms = {}; // code -> { state, seq, updated }
+var ROOM = require(path.join(ROOT, 'server', 'room', 'room.js'));
 
-function code4() {
-  var letters = 'ABCDEFGHJKMNPQRSTUVWXYZ'; // no I/L/O
-  var c = '';
-  for (var i = 0; i < 4; i++) c += letters[Math.floor(Math.random() * letters.length)];
-  return rooms[c] ? code4() : c;
-}
-
-function stamp() { return new Date().toTimeString().slice(0, 8); }
-function logRooms(msg) {
-  var open = Object.keys(rooms).sort().join(' ') || 'none';
-  console.log('  [' + stamp() + '] ' + msg + '   (open rooms: ' + open + ')');
-}
-
-function cleanup() {
-  var now = Date.now();
-  for (var c in rooms) {
-    if (now - rooms[c].updated > 6 * 3600 * 1000) {
-      delete rooms[c];
-      logRooms('room ' + c + ' expired after 6h idle');
-    }
-  }
-}
-setInterval(cleanup, 600000).unref(); // .unref: don't keep the loop alive (so `require`ing the server in a test can exit)
+setInterval(ROOM.sweep, 600000).unref(); // .unref: don't keep the loop alive (so `require`ing the server in a test can exit)
 
 function json(res, status, obj) {
   var body = JSON.stringify(obj);
@@ -123,26 +101,20 @@ function saveUnderRepo(res, relDirParts, name, nameRe, content) {
 var ROUTES = {
   'POST /api/create': function (req, res, body) {
     if (!body.state) return json(res, 400, { error: 'bad request' });
-    var room = code4();
-    rooms[room] = { state: body.state, seq: 1, updated: Date.now() };
-    logRooms('room ' + room + ' hosted by ' + (req.socket.remoteAddress || '?'));
+    var room = ROOM.create(body.state);
+    ROOM.log('room ' + room + ' hosted by ' + (req.socket.remoteAddress || '?'));
     json(res, 200, { room: room, seq: 1, version: VERSION });
   },
   'POST /api/join': function (req, res, body) {
-    var r = rooms[(body.room || '').toUpperCase()];
+    var r = ROOM.get(body.room);
     if (!r) return json(res, 404, { error: 'room not found' });
-    r.updated = Date.now();
-    logRooms('room ' + (body.room || '').toUpperCase() + ' joined by ' + (req.socket.remoteAddress || '?'));
+    ROOM.log('room ' + String(body.room).toUpperCase() + ' joined by ' + (req.socket.remoteAddress || '?'));
     json(res, 200, { state: r.state, seq: r.seq, version: VERSION });
   },
   'POST /api/push': function (req, res, body) {
-    var r = rooms[(body.room || '').toUpperCase()];
+    var r = ROOM.get(body.room);
     if (!r) return json(res, 404, { error: 'room not found' });
-    r.updated = Date.now();
-    if (body.seq !== r.seq + 1) return json(res, 200, { conflict: true, state: r.state, seq: r.seq });
-    r.seq = body.seq;
-    r.state = body.state;
-    json(res, 200, { ok: true, seq: r.seq });
+    json(res, 200, ROOM.push(r, body.seq, body.state));
   },
   'POST /api/savemap': function (req, res, body) {
     // write one map to content/maps/<id>.js and refresh the manifest
@@ -309,9 +281,8 @@ var ROUTES = {
     } catch (e) { json(res, e.badRequest ? 400 : 500, { error: e.message }); } // 400 = bad slice/metric; 500 = real db fault
   },
   'GET /api/poll': function (req, res, body, u) {
-    var r = rooms[(u.searchParams.get('room') || '').toUpperCase()];
+    var r = ROOM.get(u.searchParams.get('room'));
     if (!r) return json(res, 404, { error: 'room not found' });
-    r.updated = Date.now();
     var seq = parseInt(u.searchParams.get('seq') || '0', 10);
     if (r.seq > seq) return json(res, 200, { state: r.state, seq: r.seq });
     res.writeHead(204); return res.end();

@@ -1,11 +1,6 @@
-/* War of Attrition — the dashboard PANE kind: one of two households over
-   ui/kit/kind.js. The shell lives with its instances — every file beside this
-   one is one pane. Panes are the dashboard's alone, so they live under it;
-   modals cross screens, so they live at ui/modals/.
-
-   A pane file declares itself with dashPane({...}) and supplies only the part
-   that is its own: the render. Its pill, its mount element, its show/hide and
-   its no-runs fallback are the shell's. Registration order is pill order. */
+/* The dashboard PANE kind, over ui/kit/kind.js. The shell lives with its
+   instances: every file beside this one is one pane, and declares only its
+   render. Registration order is pill order. */
 'use strict';
 
 var DASH_PANE = defineKind({

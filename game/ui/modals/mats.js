@@ -3,4 +3,4 @@
 'use strict';
 
 uiModal({ id:'mats', title:'Rosters', width:420, bodyClass:'mats-feed',
-  render: function(){ syncRostersOverlay(); } });
+  render: function(){ regionMirror('mats'); } });

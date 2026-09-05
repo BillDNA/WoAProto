@@ -1,17 +1,5 @@
-/* War of Attrition — ui part: the Balance Dashboard's CARDS pane.
-   THE QUESTION: which cards are dead weight, and when do cards
-   actually fire? Three .chcard sections — sight quadrant (x = the doctrine
-   win-slice), the dead-card Simple% dumbbells, and the when-cards-fire strips —
-   fed by the SAME two runs' skirmish rows as Overview/Maps
-   (dashLoadSkirmishRows/SKIRMISH_CACHE in ui/net.js).
-
-   Render-only: all shaping is CHART_MODEL.buildCardsModel (ui/chart-model.js),
-   which folds per-card via WOA_REPORT.cardRows (report-model.js — the ONE
-   card-row derivation, reused unmodified for a run's DB rows). Draws over the
-   shared toolkit (ui/chart-primitives.js): chDivFill, chMakePlacer, chLine/
-   chText/chTipAttrs/chSwatch, and the .chtip/ch-hit hover layer (chBindHits).
-   Mirrors the Overview/Maps dual-run idiom throughout: A ghost/hollow, B
-   solid/filled. */
+/* Dashboard pane: CARDS — which cards are dead weight, and when cards fire.
+   Render only; the shaping is CHART_MODEL.buildCardsModel. */
 'use strict';
 // the Cards strip's swatch — the shared uiSwatch at its 11px size (the .chkey/.sw
 // CSS is scoped under .chcard, and these strips sit in plain

@@ -1,6 +1,4 @@
-/* War of Attrition — dashboard pane: RUNS, the raw listing behind the A/B
-   pickers. Added to prove the pane kind: this file plus one path in
-   load-order.js is the whole edit. */
+/* Dashboard pane: RUNS — the raw listing behind the A/B pickers. */
 'use strict';
 
 function renderRuns(el){

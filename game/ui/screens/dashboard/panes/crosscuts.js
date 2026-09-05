@@ -1,22 +1,6 @@
-/* War of Attrition — ui part: the Balance Dashboard's CROSS-CUTS pane.
-   THE QUESTION: "shadows of what needs changing" — project the whole store
-   along any dimension, not just run A vs run B. Reads the server-side SQL
-   aggregate (GET /api/aggregate over the star schema, dev/db.js) directly, so a
-   re-slice is a new query, not a new JS fold. The slice pickers come from GET
-   /api/dimensions.
-
-   Two re-sliceable cross-cuts, each a bar chart drawn over the shared toolkit
-   (ui/chart-primitives.js — chSvgOpen/chRect/chText/chLine + the .ch-hit hover
-   layer chBindHits):
-     1. Balance metric × dimension (default: first-mover win% × mountain-hex
-        count — the ADR-0004 litmus). Reslice x to forest_hexes / river_hexes /
-        map / first_player / win_type, and the metric, and the (version, config)
-        slice.
-     2. Card play-timing × terrain-hex count (the literal ADR litmus over
-        card_events). Reslice terrain, an optional single card, and the slice.
-
-   Unlike the other panes this one needs no run A/B — it slices the whole DB.
-   Plain string-concat SVG, zero dependencies. */
+/* Dashboard pane: CROSS-CUTS — the whole store projected along any dimension,
+   read from the server-side SQL aggregate, so a re-slice is a query rather than
+   a new fold. The only pane that needs no run A/B. */
 'use strict';
 
 // Lazy per-session state; extends the DASH global (dashboard.js). `dims` is the

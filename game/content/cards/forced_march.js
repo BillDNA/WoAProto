@@ -2,6 +2,7 @@
 {
  "id": "forced_march",
  "name": "Forced March",
+ "abbr": "FM",
  "faction": null,
  "text": "Reposition up to three times, in sequence.",
  "steps": [

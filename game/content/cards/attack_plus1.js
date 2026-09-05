@@ -2,6 +2,7 @@
 {
  "id": "attack_plus1",
  "name": "Attack +1",
+ "abbr": "+1",
  "faction": null,
  "text": "Order an attack with +1 support.",
  "steps": [

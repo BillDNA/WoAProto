@@ -7,6 +7,10 @@ require('./test.geometry.js');
 require('./test.combat.js');
 require('../engine/board/terrain/terrain.test.js');   // the terrain house keeps its own tests
 require('../ui/board/terrain/terrain-marks.test.js'); // and its drawing half likewise
+require('../ui/board/board.test.js');                 // the board house
+require('../ui/turn/turn.test.js');                   // the turn house
+require('../ui/session/session.test.js');             // the session house
+require('../ui/screens/skirmish/skirmish.test.js');   // the skirmish screen
 require('./test.cards.js');
 require('./test.maps.js');
 require('./test.ai.js');

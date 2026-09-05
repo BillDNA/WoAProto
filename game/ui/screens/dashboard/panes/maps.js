@@ -1,20 +1,7 @@
-/* War of Attrition — ui part: the Balance Dashboard's MAP DRILL-DOWN pane.
-   THE QUESTION: on THIS map,
-   what changed run A -> run B, and when in the skirmish did it happen?
-   Breadcrumb map switcher under the Maps pill; an A|B|A/B segmented toggle
-   (default B) drives the tempo lanes, the |FS-diff| track, and the
-   hex lenses; the band board (reusing ovBandRowHtml with the 'map' small-n
-   scope) and the settle curve (chSettleSvg) always show BOTH runs.
-
-   Render-only: all shaping is CHART_MODEL.buildMapDrillModel (ui/chart-model.js);
-   the cross-skirmish folds it draws over live in report-model.js (WOA_REPORT).
-   Reads the SAME skirmish rows the Overview does (dashLoadSkirmishRows /
-   SKIRMISH_CACHE in ui/net.js), filtered to one map client-side. Draws over the
-   shared toolkit (ui/chart-primitives.js): the band-board row renderer
-   (ovBandRowHtml, shared with the Overview pane), chSettleSvg, chLine/chText/
-   chTipAttrs, and the .chtip/ch-hit hover layer (chBindHits). The hex boards
-   reuse board.js's GLOBAL hexXY/hexPoints/viewBoxFor (the game's OWN board
-   renderer) so the two hex renderers stay one visual language. */
+/* Dashboard pane: MAP DRILL-DOWN — on this map, what changed run A to run B and
+   when. Render only; the shaping is CHART_MODEL.buildMapDrillModel. Its hex
+   boards use the board house's geometry, so the two renderers stay one visual
+   language. */
 'use strict';
 /* The cross-skirmish folds these render functions draw over — envelopesForMap,
    laneAvg, fsDiffAvg — live in report-model.js (WOA_REPORT), and the whole

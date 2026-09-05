@@ -2,6 +2,7 @@
 {
  "id": "deploy_inf_start",
  "name": "Deploy Infantry",
+ "abbr": "In",
  "faction": null,
  "starting": true,
  "text": "Place an Infantry unit adjacent to any controlled hex.",

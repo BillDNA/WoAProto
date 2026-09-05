@@ -1,18 +1,10 @@
-/* War of Attrition — the MODAL kind: one of two households over ui/kit/kind.js.
-   The shell lives with its instances — every file beside this one is one modal.
-
-   Every modal in the game is the same three-part shape — a title, a body, a row
-   of buttons that close it. Eight of them hand-built that shape, four in
-   index.html and four as innerHTML, so an X in the corner or a moved button row
-   was nine edits. Now the shell owns the shape and a modal file declares only
-   what is its own.
+/* The MODAL kind, over ui/kit/kind.js. The shell lives with its instances:
+   every file beside this one is one modal, declaring only what is its own.
 
    uiModal({id, title, tone, width, bodyClass, adopt, render, buttons,
-            buttonsClass}) — every field but id and title optional.
-   `title`, `tone` and `buttons` may be functions of the open-time context, so a
-   modal whose title or button row depends on the state stays one entry.
-   Open it with modalOpen(id, ctx); the shell closes it before running a
-   button's onClick unless the button says keepOpen. */
+   buttonsClass}) — id and title are required. title, tone and buttons may be
+   functions of the open-time context. modalOpen(id, ctx) closes the modal
+   before running a button's onClick unless the button says keepOpen. */
 'use strict';
 
 var UI_MODAL = defineKind({

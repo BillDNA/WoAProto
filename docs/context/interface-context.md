@@ -2,8 +2,6 @@
 
 How does a human drive this? The places someone goes, what has to survive between visits, and the shared ink every screen is drawn with.
 
-The primitives are named here as kinds; the roll-call of every one that exists is `docs/reference/context-ui-components.md`.
-
 ## Places you go
 
 **Front door**:
@@ -42,17 +40,27 @@ _Home_: `game/ui/app.js` — `artImg`
 
 ## Staying in the game
 
+**Seat**:
+Which of the four modes is playing a Skirmish, and so whose input is live, whose
+hand is shown, and which side an AI drives.
+_Home_: `game/ui/session/seat.js` — `uiSeat`
+
 **Save / resume**:
 A Skirmish persisted mid-play and picked back up on a later visit.
-_Home_: `game/ui/skirmish.js` — `saveLocal`
+_Home_: `game/ui/session/save.js` — `saveLocal`
 
 **Turn snapshot**:
 The state kept so a player can take the current turn back.
-_Home_: `game/ui/skirmish.js` — `ensureSnapshot`
+_Home_: `game/ui/session/snapshot.js` — `ensureSnapshot`
 
 **Hotseat handoff**:
 Passing one device between two people between turns.
-_Home_: `game/ui/skirmish.js` — `showHandoff`
+_Home_: `game/ui/session/seat.js` — `showHandoff`
+
+**Battalion slot**:
+One of the five named battalions kept in this browser, distinct from the
+Battalion a content file describes.
+_Home_: `game/ui/session/store.js` — `id: 'battalions'`
 
 ## Families that share a shell
 
@@ -81,7 +89,12 @@ Ink with no opinion about what it is drawing. If the thing could name whose turn
 
 **Board primitive**:
 A builder for one mark on the game board, shared by every board that renders.
-_Home_: `game/ui/board-primitives.js` — `bpHexTile`
+_Home_: `game/ui/board/mark.js` — `bpHexTile`
+
+**Board overlay mark**:
+A builder for one transient mark — what just happened on the board rather than
+what is on it.
+_Home_: `game/ui/board/overlay.js` — `bpOverlayMark`
 
 **Chart mark**:
 A builder for one mark in a chart.

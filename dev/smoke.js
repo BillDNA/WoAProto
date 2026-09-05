@@ -277,15 +277,14 @@ realSetTimeout(function () {
           var ors = E.trenchOrientations(APP.st, hx);
           c = { hex: hx, dirs: ors[0] };
         }
-        try { E.applyStep(APP.st, c); }
-        catch (stepErr) {
+        // the real player path: the UI's one action, not a direct engine call
+        if (!win.act(c)) {
           // this step forbids skipping — take the first real legal choice
           // instead of the skip the picker fell back to.
           var choices = E.enumerateChoices(APP.st), alt = null;
           for (var ci = 0; ci < choices.length; ci++) { if (!choices[ci].skip) { alt = choices[ci]; break; } }
-          E.applyStep(APP.st, alt || { skip: true });
+          win.act(alt || { skip: true });
         }
-        win.afterChange();
       }
     } catch (e) { return reject(e); }
     realSetTimeout(tick, 2);
@@ -765,14 +764,14 @@ realSetTimeout(function () {
       var base = E2.UNITS[M.state.pieces.units[M.atk.from].type].atk;
       var res = E2.computeAttack(M.state, M.atk);
       E2.setBoard(prevShape);
-      var pill3 = doc.querySelector('#mpBoard .mpill-t').textContent;
+      var pill3 = doc.querySelector('#mpBoard .bpm-pill text').textContent;
       assert.ok(pill3 === (base + asup.total) + ' vs ?', 'beat-3 tally = engine base + supportFor total (' + pill3 + ')');
       assert.ok(doc.querySelectorAll('#mpBoard .mring.gold').length === asup.hexes.length,
         'one gold ring per engine-confirmed supporter (' + asup.hexes.length + ')');
       doc.getElementById('mpNext').click(); // forest beat
       doc.getElementById('mpNext').click(); // defender beat
       doc.getElementById('mpNext').click(); // totals beat
-      var pill6 = doc.querySelector('#mpBoard .mpill-t').textContent;
+      var pill6 = doc.querySelector('#mpBoard .bpm-pill text').textContent;
       assert.ok(pill6 === res.attackerPower + ' vs ' + res.defenderPower,
         'final pill = engine computeAttack (' + pill6 + ')');
       assert.ok(doc.querySelectorAll('#mpBoard .mring.steel').length >= 1, 'steel defender-support ring shown');

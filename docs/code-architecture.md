@@ -24,7 +24,7 @@ A digital version of Bill's physical board game **War of Attrition**: a browser 
 | A UI guardrail (battalion size band) | `UI_CONFIG` in `game/ui/ui-config.js` | the SAME standard, UI tier; read by the builders |
 | A dev-lab run default (LLM timeout, sweep sample counts, claude-plays defaults) | `LAB` in `dev/lab-config.js` | the SAME standard, dev-lab tier (node only); named sections, read by the tools |
 | An AI dial (eval weights, or search/eval tuning) | `AI_WEIGHTS` / `AI_TUNING` in `game/engine/ai/ai-config.js` | the SAME standard, AI tier; read by nested name in `05-ai.js`; a Commander overrides `AI_WEIGHTS` terms |
-| The board / a screen's look or interaction | `game/ui/*.js` (+ `style.css`) | [[ui-invariants]], [[context-ui-components]] |
+| The board / a screen's look or interaction | the house under `game/ui/` that owns it | its `*.md` beside the code |
 | The balance report / metrics / dashboard | `game/report-model.js` | [[report-model]] |
 | The batch/sweep fold | `game/sim.js` | [[report-model]] |
 | A server route (save/record) | `game/server.js` | restart the server after editing it |
@@ -78,12 +78,21 @@ The words for talking about where code lives. A **concept** is a thing the syste
   - `07-export` — assembles the public `Engine` object (browser `window.Engine`, node export).
 - `sim.js` — **the batch/measurement layer** (skirmish sweeps + balance aggregation): `simSkirmish` + the ONE balance fold + `balanceMap`. Browser global `WOA_SIM` + node module, built on `Engine.playToEnd`. The CLI reporters, the in-browser dashboard, and `dev/db.js` all fold through this one file. It sits under `game/` (not `dev/`) because the shipped dashboard runs the same fold; deleting it leaves a game that still boots and plays by hand.
 - `report-model.js` — **ONE copy of the report model**: the balance score, the per-map health thresholds, aggregate folds, card-row derivation, markdown rendering. Browser global `WOA_REPORT` + node module. Detail: [[report-model]].
-- `ui/*.js` — the UI, classic scripts with NO wrappers (top-level names attach to `window`; files cross-reference by bare name). Key parts: `app.js` (APP state hub + helpers + `openOverlay`/`closeOverlay`), `ui-config.js` (**`UI_CONFIG`** — the UI-tier config home: the battalion size band (genuinely UI-only), same object→digest pattern as `Engine.CONFIG`, read by the builders; `boot.js` renders both digests as the read-only corner **config bug**), `ui-primitives.js` (shared HTML-chrome toolkit), `board-primitives.js` (shared board toolkit — hex geometry + `svgEl` + `BOARD` palette + `bp*` builders, reused by every board renderer), `board.js` (game-board orchestration), `fx.js`, `skirmish.js`, `net.js` (LAN client), `maps-screen.js`, `map-editor.js`, `battalion-editor.js`, `dashboard.js` (the Balance Dashboard), `manual.js` (Field Manual + step-through diagram player), and **`boot.js` — loaded LAST, owns EVERY top-level statement that executes at page load**. All other ui files only declare. Invariants: [[ui-invariants]].
+- `ui/` — the UI, classic scripts with NO wrappers (top-level names attach to `window`; files cross-reference by bare name). Four households under it document themselves beside their code, and each has one door:
+
+  | household | door | prose |
+  |---|---|---|
+  | the turn — hand, prompt, journal, the one action path, the AI's turn | `ui/turn/turn.js` | `ui/turn/turn.md` |
+  | the board — every mark on a hex board, and what a click means | `ui/board/board.js` | `ui/board/board.md` |
+  | the session — what survives an interruption, and who is at the controls | `ui/session/session.js` | `ui/session/session.md` |
+  | the skirmish screen — its regions and their small-screen mirrors | `ui/screens/skirmish/skirmish.js` | `ui/screens/skirmish/skirmish.md` |
+
+  Around them: `app.js` (APP state hub + helpers + `openOverlay`/`closeOverlay`), `ui-config.js` (**`UI_CONFIG`** — the UI-tier config home: the battalion size band (genuinely UI-only), same object→digest pattern as `Engine.CONFIG`, read by the builders; `boot.js` renders both digests as the read-only corner **config bug**), `ui-primitives.js` (shared HTML-chrome toolkit), `kit/kind.js` and `modals/` (the modal kind and its instances), `screens.js` (the screen registry), `maps-screen.js`, `map-editor.js`, `battalion-editor.js`, `screens/dashboard/` (the Balance Dashboard and its panes), `manual.js` (Field Manual + step-through diagram player), and **`boot.js` — loaded LAST, owns EVERY top-level statement that executes at page load**, which is now each household's `init()` plus the wiring for the screens that are not yet households. All other ui files only declare. What is left of the older UI invariants: [[ui-invariants]].
 - `server.js` — zero-dependency LAN + dev server; regenerates `content/manifest.js` at boot and after saves. One routes table, one row per endpoint:
 
   | Route | Does |
   |-------|------|
-  | `POST /api/create` / `join` / `push`, `GET /api/poll` | LAN rooms — whole-state JSON sync, seq-numbered; create/join return `Engine.VERSION` for mismatch warnings |
+  | `POST /api/create` / `join` / `push`, `GET /api/poll` | LAN rooms — whole-state JSON sync, seq-numbered; the room store is `server/room/room.js`, create/join return `Engine.VERSION` for mismatch warnings |
   | `POST /api/savemap` / `deletemap` | write/remove `content/maps/<id>.js` + regen manifest |
   | `POST /api/savebattalion` | write `custom-battalion.js` (the applied battalion; `null` = back to default) |
   | `POST /api/savemapsets` | rewrite the whole `content/mapsets/` dir to the posted slot state (≤ 8 sets) + regen manifest |
@@ -105,7 +114,7 @@ The words for talking about where code lives. A **concept** is a thing the syste
 - `balance-report.js` — runs the balance report and SAVES it under `logs/reports/balance/<version>/`, folding into the per-version `accumulated.json` (`--fresh` resets, `--once` skips); `--parallel [k]` = process-per-map workers; `--mapset`; prints `BEST_MAP:`.
 - `tune-weights.js` — offline `AI_WEIGHTS` sweeper (coordinate descent, common random numbers, fitness = the shared balance score). Suggestions only — never writes engine files.
 - `gen-docs.js` — regenerates the drift-prone doc tables between `<!-- GEN:x -->` markers (the AI weights table + personalities in [[ai-heuristic-model]], and the content block below). Run it after touching `AI_WEIGHTS`, personalities, or `content/`.
-- `check-context.js` — keeps the term→code spine (`docs/context/` + `context-ui-components.md`) honest (every term's anchor still appears in its `file` — no line numbers, so only a rename/move/delete drifts; retired aliases stay at zero).
+- `check-context.js` — keeps the term→code spine (`docs/context/`) honest (every term's anchor still appears in its `file` — no line numbers, so only a rename/move/delete drifts; retired aliases stay at zero).
 - `check-prose.js` — the grep-clean backstop: docs and comments stay free of war-story residue (ticket refs, round/dated narration, era labels). See [[code-style]].
 - `smoke.js` — jsdom UI harness (`node dev/smoke.js`; `npm i --prefix dev jsdom` once). Boots `index.html` (inlining every `<script src>` and asserting none survived), plays a skirmish through the real DOM.
 - Focused test files: `db.test.js`, `llm-session.test.js`, `llm-client.test.js`, `claude-plays.test.js`, `content-api.test.js`, `server.test.js`, `boot.test.js`, `balance-parallel.test.js` — run the ones matching the area you touched.

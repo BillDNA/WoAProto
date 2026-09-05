@@ -1,29 +1,21 @@
-/* War of Attrition — ui part: the shared BOARD primitives toolkit. The
-   board-side twin of chart-primitives.js. Holds the hex geometry (S/hexXY/
-   corner math/hexPoints/viewBoxFor), the one svgEl DOM builder, the BOARD
-   palette, and a bp* primitive for every mark the game board draws — hex
-   tiles, HQs, unit tokens, attack-math pills, the highlight polygon. board.js
-   draws over this toolkit and builds nothing by hand: one implementation of
-   each mark, restyled in one place, reflected everywhere the board draws it.
+/* The BOARD house's MARK base: every persistent mark on a hex board.
 
-   Terrain marks are NOT here: each type draws itself in ui/board/terrain/,
-   which loads after this file and uses its geometry.
+   A mark takes its geometry from a hex key, its ink from the BOARD palette and
+   its scale from the caller, so the live board, the field manual's diagram and
+   the map editor draw one implementation of each at three sizes. Restyle a side
+   colour or the unit token here and every board in the game follows.
 
-   The geometry + svgEl are GLOBAL on purpose — every board consumer reuses
-   them, so this file loads before them in index.html's script chain. Every
-   board consumer draws from ONE palette + shared builders: fx.js (live-board
-   flourishes) takes its colours + unit radius from BOARD/BOARD_R; the manual
-   diagram (manual.js, MP_S scale) and the map editor (map-editor.js) draw
-   their hexes/terrain/HQ/units through hexXY(k,s) + bpUnitToken / bpHQMarker
-   (sizes are options, colours from BOARD) and route every board colour through
-   BOARD — so restyling a terrain glyph, a side colour, or the unit token is
-   one edit reflected on every board in the game. The mini-boards keep their
-   own scale-tuned line widths + editing/animation overlays; only the marks and
-   the palette are shared. A colour the stylesheet also paints stays a CSS var
-   here (terrain, sides, brass; the board ink + star + attack red read
-   var(--ink-plate)/var(--star)/var(--attack)); the glyph inks the stylesheet
-   never sees (the chit) — plus the ghost-hex wash — are named once in BOARD. */
+   Terrain marks are rooms of their own directory (board/terrain/), which loads
+   after this file and uses its geometry. Transient marks — what just happened
+   rather than what is there — are board/overlay.js. The map-library thumbnails
+   keep their own emitter in board/thumbnail.js: they build an innerHTML string,
+   not DOM.
+
+   The geometry and svgEl are global on purpose: every board consumer reuses
+   them. A colour the stylesheet also paints stays a CSS var here; the glyph
+   inks the stylesheet never sees are named once in BOARD. */
 'use strict';
+
 
 /* =================== hex geometry (shared) =================== */
 // S is the live board's hex size; every geometry helper takes an optional
@@ -218,20 +210,6 @@ function bpPieceGlyph(type, col, colD){
   else s += '<circle cx="10" cy="10" r="3.4" fill="'+BOARD.chit+'"/>';
   return s+'</svg>';
 }
-// the hover-only attack-math layer + one pill on it
-function bpAttackLayer(){ return svgEl('g', { 'class':'atk-hints', 'pointer-events':'none' }); }
-function bpAttackPill(g, hexKey, text, outcome){
-  var xy = hexXY(hexKey);
-  var fill = BOARD.hint[outcome] || BOARD.hint.defender; // matches the old else-branch (defender/red default)
-  var w = text.length * 6.6 + 12;
-  g.appendChild(svgEl('rect', { x: xy[0]-w/2, y: xy[1]+S*0.18, width: w, height: 17, rx: 8.5,
-    fill: fill, stroke: BOARD.outline, 'stroke-width': 1 }));
-  var t = svgEl('text', { x: xy[0], y: xy[1]+S*0.18+12.5, 'text-anchor': 'middle',
-    'font-size': 11, 'font-weight': 'bold', fill: BOARD.star });
-  t.textContent = text;
-  g.appendChild(t);
-}
-
 // a hex-fill highlight polygon (caller attaches the click handler)
 function bpHighlight(g, key, cls){
   var xy = hexXY(key);
@@ -258,43 +236,3 @@ function bpGhostHex(g, cx, cy, rad){
   return p;
 }
 
-/* =================== string thumbnail marks (maps-screen previews) ===================
-   The one STRING board renderer: the map-library thumbnails go into innerHTML
-   (var(--…) resolves in the DOM), so previewSVG builds an SVG string — the same
-   geometry (hexXY/hexPoints/corner math) + BOARD palette as the live board, at
-   its own tiny s=11 scale. The tile is deliberately its OWN look (BOARD.thumbTile,
-   not the .hex CSS class), and the HQ is a plain side-coloured hex (no brass ring
-   / star). Each thumbnail mark lives in one bpThumb* builder, so maps-screen.js
-   builds nothing by hand. */
-function bpThumbHex(cx, cy, rad){
-  return '<polygon points="'+hexPoints(cx, cy, rad)+'" fill="'+BOARD.thumbTile+'" stroke="'+BOARD.thumbTileStroke+'" stroke-width="0.8"/>';
-}
-function bpThumbHQ(cx, cy, side, rad){
-  return '<polygon points="'+hexPoints(cx, cy, rad)+'" fill="'+BOARD.side(side).fill+'" stroke="'+BOARD.outline+'" stroke-width="0.8"/>';
-}
-// self-contained map thumbnail (no global board state): tiles, terrain sides, HQs.
-function previewSVG(def){
-  var s = 11;
-  var hexList = E.boardHexes(E.ensureMapShape(def));
-  var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
-  var body = '';
-  hexList.forEach(function(k){
-    var p = hexXY(k, s);
-    minX=Math.min(minX,p[0]); maxX=Math.max(maxX,p[0]); minY=Math.min(minY,p[1]); maxY=Math.max(maxY,p[1]);
-    body += bpThumbHex(p[0], p[1], s-0.6);
-  });
-  (def.pieces||[]).forEach(function(pc){
-    pc.edges.forEach(function(e){
-      var c = hexXY(E.key(e[0],e[1]), s), aa = cornerAngles(e[2]);
-      body += bpThumbTerrain(cornerPt(c[0],c[1],aa[0],s-2.4), cornerPt(c[0],c[1],aa[1],s-2.4), pc.t);
-    });
-  });
-  ['red','blue'].forEach(function(side){
-    var hq = def[side+'HQ'];
-    if (!hq) return;
-    var p = hexXY(E.key(hq[0],hq[1]), s);
-    body += bpThumbHQ(p[0], p[1], side, s*0.62);
-  });
-  var m = s*1.4;
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="'+(minX-m).toFixed(0)+' '+(minY-m).toFixed(0)+' '+(maxX-minX+2*m).toFixed(0)+' '+(maxY-minY+2*m).toFixed(0)+'">'+body+'</svg>';
-}

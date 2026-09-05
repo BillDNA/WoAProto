@@ -2,6 +2,7 @@
 {
  "id": "airdrop",
  "name": "Airdrop",
+ "abbr": "Ad",
  "faction": null,
  "noOpener": true,
  "text": "Place an Infantry unit on any empty hex. (Never in your opening hand.)",

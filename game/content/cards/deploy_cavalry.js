@@ -2,6 +2,7 @@
 {
  "id": "deploy_cavalry",
  "name": "Deploy Cavalry",
+ "abbr": "Cv",
  "faction": null,
  "text": "Place a Cavalry unit adjacent to any controlled hex.",
  "steps": [

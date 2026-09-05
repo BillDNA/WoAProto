@@ -42,8 +42,6 @@ function cardDef(cid){
   return UI_CARD_POOL_BY_ID[cid] || { id: cid, name: cid, text: '' };
 }
 
-var SAVE_V = 6; // bumped when old saves can no longer be loaded (board shapes, trench arrays, block-shaped state, ...)
-
 function api(path, body){
   return fetch('/api/'+path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body||{}) })
     .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); });

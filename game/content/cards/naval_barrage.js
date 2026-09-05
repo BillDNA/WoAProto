@@ -2,6 +2,7 @@
 {
  "id": "naval_barrage",
  "name": "Naval Barrage",
+ "abbr": "NB",
  "faction": null,
  "text": "Remove any trench or forest on the board (optional). Then order an attack.",
  "steps": [

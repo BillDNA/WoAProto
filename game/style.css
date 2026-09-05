@@ -3,7 +3,7 @@
      :root owns every colour a stylesheet rule reads, plus the shared
      colours the board and charts also paint (they read those as var(--…),
      which resolves in an SVG attribute too). The board's own glyph inks
-     live in the BOARD palette (ui/board-primitives.js); the dashboard
+     live in the BOARD palette (ui/board/mark.js); the dashboard
      charts keep their validated ramps in the CHART palette
      (ui/chart-primitives.js), reading this :root for the shared paper/ink/
      hairline base but owning their semantic marks independently — the one
@@ -522,7 +522,6 @@
   #mpBoard .mring.steel{stroke:var(--steel);}
   #mpBoard .mring.deny{stroke:var(--deny); stroke-dasharray:6 4;}
   @keyframes mringIn{from{transform:scale(.4); opacity:0;}}
-  #mpBoard .mstrike{opacity:.9;}
   #mpBoard .mghost{opacity:.4;}
   #mpBoard .medge-glow{animation:mpulse 1.2s ease infinite;}
   @keyframes mpulse{0%,100%{opacity:.35;}50%{opacity:.85;}}

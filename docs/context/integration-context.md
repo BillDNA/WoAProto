@@ -56,7 +56,7 @@ _Home_: `game/server.js` — `'GET /api/poll'`
 
 **LAN room**:
 Two browsers holding one Skirmish in step over the local network.
-_Home_: `game/server.js` — `rooms`
+_Home_: `game/server/room/room.js` — `rooms`
 
 **Persistence proxy**:
 The route a finished Skirmish takes to become rows, which fails open when the dev tooling is absent.

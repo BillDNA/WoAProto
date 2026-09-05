@@ -14,7 +14,7 @@ lives in **`game/ui/manual.js`**; read that file alongside this doc.
 | Styles (rings, pill, tabs, reduced-motion) | `game/style.css`, "Field Manual diagram player" block |
 | All wiring (buttons, ← → keys, `?screen=manual` deep link) | `game/ui/boot.js` — functions live in manual.js, wiring statements ONLY in boot.js |
 
-Visual vocabulary = the live skirmish FX (`ui/fx.js` / `ui/board.js`): **gold
+Visual vocabulary = the live skirmish FX (`ui/board/fx.js` / `ui/board/board.js`): **gold
 ring** = attacker support that counted, **steel ring** = defender support,
 **grey dashed ring** = support denied, strike arrow, `A vs D` pill. Reuse it;
 don't invent new glyphs for the same concepts.

@@ -12,11 +12,11 @@ uiModal({ id:'play', buttonsClass:'menu-btns',
   buttons: function(c){
     var repos = c.canRp && !c.canAtk;
     return [
-      { label:'Play the card action', onClick: function(){ resolveCard(c.cid, 'normal'); } },
+      { label:'Play the card action', onClick: function(){ resolveCard({ cid: c.cid, mode: 'normal' }); } },
       { label:'Resolve as a basic Attack' + (c.canAtk ? '' : ' (no targets)'),
-        disabled: !c.canAtk, onClick: function(){ resolveCard(c.cid, 'attack'); } },
+        disabled: !c.canAtk, onClick: function(){ resolveCard({ cid: c.cid, mode: 'attack' }); } },
       { label:'Resolve as a basic Reposition' + (!c.canRp ? ' (no moves)' : c.canAtk ? ' (attack available)' : ''),
-        disabled: !repos, onClick: function(){ resolveCard(c.cid, 'reposition'); } },
+        disabled: !repos, onClick: function(){ resolveCard({ cid: c.cid, mode: 'reposition' }); } },
       { label:'Keep it in hand', ghost:true }
     ];
   }

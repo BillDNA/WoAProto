@@ -1,8 +1,5 @@
-/* War of Attrition — dashboard pane: TABLES, the run-loop view. The full
-   dev/balance.js report in the browser, plus the Run/Save controls the other
-   panes do not have (declared as this pane's `chrome`, so the shell shows and
-   hides them). Aggregation is WOA_SIM.balanceNew/balanceAdd — the SAME fold the
-   CLI runs — so a run here reproduces the terminal's numbers exactly. */
+/* Dashboard pane: TABLES — dev/balance.js's report in the browser, over the
+   same WOA_SIM fold, plus the Run/Save controls it declares as its `chrome`. */
 'use strict';
 
 var dpct = WOA_REPORT.pct;

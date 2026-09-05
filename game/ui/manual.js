@@ -19,14 +19,14 @@
 'use strict';
 
 /* ============ mini-board geometry (the live board's vocabulary at MP_S) ============
-   The manual draws its own tiny board, but through board-primitives' shared
+   The manual draws its own tiny board, but through the board house's shared
    helpers at MP_S scale — hexXY(k,MP_S) for position, bpUnitToken / bpHQMarker
    for the pieces, and the BOARD palette for every colour — so the two boards
    are literally the same marks, one implementation, just smaller. Only the
    scale-tuned line widths + the manual's own overlays (glow halos, ghost ✕,
    support rings, A-vs-D pill) stay local. */
 var MP_S = 34; // mini hex radius (live board: S = 44)
-// the mini-board's own scale-tuned line weights (board-primitives keeps mini-boards
+// the mini-board's own scale-tuned line weights (ui/board/mark.js keeps mini-boards
 // local by design). Named here so the glow/ghost widths are read by name, not re-typed.
 var MP_GLOW_SW = { side:11, trench:10 }; // attention-halo widths (.medge-glow)
 var MP_GHOST_SW = 2.5;                   // the ✕ struck over a fallen unit / HQ
@@ -112,18 +112,12 @@ function mpDrawFrame(f){
 
   // attention halos go UNDER the terrain/trench lines they highlight
   (f.glowSides||[]).forEach(function(sk){
-    var parts = sk.split('>'), c = mpXY(parts[0]), aa = cornerAngles(+parts[1]);
-    var p1 = cornerPt(c[0],c[1],aa[0],MP_S*0.85), p2 = cornerPt(c[0],c[1],aa[1],MP_S*0.85);
-    svg.appendChild(svgEl('line', { x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
-      stroke:'var(--gold-glow)','stroke-width':MP_GLOW_SW.side,'stroke-linecap':'round','class':'medge-glow' }));
+    var parts = sk.split('>');
+    bpOverlay(svg, 'sideglow', { hex:parts[0], dir:+parts[1], rad:0.85, sw:MP_GLOW_SW.side, s:MP_S, cls:'medge-glow' });
   });
   if (f.glowTrench){
-    var gc = mpXY(f.glowTrench.hex);
     f.glowTrench.dirs.forEach(function(d){
-      var aa = cornerAngles(d);
-      var p1 = cornerPt(gc[0],gc[1],aa[0],MP_S*0.74), p2 = cornerPt(gc[0],gc[1],aa[1],MP_S*0.74);
-      svg.appendChild(svgEl('line', { x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
-        stroke:'var(--gold-glow)','stroke-width':MP_GLOW_SW.trench,'stroke-linecap':'round','class':'medge-glow' }));
+      bpOverlay(svg, 'sideglow', { hex:f.glowTrench.hex, dir:d, rad:0.74, sw:MP_GLOW_SW.trench, s:MP_S, cls:'medge-glow' });
     });
   }
 
@@ -152,76 +146,34 @@ function mpDrawFrame(f){
   (f.ghosts||[]).forEach(function(g){ mpDrawUnit(svg, g.hex, g.unit, true); });
 
   // support rings — the live FX colors: gold attacker / steel defender / grey denied
-  (f.rings||[]).forEach(function(r){
-    var xy = mpXY(r.hex);
-    svg.appendChild(svgEl('circle',{cx:xy[0], cy:xy[1], r:MP_S*0.82, 'class':'mring '+r.cls}));
-  });
+  (f.rings||[]).forEach(function(r){ bpOverlay(svg, 'ring', { hex:r.hex, s:MP_S, cls:'mring '+r.cls }); });
 
   // strike arrow (the live fxStrike, persistent, bending through a via-HQ)
-  if (f.strike) mpDrawStrike(svg, f.strike);
+  if (f.strike) bpOverlay(svg, 'strike', { from:f.strike.from, to:f.strike.to, via:f.strike.via,
+    color:f.strike.color, s:MP_S, cls:'mstrike' });
 
   // "unit fell here but the hex is re-occupied" badge (advance-into-kill)
-  (f.badges||[]).forEach(function(h){
-    var xy = mpXY(h);
-    svg.appendChild(svgEl('circle',{cx:xy[0]+MP_S*0.55, cy:xy[1]-MP_S*0.6, r:7.5, fill:BOARD.redDark, stroke:BOARD.outline,'stroke-width':1}));
-    var x = svgEl('text',{x:xy[0]+MP_S*0.55, y:xy[1]-MP_S*0.6+3.5,'text-anchor':'middle','font-size':10,'font-weight':'bold',fill:BOARD.star});
-    x.textContent = '✕';
-    svg.appendChild(x);
-  });
+  (f.badges||[]).forEach(function(h){ bpOverlay(svg, 'fellbadge', { hex:h, s:MP_S }); });
 
   // the A-vs-D pill (same maths pills the live board hovers)
-  if (f.pill){
-    var pxy = mpXY(f.pill.at);
-    var fill = BOARD.hint[f.pill.tone] || BOARD.hint.neutral;
-    var w = f.pill.text.length*6.4 + 14;
-    svg.appendChild(svgEl('rect',{x:pxy[0]-w/2, y:pxy[1]+MP_S*0.52, width:w, height:16, rx:8,
-      fill:fill, stroke:BOARD.outline,'stroke-width':1, 'class':'mpill'}));
-    var pt = svgEl('text',{x:pxy[0], y:pxy[1]+MP_S*0.52+11.5, 'text-anchor':'middle',
-      'font-size':10.5, 'font-weight':'bold', fill:BOARD.star, 'class':'mpill-t'});
-    pt.textContent = f.pill.text;
-    svg.appendChild(pt);
-  }
+  if (f.pill) bpOverlay(svg, 'pill', { hex:f.pill.at, text:f.pill.text, tone:f.pill.tone,
+    dy: MP_S*0.52, s:MP_S });
 }
 function mpDrawUnit(svg, hex, u, ghost){
   var xy = mpXY(hex);
   var g = svgEl('g', ghost ? {'class':'mghost'} : {});
   // same token as the live board, at MP_S sizes (see bpUnitToken)
   bpUnitToken(g, xy[0], xy[1], u.owner, u.type, { r:MP_S*0.5, circSW:2, chitHW:10, chitHH:7, chitSW:1.2, glyphSW:1.7, artR:3.6 });
-  if (ghost){ // fallen: the ✕ over the counter
-    g.appendChild(svgEl('line',{x1:xy[0]-12,y1:xy[1]-12,x2:xy[0]+12,y2:xy[1]+12,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));
-    g.appendChild(svgEl('line',{x1:xy[0]-12,y1:xy[1]+12,x2:xy[0]+12,y2:xy[1]-12,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));
-  }
+  if (ghost) bpOverlay(g, 'struck', { hex:hex, r:12, sw:MP_GHOST_SW, s:MP_S }); // fallen: the ✕ over the counter
   svg.appendChild(g);
 }
 function mpDrawHQ(svg, hex, p, ghost){
   var xy = mpXY(hex);
   var g = svgEl('g', ghost ? {'class':'mghost'} : {});
   bpHQMarker(g, xy[0], xy[1], p, { rOuter:MP_S*0.62, outerSW:1.6, rInner:MP_S*0.5, brassSW:1.3, starFS:15, starDY:5.5 });
-  if (ghost){
-    g.appendChild(svgEl('line',{x1:xy[0]-13,y1:xy[1]-13,x2:xy[0]+13,y2:xy[1]+13,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));
-    g.appendChild(svgEl('line',{x1:xy[0]-13,y1:xy[1]+13,x2:xy[0]+13,y2:xy[1]-13,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));
-  }
+  if (ghost) bpOverlay(g, 'struck', { hex:hex, r:13, sw:MP_GHOST_SW, s:MP_S });
   svg.appendChild(g);
 }
-function mpDrawStrike(svg, s){
-  var pts = [mpXY(s.from)];
-  if (s.via) pts.push(mpXY(s.via));
-  pts.push(mpXY(s.to));
-  var g = svgEl('g', {'class':'mstrike', 'pointer-events':'none'});
-  g.appendChild(svgEl('polyline', { points: pts.map(function(p){ return p[0].toFixed(1)+','+p[1].toFixed(1); }).join(' '),
-    fill:'none', stroke:s.color, 'stroke-width':4.5, 'stroke-linecap':'round', 'stroke-linejoin':'round',
-    'stroke-dasharray':'10 6' }));
-  var a = pts[pts.length-2], b = pts[pts.length-1];
-  var ang = Math.atan2(b[1]-a[1], b[0]-a[0]);
-  var tip = [b[0]-Math.cos(ang)*MP_S*0.46, b[1]-Math.sin(ang)*MP_S*0.46];
-  var l = 11, wdt = 6.5;
-  var p1 = [tip[0]-Math.cos(ang)*l+Math.sin(ang)*wdt, tip[1]-Math.sin(ang)*l-Math.cos(ang)*wdt];
-  var p2 = [tip[0]-Math.cos(ang)*l-Math.sin(ang)*wdt, tip[1]-Math.sin(ang)*l+Math.cos(ang)*wdt];
-  g.appendChild(svgEl('polygon', { points: [tip, p1, p2].map(function(p){ return p[0].toFixed(1)+','+p[1].toFixed(1); }).join(' '),
-    fill: s.color, stroke:BOARD.outline, 'stroke-width':1 }));
-  svg.appendChild(g);
-}
-
 /* ============ helpers for captions ============ */
 function mpSideName(p){ return p === 'red' ? 'Red' : 'Blue'; }
 // plain-words sentence for what the resolution did — built from the aftermath

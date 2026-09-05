@@ -2,6 +2,7 @@
 {
  "id": "deploy_artillery",
  "name": "Deploy Artillery",
+ "abbr": "Ar",
  "faction": null,
  "text": "Place an Artillery unit adjacent to any controlled hex.",
  "steps": [

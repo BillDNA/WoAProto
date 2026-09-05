@@ -1,17 +1,5 @@
-/* War of Attrition — ui part: the Balance Dashboard's OVERVIEW pane.
-   THE QUESTION: what regressed, run A -> run B? Reads BOTH
-   runs' skirmish rows from GET /api/skirmishes?run=<id> (fetched once per A/B
-   pair and cached — SKIRMISH_CACHE in ui/net.js, shared with the Maps
-   drill-down so switching pills never refetches), folds them through
-   WOA_REPORT.foldSkirmishes (report-model.js — the ONE DB-rows -> agg fold),
-   then draws: a verdict banner, the triage band board, the per-map
-   balance-score dumbbells, and two fleet-wide pacing minis.
-
-   Render-only: all shaping is CHART_MODEL.buildOverviewModel (ui/chart-model.js).
-   Draws over the shared toolkit in ui/chart-primitives.js — the band-board row
-   renderer (ovBandRect/ovDot/ovBandRowHtml, shared with the Maps pane), the
-   settle-curve svg (chSettleSvg), and the .chtip/ch-hit hover layer (chBindHits)
-   all live there. Plain divs by string concat (not SVG). */
+/* Dashboard pane: OVERVIEW — what regressed, run A to run B. Render only; the
+   shaping is CHART_MODEL.buildOverviewModel. */
 'use strict';
 /* Verdict banner: named links for every SCORED band row run B breaches at the
    selected temperature (small-n rows excluded — the breach set is

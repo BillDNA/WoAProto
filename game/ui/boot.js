@@ -1,15 +1,20 @@
-/* War of Attrition — ui part: BOOT — loaded LAST. Every top-level statement
-   that EXECUTES at page load lives here: dropdown population, deep links,
-   all button/overlay wiring, the initial checkResume(). Function
-   declarations do not hoist across files, so immediate statements must run
-   after every ui part above has been parsed — keep this file last in
-   index.html's tag chain (game/test/test.js asserts it). Extracted verbatim
-   from index.html's inline app script. */
+/* War of Attrition — BOOT, loaded last: connection order.
+
+   Every top-level statement that EXECUTES at page load lives here — the
+   households' init() calls, the dropdowns built from data, the deep links, and
+   the wiring for the screens that are not yet households of their own. Function
+   declarations do not hoist across files, so this must run after every part
+   above has been parsed; game/load-order.js keeps it last. */
 'use strict';
 
 // Every modal's markup, written from the registry (ui/modals/modal.js) before any
 // wiring below reaches into a modal body.
 uiModalsBuild();
+
+// Each household wires its own controls; this file only says in what order.
+initTurn();
+initSession();
+initSkirmishScreen();
 
 // A terrain type with no mark would draw nothing on the board; fail at load instead.
 terrainMarksCheck();
@@ -144,112 +149,6 @@ $('mpPrev').onclick = function(){ manualStep(-1); };
 $('mpNext').onclick = function(){ manualStep(1); };
 $('mpTabs').onclick = manualTabClick;            // tab clicks delegated to ui/manual.js
 document.addEventListener('keydown', manualKey); // ← / → step beats while the manual is open
-$('btnConcede').onclick = function(){
-  var st = APP.st, v = E.view(st);
-  if (!st || v.phase === 'skirmish-over' || APP.mode === 'watch') return;
-  if (!inputLive() || v.phase !== 'choose-card'){ toast('You can concede at the start of your own turn.'); return; }
-  var p = viewSide();
-  confirmDialog({
-    title: 'Concede the field?', titleClass: p,
-    body: '<p>'+capName(E.other(p))+' takes this skirmish. Losing one skirmish does not lose the war — the campaign moves on.</p>',
-    yesLabel: 'Concede', noLabel: 'Fight on',
-    onYes: function(){
-      E.concede(APP.st, p);
-      renderAll(); saveLocal();
-      if (APP.mode === 'net') pushState();
-      clearIfBattleOver(); showSkirmishOver();
-    }
-  });
-};
-// Debug snapshot: dump this exact game state to logs/debug/
-// so Bill can hand Claude the situation without pasting a screenshot. The state
-// carries battle.maps (full board + terrain defs) so the dump is self-contained.
-$('btnDebug').onclick = function(){
-  var st = APP.st, v = E.view(st);
-  if (!st){ toast('No skirmish in progress to snapshot.', 2500); return; }
-  var note = prompt('Save a debug snapshot of the current game.\nDescribe what looks wrong (optional):', '');
-  if (note === null) return; // cancelled
-  var bundle = {
-    savedAt: new Date().toISOString(),
-    rulesVersion: E.VERSION,
-    saveV: SAVE_V,
-    mode: APP.mode, mySide: APP.mySide, diff: APP.diff,
-    note: note || '',
-    turn: v.turnNumber, phase: v.phase, current: v.current,
-    customBattalion: !!localStorage.getItem('woa-custom-battalion') || !!window.WOA_CUSTOM_BATTALION,
-    state: st
-  };
-  var json = JSON.stringify(bundle, null, 1);
-  var slug = String(v.mapName || 'skirmish').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-  var d = new Date(), p2 = function(x){ return (x<10?'0':'')+x; };
-  var stamp = d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'-'+p2(d.getHours())+p2(d.getMinutes())+p2(d.getSeconds());
-  var fname = stamp+'-'+slug+'-T'+v.turnNumber+'-'+v.phase+'.json';
-  api('savedebug', { filename: fname, content: json })
-    .then(function(r){ toast('Debug snapshot saved &rarr; '+(r.path || 'logs/debug/'+fname), 4200); })
-    .catch(function(){ downloadDebug(fname, json); });
-};
-
-$('fabJournal').onclick = function(){ modalOpen('journal'); };
-// innerHTML mirroring drops click handlers — delegate turn expand/collapse in the overlay
-$('journalOvrBody').onclick = function(ev){
-  var t = ev.target;
-  while (t && t !== this && !(t.classList && t.classList.contains('jturn'))) t = t.parentNode;
-  if (t && t.classList && t.classList.contains('jturn') && t.classList.contains('toggler')) t.classList.toggle('open');
-};
-
-$('fabRosters').onclick = function(){ modalOpen('mats'); };
-$('btnQuit').onclick = function(){
-  if (APP.net.poller) clearInterval(APP.net.poller);
-  APP.net.poller = null; APP.mode = null;
-  show('menu'); checkResume();
-};
-
-$('btnResume').onclick = function(){
-  try{
-    var d = JSON.parse(localStorage.getItem('woa-save'));
-    if (!d || d.v !== SAVE_V) throw new Error('save from an older version');
-    APP.mode = d.mode; APP.mySide = d.mySide; APP.diff = d.diff; APP.st = d.st;
-    $('diffSel').value = d.diff || 'normal';
-    APP.ui = { sel:null, stage:null, busy:false, handoffPending: d.mode==='hotseat' };
-    syncCommandersFromState(); // a resumed battle re-seeds the Commander panel from its saved state
-    show('game'); renderAll();
-    if (E.view(APP.st).phase === 'skirmish-over') showSkirmishOver();
-    else if (d.mode==='hotseat') showHandoff();
-    else maybeAI();
-  }catch(e){ clearSave(); checkResume(); }
-};
-checkResume();
-
-$('btnHost').onclick = function(){
-  var pool = getActiveMaps();
-  if (!pool || !pool.length){ toast('No maps are in play! Enable some in Maps &amp; Map Editor.', 3500); return; }
-  var battle = E.newBattle({ maps: pool });
-  var st = E.newSkirmish(battle);
-  api('create', { state: st }).then(function(d){
-    APP.mode='net'; APP.mySide='red'; APP.st = st;
-    APP.net.room = d.room; APP.net.seq = d.seq;
-    APP.ui = { sel:null, stage:null, busy:false };
-    show('game'); renderAll(); startPolling();
-    toast('Room code: <b style="font-size:22px;letter-spacing:4px;">'+d.room+'</b><br><span class="small">The other device joins with this code. You are Red.</span>', 6500);
-  }).catch(function(e){ toast('Could not create room — is the server running? ('+e.message+')', 4000); });
-};
-$('btnJoin').onclick = function(){
-  var code = $('joinCode').value.trim().toUpperCase();
-  if (code.length !== 4) { toast('Enter the 4-letter room code.', 2500); return; }
-  api('join', { room: code }).then(function(d){
-    APP.mode='net'; APP.mySide='blue'; APP.st = d.state;
-    APP.net.room = code; APP.net.seq = d.seq;
-    APP.ui = { sel:null, stage:null, busy:false };
-    syncCommandersFromState(); // the joined state may seat Commanders — seed the panel from it
-    show('game'); renderAll(); startPolling();
-    toast('Joined! You are Blue.', 3000);
-    if (E.view(APP.st).phase==='skirmish-over') showSkirmishOver();
-  }).catch(function(e){ toast('Could not join: '+e.message, 3500); });
-};
-
-$('btnCards').onclick = showCards;
-$('btnCardsMenu').onclick = showCards;
-
 $('btnMapsBack').onclick = function(){ SCREENS.devhub.entry(); };
 $('btnNewMap').onclick = function(){ openEditor(null); };
 // Export the whole map library as a shareable bundle (maps are files now, so this is
@@ -312,20 +211,15 @@ $('dkAddPool').onchange = function(){ if (this.value) addPoolCard(this.value); t
 // actually live (index.html's override wiring, evaluated before this file
 // runs). No override = no badge. Reset reuses the same clear+reload path as
 // the editor's "Restore built-in" button below.
-function resetCustomBattalion(){
-  try { localStorage.removeItem('woa-custom-battalion'); } catch(e){}
-  clearSave();
-  syncBattalionFile(null, function(){ location.reload(); });
-}
 if (typeof WOA_BATTALION_SRC !== 'undefined' && WOA_BATTALION_SRC !== 'builtin'){
   var battalionBadgeName = 'custom-battalion.js';
   if (WOA_BATTALION_SRC === 'local'){
     battalionBadgeName = 'a custom battalion saved in this browser';
-    try {
-      var wd = JSON.parse(localStorage.getItem('woa-battalions'));
+    {
+      var wd = STORE_BATTALIONS.read();
       var slot = wd && wd.slots && wd.slots[wd.active];
       if (slot && slot.name) battalionBadgeName = slot.name;
-    } catch(e){}
+    }
   }
   $('battalionBadgeText').textContent = 'custom battalion applied: ' + battalionBadgeName;
   $('battalionBadge').style.display = 'flex';
@@ -398,12 +292,10 @@ $('dkImportFile').onchange = function(){
 function recordSkirmish(st) {
   var v = E.view(st);
   var dash = (typeof DASH !== 'undefined') && DASH.running;
-  var kind = dash ? 'balance' : APP.mode === 'watch' ? 'watch' : 'human';
+  var kind = dash ? 'balance' : seatRunKind();
   function aiOf(side){
     if (dash) return side === 'red' ? DASH.meta.dr : DASH.meta.db;
-    if (APP.mode === 'watch') return APP.diff || 'normal';
-    if (APP.mode === 'ai') return side === APP.mySide ? 'human' : (APP.diff || 'normal');
-    return 'human'; // hotseat + LAN
+    return seatAiName(side);
   }
   var m = st.battle; st.battle = null; // the cycle never crosses the wire (battle is the identity handle)
   try {

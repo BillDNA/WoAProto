@@ -2,6 +2,7 @@
 {
  "id": "reckless_maneuvers",
  "name": "Reckless Maneuvers",
+ "abbr": "RM",
  "faction": null,
  "text": "Order an attack. Then reposition a unit.",
  "steps": [

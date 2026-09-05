@@ -22,9 +22,9 @@ uiModal({ id:'skirmish',
     btns.push(m.winner
       ? { label:'New Campaign', onClick: startNewCampaign }
       : { label:'Next Skirmish', onClick: function(){ startNextSkirmish(m); } });
-    if (APP.mode !== 'net') btns.push({ label:'Rematch this map', ghost:true,
+    if (!seatWire()) btns.push({ label:'Rematch this map', ghost:true,
       title:'Fresh skirmish, same map — for A/B testing a layout',
-      onClick: function(){ startLocal(APP.mode, [m.maps[v.mapIndex]]); } });
+      onClick: function(){ rematchMap(m.maps[v.mapIndex]); } });
     btns.push({ label:'Copy journal', ghost:true, keepOpen:true,
       title:'Copy the full campaign journal to the clipboard',
       onClick: function(el){ copyText(journalText(st), el); } });

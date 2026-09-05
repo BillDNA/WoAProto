@@ -2,6 +2,7 @@
 {
  "id": "conscription",
  "name": "Conscription",
+ "abbr": "Co",
  "faction": null,
  "text": "Place two Infantry units adjacent to any controlled hex, in sequence.",
  "steps": [

@@ -1,19 +1,6 @@
-/* War of Attrition — ui part: the Balance Dashboard's UNITS pane.
-   THE QUESTION: is each unit doing its job? SAME two runs' skirmish
-   rows as Overview/Maps/Cards (dashLoadSkirmishRows/SKIRMISH_CACHE in ui/net.js),
-   folded per-unit-type via report-model.js's unitsAggFromRows — one fold, four
-   panels: role map, breakthrough gauge, lifespan bars, exchange. A ghost
-   -> B solid throughout; this tab follows the header run-A/B pickers, not the
-   map drill-down's A|B|A/B toggle.
-
-   Render-only: all shaping is CHART_MODEL.buildUnitsModel (ui/chart-model.js);
-   this file owns only the palette (UNIT_COLOR — one identity colour per unit
-   type across all four panels, reusing existing CHART poles, no good/bad
-   verdict) and the draw. Draws over the shared toolkit (ui/chart-primitives.js):
-   chMakePlacer, chLine/chText/chTipAttrs, and the .chtip/ch-hit hover layer
-   (chBindHits). Small-n: ONE n per unit type per run
-   (skirmishesFielded) governs every mark; WOA_REPORT.smallN(n, 'fleet') greys
-   the mark + appends "(n=N)" to its tooltip, same as Cards. */
+/* Dashboard pane: UNITS — is each unit type doing its job. Render only; the
+   shaping is CHART_MODEL.buildUnitsModel. This file owns UNIT_COLOR, one
+   identity colour per unit type across all four panels. */
 'use strict';
 var UNIT_COLOR = { cavalry: CHART.divRed[1], infantry: CHART.divBlue[1], artillery: CHART.improve };
 function unColor(t, i) { return UNIT_COLOR[t] || CHART.seq[i % CHART.seq.length]; }

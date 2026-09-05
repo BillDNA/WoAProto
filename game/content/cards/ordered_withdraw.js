@@ -2,6 +2,7 @@
 {
  "id": "ordered_withdraw",
  "name": "Ordered Withdraw",
+ "abbr": "OW",
  "faction": null,
  "text": "Order an attack. Your attacker survives a tie, and never advances into the hex.",
  "steps": [

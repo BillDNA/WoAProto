@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* The term→code spine (docs/context/ + context-ui-components.md), wired into the gate:
+/* The term→code spine (docs/context/), wired into the gate:
    every home pointer's anchor still appears in its file, and no locked alias has
    regressed. Home pointers are line-number-free — the anchor is the greppable key,
    so a line shift never fails the gate; only a rename / move-out / delete does.

@@ -22,7 +22,6 @@
 |---|---|
 | `engine-model.md` | The rules kernel: board, terrain, trenches, combat, cards, victory, AI, the throwaway refactor diff. |
 | `ui-invariants.md` | What the browser app guarantees; constraints a UI change must not break. |
-| `context-ui-components.md` | The shared UI-primitive vocabulary (board + chrome toolkits). |
 | `commander-schema.md` | The Commander/trait shape the Commander mat panel renders. |
 | `report-model.md` | The reporting subsystem: score, metric bands, trace envelope, the one balance fold. |
 | `query-cookbook.md` | Asking the star-schema balance store new questions (SQL / `dev/db.js` / `/api/aggregate` + the Cross-cuts pane). |

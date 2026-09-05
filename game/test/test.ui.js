@@ -1,18 +1,16 @@
 /* UI contract backstop. The completeness guarantee for the whole
    UI: nothing in game/ui/ draws SVG by hand — every tile, glyph, chit,
-   mark, and pattern is built by a primitives module (board-primitives.js /
-   chart-primitives.js / ui-primitives.js), never string-concatenated or
+   mark, and pattern is built by a mark module (ui/board/ / chart-primitives.js /
+   ui-primitives.js), never string-concatenated or
    createElementNS'd in a screen. This is the CONTRACT, not a per-screen check:
    an element or screen nobody ticketed still reds here until it is migrated, so
    nothing enumerated-and-forgotten slips through.
 
-   Two gates:
-     1. No screen draws raw SVG. Grep every ui/*.js that is NOT a *primitives.js
-        for a raw SVG element built as a string literal or via createElementNS.
-     2. The component spine resolves. Every primitive named in
-        docs/reference/context-ui-components.md resolves to a real file:line home with its
-        anchor on that line (the companion of the address book's home gate, for UI).
-
+   No screen draws raw SVG: every .js under game/ui/, at any depth, is grepped
+   for an SVG element built as a string literal or via createElementNS. The
+   exempt set is the two mark houses — game/ui/board/ (every mark on a hex
+   board) and the *primitives.js modules — so a screen cannot escape the
+   contract by moving into a subdirectory.
    Both assert the MECHANISM, never a value: adding a screen, glyph, or mark reds
    nothing as long as it is drawn through a primitive and (if named) homed; only
    hand-rolling SVG in a screen, or a stale pointer, reds it, and the red
@@ -70,15 +68,25 @@ function stripComments(src) {
   return out;
 }
 
-function uiScreens() {
-  return fs.readdirSync(UI_DIR)
-    .filter(f => f.endsWith('.js') && !f.endsWith('primitives.js'))
-    .sort();
+// Where raw SVG is allowed to live: the board house draws every mark on a hex
+// board, and the two remaining *primitives.js modules draw charts and chrome.
+function drawsMarks(rel) {
+  return rel.startsWith('board/') || path.basename(rel).endsWith('primitives.js');
+}
+function uiScreens(dir = UI_DIR, prefix = '') {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap(d => {
+    const rel = prefix + d.name;
+    if (d.isDirectory()) return uiScreens(path.join(dir, d.name), rel + '/');
+    return d.name.endsWith('.js') && !drawsMarks(rel) ? [rel] : [];
+  }).sort();
 }
 
-test('UI contract: no screen draws raw SVG outside the primitives modules', () => {
+test('UI contract: no screen draws raw SVG outside the mark modules', () => {
   const screens = uiScreens();
   assert.ok(screens.length > 0, 'found screen modules to scan (guards a broken glob)');
+  // the walk must descend: a house that moves into a subdirectory must not
+  // drop out of the contract, which is what a flat readdir would do
+  assert.ok(screens.some(f => f.includes('/')), 'the scan reaches nested houses, not just ui/*.js');
   const hits = [];
   for (const f of screens) {
     const code = stripComments(fs.readFileSync(path.join(UI_DIR, f), 'utf8'));
@@ -87,7 +95,7 @@ test('UI contract: no screen draws raw SVG outside the primitives modules', () =
     });
   }
   assert.strictEqual(hits.length, 0,
-    'raw SVG drawing found outside a primitives module — migrate it into board-primitives.js / chart-primitives.js:\n' +
+    'raw SVG drawing found outside a mark module — migrate it into ui/board/ or a *primitives.js:\n' +
     hits.join('\n'));
 });
 
@@ -105,6 +113,6 @@ test('UI contract: the scanner catches string-built SVG and ignores look-alikes'
   assert.ok(hit(stripComments('var re = /["\\047]/; var svg = "<svg>";')), 'a <svg> after a quote-bearing regex is still detected');
 });
 
-// The spine-doc home pointers (docs/context/ + context-ui-components.md) are validated
-// in ONE place — dev/check-context.js (symbol-in-file, line-number-free), with its
-// own tests. This file keeps only the raw-SVG backstop above, its distinct contract.
+// The address book's home pointers are validated in ONE place —
+// dev/check-context.js (symbol-in-file, line-number-free), with its own tests.
+// This file keeps only the raw-SVG backstop above, its distinct contract.

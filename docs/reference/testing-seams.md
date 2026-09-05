@@ -59,7 +59,7 @@ gap. Least-covered, most-load-bearing first.
 |------|----------|--------|
 | A1/A2 finished skirmish → `/api/recordskirmish` → db row | boot.js hook → server → dev/db.js | **REAL** — `server.test.js` (+ `test.integration.js` for the engine hook) |
 | B1/B2/B3 db rows → `/api/runs`+`/api/skirmishes` (timeline join) → `envelopeFromRow` | dev/db.js → server → report-model | **REAL** — `server.test.js` feeds the real row into `envelopeFromRow` |
-| D1/D2/D3 LAN create/join/push/poll + seq-conflict | ui/net.js → server rooms | **REAL** (server side) — `server.test.js`; browser producers still DOM-only |
+| D1/D2/D3 LAN create/join/push/poll + seq-conflict | ui/session/net.js → server/room/ | **REAL** (server side) — `server.test.js`; browser producers still DOM-only |
 | A6/A7 savereport/savedebug path-injection fences | server `saveUnderRepo` | **REAL** (reject side) — `server.test.js` |
 | A3/A8 savemap/deletemap → content file → manifest | server → content/ → manifest-gen | **REAL** — `content-api.test.js` (temp content dir) |
 | A4 savebattalion → custom-battalion.js | server → game/custom-battalion.js | **REAL** — `content-api.test.js` (snapshot+restore) |

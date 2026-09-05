@@ -77,7 +77,7 @@ function updateMapsHint(){
 }
 
 // previewSVG (the map-library thumbnail) is a board renderer — it lives with the
-// other board marks in ui/board-primitives.js (bpThumb* + the BOARD palette).
+// other board marks in ui/board/ (bpThumb* in thumbnail.js + the BOARD palette).
 
 function renderMapsetBar(){
   var bar = $('mapsetBar');

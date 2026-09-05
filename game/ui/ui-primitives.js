@@ -1,5 +1,5 @@
 /* War of Attrition — ui part: the shared CHROME primitives toolkit. The
-   HTML-string twin of chart-primitives.js (SVG marks) and board-primitives.js
+   HTML-string twin of chart-primitives.js (SVG marks) and the board house's mark.js
    (board marks): the repeated bits of in-game HTML that were hand-typed in
    many places — the html-escape, the legend swatch, the sortable table header
    — each live here once, so restyling one is a one-function edit. Modals are
