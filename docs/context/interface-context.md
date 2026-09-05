@@ -31,6 +31,10 @@ _Home_: `game/ui/screens.js` — `devhub:`
 The in-app screen teaching the rules, with step-through diagrams.
 _Home_: `game/ui/manual.js` — `Field Manual`
 
+**Manual beat**:
+One step of a Field Manual example — a board state and the words for it.
+_Home_: `game/ui/manual.js` — `MANUAL_EXAMPLES`
+
 **Mats**:
 The overlay showing the physical pieces a side is holding.
 _Avoid_: roster.
@@ -39,6 +43,53 @@ _Home_: `game/ui/modals/mats.js` — `id:'mats'`
 **Card art**:
 The illustration looked up for a Card by its id.
 _Home_: `game/ui/app.js` — `artImg`
+
+## What you see of a Skirmish
+
+**Board view**:
+The board of the Skirmish in play, redrawn from state after every action.
+_Home_: `game/ui/board.js` — `renderBoard`
+
+**Player mat**:
+One side's own furniture beside the board — its hand, reserves and stocks.
+_Home_: `game/ui/skirmish.js` — `renderMat`
+
+**Highlight**:
+A hex marked as a legal choice for the Step in hand.
+_Home_: `game/ui/board.js` — `renderHighlights`
+
+**Attack preview**:
+What an Attack would resolve to, shown before it is committed.
+_Home_: `game/ui/board.js` — `attackPreviewsFor`
+
+**Animation pass**:
+The difference one action made, replayed as movement over the board.
+_Home_: `game/ui/fx.js` — `playFX`
+
+## Taking a turn
+
+**Prompt**:
+The line saying what the current Step is waiting for.
+_Home_: `game/ui/skirmish.js` — `renderPrompt`
+
+**Battle log**:
+The running player-facing record of what has happened this Skirmish.
+_Home_: `game/ui/skirmish.js` — `renderLog`
+
+**The one action path**:
+That every player action goes through one function, which applies it, replays it
+and redraws.
+_Home_: `game/ui/skirmish.js` — `function act`
+
+**AI turn driver**:
+The browser-side loop that makes a seated AI take its turn.
+_Home_: `game/ui/skirmish.js` — `maybeAI`
+
+## Working a Commander
+
+**Commander panel**:
+The live per-side Commander controls beside the board.
+_Home_: `game/ui/commander-panel.js` — `renderCommanderPanel`
 
 ## Staying in the game
 
@@ -53,6 +104,24 @@ _Home_: `game/ui/skirmish.js` — `ensureSnapshot`
 **Hotseat handoff**:
 Passing one device between two people between turns.
 _Home_: `game/ui/skirmish.js` — `showHandoff`
+
+**App state**:
+The one object holding what this browser is doing — the Skirmish in play, the
+mode, which side you are, the room you are in.
+_Home_: `game/ui/app.js` — `APP = {`
+
+**Save version**:
+The stamp that retires saves the current code can no longer load.
+_Home_: `game/ui/skirmish.js` — `SAVE_V`
+
+**Live sync**:
+The browser half of a LAN room — pushing your state and polling for theirs.
+_Home_: `game/ui/net.js` — `startPolling`
+
+**Slot**:
+A numbered place in the browser holding one draft of a content kind, one of
+which is active.
+_Home_: `game/ui/battalion-editor.js` — `DK_SLOTS`
 
 ## Families that share a shell
 
@@ -75,6 +144,22 @@ buttons that dismiss it. Normally none is open.
 _Avoid_: modal card — a Card is an order in the rule book.
 _Home_: `game/ui/modals/modal.js` — `uiModal`
 
+**Content editor**:
+One content kind's authoring screen: pick a Slot, edit, save.
+_Home_: none yet — three bespoke editors today (battalion, mapset, map), each
+with its own save path.
+
+## The dashboard
+
+**Row cache**:
+The fetch-once skirmish rows every pane on a screen reads, so one visit makes one
+request.
+_Home_: `game/ui/net.js` — `SKIRMISH_CACHE`
+
+**Run comparison**:
+The pairing of two recorded runs that every pane renders against.
+_Home_: `game/ui/screens/dashboard/dashboard.js` — `dashPickDefaultRuns`
+
 ## The drawing kit
 
 Ink with no opinion about what it is drawing. If the thing could name whose turn it is or which run is loaded, it is not one of these.
@@ -86,6 +171,14 @@ _Home_: `game/ui/board-primitives.js` — `bpHexTile`
 **Chart mark**:
 A builder for one mark in a chart.
 _Home_: `game/ui/chart-primitives.js` — `chRect`
+
+**Toast**:
+A message that appears over whatever is on screen and leaves on its own.
+_Home_: `game/ui/app.js` — `function toast`
+
+**Band board**:
+A compound mark: one metric's two runs read against its guard band.
+_Home_: `game/ui/chart-primitives.js` — `ovBandRowHtml`
 
 **Screen chrome**:
 A builder for shared page furniture outside the board and chart canvases.
