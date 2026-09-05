@@ -55,7 +55,7 @@ A trench is a terrain room like the others on the combat and support axis, and t
 ## Victory
 
 - **HQ capture** — capturing (tie included) wins the skirmish.
-- **Attrition** when a player cannot draw: score is surviving units on the board (`fieldScore`, each unit at its own `worth` — `engine/unit/unit.md`; reserves never deployed count for nothing; a tie goes to the second player). Kills as such do not score, though `st.result.kills` still tracks them for stats.
+- **Attrition** when a player cannot draw: score is surviving units on the board (`fieldScore`, each unit at its own `worth` — `engine/board/unit/unit.md`; reserves never deployed count for nothing; a tie goes to the second player). Kills as such do not score, though `st.result.kills` still tracks them for stats.
 - **Concession** — `concede(st,p)`, winType `'concession'`, counts as a normal skirmish loss. `concedeAdvised(st,p)` is an advisory foregone-conclusion heuristic (never enforced): truthy only when the field-score gap exceeds ~3 field-score points per remaining turn and no unit/deploy can reach the enemy HQ within `cardsRemaining(st,p)` turns (a live Airdrop keeps hope alive). The UI hints the human; `maybeAI` auto-concedes; `simSkirmish` never concedes, so balance stats stay full-game.
 - **Battle**: a pool of maps travels inside `st.battle.maps`; first to 3 skirmish wins.
 
@@ -67,7 +67,7 @@ A trench is a terrain room like the others on the combat and support axis, and t
 
 `engine/04-skirmish.js` owns the de-flattened skirmish state: it groups into composable blocks — `st.board` / `st.pieces` / `st.cards` / `st.flow` / `st.result` / `st.journal`, with identity keys (`seed`, `battle`, `mapIndex`, `mapName`) top-level. **`Engine.view(st)`** is the read-only play surface the live-play UI consumes (getters + per-side methods) instead of poking state internals. `04-skirmish.js` fires `Engine.hooks.onSkirmishEnd` (skipped for sims) and appends `st.journal.fsTimeline` per-turn field scores (feeds the DB timeline table).
 
-**Piece storage seam**: `Engine.Pieces` (defined in `03-rules.js`) is the one place unit/trench/reserve layout is known — every mutation (deploy/march/swap/kill, reserve spend) routes through it, so re-keying a piece is a one-place edit.
+**Piece storage seam**: each house owns its own pieces — `Engine.Units` (`engine/board/unit/unit.js`: place/remove/advance/swap, reserve read + spend) and `Engine.Trenches` (`engine/board/terrain/terrain.js`) — so every mutation routes through the house that owns the piece, and re-keying one is a one-file edit.
 
 ## AI
 

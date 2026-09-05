@@ -12,7 +12,6 @@
     sup:        function () { return I.CONFIG.unit.artillery.sup; },
     worth:      function () { return I.CONFIG.unit.artillery.worth; },
     count:      function () { return I.CONFIG.unit.artillery.count; },
-    aiValue:    function (price) { return price.artillery; },
     deployCost: function () { return I.CONFIG.unit.artillery.deployCost; }
   });
 })(typeof window !== 'undefined' ? window : globalThis);

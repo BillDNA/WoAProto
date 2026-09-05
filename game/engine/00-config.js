@@ -56,8 +56,8 @@
 
     // Terrain dials are the terrain house's own file, installed here as
     // CONFIG.terrain: engine/board/terrain/terrain-config.js. The unit's are
-    // likewise CONFIG.unit, from engine/unit/unit-config.js — including the
-    // per-type deploy surcharge the points table above used to spell out.
+    // likewise CONFIG.unit, from engine/board/unit/unit-config.js — including
+    // the per-type deploy surcharge the points table above used to spell out.
 
     // Map hex-count band — the physical board-size guardrail. Ceiling is the
     // laser-cutter max, enforced by validateMaps AND the map editor; floor is the

@@ -10,7 +10,7 @@
    dialect (ui/board/hex/hex-screen.js), which loads first and this file calls.
    Terrain marks are NOT here either: each type draws itself in ui/board/terrain/,
    which loads after this file and uses both. Nor is the unit token: that is the
-   unit house's screen dialect (ui/unit/), which also loads after this file.
+   unit house's screen dialect (ui/board/unit/), which also loads after this file.
 
    Every board consumer draws from ONE palette + shared builders: fx.js (live-board
    flourishes) takes its colours from BOARD; the manual diagram (manual.js, MP_S
@@ -43,7 +43,7 @@ function viewBoxFor(hexList, s){
 /* =================== mark radii + stroke tokens =================== */
 // board glyph radii, as a fraction of the live board's hex size.
 // (terrain insets are per type, declared with each mark in ui/board/terrain/)
-// (the unit token's radius is its own house's — ui/unit/unit-config.js)
+// (the unit token's radius is its own house's — ui/board/unit/unit-config.js)
 var BOARD_R = { hqOuter:HEX_CONFIG.board.size*0.62, hqInner:HEX_CONFIG.board.size*0.5 };
 
 /* =================== palette =================== */

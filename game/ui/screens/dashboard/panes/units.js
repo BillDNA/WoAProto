@@ -8,7 +8,7 @@
 
    Render-only: all shaping is CHART_MODEL.buildUnitsModel (ui/chart-model.js),
    and each type's identity colour — one across all four panels, a CHART pole
-   reused with no good/bad verdict — is declared on its own mark in ui/unit/ and
+   reused with no good/bad verdict — is declared on its own mark in ui/board/unit/ and
    read here through unitChartColor. This file owns the draw, over the shared
    toolkit (ui/chart-primitives.js): chMakePlacer, chLine/chText/chTipAttrs, and the .chtip/ch-hit hover layer
    (chBindHits). Small-n: ONE n per unit type per run

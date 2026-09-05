@@ -1,10 +1,10 @@
 /* The unit house's own tests — they live with the code they cover.
-   Run alone with `node game/engine/unit/unit.test.js`, or as part of the gate
+   Run alone with `node game/engine/board/unit/unit.test.js`, or as part of the gate
    with `node game/test/test.js`, which requires this file. */
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { E, testSkirmish } = require('../../test/test.helpers.js');
+const { E, testSkirmish } = require('../../../test/test.helpers.js');
 
 test('the stat record is a live view of the dials, not a snapshot', () => {
   const was = E.CONFIG.unit.infantry.atk;
@@ -18,7 +18,7 @@ test('the stat record is a live view of the dials, not a snapshot', () => {
 });
 
 test('a room must answer every question, and only those questions', () => {
-  const full = { type: 'q', name: f, atk: f, def: f, sup: f, worth: f, count: f, aiValue: f, deployCost: f };
+  const full = { type: 'q', name: f, atk: f, def: f, sup: f, worth: f, count: f, deployCost: f };
   function f() { return 0; }
   Object.keys(full).forEach(field => {
     if (field === 'type') return;
@@ -41,7 +41,7 @@ test('a room must answer every question, and only those questions', () => {
 test('a stat row nobody claimed is named, not silently dropped', () => {
   E.CONFIG.unit.tank = { name: 'Tank', atk: 4, def: 4, sup: 0, worth: 5, count: 2 };
   try {
-    assert.match(String(E.orphanRowProblem()), /"tank".*no room in engine\/unit\//,
+    assert.match(String(E.orphanRowProblem()), /"tank".*no room in engine\/board\/unit\//,
       'the orphan row is named, with where its stats came from');
     assert.throws(() => E.checkUnitStock(), /tank/,
       'and the load-time check fails on it rather than on the piece count it skews');
@@ -61,31 +61,55 @@ test('the stock guardrail counts what the rooms declare', () => {
   E.unitTypes().forEach(t => assert.strictEqual(stock[t], E.UNITS[t].count, t + "'s stock is its count"));
 });
 
-test('the AI prices a unit from its own weight, overridably, and falls back to the bounty', () => {
-  assert.strictEqual(E.unitValue('cavalry'), E.AI_WEIGHTS.unitValue.cavalry, 'the weight is what the search reads');
-  assert.strictEqual(E.unitValue('cavalry', { unitValue: { cavalry: 99 } }), 99,
-    "a personality's or Commander's merged weights reprice the piece");
-  assert.strictEqual(E.unitValue('infantry', { unitValue: { cavalry: 99 } }),
-    E.AI_WEIGHTS.unitValue.infantry, 'a partial override leaves the other types at base');
-  const was = E.AI_WEIGHTS.unitValue.cavalry;
+// A piece is worth its bounty plus a premium for what it can still do. Derived,
+// not tabulated, so a new type is priced with no number to keep in step.
+test('the AI prices a unit off its bounty, by a weight anyone may shift', () => {
+  E.unitTypes().forEach(t => assert.strictEqual(E.unitValue(t), E.UNITS[t].worth + E.AI_WEIGHTS.unitValueBase,
+    t + ' is priced at its bounty plus the premium'));
+  assert.strictEqual(E.unitValue('cavalry', { unitValueBase: 10 }), E.UNITS.cavalry.worth + 10,
+    "a personality's or Commander's merged weights shift the premium");
+  const was = E.CONFIG.unit.cavalry.worth;
   try {
-    delete E.AI_WEIGHTS.unitValue.cavalry;
-    assert.strictEqual(E.unitValue('cavalry'), E.UNITS.cavalry.worth + 2,
-      'a type with no price is valued off its bounty rather than vanishing from the search');
-  } finally { E.AI_WEIGHTS.unitValue.cavalry = was; }
+    E.CONFIG.unit.cavalry.worth = was + 3;
+    assert.strictEqual(E.unitValue('cavalry'), was + 3 + E.AI_WEIGHTS.unitValueBase,
+      'and retuning the bounty moves the price with it');
+  } finally { E.CONFIG.unit.cavalry.worth = was; }
 });
 
 // AI tuning must never move the digest stamped on DB rows: sweeping what the
-// search pays for a cavalry cannot make new runs incomparable with old ones.
-test('the AI price is an AI weight, so it is outside the rules digest', () => {
+// search pays for a piece cannot make new runs incomparable with old ones.
+test('the AI premium is an AI weight, so it is outside the rules digest', () => {
   const was = E.CONFIG.digest;
-  E.AI_WEIGHTS.unitValue.cavalry += 1;
-  try { assert.strictEqual(E.CONFIG.digest, was, 'repricing a unit leaves CONFIG.digest alone'); }
-  finally { E.AI_WEIGHTS.unitValue.cavalry -= 1; }
+  E.AI_WEIGHTS.unitValueBase += 1;
+  try { assert.strictEqual(E.CONFIG.digest, was, 'repricing leaves CONFIG.digest alone'); }
+  finally { E.AI_WEIGHTS.unitValueBase -= 1; }
   E.CONFIG.unit.cavalry.deployCost += 1;
   try {
     assert.notStrictEqual(E.CONFIG.digest, was, 'while a rules dial on the same row does move it');
   } finally { E.CONFIG.unit.cavalry.deployCost -= 1; }
+});
+
+// The house owns the pieces, not just their numbers: every deploy, march, kill
+// and reserve spend goes through this one door.
+test('the pieces themselves live behind the house door', () => {
+  const st = testSkirmish(410);
+  E.Units.place(st, '0,0', 'infantry', 'red');
+  assert.deepStrictEqual(E.Units.at(st, '0,0'), { type: 'infantry', owner: 'red' }, 'placed and read back');
+  assert.strictEqual(E.Units.at(st, '2,0'), null, 'an empty hex answers null, not undefined');
+  E.Units.advance(st, '0,0', '1,0');
+  assert.ok(!E.Units.at(st, '0,0') && E.Units.at(st, '1,0'), 'a march moves the piece, leaving nothing behind');
+  E.Units.place(st, '0,0', 'cavalry', 'red');
+  E.Units.swap(st, '0,0', '1,0');
+  assert.strictEqual(E.Units.at(st, '0,0').type, 'infantry', 'a swap exchanges them');
+  const seen = [];
+  E.Units.each(st, (h, u) => seen.push(u.type));
+  assert.strictEqual(seen.length, 2, 'each() walks every piece on the board');
+  const held = E.Units.reserve(st, 'red', 'cavalry');
+  E.Units.spendReserve(st, 'red', 'cavalry');
+  assert.strictEqual(E.Units.reserve(st, 'red', 'cavalry'), held - 1, 'a spend comes off the reserve');
+  E.Units.remove(st, '0,0');
+  assert.strictEqual(E.Units.at(st, '0,0'), null, 'and a kill clears the hex');
+  assert.deepStrictEqual(E.Units.fullReserve(), E.unitStock(), "a side's untouched stock is the box's");
 });
 
 test('a deploy step is priced by the unit it places', () => {
@@ -104,7 +128,6 @@ test('a deploy step is priced by the unit it places', () => {
 test('the unit house: a fourth type needs only its own answers', () => {
   const dial = { name: 'Sapper', atk: 2, def: 2, sup: 0, worth: 4, count: 0, deployCost: 3 };
   E.CONFIG.unit.sapper = dial;
-  E.AI_WEIGHTS.unitValue.sapper = 7;
   E.defineUnit({
     type: 'sapper',
     name:       function () { return E.CONFIG.unit.sapper.name; },
@@ -113,7 +136,6 @@ test('the unit house: a fourth type needs only its own answers', () => {
     sup:        function () { return E.CONFIG.unit.sapper.sup; },
     worth:      function () { return E.CONFIG.unit.sapper.worth; },
     count:      function () { return E.CONFIG.unit.sapper.count; },
-    aiValue:    function (price) { return price.sapper; },
     deployCost: function () { return E.CONFIG.unit.sapper.deployCost; }
   });
 
@@ -122,8 +144,8 @@ test('the unit house: a fourth type needs only its own answers', () => {
 
   // combat: it attacks, defends and hands over its bounty, with no edit to the rules
   const st = testSkirmish(321);
-  E.Pieces.place(st, '0,0', 'sapper', 'red');
-  E.Pieces.place(st, '1,0', 'infantry', 'blue');
+  E.Units.place(st, '0,0', 'sapper', 'red');
+  E.Units.place(st, '1,0', 'infantry', 'blue');
   const r = E.computeAttack(st, { from: '0,0', to: '1,0' });
   assert.strictEqual(r.attackerPower, dial.atk, 'it attacks at its own strength');
   assert.ok(r.attackerParts.some(p => p.indexOf('Sapper attack') >= 0),
@@ -133,7 +155,8 @@ test('the unit house: a fourth type needs only its own answers', () => {
   assert.strictEqual(E.fieldScore(st, 'red'), dial.worth, 'it counts for its own field score');
 
   // the AI's valuation
-  assert.strictEqual(E.unitValue('sapper'), E.AI_WEIGHTS.unitValue.sapper, "the search knows what it's worth");
+  assert.strictEqual(E.unitValue('sapper'), dial.worth + E.AI_WEIGHTS.unitValueBase,
+    "the search prices it with no number added anywhere");
 
   // the reserve model + the mat's slot count
   const fresh = E.newSkirmish(E.newBattle({ seed: 5, firstPlayer: 'red' }));

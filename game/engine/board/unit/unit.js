@@ -4,13 +4,16 @@
    A unit is a piece a side owns: it stands on a hex, it fights, it is worth
    something to the enemy when it falls, and the box holds a fixed number of it.
    A type declares where each of those answers is read from (see FIELDS below)
-   and nothing more; combat, the AI's valuation, the reserve model and the card
-   yardstick ask through I.UNITS / unitTypes / unitStock / unitValue /
-   deployPoints and never name a type.
+   and nothing more.
 
-   The numbers themselves stay DATA — maps.js's "units" block, wholly replaced by
-   an active content/units/*.js variant, merged with this house's own dials in
-   unit-config.js. This file owns the shape, not the values.
+   The house owns the pieces themselves, not just their numbers: I.Units is the
+   one place unit and reserve layout is known — every deploy, march, swap, kill
+   and reserve spend goes through it, so re-keying a piece is a one-file edit.
+   Combat, the AI, the mat and the board ask through I.Units / I.UNITS /
+   unitTypes / unitStock / unitValue / deployPoints and never name a type.
+
+   The numbers stay DATA — content/units/<slug>.js, one file flagged active,
+   installed as CONFIG.unit by unit-config.js. This file owns the shape.
 
    Classic script (browser + node), shared namespace g.WOA_E. Prose: unit.md */
 (function (global) {
@@ -28,7 +31,6 @@
     sup:        'function',  // () -> power lent to an adjacent fight
     worth:      'function',  // () -> field score the enemy banks for destroying it
     count:      'function',  // () -> pieces of it the box holds, per side
-    aiValue:    'function',  // (priceTable) -> what the AI prices one of them at
     deployCost: 'function'   // () -> points a deploy step of it adds to a card
   };
   // The answers a caller reads off I.UNITS[type] — the stat record.
@@ -49,10 +51,9 @@
     Object.keys(spec).forEach(function (f) {
       if (!FIELDS[f]) bad(id, 'unknown field ' + JSON.stringify(f));
     });
-    // A room whose type the active stat block does not carry stands DOWN rather
-    // than registering: a units variant replaces that block wholly, and dropping
-    // a type is one of the things it is allowed to do. The stock guardrail below
-    // catches the case where the drop was a typo.
+    // A room whose type the active unit set does not carry stands DOWN rather
+    // than registering: dropping a type is one of the things a set is allowed to
+    // do. The stock guardrail catches the case where the drop was a typo.
     if (!I.CONFIG.unit[id]) return null;
     all.push(spec); byType[id] = spec;
     UNITS[id] = record(spec);
@@ -81,25 +82,34 @@
     return out;
   }
 
+  /* ---------- where the pieces are ----------
+     st.pieces.units is hexKey -> {type, owner} and st.pieces.reserves[side] is
+     type -> count. Reads and writes both go through here. */
+  var Units = {
+    all: function (st) { return st.pieces.units; },
+    at: function (st, h) { return st.pieces.units[h] || null; },
+    each: function (st, fn) { var U = st.pieces.units; for (var h in U) fn(h, U[h]); },
+    place: function (st, h, type, owner) { st.pieces.units[h] = { type: type, owner: owner }; },
+    remove: function (st, h) { delete st.pieces.units[h]; },
+    advance: function (st, from, to) { st.pieces.units[to] = st.pieces.units[from]; delete st.pieces.units[from]; },
+    swap: function (st, a, b) { var ua = st.pieces.units[a]; st.pieces.units[a] = st.pieces.units[b]; st.pieces.units[b] = ua; },
+    reserve: function (st, p, type) { return st.pieces.reserves[p][type]; },
+    spendReserve: function (st, p, type) { st.pieces.reserves[p][type]--; },
+    // A side's untouched stock, the shape st.pieces.reserves starts at.
+    fullReserve: unitStock
+  };
+
   /* ---------- what a type is worth to each layer ---------- */
-  // The AI's own price for one piece, kept apart from the rules' `worth` (the
-  // enemy's field score) because the search values a piece for what it can still
-  // do, not for the points it hands over. It is an AI weight, not a rules dial —
-  // AI tuning must never move CONFIG.digest, which is stamped on DB rows — so it
-  // lives in AI_WEIGHTS.unitValue and a personality or Commander can reprice a
-  // piece by overriding it. A type with no price falls back to its bounty.
+  // The AI's own price for one piece: its bounty plus a flat premium, because a
+  // piece on the board is worth what it hands over PLUS what it can still do.
+  // The premium is an AI weight, not a rules dial — AI tuning must never move
+  // CONFIG.digest, which is stamped on DB rows — and a personality or Commander
+  // can shift it like any other.
   function unitValue(t, w) {
     var u = byType[t];
     if (!u) return 1;
-    var v = u.aiValue(priceTable(w));
-    return typeof v === 'number' ? v : u.worth() + 2;
-  }
-  // The base prices, with a merged weight vector's override laid over them —
-  // the same object back when there is no override, so the search allocates
-  // nothing in the common case.
-  function priceTable(w) {
-    var base = I.AI_WEIGHTS.unitValue, over = w && w.unitValue;
-    return (!over || over === base) ? base : Object.assign({}, base, over);
+    var base = (w && typeof w.unitValueBase === 'number') ? w.unitValueBase : I.AI_WEIGHTS.unitValueBase;
+    return u.worth() + base;
   }
   // The surcharge a deploy step of this type adds to a card's price. A step with
   // no unit costs nothing extra.
@@ -117,7 +127,7 @@
     Object.keys(stock).forEach(function (t) { total += stock[t]; });
     if (total === I.CONFIG.pieceTotal) return null;
     return 'unit composition must total ' + I.CONFIG.pieceTotal + ' pieces (got ' + total +
-      ') ' + source();
+      ') in content/units/' + I.unitSet + '.js';
   }
   // A stat row nobody claimed. Its pieces would be counted by no rule and drawn
   // by nothing, so the author's composition silently loses them — say so instead.
@@ -125,12 +135,10 @@
     var orphans = Object.keys(I.CONFIG.unit).filter(function (t) { return !byType[t]; });
     if (!orphans.length) return null;
     return 'unit type ' + orphans.map(function (t) { return '"' + t + '"'; }).join(', ') +
-      ' has stats ' + source() + ' but no room in engine/unit/ — a piece nothing can draw';
+      ' has stats in content/units/' + I.unitSet + '.js but no room in engine/board/unit/' +
+      ' — a piece nothing can draw';
   }
-  function source() {
-    return I.unitVariant ? 'from units variant "' + I.unitVariant + '"' : 'in maps.js';
-  }
-  // Both checks at load (07-export), so a bad stat block fails loud instead of
+  // Both checks at load (07-export), so a bad unit set fails loud instead of
   // quietly skewing every skirmish.
   function checkUnitStock() {
     var prob = orphanRowProblem() || unitStockProblem();
@@ -140,6 +148,7 @@
   /* shared-namespace exports */
   I.defineUnit = defineUnit;
   I.UNITS = UNITS;
+  I.Units = Units;
   I.unitTypes = unitTypes;
   I.unitOf = unitOf;
   I.unitStock = unitStock;

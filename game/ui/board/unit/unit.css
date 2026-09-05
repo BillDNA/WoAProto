@@ -1,0 +1,20 @@
+/* How a unit behaves as an element: the token's transform origin, and the two
+   animations a unit has of its own — arriving on the board, and falling off it.
+
+   The token's colours are not here. Its disc takes the seat's red or blue, and
+   the chit ink is an SVG fill no rule ever paints (UNIT_CONFIG.ink.chit), so
+   what CSS owns is motion, not paint. fx.js adds and removes these classes; the
+   shapes they move are built by unit-marks.js.
+
+   Loaded by style.css's @import chain. Prose: engine/board/unit/unit.md */
+
+/* every token transforms about its own centre, which is what makes it animatable */
+#board g.unit{transform-box:fill-box; transform-origin:center;}
+
+/* a deployed unit lands on its hex */
+#board g.unit.fx-pop{animation:popIn var(--dur-enter) ease backwards;}
+@keyframes popIn{from{transform:scale(.15); opacity:0;} to{transform:scale(1); opacity:1;}}
+
+/* a destroyed unit sinks and fades — fx.js draws the ghost, this moves it */
+.fx-ghost{transform-box:fill-box; transform-origin:center; animation:ghostOut .65s ease forwards; pointer-events:none;}
+@keyframes ghostOut{to{opacity:0; transform:translateY(12px) scale(.7);}}

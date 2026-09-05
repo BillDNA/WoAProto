@@ -57,7 +57,7 @@ near zero).
 { "type": "deploy", "unit": "infantry" }
 { "type": "deploy", "unit": "cavalry",  "anywhere": true }
 ```
-- `unit` (required): any type the unit house registers (`game/engine/unit/`).
+- `unit` (required): any type the unit house registers (`game/engine/board/unit/`).
 - `anywhere: true`: any EMPTY hex on the board (this is what makes Airdrop an airdrop). Default: empty hex adjacent to a hex you control.
 - Needs that unit in reserve, otherwise the step auto-skips.
 

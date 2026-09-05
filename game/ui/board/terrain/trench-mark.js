@@ -9,8 +9,8 @@
 
 var TRENCH_MARK = {
   letter: 'T',
-  stroke: '#5a4326',
-  ink: '#5a4326',
+  stroke: 'var(--trench)',
+  ink: 'var(--trench)',
   inset: 0.74,
   dash: '7 4'
 };

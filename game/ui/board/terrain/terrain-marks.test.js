@@ -110,11 +110,11 @@ test('every terrain colour is defined in the terrain house\'s stylesheet', () =>
   const page = fs.readFileSync(path.join(HERE, '..', '..', '..', 'style.css'), 'utf8');
   const mine = fs.readFileSync(path.join(HERE, 'terrain.css'), 'utf8');
   assert.match(page, /@import url\('ui\/board\/terrain\/terrain\.css'\)/, 'style.css imports it');
-  // a mark either names a CSS var — which must live here — or inks itself inline
+  // every mark names a CSS var, and every one of those lives here
   fs.readdirSync(HERE).filter(f => /-mark\.js$/.test(f)).forEach(f => {
     const src = fs.readFileSync(path.join(HERE, f), 'utf8');
     const v = (src.match(/stroke:\s*'var\((--[a-z-]+)\)'/) || [])[1];
-    if (!v) return;
+    assert.ok(v, f + ' names its colour as a CSS var rather than inking itself inline');
     assert.ok(mine.includes(v + ':'), f + " names " + v + ', so terrain.css must define it');
     assert.ok(!page.includes(v + ':'), 'style.css no longer defines ' + v);
   });

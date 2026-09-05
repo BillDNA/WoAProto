@@ -14,7 +14,7 @@ const { JSDOM } = require(path.join(__dirname, 'node_modules', 'jsdom'));
 
 const harness = require('./page-harness.js');
 const GAME = harness.GAME;
-const bootHtml = function (prefix) { return harness.pageHtml(['cards', 'battalions', 'maps'], prefix); };
+const bootHtml = function (prefix) { return harness.pageHtml(['cards', 'battalions', 'maps', 'units'], prefix); };
 
 function makeDom(prefix) {
   const dom = new JSDOM(bootHtml(prefix), { runScripts: 'dangerously', pretendToBeVisual: true, url: 'http://localhost/game/index.html' });

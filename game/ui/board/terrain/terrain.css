@@ -1,8 +1,9 @@
 /* The colour of each terrain, named where its mark is drawn.
 
    One var per type, read by that type's own *-mark.js (`stroke: 'var(--forest)'`).
-   A type whose colour the stylesheet never paints keeps it inline at the mark
-   instead — the trench does, so it has no row here.
+   Every type has a row, painted by a stylesheet rule or not: the mat's trench
+   slot proved that "the stylesheet never sees it" is not a reason for a colour
+   to hide inline.
 
    Loaded by style.css's @import chain. Prose: terrain.md */
 
@@ -10,4 +11,5 @@
   --forest:#4a7c3a;
   --mountain:#75726a;
   --river:#4a7ea8;
+  --trench:#5a4326;
 }

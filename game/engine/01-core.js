@@ -13,7 +13,7 @@
   // Must track the rule book header (docs/War Of Attrition rule book.md).
   var RULES_VERSION = '1.2';
 
-  // CORE data (units/shapes/stock/ai) is hand-editable JSON in maps.js, which
+  // CORE data (shapes/terrain stock/ai) is hand-editable JSON in maps.js, which
   // loads first (browser) / sits next to this file (node).
   var CORE = global.WOA_BUILTIN ||
     (typeof require === 'function' ? require('../maps.js') : null);
@@ -74,9 +74,9 @@
   var ACTIVE_BATTALION = (CONTENT.battalions || []).filter(function (d) { return d && d.active; })[0] ||
     (CONTENT.battalions || [])[0] || null;
   var CARD_LIST = (ACTIVE_BATTALION && ACTIVE_BATTALION.cards && ACTIVE_BATTALION.cards.length) ? hydrateBattalionCards(ACTIVE_BATTALION.cards) : (CONTENT.cards || []);
-  // Units are not assembled here: the unit house (engine/unit/) resolves its own
-  // stats — maps.js's block, or the active content/units/*.js variant that
-  // replaces it — and every layer reads them through I.UNITS.
+  // Units are not assembled here: the unit house (engine/board/unit/) resolves
+  // the active content/units/*.js set itself, and every layer reads it through
+  // I.UNITS.
   var BUILTIN = {
     shapes: CORE.shapes, terrain: CORE.terrain,
     ai: CORE.ai,

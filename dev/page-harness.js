@@ -9,7 +9,8 @@
    `prefix` is injected ahead of the whole chain, for seeding localStorage
    before applied-battalion.js reads it. `kinds` is the caller's content-kind
    list: the two harnesses load different sets today, so each states its own
-   rather than inheriting a default that would silently move what it tests. */
+   rather than inheriting a default that would silently move what it tests. A
+   kind the ENGINE cannot boot without — units — has to be in every list. */
 'use strict';
 var fs = require('fs');
 var path = require('path');

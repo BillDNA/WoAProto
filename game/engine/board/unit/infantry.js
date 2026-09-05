@@ -12,7 +12,6 @@
     sup:        function () { return I.CONFIG.unit.infantry.sup; },
     worth:      function () { return I.CONFIG.unit.infantry.worth; },
     count:      function () { return I.CONFIG.unit.infantry.count; },
-    aiValue:    function (price) { return price.infantry; },
     deployCost: function () { return I.CONFIG.unit.infantry.deployCost; }
   });
 })(typeof window !== 'undefined' ? window : globalThis);

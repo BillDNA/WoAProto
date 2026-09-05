@@ -76,8 +76,9 @@ reading "TODO — describe me" is new and needs a description in
 | `attrWin` | 500 | Huge swing for being the projected attrition winner if the battalions ran out now. Ramps up as cards run low. This is the anti-stalemate term — **don't zero it.** |
 | `fsDiff` | 8 | Value per point of field-score lead (surviving units on board), always on. |
 | `fsDiffUrgent` | 40 | Extra value per point of field-score lead, scaled up as the game nears its end. |
-| `unitOnBoard` | 22 | Value of each of my deployed units (× that type's own `unitValue` price). |
+| `unitOnBoard` | 22 | Value of each of my deployed units (× what that piece is worth to the search). |
 | `unitReserve` | 16 | Value of each of my un-deployed reserves. Lower than on-board = mild nudge to actually field them. |
+| `unitValueBase` | 2 | What a piece is worth to the search OVER its bounty — the premium for what it can still do. A piece is priced `worth + this`, so a new unit type needs no price of its own. |
 | `advance` | 2.2 | Reward for my units being *closer* to the enemy HQ (per hex). Raise it to make the AI pushy. |
 | `hqGuard` | 4 | Bonus for a unit sitting next to my own HQ. |
 | `enemyDist` | 1.6 | Reward for keeping enemy units *far* from my HQ. |
@@ -92,7 +93,6 @@ reading "TODO — describe me" is new and needs a description in
 | `antiShuffle` | 10 | Penalty for re-swapping the same pair of units it swapped last turn. Anti-degeneracy. |
 | `fallbackBias` | 12 | Mild preference for a card's printed action over burning it. |
 | `shortlist` | 40 | Search dial: when a step has more options than this, keep the top N by a cheap static pre-rank (winning attacks first, advances next, swaps last). Lower = faster + more approximate — lab personalities can crank it down. |
-| `unitValue` | [object Object] | What the search pays for one piece of each type, keyed by unit type. Installed by the unit house (`game/engine/unit/unit-config.js`); a personality or Commander may override any row. |
 <!-- /GEN:weights -->
 
 ### How the AI picks a trench's orientation

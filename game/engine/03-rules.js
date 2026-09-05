@@ -7,7 +7,9 @@
   var I = global.WOA_E = global.WOA_E || {};
 
   /* ---------- queries ---------- */
-  function unitAt(st, h) { return st.pieces.units[h] || null; }
+  // The two hex questions this file asks constantly. What is standing there is
+  // the unit house's to answer; whether it is an HQ is the board's.
+  function unitAt(st, h) { return I.Units.at(st, h); }
   function isHQ(st, h) {
     if (st.board.hqAlive.red && st.board.hq.red === h) return 'red';
     if (st.board.hqAlive.blue && st.board.hq.blue === h) return 'blue';
@@ -15,29 +17,9 @@
   }
   function isEmpty(st, h) { return !unitAt(st, h) && !isHQ(st, h); }
 
-  /* ---------- piece storage ----------
-     The ONE place the shape of st.pieces (units / trenches / reserves) is
-     known. Every free function reaches pieces through these accessors — reads
-     via unitAt/units/eachUnit, writes via place/remove/advance and the reserve
-     helpers — so re-keying or re-typing a piece is a one-place edit and nothing
-     distant breaks. */
-  var Pieces = {
-    units: function (st) { return st.pieces.units; },
-    unitAt: unitAt,
-    eachUnit: function (st, fn) { var U = st.pieces.units; for (var h in U) fn(h, U[h]); },
-    place: function (st, h, type, owner) { st.pieces.units[h] = { type: type, owner: owner }; },
-    remove: function (st, h) { delete st.pieces.units[h]; },
-    advance: function (st, from, to) { st.pieces.units[to] = st.pieces.units[from]; delete st.pieces.units[from]; },
-    swap: function (st, a, b) { var ua = st.pieces.units[a]; st.pieces.units[a] = st.pieces.units[b]; st.pieces.units[b] = ua; },
-    reserve: function (st, p, type) { return st.pieces.reserves[p][type]; },
-    spendReserve: function (st, p, type) { st.pieces.reserves[p][type]--; },
-    trenchesAt: function (st, h) { return st.pieces.trenches[h]; },
-    trenches: function (st) { return st.pieces.trenches; }
-  };
-
   function controlledHexes(st, p) {
     var out = [];
-    Pieces.eachUnit(st, function (h, u) { if (u.owner === p) out.push(h); });
+    I.Units.each(st, function (h, u) { if (u.owner === p) out.push(h); });
     if (st.board.hqAlive[p]) out.push(st.board.hq[p]);
     return out;
   }
@@ -267,7 +249,7 @@
     // st.result.kills tracks kills for stats/journal only — victory reads I.fieldScore.
     function killDefender() {
       if (du) {
-        Pieces.remove(st, atk.to); st.result.kills[p] += I.UNITS[du.type].worth; if (!st.journal.stats.firstBlood) st.journal.stats.firstBlood = p;
+        I.Units.remove(st, atk.to); st.result.kills[p] += I.UNITS[du.type].worth; if (!st.journal.stats.firstBlood) st.journal.stats.firstBlood = p;
         um[du.type].die++; um[du.type].dieT.push(st.flow.turnNumber); um[au.type].kill++;
         I.recordKill(st, 1);
       }
@@ -275,7 +257,7 @@
       st.journal.lastKillTurn = st.flow.turnNumber;
     }
     function killAttacker() {
-      Pieces.remove(st, atk.from);
+      I.Units.remove(st, atk.from);
       st.result.kills[e] += I.UNITS[au.type].worth;
       if (!st.journal.stats.firstBlood) st.journal.stats.firstBlood = e;
       um[au.type].die++; um[au.type].dieT.push(st.flow.turnNumber);
@@ -289,7 +271,7 @@
       if (atk.noAdvance) {
         msg += 'defender destroyed; the attacker holds its ground.';
       } else {
-        Pieces.advance(st, atk.from, atk.to);
+        I.Units.advance(st, atk.from, atk.to);
         msg += 'defender destroyed, attacker advances.';
       }
     } else if (res.outcome === 'defender') {
@@ -325,7 +307,6 @@
   }
 
   /* shared-namespace exports */
-  I.Pieces = Pieces;
   I.unitAt = unitAt;
   I.isHQ = isHQ;
   I.isEmpty = isEmpty;

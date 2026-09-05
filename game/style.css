@@ -4,7 +4,7 @@
    this file is the page: chrome, layout, screens, and the shared palette. */
 @import url('ui/board/hex/hex.css');
 @import url('ui/board/terrain/terrain.css');
-@import url('ui/unit/unit.css');
+@import url('ui/board/unit/unit.css');
 
   /* ===== War of Attrition palette =================================
      Every themed colour the UI paints has ONE home read by name. A concept
@@ -348,10 +348,6 @@
   @keyframes shake{0%,100%{transform:translate(0,0);}25%{transform:translate(-5px,2px);}50%{transform:translate(4px,-2px);}75%{transform:translate(-2px,1px);}}
 
   /* ===== board animations ===== */
-  #board g.unit.fx-pop{animation:popIn var(--dur-enter) ease backwards;}
-  @keyframes popIn{from{transform:scale(.15); opacity:0;} to{transform:scale(1); opacity:1;}}
-  .fx-ghost{transform-box:fill-box; transform-origin:center; animation:ghostOut .65s ease forwards; pointer-events:none;}
-  @keyframes ghostOut{to{opacity:0; transform:translateY(12px) scale(.7);}}
   .fx-ring{transform-box:fill-box; transform-origin:center; animation:ringOut .5s ease-out forwards; pointer-events:none;}
   @keyframes ringOut{from{transform:scale(.3); opacity:.95;} to{transform:scale(1.25); opacity:0;}}
   .fx-strike{animation:strikeFade .85s ease forwards;}
