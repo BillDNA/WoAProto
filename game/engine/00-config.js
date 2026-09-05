@@ -56,7 +56,8 @@
     },
 
     // Piece stocks (editable in maps.js): terrain chit counts + trench pieces.
-    terrainStock: CORE.terrainStock || { F3: 2, F2: 4, M3: 2, M2: 4 },
+    // Keyed <terrain letter><piece length>; read through Engine.stockCap.
+    terrainStock: CORE.terrainStock || { F3: 2, F2: 4, M3: 2, M2: 4, R3: 2, R2: 4 },
     trenchCount: CORE.trenchCount || 3,
 
     // Map hex-count band — the physical board-size guardrail. Ceiling is the
@@ -74,8 +75,14 @@
     // Grouped because each is a flat power swing on one side of a single fight —
     // the levers for how much terrain and position matter in combat.
     combat: {
-      forestAttack: 1,     // attacking ACROSS a forest edge adds this to attack
-      mountainDefense: 1,  // defending BEHIND a mountain edge adds this to defense
+      // One row per terrain letter, read by that terrain's room in
+      // engine/board/terrain/ — whether a type modifies a fight at all is the
+      // room's answer, how much is this dial. A row is absent when the type
+      // swings no power.
+      terrain: {
+        F: { attack: 1 },   // attacking ACROSS a forest edge adds this to attack
+        M: { defense: 1 }   // defending BEHIND a mountain edge adds this to defense
+      },
       hqSupport: 1         // an adjacent friendly HQ lends this much support to a fight
     },
 

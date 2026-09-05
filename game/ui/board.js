@@ -181,7 +181,7 @@ function renderHighlights(g){
         seg.addEventListener('click', function(){ act({trenchHex:t.hex, trenchIdx:t.idx}); });
       });
     });
-    o.forestPieces.forEach(function(pc){
+    o.terrainTargets.forEach(function(pc){
       pc.edgeKeys.forEach(function(ek){
         var parts = ek.split('>');
         var line = bpBarrageForestEdge(g, parts[0], +parts[1]);

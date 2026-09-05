@@ -161,11 +161,10 @@ function renderEditor(){
     if (ED.tool==='terrain'){
       var hit = bpEdgeHitLine(gHit, e[0], e[1], S*0.8);
       hit.addEventListener('click', function(){
-        var cur = ED.edges[ek];
-        if (!cur) ED.edges[ek] = 'F';
-        else if (cur==='F') ED.edges[ek] = 'M';
-        else if (cur==='M') ED.edges[ek] = 'R';
-        else delete ED.edges[ek];
+        // cycle empty -> each map terrain type in registration order -> empty
+        var cycle = E.mapTerrainTypes().map(function(t){ return t.letter; });
+        var next = cycle[cycle.indexOf(ED.edges[ek]) + 1];
+        if (next) ED.edges[ek] = next; else delete ED.edges[ek];
         renderEditor();
       });
     }
@@ -201,38 +200,15 @@ function groupEdgesToPieces(edges){
       });
     }
     var qr = E.parseKey(it.a);
-    // physical pieces come in lengths 2-3, but several can share one hex —
-    // split longer runs into 3s and 2s (TwoSetsOfThree: a full forest ring = 3+3).
-    // Rivers come in the same physical lengths as forest/mountain.
-    var chunks = splitRun(comp.map(function(x){ return x.d; }));
+    // several pieces can share one hex — the house cuts a long run into the
+    // physical lengths the box holds
+    var chunks = E.splitPieceRun(comp.map(function(x){ return x.d; }));
     chunks.forEach(function(chunk){
       pieces.push({ t: it.t, edges: chunk.map(function(d){ return [qr[0], qr[1], d]; }) });
     });
   });
   return pieces;
 }
-function splitRun(dirs){
-  if (dirs.length <= 3) return [dirs];
-  var inSet = {};
-  dirs.forEach(function(d){ inSet[d] = true; });
-  // order the contiguous arc: start where the previous direction is absent (full ring: anywhere)
-  var start = dirs[0];
-  for (var d = 0; d < 6; d++) if (inSet[d] && !inSet[(d + 5) % 6]) { start = d; break; }
-  var seq = [];
-  for (var i = 0, cur = start; i < dirs.length; i++, cur = (cur + 1) % 6){
-    if (!inSet[cur]) return [dirs]; // not one arc (shouldn't happen) — leave untouched
-    seq.push(cur);
-  }
-  var out = [];
-  while (seq.length > 3){
-    var take = seq.length === 4 ? 2 : 3; // 4 -> 2+2, 5 -> 3+2, 6 -> 3+3
-    out.push(seq.slice(0, take));
-    seq = seq.slice(take);
-  }
-  out.push(seq);
-  return out;
-}
-
 function renderEdStock(){
   var pieces = groupEdgesToPieces(ED.edges);
   function summary(t){
@@ -242,12 +218,16 @@ function renderEdStock(){
     lens.forEach(function(l){ cnt[l] = (cnt[l]||0)+1; });
     return Object.keys(cnt).sort().map(function(l){ return cnt[l]+'&times;len'+l; }).join(', ');
   }
-  var stockNote = Object.keys(E.CONFIG.terrainStock).map(function(k){ return E.CONFIG.terrainStock[k]+'&times;len'+k.slice(1)+' '+(k[0]==='F'?'forest':k[0]==='R'?'river':'mountain'); }).join(', ');
+  // One panel per map terrain type, off the registry — a new type brings its own.
+  var types = E.mapTerrainTypes();
+  var stockNote = types.map(function(t){
+    return E.PIECE_LENGTHS.map(function(l){ return E.stockCap(t.letter, l)+'&times;len'+l; }).join(', ')+' '+t.name;
+  }).join('; ');
   $('edStock').innerHTML = (ED.hexes ? '<b>'+Object.keys(ED.hexes).length+'/'+E.CONFIG.mapHexCeiling+' hexes</b> &nbsp;|&nbsp; ' : '') +
-    'Forest pieces: '+summary('F')+' &nbsp;|&nbsp; Mountain pieces: '+summary('M')+' &nbsp;|&nbsp; River pieces: '+summary('R')+
+    types.map(function(t){ return t.label+' pieces: '+summary(t.letter); }).join(' &nbsp;|&nbsp; ') +
     ' <span class="small">(physical stock: '+stockNote+')</span>';
   var over = pieces.some(function(p){
-    var cap = E.CONFIG.terrainStock[p.t + p.edges.length];
+    var cap = E.stockCap(p.t, p.edges.length);
     if (cap === undefined) return true; // no physical piece of this size
     return pieces.filter(function(o){ return o.t===p.t && o.edges.length===p.edges.length; }).length > cap;
   });

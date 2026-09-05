@@ -402,7 +402,7 @@ test('Barrage targets ANY trench or forest', () => {
   var st = E.newSkirmish(m);
   st.pieces.trenches['-3,1'] = [{ dirs: [0, 1], owner: 'blue' }];
   var b = E.listBarrageTargets(st, 'red');
-  assert.ok(b.forestPieces.length === 1, 'forest far outside red lines is targetable (got ' + b.forestPieces.length + ')');
+  assert.ok(b.terrainTargets.length === 1, 'forest far outside red lines is targetable (got ' + b.terrainTargets.length + ')');
   assert.ok(b.trenches.length === 1 && b.trenches[0].hex === '-3,1', 'trench far outside red lines is targetable');
   st.cards.hands.red = ['naval_barrage'];
   E.playCard(st, 'naval_barrage');

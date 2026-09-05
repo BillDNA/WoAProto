@@ -85,16 +85,16 @@ var BOARD_SW = { unit:2.5 }; // unit-token outline — fx.js's fallen-unit ghost
 // (resolves in an SVG attribute, same as the unit fills). The glyph inks the
 // stylesheet never sees are named once here.
 var BOARD = {
-  // terrain strokes live in CSS (the stylesheet themes them); glyph fills don't
-  forest:'var(--forest)', river:'var(--river)', mountain:'var(--mountain)',
-  forestGlyph:'#3a6330', riverCurrent:'#a9c6dd', mountainPeak:'#5d5a52',
+  // Terrain colours are the terrain house's — a room owns its own stroke and
+  // glyph ink (game/engine/board/terrain/), so a new type brings its palette
+  // with it and nothing here is edited. Strokes live in CSS as var(--…) so the
+  // stylesheet still themes them.
   // side colours (units + HQ) also from CSS
   red:'var(--red)', redDark:'var(--red-dark)', blue:'var(--blue)', blueDark:'var(--blue-dark)',
   brass:'var(--brass)',
   outline:'var(--ink-plate)',   // the near-black board ink (piece + pill strokes)
   chit:'#ece1c4',       // the unit chit
   star:'var(--star)',   // HQ star + pill text
-  trench:'#5a4326',     // dug-in earthwork
   barrage:'var(--attack)',      // barrage action marks
   thumbTile:'var(--hex)', thumbTileStroke:'var(--hex-stroke)', // maps-screen preview tiles (own look, not the live .hex class)
   // attack-math pill fill by combat outcome (neutral = manual's "no clear side")
@@ -108,7 +108,8 @@ var BOARD = {
 BOARD.side = function(owner){
   return owner==='red' ? { fill:BOARD.red, dark:BOARD.redDark } : { fill:BOARD.blue, dark:BOARD.blueDark };
 };
-BOARD.terrainStroke = function(t){ return t==='F' ? BOARD.forest : t==='R' ? BOARD.river : BOARD.mountain; };
+BOARD.terrainStroke = function(t){ var T = E.terrainOf(t); return T ? T.colour : BOARD.outline; };
+BOARD.trench = E.terrainNamed('trench').colour;   // dug-in earthwork
 
 /* =================== board setup =================== */
 // clear the svg, size its viewBox to the hex geometry (kills empty gutters on
@@ -168,6 +169,30 @@ function bpTerrainStroke(g, hexKey, dir, type, o){
   g.appendChild(line);
   return [p1, p2];
 }
+// The mark drawn ON a terrain side, one entry per map terrain type keyed by its
+// letter. The only thing about terrain the UI still decides for itself: every
+// other answer comes off the room. A type with no entry draws its bare stroke.
+// fn(g, geom, ink, o) — geom = {p1, p2, mx, my, c}; ink = the room's glyphColour.
+var BP_TERRAIN_GLYPH = {
+  R: function(g, m, ink, o){
+    g.appendChild(svgEl('line',{ x1:(m.p1[0]*0.7+m.mx*0.3), y1:(m.p1[1]*0.7+m.my*0.3),
+      x2:(m.p2[0]*0.7+m.mx*0.3), y2:(m.p2[1]*0.7+m.my*0.3),
+      stroke:ink, 'stroke-width':o.riverSW!=null?o.riverSW:2.2, 'stroke-linecap':'round', 'stroke-dasharray':o.riverDash||'6 5' }));
+  },
+  F: function(g, m, ink, o){
+    var fr = o.forestR!=null?o.forestR:4.4, fr2 = o.forestR2!=null?o.forestR2:3.4;
+    g.appendChild(svgEl('circle',{ cx:m.mx, cy:m.my, r:fr, fill:ink }));
+    g.appendChild(svgEl('circle',{ cx:(m.p1[0]+m.mx)/2, cy:(m.p1[1]+m.my)/2, r:fr2, fill:ink }));
+    g.appendChild(svgEl('circle',{ cx:(m.p2[0]+m.mx)/2, cy:(m.p2[1]+m.my)/2, r:fr2, fill:ink }));
+  },
+  M: function(g, m, ink){
+    var ex = (m.p2[0]-m.p1[0]), eyy = (m.p2[1]-m.p1[1]);
+    var tri = [ [m.mx-ex*0.14, m.my-eyy*0.14], [m.mx+ex*0.14, m.my+eyy*0.14],
+                [m.mx-(m.my-m.c[1])*0.18, m.my+(m.mx-m.c[0])*0.18] ];
+    g.appendChild(svgEl('polygon',{ points: tri.map(function(q){return q[0].toFixed(1)+','+q[1].toFixed(1);}).join(' '), fill:ink }));
+  }
+};
+
 // a hex-owned terrain side, drawn inset inside the owning hex, with its glyph.
 // Board defaults (S scale); a mini-board passes o = {s, sw, riverSW, riverDash,
 // forestR, forestR2, edgeData} so the SAME mark renders at its scale.
@@ -176,20 +201,9 @@ function bpTerrainEdge(g, edgeKey, type, o){
   var s = o.s || S, parts = edgeKey.split('>'), d = +parts[1];
   var ep = bpTerrainStroke(g, parts[0], d, type, { s:s, rad:o.rad, sw:o.sw, edgeData:o.edgeData });
   var p1 = ep[0], p2 = ep[1];
-  var mx=(p1[0]+p2[0])/2, my=(p1[1]+p2[1])/2, c = hexXY(parts[0], s);
-  if (type==='R'){
-    g.appendChild(svgEl('line',{ x1:(p1[0]*0.7+mx*0.3), y1:(p1[1]*0.7+my*0.3), x2:(p2[0]*0.7+mx*0.3), y2:(p2[1]*0.7+my*0.3),
-      stroke:BOARD.riverCurrent, 'stroke-width':o.riverSW!=null?o.riverSW:2.2, 'stroke-linecap':'round', 'stroke-dasharray':o.riverDash||'6 5' }));
-  } else if (type==='F'){
-    var fr = o.forestR!=null?o.forestR:4.4, fr2 = o.forestR2!=null?o.forestR2:3.4;
-    g.appendChild(svgEl('circle',{ cx:mx, cy:my, r:fr, fill:BOARD.forestGlyph }));
-    g.appendChild(svgEl('circle',{ cx:(p1[0]+mx)/2, cy:(p1[1]+my)/2, r:fr2, fill:BOARD.forestGlyph }));
-    g.appendChild(svgEl('circle',{ cx:(p2[0]+mx)/2, cy:(p2[1]+my)/2, r:fr2, fill:BOARD.forestGlyph }));
-  } else {
-    var ex = (p2[0]-p1[0]), eyy = (p2[1]-p1[1]);
-    var tri = [ [mx-ex*0.14, my-eyy*0.14], [mx+ex*0.14, my+eyy*0.14], [mx-(my-c[1])*0.18, my+(mx-c[0])*0.18] ];
-    g.appendChild(svgEl('polygon',{ points: tri.map(function(q){return q[0].toFixed(1)+','+q[1].toFixed(1);}).join(' '), fill:BOARD.mountainPeak }));
-  }
+  var glyph = BP_TERRAIN_GLYPH[type], T = E.terrainOf(type);
+  if (!glyph || !T) return;
+  glyph(g, { p1:p1, p2:p2, mx:(p1[0]+p2[0])/2, my:(p1[1]+p2[1])/2, c:hexXY(parts[0], s) }, T.glyphColour, o);
 }
 
 // a dug trench segment on one edge of a hex. o = {s, rad, sw, dash} lets a

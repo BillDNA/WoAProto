@@ -14,17 +14,19 @@
 
 A side is keyed `sideKey(hex,dir)` = `'q,r>d'`. Map defs list pieces as `{t, edges:[[q,r,d],...]}`.
 
-- **Forest** in hex X: +1 attack when X's occupant attacks out across a covered side.
+Every type is a room in the terrain house, `game/engine/board/terrain/` — one file per type, on one base. Each answers the same five questions about a side (`attack`, `defense`, `blocksSupport`, `blocksDeploy`, `barrageable`) and the rules ask them through `terrainAt` / `terrainAcross` / `supportBlocker` / `deployBlocked`; no rules file names a terrain type. See that directory's README.
+
+- **Forest** in hex X: +1 attack when X's occupant attacks out across a covered side; barrageable.
 - **Mountain** in hex X: +1 defense when X is attacked across a covered side.
-- **River** (`'R'`): does not block support — support crosses freely for both sides. Instead a river denies deploy-control extension: `riverBetween(st,a,b)` reads both hexes' sides and `deployTargets` skips any empty neighbour reached only across a river. Attacks/moves/Airdrop cross freely; not barrageable.
-- Both hexes of one border can each own a piece on their side. A terrain piece must live inside **one** hex with contiguous directions (like the physical pieces; `pieceProblem()` enforces, `buildTerrain` throws). Stock comes in physical lengths: forest/mountain and rivers alike group into contiguous 2s/3s; a full ring splits 3+3.
+- **River**: does not block support — support crosses freely for both sides. Instead a river denies deploy-control extension: `deployBlocked(st,a,b)` reads both hexes' sides and `deployTargets` skips any empty neighbour reached only across a river. Attacks/moves/Airdrop cross freely; not barrageable.
+- Both hexes of one border can each own a piece on their side. A terrain piece must live inside **one** hex with contiguous directions (like the physical pieces; `pieceProblem()` enforces, `buildTerrain` throws). Stock comes in physical lengths: every map terrain type groups into contiguous 2s/3s (`splitPieceRun`); a full ring splits 3+3.
 
 ## Trenches
 
-`st.trenches[hex]` is an array of `{dirs:[d,d+1], owner}` — a hex may hold several trenches, but edges may not overlap each other or that hex's own terrain sides (`trenchOrientations` filters).
+A trench is a terrain room like the others on the combat and support axis, and the one type stored as pieces rather than authored into the map: `st.trenches[hex]` is an array of `{dirs:[d,d+1], owner}` — a hex may hold several trenches, but edges may not overlap each other or that hex's own terrain sides (`trenchOrientations` filters).
 
 - **Trenches are attacker-support denial**: attacker support may not cross a trenched border into the skirmish hex (`borderBlocked` checks both hexes' trenches on that border). No defense bonus; the attack itself always crosses; defender support is unaffected; ownership is irrelevant to the rules (`owner` is UI mat bookkeeping only).
-- Barrage targets an individual trench (choice `{trenchHex, trenchIdx}`) and reaches the whole board — any trench or forest is a legal target.
+- Barrage targets an individual trench (choice `{trenchHex, trenchIdx}`) and reaches the whole board — any piece whose room answers `barrageable` is a legal target (trench and forest today).
 
 ## Combat
 

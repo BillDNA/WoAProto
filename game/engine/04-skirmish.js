@@ -385,7 +385,7 @@
       o.moves = r.moves; o.swaps = r.swaps;
     } else if (step.type === 'barrage') {
       var b = I.listBarrageTargets(st, p);
-      o.trenches = b.trenches; o.forestPieces = b.forestPieces;
+      o.trenches = b.trenches; o.terrainTargets = b.terrainTargets;
     }
     return o;
   }
@@ -396,7 +396,7 @@
     if (o.type === 'deploy' || o.type === 'trench') return o.targets.length > 0;
     if (o.type === 'attack') return o.attacks.length > 0;
     if (o.type === 'reposition') return o.moves.length > 0 || o.swaps.length > 0;
-    if (o.type === 'barrage') return o.trenches.length > 0 || o.forestPieces.length > 0;
+    if (o.type === 'barrage') return o.trenches.length > 0 || o.terrainTargets.length > 0;
     return false;
   }
 
@@ -528,10 +528,10 @@
         log(st, I.cap(p) + "'s naval barrage obliterates a trench at " + I.hexLabel(choice.trenchHex) + '.');
       } else if (choice.pieceId) {
         var pc = st.board.terrainPieces.filter(function (x) { return x.id === choice.pieceId && !x.removed; })[0];
-        if (!pc || b.forestPieces.indexOf(pc) < 0) throw new Error('invalid barrage');
+        if (!pc || b.terrainTargets.indexOf(pc) < 0) throw new Error('invalid barrage');
         pc.removed = true;
         pc.edgeKeys.forEach(function (ek) { delete st.board.terrainEdges[ek]; });
-        log(st, I.cap(p) + "'s naval barrage burns away the forest at " + I.hexLabel(pc.edgeKeys[0].split('>')[0]) + '.');
+        log(st, I.cap(p) + "'s naval barrage clears the " + I.terrainOf(pc.t).name + ' at ' + I.hexLabel(pc.edgeKeys[0].split('>')[0]) + '.');
       } else throw new Error('invalid barrage choice');
     }
     if (st.flow.pending) st.flow.pending.acted = (st.flow.pending.acted || 0) + 1;

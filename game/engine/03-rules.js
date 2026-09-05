@@ -48,9 +48,7 @@
     } else {
       controlledHexes(st, p).forEach(function (c) {
         I.neighbors(c).forEach(function (n) {
-          // a river on the c|n border stops control from extending across it
-          // (adjacency control must not cross the water)
-          if (isEmpty(st, n) && !riverBetween(st, c, n)) set[n] = true;
+          if (isEmpty(st, n) && !I.deployBlocked(st, c, n)) set[n] = true;
         });
       });
     }
@@ -66,8 +64,9 @@
     return false;
   }
   function edgeFreeForTrench(st, h, d) {
-    // only works owned by this hex occupy the same physical space as a trench here
-    return !st.board.terrainEdges[I.sideKey(h, d)] && !trenchCovers(st, h, d);
+    // A trench needs the physical space of the side, so it needs the side empty
+    // — of authored terrain owned by THIS hex, and of another trench.
+    return !I.terrainAt(st, h, d);
   }
   function trenchOrientations(st, h) {
     var out = [];
@@ -147,39 +146,31 @@
   }
 
   function listBarrageTargets(st, p) {
-    // The naval guns reach the whole board — ANY trench or forest may be targeted.
+    // The naval guns reach the whole board — anything barrageable may be hit.
+    // The two storages answer separately: trenches sit in st.pieces, authored
+    // terrain in st.board.terrainPieces.
     var trenches = [];
-    Object.keys(st.pieces.trenches).forEach(function (h) {
-      st.pieces.trenches[h].forEach(function (t, i) { trenches.push({ hex: h, idx: i, dirs: t.dirs }); });
+    if (I.terrainNamed('trench').barrageable)
+      Object.keys(st.pieces.trenches).forEach(function (h) {
+        st.pieces.trenches[h].forEach(function (t, i) { trenches.push({ hex: h, idx: i, dirs: t.dirs }); });
+      });
+    var terrainTargets = st.board.terrainPieces.filter(function (pc) {
+      var t = I.terrainOf(pc.t);
+      return t && t.barrageable && !pc.removed;
     });
-    var forestPieces = st.board.terrainPieces.filter(function (pc) {
-      return pc.t === 'F' && !pc.removed;
-    });
-    return { trenches: trenches, forestPieces: forestPieces };
+    return { trenches: trenches, terrainTargets: terrainTargets };
   }
 
   /* ---------- combat ---------- */
-  // Support crossing rules:
-  //  - a TRENCH on the border between supporter and skirmish hex blocks ATTACKER
-  //    support only. Ownership is irrelevant (lose a trench and the enemy uses
-  //    it just fine). Trenches grant no +1 defense — that's for mountains.
-  //  - a RIVER does not block support: support crosses it freely for both sides.
-  //    A river instead denies DEPLOY-control extension across it (riverBetween /
-  //    deployTargets) — control creep stops at the water, but armies already on
-  //    the field still support across it. This makes situational repositioning
-  //    stronger and cuts infantry-for-infantry swaps. Attacks/moves/Airdrop
-  //    cross freely; a river is not barrageable.
+  // Attacker support crosses a border unless the terrain on it says otherwise —
+  // which terrain, and what it denies, is each room's answer in
+  // engine/board/terrain/. Only the ATTACKER's support is ever denied, and
+  // ownership of the piece is irrelevant. Returns the blocker's name for the
+  // combat breakdown, or null.
   function borderBlocked(st, fromHex, skirmishHex, attacking) {
-    var dOut = I.dirBetween(fromHex, skirmishHex), dIn = I.dirBetween(skirmishHex, fromHex);
-    if (attacking && (trenchCovers(st, fromHex, dOut) || trenchCovers(st, skirmishHex, dIn))) return 'trench';
-    return null;
-  }
-  // A river on the border between two adjacent hexes stops deploy-control from
-  // extending across it (adjacency control must not cross the water).
-  // Reads both hexes' sides — ownership of the piece is irrelevant.
-  function riverBetween(st, a, b) {
-    var dOut = I.dirBetween(a, b), dIn = I.dirBetween(b, a);
-    return st.board.terrainEdges[I.sideKey(a, dOut)] === 'R' || st.board.terrainEdges[I.sideKey(b, dIn)] === 'R';
+    if (!attacking) return null;
+    var t = I.supportBlocker(st, fromHex, skirmishHex);
+    return t ? t.name : null;
   }
   function supportFor(st, p, skirmishHex, excludeHex, attacking) {
     var total = 0, parts = [], hexes = [];
@@ -199,11 +190,10 @@
     return { total: total, parts: parts, hexes: hexes };
   }
 
-  // Terrain letters on every edge a hex OWNS (buildTerrain registers a piece under
-  // its owning hex's sideKey, so "forest in hex X" lands under X's sides). Commander
-  // combatMods read this: a Fortress is dug into its whole position, so its bonus
-  // keys on the hex holding forest/mountain — on any facing, not just the attacked
-  // edge. The base forest-attack / mountain-defense bonuses stay per-edge.
+  // Terrain letters on every edge a hex OWNS. Commander combatMods read this: a
+  // Fortress is dug into its whole position, so its bonus keys on the hex holding
+  // terrain — on any facing, not just the attacked edge. A terrain type's own
+  // attack/defence answers stay per-edge.
   function hexTerrain(st, hex) {
     var out = [];
     for (var d = 0; d < 6; d++) {
@@ -217,13 +207,12 @@
     var p = st.pieces.units[atk.from].owner, e = I.other(p);
     var au = st.pieces.units[atk.from];
     var attackEdgeFromHex = atk.via || atk.from; // hex the attack crosses from
-    var atkSide = I.sideKey(attackEdgeFromHex, I.dirBetween(attackEdgeFromHex, atk.to));
-    var defSide = I.sideKey(atk.to, I.dirBetween(atk.to, attackEdgeFromHex));
     var aParts = [I.UNITS[au.type].name + ' attack ' + I.UNITS[au.type].atk];
     var aPow = I.UNITS[au.type].atk;
     var asup = supportFor(st, p, atk.to, atk.from, true);
     aPow += asup.total; aParts = aParts.concat(asup.parts);
-    if (st.board.terrainEdges[atkSide] === 'F') { aPow += I.CONFIG.combat.forestAttack; aParts.push('Forest +' + I.CONFIG.combat.forestAttack); }
+    var atkTerr = I.terrainAt(st, attackEdgeFromHex, I.dirBetween(attackEdgeFromHex, atk.to));
+    if (atkTerr && atkTerr.attack()) { aPow += atkTerr.attack(); aParts.push(atkTerr.label + ' +' + atkTerr.attack()); }
     var mod = atk.mod || 0;
     if (mod) { aPow += mod; aParts.push('Card ' + (mod > 0 ? '+' : '') + mod); }
     // Commander passive: an attack-side combatMod, gated by the attacker's hex terrain.
@@ -237,13 +226,12 @@
     else { dPow = 0; dParts = ['Headquarters defense 0']; }
     var dsup = supportFor(st, e, atk.to, null, false);
     dPow += dsup.total; dParts = dParts.concat(dsup.parts);
-    if (st.board.terrainEdges[defSide] === 'M') { dPow += I.CONFIG.combat.mountainDefense; dParts.push('Mountain +' + I.CONFIG.combat.mountainDefense); }
+    var defTerr = I.terrainAt(st, atk.to, I.dirBetween(atk.to, attackEdgeFromHex));
+    if (defTerr && defTerr.defense()) { dPow += defTerr.defense(); dParts.push(defTerr.label + ' +' + defTerr.defense()); }
     // Commander passive: a defense-side combatMod, gated by the defender's hex terrain
-    // (any owned forest/mountain edge, not only the attacked one — the "dug in" rule).
+    // (any owned terrain edge, not only the attacked one — the "dug in" rule).
     var dCmd = I.commanderCombat(I.sideCommander(st, e), 'defense', hexTerrain(st, atk.to));
     dPow += dCmd.delta; dParts = dParts.concat(dCmd.parts);
-    // (trenches no longer add defense — they deny attacker support instead;
-    //  the attack itself may always cross a trench or river)
     var outcome = aPow > dPow ? 'attacker' : (dPow > aPow ? 'defender' : 'tie');
     return {
       attackerPower: aPow, defenderPower: dPow,
@@ -353,7 +341,6 @@
   I.listRepositions = listRepositions;
   I.listBarrageTargets = listBarrageTargets;
   I.borderBlocked = borderBlocked;
-  I.riverBetween = riverBetween;
   I.supportFor = supportFor;
   I.computeAttack = computeAttack;
   I.resolveAttack = resolveAttack;

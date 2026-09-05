@@ -233,7 +233,7 @@ test('terrain-crossing rules: trench support denial + rivers', () => {
   var m3 = E.newBattle({ seed: 99, firstPlayer: 'red', maps: [riverMap] });
   var st3 = E.newSkirmish(m3);
   var bt = E.listBarrageTargets(st3, 'red');
-  assert.ok(bt.forestPieces.length === 0, 'rivers are not barrage targets (they act like mountains)');
+  assert.ok(bt.terrainTargets.length === 0, 'rivers are not barrage targets (they act like mountains)');
   // rivers occupy the border: no trench may share it
   st3.pieces.units['0,0'] = { type: 'infantry', owner: 'red' };
   assert.ok(!E.trenchOrientations(st3, '0,0').some(function (pr) { return pr.indexOf(1) >= 0 || pr.indexOf(4) >= 0; }),
@@ -352,4 +352,59 @@ test('trench orientations are never fully off-board', () => {
   });
   assert.ok(total > 0 && offBoard === 0, 'no offered trench faces fully off-board (' + offBoard + '/' + total + ' bad)');
 })();
+});
+
+// The house's contract: a fifth type is written once, in one file, and is then
+// live in the physical model, combat, support, deploy, barrage, map validation
+// and the commander terrain gate — none of which names a terrain type.
+// Registered LAST so the shipped four are asserted against a four-type registry.
+test('the terrain house: a fifth type needs only its own answers', () => {
+  E.defineTerrain({
+    letter: 'X', name: 'marsh', label: 'Marsh', storage: 'edges',
+    attack: function () { return 0; },
+    defense: function () { return 3; },
+    blocksSupport: true, blocksDeploy: true, barrageable: true,
+    colour: '#000', glyphColour: '#000'
+  });
+  E.CONFIG.terrainStock.X2 = 4;
+
+  assert.ok(E.pieceProblem({ t: 'X', edges: [[0, 0, 0], [0, 0, 1]] }) === null,
+    'the shared physical model accepts the new type');
+  assert.ok(E.pieceProblem({ t: 'X', edges: [[0, 0, 0], [0, 0, 3]] }) !== null,
+    'and still enforces contiguity on it');
+
+  var marshMap = { name: 'Marsh Test', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2],
+    pieces: [{ t: 'X', edges: [[0, 0, 0], [0, 0, 1]] }] };
+  assert.ok(E.validateMaps([marshMap]).length === 0, 'validateMaps accepts a map of the new type');
+
+  var st = E.newSkirmish(E.newBattle({ seed: 7, firstPlayer: 'red', maps: [marshMap] }));
+  var A = '0,0', B = E.neighbor(A, 0), C = E.neighbor(A, 1);
+  E.Pieces.place(st, A, 'infantry', 'red');
+  E.Pieces.place(st, C, 'infantry', 'red');   // A's supporter
+  E.Pieces.place(st, B, 'infantry', 'blue');
+
+  // defence keys on the DEFENDER's own side toward the hex the attack crosses from
+  st.board.terrainEdges[E.sideKey(B, E.dirBetween(B, A))] = 'X';
+  var r = E.computeAttack(st, { from: A, to: B });
+  assert.ok(r.defenderParts.some(function (p) { return p === 'Marsh +3'; }),
+    "the new type's defence answer reaches combat: " + JSON.stringify(r.defenderParts));
+
+  // attacker support is denied across the marsh on A's own side toward C
+  var supBefore = E.supportFor(st, 'red', B, null, true);
+  assert.ok(supBefore.hexes.indexOf(C) >= 0, 'C supports the attack before the marsh is laid');
+  st.board.terrainEdges[E.sideKey(C, E.dirBetween(C, B))] = 'X';
+  var supAfter = E.supportFor(st, 'red', B, null, true);
+  assert.ok(supAfter.hexes.indexOf(C) < 0 &&
+    supAfter.parts.some(function (p) { return p.indexOf('blocked by marsh') >= 0; }),
+    'the new type denies attacker support: ' + JSON.stringify(supAfter.parts));
+
+  assert.ok(E.deployBlocked(st, B, A), 'deploy-control stops at the new type');
+  assert.ok(E.listBarrageTargets(st, 'red').terrainTargets.some(function (pc) { return pc.t === 'X'; }),
+    'the new type is a legal barrage target');
+  assert.ok(!E.trenchOrientations(st, A).some(function (pr) { return pr.indexOf(0) >= 0 || pr.indexOf(1) >= 0; }),
+    'a trench may not share the new type\'s sides');
+
+  assert.ok(E.commanderCombat({ name: 'Bog Marshal', traits: [
+    { primitive: 'combatMod', source: 'passive', when: 'defense', terrain: 'marsh', delta: 2 }
+  ] }, 'defense', ['X']).delta === 2, 'a commander trait gates on the new type by its game word');
 });

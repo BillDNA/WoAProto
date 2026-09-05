@@ -349,9 +349,9 @@ realSetTimeout(function () {
     assert.ok(win.Engine.validateMaps([carvedDef]).length === 0, 'carved map validates: ' + win.Engine.validateMaps([carvedDef]).join('; '));
 
     console.log('== TwoSetsOfThree: long terrain runs split into stock pieces ==');
-    var ring = win.splitRun([0, 1, 2, 3, 4, 5]);
+    var ring = win.Engine.splitPieceRun([0, 1, 2, 3, 4, 5]);
     assert.ok(ring.length === 2 && ring[0].length === 3 && ring[1].length === 3, 'full forest ring = two length-3 pieces');
-    var five = win.splitRun([5, 0, 1, 2, 3]);
+    var five = win.Engine.splitPieceRun([5, 0, 1, 2, 3]);
     assert.ok(five.length === 2 && five[0].length === 3 && five[1].length === 2 && five[0][0] === 5,
       'five-side arc splits 3+2 from its true start (' + JSON.stringify(five) + ')');
     var ringPieces = win.groupEdgesToPieces({ '0,0>0': 'F', '0,0>1': 'F', '0,0>2': 'F', '0,0>3': 'F', '0,0>4': 'F', '0,0>5': 'F' });

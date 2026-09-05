@@ -50,7 +50,7 @@ test('litmus: card timing vs mountain-hex count is a 3-table join through db-que
   assert.ok(!/\(0 rows\)/.test(out), 'the join returns per-card aggregate rows');
   // The mountain-hex count in every row is the played map's COMPUTED value —
   // answered in SQL, never read from the JS content files.
-  const mtn = db.terrainFeatures(E.MAPS[0]).mountainHexes;
+  const mtn = db.terrainFeatures(E.MAPS[0]).hexes.mountain;
   const dataRows = out.split('\n').filter(function (l) { return /\S/.test(l) && !/mtn|-----|\(\d+ row/.test(l); });
   assert.ok(dataRows.length > 0 && dataRows.every(function (l) {
     const cols = l.trim().split(/\s{2,}/); // card | mtn | avg_turn | plays

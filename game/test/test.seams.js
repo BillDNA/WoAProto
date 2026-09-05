@@ -116,8 +116,12 @@ test('seam: the engine dials are grouped into named sections, not one flat blob'
   ['combat', 'skirmish', 'limits'].forEach(function (s) {
     assert.ok(C[s] && typeof C[s] === 'object', 'CONFIG.' + s + ' is a named section');
   });
-  assert.ok('forestAttack' in C.combat && 'mountainDefense' in C.combat && 'hqSupport' in C.combat,
+  assert.ok('terrain' in C.combat && 'hqSupport' in C.combat,
     'combat holds the per-fight power bonuses');
+  assert.ok(E.terrainTypes().every(function (t) {
+    var row = C.combat.terrain[t.letter] || {};
+    return Object.keys(row).every(function (k) { return k === 'attack' || k === 'defense'; });
+  }), 'the combat terrain table is keyed by terrain letter, one row per type that swings power');
   assert.ok('handDraw' in C.skirmish && 'matchTarget' in C.skirmish, 'skirmish holds the draw + victory dials');
   assert.ok('turnCap' in C.limits && 'stepsPerTurn' in C.limits, 'limits holds the loop-safety rails');
 });
@@ -125,18 +129,18 @@ test('seam: the engine dials are grouped into named sections, not one flat blob'
 // Each section's dial is proven tune-and-move RELATIVE to its live value — bump the
 // dial, watch the mechanism it drives move by the same delta; never a pinned number.
 // Restore the dial after so no later test inherits a tuned home.
-test('seam: combat.forestAttack drives the forest attack bonus', () => {
-  const C = E.CONFIG, base = C.combat.forestAttack;
+test('seam: combat.terrain.F.attack drives the forest attack bonus', () => {
+  const C = E.CONFIG, base = C.combat.terrain.F.attack;
   const st = testSkirmish(1);
   E.Pieces.place(st, '0,0', 'infantry', 'red');
   E.Pieces.place(st, '0,1', 'infantry', 'blue');
   st.board.terrainEdges[E.sideKey('0,0', E.dirBetween('0,0', '0,1'))] = 'F'; // forest the attack crosses
   const p0 = E.computeAttack(st, { from: '0,0', to: '0,1' }).attackerPower;
   try {
-    C.combat.forestAttack = base + 2;
+    C.combat.terrain.F.attack = base + 2;
     const p1 = E.computeAttack(st, { from: '0,0', to: '0,1' }).attackerPower;
-    assert.ok(p1 - p0 === 2, 'raising combat.forestAttack raises attack power by the same delta (got +' + (p1 - p0) + ')');
-  } finally { C.combat.forestAttack = base; }
+    assert.ok(p1 - p0 === 2, 'raising the forest row raises attack power by the same delta (got +' + (p1 - p0) + ')');
+  } finally { C.combat.terrain.F.attack = base; }
 });
 
 test('seam: skirmish.handDraw sizes the opening hand', () => {

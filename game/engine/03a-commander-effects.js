@@ -20,17 +20,18 @@
   'use strict';
   var I = global.WOA_E = global.WOA_E || {};
 
-  // A trait's terrain gate names game terrain; combat reads terrain as letters.
-  var TERRAIN_LETTER = { forest: 'F', mountain: 'M', river: 'R' };
   // A trait with no terrain applies everywhere; one with terrain applies when the
   // fight's terrain set holds one of the named terrains ('forest|mountain' → F or M).
-  // The set is the HELD hex's terrain (its owned edges), not one edge — a Fortress
-  // is dug into its whole position, so its bonus keys on the hex, not the attacked
-  // edge. `terrain` may arrive as a single letter (normalized to a one-item set).
+  // The name-to-letter translation is the terrain house's (engine/board/terrain/),
+  // so a trait may gate on any type that exists. The set is the HELD hex's terrain
+  // (its owned edges), not one edge — a Fortress is dug into its whole position,
+  // so its bonus keys on the hex, not the attacked edge. `terrain` may arrive as a
+  // single letter (normalized to a one-item set).
   function terrainMatches(trait, terrainLetters) {
     if (!trait.terrain) return true;
     return String(trait.terrain).split('|').some(function (name) {
-      return terrainLetters.indexOf(TERRAIN_LETTER[name]) >= 0;
+      var t = I.terrainNamed(name);
+      return !!t && terrainLetters.indexOf(t.letter) >= 0;
     });
   }
   // Only always-on sources contribute through this layer today (passives). A

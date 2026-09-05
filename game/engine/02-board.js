@@ -1,4 +1,6 @@
-/* War of Attrition — engine part 02: hex geometry, shapes, current-board state, terrain pieces.
+/* War of Attrition — engine part 02: hex geometry, shapes, current-board state.
+   What a terrain side DOES is the terrain house (engine/board/terrain/); this
+   part only lays the authored pieces onto sides.
    Classic script (browser + node). Engine parts share the internal namespace
    g.WOA_E (alias I) — cross-part calls go through I.* at the CALL SITE (never
    captured at load time), so only filename-sorted load order matters. */
@@ -182,43 +184,13 @@
   // a "side" is one hex's face of an edge. Key: 'q,r>d'.
   function sideKey(h, d) { return h + '>' + d; }
 
-
-  // A terrain piece is physical: it sits INSIDE one hex and wraps adjacent
-  // corners. Returns a problem string, or null if the piece is well-formed.
-  function pieceProblem(p) {
-    if (!p || (p.t !== 'F' && p.t !== 'M' && p.t !== 'R')) return 'piece type must be "F", "M" or "R"';
-    if (!p.edges || !p.edges.length) return 'piece has no sides';
-    var q0 = p.edges[0][0], r0 = p.edges[0][1], dirs = {};
-    for (var i = 0; i < p.edges.length; i++) {
-      var e = p.edges[i];
-      if (e[0] !== q0 || e[1] !== r0)
-        return 'piece spans hexes ' + key(q0, r0) + ' and ' + key(e[0], e[1]) + ' — every side of a piece must belong to ONE hex';
-      if (e[2] < 0 || e[2] > 5) return 'bad direction ' + e[2];
-      if (dirs[e[2]]) return 'side ' + e[2] + ' listed twice';
-      dirs[e[2]] = true;
-    }
-    var n = p.edges.length;
-    var contiguous = false;
-    for (var s = 0; s < 6 && !contiguous; s++) {
-      var run = true;
-      for (var j = 0; j < n; j++) if (!dirs[(s + j) % 6]) { run = false; break; }
-      contiguous = run;
-    }
-    if (!contiguous) return 'sides of a piece must be contiguous (wrap adjacent corners of the hex)';
-    return null;
-  }
-
   function buildTerrain(map) {
-    // Each [q,r,d] in a piece is a SIDE owned by hex (q,r):
-    //   forest in hex X: +1 attack when X's occupant attacks out across it;
-    //   mountain in hex X: +1 defense when X is attacked across it;
-    //   river on a border: DEPLOY-control doesn't extend across it (support
-    //   still crosses freely). The crossing check reads BOTH hexes' sides, so
-    //   which hex owns it is moot.
-    // returns { edges: {sideKey: 'F'|'M'|'R'}, pieces:[{id,t,edgeKeys:[sideKey...]}] }
+    // Each [q,r,d] in a piece is a SIDE owned by hex (q,r); what that side then
+    // does to a fight is its type's room in engine/board/terrain/.
+    // returns { edges: {sideKey: terrain letter}, pieces:[{id,t,edgeKeys:[sideKey...]}] }
     var edges = {}, pieces = [];
     map.pieces.forEach(function (p, i) {
-      var prob = pieceProblem(p);
+      var prob = I.pieceProblem(p);
       if (prob) throw new Error('map "' + map.name + '" piece ' + (i + 1) + ': ' + prob);
       var eks = [];
       p.edges.forEach(function (e) {
@@ -256,6 +228,5 @@
   I.edgeKey = edgeKey;
   I.edgeFrom = edgeFrom;
   I.sideKey = sideKey;
-  I.pieceProblem = pieceProblem;
   I.buildTerrain = buildTerrain;
 })(typeof window !== 'undefined' ? window : globalThis);
