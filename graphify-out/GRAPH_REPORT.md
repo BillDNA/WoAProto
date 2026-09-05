@@ -1,16 +1,16 @@
 # Graph Report - WoAProto  (2026-09-05)
 
 ## Corpus Check
-- 259 files · ~275,247 words
+- 259 files · ~275,714 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1393 nodes · 1866 edges · 222 communities (185 shown, 37 thin omitted)
-- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 143 edges (avg confidence: 0.66)
+- 1394 nodes · 1859 edges · 223 communities (186 shown, 37 thin omitted)
+- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 140 edges (avg confidence: 0.66)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `c8b4cf64`
+- Built from commit: `8c246bc2`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -39,7 +39,7 @@
 - server.js
 - 01-core.js
 - app.js
-- boot.test.js
+- dashboard.js
 - claude-plays.test.js
 - test.ui.js
 - fx.js
@@ -50,7 +50,7 @@
 - compilerOptions
 - test.cards.js
 - test.helpers.js
-- testSkirmish
+- test.seams.js
 - test.ai.js
 - turn.js
 - check-context.test.js
@@ -59,7 +59,7 @@
 - check-prose.js
 - check-prose.test.js
 - Hex adjacency clarification diagram (hexes A, B, C sharing edges)
-- test.geometry.js
+- terrain-marks.test.js
 - pr-check.js
 - db-query.js
 - test.integration.js
@@ -137,26 +137,27 @@
 - thumbnail.js
 - debug.js
 - panes/maps.js
-- dashboard.js
+- screens.js
 - overview.js
+- boot.js
 
 ## God Nodes (most connected - your core abstractions)
 1. `seat()` - 15 edges
 2. `War of Attrition Rule Book (v1.1)` - 15 edges
 3. `Engine model (rules kernel)` - 13 edges
-4. `testSkirmish()` - 12 edges
-5. `Report model (reporting subsystem)` - 11 edges
-6. `svgEl()` - 10 edges
-7. `LlmSession()` - 10 edges
-8. `R` - 10 edges
-9. `applyStep()` - 10 edges
-10. `Game concepts` - 10 edges
+4. `Report model (reporting subsystem)` - 11 edges
+5. `svgEl()` - 10 edges
+6. `LlmSession()` - 10 edges
+7. `R` - 10 edges
+8. `applyStep()` - 10 edges
+9. `Game concepts` - 10 edges
+10. `done()` - 9 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `dashReportMarkdown()` --indirect_call--> `done()`  [INFERRED]
-  game/ui/screens/dashboard/dashboard.js → dev/smoke.js
 - `reportMarkdown()` --indirect_call--> `done()`  [INFERRED]
   game/report-model.js → dev/smoke.js
+- `dashReportMarkdown()` --indirect_call--> `done()`  [INFERRED]
+  game/ui/screens/dashboard/dashboard.js → dev/smoke.js
 - `run()` --indirect_call--> `key()`  [INFERRED]
   dev/tune-weights.js → game/engine/02-board.js
 - `generate-reports skill` --conceptually_related_to--> `Balance loop (concept)`  [INFERRED]
@@ -174,15 +175,15 @@
 - **War of Attrition content rubrics (findings-not-score)** — docs_rubrics_card_rubric_card_rubric, docs_rubrics_map_rubric_map_rubric, docs_rubrics_personality_rubric_personality_rubric, docs_rubrics_ui_rubric_ui_rubric, docs_rubrics_unit_rubric_unit_rubric [INFERRED 0.85]
 - **Balance measurement pipeline (sweep to graded report)** — docs_human_instructions_standard_runs_runbook_standard_runs, docs_reference_report_model_report_model, game_readme_balance_lab, logs_readme_playtest_data [INFERRED 0.75]
 
-## Communities (222 total, 37 thin omitted)
+## Communities (223 total, 37 thin omitted)
 
 ### Community 0 - "Engine model (rules kernel)"
 Cohesion: 0.05
 Nodes (53): Apples-to-apples determinism, Standard runs runbook, AI heuristic model, AI_PRESETS (easy/normal/hard), AI_WEIGHTS, Anti-degeneracy guards (noopPenalty/antiShuffle/attrWin), CARD_KEEP burn priority, evalState board scoring (+45 more)
 
 ### Community 1 - "chart-model.js"
-Cohesion: 0.08
-Nodes (24): assert, E, fs, http, os, path, R, server (+16 more)
+Cohesion: 0.07
+Nodes (27): accFilePath(), readAcc(), run(), assert, E, fs, http, os (+19 more)
 
 ### Community 2 - "War of Attrition Rule Book (v1.1)"
 Cohesion: 0.06
@@ -221,8 +222,8 @@ Cohesion: 0.19
 Nodes (19): boardHexes(), buildGeo(), buildShape(), buildTerrain(), coordOf(), dirBetween(), dist(), edgeFrom() (+11 more)
 
 ### Community 11 - "ui/manual.js"
-Cohesion: 0.10
-Nodes (25): finish(), runParallel(), step(), manualKey(), manualStep(), manualTabClick(), mpAftermathWords(), mpDrawFrame() (+17 more)
+Cohesion: 0.17
+Nodes (15): manualKey(), manualStep(), manualTabClick(), mpAftermathWords(), mpDrawFrame(), mpDrawHQ(), mpDrawUnit(), mpSideName() (+7 more)
 
 ### Community 12 - "chart-primitives.js"
 Cohesion: 0.16
@@ -268,9 +269,9 @@ Nodes (5): handler(), json(), listen(), readBody(), saveUnderRepo()
 Cohesion: 0.20
 Nodes (12): activeMaps(), activeMapset(), battalionPoints(), battalionRegistry(), cardPoints(), comboWeight(), hydrateBattalionCards(), hydrateCardRef() (+4 more)
 
-### Community 24 - "boot.test.js"
-Cohesion: 0.09
-Nodes (27): accFilePath(), readAcc(), run(), assert, bootHtml(), fs, harness, { JSDOM } (+19 more)
+### Community 24 - "dashboard.js"
+Cohesion: 0.08
+Nodes (33): assert, bootHtml(), fs, harness, { JSDOM }, makeDom(), path, { test } (+25 more)
 
 ### Community 25 - "claude-plays.test.js"
 Cohesion: 0.18
@@ -306,19 +307,19 @@ Nodes (8): compilerOptions, allowJs, checkJs, module, moduleResolution, target, 
 
 ### Community 33 - "test.cards.js"
 Cohesion: 0.20
-Nodes (4): assert, { E, SIM, testSkirmish, fixtureCard }, ADR-0003, { test }
+Nodes (4): ADR-0003, assert, { E, SIM, testSkirmish, fixtureCard }, { test }
 
 ### Community 34 - "test.helpers.js"
-Cohesion: 0.25
-Nodes (6): assert, { E, testSkirmish, fixtureCard }, fresh(), { test }, fixtureCard(), ADR-0003
+Cohesion: 0.15
+Nodes (9): assert, { E, testSkirmish, fixtureCard }, { test }, assert, { E, SIM }, ADR-0003, { test }, fixtureCard() (+1 more)
 
-### Community 35 - "testSkirmish"
-Cohesion: 0.18
-Nodes (10): assert, { E, TESTMAP, testSkirmish }, fightSkirmish(), { test }, testSkirmish(), assert, burnGame(), { E, TESTMAP, testSkirmish } (+2 more)
+### Community 35 - "test.seams.js"
+Cohesion: 0.25
+Nodes (3): assert, { E, TESTMAP, testSkirmish }, { test }
 
 ### Community 36 - "test.ai.js"
-Cohesion: 0.25
-Nodes (4): assert, { E, SIM, testSkirmish }, ADR-0003, { test }
+Cohesion: 0.13
+Nodes (10): fresh(), assert, { E, SIM, testSkirmish }, ADR-0003, { test }, assert, { E, TESTMAP, testSkirmish }, fightSkirmish() (+2 more)
 
 ### Community 37 - "turn.js"
 Cohesion: 0.22
@@ -348,9 +349,9 @@ Nodes (4): assert, path, { spawnSync }, { test }
 Cohesion: 0.70
 Nodes (5): Hex A (top hex), Hex adjacency / shared-edge clarification, Hex adjacency clarification diagram (hexes A, B, C sharing edges), Hex B (lower-left hex), Hex C (lower-right hex)
 
-### Community 45 - "test.geometry.js"
-Cohesion: 0.40
-Nodes (4): assert, { E, SIM }, ADR-0003, { test }
+### Community 45 - "terrain-marks.test.js"
+Cohesion: 0.20
+Nodes (7): assert, E, fs, path, ROOMS, { test }, vm
 
 ### Community 47 - "pr-check.js"
 Cohesion: 0.50
@@ -389,8 +390,8 @@ Cohesion: 0.38
 Nodes (5): scan(), assert, { scan }, { test }, walk()
 
 ### Community 152 - "balance.js"
-Cohesion: 0.10
-Nodes (19): mapReport(), matchup(), pad(), sweepMaps(), sweepWorkers(), planBatches(), runParallelSweep(), configCanon() (+11 more)
+Cohesion: 0.19
+Nodes (12): mapReport(), matchup(), pad(), sweepMaps(), sweepWorkers(), planBatches(), runParallelSweep(), configCanon() (+4 more)
 
 ### Community 153 - "ADR-0004 — The balance fold moves from JS to SQL"
 Cohesion: 0.40
@@ -516,33 +517,37 @@ Nodes (3): bpThumbHex(), bpThumbHQ(), previewSVG()
 Cohesion: 0.27
 Nodes (13): mdBandBoard(), mdFsDiffTrackHtml(), mdHeaderHtml(), mdHexLabelFor(), mdHexLensSection(), mdLaneBars(), mdLensFill(), mdMapDef() (+5 more)
 
-### Community 220 - "dashboard.js"
-Cohesion: 0.33
-Nodes (9): dashFillRunSelect(), dashLoadRuns(), dashPickDefaultRuns(), dashReportMarkdown(), dashRunLabel(), openDash(), openDashDef(), renderDash() (+1 more)
+### Community 220 - "screens.js"
+Cohesion: 0.42
+Nodes (7): applyDevMode(), devHotkey(), devMode(), goScreen(), renderSettings(), screenAllowed(), setDevMode()
 
 ### Community 221 - "overview.js"
 Cohesion: 0.60
 Nodes (5): ovMapDumbbells(), ovPacingMinis(), ovRenderBody(), ovVerdictBanner(), renderOverview()
 
+### Community 222 - "boot.js"
+Cohesion: 0.60
+Nodes (3): finish(), runParallel(), step()
+
 ## Knowledge Gaps
-- **356 isolated node(s):** `{ test }`, `assert`, `{ spawnSync }`, `path`, `{ checkHomes }` (+351 more)
+- **356 isolated node(s):** `{ test }`, `assert`, `{ E, SIM, testSkirmish, fixtureCard }`, `ADR-0003`, `{ test }` (+351 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **37 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `done()` connect `boot.test.js` to `balance.js`, `report-model.js`, `dashboard.js`?**
+- **Why does `done()` connect `dashboard.js` to `balance.js`, `chart-model.js`, `report-model.js`?**
   _High betweenness centrality (0.019) - this node is a cross-community bridge._
-- **Why does `mapReport()` connect `balance.js` to `boot.test.js`, `chart-model.js`, `report-model.js`?**
-  _High betweenness centrality (0.017) - this node is a cross-community bridge._
-- **Why does `send()` connect `llm-session.test.js` to `claude-plays.js`?**
-  _High betweenness centrality (0.013) - this node is a cross-community bridge._
+- **Why does `mapReport()` connect `balance.js` to `dashboard.js`, `chart-model.js`, `report-model.js`?**
+  _High betweenness centrality (0.018) - this node is a cross-community bridge._
 - **Are the 3 inferred relationships involving `Engine model (rules kernel)` (e.g. with `Anti-degeneracy guards (noopPenalty/antiShuffle/attrWin)` and `Unit rubric`) actually correct?**
   _`Engine model (rules kernel)` has 3 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 3 inferred relationships involving `Report model (reporting subsystem)` (e.g. with `Standard runs runbook` and `Balance lab (dev/balance.js + Balance Dashboard)`) actually correct?**
   _`Report model (reporting subsystem)` has 3 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `{ test }`, `assert`, `{ spawnSync }` to the rest of the system?**
+- **What connects `{ test }`, `assert`, `{ E, SIM, testSkirmish, fixtureCard }` to the rest of the system?**
   _356 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Engine model (rules kernel)` be split into smaller, more focused modules?**
   _Cohesion score 0.05224963715529753 - nodes in this community are weakly interconnected._
+- **Should `chart-model.js` be split into smaller, more focused modules?**
+  _Cohesion score 0.07254623044096728 - nodes in this community are weakly interconnected._
