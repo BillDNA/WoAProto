@@ -8,7 +8,7 @@ Mountain, forest, river, trench.
 | what they share | `terrain.js` |
 | every tunable number | `terrain-config.js` |
 | tests | `terrain.test.js` |
-| how a type is drawn | `game/ui/board/terrain/` — one `*-mark.js` per type |
+| how a type is drawn | `game/ui/board/terrain/` — one `*-mark.js` per type, and its own `terrain-marks.test.js` |
 
 ## Adding a type
 
