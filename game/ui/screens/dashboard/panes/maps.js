@@ -13,7 +13,7 @@
    shared toolkit (ui/chart-primitives.js): the band-board row renderer
    (ovBandRowHtml, shared with the Overview pane), chSettleSvg, chLine/chText/
    chTipAttrs, and the .chtip/ch-hit hover layer (chBindHits). The hex boards
-   reuse the GLOBAL hexXY/hexPoints (the hex house) + viewBoxFor (the game's OWN board
+   reuse the board house's marks + viewBoxFor (the game's OWN board
    renderer) so the two hex renderers stay one visual language. */
 'use strict';
 /* The cross-skirmish folds these render functions draw over — envelopesForMap,
@@ -157,17 +157,15 @@ function mdHeaderHtml(mapList, idx, scoreA, scoreB, regressed) {
 /* =================== hex lenses ===================
    THREE spatial reads on THIS map's board — occupancy, ownership flips, kills
    — the drill-down's only SPATIAL view (tempo/FS/bands are all temporal or
-   aggregate). Rendered as SVG hex boards reusing board.js's GLOBAL
-   hexXY/hexPoints (the hex house) + viewBoxFor (the game's OWN board renderer).
+   aggregate). A real board: the tile and the HQ are the board house's marks at
+   the mapPane scale, so a lens looks like the game.
 
-   SVG polygons, NOT clip-path divs: the
-   avenue-of-attack marker is then a real nested <polygon> stroke and the
-   dead-hex hatch an SVG <pattern> — which structurally avoids the broken
-   render of a css `outline` on a clip-path element, and
-   it matches how the live game already draws its board (board.js), so the two
-   hex renderers stay one visual language. The fold (report-model.js
-   foldHexLenses) is pure over the trace; THIS layer owns the map/board join
-   (HQ hexes, outline, labels) the fold deliberately doesn't know. */
+   The lens OVERLAYS are chart marks, not board ones — the dead-hex hatch, the
+   avenue ring and the A-run ghost say something about the numbers, not about
+   the board, and they are read against the chart legend beside them.
+
+   The fold (report-model.js foldHexLenses) is pure over the trace; THIS layer
+   owns the map/board join (HQ hexes, outline, labels) the fold doesn't know. */
 var MD_HEX_LENSES = [
   { key: 'occ',   title: 'occupancy',      sub: '% of turns held', fmt: function (v) { return Math.round(v * 100) + '%'; } },
   { key: 'flips', title: 'ownership flips', sub: 'flips / skirmish',  fmt: function (v) { return WOA_REPORT.f1(v); } },
@@ -182,23 +180,11 @@ function mdMapDef(mapName) {
   for (var i = 0; i < maps.length; i++) if (maps[i].name === mapName) return maps[i];
   return null;
 }
-/* the map's shape object WITHOUT mutating the live engine board: buildShape is
-   pure (a shapeDef map builds a throwaway '@id' shape; a built-in reads
-   E.SHAPES), so opening the dashboard never switches CURRENT_SHAPE out from
-   under a paused live game. null on a malformed outline (caller notes it). */
-function mdShapeOf(map) {
-  try {
-    if (map.shapeDef) return E.buildShape('@' + (map.id || map.name || 'custom'), map.shapeDef);
-    return E.SHAPES[map.shape] || E.SHAPES[E.DEFAULT_SHAPE];
-  } catch (e) { return null; }
-}
-/* grid label ('C4') for a hex on an ARBITRARY shape — E.hexLabel only reads
-   CURRENT_SHAPE, and we deliberately don't switch it, so replicate its 3-line
-   formula against the passed shape object. */
-function mdHexLabelFor(shape, k) {
-  var p = E.parseKey(k), ri = shape.rowRs.indexOf(p[1]);
-  if (ri < 0 || !shape.set[k]) return k;
-  return String.fromCharCode(65 + ri) + (p[0] - shape.rowQFrom[p[1]] + 1);
+/* the map's outline WITHOUT moving the live engine board — E.outline is pure,
+   so opening the dashboard never switches the board out from under a paused
+   live game. null on a malformed outline (caller notes it). */
+function mdOutlineOf(map) {
+  try { return E.outline(map); } catch (e) { return null; }
 }
 /* sequential brass->ink ramp by fraction of a lens's display max (light = low,
    the CHART.seq magnitude ramp reused). Untouched/zero = bare parchment, so
@@ -219,16 +205,16 @@ function mdHexLensSection(mapName, hex) {
     '<span class="small" style="font-style:italic;">(where the skirmish actually happens on this map)</span></div>';
   var map = mdMapDef(mapName);
   if (!map) return head + '<p class="small">No board outline on disk for &ldquo;' + chEsc(mapName) + '&rdquo; &mdash; it may have been deleted since this run.</p>';
-  var shape = mdShapeOf(map);
-  if (!shape) return head + '<p class="small">Could not build the board outline for &ldquo;' + chEsc(mapName) + '&rdquo;.</p>';
-  var hexList = shape.list;
+  var outline = mdOutlineOf(map);
+  if (!outline) return head + '<p class="small">Could not build the board outline for &ldquo;' + chEsc(mapName) + '&rdquo;.</p>';
+  var hexList = E.outlineHexes(outline);
   var hqRed = E.key(map.redHQ[0], map.redHQ[1]), hqBlue = E.key(map.blueHQ[0], map.blueHQ[1]);
 
   var foldA = hex.foldA, foldB = hex.foldB;
   var solid = hex.solid, ghost = hex.ghost, solidLabel = hex.solidLabel;
   if (!solid.n) return head + '<p class="small">No skirmishes on ' + chEsc(mapName) + ' for run ' + solidLabel + ' yet.</p>';
 
-  var vb = viewBoxFor(hexList);
+  var vb = viewBoxFor(hexList, null, 'mapPane');
   // dead-hex hatch: one <pattern>, defined once, referenced by url() doc-wide
   var defs = chHatchDefs('mdHatch');
 
@@ -240,37 +226,49 @@ function mdHexLensSection(mapName, hex) {
 
     var cells = '', overlays = '', hits = '';
     hexList.forEach(function (k) {
-      var xy = hexXY(k, HEX_CONFIG.mapPane.size), pts = hexPoints(xy[0], xy[1], HEX_CONFIG.mapPane.tile);
+      var on = 'mapPane';
       var d = solid.hexes[k], g = ghost ? ghost.hexes[k] : null, isHQ = (k === hqRed || k === hqBlue);
       // dead = <5% occupancy — a never-touched hex (absent from the fold, occ 0)
       // is the deadest of all, so hatch it too; HQ exempt (always held, but the
       // trace never logs an HQ hex unless it's attacked). Occupancy-based, so a
       // hex reads dead-or-not identically across all three lenses.
       var dead = !isHQ && (d ? d.dead : true);
-      cells += chPolygon(pts, { fill: mdLensFill(d ? d[lens.key] : 0, max), stroke: CHART.axis, sw: 1 });
-      if (dead) overlays += chPolygon(pts, { fill: 'url(#mdHatch)', stroke: 'none' });
+      cells += bpMarkup(function (g) {
+        bpMark('tile', g, { hex: k, on: on, fill: mdLensFill(d ? d[lens.key] : 0, max), stroke: CHART.axis });
+      });
+      if (dead) overlays += bpMarkup(function (g) {
+        bpMark('tile', g, { hex: k, on: on, fill: 'url(#mdHatch)', stroke: 'none' });
+      });
       // avenue of attack: a NESTED hex red ring (real polygon stroke, never a css outline on a clip — AC2)
-      if (d && d.avenue) overlays += chPolygon(hexPoints(xy[0], xy[1], HEX_CONFIG.mapPane.tile * 0.62), { stroke: CHART.breach, sw: 2.5 });
+      var ring = BOARD_CONFIG.mapPane.hexRing;
+      if (d && d.avenue) overlays += bpMarkup(function (g) {
+        bpMark('hexRing', g, { hex: k, on: on, of: ring.avenue, stroke: CHART.breach, sw: ring.avenueSW });
+      });
       // A/B ghost: dashed inner hex sized by run A's value on the shared max
       if (g && g[lens.key] > 0 && max > 0) {
-        var gr = HEX_CONFIG.mapPane.tile * (0.16 + 0.74 * Math.min(1, g[lens.key] / max));
-        overlays += chPolygon(hexPoints(xy[0], xy[1], gr), { stroke: CHART.ink, sw: 1.3, dash: '3 2' });
+        var gr = ring.runAFloor + ring.runASpan * Math.min(1, g[lens.key] / max);
+        overlays += bpMarkup(function (gg) {
+          bpMark('hexRing', gg, { hex: k, on: on, of: gr, stroke: CHART.ink, sw: ring.runASW, dash: ring.runADash });
+        });
       }
       // HQ marker: thick side-coloured border + star
       if (isHQ) {
         var hc = (k === hqRed) ? CHART.divRed[2] : CHART.divBlue[2];
-        overlays += chPolygon(hexPoints(xy[0], xy[1], HEX_CONFIG.mapPane.tile - 2), { stroke: hc, sw: 3 }) +
-          chText(xy[0].toFixed(1), (xy[1] + 5.5).toFixed(1), '★', { fs: 16, fill: hc, anchor: 'middle' });
+        overlays += bpMarkup(function (g) {
+          bpMark('hq', g, { hex: k, on: on, fill: 'none', stroke: hc, starFill: hc });
+        });
       }
       // hover: per-hex values for BOTH runs (A -> B), plus the classification tags
-      var lbl = mdHexLabelFor(shape, k) + (isHQ ? (k === hqRed ? ' · red HQ' : ' · blue HQ') : '');
+      var lbl = E.outlineLabel(outline, k) + (isHQ ? (k === hqRed ? ' · red HQ' : ' · blue HQ') : '');
       var rows = MD_HEX_LENSES.map(function (L) {
         var av = foldA.hexes[k] ? foldA.hexes[k][L.key] : 0, bv = foldB.hexes[k] ? foldB.hexes[k][L.key] : 0;
         return [L.sub, L.fmt(av) + ' → ' + L.fmt(bv)];
       });
       if (dead) rows.push(['flag', 'dead hex (<5% held)']);
       if (d && d.avenue) rows.push(['flag', 'avenue of attack']);
-      hits += chPolygon(pts, { cls: 'ch-hit', fill: 'transparent', extra: chTipAttrs(lbl, rows) });
+      hits += bpMarkup(function (g) {
+        bpMark('hexHit', g, { hex: k, on: on, cls: 'ch-hit', attrs: chTipData(lbl, rows) });
+      });
     });
     var svg = chSvgOpen({ vb: vb, role: 'img', aria: lens.title + ' on ' + mapName,
       style: 'display:block;width:100%;height:auto;background:' + CHART.surface + ';border-radius:6px;' }) +

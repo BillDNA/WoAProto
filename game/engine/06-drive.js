@@ -37,11 +37,14 @@
       var shape;
       try { shape = I.ensureMapShape(m); }
       catch (e) { problems.push(m.name + ': ' + e.message); return; }
-      if (!I.SHAPES[shape]) { problems.push(m.name + ': unknown board shape "' + shape + '"'); return; }
-      if (m.shapeDef && I.SHAPES[shape].list.length > I.CONFIG.mapHexCeiling)
-        problems.push(m.name + ': ' + I.SHAPES[shape].list.length + ' hexes exceeds the ' + I.CONFIG.mapHexCeiling + '-hex ceiling (laser-cutter max; big empty maps are not fun)');
+      if (!I.hasShape(shape)) { problems.push(m.name + ': unknown board shape "' + shape + '"'); return; }
       I.setBoard(shape);
       try {
+        // an outline is built on first use, so a malformed BUILT-IN shape throws
+        // here rather than at load — inside the try, or the restore below is skipped
+        var hexCount = I.boardHexes(shape).length;
+        if (m.shapeDef && hexCount > I.CONFIG.mapHexCeiling)
+          problems.push(m.name + ': ' + hexCount + ' hexes exceeds the ' + I.CONFIG.mapHexCeiling + '-hex ceiling (laser-cutter max; big empty maps are not fun)');
         I.buildTerrain(m);
         if (!I.inBoard.apply(null, m.redHQ)) problems.push(m.name + ': red HQ off board');
         if (!I.inBoard.apply(null, m.blueHQ)) problems.push(m.name + ': blue HQ off board');

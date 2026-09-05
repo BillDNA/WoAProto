@@ -89,7 +89,7 @@ test('every board that draws hexes takes its size from the config home', () => {
   // no board keeps its own copy of a size: the literals are gone from the files
   const UI = path.join(__dirname, '..', '..');   // game/ui
   const owned = [['manual.js', /MP_S/], ['screens/dashboard/panes/maps.js', /MDHEX_R/],
-                 ['board-primitives.js', /\bvar S\b/], ['board/hex/hex-screen.js', /\bvar S\b/]];
+                 ['board/board-marks.js', /\bvar S\b/], ['board/hex/hex-screen.js', /\bvar S\b/]];
   owned.forEach(([f, re]) => assert.ok(!re.test(fs.readFileSync(path.join(UI, f), 'utf8')),
     f + ' reads the home instead of naming its own size'));
 });

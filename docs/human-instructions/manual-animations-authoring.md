@@ -11,10 +11,10 @@ lives in **`game/ui/manual.js`**; read that file alongside this doc.
 |---|---|
 | Examples + beats + fixtures + mini renderer | `game/ui/manual.js` (`MANUAL_EXAMPLES`, `mpDef`/`mpState`/`mpResolve`, `mpDrawFrame`) |
 | Static player chrome (`#manualPlayer`, `#mpBoard`, `#mpCaption`, Prev/Next) | `game/index.html`, inside `#manualOvr` — the prose below it stays the text canon |
-| Styles (rings, pill, tabs, reduced-motion) | `game/style.css`, "Field Manual diagram player" block |
+| Styles — tabs, reduced-motion | `game/style.css`, "Field Manual diagram player" block; the rings, pill and halo are board marks (`game/ui/board/board.css`) |
 | All wiring (buttons, ← → keys, `?screen=manual` deep link) | `game/ui/boot.js` — functions live in manual.js, wiring statements ONLY in boot.js |
 
-Visual vocabulary = the live skirmish FX (`ui/fx.js` / `ui/board.js`): **gold
+Visual vocabulary = the live skirmish FX (`ui/fx.js` / `ui/board/`): **gold
 ring** = attacker support that counted, **steel ring** = defender support,
 **grey dashed ring** = support denied, strike arrow, `A vs D` pill. Reuse it;
 don't invent new glyphs for the same concepts.

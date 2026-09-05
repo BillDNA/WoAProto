@@ -40,8 +40,9 @@ _Home_: `game/engine/01-core.js` — `other(p)`
 ## The board
 
 **Map**:
-One battlefield: a hex layout with terrain and the two HQ start positions.
-_Avoid_: Board, level, battlefield, Map Card.
+One board, saved: its outline, its terrain and the two HQ start positions. A map is the board
+house's content file, the way a unit-set is the unit house's — every field in one is a board fact.
+_Avoid_: level, battlefield, Map Card.
 _Home_: `game/content/maps/causeway.js` — `"name"`
 
 **Mapset**:
@@ -62,9 +63,11 @@ One Hex's face of a border. Both Hexes own their own face, so Terrain is stored 
 and can differ across one border.
 _Home_: `game/engine/board/hex/hex.js` — `function sideKey(h, d)`
 
-**Board shape**:
-The outline of hexes a Map is cut from, either a named family or an outline the Map carries itself.
-_Home_: `game/engine/02-board.js` — `shapeDef`
+**Board outline**:
+Which hexes are in play — the half of a Map that says what shape it is, either a named one from
+the shape library or one the Map carries itself. Which form it is authored in is a room of the
+board house.
+_Home_: `game/engine/board/board.js` — `function buildShape`
 
 **Terrain**:
 A feature sitting on a hex or on one of its borders.

@@ -1,7 +1,20 @@
 /* Each house owns its look. A household's stylesheet is imported here — this is
    where the chain is written, the way load-order.js writes the script chain —
-   and it holds every rule and :root var about that one concept. What stays in
-   this file is the page: chrome, layout, screens, and the shared palette. */
+   and it holds every rule and :root var about that one concept.
+
+   This file is the leftovers, and it is meant to end up nearly empty. What is
+   still here has exactly two owners, neither of which has a household yet:
+
+     the PAGE — its chrome, its layout, its screens, and the paper-and-brass
+       palette they are printed on (--parch*, --ink*, --brass*, --gold, --steel,
+       the radii, the durations). Every house reads these by name; none owns them.
+     RED / BLUE — --red*, --blue* and their ink. The lexicon names this concept
+       (docs/context/game-concepts-context.md); ui/kit/palette.js is its script
+       share, and these four lines are its stylesheet share.
+
+   Neither is "shared" in the sense of unowned: each is one house that has not
+   been built. When it is, its share leaves here and this file shrinks again. */
+@import url('ui/board/board.css');
 @import url('ui/board/hex/hex.css');
 @import url('ui/board/terrain/terrain.css');
 @import url('ui/board/unit/unit.css');
@@ -12,7 +25,7 @@
      :root owns the rest — every colour a page rule reads, plus the shared
      colours the board and charts also paint (they read those as var(--…),
      which resolves in an SVG attribute too). The board's own glyph inks
-     live in the BOARD palette (ui/board-primitives.js); the dashboard
+     live in the board house (ui/board/board-config.js); the dashboard
      charts keep their validated ramps in the CHART palette
      (ui/chart-primitives.js), reading this :root for the shared paper/ink/
      hairline base but owning their semantic marks independently — the one
@@ -34,7 +47,7 @@
     --lost:#7a2c20;                     /* a destroyed piece slot */
     --lost-edge:#8a6c3c55;              /* its faint brass border */
 
-    /* — sides (red vs blue factions) — */
+    /* — sides (red vs blue) — the Red / Blue house's share, see the header — */
     --red:#9e2b25; --red-dark:#6f1d19; --red-rgb:158,43,37;
     --blue:#28527a; --blue-dark:#1b3a59; --blue-rgb:40,82,122;
     --red-ink:#eba9a2; --blue-ink:#a8cbec;   /* side text on the dark journal */
@@ -52,10 +65,6 @@
     --deny:#98917f;                     /* support denied */
     --amber:#e3c06a;                    /* the concede / must-act hint text */
 
-    /* — in-battle board highlights (.hl-* fills + strokes) — */
-    --hl-from-rgb:80,140,200; --hl-from-stroke:#5b8cbf;   /* the move-from steel-blue */
-    --hl-swap-fill:rgba(106,90,205,.4); --hl-swap-stroke:#7b68c8;   /* the swap violet */
-    --attack:#c0392b;                   /* the attack ring stroke (BOARD.barrage) */
 
     /* — chrome & brass (the UI frame: plates, links, rules) — */
     --brass:#b08d57; --brass-dark:#8a6c3c; --copper:#9c5f3a;
@@ -344,14 +353,8 @@
   .fab i{display:block; width:16px; height:2px; background:var(--ink-plate); box-shadow:0 5px 0 var(--ink-plate), 0 -5px 0 var(--ink-plate);}
   #fabRosters{top:14px; left:10px;}
   #fabJournal{top:14px; right:10px; outline:2px solid var(--brass); outline-offset:2px;} /* the journal fab carries the brass ring */
-  #boardwrap.fx-shake{animation:shake .35s ease;}
-  @keyframes shake{0%,100%{transform:translate(0,0);}25%{transform:translate(-5px,2px);}50%{transform:translate(4px,-2px);}75%{transform:translate(-2px,1px);}}
 
-  /* ===== board animations ===== */
-  .fx-ring{transform-box:fill-box; transform-origin:center; animation:ringOut .5s ease-out forwards; pointer-events:none;}
-  @keyframes ringOut{from{transform:scale(.3); opacity:.95;} to{transform:scale(1.25); opacity:0;}}
-  .fx-strike{animation:strikeFade .85s ease forwards;}
-  @keyframes strikeFade{0%{opacity:0;} 12%{opacity:1;} 70%{opacity:.9;} 100%{opacity:0;}}
+  /* ===== card animations ===== */
   .card.deal{animation:dealIn var(--dur-enter) ease backwards;}
   @keyframes dealIn{from{transform:translateY(30px) scale(.92); opacity:0;}}
 
@@ -398,13 +401,6 @@
   .card .c3{bottom:3px; left:3px; border-right:none; border-top:none;}
   .card .c4{bottom:3px; right:3px; border-left:none; border-top:none;}
 
-  /* svg board pieces */
-  .hl{cursor:pointer;}
-  .hl-target{fill:rgba(var(--gold-rgb),.4); stroke:var(--gold-glow); stroke-width:var(--stroke-hl); animation:pulse var(--dur-pulse) infinite;}
-  .hl-attack{fill:rgba(var(--red-rgb),.42); stroke:var(--attack); stroke-width:var(--stroke-hl); animation:pulse var(--dur-pulse) infinite;}
-  .hl-from{fill:rgba(var(--hl-from-rgb),.35); stroke:var(--hl-from-stroke); stroke-width:var(--stroke-hl); animation:pulse var(--dur-pulse) infinite;}
-  .hl-selected{fill:rgba(var(--hl-from-rgb),.25); stroke:var(--white); stroke-width:3;}
-  .hl-swap{fill:var(--hl-swap-fill); stroke:var(--hl-swap-stroke); stroke-width:var(--stroke-hl); animation:pulse var(--dur-pulse) infinite;}
   @keyframes pulse{0%,100%{opacity:.55;}50%{opacity:1;}}
   /* the pulse as a utility class — board.js adds it to the live trench knob so the
      duration reads the --dur-pulse token, not a re-typed literal */
@@ -516,18 +512,9 @@
   #mpCtrls{display:flex; gap:12px; justify-content:center; align-items:center; margin-top:6px;}
   #mpCtrls button{padding:4px 14px; font-size:13px;}
   #mpCounter{font-size:12.5px; color:var(--ink-soft); min-width:44px; text-align:center; font-variant:small-caps; letter-spacing:1px;}
-  #mpBoard .mring{fill:none; stroke-width:4; transform-box:fill-box; transform-origin:center; animation:mringIn .45s ease backwards;}
-  #mpBoard .mring.gold{stroke:var(--gold);}
-  #mpBoard .mring.steel{stroke:var(--steel);}
-  #mpBoard .mring.deny{stroke:var(--deny); stroke-dasharray:6 4;}
-  @keyframes mringIn{from{transform:scale(.4); opacity:0;}}
-  #mpBoard .mstrike{opacity:.9;}
   #mpBoard .mghost{opacity:.4;}
-  #mpBoard .medge-glow{animation:mpulse 1.2s ease infinite;}
-  @keyframes mpulse{0%,100%{opacity:.35;}50%{opacity:.85;}}
   @media (prefers-reduced-motion: reduce){
     #manualPlayer *{animation:none !important; transition:none !important;}
-    #mpBoard .medge-glow{opacity:.6;}
   }
 
   /* maps screen + editor + balance dashboard + battalion editor */
@@ -633,8 +620,6 @@
   .edtools{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:10px 0;}
   .edtools button.tool.sel{outline:3px solid var(--copper); filter:brightness(1.12);}
   #edBoard{width:100%; max-height:56vh;}
-  #edBoard .edge-hit{stroke:transparent; stroke-width:12; cursor:pointer;}
-  #edBoard .edge-hit:hover{stroke:rgba(var(--gold-rgb),.45);}
   #edName{font-family:inherit; font-size:16px; padding:6px 10px; border:2px solid var(--brass-dark); border-radius:var(--radius-control); background:rgba(var(--white-rgb),.5); width:min(280px,60vw);}
   #edShape{font-family:inherit; font-size:14px; padding:6px; border:2px solid var(--brass-dark); border-radius:var(--radius-control); background:rgba(var(--white-rgb),.5);}
   .warn{color:var(--warn); font-size:12.5px; font-style:italic;}

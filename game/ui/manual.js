@@ -18,20 +18,13 @@
    in ui/boot.js; this file only declares. */
 'use strict';
 
-/* ============ mini-board geometry (the live board's vocabulary at HEX_CONFIG.manual.size) ============
-   The manual draws its own tiny board, but through the shared helpers at HEX_CONFIG.manual.size
-   scale — the hex house's hexXY(k,HEX_CONFIG.manual.size) for position, board-primitives'
-   bpUnitToken / bpHQMarker for the pieces, and the BOARD palette for every
-   colour — so the two boards are literally the same marks, one implementation,
-   just smaller. Only the scale-tuned line widths + the manual's own overlays
-   (glow halos, ghost ✕, support rings, A-vs-D pill) stay local. */
-// the mini-board's own scale-tuned line weights (board-primitives keeps mini-boards
-// local by design). Named here so the glow/ghost widths are read by name, not re-typed.
-var MP_GLOW_SW = { side:11, trench:10 }; // attention-halo widths (.medge-glow)
-var MP_GHOST_SW = 2.5;                   // the ✕ struck over a fallen unit / HQ
-
+/* ============ the mini-board ============
+   Every mark on it is the live board's, drawn through bpMark at the 'manual'
+   surface — that row in board-config.js and hex-config.js is where its scale and
+   its lighter line weights live, so nothing here is a second spelling. The
+   terrain glyph and the unit token read their own houses' `manual` rows the
+   same way, so this file names a board and never a number. */
 function mpXY(k){ return hexXY(k, HEX_CONFIG.manual.size); }
-function mpViewBox(hexList){ return viewBoxFor(hexList, HEX_CONFIG.manual.size); }
 
 /* ============ fixture states (real engine states, tiny inline maps) ============ */
 // One 9-hex outline shared by every example: labels A1-A3 / B1-B3 / C1-C3.
@@ -99,44 +92,33 @@ function mpSum(st, hexes){ var t=0; hexes.forEach(function(h){ t += mpSupAmount(
 function mpDrawFrame(f){
   var st = f.st, svg = $('mpBoard');
   svg.innerHTML = '';
-  var list = E.SHAPES[st.board.boardShape].list;
-  svg.setAttribute('viewBox', mpViewBox(list));
+  var list = E.boardHexes(st.board.boardShape);
+  svg.setAttribute('viewBox', viewBoxFor(list, null, 'manual'));
 
-  // hexes + grid labels (same classes as the live board)
   list.forEach(function(k){
-    var xy = mpXY(k), p = E.parseKey(k);
-    svg.appendChild(bpHexPoly(xy[0], xy[1], HEX_CONFIG.manual.tile, ((p[0]-p[1])%2+2)%2));
-    bpCoordLabel(svg, xy[0], xy[1], E.hexLabel(k), HEX_CONFIG.manual.size);
+    bpMark('tile', svg, { hex:k, on:'manual' });
+    bpMark('coord', svg, { hex:k, on:'manual' });
   });
 
   // attention halos go UNDER the terrain/trench lines they highlight
   (f.glowSides||[]).forEach(function(sk){
-    var parts = E.parseSideKey(sk), c = mpXY(parts[0]), aa = hexCornerAngles(parts[1]);
-    var p1 = hexCornerPt(c[0],c[1],aa[0],HEX_CONFIG.manual.size*0.85), p2 = hexCornerPt(c[0],c[1],aa[1],HEX_CONFIG.manual.size*0.85);
-    svg.appendChild(svgEl('line', { x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
-      stroke:'var(--gold-glow)','stroke-width':MP_GLOW_SW.side,'stroke-linecap':'round','class':'medge-glow' }));
+    var parts = E.parseSideKey(sk);
+    bpMark('glow', svg, { hex:parts[0], dir:parts[1], of:'side', on:'manual' });
   });
   if (f.glowTrench){
-    var gc = mpXY(f.glowTrench.hex);
     f.glowTrench.dirs.forEach(function(d){
-      var aa = hexCornerAngles(d);
-      var p1 = hexCornerPt(gc[0],gc[1],aa[0],HEX_CONFIG.manual.size*0.74), p2 = hexCornerPt(gc[0],gc[1],aa[1],HEX_CONFIG.manual.size*0.74);
-      svg.appendChild(svgEl('line', { x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
-        stroke:'var(--gold-glow)','stroke-width':MP_GLOW_SW.trench,'stroke-linecap':'round','class':'medge-glow' }));
+      bpMark('glow', svg, { hex:f.glowTrench.hex, dir:d, of:'trench', on:'manual' });
     });
   }
 
-  // terrain sides — the live board's terrain mark (bpTerrainEdge) at HEX_CONFIG.manual.size scale,
-  // its glyph sizes/line widths tuned for the mini board (no data-edge hover).
+  // terrain sides and trenches — the live board's marks at the manual's row
+  // (no data-edge hover: a diagram has nothing to paint)
   for (var ek in st.board.terrainEdges){
-    bpTerrainEdge(svg, ek, st.board.terrainEdges[ek],
-      { s:HEX_CONFIG.manual.size, sw:6, riverSW:1.8, riverDash:'5 4', forestR:3.4, forestR2:2.6, edgeData:false });
+    bpTerrainEdge(svg, ek, st.board.terrainEdges[ek], { on:'manual', edgeData:false });
   }
-
-  // trenches — the live board's trench mark (bpTrenchLine) at HEX_CONFIG.manual.size scale
   for (var th in st.pieces.trenches){
     st.pieces.trenches[th].forEach(function(tr){
-      tr.dirs.forEach(function(d2){ bpTrenchLine(svg, th, d2, { s:HEX_CONFIG.manual.size, sw:5, dash:'5.5 3' }); });
+      tr.dirs.forEach(function(d2){ bpTrenchLine(svg, th, d2, { on:'manual' }); });
     });
   }
 
@@ -152,75 +134,32 @@ function mpDrawFrame(f){
 
   // support rings — the live FX colors: gold attacker / steel defender / grey denied
   (f.rings||[]).forEach(function(r){
-    var xy = mpXY(r.hex);
-    svg.appendChild(svgEl('circle',{cx:xy[0], cy:xy[1], r:HEX_CONFIG.manual.size*0.82, 'class':'mring '+r.cls}));
+    bpMark('ring', svg, { hex:r.hex, cls:'mring '+r.cls, on:'manual' });
   });
 
-  // strike arrow (the live fxStrike, persistent, bending through a via-HQ)
-  if (f.strike) mpDrawStrike(svg, f.strike);
+  // the live board's strike arrow, held still instead of played
+  if (f.strike) bpMark('strike', svg, { from:f.strike.from, to:f.strike.to, via:f.strike.via,
+    color:f.strike.color, cls:'mstrike', on:'manual' });
 
   // "unit fell here but the hex is re-occupied" badge (advance-into-kill)
-  (f.badges||[]).forEach(function(h){
-    var xy = mpXY(h);
-    svg.appendChild(svgEl('circle',{cx:xy[0]+HEX_CONFIG.manual.size*0.55, cy:xy[1]-HEX_CONFIG.manual.size*0.6, r:7.5, fill:BOARD.redDark, stroke:BOARD.outline,'stroke-width':1}));
-    var x = svgEl('text',{x:xy[0]+HEX_CONFIG.manual.size*0.55, y:xy[1]-HEX_CONFIG.manual.size*0.6+3.5,'text-anchor':'middle','font-size':10,'font-weight':'bold',fill:BOARD.star});
-    x.textContent = '✕';
-    svg.appendChild(x);
-  });
+  (f.badges||[]).forEach(function(h){ bpMark('badge', svg, { hex:h, on:'manual' }); });
 
   // the A-vs-D pill (same maths pills the live board hovers)
-  if (f.pill){
-    var pxy = mpXY(f.pill.at);
-    var fill = BOARD.hint[f.pill.tone] || BOARD.hint.neutral;
-    var w = f.pill.text.length*6.4 + 14;
-    svg.appendChild(svgEl('rect',{x:pxy[0]-w/2, y:pxy[1]+HEX_CONFIG.manual.size*0.52, width:w, height:16, rx:8,
-      fill:fill, stroke:BOARD.outline,'stroke-width':1, 'class':'mpill'}));
-    var pt = svgEl('text',{x:pxy[0], y:pxy[1]+HEX_CONFIG.manual.size*0.52+11.5, 'text-anchor':'middle',
-      'font-size':10.5, 'font-weight':'bold', fill:BOARD.star, 'class':'mpill-t'});
-    pt.textContent = f.pill.text;
-    svg.appendChild(pt);
-  }
+  if (f.pill) bpMark('pill', svg, { hex:f.pill.at, text:f.pill.text, outcome:f.pill.tone, on:'manual' });
 }
 function mpDrawUnit(svg, hex, u, ghost){
   var xy = mpXY(hex);
   var g = svgEl('g', ghost ? {'class':'mghost'} : {});
-  // same token as the live board, at HEX_CONFIG.manual.size sizes (see bpUnitToken)
-  bpUnitToken(g, xy[0], xy[1], u.owner, u.type, { r:unitTokenR(HEX_CONFIG.manual.size), circSW:2, chitHW:10, chitHH:7, chitSW:1.2, glyphSW:1.7, dotR:3.6 });
-  if (ghost){ // fallen: the ✕ over the counter
-    g.appendChild(svgEl('line',{x1:xy[0]-12,y1:xy[1]-12,x2:xy[0]+12,y2:xy[1]+12,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));
-    g.appendChild(svgEl('line',{x1:xy[0]-12,y1:xy[1]+12,x2:xy[0]+12,y2:xy[1]-12,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));
-  }
+  bpUnitToken(g, xy[0], xy[1], u.owner, u.type, { on:'manual' });
+  if (ghost) bpMark('struck', g, { hex:hex, of:'unit', on:'manual' });
   svg.appendChild(g);
 }
 function mpDrawHQ(svg, hex, p, ghost){
-  var xy = mpXY(hex);
   var g = svgEl('g', ghost ? {'class':'mghost'} : {});
-  bpHQMarker(g, xy[0], xy[1], p, { rOuter:HEX_CONFIG.manual.size*0.62, outerSW:1.6, rInner:HEX_CONFIG.manual.size*0.5, brassSW:1.3, starFS:15, starDY:5.5 });
-  if (ghost){
-    g.appendChild(svgEl('line',{x1:xy[0]-13,y1:xy[1]-13,x2:xy[0]+13,y2:xy[1]+13,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));
-    g.appendChild(svgEl('line',{x1:xy[0]-13,y1:xy[1]+13,x2:xy[0]+13,y2:xy[1]-13,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));
-  }
+  bpMark('hq', g, { hex:hex, side:p, on:'manual' });
+  if (ghost) bpMark('struck', g, { hex:hex, of:'hq', on:'manual' });
   svg.appendChild(g);
 }
-function mpDrawStrike(svg, s){
-  var pts = [mpXY(s.from)];
-  if (s.via) pts.push(mpXY(s.via));
-  pts.push(mpXY(s.to));
-  var g = svgEl('g', {'class':'mstrike', 'pointer-events':'none'});
-  g.appendChild(svgEl('polyline', { points: pts.map(function(p){ return p[0].toFixed(1)+','+p[1].toFixed(1); }).join(' '),
-    fill:'none', stroke:s.color, 'stroke-width':4.5, 'stroke-linecap':'round', 'stroke-linejoin':'round',
-    'stroke-dasharray':'10 6' }));
-  var a = pts[pts.length-2], b = pts[pts.length-1];
-  var ang = Math.atan2(b[1]-a[1], b[0]-a[0]);
-  var tip = [b[0]-Math.cos(ang)*HEX_CONFIG.manual.size*0.46, b[1]-Math.sin(ang)*HEX_CONFIG.manual.size*0.46];
-  var l = 11, wdt = 6.5;
-  var p1 = [tip[0]-Math.cos(ang)*l+Math.sin(ang)*wdt, tip[1]-Math.sin(ang)*l-Math.cos(ang)*wdt];
-  var p2 = [tip[0]-Math.cos(ang)*l-Math.sin(ang)*wdt, tip[1]-Math.sin(ang)*l+Math.cos(ang)*wdt];
-  g.appendChild(svgEl('polygon', { points: [tip, p1, p2].map(function(p){ return p[0].toFixed(1)+','+p[1].toFixed(1); }).join(' '),
-    fill: s.color, stroke:BOARD.outline, 'stroke-width':1 }));
-  svg.appendChild(g);
-}
-
 /* ============ helpers for captions ============ */
 function mpSideName(p){ return p === 'red' ? 'Red' : 'Blue'; }
 // plain-words sentence for what the resolution did — built from the aftermath
@@ -335,19 +274,19 @@ var MANUAL_EXAMPLES = [
       frame: function(d){ return { st:d.stA, atk:d.atkA, strike:{from:d.atkA.from,to:d.atkA.to,color:'var(--red)'}, pill:{at:d.atkA.to, text:d.resA.attackerPower+' vs '+d.resA.defenderPower, tone:d.resA.outcome} }; } },
     { cap: function(d){ return mpAftermathWords(d.amA)+' A tie destroys <b>both</b> units, and the attacker does <b>not</b> advance — the hex stands empty. An even trade, chosen by the attacker.'; },
       frame: function(d){ return { st:d.postA, atk:d.atkA, strike:{from:d.atkA.from,to:d.atkA.to,color:'var(--red)'}, pill:{at:d.atkA.to, text:d.resA.attackerPower+' vs '+d.resA.defenderPower, tone:d.resA.outcome},
-        ghosts: (d.amA.defenderFell ? [{hex:d.atkA.to, unit:d.stA.units[d.atkA.to]}] : []).concat(d.amA.attackerFell ? [{hex:d.atkA.from, unit:d.stA.units[d.atkA.from]}] : []) }; } },
+        ghosts: (d.amA.defenderFell ? [{hex:d.atkA.to, unit:d.stA.pieces.units[d.atkA.to]}] : []).concat(d.amA.attackerFell ? [{hex:d.atkA.from, unit:d.stA.pieces.units[d.atkA.from]}] : []) }; } },
     { cap: function(d){ return 'Scene two — a tie <b>on a headquarters</b>. The HQ defends at '+(d.resB.defenderPower - d.dsupB.total)+', its adjacent Infantry lends +'+d.dsupB.total+': <b>'+d.resB.attackerPower+' vs '+d.resB.defenderPower+'</b>. Even again.'; },
       frame: function(d){ return { st:d.stB, atk:d.atkB, strike:{from:d.atkB.from,to:d.atkB.to,color:'var(--red)'}, pill:{at:d.atkB.to, text:d.resB.attackerPower+' vs '+d.resB.defenderPower, tone:d.resB.outcome},
         rings: d.dsupB.hexes.map(function(h){ return {hex:h, cls:'steel'}; }) }; } },
     { cap: function(d){ return mpAftermathWords(d.amB)+' A tie on a headquarters still <b>captures it</b>'+(d.amB.winner ? ' — <b>'+mpSideName(d.amB.winner)+' wins the skirmish</b> on the spot. One Infantry for the war is a fine trade.' : '.'); },
       frame: function(d){ return { st:d.postB, atk:d.atkB, strike:{from:d.atkB.from,to:d.atkB.to,color:'var(--red)'}, pill:{at:d.atkB.to, text:d.resB.attackerPower+' vs '+d.resB.defenderPower, tone:d.resB.outcome},
         hqGhost: d.amB.hqFell ? {hex:d.atkB.to, side:d.amB.hqSide} : null,
-        ghosts: d.amB.attackerFell ? [{hex:d.atkB.from, unit:d.stB.units[d.atkB.from]}] : [] }; } },
+        ghosts: d.amB.attackerFell ? [{hex:d.atkB.from, unit:d.stB.pieces.units[d.atkB.from]}] : [] }; } },
     { cap: function(d){ return 'Scene three — the card <b>'+d.tieCardName+'</b>. The same dead-even fight, <b>'+d.resC.attackerPower+' vs '+d.resC.defenderPower+'</b> — but this order promises your attacker <b>survives a tie</b> (and never advances).'; },
       frame: function(d){ return { st:d.stC, atk:d.atkC, strike:{from:d.atkC.from,to:d.atkC.to,color:'var(--red)'}, pill:{at:d.atkC.to, text:d.resC.attackerPower+' vs '+d.resC.defenderPower, tone:d.resC.outcome} }; } },
     { cap: function(d){ return mpAftermathWords(d.amC)+' One card turns an even trade into a clean kill — that’s why ties are worth engineering.'; },
       frame: function(d){ return { st:d.postC, atk:d.atkC, strike:{from:d.atkC.from,to:d.atkC.to,color:'var(--red)'}, pill:{at:d.atkC.to, text:d.resC.attackerPower+' vs '+d.resC.defenderPower, tone:d.resC.outcome},
-        ghosts: (d.amC.defenderFell ? [{hex:d.atkC.to, unit:d.stC.units[d.atkC.to]}] : []).concat(d.amC.attackerFell ? [{hex:d.atkC.from, unit:d.stC.units[d.atkC.from]}] : []) }; } }
+        ghosts: (d.amC.defenderFell ? [{hex:d.atkC.to, unit:d.stC.pieces.units[d.atkC.to]}] : []).concat(d.amC.attackerFell ? [{hex:d.atkC.from, unit:d.stC.pieces.units[d.atkC.from]}] : []) }; } }
   ] },
 
 { id: 'trench-river', label: 'Trench vs River',

@@ -5,7 +5,7 @@
    and omitting it draws at the live board's. What a board frames or paints is
    the board's and calls in here.
 
-   Classic script, no wrapper; loads before ui/board-primitives.js.
+   Classic script, no wrapper; loads before ui/board/board-marks.js.
    Prose: game/engine/board/hex/hex.md */
 'use strict';
 

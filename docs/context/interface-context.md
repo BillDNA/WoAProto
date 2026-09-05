@@ -79,9 +79,10 @@ _Home_: `game/ui/modals/modal.js` — `uiModal`
 
 Ink with no opinion about what it is drawing. If the thing could name whose turn it is or which run is loaded, it is not one of these.
 
-**Board primitive**:
-A builder for one mark on the game board, shared by every board that renders.
-_Home_: `game/ui/board-primitives.js` — `bpHexTile`
+**Board mark**:
+One thing drawn on a hex board, in one file, at whatever scale its caller asks for. It declares
+whether it stands on the board or is a moment played over it.
+_Home_: `game/ui/board/board-marks.js` — `function defineBoardMark`
 
 **Chart mark**:
 A builder for one mark in a chart.

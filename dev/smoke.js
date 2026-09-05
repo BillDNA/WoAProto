@@ -40,7 +40,7 @@ win.setTimeout = function (fn, ms) { return realSetTimeout(fn, Math.min(ms || 0,
 realSetTimeout(function () {
   console.log('== boot ==');
   assert.ok(win.Engine && win.Engine.MAPS.length >= 5, 'engine loaded the map library (' + (win.Engine && win.Engine.MAPS.length) + ' maps)');
-  assert.ok(doc.querySelectorAll('#edShape option').length === Object.keys(win.Engine.SHAPES).length + 1,
+  assert.ok(doc.querySelectorAll('#edShape option').length === win.Engine.shapeNames().length + 1,
     'editor shape dropdown = maps.js shapes + the Custom entry');
 
   console.log('== partition: front door hides dev tooling by default ==');
@@ -765,14 +765,14 @@ realSetTimeout(function () {
       var base = E2.UNITS[M.state.pieces.units[M.atk.from].type].atk;
       var res = E2.computeAttack(M.state, M.atk);
       E2.setBoard(prevShape);
-      var pill3 = doc.querySelector('#mpBoard .mpill-t').textContent;
+      var pill3 = doc.querySelector('#mpBoard .pill-t').textContent;
       assert.ok(pill3 === (base + asup.total) + ' vs ?', 'beat-3 tally = engine base + supportFor total (' + pill3 + ')');
       assert.ok(doc.querySelectorAll('#mpBoard .mring.gold').length === asup.hexes.length,
         'one gold ring per engine-confirmed supporter (' + asup.hexes.length + ')');
       doc.getElementById('mpNext').click(); // forest beat
       doc.getElementById('mpNext').click(); // defender beat
       doc.getElementById('mpNext').click(); // totals beat
-      var pill6 = doc.querySelector('#mpBoard .mpill-t').textContent;
+      var pill6 = doc.querySelector('#mpBoard .pill-t').textContent;
       assert.ok(pill6 === res.attackerPower + ' vs ' + res.defenderPower,
         'final pill = engine computeAttack (' + pill6 + ')');
       assert.ok(doc.querySelectorAll('#mpBoard .mring.steel').length >= 1, 'steel defender-support ring shown');

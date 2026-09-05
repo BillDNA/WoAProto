@@ -1,7 +1,7 @@
 /* A hex as a COORDINATE. Nothing here names a board, a map, a unit or a rule.
 
    Which of a hex's six neighbours EXIST needs an outline, so that filter is
-   02-board.js's (I.neighbor/I.neighbors), written over step().
+   the board house's (board.js — I.neighbor/I.neighbors), written over step().
 
    Classic script (browser + node), shared namespace g.WOA_E. Prose: hex.md */
 (function (global) {
