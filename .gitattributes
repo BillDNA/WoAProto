@@ -11,3 +11,13 @@
 *.jpg binary
 *.jpeg binary
 *.pdf binary
+
+# graphify knowledge graph. graph.json takes the union merge driver (registered in
+# git config by `graphify hook install`). manifest.json is the incremental cache:
+# its mtime keys are per-clone and its `seen` stamps are per-rebuild, so both sides
+# always differ — keep the local copy, which is the one whose hashes match this
+# checkout, and let the post-commit rebuild refresh it. `ours` is not built in:
+# each clone needs `git config merge.ours.driver true`, and without it the file
+# simply falls back to a normal conflict.
+graphify-out/graph.json merge=graphify
+graphify-out/manifest.json merge=ours
