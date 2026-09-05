@@ -125,9 +125,8 @@ function renderMat(p){
     var total = totals[type];
     var res = r[type==='trench'?'trench':type];
     var field = Math.min(onField[type], total - res);
-    var boxes = '';
+    var boxes = '', glyph = type==='trench' ? bpTrenchMatGlyph() : bpUnitGlyph(type,col,colD);
     for (var i=0;i<total;i++){
-      var glyph = type==='trench' ? bpTrenchMatGlyph() : bpUnitGlyph(type,col,colD);
       if (i < res) boxes += '<span class="slot" title="'+label+' in reserve">'+glyph+'</span>';
       else if (i < res+field) boxes += '<span class="slot field" title="'+label+' on the field"></span>';
       else boxes += '<span class="slot lost" title="'+label+' destroyed">&#10006;</span>';

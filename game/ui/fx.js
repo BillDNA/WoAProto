@@ -1,9 +1,9 @@
 /* War of Attrition — ui part: board effects (pure flourish, no rules).
    Classic script, no wrapper — top-level names attach to window (see
    ui/app.js header). These draw transient marks on the SAME live #board as
-   board.js, so colours + the unit radius come from board-primitives' BOARD /
-   the unit house — restyle a side colour or the unit token once and the flourishes
-   follow. */
+   board.js, so colours come from board-primitives' BOARD and the token's size
+   from the unit house — restyle a side colour or the unit token once and the
+   flourishes follow. */
 'use strict';
 
 /* =================== board effects (pure flourish, no rules) =================== */

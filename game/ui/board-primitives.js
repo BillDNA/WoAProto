@@ -13,9 +13,9 @@
    unit house's screen dialect (ui/unit/), which also loads after this file.
 
    Every board consumer draws from ONE palette + shared builders: fx.js (live-board
-   flourishes) takes its colours from BOARD; the manual
-   diagram (manual.js, MP_S scale) and the map editor (map-editor.js) draw
-   their hexes/terrain/HQ/units through hexXY(k,s) + bpUnitToken / bpHQMarker
+   flourishes) takes its colours from BOARD; the manual diagram (manual.js, MP_S
+   scale) and the map editor (map-editor.js) draw their hexes/terrain/HQ/units
+   through hexXY(k,s) + bpHQMarker and the unit house's bpUnitToken
    (sizes are options, colours from BOARD) and route every board colour through
    BOARD — so restyling a terrain glyph, a side colour, or the unit token is
    one edit reflected on every board in the game. The mini-boards keep their
@@ -49,8 +49,8 @@ var BOARD_R = { hqOuter:HEX_CONFIG.board.size*0.62, hqInner:HEX_CONFIG.board.siz
 /* =================== palette =================== */
 // The board palette: the twin of :root for the board's SVG. A colour the
 // stylesheet also paints lives in :root once and is read here as var(--…)
-// (resolves in an SVG attribute, same as the unit fills). The glyph inks the
-// stylesheet never sees are named once here.
+// (resolves in an SVG attribute, same as the unit fills). The fills the
+// stylesheet never sees — the pill and support washes — are named once here.
 // What is left in here has several owners and no house yet: red/redDark/blue/
 // blueDark and side() are the SEAT's — a side is red or blue whether or not a
 // unit is standing on it — the star and brass are the HQ mark's, hint is the
