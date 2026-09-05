@@ -1,0 +1,1556 @@
+{
+  ".claude/hooks/pr-check.js": {
+    "mtime": 1788629711.7239742,
+    "seen": 1788631893.1731489,
+    "ast_hash": "de1dc0973ff83db0dd9aee862d054b25",
+    "semantic_hash": ""
+  },
+  ".claude/settings.json": {
+    "mtime": 1788629711.7242951,
+    "seen": 1788631893.17315,
+    "ast_hash": "f7354a96cd23c12e553066e51f9b2696",
+    "semantic_hash": ""
+  },
+  ".vscode/launch.json": {
+    "mtime": 1788629711.7277071,
+    "seen": 1788631893.173151,
+    "ast_hash": "a1c6c9faefcf6943fd8292ebb2e22c02",
+    "semantic_hash": ""
+  },
+  ".vscode/settings.json": {
+    "mtime": 1788629711.7280357,
+    "seen": 1788631893.173152,
+    "ast_hash": "3127d524b58b35e5a6430b25e38921db",
+    "semantic_hash": ""
+  },
+  ".vscode/tasks.json": {
+    "mtime": 1788629711.728265,
+    "seen": 1788631893.173153,
+    "ast_hash": "d457973043ff7d0d43d5e02dd4a1c118",
+    "semantic_hash": ""
+  },
+  "dev/balance-parallel.test.js": {
+    "mtime": 1788629711.7313123,
+    "seen": 1788631893.173154,
+    "ast_hash": "cfcd5bf6cb1d4bbd193b9aea55013d98",
+    "semantic_hash": ""
+  },
+  "dev/balance-report.js": {
+    "mtime": 1788629711.7318163,
+    "seen": 1788631893.173154,
+    "ast_hash": "da56a2c35a7960ef2ff4e0e35d62666d",
+    "semantic_hash": ""
+  },
+  "dev/balance.js": {
+    "mtime": 1788629711.732158,
+    "seen": 1788631893.173161,
+    "ast_hash": "bdb5fb9ad93cf3411547888c9f12acb4",
+    "semantic_hash": ""
+  },
+  "dev/boot.test.js": {
+    "mtime": 1788629711.7329168,
+    "seen": 1788631893.173162,
+    "ast_hash": "da862dee62f7d7cd4df75f80216d022b",
+    "semantic_hash": ""
+  },
+  "dev/check-context.js": {
+    "mtime": 1788629711.7343838,
+    "seen": 1788631893.173162,
+    "ast_hash": "b6aea3c971e6eb195a05f2befda20325",
+    "semantic_hash": ""
+  },
+  "dev/check-context.test.js": {
+    "mtime": 1788629711.7349043,
+    "seen": 1788631893.173163,
+    "ast_hash": "a18d8298ce31059370e091599ece9c28",
+    "semantic_hash": ""
+  },
+  "dev/check-deck-scope.js": {
+    "mtime": 1788629711.7365944,
+    "seen": 1788631893.1731641,
+    "ast_hash": "66746b39ddcbf699140541a9bb3c939f",
+    "semantic_hash": ""
+  },
+  "dev/check-deck-scope.test.js": {
+    "mtime": 1788629711.7369716,
+    "seen": 1788631893.1731641,
+    "ast_hash": "5a3f6674ec416d91b58a5bcd4cd69040",
+    "semantic_hash": ""
+  },
+  "dev/check-prose.js": {
+    "mtime": 1788629711.7374892,
+    "seen": 1788631893.173165,
+    "ast_hash": "ba9b05f4e37cb4f84083a610855448f6",
+    "semantic_hash": ""
+  },
+  "dev/check-prose.test.js": {
+    "mtime": 1788629711.7379012,
+    "seen": 1788631893.173165,
+    "ast_hash": "21302f1b6f3ecf4cf9d2945e529b2b38",
+    "semantic_hash": ""
+  },
+  "dev/claude-plays.js": {
+    "mtime": 1788629711.7385569,
+    "seen": 1788631893.173166,
+    "ast_hash": "6525e07286360486480a53779deb7d68",
+    "semantic_hash": ""
+  },
+  "dev/claude-plays.test.js": {
+    "mtime": 1788629711.7389488,
+    "seen": 1788631893.173166,
+    "ast_hash": "0f2b6d8823f20367a0c158da87bc1a82",
+    "semantic_hash": ""
+  },
+  "dev/content-api.test.js": {
+    "mtime": 1788629711.7393901,
+    "seen": 1788631893.173167,
+    "ast_hash": "40a0c04df5e6ad80f2d452a3e14a0844",
+    "semantic_hash": ""
+  },
+  "dev/db-query.js": {
+    "mtime": 1788629711.7398047,
+    "seen": 1788631893.1731682,
+    "ast_hash": "f10e5857ffe12a9bad5b7190f461a88d",
+    "semantic_hash": ""
+  },
+  "dev/db-query.test.js": {
+    "mtime": 1788629711.7403622,
+    "seen": 1788631893.1731682,
+    "ast_hash": "bfdf8137e956a69b10b06d2361e68e43",
+    "semantic_hash": ""
+  },
+  "dev/db.js": {
+    "mtime": 1788629711.7410326,
+    "seen": 1788631893.173169,
+    "ast_hash": "123ae992d9502c58cef8835d2d91bd87",
+    "semantic_hash": ""
+  },
+  "dev/db.test.js": {
+    "mtime": 1788629711.7420008,
+    "seen": 1788631893.173169,
+    "ast_hash": "f95ed68457e6b6519b82ddf3ed90d07a",
+    "semantic_hash": ""
+  },
+  "dev/gen-docs.js": {
+    "mtime": 1788629711.7425292,
+    "seen": 1788631893.1731699,
+    "ast_hash": "dc5526acff9bd8fdc96388521c4cd2e1",
+    "semantic_hash": ""
+  },
+  "dev/lab-config.js": {
+    "mtime": 1788629711.7429135,
+    "seen": 1788631893.1731699,
+    "ast_hash": "2cdc99d485fe09bf6a7919361adf4eb0",
+    "semantic_hash": ""
+  },
+  "dev/lab-config.test.js": {
+    "mtime": 1788629711.7431881,
+    "seen": 1788631893.173171,
+    "ast_hash": "8c772fc2770277fe0e9a60ff9f015da1",
+    "semantic_hash": ""
+  },
+  "dev/llm-client.js": {
+    "mtime": 1788629711.74354,
+    "seen": 1788631893.173171,
+    "ast_hash": "9b4f50f19f5b4dbf39e7698a81895700",
+    "semantic_hash": ""
+  },
+  "dev/llm-client.test.js": {
+    "mtime": 1788629711.7441182,
+    "seen": 1788631893.173172,
+    "ast_hash": "d637d97ae92d7680332bf758681f284d",
+    "semantic_hash": ""
+  },
+  "dev/llm-session.js": {
+    "mtime": 1788629711.7444763,
+    "seen": 1788631893.173173,
+    "ast_hash": "6831269d85a4da34c3d97e72901f758f",
+    "semantic_hash": ""
+  },
+  "dev/llm-session.test.js": {
+    "mtime": 1788629711.7449572,
+    "seen": 1788631893.173173,
+    "ast_hash": "5db535d3e9db0d807e33082ac1ff8512",
+    "semantic_hash": ""
+  },
+  "dev/optimize-art.ps1": {
+    "mtime": 1788629711.745656,
+    "seen": 1788631893.173174,
+    "ast_hash": "e6a3b79ab1ff37b26c9368951f9c20ff",
+    "semantic_hash": ""
+  },
+  "dev/page-harness.js": {
+    "mtime": 1788629711.7462068,
+    "seen": 1788631893.173174,
+    "ast_hash": "44d55f00e1160969577730b8b6d81135",
+    "semantic_hash": ""
+  },
+  "dev/prune-worktrees.sh": {
+    "mtime": 1788629711.7467463,
+    "seen": 1788631893.173175,
+    "ast_hash": "4ee2b8cd7b868f0d4776cb24052fe7dc",
+    "semantic_hash": ""
+  },
+  "dev/server.test.js": {
+    "mtime": 1788629711.747284,
+    "seen": 1788631893.173175,
+    "ast_hash": "923601f87efc6f2bb17ad69508e9d927",
+    "semantic_hash": ""
+  },
+  "dev/smoke.js": {
+    "mtime": 1788629711.7478104,
+    "seen": 1788631893.173176,
+    "ast_hash": "20b2c87cda18bab50d14e01867182fea",
+    "semantic_hash": ""
+  },
+  "dev/sweep.js": {
+    "mtime": 1788629711.7483113,
+    "seen": 1788631893.173176,
+    "ast_hash": "d0f5c047c623dd8a68e6d1adcae5a051",
+    "semantic_hash": ""
+  },
+  "dev/tune-weights.js": {
+    "mtime": 1788629711.7486758,
+    "seen": 1788631893.173177,
+    "ast_hash": "e2adf7a4b327a4492f4ea44d5e1680d8",
+    "semantic_hash": ""
+  },
+  "game/applied-battalion.js": {
+    "mtime": 1788629711.7647984,
+    "seen": 1788631893.173177,
+    "ast_hash": "35824ac6edc8c913dbd6878acaf62969",
+    "semantic_hash": ""
+  },
+  "game/content/battalions/bestof.js": {
+    "mtime": 1788629711.7786458,
+    "seen": 1788631893.1731782,
+    "ast_hash": "32d9e81d975f98200e84821516369032",
+    "semantic_hash": ""
+  },
+  "game/content/battalions/cavsplit-16.js": {
+    "mtime": 1788629711.7795148,
+    "seen": 1788631893.1731782,
+    "ast_hash": "a40d8dfbe95256b8689f8a790d83e243",
+    "semantic_hash": ""
+  },
+  "game/content/battalions/cavsplit-17.js": {
+    "mtime": 1788629711.7797391,
+    "seen": 1788631893.173179,
+    "ast_hash": "64bb301060b6451e33ad47e0b8e72913",
+    "semantic_hash": ""
+  },
+  "game/content/battalions/cavsplit17-raid-paid.js": {
+    "mtime": 1788629711.7800279,
+    "seen": 1788631893.173179,
+    "ast_hash": "a6764b7cb9b948a59bd3328c15ae51bb",
+    "semantic_hash": ""
+  },
+  "game/content/battalions/cavsplit17-raid.js": {
+    "mtime": 1788629711.7803247,
+    "seen": 1788631893.1731799,
+    "ast_hash": "4e38119baa8cf1a9ba9e34876911f4ea",
+    "semantic_hash": ""
+  },
+  "game/content/battalions/cavsplit17-tempo.js": {
+    "mtime": 1788629711.7806134,
+    "seen": 1788631893.1731799,
+    "ast_hash": "57e3b204f3e03244a11ff371093d580d",
+    "semantic_hash": ""
+  },
+  "game/content/battalions/default.js": {
+    "mtime": 1788629711.7809553,
+    "seen": 1788631893.1731808,
+    "ast_hash": "0b4bfe7527d833a83c5458f27417e537",
+    "semantic_hash": ""
+  },
+  "game/content/battalions/iter2.js": {
+    "mtime": 1788629711.7815368,
+    "seen": 1788631893.173182,
+    "ast_hash": "3ea8e2e436905e37575d71d31d0e7a7a",
+    "semantic_hash": ""
+  },
+  "game/content/battalions/iter3.js": {
+    "mtime": 1788629711.7818325,
+    "seen": 1788631893.173182,
+    "ast_hash": "2f45454b161d3b15db0448d6a75ec1c9",
+    "semantic_hash": ""
+  },
+  "game/content/cards/airdrop.js": {
+    "mtime": 1788629711.7822046,
+    "seen": 1788631893.173183,
+    "ast_hash": "7ce192bcb5c538ccb4fcc7a6beaf6335",
+    "semantic_hash": ""
+  },
+  "game/content/cards/attack_plus1.js": {
+    "mtime": 1788629711.7824552,
+    "seen": 1788631893.173183,
+    "ast_hash": "f6b4b1f7d990416d9fff113915f6fd27",
+    "semantic_hash": ""
+  },
+  "game/content/cards/careful_maneuvers.js": {
+    "mtime": 1788629711.7831547,
+    "seen": 1788631893.173184,
+    "ast_hash": "93bf21035a7825fc57693ed7523232ed",
+    "semantic_hash": ""
+  },
+  "game/content/cards/cavalry_muster.js": {
+    "mtime": 1788629711.7833931,
+    "seen": 1788631893.173184,
+    "ast_hash": "299921627fa7dbe8617c89567204361f",
+    "semantic_hash": ""
+  },
+  "game/content/cards/conscription.js": {
+    "mtime": 1788629711.7836113,
+    "seen": 1788631893.173185,
+    "ast_hash": "7ccd39f509c6aa0862ae2dd67c9d82a2",
+    "semantic_hash": ""
+  },
+  "game/content/cards/creeping_barrage.js": {
+    "mtime": 1788629711.7838254,
+    "seen": 1788631893.173185,
+    "ast_hash": "fb5c07170e625553193198e438b48cf8",
+    "semantic_hash": ""
+  },
+  "game/content/cards/deploy_artillery.js": {
+    "mtime": 1788629711.7840283,
+    "seen": 1788631893.173186,
+    "ast_hash": "2c9a2f78a95e81fdcf79c358f36cb80b",
+    "semantic_hash": ""
+  },
+  "game/content/cards/deploy_cavalry.js": {
+    "mtime": 1788629711.784269,
+    "seen": 1788631893.173187,
+    "ast_hash": "0d5abd63c73947741cf141977bc591ce",
+    "semantic_hash": ""
+  },
+  "game/content/cards/deploy_inf_start.js": {
+    "mtime": 1788629711.7848358,
+    "seen": 1788631893.173187,
+    "ast_hash": "b7fb94942d98988f2b2701c75d9b18dd",
+    "semantic_hash": ""
+  },
+  "game/content/cards/deploy_inf_trench.js": {
+    "mtime": 1788629711.785047,
+    "seen": 1788631893.1731882,
+    "ast_hash": "c7a685118035d5d8e469692e7a49a75b",
+    "semantic_hash": ""
+  },
+  "game/content/cards/forced_march.js": {
+    "mtime": 1788629711.7852345,
+    "seen": 1788631893.1731882,
+    "ast_hash": "726192ad2de990850841ba99c766eb2a",
+    "semantic_hash": ""
+  },
+  "game/content/cards/mass_assault.js": {
+    "mtime": 1788629711.7854047,
+    "seen": 1788631893.1731892,
+    "ast_hash": "275b1591450de6287ba35eb0a306a509",
+    "semantic_hash": ""
+  },
+  "game/content/cards/naval_barrage.js": {
+    "mtime": 1788629711.785552,
+    "seen": 1788631893.1731892,
+    "ast_hash": "086d3df690d383e1b194b74bf7d78ab2",
+    "semantic_hash": ""
+  },
+  "game/content/cards/ordered_withdraw.js": {
+    "mtime": 1788629711.7856917,
+    "seen": 1788631893.1731899,
+    "ast_hash": "b1c62a99958312cbbaba2968ffbfd95e",
+    "semantic_hash": ""
+  },
+  "game/content/cards/over_the_top.js": {
+    "mtime": 1788629711.7858543,
+    "seen": 1788631893.1731899,
+    "ast_hash": "1414835f5bcc8124b92902068cffa2ad",
+    "semantic_hash": ""
+  },
+  "game/content/cards/raiding_party.js": {
+    "mtime": 1788629711.7860146,
+    "seen": 1788631893.1731908,
+    "ast_hash": "7956a4f163f2590f6db40a8e0bbc131c",
+    "semantic_hash": ""
+  },
+  "game/content/cards/reckless_maneuvers.js": {
+    "mtime": 1788629711.7861638,
+    "seen": 1788631893.1731908,
+    "ast_hash": "6ebe5c97f2df110968bf70959ff9276a",
+    "semantic_hash": ""
+  },
+  "game/content/cards/sappers.js": {
+    "mtime": 1788629711.7863803,
+    "seen": 1788631893.173192,
+    "ast_hash": "9ab0ff5f740a58845f5d1b627f6ff227",
+    "semantic_hash": ""
+  },
+  "game/content/cards/shock_troops.js": {
+    "mtime": 1788629711.7866328,
+    "seen": 1788631893.173192,
+    "ast_hash": "92c80030bcab753f556e20d8a15d0a4c",
+    "semantic_hash": ""
+  },
+  "game/content/cards/storm_and_hold.js": {
+    "mtime": 1788629711.7872286,
+    "seen": 1788631893.173193,
+    "ast_hash": "5723cce32ff5981d232b4dd225297ac5",
+    "semantic_hash": ""
+  },
+  "game/content/cards/vanguard.js": {
+    "mtime": 1788629711.7873638,
+    "seen": 1788631893.173193,
+    "ast_hash": "362e685de21c0884de528909763dd3a8",
+    "semantic_hash": ""
+  },
+  "game/content/commanders/fortress.js": {
+    "mtime": 1788629711.7877457,
+    "seen": 1788631893.173194,
+    "ast_hash": "76f8cd193733c9bafa080211a16005b1",
+    "semantic_hash": ""
+  },
+  "game/content/kinds.js": {
+    "mtime": 1788629711.7880833,
+    "seen": 1788631893.173194,
+    "ast_hash": "4fef7e886f9b2d72c6fe8b5977cde1e5",
+    "semantic_hash": ""
+  },
+  "game/content/manifest-gen.js": {
+    "mtime": 1788629711.7883716,
+    "seen": 1788631893.1731951,
+    "ast_hash": "dea8cc450e3190c02eba02b9146ff4eb",
+    "semantic_hash": ""
+  },
+  "game/content/manifest.js": {
+    "mtime": 1788629711.788638,
+    "seen": 1788631893.1731951,
+    "ast_hash": "db3c384cc39cc8bdaac7d91792308d9c",
+    "semantic_hash": ""
+  },
+  "game/content/maps/causeway.js": {
+    "mtime": 1788629711.7890973,
+    "seen": 1788631893.173196,
+    "ast_hash": "c5af399ac901f362c0e34202aff01702",
+    "semantic_hash": ""
+  },
+  "game/content/maps/frontier.js": {
+    "mtime": 1788629711.7894168,
+    "seen": 1788631893.173196,
+    "ast_hash": "31b43517a3c0a79ac65bb52eb5816471",
+    "semantic_hash": ""
+  },
+  "game/content/maps/killing-ground.js": {
+    "mtime": 1788629711.7902207,
+    "seen": 1788631893.173197,
+    "ast_hash": "767727537a8fa5040996c72b4e77f27a",
+    "semantic_hash": ""
+  },
+  "game/content/maps/long-march.js": {
+    "mtime": 1788629711.790414,
+    "seen": 1788631893.173197,
+    "ast_hash": "904d65aa6ec13bb4577e6a5bf9de5f4c",
+    "semantic_hash": ""
+  },
+  "game/content/maps/riverbend.js": {
+    "mtime": 1788629711.7906065,
+    "seen": 1788631893.173198,
+    "ast_hash": "dd58a8d7b6d32483f6f52cb7556796da",
+    "semantic_hash": ""
+  },
+  "game/content/maps/saber-ridge.js": {
+    "mtime": 1788629711.7908857,
+    "seen": 1788631893.173198,
+    "ast_hash": "3dc9506e472ac29c545016d112e767c5",
+    "semantic_hash": ""
+  },
+  "game/content/maps/the-cauldron.js": {
+    "mtime": 1788629711.7910795,
+    "seen": 1788631893.1731992,
+    "ast_hash": "fcf0b75092dff15d476608dbcc7e250d",
+    "semantic_hash": ""
+  },
+  "game/content/maps/the-clearing.js": {
+    "mtime": 1788629711.7914484,
+    "seen": 1788631893.1732,
+    "ast_hash": "fafe4c4144d7d31e1dbfffddd7b43aaf",
+    "semantic_hash": ""
+  },
+  "game/content/maps/the-cockpit.js": {
+    "mtime": 1788629711.791595,
+    "seen": 1788631893.1732,
+    "ast_hash": "ded88931fce8dc1fd3025cab5e72c01e",
+    "semantic_hash": ""
+  },
+  "game/content/maps/the-col.js": {
+    "mtime": 1788629711.7917252,
+    "seen": 1788631893.1732008,
+    "ast_hash": "1d7a5b0dbddb3dc1a5cab8e6aaef44d7",
+    "semantic_hash": ""
+  },
+  "game/content/maps/the-ford.js": {
+    "mtime": 1788629711.7918668,
+    "seen": 1788631893.1732008,
+    "ast_hash": "c9bd331e5e46ecaf12aab8959b417589",
+    "semantic_hash": ""
+  },
+  "game/content/maps/the-marshes.js": {
+    "mtime": 1788629711.7920208,
+    "seen": 1788631893.173202,
+    "ast_hash": "ce1f806df0f4daba328cb5c980ec6e2e",
+    "semantic_hash": ""
+  },
+  "game/content/maps/the-narrows.js": {
+    "mtime": 1788629711.7921712,
+    "seen": 1788631893.173202,
+    "ast_hash": "c37c98a987b3e062d6cfac6853d9b43c",
+    "semantic_hash": ""
+  },
+  "game/content/maps/the-salient.js": {
+    "mtime": 1788629711.7923253,
+    "seen": 1788631893.173203,
+    "ast_hash": "2811d29e1f60a2ecf885f906107f5cd5",
+    "semantic_hash": ""
+  },
+  "game/content/maps/the-sluice.js": {
+    "mtime": 1788629711.792467,
+    "seen": 1788631893.173203,
+    "ast_hash": "4ff5e574b57a49cf2495eb2cb4e898ed",
+    "semantic_hash": ""
+  },
+  "game/content/maps/the-void.js": {
+    "mtime": 1788629711.792599,
+    "seen": 1788631893.173204,
+    "ast_hash": "0b7fb8b9fe22af08800e9f5a47e09292",
+    "semantic_hash": ""
+  },
+  "game/content/maps/the-weir.js": {
+    "mtime": 1788629711.7927294,
+    "seen": 1788631893.173205,
+    "ast_hash": "ca29c9ff1d8c99127794d1094a75ec27",
+    "semantic_hash": ""
+  },
+  "game/content/maps/twin-gates.js": {
+    "mtime": 1788629711.7929583,
+    "seen": 1788631893.173205,
+    "ast_hash": "78bdf1a6206b000dad0100557dd51e45",
+    "semantic_hash": ""
+  },
+  "game/content/mapsets/bestof.js": {
+    "mtime": 1788629711.793145,
+    "seen": 1788631893.173206,
+    "ast_hash": "303ade4e900174633a70eb30e99af6f6",
+    "semantic_hash": ""
+  },
+  "game/content/mapsets/core7.js": {
+    "mtime": 1788629711.7933009,
+    "seen": 1788631893.173207,
+    "ast_hash": "74c8301c0d61b18c347091b8376f7dd0",
+    "semantic_hash": ""
+  },
+  "game/content/mapsets/iter2.js": {
+    "mtime": 1788629711.7934334,
+    "seen": 1788631893.173207,
+    "ast_hash": "f91cefe9eb8932893d2fddbac5e39962",
+    "semantic_hash": ""
+  },
+  "game/content/mapsets/iter3.js": {
+    "mtime": 1788629711.7935634,
+    "seen": 1788631893.173208,
+    "ast_hash": "4a6fd6426ebf9bee5ab4e9dcf887c562",
+    "semantic_hash": ""
+  },
+  "game/content/mapsets/rivers.js": {
+    "mtime": 1788629711.793687,
+    "seen": 1788631893.1732092,
+    "ast_hash": "adadcf09b1b42a814d2840489b96cb2c",
+    "semantic_hash": ""
+  },
+  "game/content/mapsets/tournament.js": {
+    "mtime": 1788629711.793817,
+    "seen": 1788631893.1732092,
+    "ast_hash": "2b6b1ea60c9aeac69457a6308f271c89",
+    "semantic_hash": ""
+  },
+  "game/content/units/shock-army.js": {
+    "mtime": 1788629711.794006,
+    "seen": 1788631893.1732101,
+    "ast_hash": "3909be54f969231a5dc57e891a42b7c3",
+    "semantic_hash": ""
+  },
+  "game/custom-battalion.js": {
+    "mtime": 1788629711.794155,
+    "seen": 1788631893.1732101,
+    "ast_hash": "706a75eaf1029304647583b716732116",
+    "semantic_hash": ""
+  },
+  "game/engine.js": {
+    "mtime": 1788629711.7943835,
+    "seen": 1788631893.1732109,
+    "ast_hash": "3f69bf2efa097ad9898d853676103823",
+    "semantic_hash": ""
+  },
+  "game/engine/00-config.js": {
+    "mtime": 1788629711.794843,
+    "seen": 1788631893.1732109,
+    "ast_hash": "e27d0a76c613ba925325f6201a630b2b",
+    "semantic_hash": ""
+  },
+  "game/engine/01-core.js": {
+    "mtime": 1788629711.7951264,
+    "seen": 1788631893.1732118,
+    "ast_hash": "3be893ee6b6f5977e13c444fd4b808c5",
+    "semantic_hash": ""
+  },
+  "game/engine/02-board.js": {
+    "mtime": 1788629711.7954845,
+    "seen": 1788631893.1732118,
+    "ast_hash": "9b887bd432174d63c3ec53df0f232063",
+    "semantic_hash": ""
+  },
+  "game/engine/03-rules.js": {
+    "mtime": 1788629711.7958217,
+    "seen": 1788631893.173213,
+    "ast_hash": "c43e34113609e89c97e267ffbfd4b47c",
+    "semantic_hash": ""
+  },
+  "game/engine/03a-commander-effects.js": {
+    "mtime": 1788629711.7960773,
+    "seen": 1788631893.173213,
+    "ast_hash": "be8fa6d165949b8a4389892ec4858f0b",
+    "semantic_hash": ""
+  },
+  "game/engine/04-skirmish.js": {
+    "mtime": 1788629711.7963758,
+    "seen": 1788631893.173214,
+    "ast_hash": "250578eda5401826e64a6dbd901f6461",
+    "semantic_hash": ""
+  },
+  "game/engine/05-ai.js": {
+    "mtime": 1788629711.7967381,
+    "seen": 1788631893.173214,
+    "ast_hash": "1496492803f0983562e0aeb2458c3248",
+    "semantic_hash": ""
+  },
+  "game/engine/06-drive.js": {
+    "mtime": 1788629711.7969737,
+    "seen": 1788631893.173215,
+    "ast_hash": "c16df3cedae6d7e165a0ddc5cd2f2485",
+    "semantic_hash": ""
+  },
+  "game/engine/07-export.js": {
+    "mtime": 1788629711.7972035,
+    "seen": 1788631893.173215,
+    "ast_hash": "5fc772ca0fa7a3145a5a40c0154be468",
+    "semantic_hash": ""
+  },
+  "game/engine/ai/ai-config.js": {
+    "mtime": 1788629711.797504,
+    "seen": 1788631893.173216,
+    "ast_hash": "35fedf053aabb88baa91c2e9ece8f663",
+    "semantic_hash": ""
+  },
+  "game/engine/board/terrain/forest.js": {
+    "mtime": 1788629711.797873,
+    "seen": 1788631893.173216,
+    "ast_hash": "6d3e74afa7b61942b6b5057f24d67f9b",
+    "semantic_hash": ""
+  },
+  "game/engine/board/terrain/mountain.js": {
+    "mtime": 1788629711.798123,
+    "seen": 1788631893.173217,
+    "ast_hash": "04b48e0cd42fdecdb5157b656a816acd",
+    "semantic_hash": ""
+  },
+  "game/engine/board/terrain/river.js": {
+    "mtime": 1788629711.7983618,
+    "seen": 1788631893.173217,
+    "ast_hash": "ebafe0d27616d2f147de4c4c8053a2df",
+    "semantic_hash": ""
+  },
+  "game/engine/board/terrain/terrain-config.js": {
+    "mtime": 1788629711.7986789,
+    "seen": 1788631893.173218,
+    "ast_hash": "1511d6966045c4f4720d2bdf5a6ee6fb",
+    "semantic_hash": ""
+  },
+  "game/engine/board/terrain/terrain.js": {
+    "mtime": 1788629711.7990284,
+    "seen": 1788631893.173218,
+    "ast_hash": "5f1de881668dabda630131e99d34b513",
+    "semantic_hash": ""
+  },
+  "game/engine/board/terrain/terrain.test.js": {
+    "mtime": 1788629711.799727,
+    "seen": 1788631893.173219,
+    "ast_hash": "2678f98d82f921bd23325b95a93bf822",
+    "semantic_hash": ""
+  },
+  "game/engine/board/terrain/trench.js": {
+    "mtime": 1788629711.7999904,
+    "seen": 1788631893.173219,
+    "ast_hash": "d3fa1a6389dab47df2fdd11179573e72",
+    "semantic_hash": ""
+  },
+  "game/jsconfig.json": {
+    "mtime": 1788629711.8006222,
+    "seen": 1788631893.1732202,
+    "ast_hash": "9d7109a4f33d88177b96753683ec357a",
+    "semantic_hash": ""
+  },
+  "game/load-order.js": {
+    "mtime": 1788629711.8010778,
+    "seen": 1788631893.1732202,
+    "ast_hash": "4646d7adfae682295d94087335953556",
+    "semantic_hash": ""
+  },
+  "game/maps.js": {
+    "mtime": 1788629711.8013988,
+    "seen": 1788631893.173221,
+    "ast_hash": "ebe4495ea850ec08bac9c5292e9feca3",
+    "semantic_hash": ""
+  },
+  "game/report-model.js": {
+    "mtime": 1788629711.802902,
+    "seen": 1788631893.173221,
+    "ast_hash": "0d366f6f523edda7949e28ad307b0b08",
+    "semantic_hash": ""
+  },
+  "game/server.js": {
+    "mtime": 1788629711.8036325,
+    "seen": 1788631893.1732218,
+    "ast_hash": "93bfe04b6692d96d81b4e5a85d5a3625",
+    "semantic_hash": ""
+  },
+  "game/sim.js": {
+    "mtime": 1788629711.8039958,
+    "seen": 1788631893.1732218,
+    "ast_hash": "3249e1f9bbddcefcc7189084c9e8446f",
+    "semantic_hash": ""
+  },
+  "game/sweep-worker.js": {
+    "mtime": 1788629711.8046885,
+    "seen": 1788631893.173223,
+    "ast_hash": "467b1ff844aac70f31b1818ff4cb6812",
+    "semantic_hash": ""
+  },
+  "game/test/test.ai.js": {
+    "mtime": 1788629711.8050785,
+    "seen": 1788631893.173223,
+    "ast_hash": "11f1de19cc6f09617b17e431f9ebe3ff",
+    "semantic_hash": ""
+  },
+  "game/test/test.cards.js": {
+    "mtime": 1788629711.8053539,
+    "seen": 1788631893.173224,
+    "ast_hash": "a78fbb7891aa8ae3da503cdbccc02056",
+    "semantic_hash": ""
+  },
+  "game/test/test.combat.js": {
+    "mtime": 1788629711.8056102,
+    "seen": 1788631893.173224,
+    "ast_hash": "21c1fc980c42c9c71f009916f211cc16",
+    "semantic_hash": ""
+  },
+  "game/test/test.commanders.js": {
+    "mtime": 1788629711.805867,
+    "seen": 1788631893.173225,
+    "ast_hash": "ca1bdcee799bf7a3641b67fbf2f19fe4",
+    "semantic_hash": ""
+  },
+  "game/test/test.geometry.js": {
+    "mtime": 1788629711.806205,
+    "seen": 1788631893.173225,
+    "ast_hash": "2b601059b713d13af59247b35cdea3af",
+    "semantic_hash": ""
+  },
+  "game/test/test.helpers.js": {
+    "mtime": 1788629711.8064601,
+    "seen": 1788631893.1732259,
+    "ast_hash": "b28c222c8d389e8b78fd1f6df6dff3d4",
+    "semantic_hash": ""
+  },
+  "game/test/test.integration.js": {
+    "mtime": 1788629711.8067384,
+    "seen": 1788631893.1732259,
+    "ast_hash": "ef7adeccbb56f70f59d62b8021ba5ee6",
+    "semantic_hash": ""
+  },
+  "game/test/test.js": {
+    "mtime": 1788629711.8071728,
+    "seen": 1788631893.173227,
+    "ast_hash": "0fb7b3fccf9542ff4d07fd750bd75c87",
+    "semantic_hash": ""
+  },
+  "game/test/test.maps.js": {
+    "mtime": 1788629711.8073394,
+    "seen": 1788631893.173228,
+    "ast_hash": "365b17920f7cd2feb369f882570589a1",
+    "semantic_hash": ""
+  },
+  "game/test/test.reports.js": {
+    "mtime": 1788629711.808252,
+    "seen": 1788631893.173228,
+    "ast_hash": "7e1f0b02a8e48e9159928a630bb4617c",
+    "semantic_hash": ""
+  },
+  "game/test/test.seams.js": {
+    "mtime": 1788629711.8086462,
+    "seen": 1788631893.173229,
+    "ast_hash": "fc722ecec7c0beba540bde79e42f95d7",
+    "semantic_hash": ""
+  },
+  "game/test/test.ui.js": {
+    "mtime": 1788629711.8089073,
+    "seen": 1788631893.173229,
+    "ast_hash": "41fd03d1154ba2efc596a0e335ccad6a",
+    "semantic_hash": ""
+  },
+  "game/ui/app.js": {
+    "mtime": 1788629711.8096886,
+    "seen": 1788631893.1732302,
+    "ast_hash": "97eb261f811ee701abb9227ac3b81284",
+    "semantic_hash": ""
+  },
+  "game/ui/battalion-editor.js": {
+    "mtime": 1788629711.8100538,
+    "seen": 1788631893.1732302,
+    "ast_hash": "7d7ac4daed01716d3171a6746a45a399",
+    "semantic_hash": ""
+  },
+  "game/ui/board-primitives.js": {
+    "mtime": 1788629711.8105066,
+    "seen": 1788631893.1732311,
+    "ast_hash": "506d85d4ec8c3ca01fbe36cec78714a3",
+    "semantic_hash": ""
+  },
+  "game/ui/board.js": {
+    "mtime": 1788629711.8107178,
+    "seen": 1788631893.1732311,
+    "ast_hash": "46ca5280f9dc8bd89bb874054bcd65ce",
+    "semantic_hash": ""
+  },
+  "game/ui/board/terrain/forest-mark.js": {
+    "mtime": 1788629711.8110738,
+    "seen": 1788631893.173232,
+    "ast_hash": "65b9d925529c3df0e9c2bd0174409433",
+    "semantic_hash": ""
+  },
+  "game/ui/board/terrain/mountain-mark.js": {
+    "mtime": 1788629711.811308,
+    "seen": 1788631893.173232,
+    "ast_hash": "1021afd8fb6a48e3db1207bb22f48bde",
+    "semantic_hash": ""
+  },
+  "game/ui/board/terrain/river-mark.js": {
+    "mtime": 1788629711.8117294,
+    "seen": 1788631893.1732328,
+    "ast_hash": "4c0796e59ee8a21d567463dee4fc6bba",
+    "semantic_hash": ""
+  },
+  "game/ui/board/terrain/terrain-marks.js": {
+    "mtime": 1788629711.812337,
+    "seen": 1788631893.1732328,
+    "ast_hash": "6fd675c0e5d6c625b7cd45fb4fd0bb90",
+    "semantic_hash": ""
+  },
+  "game/ui/board/terrain/terrain-marks.test.js": {
+    "mtime": 1788629711.8139389,
+    "seen": 1788631893.173234,
+    "ast_hash": "bd52dbffc7f41c0581bcc9e5434ad10a",
+    "semantic_hash": ""
+  },
+  "game/ui/board/terrain/trench-mark.js": {
+    "mtime": 1788629711.8142278,
+    "seen": 1788631893.173234,
+    "ast_hash": "e727e9677042b67cfab1a1727738ef64",
+    "semantic_hash": ""
+  },
+  "game/ui/boot.js": {
+    "mtime": 1788629711.8145394,
+    "seen": 1788631893.173235,
+    "ast_hash": "93558174f7ca27de5e267741e72013b3",
+    "semantic_hash": ""
+  },
+  "game/ui/build-battalion.js": {
+    "mtime": 1788629711.8148875,
+    "seen": 1788631893.173235,
+    "ast_hash": "b516a404dd08c1c57d0020523b8846f9",
+    "semantic_hash": ""
+  },
+  "game/ui/chart-model.js": {
+    "mtime": 1788629711.8151753,
+    "seen": 1788631893.173236,
+    "ast_hash": "79dd9ccac59eeb502920701c7f39b749",
+    "semantic_hash": ""
+  },
+  "game/ui/chart-primitives.js": {
+    "mtime": 1788629711.815435,
+    "seen": 1788631893.173236,
+    "ast_hash": "dee518e33887fa2360efea0f308912e7",
+    "semantic_hash": ""
+  },
+  "game/ui/commander-panel.js": {
+    "mtime": 1788629711.8157907,
+    "seen": 1788631893.173237,
+    "ast_hash": "f5d6301817fef1bd3cedcf8667762db3",
+    "semantic_hash": ""
+  },
+  "game/ui/commander-picker.js": {
+    "mtime": 1788629711.8160312,
+    "seen": 1788631893.173237,
+    "ast_hash": "79634f5f436de50296345c39b3463a91",
+    "semantic_hash": ""
+  },
+  "game/ui/fx.js": {
+    "mtime": 1788629711.8163583,
+    "seen": 1788631893.173238,
+    "ast_hash": "4e6eb67cda7b4202ededd2355de966c6",
+    "semantic_hash": ""
+  },
+  "game/ui/kit/kind.js": {
+    "mtime": 1788629711.8167028,
+    "seen": 1788631893.173238,
+    "ast_hash": "c781946642b8eaf350b72e7c4a810fb2",
+    "semantic_hash": ""
+  },
+  "game/ui/manual.js": {
+    "mtime": 1788629711.8169856,
+    "seen": 1788631893.173239,
+    "ast_hash": "f0f2263ba867939cbb894c5596badb84",
+    "semantic_hash": ""
+  },
+  "game/ui/map-editor.js": {
+    "mtime": 1788629711.8172843,
+    "seen": 1788631893.17324,
+    "ast_hash": "b74c9a624e3aa3742af7a52a469422d5",
+    "semantic_hash": ""
+  },
+  "game/ui/maps-screen.js": {
+    "mtime": 1788629711.817612,
+    "seen": 1788631893.17324,
+    "ast_hash": "a7e8778cefe2209c15d940557f37469e",
+    "semantic_hash": ""
+  },
+  "game/ui/modals/cards.js": {
+    "mtime": 1788629711.8178527,
+    "seen": 1788631893.1732411,
+    "ast_hash": "403de604722368286ccf94e4f63210fb",
+    "semantic_hash": ""
+  },
+  "game/ui/modals/confirm.js": {
+    "mtime": 1788629711.818143,
+    "seen": 1788631893.1732411,
+    "ast_hash": "a62699db528d8882d4e3a33a2274f4d6",
+    "semantic_hash": ""
+  },
+  "game/ui/modals/handoff.js": {
+    "mtime": 1788629711.8183768,
+    "seen": 1788631893.173242,
+    "ast_hash": "1f183ff1255b61041aa8993a0a98558d",
+    "semantic_hash": ""
+  },
+  "game/ui/modals/journal.js": {
+    "mtime": 1788629711.819089,
+    "seen": 1788631893.173242,
+    "ast_hash": "3d5e35d75ec99dd33fd49fad5b761246",
+    "semantic_hash": ""
+  },
+  "game/ui/modals/manual.js": {
+    "mtime": 1788629711.819225,
+    "seen": 1788631893.1732428,
+    "ast_hash": "4d1e34440715cb16fd72a291bd2dfb31",
+    "semantic_hash": ""
+  },
+  "game/ui/modals/mats.js": {
+    "mtime": 1788629711.819487,
+    "seen": 1788631893.1732428,
+    "ast_hash": "2ff2f122de5c4d57d31813e75c56b76a",
+    "semantic_hash": ""
+  },
+  "game/ui/modals/modal.js": {
+    "mtime": 1788629711.8198066,
+    "seen": 1788631893.173244,
+    "ast_hash": "904727aa5f715692c454c798ba2df77c",
+    "semantic_hash": ""
+  },
+  "game/ui/modals/play.js": {
+    "mtime": 1788629711.8199306,
+    "seen": 1788631893.173244,
+    "ast_hash": "f87bf1282cfdf3f03708cae8d2c2a2ce",
+    "semantic_hash": ""
+  },
+  "game/ui/modals/skirmish.js": {
+    "mtime": 1788629711.8202288,
+    "seen": 1788631893.173245,
+    "ast_hash": "aa0032237877b5923cf791bf06c50c1a",
+    "semantic_hash": ""
+  },
+  "game/ui/net.js": {
+    "mtime": 1788629711.8205764,
+    "seen": 1788631893.173245,
+    "ast_hash": "e4db304d6646f1b6c56d57a0e64974b7",
+    "semantic_hash": ""
+  },
+  "game/ui/screens.js": {
+    "mtime": 1788629711.8209105,
+    "seen": 1788631893.173246,
+    "ast_hash": "f73c78203935cb060b9324fc6690a8d9",
+    "semantic_hash": ""
+  },
+  "game/ui/screens/dashboard/dashboard.js": {
+    "mtime": 1788629711.8212738,
+    "seen": 1788631893.173246,
+    "ast_hash": "40169def3f0c0583bd36a55453472544",
+    "semantic_hash": ""
+  },
+  "game/ui/screens/dashboard/panes/cards.js": {
+    "mtime": 1788629711.8217173,
+    "seen": 1788631893.1732469,
+    "ast_hash": "bb30bec822cdcfe749577e8d4ef446a8",
+    "semantic_hash": ""
+  },
+  "game/ui/screens/dashboard/panes/crosscuts.js": {
+    "mtime": 1788629711.8220024,
+    "seen": 1788631893.1732469,
+    "ast_hash": "44337388c70d87bcf7d2c7ca2f2d35bd",
+    "semantic_hash": ""
+  },
+  "game/ui/screens/dashboard/panes/maps.js": {
+    "mtime": 1788629711.8223777,
+    "seen": 1788631893.173248,
+    "ast_hash": "a8040247f1789bd3b21d94663189dcb1",
+    "semantic_hash": ""
+  },
+  "game/ui/screens/dashboard/panes/overview.js": {
+    "mtime": 1788629711.8228433,
+    "seen": 1788631893.173248,
+    "ast_hash": "c773d4aea8a214b94cc4cea0fce0a54c",
+    "semantic_hash": ""
+  },
+  "game/ui/screens/dashboard/panes/pane.js": {
+    "mtime": 1788629711.8231275,
+    "seen": 1788631893.17325,
+    "ast_hash": "99fe4b02a0219119caf532154a5a4b54",
+    "semantic_hash": ""
+  },
+  "game/ui/screens/dashboard/panes/runs.js": {
+    "mtime": 1788629711.8235686,
+    "seen": 1788631893.17325,
+    "ast_hash": "6ca70114a4c7e88c5c64333bac5b89e6",
+    "semantic_hash": ""
+  },
+  "game/ui/screens/dashboard/panes/tables.js": {
+    "mtime": 1788629711.8238723,
+    "seen": 1788631893.1732512,
+    "ast_hash": "85c6905d7d9938836670b20c2acbea06",
+    "semantic_hash": ""
+  },
+  "game/ui/screens/dashboard/panes/units.js": {
+    "mtime": 1788629711.8241951,
+    "seen": 1788631893.1732512,
+    "ast_hash": "b12b4baa8d129fbae05aa1256d24ced6",
+    "semantic_hash": ""
+  },
+  "game/ui/skirmish.js": {
+    "mtime": 1788629711.8251462,
+    "seen": 1788631893.173252,
+    "ast_hash": "70d94ab0d2fff054f301ed3c8c2280c7",
+    "semantic_hash": ""
+  },
+  "game/ui/ui-config.js": {
+    "mtime": 1788629711.825505,
+    "seen": 1788631893.173252,
+    "ast_hash": "75887d86294ae0d22d7faeb375a1b7b9",
+    "semantic_hash": ""
+  },
+  "game/ui/ui-primitives.js": {
+    "mtime": 1788629711.8257496,
+    "seen": 1788631893.173253,
+    "ast_hash": "dd4d8a402e4c907428aa4474524f556d",
+    "semantic_hash": ""
+  },
+  "package.json": {
+    "mtime": 1788629711.8295276,
+    "seen": 1788631893.173253,
+    "ast_hash": "7544c50832180c907ba2afcd41923bc0",
+    "semantic_hash": ""
+  },
+  ".claude/skills/balance-loop/SKILL.md": {
+    "mtime": 1788629711.7247,
+    "seen": 1788631893.1732538,
+    "ast_hash": "cec512671124a8790ab55ed429a3816f",
+    "semantic_hash": ""
+  },
+  ".claude/skills/create-card/SKILL.md": {
+    "mtime": 1788629711.7250829,
+    "seen": 1788631893.1732538,
+    "ast_hash": "2a3a66b94d15d60f3b1bb885d2437d5b",
+    "semantic_hash": ""
+  },
+  ".claude/skills/create-map/SKILL.md": {
+    "mtime": 1788629711.7254648,
+    "seen": 1788631893.173255,
+    "ast_hash": "67bd308c4c2c89777c7476c55a43966f",
+    "semantic_hash": ""
+  },
+  ".claude/skills/generate-reports/SKILL.md": {
+    "mtime": 1788629711.725741,
+    "seen": 1788631893.173255,
+    "ast_hash": "2ae2d188f8d3047203da43d4671bdfa6",
+    "semantic_hash": ""
+  },
+  ".claude/skills/review-reports/SKILL.md": {
+    "mtime": 1788629711.7261653,
+    "seen": 1788631893.173256,
+    "ast_hash": "c3da8101f53ae68019359841e5d79874",
+    "semantic_hash": ""
+  },
+  ".claude/skills/review-with-rubric/SKILL.md": {
+    "mtime": 1788629711.7265086,
+    "seen": 1788631893.173256,
+    "ast_hash": "c1783cef55ac87c248ca506f8fa93b4c",
+    "semantic_hash": ""
+  },
+  ".claude/skills/run-tournament/SKILL.md": {
+    "mtime": 1788629711.7268152,
+    "seen": 1788631893.1732569,
+    "ast_hash": "ca212c28757d2ee7fbb9db3ae5dc0532",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1788629711.728633,
+    "seen": 1788631893.173258,
+    "ast_hash": "17e9a9c628b608800f4df802de9ffa85",
+    "semantic_hash": ""
+  },
+  "CONTEXT.md": {
+    "mtime": 1788629711.7289393,
+    "seen": 1788631893.173258,
+    "ast_hash": "6654874f3368ffa48c296d2d11d9f6c7",
+    "semantic_hash": ""
+  },
+  "dev/balance-80.txt": {
+    "mtime": 1788629711.7298017,
+    "seen": 1788631893.173259,
+    "ast_hash": "af603c2dd27ecf7e5d7e2141392b491a",
+    "semantic_hash": ""
+  },
+  "dev/baselines/README.md": {
+    "mtime": 1788629711.7324567,
+    "seen": 1788631893.173259,
+    "ast_hash": "60f9167225b4561f18251a4860be34e4",
+    "semantic_hash": ""
+  },
+  "dev/matchup-16.txt": {
+    "mtime": 1788629711.7450297,
+    "seen": 1788631893.17326,
+    "ast_hash": "84e377887ae238607605bf9e2847f20a",
+    "semantic_hash": ""
+  },
+  "docs/README.md": {
+    "mtime": 1788629711.7499177,
+    "seen": 1788631893.17326,
+    "ast_hash": "858458c9ed3dabb2ba24a9ee8b1788e4",
+    "semantic_hash": ""
+  },
+  "docs/War Of Attrition rule book.md": {
+    "mtime": 1788629711.7501569,
+    "seen": 1788631893.1732612,
+    "ast_hash": "7260104761ba08f963dfb8fa2948778f",
+    "semantic_hash": ""
+  },
+  "docs/adr/0001-no-file-protocol-target.md": {
+    "mtime": 1788629711.7505124,
+    "seen": 1788631893.1732612,
+    "ast_hash": "4235c4c6fdf5c8aec16c597fdbf670bf",
+    "semantic_hash": ""
+  },
+  "docs/adr/0002-army-points-descriptive-yardstick.md": {
+    "mtime": 1788629711.7507486,
+    "seen": 1788631893.1732621,
+    "ast_hash": "d5a2dbdd729880e39dc4c25a6e8ad622",
+    "semantic_hash": ""
+  },
+  "docs/adr/0003-node-test-harness.md": {
+    "mtime": 1788629711.7509804,
+    "seen": 1788631893.1732621,
+    "ast_hash": "4413542039abeb70ea109f645f3a575c",
+    "semantic_hash": ""
+  },
+  "docs/adr/0004-fold-moves-to-sql.md": {
+    "mtime": 1788629711.7513194,
+    "seen": 1788631893.173263,
+    "ast_hash": "f76544305c97cdfcfdb617ea8ae28058",
+    "semantic_hash": ""
+  },
+  "docs/adr/0005-throwaway-balance-diff.md": {
+    "mtime": 1788629711.7515504,
+    "seen": 1788631893.173263,
+    "ast_hash": "43745398176f2c15f91cc4e6516eb5d5",
+    "semantic_hash": ""
+  },
+  "docs/adr/0006-declared-load-order.md": {
+    "mtime": 1788629711.7518916,
+    "seen": 1788631893.1732638,
+    "ast_hash": "f20283102bc356af4ef012c7ca859c8f",
+    "semantic_hash": ""
+  },
+  "docs/agents/domain.md": {
+    "mtime": 1788629711.7522798,
+    "seen": 1788631893.1732638,
+    "ast_hash": "cb499fa58eea44d06761d23d82760803",
+    "semantic_hash": ""
+  },
+  "docs/agents/issue-tracker.md": {
+    "mtime": 1788629711.7525039,
+    "seen": 1788631893.173265,
+    "ast_hash": "314a8de24eec0ca844078ebf500e0f9c",
+    "semantic_hash": ""
+  },
+  "docs/agents/triage-labels.md": {
+    "mtime": 1788629711.7527344,
+    "seen": 1788631893.173265,
+    "ast_hash": "a270eb202f91f1fc7c39f131718f9bc0",
+    "semantic_hash": ""
+  },
+  "docs/balance/README.md": {
+    "mtime": 1788629711.7530613,
+    "seen": 1788631893.173266,
+    "ast_hash": "80bd06a840f805173c567eae365a38e9",
+    "semantic_hash": ""
+  },
+  "docs/balance/balance-baselines.md": {
+    "mtime": 1788629711.7533402,
+    "seen": 1788631893.173266,
+    "ast_hash": "039c638ad5201b45c1aed8c0cd91ede5",
+    "semantic_hash": ""
+  },
+  "docs/balance/best-map-score.md": {
+    "mtime": 1788629711.7536426,
+    "seen": 1788631893.173267,
+    "ast_hash": "b90229150a1942683eb693175f903c2c",
+    "semantic_hash": ""
+  },
+  "docs/code-architecture.md": {
+    "mtime": 1788629711.7540905,
+    "seen": 1788631893.173267,
+    "ast_hash": "6e068b6f7997b3ab01b1f3c5ea1aed6f",
+    "semantic_hash": ""
+  },
+  "docs/context/dev-tooling-context.md": {
+    "mtime": 1788629711.7546299,
+    "seen": 1788631893.173268,
+    "ast_hash": "abb3de25d7dde5cca1431ef294a28308",
+    "semantic_hash": ""
+  },
+  "docs/context/game-concepts-context.md": {
+    "mtime": 1788629711.755808,
+    "seen": 1788631893.173268,
+    "ast_hash": "04345a305c980bb7247d8c723e453d9e",
+    "semantic_hash": ""
+  },
+  "docs/context/heuristic-ai-context.md": {
+    "mtime": 1788629711.7561665,
+    "seen": 1788631893.173269,
+    "ast_hash": "c3b96e1fee618ea68b2f95af0eaedf79",
+    "semantic_hash": ""
+  },
+  "docs/context/integration-context.md": {
+    "mtime": 1788629711.7565289,
+    "seen": 1788631893.173269,
+    "ast_hash": "3a84aad2ace1fd11dd814653013ac048",
+    "semantic_hash": ""
+  },
+  "docs/context/interface-context.md": {
+    "mtime": 1788629711.7569613,
+    "seen": 1788631893.17327,
+    "ast_hash": "e7b72443bcfe4377620c15a5497954c0",
+    "semantic_hash": ""
+  },
+  "docs/human-instructions/manual-animations-authoring.md": {
+    "mtime": 1788629711.7573707,
+    "seen": 1788631893.17327,
+    "ast_hash": "9fd3af96b2190b573fc217390875d359",
+    "semantic_hash": ""
+  },
+  "docs/human-instructions/standard-runs-runbook.md": {
+    "mtime": 1788629711.7578363,
+    "seen": 1788631893.173271,
+    "ast_hash": "6a57a53fff1e20a88195f03ead6c4687",
+    "semantic_hash": ""
+  },
+  "docs/reference/ai-heuristic-model.md": {
+    "mtime": 1788629711.7582428,
+    "seen": 1788631893.173271,
+    "ast_hash": "b7b178927b27e57c493db5ab5038ef63",
+    "semantic_hash": ""
+  },
+  "docs/reference/card-cheatsheet.md": {
+    "mtime": 1788629711.7586694,
+    "seen": 1788631893.1732721,
+    "ast_hash": "d6dd43054275d2bd7e6053db41044a37",
+    "semantic_hash": ""
+  },
+  "docs/reference/code-style.md": {
+    "mtime": 1788629711.7590263,
+    "seen": 1788631893.1732721,
+    "ast_hash": "0085adeb3732ab7a1702cc43c9ec1464",
+    "semantic_hash": ""
+  },
+  "docs/reference/commander-schema.md": {
+    "mtime": 1788629711.7592814,
+    "seen": 1788631893.173273,
+    "ast_hash": "e3d750c81b1f444c7be0579e35741adc",
+    "semantic_hash": ""
+  },
+  "docs/reference/context-ui-components.md": {
+    "mtime": 1788629711.7596412,
+    "seen": 1788631893.173273,
+    "ast_hash": "f574661f336be8fc97cc53ad9967b739",
+    "semantic_hash": ""
+  },
+  "docs/reference/engine-model.md": {
+    "mtime": 1788629711.7599666,
+    "seen": 1788631893.173274,
+    "ast_hash": "b04b385c06a994af1eb254235909833a",
+    "semantic_hash": ""
+  },
+  "docs/reference/query-cookbook.md": {
+    "mtime": 1788629711.760871,
+    "seen": 1788631893.173274,
+    "ast_hash": "3b9516f8103a1e53cdc5a619d97103e8",
+    "semantic_hash": ""
+  },
+  "docs/reference/report-model.md": {
+    "mtime": 1788629711.761142,
+    "seen": 1788631893.173275,
+    "ast_hash": "6dbb90d86e34e65959fc0167d0544e57",
+    "semantic_hash": ""
+  },
+  "docs/reference/testing-seams.md": {
+    "mtime": 1788629711.7614095,
+    "seen": 1788631893.173276,
+    "ast_hash": "1593b67840bf33dd919d62534b30fb44",
+    "semantic_hash": ""
+  },
+  "docs/reference/ui-invariants.md": {
+    "mtime": 1788629711.761731,
+    "seen": 1788631893.173276,
+    "ast_hash": "73bc3e6fbe6c381a9f67a747132c6ead",
+    "semantic_hash": ""
+  },
+  "docs/reference/workflow.md": {
+    "mtime": 1788629711.762059,
+    "seen": 1788631893.173277,
+    "ast_hash": "e5b61e124c1bf017201c2e2ad1e41021",
+    "semantic_hash": ""
+  },
+  "docs/rubrics/card-rubric.md": {
+    "mtime": 1788629711.7623131,
+    "seen": 1788631893.173277,
+    "ast_hash": "2497445043901dec990bbe6337b77831",
+    "semantic_hash": ""
+  },
+  "docs/rubrics/map-rubric.md": {
+    "mtime": 1788629711.7626076,
+    "seen": 1788631893.1732779,
+    "ast_hash": "45e139ffd2c5683c6c03d9e06d9df90d",
+    "semantic_hash": ""
+  },
+  "docs/rubrics/personality-rubric.md": {
+    "mtime": 1788629711.7628467,
+    "seen": 1788631893.1732779,
+    "ast_hash": "0875e81f2f9fba15056cab4fdaa572a0",
+    "semantic_hash": ""
+  },
+  "docs/rubrics/rubric-rubric.md": {
+    "mtime": 1788629711.7632256,
+    "seen": 1788631893.173279,
+    "ast_hash": "08dff2fa5e4c0460d664026aacb62738",
+    "semantic_hash": ""
+  },
+  "docs/rubrics/ui-rubric.md": {
+    "mtime": 1788629711.7636168,
+    "seen": 1788631893.173279,
+    "ast_hash": "00141f215bfe340387a798174c21a08e",
+    "semantic_hash": ""
+  },
+  "docs/rubrics/unit-rubric.md": {
+    "mtime": 1788629711.763845,
+    "seen": 1788631893.17328,
+    "ast_hash": "f8350fe865a2ae820771cdfcac813865",
+    "semantic_hash": ""
+  },
+  "game/CLAUDE.md": {
+    "mtime": 1788629711.7641912,
+    "seen": 1788631893.17328,
+    "ast_hash": "8923223d471e87840d2b59f99fb08ce6",
+    "semantic_hash": ""
+  },
+  "game/README.md": {
+    "mtime": 1788629711.7645576,
+    "seen": 1788631893.173281,
+    "ast_hash": "069121c4cb9ed23995f36488b0428661",
+    "semantic_hash": ""
+  },
+  "game/engine/board/terrain/terrain.md": {
+    "mtime": 1788629711.7993894,
+    "seen": 1788631893.173281,
+    "ast_hash": "a6e3ad153cf4f9c42ba6601f3066fbc7",
+    "semantic_hash": ""
+  },
+  "game/index.html": {
+    "mtime": 1788629711.8003693,
+    "seen": 1788631893.1732821,
+    "ast_hash": "d511bb1c9df6ebdbf9d8c1adbdd1c9c7",
+    "semantic_hash": ""
+  },
+  "index.html": {
+    "mtime": 1788629711.8278315,
+    "seen": 1788631893.1732821,
+    "ast_hash": "2ee710afa3becead7c57b6a94b14552c",
+    "semantic_hash": ""
+  },
+  "logs/README.md": {
+    "mtime": 1788629711.8281364,
+    "seen": 1788631893.173283,
+    "ast_hash": "dd3eb830938fa50ff74c9f06bd8a58ce",
+    "semantic_hash": ""
+  },
+  "docs/HexClarificationDiagram.png": {
+    "mtime": 1788629711.7496507,
+    "seen": 1788631893.173283,
+    "ast_hash": "dee787b8dcbb63be4991f0f342e3c061",
+    "semantic_hash": ""
+  },
+  "game/art/airdrop.jpg": {
+    "mtime": 1788629711.7656124,
+    "seen": 1788631893.173284,
+    "ast_hash": "d6104b34261bb884e5121128251b9848",
+    "semantic_hash": ""
+  },
+  "game/art/attack_plus1.jpg": {
+    "mtime": 1788629711.7658212,
+    "seen": 1788631893.173284,
+    "ast_hash": "443e3074fa9a94b36ce9ac6fd3258e28",
+    "semantic_hash": ""
+  },
+  "game/art/board.jpg": {
+    "mtime": 1788629711.767176,
+    "seen": 1788631893.173285,
+    "ast_hash": "5b5eab8e9833f494a55c0033e1b2bf6a",
+    "semantic_hash": ""
+  },
+  "game/art/careful_maneuvers.jpg": {
+    "mtime": 1788629711.767824,
+    "seen": 1788631893.173285,
+    "ast_hash": "edfa3eea0d6bba208b3faa1840ec4b23",
+    "semantic_hash": ""
+  },
+  "game/art/conscription.jpg": {
+    "mtime": 1788629711.7683592,
+    "seen": 1788631893.173286,
+    "ast_hash": "be973b0ab916d50384eb16f9d90f1b7a",
+    "semantic_hash": ""
+  },
+  "game/art/creeping_barrage.jpg": {
+    "mtime": 1788629711.7687256,
+    "seen": 1788631893.173286,
+    "ast_hash": "48d5170dcf71d5be212bb1ee1d54eca6",
+    "semantic_hash": ""
+  },
+  "game/art/deploy_artillery.jpg": {
+    "mtime": 1788629711.7689028,
+    "seen": 1788631893.173287,
+    "ast_hash": "34c233a0a371936afde866942beccb8e",
+    "semantic_hash": ""
+  },
+  "game/art/deploy_cavalry.jpg": {
+    "mtime": 1788629711.7691004,
+    "seen": 1788631893.173287,
+    "ast_hash": "2014c524849d58c3f48c4a123d3f5045",
+    "semantic_hash": ""
+  },
+  "game/art/deploy_inf_start.jpg": {
+    "mtime": 1788629711.770093,
+    "seen": 1788631893.1732879,
+    "ast_hash": "8edb82cb9cc78bd2481116fc8b390a14",
+    "semantic_hash": ""
+  },
+  "game/art/deploy_inf_trench.jpg": {
+    "mtime": 1788629711.7710934,
+    "seen": 1788631893.1732879,
+    "ast_hash": "78819cec06733f0391f910b940ad4144",
+    "semantic_hash": ""
+  },
+  "game/art/forced_march.jpg": {
+    "mtime": 1788629711.7712731,
+    "seen": 1788631893.173289,
+    "ast_hash": "41c11b0d3308150f521c7ab37f886e87",
+    "semantic_hash": ""
+  },
+  "game/art/mass_assault.jpg": {
+    "mtime": 1788629711.7715242,
+    "seen": 1788631893.173289,
+    "ast_hash": "e992598f957596e9519296e09cd08109",
+    "semantic_hash": ""
+  },
+  "game/art/naval_barrage.jpg": {
+    "mtime": 1788629711.7722158,
+    "seen": 1788631893.17329,
+    "ast_hash": "bebfe3f2431dce4a0fdba7fe4bf7d98a",
+    "semantic_hash": ""
+  },
+  "game/art/ordered_withdraw.jpg": {
+    "mtime": 1788629711.77255,
+    "seen": 1788631893.17329,
+    "ast_hash": "66a244090491991e4bddcfdf6f2117f5",
+    "semantic_hash": ""
+  },
+  "game/art/over_the_top.jpg": {
+    "mtime": 1788629711.7730105,
+    "seen": 1788631893.173291,
+    "ast_hash": "7edd51e9f92468e288ff759631959ba0",
+    "semantic_hash": ""
+  },
+  "game/art/reckless_maneuvers.jpg": {
+    "mtime": 1788629711.7736692,
+    "seen": 1788631893.173291,
+    "ast_hash": "e92f7d2f4147aca7e9203007ae326e6d",
+    "semantic_hash": ""
+  },
+  "game/art/sappers.jpg": {
+    "mtime": 1788629711.774353,
+    "seen": 1788631893.173292,
+    "ast_hash": "19e5feeb3a7da8d115dc9ebcd6596c38",
+    "semantic_hash": ""
+  },
+  "game/art/shock_troops.jpg": {
+    "mtime": 1788629711.7746553,
+    "seen": 1788631893.173292,
+    "ast_hash": "c33227b76698deeb14a9a619e6426fdd",
+    "semantic_hash": ""
+  },
+  "game/art/storm_and_hold.jpg": {
+    "mtime": 1788629711.7751725,
+    "seen": 1788631893.173293,
+    "ast_hash": "79151809bb956ebb6857c97ffcfb0b6f",
+    "semantic_hash": ""
+  },
+  "game/art/table.jpg": {
+    "mtime": 1788629711.7761173,
+    "seen": 1788631893.173293,
+    "ast_hash": "e0d8083b44f57c1c1352486ba02978a5",
+    "semantic_hash": ""
+  },
+  "game/art/title.png": {
+    "mtime": 1788629711.777819,
+    "seen": 1788631893.173294,
+    "ast_hash": "02788afa2f93f5e6d484719a68568ab3",
+    "semantic_hash": ""
+  },
+  "game/art/vanguard.jpg": {
+    "mtime": 1788629711.7781818,
+    "seen": 1788631893.173294,
+    "ast_hash": "3352548e0d03a69a90a12445ebf6fc15",
+    "semantic_hash": ""
+  }
+}

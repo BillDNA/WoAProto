@@ -44,9 +44,17 @@ dev/baselines/*
 .board-log.jsonl
 
 
-# graphify knowledge graph — the map (graph.json + report) is committed per-project so
-# every clone/worktree starts with it; local build state is not (cache, html, manifest,
-# cost, dated snapshots, machine-specific dotfiles).
+# graphify knowledge graph — the map is committed per-project so every clone/worktree
+# starts with it. manifest.json is the incremental cache: its keys are repo-relative
+# and re-anchored on load, so committing it is what stops a fresh checkout doing a full
+# rebuild. The labels sidecar travels with its .sig: re-clustering reassigns community
+# ids, and the signature is what lets a rebuild detect that and re-derive a stale name
+# instead of trusting it. Still excluded: the regenerable viewer, the cache, dated
+# snapshots, cost accounting, and .graphify_python (a machine-local interpreter path).
 graphify-out/*
 !graphify-out/graph.json
+!graphify-out/manifest.json
 !graphify-out/GRAPH_REPORT.md
+!graphify-out/.graphify_labels.json
+!graphify-out/.graphify_labels.json.sig
+!graphify-out/.graphify_root
