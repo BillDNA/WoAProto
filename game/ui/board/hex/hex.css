@@ -3,11 +3,13 @@
 
    Loaded by style.css's @import chain. The two board renderers that cannot use
    the .hex class (the string-built map thumbnails, the editor's ghost) read
-   these same vars through HEX_CONFIG.ink. */
+   every one of these through HEX_CONFIG.ink. */
 
 :root{
   --hex:#d9cca8; --hex-dark:#d2c39c; --hex-stroke:#4a3d26;   /* the parchment tile */
   --coord:rgba(60,48,28,.48);                                /* its grid label */
+  /* the "add this hex" affordance: a wash on an empty hex, gold under the cursor */
+  --hex-ghost:rgba(255,255,255,.10); --hex-ghost-stroke:rgba(74,61,38,.5); --hex-ghost-hover:rgba(212,175,55,.28);
 }
 
 .hex{fill:var(--hex); stroke:var(--hex-stroke); stroke-width:1.6;}

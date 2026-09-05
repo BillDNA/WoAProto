@@ -4,6 +4,7 @@
      WOA_CONTENT.battalions -> the engine's ACTIVE_BATTALION snapshot (localStorage wins).
    - F2: a maps-bundle file -> the importFile lenient parser (bare array /
      assignment prefix / trailing semicolon / single map) -> libraryReplace -> E.MAPS.
+   - C1: every UI-tier config home on the live page really is one.
    Run: node --test dev/boot.test.js  (needs dev/node_modules/jsdom). */
 'use strict';
 const { test } = require('node:test');
@@ -81,6 +82,27 @@ test('F2: maps-bundle import lenient parser lands the map in E.MAPS', function (
 // document.write is captured rather than read back off the DOM — jsdom's
 // insertion point for a write outside the parser is not the browser's, so DOM
 // order there is a jsdom artifact. What load-order.js EMITS is the real fact.
+// A dial belongs to a config home, and a household's dials belong to the
+// household's own file. Checked by IDENTITY — the shared digest getter — because
+// a hand-rolled object with a `digest` key would pass anything weaker, and the
+// digest is what stamps a run.
+test('C1: every UI-tier config home was made by the shared maker', function () {
+  const dom = makeDom();
+  const win = dom.window;
+  try {
+    const shared = Object.getOwnPropertyDescriptor(win.Engine.CONFIG, 'digest').get;
+    // the UI tier's own guardrails, plus one per household on the board street
+    ['UI_CONFIG', 'HEX_CONFIG', 'TERRAIN_CONFIG', 'UNIT_CONFIG'].forEach(function (name) {
+      const home = win[name];
+      assert.ok(home && typeof home === 'object', name + ' is published on the page');
+      const d = Object.getOwnPropertyDescriptor(home, 'digest');
+      assert.ok(d && d.get === shared, name + ' was made by Engine.defineConfigHome');
+      assert.strictEqual(d.enumerable, false, name + "'s digest getter never feeds its own hash");
+      assert.strictEqual(home.digest, win.Engine.configDigest(home), name + ' digest is the util over the home');
+    });
+  } finally { try { win.close(); } catch (e) {} }
+});
+
 test('L1: index.html + load-order.js emit the declared chain, in order', function () {
   const ORDER = require(path.join(GAME, 'load-order.js'));
   const html = harness.read('index.html');

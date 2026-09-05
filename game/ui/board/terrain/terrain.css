@@ -1,15 +1,12 @@
-/* The colour of each terrain, named where its mark is drawn.
+/* The colours of terrain. Every colour a type is drawn in lives here and is read
+   by that type's own *-mark.js as a var — whether a stylesheet rule paints it or
+   only an SVG attribute does.
 
-   One var per type, read by that type's own *-mark.js (`stroke: 'var(--forest)'`).
-   Every type has a row, painted by a stylesheet rule or not: the mat's trench
-   slot proved that "the stylesheet never sees it" is not a reason for a colour
-   to hide inline.
-
-   Loaded by style.css's @import chain. Prose: terrain.md */
+   Loaded by style.css's @import chain. Prose: engine/board/terrain/terrain.md */
 
 :root{
-  --forest:#4a7c3a;
-  --mountain:#75726a;
-  --river:#4a7ea8;
-  --trench:#5a4326;
+  --forest:#4a7c3a;       --forest-ink:#3a6330;     /* the side's line, and its glyph */
+  --mountain:#75726a;     --mountain-ink:#5d5a52;
+  --river:#4a7ea8;        --river-ink:#a9c6dd;
+  --trench:#5a4326;                                 /* dug earthwork: one colour for both */
 }

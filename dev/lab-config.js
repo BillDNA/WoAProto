@@ -5,23 +5,7 @@
    identical digest getter; a hand-rolled home would fail the seam check. Node only: the
    dev lab never loads in the browser. It requires JUST the engine's config part (00-config)
    for the maker, not the whole engine — the transports that read the timeout stay light.
-
-   Organized into intentional named sections (one per lab tool / concern), never one flat
-   bag — each field is read by name at its point of use:
-     · llm           — transport timeout shared by the cold (llm-client) and session
-                       (llm-session) call paths; one owner, both reference it.
-     · claudePlays   — run defaults for dev/claude-plays.js (a single skirmish or a
-                       first-to-N series); each CLI flag falls back to the value here,
-                       EXCEPT --k (the option cap), which reads the engine's one owner
-                       Engine.AI_TUNING.optionCap — the rankChoices default lives there.
-     · balance       — dev/balance.js run defaults (sweep sample count, opponent, the
-                       matchup luck-o-meter sample count).
-     · balanceReport — dev/balance-report.js run defaults (its own heavier sample count
-                       and hard-vs-hard opponent — the accumulating balance loop).
-     · tuneWeights   — dev/tune-weights.js run defaults (sample count, opponent, passes);
-                       its sweep-algorithm shape (which weights, step scales, regression
-                       bands) stays inline — that is the tool's design, not a run knob.
-     · sweep         — dev/sweep.js parallel-pool tunable (cores held back).
+   One named section per lab tool, never one flat bag; each field is read by name at its site.
 
    NOT a home for pure infra — schema versions, request-body/GC windows, DB batch sizing,
    the deterministic seed schedule, hex/axial math and runaway-loop guards stay inline at
@@ -46,8 +30,8 @@ module.exports = defineConfigHome({
     maxTurns: 60,        // --max-turns default: per-skirmish turn cap (a runaway guard)
     matchTarget: 3,      // --match with no number: first-to-N series target
     typicalN: 40         // typicality-baseline sample size for the felt-notes read
-    // --k option cap is NOT here: its one owner is Engine.AI_TUNING.optionCap (the
-    // rankChoices default), which claude-plays reads directly — no duplicate literal.
+    // --k option cap is NOT here: its one owner is Engine.AI_TUNING.optionCap, which
+    // claude-plays reads directly — no duplicate literal.
   },
 
   balance: {
@@ -65,6 +49,8 @@ module.exports = defineConfigHome({
     samplesPerMap: 16,   // default skirmishes per map per candidate weight vector
     ai: 'normal',        // default base personality the sweep perturbs from
     iters: 1             // default coordinate-descent passes
+    // the sweep's own shape (which weights, step scales, bands) stays inline in the
+    // tool — that is its design, not a run knob
   },
 
   sweep: {

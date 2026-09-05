@@ -5,7 +5,7 @@
 defineTerrainMark({
   letter: 'F',
   stroke: 'var(--forest)',
-  ink: '#3a6330',
+  ink: 'var(--forest-ink)',
   inset: 0.85,
   glyph: function(g, m, o){
     var r = o.forestR != null ? o.forestR : 4.4, r2 = o.forestR2 != null ? o.forestR2 : 3.4;

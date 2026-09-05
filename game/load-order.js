@@ -68,6 +68,7 @@
     'ui/board/hex/hex-config.js',
     'ui/board/hex/hex-screen.js',
     'ui/board-primitives.js',
+    'ui/board/terrain/terrain-config.js',
     'ui/board/terrain/terrain-marks.js',
     'ui/board/terrain/forest-mark.js',
     'ui/board/terrain/mountain-mark.js',

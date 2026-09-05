@@ -1,12 +1,12 @@
-/* How a unit behaves as an element: the token's transform origin, and the two
-   animations a unit has of its own — arriving on the board, and falling off it.
-
-   The token's colours are not here. Its disc takes the seat's red or blue, and
-   the chit ink is an SVG fill no rule ever paints (UNIT_CONFIG.ink.chit), so
-   what CSS owns is motion, not paint. fx.js adds and removes these classes; the
-   shapes they move are built by unit-marks.js.
+/* The colour a unit is drawn in that is its own, and the motion of its token.
+   The disc's red or blue is the seat's, not the unit's, so it is not here.
+   fx.js adds and removes the classes below; unit-marks.js builds what they move.
 
    Loaded by style.css's @import chain. Prose: engine/board/unit/unit.md */
+
+:root{
+  --chit:#ece1c4;   /* the parchment the type's glyph is printed on */
+}
 
 /* every token transforms about its own centre, which is what makes it animatable */
 #board g.unit{transform-box:fill-box; transform-origin:center;}

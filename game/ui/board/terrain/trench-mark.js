@@ -11,8 +11,9 @@ var TRENCH_MARK = {
   letter: 'T',
   stroke: 'var(--trench)',
   ink: 'var(--trench)',
-  inset: 0.74,
-  dash: '7 4'
+  inset: 0.74,      // dug closer to the hex centre than map terrain, so the two never share a line
+  dash: '7 4',      // the earthwork's broken line
+  sw: 6.5           // thinner than a map side (TERRAIN_CONFIG.edge.sw)
 };
 defineTerrainMark(TRENCH_MARK);
 
@@ -30,7 +31,7 @@ function bpTrenchLine(g, hexKey, dir, o){
   var s = o.s || HEX_CONFIG.board.size, rad = o.rad != null ? o.rad : terrainInset('T', s);
   var pt = hexEdgePts(hexKey, dir, rad, s);
   g.appendChild(svgEl('line',{ x1:pt[0][0], y1:pt[0][1], x2:pt[1][0], y2:pt[1][1],
-    stroke:TRENCH_MARK.stroke, 'stroke-width':o.sw != null ? o.sw : 6.5,
+    stroke:TRENCH_MARK.stroke, 'stroke-width':o.sw != null ? o.sw : TRENCH_MARK.sw,
     'stroke-linecap':'round', 'stroke-dasharray':o.dash || TRENCH_MARK.dash }));
 }
 
@@ -39,8 +40,8 @@ function bpTrenchLine(g, hexKey, dir, o){
 function bpTrenchGhost(g, hexKey, dir){
   var pt = hexEdgePts(hexKey, dir, terrainInset('T'));
   var ln = svgEl('line', { x1:pt[0][0], y1:pt[0][1], x2:pt[1][0], y2:pt[1][1],
-    stroke:TRENCH_MARK.stroke, 'stroke-width':8, 'stroke-linecap':'round',
-    'stroke-dasharray':TRENCH_MARK.dash, opacity:.35, 'pointer-events':'none' });
+    stroke:TRENCH_MARK.stroke, 'stroke-width':TERRAIN_CONFIG.dig.ghostSW, 'stroke-linecap':'round',
+    'stroke-dasharray':TRENCH_MARK.dash, opacity:TERRAIN_CONFIG.dig.ghostOpacity, 'pointer-events':'none' });
   g.appendChild(ln);
   return ln;
 }
@@ -49,8 +50,8 @@ function bpTrenchGhost(g, hexKey, dir){
 // Returns the circle for the caller's hover/click.
 function bpTrenchKnob(g, hexKey, firstDir){
   var c = hexXY(hexKey), cp = hexCornerPt(c[0], c[1], hexCornerAngles(firstDir)[0], terrainInset('T'));
-  var knob = svgEl('circle', { cx:cp[0], cy:cp[1], r:8, fill:BOARD.brass,
-    stroke:TRENCH_MARK.stroke, 'stroke-width':2.5, 'class':'hl' });
+  var knob = svgEl('circle', { cx:cp[0], cy:cp[1], r:TERRAIN_CONFIG.dig.knobR, fill:BOARD.brass,
+    stroke:TRENCH_MARK.stroke, 'stroke-width':TERRAIN_CONFIG.dig.knobSW, 'class':'hl' });
   g.appendChild(knob);
   return knob;
 }

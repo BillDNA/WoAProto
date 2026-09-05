@@ -41,8 +41,9 @@ function loadMarks() {
     hexCornerAngles: () => [0, 0],
     hexEdgePts: () => [[0, 0], [1, 1]]
   };
+  ctx.window = { Engine: E };
   vm.createContext(ctx);
-  ['terrain-marks.js']
+  ['terrain-config.js', 'terrain-marks.js']
     .concat(fs.readdirSync(HERE).filter(f => /-mark\.js$/.test(f)).sort())
     .forEach(f => vm.runInContext(fs.readFileSync(path.join(HERE, f), 'utf8'), ctx, { filename: f }));
   return ctx;
@@ -110,12 +111,17 @@ test('every terrain colour is defined in the terrain house\'s stylesheet', () =>
   const page = fs.readFileSync(path.join(HERE, '..', '..', '..', 'style.css'), 'utf8');
   const mine = fs.readFileSync(path.join(HERE, 'terrain.css'), 'utf8');
   assert.match(page, /@import url\('ui\/board\/terrain\/terrain\.css'\)/, 'style.css imports it');
-  // every mark names a CSS var, and every one of those lives here
+  // every colour a mark names is a var, and every one of those lives here
   fs.readdirSync(HERE).filter(f => /-mark\.js$/.test(f)).forEach(f => {
     const src = fs.readFileSync(path.join(HERE, f), 'utf8');
-    const v = (src.match(/stroke:\s*'var\((--[a-z-]+)\)'/) || [])[1];
-    assert.ok(v, f + ' names its colour as a CSS var rather than inking itself inline');
-    assert.ok(mine.includes(v + ':'), f + " names " + v + ', so terrain.css must define it');
-    assert.ok(!page.includes(v + ':'), 'style.css no longer defines ' + v);
+    const vars = [...src.matchAll(/(?:stroke|ink):\s*'var\((--[a-z-]+)\)'/g)].map(m => m[1]);
+    assert.ok(vars.length >= 2, f + ' names its stroke AND its glyph ink as CSS vars, not inline hexes');
+    vars.forEach(v => {
+      assert.ok(mine.includes(v + ':'), f + ' names ' + v + ', so terrain.css must define it');
+      assert.ok(!page.includes(v + ':'), 'style.css no longer defines ' + v);
+    });
   });
+  assert.ok(!/#[0-9a-f]{6}/i.test(fs.readdirSync(HERE).filter(f => /-mark\.js$/.test(f))
+    .map(f => fs.readFileSync(path.join(HERE, f), 'utf8')).join('')),
+    'and no mark file spells a raw colour at all');
 });

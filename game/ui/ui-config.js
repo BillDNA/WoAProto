@@ -1,8 +1,8 @@
-/* War of Attrition — UI-tier config home: UI-only guardrails.
+/* The UI tier's config home: guardrails the engine never checks. Rules-facing
+   dials live in Engine.CONFIG; a household's drawn dials live with the household
+   (ui/board/<house>/<house>-config.js).
 
-   Made by Engine.defineConfigHome, same as the engine home. Holds only guardrails the
-   engine never checks (the battalion size band); rules-facing dials live in Engine.CONFIG.
-   Classic script, no wrapper; loads after the engine, before the builders that read UI_CONFIG. */
+   Classic script, no wrapper; loads after the engine, before its readers. */
 'use strict';
 
 var UI_CONFIG = window.Engine.defineConfigHome({
