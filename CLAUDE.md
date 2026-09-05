@@ -48,7 +48,7 @@ defaults stand.)*
 
 ### Issue tracker
 
-Issues and specs are tracked as GitHub issues in `BillDNA/WoAProto` (via the `gh` CLI). See `docs/agents/issue-tracker.md`.
+Issues and specs are tracked as GitHub issues in `BillDNA/WoAProto` (via the GitHub MCP plugin). See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
