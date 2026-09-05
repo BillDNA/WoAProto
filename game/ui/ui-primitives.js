@@ -4,8 +4,9 @@
    many places — the html-escape, the legend swatch, the sortable table header
    — each live here once, so restyling one is a one-function edit. Modals are
    a kind, not a primitive: ui/kit/modal.js. Behaviour verbs that touch the
-   live DOM (show, toast) live in app.js next to $; this file builds strings. Card tiles, pips, the tug bar, unit slots, key-value rows are
-   already single-sourced by CSS classes (style.css) — no primitive needed.
+   live DOM (show, toast) live in app.js next to $; this file builds strings.
+   Card tiles, pips, the tug bar, unit slots, key-value rows are already
+   single-sourced by CSS classes (style.css) — no primitive needed.
 
    Classic script, no wrapper — top-level names attach to window; loads right
    after app.js so every ui file can build over it. */

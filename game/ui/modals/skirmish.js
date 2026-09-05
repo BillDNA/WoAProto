@@ -20,7 +20,7 @@ uiModal({ id:'skirmish',
   buttons: function(c){
     var st = c.st, v = c.v, m = c.m, btns = [];
     btns.push(m.winner
-      ? { label:'New Campaign', onClick: function(){ startNewCampaign(m); } }
+      ? { label:'New Campaign', onClick: startNewCampaign }
       : { label:'Next Skirmish', onClick: function(){ startNextSkirmish(m); } });
     if (APP.mode !== 'net') btns.push({ label:'Rematch this map', ghost:true,
       title:'Fresh skirmish, same map — for A/B testing a layout',
