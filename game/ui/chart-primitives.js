@@ -129,9 +129,16 @@ function chText(x, y, s, o){
     (o.rotate ? ' transform="rotate(-90 '+x+' '+y+')"' : '')+'>'+chEsc(s)+'</text>';
 }
 function chSwatch(color){ return '<span class="sw" style="background:'+color+';"></span>'; }
+function chTipData(name, rows, markIds){
+  var d = { 'data-name': name, 'data-tip': JSON.stringify(rows) };
+  if (markIds) d['data-mark'] = markIds;
+  return d;
+}
+// the same tooltip, as attributes on a string-built mark
 function chTipAttrs(name, rows, markIds){
-  return ' data-name="'+chEsc(name)+'" data-tip="'+chEsc(JSON.stringify(rows))+'"'+
-    (markIds ? ' data-mark="'+markIds+'"' : '');
+  var d = chTipData(name, rows, markIds), out = '';
+  for (var k in d) out += ' ' + k + '="' + chEsc(d[k]) + '"';
+  return out;
 }
 
 /* CDF polyline points for a pre-SORTED array over a fixed [0,100] domain (the

@@ -1,9 +1,9 @@
-/* War of Attrition — ui part: game-board rendering. Orchestration only —
-   every mark is drawn by a bp* primitive from ui/board-primitives.js (svgEl and
-   the BOARD palette live there; where a hex sits is ui/board/hex/hex-screen.js, the
-   hex house's screen dialect); this file decides WHAT to draw and wires
-   the interaction (clicks, the attack-math hover), never the raw SVG. Classic
-   script, no wrapper — top-level names attach to window (see ui/app.js header). */
+/* The board in play. Orchestration only — every mark is drawn by bpMark, so
+   this file decides WHAT to draw and wires the interaction (clicks, the
+   attack-math hover), never the raw SVG.
+
+   Classic script, no wrapper — top-level names attach to window (see
+   ui/app.js header). Prose: engine/board/board.md */
 'use strict';
 
 /* =================== board rendering =================== */
@@ -11,7 +11,10 @@ function renderBoard(){
   var st = APP.st, v = E.view(st), svg = $('board');
   var L = bpBeginBoard(svg);
 
-  E.hexes().forEach(function(k){ bpHexTile(L.hex, k); });
+  E.hexes().forEach(function(k){
+    bpMark('tile', L.hex, { hex:k, data:true });
+    bpMark('coord', L.hex, { hex:k });
+  });
 
   // terrain sides (hex-owned: drawn inset inside the owning hex)
   for (var ek in v.terrainEdges) bpTerrainEdge(L.ter, ek, v.terrainEdges[ek]);
@@ -25,7 +28,7 @@ function renderBoard(){
 
   // HQs
   ['red','blue'].forEach(function(p){
-    if (v.hqAlive(p)) bpHQ(L.pc, v.hq(p), p);
+    if (v.hqAlive(p)) bpMark('hq', L.pc, { hex:v.hq(p), side:p });
   });
 
   // units — the primitive draws the token, this file wires the attack-math
@@ -43,7 +46,7 @@ function renderBoard(){
 }
 
 function hl(g, k, cls, handler){
-  var p = bpHighlight(g, k, cls);
+  var p = bpMark('highlight', g, { hex:k, cls:cls });
   p.addEventListener('click', handler);
   return p;
 }
@@ -79,7 +82,7 @@ function showAttackHints(fromHex){
   var g = bpAttackLayer();
   attackPreviewsFor(st, fromHex).forEach(function(a){
     var pv = a.preview;
-    bpAttackPill(g, a.to, pv.attackerPower + ' vs ' + pv.defenderPower, pv.outcome);
+    bpMark('pill', g, { hex:a.to, text: pv.attackerPower + ' vs ' + pv.defenderPower, outcome: pv.outcome });
   });
   $('board').appendChild(g);
 }

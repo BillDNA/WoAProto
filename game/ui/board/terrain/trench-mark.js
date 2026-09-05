@@ -50,7 +50,7 @@ function bpTrenchGhost(g, hexKey, dir){
 // Returns the circle for the caller's hover/click.
 function bpTrenchKnob(g, hexKey, firstDir){
   var c = hexXY(hexKey), cp = hexCornerPt(c[0], c[1], hexCornerAngles(firstDir)[0], terrainInset('T'));
-  var knob = svgEl('circle', { cx:cp[0], cy:cp[1], r:TERRAIN_CONFIG.dig.knobR, fill:BOARD.brass,
+  var knob = svgEl('circle', { cx:cp[0], cy:cp[1], r:TERRAIN_CONFIG.dig.knobR, fill:BOARD_CONFIG.board.ink.brass,
     stroke:TRENCH_MARK.stroke, 'stroke-width':TERRAIN_CONFIG.dig.knobSW, 'class':'hl' });
   g.appendChild(knob);
   return knob;

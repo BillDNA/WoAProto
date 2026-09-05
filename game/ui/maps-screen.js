@@ -76,8 +76,8 @@ function updateMapsHint(){
   el.innerHTML = 'Maps are files in <b>game/content/maps/</b> — deleting one here deletes its file. Zip the folder and friends get your map library.';
 }
 
-// previewSVG (the map-library thumbnail) is a board renderer — it lives with the
-// other board marks in ui/board-primitives.js (bpThumb* + the BOARD palette).
+// previewSVG (the map-library thumbnail) is a board renderer — it lives in the
+// board house, at ui/board/thumb-board.js.
 
 function renderMapsetBar(){
   var bar = $('mapsetBar');
@@ -130,10 +130,12 @@ function renderMapsScr(){
     var off = !inSet;
     var d = document.createElement('div');
     d.className = 'mapitem' + (off ? ' off' : '');
-    var shp = E.SHAPES[E.ensureMapShape(m.def)];
+    // the outline a map plays on is what ensureMapShape RETURNS — a map with no
+    // shape field of its own is handed the default, and never gets one written
+    var shape = E.ensureMapShape(m.def);
     d.innerHTML = previewSVG(m.def) +
       '<div class="nm">'+m.def.name+'</div>' +
-      '<div class="shp">'+(shp ? shp.label : '&#9888; board "'+m.def.shape+'" no longer exists')+(m.builtin?'':' &middot; custom')+'</div>' +
+      '<div class="shp">'+(E.hasShape(shape) ? E.shapeLabel(shape) : '&#9888; board "'+shape+'" no longer exists')+(m.builtin?'':' &middot; custom')+'</div>' +
       (cur ? '<label><input type="checkbox" '+(off?'':'checked')+'> in &ldquo;'+cur.name+'&rdquo;</label>' : '') +
       '<div class="btns"></div>';
     var cb = d.querySelector('input[type=checkbox]');

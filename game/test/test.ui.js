@@ -1,7 +1,7 @@
 /* UI contract backstop. The completeness guarantee for the whole
    UI: nothing in game/ui/ draws SVG by hand — every tile, glyph, chit,
-   mark, and pattern is built by a primitives module (board-primitives.js /
-   chart-primitives.js / ui-primitives.js), never string-concatenated or
+   mark, and pattern is built by a house's marks (ui/board/) or a primitives
+   module (chart-primitives.js / ui-primitives.js), never string-concatenated or
    createElementNS'd in a screen. This is the CONTRACT, not a per-screen check:
    an element or screen nobody ticketed still reds here until it is migrated, so
    nothing enumerated-and-forgotten slips through.
@@ -87,7 +87,7 @@ test('UI contract: no screen draws raw SVG outside the primitives modules', () =
     });
   }
   assert.strictEqual(hits.length, 0,
-    'raw SVG drawing found outside a primitives module — migrate it into board-primitives.js / chart-primitives.js:\n' +
+    'raw SVG drawing found outside a primitives module — migrate it into a board mark (ui/board/) or chart-primitives.js:\n' +
     hits.join('\n'));
 });
 

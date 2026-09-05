@@ -29,8 +29,20 @@
     unitStock: I.unitStock, unitValue: I.unitValue, deployPoints: I.deployPoints,
     unitStockProblem: I.unitStockProblem, orphanRowProblem: I.orphanRowProblem,
     checkUnitStock: I.checkUnitStock,
-    SHAPES: I.SHAPES, DEFAULT_SHAPE: I.DEFAULT_SHAPE, boardHexes: I.boardHexes, setBoard: I.setBoard, hexes: I.hexes,
-    buildShape: I.buildShape, ensureMapShape: I.ensureMapShape,
+    // The board house (engine/board/board.js) — the outline: which hexes are in
+    // play. A shape's innards stay behind the outline* door, so a caller can ask
+    // about a board that is not the live one without moving the live one. Its
+    // screen dialect is game/ui/board/.
+    defineOutlineForm: I.defineOutlineForm, buildShape: I.buildShape,
+    shapeNames: I.shapeNames, shapeLabel: I.shapeLabel, hasShape: I.hasShape,
+    outline: I.outline, outlineHexes: I.outlineHexes, outlineName: I.outlineName,
+    outlineTitle: I.outlineTitle, outlineSymmetric: I.outlineSymmetric,
+    outlineRows: I.outlineRows, outlineLabel: I.outlineLabel,
+    DEFAULT_SHAPE: I.DEFAULT_SHAPE, boardHexes: I.boardHexes, setBoard: I.setBoard, hexes: I.hexes,
+    ensureMapShape: I.ensureMapShape,
+    // and the one question that needs an outline: which of a hex's six
+    // neighbours exist.
+    inBoard: I.inBoard, neighbor: I.neighbor, neighbors: I.neighbors, edgeFrom: I.edgeFrom,
     currentShape: I.currentShape, rot180: I.rot180, buildTerrain: I.buildTerrain, hexLabel: I.hexLabel,
     // The terrain house (engine/board/terrain/) — the registry, the side questions
     // and the shared physical model. UI, editor and dev tools read the types from
@@ -46,8 +58,6 @@
     key: I.key, parseKey: I.parseKey, step: I.step, dist: I.dist, dirBetween: I.dirBetween,
     edgeKey: I.edgeKey, sideKey: I.sideKey, parseSideKey: I.parseSideKey,
     sideHex: I.sideHex, sideDir: I.sideDir, facingSide: I.facingSide,
-    // The board's outline question: which of a hex's six neighbours exist.
-    inBoard: I.inBoard, neighbor: I.neighbor, neighbors: I.neighbors, edgeFrom: I.edgeFrom,
     other: I.other,
     newBattle: I.newBattle, newSkirmish: I.newSkirmish, view: I.view,
     unitAt: I.unitAt, isHQ: I.isHQ, isEmpty: I.isEmpty, controlledHexes: I.controlledHexes,

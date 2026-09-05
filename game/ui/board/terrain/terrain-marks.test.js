@@ -34,7 +34,8 @@ function shippedTypes() {
 // in a new context is how a test gets a clean one.
 function loadMarks() {
   const ctx = {
-    E, HEX_CONFIG: { board: { size: 44 } }, BOARD: { outline: '#000', brass: '#b5a642', barrage: '#a33' },
+    E, HEX_CONFIG: { board: { size: 44 } }, BOARD: {},
+    BOARD_CONFIG: { board: { ink: { outline: '#000', brass: '#b5a642', barrage: '#a33' } } },
     svgEl: (tag, attrs) => ({ tag, attrs, appendChild() {} }),
     hexXY: () => [0, 0],
     hexCornerPt: () => [0, 0],
@@ -103,7 +104,7 @@ test('the stroke a board draws comes off the mark', () => {
     assert.strictEqual(ctx.BOARD.terrainStroke(t.letter), ctx.terrainMark(t.letter).stroke,
       t.name + "'s side is stroked with its own declared colour");
   });
-  assert.strictEqual(ctx.BOARD.terrainStroke('?'), ctx.BOARD.outline,
+  assert.strictEqual(ctx.BOARD.terrainStroke('?'), ctx.BOARD_CONFIG.board.ink.outline,
     'an unknown letter falls back to board ink rather than drawing nothing');
 });
 

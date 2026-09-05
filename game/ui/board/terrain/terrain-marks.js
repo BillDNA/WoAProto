@@ -8,7 +8,7 @@
    the same everywhere and no caller names one.
 
    Classic script, no wrapper. Loads after ui/board/hex/hex-screen.js, whose geometry
-   (hexXY, hexEdgePts, hex-config's sizes) it draws with, ui/board-primitives.js, whose svgEl
+   (hexXY, hexEdgePts, hex-config's sizes) it draws with, ui/board/board-marks.js, whose ink
    and BOARD palette it uses, and terrain-config.js, whose sizes it draws at.
    Prose: engine/board/terrain/terrain.md */
 'use strict';
@@ -44,7 +44,7 @@ function terrainMarksCheck(){
 
 BOARD.terrainStroke = function(letter){
   var m = terrainMark(letter);
-  return m ? m.stroke : BOARD.outline;
+  return m ? m.stroke : BOARD_CONFIG.board.ink.outline;
 };
 
 // The bare side line, no glyph — what the editor paints, and the base line under
@@ -82,7 +82,7 @@ function bpTerrainEdge(g, side, letter, o){
 function bpBarrageTerrain(g, hexKey, dir, letter){
   var pt = hexEdgePts(hexKey, dir, terrainInset(letter));
   var line = svgEl('line',{ x1:pt[0][0], y1:pt[0][1], x2:pt[1][0], y2:pt[1][1],
-    stroke:BOARD.barrage, 'stroke-width':TERRAIN_CONFIG.barrage.sw, 'stroke-linecap':'round',
+    stroke:BOARD_CONFIG.board.ink.barrage, 'stroke-width':TERRAIN_CONFIG.barrage.sw, 'stroke-linecap':'round',
     opacity:TERRAIN_CONFIG.barrage.opacity, 'class':'hl' });
   g.appendChild(line);
   return line;

@@ -15,8 +15,7 @@
    red and blue are and paints whatever comes back.
 
    Classic script, no wrapper. Loads after ui/board/hex/hex-screen.js, whose
-   geometry it draws with, and ui/board-primitives.js, whose svgEl and side
-   colours it uses. Prose: engine/board/unit/unit.md */
+   geometry it draws with, and ui/kit/palette.js, whose side colours it uses. Prose: engine/board/unit/unit.md */
 'use strict';
 
 var UNIT_MARK = {};

@@ -196,10 +196,9 @@ function nz(v) { return v === undefined ? null : v; }
 /* ---------- dimension derivations (pure; exported for tests) ---------- */
 
 // The board hex list for a map: its inline shapeDef, else the named built-in
-// shape. Pure — buildShape/boardHexes return fresh data, no global board mutation.
+// shape. Pure — E.outline never moves the live board.
 function boardHexList(map) {
-  if (map && map.shapeDef) return E.buildShape('@' + (map.id || map.name || 'custom'), map.shapeDef).list;
-  return E.boardHexes((map && map.shape) || E.DEFAULT_SHAPE);
+  return E.outlineHexes(E.outline(map));
 }
 
 // The map terrain types, from the terrain house — the ONE list this file reads.

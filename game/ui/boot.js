@@ -44,10 +44,9 @@ unitMarksCheck();
 // board shapes come from maps.js — keep the editor's dropdown in sync
 (function(){
   var sel = $('edShape');
-  Object.keys(E.SHAPES).forEach(function(n){
-    if (n.charAt(0) === '@') return; // per-map registered shapes aren't templates
+  E.shapeNames().forEach(function(n){
     var o = document.createElement('option');
-    o.value = n; o.textContent = E.SHAPES[n].label;
+    o.value = n; o.textContent = E.shapeLabel(n);
     sel.appendChild(o);
   });
   var oc = document.createElement('option');
@@ -642,7 +641,7 @@ $('edClear').onclick = function(){
 $('edMirror').onclick = function(){
   // point-symmetry: every edge and HQ gets its rotated twin
   var live = edLiveShape();
-  if (!E.SHAPES[live] || !E.SHAPES[live].centre){
+  if (!E.hasShape(live) || !E.outlineSymmetric(E.outline(live))){
     toast('This outline is not point-symmetric, so Mirror has no centre to turn around. Carve the hexes symmetric first.', 4200);
     return;
   }

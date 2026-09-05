@@ -252,12 +252,9 @@ function spentStr(st, p) {
   return st.cards.removed[p].map(function (id) { return E.CARD_BY_ID[id].name; }).join(', ') || 'none yet';
 }
 function rowsStr(st) {
-  const s = E.SHAPES[st.board.boardShape];
-  const counts = {};
-  s.list.forEach(function (k) { const r = E.parseKey(k)[1]; counts[r] = (counts[r] || 0) + 1; });
-  return s.rowRs.map(function (r, i) {
+  return E.outlineRows(E.outline(st.board.boardShape)).map(function (row, i) {
     const L = String.fromCharCode(65 + i);
-    return L + '1-' + L + counts[r];
+    return L + '1-' + L + row.length;
   }).join(', ');
 }
 function stateView(st, p, withHand, match) {

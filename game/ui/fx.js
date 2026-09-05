@@ -1,9 +1,10 @@
-/* War of Attrition — ui part: board effects (pure flourish, no rules).
+/* War of Attrition — ui part: board effects (pure flourish, no rules) — timing
+   over an element that is already there. What is DRAWN is never here: the
+   transient marks are the board house's (bpPlay plays them for their own
+   declared life), the token the unit house's; this file decides when.
+
    Classic script, no wrapper — top-level names attach to window (see
-   ui/app.js header). These draw transient marks on the SAME live #board as
-   board.js, so colours come from board-primitives' BOARD and the token's size
-   from the unit house — restyle a side colour or the unit token once and the
-   flourishes follow. */
+   ui/app.js header). */
 'use strict';
 
 /* =================== board effects (pure flourish, no rules) =================== */
@@ -33,34 +34,10 @@ function ghostUnit(hex, unit){
   setTimeout(function(){ if (g.parentNode) g.parentNode.removeChild(g); }, 750);
 }
 function ringAt(hex, color){
-  var svg = $('board');
-  if (!hex || !svg.firstChild) return;
-  var xy = hexXY(hex);
-  var c = svgEl('circle',{cx:xy[0], cy:xy[1], r:HEX_CONFIG.board.size*0.8, fill:'none', stroke:color, 'stroke-width':5, 'class':'fx-ring'});
-  svg.appendChild(c);
-  setTimeout(function(){ if (c.parentNode) c.parentNode.removeChild(c); }, 600);
+  if (hex) bpPlay($('board'), 'ring', { hex:hex, color:color });
 }
 function fxStrike(fromHex, toHex, viaHex, color){
-  var svg = $('board');
-  if (!svg.firstChild) return;
-  var pts = [hexXY(fromHex)];
-  if (viaHex) pts.push(hexXY(viaHex));
-  pts.push(hexXY(toHex));
-  var g = svgEl('g', {'class':'fx-strike', 'pointer-events':'none'});
-  g.appendChild(svgEl('polyline', { points: pts.map(function(p){ return p[0].toFixed(1)+','+p[1].toFixed(1); }).join(' '),
-    fill:'none', stroke:color, 'stroke-width':6, 'stroke-linecap':'round', 'stroke-linejoin':'round',
-    'stroke-dasharray':'13 8', opacity:.9 }));
-  // arrowhead just short of the target's centre
-  var a = pts[pts.length-2], b = pts[pts.length-1];
-  var ang = Math.atan2(b[1]-a[1], b[0]-a[0]);
-  var tip = [b[0]-Math.cos(ang)*HEX_CONFIG.board.size*0.42, b[1]-Math.sin(ang)*HEX_CONFIG.board.size*0.42];
-  var l = 14, wdt = 8;
-  var p1 = [tip[0]-Math.cos(ang)*l+Math.sin(ang)*wdt, tip[1]-Math.sin(ang)*l-Math.cos(ang)*wdt];
-  var p2 = [tip[0]-Math.cos(ang)*l-Math.sin(ang)*wdt, tip[1]-Math.sin(ang)*l+Math.cos(ang)*wdt];
-  g.appendChild(svgEl('polygon', { points: [tip, p1, p2].map(function(p){ return p[0].toFixed(1)+','+p[1].toFixed(1); }).join(' '),
-    fill: color, stroke:BOARD.outline, 'stroke-width':1 }));
-  svg.appendChild(g);
-  setTimeout(function(){ if (g.parentNode) g.parentNode.removeChild(g); }, 900);
+  bpPlay($('board'), 'strike', { from:fromHex, to:toHex, via:viaHex, color:color });
 }
 function shakeBoard(){
   var w = $('boardwrap');
@@ -92,8 +69,8 @@ function playFX(pre){
   if (!pre) return;
   var st = APP.st, v = E.view(st), c = pre.choice;
   if (pre.type==='deploy' && c.hex){ popUnit(c.hex); }
-  else if (pre.type==='trench' && c.hex){ ringAt(c.hex, BOARD.trench); }
-  else if (pre.type==='barrage'){ ringAt(c.trenchHex || fxPieceHex(c.pieceId), BOARD.barrage); }
+  else if (pre.type==='trench' && c.hex){ ringAt(c.hex, BOARD.terrainStroke('T')); }
+  else if (pre.type==='barrage'){ ringAt(c.trenchHex || fxPieceHex(c.pieceId), BOARD_CONFIG.board.ink.barrage); }
   else if (pre.type==='reposition'){
     if (c.swap){ slideUnit(c.b, c.a); slideUnit(c.a, c.b); }
     else slideUnit(c.from, c.to);
@@ -106,7 +83,7 @@ function playFX(pre){
       (pre.supporters || []).forEach(function(h){ ringAt(h, BOARD.supportAlly); });
       (pre.defSupporters || []).forEach(function(h){ ringAt(h, BOARD.supportEnemy); });
     }
-    ringAt(c.to, BOARD.barrage);
+    ringAt(c.to, BOARD_CONFIG.board.ink.barrage);
     var now = v.units[c.to];
     var advanced = now && pre.attacker && now.owner===pre.attacker.owner && !v.units[c.from];
     if (advanced) slideUnit(c.from, c.to);

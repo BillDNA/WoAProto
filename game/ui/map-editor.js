@@ -24,7 +24,7 @@ function openEditor(def, isNewCopy){
       ED.hexes = {};
       def.shapeDef.hexes.forEach(function(h){ ED.hexes[E.key(h[0], h[1])] = true; });
     } else {
-      ED.shape = E.SHAPES[def.shape] ? def.shape : E.DEFAULT_SHAPE;
+      ED.shape = E.hasShape(def.shape) ? def.shape : E.DEFAULT_SHAPE;
       ED.hexes = null;
     }
     ED.red = def.redHQ ? def.redHQ.slice() : null;
@@ -120,8 +120,7 @@ function renderEditor(){
   var gHex = svgEl('g',{}), gTer = svgEl('g',{}), gHit = svgEl('g',{});
   svg.appendChild(gHex); svg.appendChild(gTer); svg.appendChild(gHit);
   hexList.forEach(function(k){
-    var xy = hexXY(k);
-    var p = bpHexPoly(xy[0], xy[1], HEX_CONFIG.board.tile, false); // editor tiles are uniform, no dark parity
+    var p = bpMark('tile', gHex, { hex:k, dark:false }); // editor tiles are uniform, no dark parity
     if (ED.tool==='redhq' || ED.tool==='bluehq'){
       p.style.cursor = 'pointer';
       p.addEventListener('click', function(){
@@ -134,12 +133,10 @@ function renderEditor(){
       p.style.cursor = 'pointer';
       p.addEventListener('click', function(){ edRemoveHex(k); renderEditor(); });
     }
-    gHex.appendChild(p);
-    bpCoordLabel(gHex, xy[0], xy[1], E.hexLabel(k), HEX_CONFIG.board.size, 'none');
+    bpMark('coord', gHex, { hex:k, pe:'none' });
   });
   ghosts.forEach(function(k){
-    var xy = hexXY(k);
-    var p = bpGhostHex(gHex, xy[0], xy[1], HEX_CONFIG.board.tile-3);
+    var p = bpMark('ghost', gHex, { hex:k });
     p.style.cursor = 'pointer';
     p.addEventListener('click', function(){
       if (hexList.length >= E.CONFIG.mapHexCeiling){ toast(E.CONFIG.mapHexCeiling + ' hexes is the ceiling (laser-cutter max — and big empty maps are not fun).', 3600); return; }
@@ -152,9 +149,8 @@ function renderEditor(){
   ['red','blue'].forEach(function(side){
     var hq = ED[side];
     if (!hq) return;
-    var xy = hexXY(E.key(hq[0],hq[1]));
-    // the live board's HQ marker sans brass ring (the editor's plain flag)
-    bpHQMarker(gHex, xy[0], xy[1], side, { rInner:false, pe:'none' });
+    // the live board's HQ mark sans brass ring (the editor's plain flag)
+    bpMark('hq', gHex, { hex:E.key(hq[0],hq[1]), side:side, inner:false, pe:'none' });
   });
   edInternalSides().forEach(function(e){
     var ek = E.sideKey(e[0], e[1]);
@@ -163,7 +159,7 @@ function renderEditor(){
     // shared mark owns colour/width/linecap. Empty sides get only the hit line.
     if (t) bpTerrainStroke(gTer, e[0], e[1], t, { rad: ED_TERRAIN_INSET, pe: 'none', edgeData: false });
     if (ED.tool==='terrain'){
-      var hit = bpEdgeHitLine(gHit, e[0], e[1], ED_TERRAIN_INSET);
+      var hit = bpMark('edgeHit', gHit, { hex:e[0], dir:e[1], rad:ED_TERRAIN_INSET });
       hit.addEventListener('click', function(){
         // cycle empty -> each map terrain type in registration order -> empty
         var cycle = E.mapTerrainTypes().map(function(t){ return t.letter; });
