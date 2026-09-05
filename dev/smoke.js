@@ -400,14 +400,14 @@ realSetTimeout(function () {
         assert.ok(doc.getElementById('dashRunA').disabled && doc.getElementById('dashRunA').options[0].textContent === 'No runs yet',
           'no saved runs — run pickers show the "No runs yet" fallback');
       }, 0);
-      // the mechanism, not the roster: one pill per registered pane, in
+      // the mechanism, not the list: one pill per registered pane, in
       // registration order, each with the mount the factory named for it.
-      assert.ok(win.DASH_PANES.length >= 2, 'panes registered');
+      assert.ok(win.DASH_PANE.all().length >= 2, 'panes registered');
       assert.strictEqual(
         [].map.call(doc.querySelectorAll('#dashPills .dpill'), function (b) { return b.dataset.view; }).join(' | '),
-        [].map.call(win.DASH_PANES, function (p) { return p.id; }).join(' | '),
+        win.DASH_PANE.all().map(function (p) { return p.id; }).join(' | '),
         'the pill nav is built from the pane registry, in registration order');
-      assert.ok(win.DASH_PANES.every(function (p) { return doc.getElementById(p.mount); }),
+      assert.ok(win.DASH_PANE.all().every(function (p) { return doc.getElementById(p.mount); }),
         'every registered pane has the mount element the factory named');
       assert.ok(doc.querySelector('#dashPills .dpill[data-view="tables"]').classList.contains('sel'), 'Tables is the selected pill');
       assert.ok(doc.getElementById('dashRunControls').style.display !== 'none', 'Run/Save controls visible on Tables');
@@ -724,7 +724,23 @@ realSetTimeout(function () {
       })();
     }
 
+    function modalKind() {
+      console.log('== modal kind: every registered modal has the shell the factory named ==');
+      assert.ok(win.UI_MODAL.all().length >= 2, 'modals registered');
+      win.UI_MODAL.all().forEach(function (m) {
+        assert.ok(doc.getElementById(m.mount), m.id + ': overlay mount');
+        ['Title', 'Body', 'Btns', 'X'].forEach(function (part) {
+          assert.ok(doc.getElementById(m.mount + part), m.id + ': the shell\'s ' + part.toLowerCase());
+        });
+      });
+      // no derived id collides with the rest of the page
+      win.UI_MODAL.all().forEach(function (m) {
+        assert.strictEqual(doc.querySelectorAll('#' + m.mount).length, 1, m.id + ': one element owns its mount id');
+      });
+    }
+
     function manualPlayer() {
+      modalKind();
       console.log('== field manual diagram player ==');
       doc.getElementById('btnQuit').click();
       var liveShape = win.Engine.currentShape();

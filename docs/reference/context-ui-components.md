@@ -260,6 +260,15 @@ _Home_: `game/ui/ui-primitives.js` — `uiSwatch`
 A sortable table header cell (active key + direction arrow).
 _Home_: `game/ui/ui-primitives.js` — `uiSortableTh`
 
+**Kind**:
+A family of concepts sharing one shell — a registry of what exists plus a
+factory that validates and mounts it. Panes and modals are the two.
+_Home_: `game/ui/kit/kind.js` — `defineKind`
+
+**Modal**:
+One overlay dialog: a title, a body, a row of buttons that close it.
+_Home_: `game/ui/kit/modal.js` — `uiModal`
+
 **confirmDialog**:
-The shared confirm/cancel modal.
-_Home_: `game/ui/ui-primitives.js` — `confirmDialog`
+The shared confirm/cancel modal, one entry in the Modal registry.
+_Home_: `game/ui/modals/confirm.js` — `confirmDialog`

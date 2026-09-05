@@ -443,7 +443,7 @@ function openManual(){
     MANUAL.built = true;
   }
   renderManual();
-  openOverlay('manualOvr');
+  modalOpen('manual');
 }
 function manualStep(delta){
   MANUAL.beat += delta;
@@ -460,7 +460,7 @@ function manualTabClick(ev){
 }
 // ← / → step the beats while the manual is open (wired in ui/boot.js)
 function manualKey(ev){
-  if (!$('manualOvr').classList.contains('active')) return;
+  if (!modalIsOpen('manual')) return;
   var tag = ev.target && ev.target.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
   if (ev.key === 'ArrowRight'){ manualStep(1); ev.preventDefault(); }

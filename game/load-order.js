@@ -50,6 +50,8 @@
     'ui/ui-config.js',
     'ui/screens.js',
     'ui/ui-primitives.js',
+    'ui/kit/kind.js',
+    'ui/kit/modal.js',
     'ui/board-primitives.js',
     'ui/board.js',
     'ui/fx.js',
@@ -72,6 +74,14 @@
     'ui/screens/dashboard/panes/runs.js',
     'ui/screens/dashboard/panes/tables.js',
     'ui/manual.js',
+    'ui/modals/cards.js',
+    'ui/modals/confirm.js',
+    'ui/modals/handoff.js',
+    'ui/modals/journal.js',
+    'ui/modals/manual.js',
+    'ui/modals/play.js',
+    'ui/modals/rosters.js',
+    'ui/modals/skirmish.js',
     'ui/boot.js'
   ];
 

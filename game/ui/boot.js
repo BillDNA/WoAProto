@@ -7,6 +7,10 @@
    from index.html's inline app script. */
 'use strict';
 
+// Every modal's markup, written from the registry (ui/kit/modal.js) before any
+// wiring below reaches into a modal body.
+uiModalsBuild();
+
 // config identity: a small, read-only screen-corner overlay stamping the
 // config identity — rules version + both config-home digests — so any screenshot
 // carries a retrievable record of which dials were in force. Plain HTML (no SVG),
@@ -182,21 +186,15 @@ $('btnDebug').onclick = function(){
     .catch(function(){ downloadDebug(fname, json); });
 };
 
-$('fabJournal').onclick = function(){
-  syncJournalOverlay();
-  openOverlay('journalOvr');
-};
+$('fabJournal').onclick = function(){ modalOpen('journal'); };
 // innerHTML mirroring drops click handlers — delegate turn expand/collapse in the overlay
-$('journalBody').onclick = function(ev){
+$('journalOvrBody').onclick = function(ev){
   var t = ev.target;
   while (t && t !== this && !(t.classList && t.classList.contains('jturn'))) t = t.parentNode;
   if (t && t.classList && t.classList.contains('jturn') && t.classList.contains('toggler')) t.classList.toggle('open');
 };
 
-$('fabRosters').onclick = function(){
-  syncRostersOverlay();
-  openOverlay('rostersOvr');
-};
+$('fabRosters').onclick = function(){ modalOpen('rosters'); };
 $('btnQuit').onclick = function(){
   if (APP.net.poller) clearInterval(APP.net.poller);
   APP.net.poller = null; APP.mode = null;
