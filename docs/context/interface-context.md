@@ -1,6 +1,6 @@
 # Interface
 
-How does a human drive this? The places someone goes, what has to survive between visits, and the shared ink every screen is drawn with.
+How does a human drive this? The places someone goes, what they see and do while a Skirmish is on, what has to survive between visits, and the shared ink every screen is drawn with.
 
 The primitives are named here as kinds; the roll-call of every one that exists is `docs/reference/context-ui-components.md`.
 
@@ -30,10 +30,6 @@ _Home_: `game/ui/screens.js` — `devhub:`
 **Field Manual**:
 The in-app screen teaching the rules, with step-through diagrams.
 _Home_: `game/ui/manual.js` — `Field Manual`
-
-**Manual beat**:
-One step of a Field Manual example — a board state and the words for it.
-_Home_: `game/ui/manual.js` — `MANUAL_EXAMPLES`
 
 **Mats**:
 The overlay showing the physical pieces a side is holding.
@@ -108,7 +104,7 @@ _Home_: `game/ui/skirmish.js` — `showHandoff`
 **App state**:
 The one object holding what this browser is doing — the Skirmish in play, the
 mode, which side you are, the room you are in.
-_Home_: `game/ui/app.js` — `APP = {`
+_Home_: `game/ui/app.js` — `var APP`
 
 **Save version**:
 The stamp that retires saves the current code can no longer load.
@@ -146,10 +142,9 @@ _Home_: `game/ui/modals/modal.js` — `uiModal`
 
 **Content editor**:
 One content kind's authoring screen: pick a Slot, edit, save.
-_Home_: none yet — three bespoke editors today (battalion, mapset, map), each
-with its own save path.
+_Home_: none yet — every content kind's editor writes its own save path today.
 
-## The dashboard
+## Reading recorded runs
 
 **Row cache**:
 The fetch-once skirmish rows every pane on a screen reads, so one visit makes one
@@ -159,6 +154,11 @@ _Home_: `game/ui/net.js` — `SKIRMISH_CACHE`
 **Run comparison**:
 The pairing of two recorded runs that every pane renders against.
 _Home_: `game/ui/screens/dashboard/dashboard.js` — `dashPickDefaultRuns`
+
+**Band board**:
+One metric's two runs read against its guard band, the compound mark a run is
+judged by.
+_Home_: `game/ui/chart-primitives.js` — `ovBandRowHtml`
 
 ## The drawing kit
 
@@ -175,10 +175,6 @@ _Home_: `game/ui/chart-primitives.js` — `chRect`
 **Toast**:
 A message that appears over whatever is on screen and leaves on its own.
 _Home_: `game/ui/app.js` — `function toast`
-
-**Band board**:
-A compound mark: one metric's two runs read against its guard band.
-_Home_: `game/ui/chart-primitives.js` — `ovBandRowHtml`
 
 **Screen chrome**:
 A builder for shared page furniture outside the board and chart canvases.
