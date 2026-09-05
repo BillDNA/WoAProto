@@ -5,7 +5,7 @@
 'use strict';
 require('../engine/hex/hex.test.js');        // the hex house — the coordinate dialect
 require('../ui/hex/hex-screen.test.js');     // and its screen dialect
-require('./test.geometry.js');
+require('./test.board.js');           // the board's outline, shapes and grid labels
 require('./test.combat.js');
 require('../engine/board/terrain/terrain.test.js');   // the terrain house keeps its own tests
 require('../ui/board/terrain/terrain-marks.test.js'); // and its drawing half likewise

@@ -1,6 +1,10 @@
-/* Auto-split from game/test.js (ADR-0003: node:test). Subsystem: geometry.
-   Frozen-API entry game/test.js delegates here; run this file directly with
-   `node game/test.geometry.js` or the whole gate with `node game/test.js`. */
+/* The board's outline: which hexes a shape has, what a map's own shapeDef adds,
+   and the grid reference each hex ends up with. The hex vocabulary these are
+   written in has its own suite (game/engine/hex/hex.test.js) — every test here
+   needs a board, which is what makes it the board's.
+
+   Moves into the board house when that is built. Run alone with
+   `node game/test/test.board.js`, or the whole gate with `node game/test/test.js`. */
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');

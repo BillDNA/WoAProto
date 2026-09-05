@@ -94,6 +94,17 @@ test('every board that draws hexes takes its size from the config home', () => {
     f + ' reads the home instead of naming its own size'));
 });
 
+test('the hex look is the hex house\'s stylesheet, not the page\'s', () => {
+  const root = path.join(__dirname, '..', '..');
+  const page = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  const mine = fs.readFileSync(path.join(__dirname, 'hex.css'), 'utf8');
+  assert.match(page, /@import url\('ui\/hex\/hex\.css'\)/, 'style.css imports it');
+  ['--hex:', '--hex-dark:', '--hex-stroke:', '--coord:', '.hex{', '.coordlbl{'].forEach(rule => {
+    assert.ok(mine.includes(rule), 'hex.css owns ' + rule);
+    assert.ok(!page.includes(rule), 'style.css no longer holds ' + rule);
+  });
+});
+
 /* The screen dialect's extension check: the one thing that varies between the
    boards in this game is the SCALE, and a new one is live with no edit here. */
 test('one more scale: an unseen hex size works with no edit anywhere', () => {

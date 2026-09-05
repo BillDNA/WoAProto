@@ -28,6 +28,10 @@
   function dirName(d) { return DIR_NAMES[d]; }
   // The way back across the same border.
   function oppositeDir(d) { return (d + 3) % 6; }
+  // How a hex is NAMED for a human: letters down, numbers across, both 1-based
+  // ('C4'). Which row and column a hex is in needs an outline, so the board
+  // works those out (I.hexLabel) and asks here for the name.
+  function gridName(row, col) { return String.fromCharCode(65 + row) + (col + 1); }
 
   // The coordinate one step from k in direction d, on-board or not.
   function step(k, d) {
@@ -66,6 +70,7 @@
   I.DIR_NAMES = DIR_NAMES;
   I.dirName = dirName;
   I.oppositeDir = oppositeDir;
+  I.gridName = gridName;
   I.key = key;
   I.parseKey = parseKey;
   I.step = step;

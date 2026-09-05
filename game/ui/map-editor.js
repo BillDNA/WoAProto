@@ -146,8 +146,8 @@ function renderEditor(){
       ED.hexes[k] = true;
       renderEditor();
     });
-    p.addEventListener('mouseenter', function(){ p.setAttribute('fill', BOARD.ghostHover); });
-    p.addEventListener('mouseleave', function(){ p.setAttribute('fill', BOARD.ghostFill); });
+    p.addEventListener('mouseenter', function(){ p.setAttribute('fill', HEX_CONFIG.ink.ghostHover); });
+    p.addEventListener('mouseleave', function(){ p.setAttribute('fill', HEX_CONFIG.ink.ghost); });
   });
   ['red','blue'].forEach(function(side){
     var hq = ED[side];

@@ -58,6 +58,7 @@
     'ui/screens.js',
     'ui/ui-primitives.js',
     'ui/kit/kind.js',
+    'ui/kit/svg.js',
     'ui/modals/modal.js',
     'ui/hex/hex-config.js',
     'ui/hex/hex-screen.js',

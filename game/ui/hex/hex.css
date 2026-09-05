@@ -1,0 +1,17 @@
+/* How a hex looks. The stylesheet half of the hex house's screen dialect —
+   the parchment tile, its dark-parity twin, and the grid label sitting over it.
+
+   Loaded by style.css's @import chain. The two board renderers that cannot use
+   the .hex class (the string-built map thumbnails, the editor's ghost) read
+   these same vars through HEX_CONFIG.ink. */
+
+:root{
+  --hex:#d9cca8; --hex-dark:#d2c39c; --hex-stroke:#4a3d26;   /* the parchment tile */
+  --coord:rgba(60,48,28,.48);                                /* its grid label */
+}
+
+.hex{fill:var(--hex); stroke:var(--hex-stroke); stroke-width:1.6;}
+.hex.dark{fill:var(--hex-dark);}
+
+.coordlbl{font-size:9.5px; fill:var(--coord); pointer-events:none; font-style:italic;}
+#mpBoard .coordlbl{font-size:8.5px;}   /* the manual's mini-board */

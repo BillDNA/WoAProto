@@ -1,6 +1,14 @@
+/* Each house owns its look. A household's stylesheet is imported here — this is
+   where the chain is written, the way load-order.js writes the script chain —
+   and it holds every rule and :root var about that one concept. What stays in
+   this file is the page: chrome, layout, screens, and the shared palette. */
+@import url('ui/hex/hex.css');
+@import url('ui/board/terrain/terrain.css');
+
   /* ===== War of Attrition palette =================================
-     Every themed colour the UI paints has ONE home read by name. This
-     :root owns every colour a stylesheet rule reads, plus the shared
+     Every themed colour the UI paints has ONE home read by name. A concept
+     with a household keeps its colours there (the imports above); this
+     :root owns the rest — every colour a page rule reads, plus the shared
      colours the board and charts also paint (they read those as var(--…),
      which resolves in an SVG attribute too). The board's own glyph inks
      live in the BOARD palette (ui/board-primitives.js); the dashboard
@@ -24,18 +32,17 @@
     --ink-plate:#2b2113;                /* near-black plate ink + board piece/pill stroke (BOARD.outline) */
     --lost:#7a2c20;                     /* a destroyed piece slot */
     --lost-edge:#8a6c3c55;              /* its faint brass border */
-    --coord:rgba(60,48,28,.48);         /* board coordinate labels */
 
     /* — sides (red vs blue factions) — */
     --red:#9e2b25; --red-dark:#6f1d19; --red-rgb:158,43,37;
     --blue:#28527a; --blue-dark:#1b3a59; --blue-rgb:40,82,122;
     --red-ink:#eba9a2; --blue-ink:#a8cbec;   /* side text on the dark journal */
 
-    /* — terrain (map biomes; the board strokes read these) — */
-    --olive:#6b6b3a; --forest:#4a7c3a; --mountain:#75726a; --river:#4a7ea8;
+    /* — the table the board sits on (terrain colours are ui/board/terrain/
+         terrain.css; the hex tile is ui/hex/hex.css) — */
+    --olive:#6b6b3a;
     --felt:#2e3a2e;                     /* the felt green */
     --table:#20281f; --table-rgb:32,40,31;   /* the war-table dark green + its board-sheet wash */
-    --hex:#d9cca8; --hex-dark:#d2c39c; --hex-stroke:#4a3d26;   /* parchment hex tiles (BOARD.thumbTile/…Stroke) */
 
     /* — golds & support (attacker support · selection · glow) — */
     --gold:#d4af37; --gold-rgb:212,175,55;   /* support/selection gold (BOARD.supportAlly) */
@@ -396,8 +403,6 @@
   .card .c4{bottom:3px; right:3px; border-left:none; border-top:none;}
 
   /* svg board pieces */
-  .hex{fill:var(--hex); stroke:var(--hex-stroke); stroke-width:1.6;}
-  .hex.dark{fill:var(--hex-dark);}
   .hl{cursor:pointer;}
   .hl-target{fill:rgba(var(--gold-rgb),.4); stroke:var(--gold-glow); stroke-width:var(--stroke-hl); animation:pulse var(--dur-pulse) infinite;}
   .hl-attack{fill:rgba(var(--red-rgb),.42); stroke:var(--attack); stroke-width:var(--stroke-hl); animation:pulse var(--dur-pulse) infinite;}
@@ -408,7 +413,6 @@
   /* the pulse as a utility class — board.js adds it to the live trench knob so the
      duration reads the --dur-pulse token, not a re-typed literal */
   .pulse{animation:pulse var(--dur-pulse) infinite;}
-  .coordlbl{font-size:9.5px; fill:var(--coord); pointer-events:none; font-style:italic;}
 
   /* overlays */
   .overlay{
@@ -511,7 +515,6 @@
   .mptab{font-family:inherit; font-size:12.5px; font-weight:normal; padding:4px 12px; border:1px solid var(--brass-dark); border-radius:var(--radius-pill); background:rgba(var(--white-rgb),.3); color:var(--ink); cursor:pointer; box-shadow:none; letter-spacing:0;}
   .mptab.sel{background:var(--brass); color:var(--white); font-weight:bold;}
   #mpBoard{display:block; width:100%; max-height:290px; margin:0 auto;}
-  #mpBoard .coordlbl{font-size:8.5px;}
   #mpCaption{min-height:60px; font-size:13.5px; line-height:1.45; text-align:center; font-style:italic; color:var(--ink-soft); padding:6px 8px 0;}
   #mpCaption b{color:var(--ink); font-style:normal;}
   #mpCtrls{display:flex; gap:12px; justify-content:center; align-items:center; margin-top:6px;}

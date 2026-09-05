@@ -2,8 +2,7 @@
    The hex vocabulary it is written in — keys, directions, distance, edge and
    side names — is the hex house (engine/hex/hex.js); this part answers the one
    question that needs an outline: which of a hex's six neighbours EXIST.
-   What a terrain side DOES is the terrain house (engine/board/terrain/); this
-   part only lays the authored pieces onto sides.
+   Terrain is the terrain house's, sides and all (engine/board/terrain/).
    Classic script (browser + node). Engine parts share the internal namespace
    g.WOA_E (alias I) — cross-part calls go through I.* at the CALL SITE (never
    captured at load time), so only filename-sorted load order matters. */
@@ -87,14 +86,15 @@
     }
     return (map && map.shape) || DEFAULT_SHAPE;
   }
-  // Human grid reference on the current board: row letter (A = top) + position
-  // in the row counted from the left, e.g. 'C4'. Falls back to raw coords.
+  // Which row and column a hex is in on the current board — the half of a grid
+  // reference that needs an outline. The NAME it turns into is I.gridName.
+  // An off-board key has no row, so it falls back to raw coords.
   function hexLabel(k) {
     var s = SHAPES[CURRENT_SHAPE];
     var p = I.parseKey(k);
     var ri = s.rowRs.indexOf(p[1]);
     if (ri < 0 || !s.set[k]) return k;
-    return String.fromCharCode(65 + ri) + (p[0] - s.rowQFrom[p[1]] + 1);
+    return I.gridName(ri, p[0] - s.rowQFrom[p[1]]);
   }
   function currentShape() { return CURRENT_SHAPE; }
   function hexes() { return HEXES; }
@@ -165,28 +165,6 @@
     return n ? I.edgeKey(k, n) : null;
   }
 
-  function buildTerrain(map) {
-    // Each [q,r,d] in a piece is a SIDE owned by hex (q,r); what that side then
-    // does to a fight is its type's room in engine/board/terrain/.
-    // returns { edges: {sideKey: terrain letter}, pieces:[{id,t,edgeKeys:[sideKey...]}] }
-    var edges = {}, pieces = [];
-    map.pieces.forEach(function (p, i) {
-      var prob = I.pieceProblem(p);
-      if (prob) throw new Error('map "' + map.name + '" piece ' + (i + 1) + ': ' + prob);
-      var eks = [];
-      p.edges.forEach(function (e) {
-        var k = I.key(e[0], e[1]);
-        if (!inBoard(e[0], e[1]) || !neighbor(k, e[2])) throw new Error('map "' + map.name + '" side off board: ' + JSON.stringify(e));
-        var sk = I.sideKey(k, e[2]);
-        if (edges[sk]) throw new Error('map "' + map.name + '" duplicate side: ' + sk);
-        edges[sk] = p.t;
-        eks.push(sk);
-      });
-      pieces.push({ id: 'p' + i, t: p.t, edgeKeys: eks });
-    });
-    return { edges: edges, pieces: pieces };
-  }
-
   /* shared-namespace exports */
   I.buildShape = buildShape;
   I.SHAPES = SHAPES;
@@ -202,5 +180,4 @@
   I.neighbor = neighbor;
   I.neighbors = neighbors;
   I.edgeFrom = edgeFrom;
-  I.buildTerrain = buildTerrain;
 })(typeof window !== 'undefined' ? window : globalThis);

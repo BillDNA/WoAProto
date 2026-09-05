@@ -1,6 +1,6 @@
 /* War of Attrition — ui part: the shared BOARD primitives toolkit. The
-   board-side twin of chart-primitives.js. Holds the one svgEl DOM builder, the
-   board's framing (viewBoxFor), the BOARD palette, and a bp* primitive for
+   board-side twin of chart-primitives.js. Holds the board's framing
+   (viewBoxFor), the BOARD palette, and a bp* primitive for
    every mark the game board draws — hex tiles, HQs, unit tokens, attack-math
    pills, the highlight polygon. board.js draws over this toolkit and builds
    nothing by hand: one implementation of each mark, restyled in one place,
@@ -11,9 +11,7 @@
    Terrain marks are NOT here either: each type draws itself in ui/board/terrain/,
    which loads after this file and uses both.
 
-   svgEl is GLOBAL on purpose — every board consumer reuses it, so this file
-   loads before them in index.html's script chain. Every board consumer draws
-   from ONE palette + shared builders: fx.js (live-board
+   Every board consumer draws from ONE palette + shared builders: fx.js (live-board
    flourishes) takes its colours + unit radius from BOARD/BOARD_R; the manual
    diagram (manual.js, MP_S scale) and the map editor (map-editor.js) draw
    their hexes/terrain/HQ/units through hexXY(k,s) + bpUnitToken / bpHQMarker
@@ -27,12 +25,7 @@
    never sees (the chit) — plus the ghost-hex wash — are named once in BOARD. */
 'use strict';
 
-/* =================== the svg builder + the board's frame =================== */
-function svgEl(tag, attrs){
-  var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
-  for (var k in attrs) el.setAttribute(k, attrs[k]);
-  return el;
-}
+/* =================== the board's frame =================== */
 // the viewBox that frames a list of hexes, at the hex house's positions.
 function viewBoxFor(hexList, s){
   s = s || HEX_CONFIG.board.size;
@@ -59,9 +52,11 @@ var BOARD_SW = { unit:2.5 }; // unit-token outline — fx.js's fallen-unit ghost
 // stylesheet also paints lives in :root once and is read here as var(--…)
 // (resolves in an SVG attribute, same as the unit fills). The glyph inks the
 // stylesheet never sees are named once here.
+// What is left in here has several owners and no house yet: the side colours and
+// the chit are a unit's, the star and brass are the HQ mark's, hint is the
+// attack-math pill's, support* are fx's. Terrain's colours went to its house
+// (ui/board/terrain/terrain.css) and the hex tile's to its own (HEX_CONFIG.ink).
 var BOARD = {
-  // Terrain colours are not here — each type's mark owns its own stroke and
-  // glyph ink (ui/board/terrain/).
   // side colours (units + HQ) from CSS
   red:'var(--red)', redDark:'var(--red-dark)', blue:'var(--blue)', blueDark:'var(--blue-dark)',
   brass:'var(--brass)',
@@ -69,11 +64,8 @@ var BOARD = {
   chit:'#ece1c4',       // the unit chit
   star:'var(--star)',   // HQ star + pill text
   barrage:'var(--attack)',      // barrage action marks
-  thumbTile:'var(--hex)', thumbTileStroke:'var(--hex-stroke)', // maps-screen preview tiles (own look, not the live .hex class)
   // attack-math pill fill by combat outcome (neutral = manual's "no clear side")
   hint:{ attacker:'rgba(58,99,48,.92)', tie:'rgba(138,108,60,.94)', defender:'rgba(111,29,25,.92)', neutral:'rgba(74,61,38,.92)' },
-  // the editor/dig ghost-hex affordance (own board-only wash + gold hover)
-  ghostFill:'rgba(255,255,255,.10)', ghostStroke:'rgba(74,61,38,.5)', ghostHover:'rgba(212,175,55,.28)',
   // fx.js transient support-ring accents (drawn on the live board, not marks)
   supportAlly:'var(--gold)',    // gold — an allied unit whose support counted
   supportEnemy:'var(--steel)'   // slate — a defender's support that counted
@@ -226,7 +218,7 @@ function bpEdgeHitLine(g, hexKey, dir, rad, s){
 // the polygon so the editor wires its own hover/click (fill defined here).
 function bpGhostHex(g, cx, cy, rad){
   var p = svgEl('polygon', { points: hexPoints(cx, cy, rad),
-    fill:BOARD.ghostFill, stroke:BOARD.ghostStroke, 'stroke-width':1.4, 'stroke-dasharray':'6 5' });
+    fill:HEX_CONFIG.ink.ghost, stroke:HEX_CONFIG.ink.ghostStroke, 'stroke-width':1.4, 'stroke-dasharray':'6 5' });
   g.appendChild(p);
   return p;
 }
@@ -235,12 +227,12 @@ function bpGhostHex(g, cx, cy, rad){
    The one STRING board renderer: the map-library thumbnails go into innerHTML
    (var(--…) resolves in the DOM), so previewSVG builds an SVG string — the same
    geometry (the hex house's screen dialect) + BOARD palette as the live board, at
-   its own tiny scale (hex-config's thumb row). The tile is deliberately its OWN look (BOARD.thumbTile,
+   its own tiny scale (hex-config's thumb row). The tile is deliberately its OWN look (HEX_CONFIG.ink.tile,
    not the .hex CSS class), and the HQ is a plain side-coloured hex (no brass ring
    / star). Each thumbnail mark lives in one bpThumb* builder, so maps-screen.js
    builds nothing by hand. */
 function bpThumbHex(cx, cy, rad){
-  return '<polygon points="'+hexPoints(cx, cy, rad)+'" fill="'+BOARD.thumbTile+'" stroke="'+BOARD.thumbTileStroke+'" stroke-width="0.8"/>';
+  return '<polygon points="'+hexPoints(cx, cy, rad)+'" fill="'+HEX_CONFIG.ink.tile+'" stroke="'+HEX_CONFIG.ink.tileStroke+'" stroke-width="0.8"/>';
 }
 function bpThumbHQ(cx, cy, side, rad){
   return '<polygon points="'+hexPoints(cx, cy, rad)+'" fill="'+BOARD.side(side).fill+'" stroke="'+BOARD.outline+'" stroke-width="0.8"/>';

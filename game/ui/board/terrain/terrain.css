@@ -1,0 +1,13 @@
+/* The colour of each terrain, named where its mark is drawn.
+
+   One var per type, read by that type's own *-mark.js (`stroke: 'var(--forest)'`).
+   A type whose colour the stylesheet never paints keeps it inline at the mark
+   instead — the trench does, so it has no row here.
+
+   Loaded by style.css's @import chain. Prose: terrain.md */
+
+:root{
+  --forest:#4a7c3a;
+  --mountain:#75726a;
+  --river:#4a7ea8;
+}
