@@ -19,13 +19,21 @@
     PIECE_TOTALS: I.PIECE_TOTALS,
     SHAPES: I.SHAPES, DEFAULT_SHAPE: I.DEFAULT_SHAPE, boardHexes: I.boardHexes, setBoard: I.setBoard, hexes: I.hexes,
     buildShape: I.buildShape, ensureMapShape: I.ensureMapShape,
-    currentShape: I.currentShape, rot180: I.rot180, buildTerrain: I.buildTerrain, pieceProblem: I.pieceProblem, hexLabel: I.hexLabel,
+    currentShape: I.currentShape, rot180: I.rot180, buildTerrain: I.buildTerrain, hexLabel: I.hexLabel,
+    // The terrain house (engine/board/terrain/) — the registry, the side questions
+    // and the shared physical model. UI, editor and dev tools read the types from
+    // here rather than respelling the list.
+    defineTerrain: I.defineTerrain, terrainTypes: I.terrainTypes, terrainOf: I.terrainOf,
+    terrainNamed: I.terrainNamed, mapTerrainTypes: I.mapTerrainTypes,
+    terrainAt: I.terrainAt, sideEffect: I.sideEffect,
+    pieceProblem: I.pieceProblem, stockCap: I.stockCap, splitPieceRun: I.splitPieceRun,
+    PIECE_LENGTHS: I.PIECE_LENGTHS,
     key: I.key, parseKey: I.parseKey, inBoard: I.inBoard, neighbor: I.neighbor, neighbors: I.neighbors,
     dist: I.dist, dirBetween: I.dirBetween, edgeKey: I.edgeKey, edgeFrom: I.edgeFrom, sideKey: I.sideKey, other: I.other,
     newBattle: I.newBattle, newSkirmish: I.newSkirmish, view: I.view,
     Pieces: I.Pieces,
     unitAt: I.unitAt, isHQ: I.isHQ, isEmpty: I.isEmpty, controlledHexes: I.controlledHexes,
-    deployTargets: I.deployTargets, riverBetween: I.riverBetween, trenchTargets: I.trenchTargets, trenchOrientations: I.trenchOrientations,
+    deployTargets: I.deployTargets, deployBlocked: I.deployBlocked, trenchTargets: I.trenchTargets, trenchOrientations: I.trenchOrientations,
     listAttacks: I.listAttacks, listRepositions: I.listRepositions, listBarrageTargets: I.listBarrageTargets,
     computeAttack: I.computeAttack, supportFor: I.supportFor, playCard: I.playCard, currentStep: I.currentStep,
     stepOptions: I.stepOptions, applyStep: I.applyStep, mustPlayStep: I.mustPlayStep, cardsRemaining: I.cardsRemaining,

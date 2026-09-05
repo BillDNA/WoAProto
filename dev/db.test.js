@@ -138,8 +138,8 @@ test('dimensions (versions / maps / cards / battalions)', function () {
   var m = h.db.prepare('SELECT * FROM maps WHERE name = ? AND version = ?').get(E.MAPS[0].name, E.VERSION);
   assert.ok(m, 'a maps row exists for the played map');
   var tf = db.terrainFeatures(E.MAPS[0]);
-  assert.ok(m.mountain_hexes === tf.mountainHexes && m.forest_hexes === tf.forestHexes &&
-    m.river_hexes === tf.riverHexes && m.hex_total === tf.hexTotal,
+  assert.ok(m.mountain_hexes === tf.hexes.mountain && m.forest_hexes === tf.hexes.forest &&
+    m.river_hexes === tf.hexes.river && m.hex_total === tf.hexTotal,
     'maps carries computed mountain/forest/river hex counts + hex total (' +
     m.mountain_hexes + '/' + m.forest_hexes + '/' + m.river_hexes + ', ' + m.hex_total + ' hexes)');
   var mapCount = h.db.prepare('SELECT COUNT(*) c FROM maps WHERE version = ? AND config_digest = ?').get(E.VERSION, E.CONFIG.digest).c;
@@ -176,8 +176,8 @@ test('terrainFeatures / cardKind (pure)', function () {
     { t: 'M', edges: [[0, 0, 3]] } // a SECOND piece on hex 0,0 — still ONE mountain hex
   ] };
   var tf = db.terrainFeatures(fakeMap);
-  assert.strictEqual(tf.mountainHexes, 2, 'two distinct mountain hexes (0,0 counted once across two pieces), got ' + tf.mountainHexes);
-  assert.strictEqual(tf.forestHexes, 1, 'one forest hex, got ' + tf.forestHexes);
+  assert.strictEqual(tf.hexes.mountain, 2, 'two distinct mountain hexes (0,0 counted once across two pieces), got ' + tf.hexes.mountain);
+  assert.strictEqual(tf.hexes.forest, 1, 'one forest hex, got ' + tf.hexes.forest);
   assert.strictEqual(tf.hexTotal, E.boardHexes('classic').length, 'hex_total = the classic board size');
 
   assert.strictEqual(db.cardKind({ steps: [{ type: 'deploy', unit: 'infantry' }, { type: 'deploy', unit: 'infantry' }] }), 'deploy', 'two deploys -> deploy');
@@ -200,8 +200,8 @@ test('litmus 3-table join (card_events x cards x maps)', function () {
     " WHERE ce.outcome = 'played' GROUP BY c.id, m.mountain_hexes ORDER BY c.id").all();
   assert.ok(rows.length > 0, 'the 3-table join returns per-card timing rows');
   var tf = db.terrainFeatures(E.MAPS[0]);
-  assert.ok(rows.every(function (r) { return r.mtn === tf.mountainHexes; }),
-    "every row's mountain-hex count is the played map's computed value (" + tf.mountainHexes + ')');
+  assert.ok(rows.every(function (r) { return r.mtn === tf.hexes.mountain; }),
+    "every row's mountain-hex count is the played map's computed value (" + tf.hexes.mountain + ')');
   assert.ok(rows.every(function (r) { return r.avg_turn >= 1 && r.plays >= 1 && typeof r.kind === 'string'; }),
     'each row carries a sane avg play turn, play count, and the card kind — no reach into JS');
 });
@@ -366,8 +366,8 @@ test('aggregate: sliceable metric-by-dimension over the star schema', function (
   var litmus = db.aggregate(h, { x: 'mountain_hexes', metrics: ['n', 'first_win_pct'], version: E.VERSION });
   assert.ok(litmus.numeric === true && litmus.rows.length >= 1, 'the mountain-hex litmus buckets numerically');
   var tf = db.terrainFeatures(E.MAPS[0]);
-  assert.ok(litmus.rows.some(function (r) { return r.bucket === tf.mountainHexes; }),
-    "the played map's mountain-hex count (" + tf.mountainHexes + ') is one of the litmus buckets');
+  assert.ok(litmus.rows.some(function (r) { return r.bucket === tf.hexes.mountain; }),
+    "the played map's mountain-hex count (" + tf.hexes.mountain + ') is one of the litmus buckets');
   assert.doesNotThrow(function () { db.aggregate(h, { x: 'forest_hexes', metrics: ['n'] }); }, 'reslice to forest_hexes works');
 
   // The whitelist is the injection fence: an unknown x or metric throws, never
@@ -382,8 +382,8 @@ test('cardTiming: the ADR litmus (card play-timing vs terrain-hex count)', funct
   assert.ok(ct.rows.every(function (r) { return r.plays >= 1 && r.avg_play_turn >= 1 && r.card_id; }),
     'each row carries a card id, a positive play count, and a sane avg play turn');
   var tf = db.terrainFeatures(E.MAPS[0]);
-  assert.ok(ct.rows.every(function (r) { return r.bucket === tf.mountainHexes; }),
-    "every bucket is the played map's mountain-hex count (" + tf.mountainHexes + '), no reach into JS');
+  assert.ok(ct.rows.every(function (r) { return r.bucket === tf.hexes.mountain; }),
+    "every bucket is the played map's mountain-hex count (" + tf.hexes.mountain + '), no reach into JS');
   assert.throws(function () { db.cardTiming(h, { terrain: 'lava' }); }, /unknown terrain/, 'a non-whitelisted terrain is rejected');
 });
 

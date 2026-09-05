@@ -247,7 +247,7 @@
       <button id="edMirror" class="ghost btn-ghost-dark">Mirror &#8635;</button>
       <button id="edClear" class="ghost btn-ghost-dark">Clear</button>
     </div>
-    <p class="small" style="text-align:center;">Terrain belongs to a hex: click just <b>inside</b> a hex's border to cycle <span style="color:var(--forest);font-weight:bold;">forest</span> &rarr; <span style="color:var(--mountain);font-weight:bold;">mountain</span> &rarr; <span style="color:var(--river);font-weight:bold;">river</span> &rarr; empty on that hex's side. Forest = +1 attacking out across it; mountain = +1 defending behind it; river = you can't deploy across it (support still crosses freely). Mirror copies everything point-symmetrically. <b>Board hexes</b> carves the outline itself: click a dashed hex to add it, a solid one to remove it (24-hex ceiling).</p>
+    <p class="small" id="edTerrainHint" style="text-align:center;"></p>
     <svg id="edBoard" xmlns="http://www.w3.org/2000/svg"></svg>
     <div id="edStock" class="small" style="text-align:center;"></div>
     <div id="edWarn" class="warn" style="text-align:center;"></div>

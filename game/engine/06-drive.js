@@ -46,15 +46,21 @@
         if (!I.inBoard.apply(null, m.redHQ)) problems.push(m.name + ': red HQ off board');
         if (!I.inBoard.apply(null, m.blueHQ)) problems.push(m.name + ': blue HQ off board');
         if (I.key.apply(null, m.redHQ) === I.key.apply(null, m.blueHQ)) problems.push(m.name + ': HQs overlap');
-        var stock = {};
-        Object.keys(I.CONFIG.terrainStock).forEach(function (k) { stock[k] = 0; });
+        // no map may field more pieces of a type+length than the box holds
+        var used = {};
         m.pieces.forEach(function (p) {
-          var sk = p.t + p.edges.length;
-          if (stock[sk] === undefined) problems.push(m.name + ': piece of length ' + p.edges.length + ' has no physical counterpart (stock: ' + Object.keys(I.CONFIG.terrainStock).join(',') + ')');
-          else stock[sk]++;
+          var cap = I.stockCap(p.t, p.edges.length);
+          if (cap === undefined) {
+            problems.push(m.name + ': no physical ' + I.terrainOf(p.t).name + ' piece is ' +
+              p.edges.length + ' sides long (the box holds ' + I.PIECE_LENGTHS.join('- and ') + '-side pieces)');
+            return;
+          }
+          var k = p.t + p.edges.length;
+          used[k] = (used[k] || 0) + 1;
+          if (used[k] > cap)
+            problems.push(m.name + ': needs ' + used[k] + ' ' + I.terrainOf(p.t).name +
+              ' pieces of length ' + p.edges.length + ', the box holds ' + cap);
         });
-        var over = Object.keys(I.CONFIG.terrainStock).filter(function (k) { return stock[k] > I.CONFIG.terrainStock[k]; });
-        if (over.length) problems.push(m.name + ': exceeds terrain stock ' + JSON.stringify(stock));
       } catch (e) { problems.push(e.message); }
     });
     I.setBoard(prevShape);

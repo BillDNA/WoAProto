@@ -213,7 +213,7 @@
       o.swaps.forEach(function (sw) { out.push({ swap: true, a: sw.a, b: sw.b }); });
     } else if (o.type === 'barrage') {
       o.trenches.forEach(function (t) { out.push({ trenchHex: t.hex, trenchIdx: t.idx }); });
-      o.forestPieces.forEach(function (pc) { out.push({ pieceId: pc.id }); });
+      o.terrainTargets.forEach(function (pc) { out.push({ pieceId: pc.id }); });
     }
     return { o: o, choices: out };
   }

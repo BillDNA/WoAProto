@@ -83,8 +83,8 @@
   var UNITS_VARIANT = (CONTENT.units || []).filter(function (u) { return u && u.active; })[0] || null;
   var UNIT_DEFS = (UNITS_VARIANT && UNITS_VARIANT.units) || CORE.units;
   var BUILTIN = {
-    shapes: CORE.shapes, units: UNIT_DEFS, trenchCount: CORE.trenchCount,
-    terrainStock: CORE.terrainStock, ai: CORE.ai,
+    shapes: CORE.shapes, units: UNIT_DEFS, terrain: CORE.terrain,
+    ai: CORE.ai,
     maps: (CONTENT.maps || []).slice(),
     cards: CARD_LIST
   };
@@ -190,7 +190,7 @@
   }
 
   // one slot per physical piece on the player mat
-  var PIECE_TOTALS = { trench: I.CONFIG.trenchCount };
+  var PIECE_TOTALS = { trench: I.CONFIG.terrain.trench.perSide };
   Object.keys(UNITS).forEach(function (t) { PIECE_TOTALS[t] = UNITS[t].count || 0; });
 
   var MAPS = BUILTIN.maps;

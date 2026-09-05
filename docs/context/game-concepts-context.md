@@ -63,19 +63,19 @@ _Home_: `game/engine/02-board.js` — `shapeDef`
 
 **Terrain**:
 A feature sitting on a hex or on one of its borders.
-_Home_: `game/engine/02-board.js` — `buildTerrain`
+_Home_: `game/engine/board/terrain/terrain.js` — `defineTerrain`
 
 **Mountain**:
 The terrain that favours whoever is defending across it.
-_Home_: `game/engine/02-board.js` — `'M'`
+_Home_: `game/engine/board/terrain/mountain.js` — `mountain`
 
 **Forest**:
 The terrain that favours whoever is attacking across it.
-_Home_: `game/engine/02-board.js` — `'F'`
+_Home_: `game/engine/board/terrain/forest.js` — `forest`
 
 **River**:
 The border terrain that movement and attacks cross but Control does not.
-_Home_: `game/engine/03-rules.js` — `deployTargets`
+_Home_: `game/engine/board/terrain/river.js` — `river`
 
 **Directional terrain**:
 That a border feature helps one side or the other depending on which way it is crossed.
@@ -119,7 +119,7 @@ _Home_: `game/engine/03-rules.js` — `I.UNITS[du.type].worth`
 
 **Stock**:
 How many pieces of a kind exist to be placed at all.
-_Home_: `game/engine/00-config.js` — `terrainStock`
+_Home_: `game/engine/board/terrain/terrain-config.js` — `pieces`
 
 **Piece total**:
 The fixed number of pieces a side's Units must sum to.
@@ -137,7 +137,7 @@ _Home_: `game/engine/03-rules.js` — `isHQ`
 **Trench**:
 A structure covering hex edges, serving whichever side holds the hex.
 _Avoid_: Fortification.
-_Home_: `game/engine/03-rules.js` — `borderBlocked`
+_Home_: `game/engine/board/terrain/trench.js` — `trench`
 
 **Reserve**:
 Pieces a side owns but has not placed.

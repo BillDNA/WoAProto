@@ -83,13 +83,15 @@ test('load order: one declared chain, no second hand-list', () => {
     seen[src] = true;
   });
 
-  // 3. Every .js under engine/ and ui/ is scheduled, at any depth — a file that
-  //    exists but is unlisted silently never loads.
+  // 3. Every shipped .js under engine/ and ui/ is scheduled, at any depth — a
+  //    file that exists but is unlisted silently never loads. A house's own
+  //    *.test.js sits beside the code it covers and is NOT a shipped part;
+  //    game/test/test.js requires those directly.
   function walk(sub, out) {
     fs.readdirSync(path.join(GAME, sub), { withFileTypes: true }).forEach(function (e) {
       var rel = sub + '/' + e.name;
       if (e.isDirectory()) walk(rel, out);
-      else if (/\.js$/.test(e.name)) out.push(rel);
+      else if (/\.js$/.test(e.name) && !/\.test\.js$/.test(e.name)) out.push(rel);
     });
     return out;
   }

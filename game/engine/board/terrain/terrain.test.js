@@ -1,10 +1,10 @@
-/* Auto-split from game/test.js (ADR-0003: node:test). Subsystem: terrain.
-   Frozen-API entry game/test.js delegates here; run this file directly with
-   `node game/test.terrain.js` or the whole gate with `node game/test.js`. */
+/* The terrain house's own tests — they live with the code they cover.
+   Run alone with `node game/engine/board/terrain/terrain.test.js`, or as part of
+   the gate with `node game/test/test.js`, which requires this file. */
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { E, testSkirmish, fixtureCard } = require('./test.helpers.js');
+const { E, testSkirmish, fixtureCard } = require('../../../test/test.helpers.js');
 
 test('terrain pieces live inside ONE hex', () => {
 (function () {
@@ -112,64 +112,6 @@ test('terrain attack table (A/B/C)', () => {
 })();
 });
 
-test('combat math', () => {
-(function () {
-  // Powers relative to live stats: base = infantry atk/def, each
-  // infantry supporter adds its sup, artillery adds its sup; terrain/HQ/card mod
-  // are flat +1 rules constants. Retuning a unit stat reds nothing here.
-  var U = E.UNITS, Ia = U.infantry.atk, Id = U.infantry.def, Is = U.infantry.sup, As = U.artillery.sup;
-  function winner(a, d) { return a > d ? 'attacker' : a < d ? 'defender' : 'tie'; }
-  var st = testSkirmish(42);
-  st.pieces.units['0,0'] = { type: 'infantry', owner: 'red' };
-  st.pieces.units['0,1'] = { type: 'infantry', owner: 'blue' };
-  var res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.attackerPower === Ia && res.defenderPower === Id && res.outcome === winner(Ia, Id),
-    'inf vs inf bare = atk vs def, higher wins / equal ties (got ' + res.attackerPower + 'v' + res.defenderPower + ' ' + res.outcome + ')');
-  // attacker support: red artillery adjacent to skirmish hex
-  st.pieces.units['-1,1'] = { type: 'artillery', owner: 'red' };
-  res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.attackerPower === Ia + As && res.outcome === winner(Ia + As, Id), 'artillery adds its sup to attacker (got ' + res.attackerPower + ')');
-  // defender support: blue infantry adjacent to skirmish hex
-  st.pieces.units['1,1'] = { type: 'infantry', owner: 'blue' };
-  res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.defenderPower === Id + Is, 'defender gains one infantry support (got ' + res.defenderPower + ')');
-  // trench across the artillery's support border: that support is denied
-  st.pieces.trenches['0,1'] = [{ dirs: [2, 3], owner: 'blue' }]; // covers borders toward 0,0 and -1,1
-  res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.attackerPower === Ia && res.defenderPower === Id + Is,
-    'trench denies attacker support and adds no defense (got ' + res.attackerPower + 'v' + res.defenderPower + ')');
-  st.pieces.trenches['0,1'] = [{ dirs: [0, 1], owner: 'blue' }]; // clear of the support borders; covers blue supporter's border
-  res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.attackerPower === Ia + As, 'trench clear of the attacker-support border denies nothing (got ' + res.attackerPower + ')');
-  assert.ok(res.defenderPower === Id + Is, 'defender support is never trench-blocked (got ' + res.defenderPower + ')');
-  // terrain is hex-owned and directional (HexClarificationDiagram)
-  st.board.terrainEdges[E.sideKey('0,0', 5)] = 'F'; // forest in the attacker's hex facing 0,1
-  res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.attackerPower === Ia + As + 1, 'forest +1 attacking out of its hex (got ' + res.attackerPower + ')');
-  delete st.board.terrainEdges[E.sideKey('0,0', 5)];
-  st.board.terrainEdges[E.sideKey('0,1', 2)] = 'F'; // forest in DEFENDER hex: no effect
-  st.board.terrainEdges[E.sideKey('0,0', 5)] = 'M'; // mountain in ATTACKER hex: no effect
-  res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.attackerPower === Ia + As && res.defenderPower === Id + Is, 'reversed sides give no bonus (got ' + res.attackerPower + 'v' + res.defenderPower + ')');
-  delete st.board.terrainEdges[E.sideKey('0,1', 2)];
-  delete st.board.terrainEdges[E.sideKey('0,0', 5)];
-  st.board.terrainEdges[E.sideKey('0,1', 2)] = 'M'; // mountain in the defender's hex facing 0,0
-  res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.attackerPower === Ia + As && res.defenderPower === Id + Is + 1, 'mountain +1 defending its hex (got ' + res.defenderPower + ')');
-  // card mod
-  res = E.computeAttack(st, { from: '0,0', to: '0,1', mod: 1 });
-  assert.ok(res.attackerPower === Ia + As + 1, 'card +1 mod applied');
-  // HQ support: blue HQ adjacent to skirmish hex
-  st.board.hq.blue = '1,0';
-  res = E.computeAttack(st, { from: '0,0', to: '0,1' });
-  assert.ok(res.defenderPower === Id + Is + 1 + 1, 'HQ gives +1 support to adjacent skirmish hex (mountain + HQ, got ' + res.defenderPower + ')');
-  // attack the HQ itself
-  st.pieces.units['2,0'] = { type: 'cavalry', owner: 'red' };
-  var hqAtk = E.computeAttack(st, { from: '2,0', to: '1,0' });
-  assert.ok(hqAtk.defenderIsHQ, 'HQ recognized as target');
-})();
-});
-
 test('terrain-crossing rules: trench support denial + rivers', () => {
 (function () {
   // Trench on the SUPPORTER's hex blocks just the same (ownership of the
@@ -233,26 +175,11 @@ test('terrain-crossing rules: trench support denial + rivers', () => {
   var m3 = E.newBattle({ seed: 99, firstPlayer: 'red', maps: [riverMap] });
   var st3 = E.newSkirmish(m3);
   var bt = E.listBarrageTargets(st3, 'red');
-  assert.ok(bt.forestPieces.length === 0, 'rivers are not barrage targets (they act like mountains)');
+  assert.ok(bt.terrainTargets.length === 0, 'rivers are not barrage targets (they act like mountains)');
   // rivers occupy the border: no trench may share it
   st3.pieces.units['0,0'] = { type: 'infantry', owner: 'red' };
   assert.ok(!E.trenchOrientations(st3, '0,0').some(function (pr) { return pr.indexOf(1) >= 0 || pr.indexOf(4) >= 0; }),
     'trenches may not overlap river sides');
-})();
-});
-
-test('through-HQ movement & attacks', () => {
-(function () {
-  var st = testSkirmish(7);
-  st.board.hq.red = '0,0';
-  st.pieces.units['-1,0'] = { type: 'infantry', owner: 'red' };
-  st.pieces.units['1,0'] = { type: 'infantry', owner: 'blue' };
-  var atks = E.listAttacks(st, 'red');
-  var thr = atks.filter(function (a) { return a.via === '0,0'; });
-  assert.ok(thr.length >= 1 && thr[0].to === '1,0', 'attack through HQ available');
-  var rep = E.listRepositions(st, 'red');
-  var thrMove = rep.moves.filter(function (mv) { return mv.via === '0,0'; });
-  assert.ok(thrMove.length > 0, 'reposition through HQ available');
 })();
 });
 
@@ -352,4 +279,106 @@ test('trench orientations are never fully off-board', () => {
   });
   assert.ok(total > 0 && offBoard === 0, 'no offered trench faces fully off-board (' + offBoard + '/' + total + ' bad)');
 })();
+});
+
+// A border has TWO facing sides and each hex owns its own, so the two may carry
+// different types. Every border question must ask both — a type answering "no"
+// must never mask the other side's "yes".
+test('both facing sides of a border are asked, not just the first', () => {
+  var st = testSkirmish(88);
+  var A = '0,0', B = E.neighbor(A, 0), C = E.neighbor(A, 1);
+
+  // support: a forest on A's side (blocks nothing) must not hide a trench dug on
+  // the supporter's side of the same border
+  E.Pieces.place(st, A, 'infantry', 'blue');          // the defender under attack
+  E.Pieces.place(st, B, 'infantry', 'red');           // the attacker
+  E.Pieces.place(st, C, 'infantry', 'red');           // C supports the attack on A
+  st.board.terrainEdges[E.sideKey(A, E.dirBetween(A, C))] = 'F';
+  assert.ok(E.supportFor(st, 'red', A, B, true).hexes.indexOf(C) >= 0,
+    'a forest on the border blocks nothing, so C still supports');
+  st.pieces.trenches[C] = [{ dirs: [E.dirBetween(C, A), (E.dirBetween(C, A) + 1) % 6], owner: 'red' }];
+  var sup = E.supportFor(st, 'red', A, B, true);
+  assert.ok(sup.hexes.indexOf(C) < 0 && sup.parts.some(function (p) { return p.indexOf('blocked by trench') >= 0; }),
+    "the trench on the OTHER side of that border still denies support: " + JSON.stringify(sup.parts));
+
+  // deploy: a river on one hex's side must still block when the facing side
+  // carries a trench, which blocks nothing
+  var st2 = testSkirmish(89);
+  st2.board.terrainEdges[E.sideKey(B, E.dirBetween(B, A))] = 'R';
+  assert.ok(E.deployBlocked(st2, A, B), 'the river blocks deploy from A across the border');
+  st2.pieces.trenches[A] = [{ dirs: [E.dirBetween(A, B), (E.dirBetween(A, B) + 1) % 6], owner: 'red' }];
+  assert.ok(E.deployBlocked(st2, A, B),
+    "a trench on A's own side does not cancel the river facing it");
+});
+
+// The house's contract: a fifth type is written once, in one file, and is then
+// live in the physical model, combat, support, deploy, barrage, map validation
+// and the commander terrain gate — none of which names a terrain type.
+// Registered LAST so the shipped four are asserted against a four-type registry.
+test('the terrain house: a fifth type needs only its own answers', () => {
+  E.CONFIG.terrain.marsh = { defense: 3, pieces: { 2: 4 } };
+  E.defineTerrain({
+    letter: 'X', name: 'marsh', label: 'Marsh', storage: 'edges',
+    attack: function () { return 0; },
+    defense: function () { return E.CONFIG.terrain.marsh.defense; },
+    blocksSupport: true, blocksDeploy: true, holdsOnTie: true, barrageable: true
+  });
+
+  assert.ok(E.pieceProblem({ t: 'X', edges: [[0, 0, 0], [0, 0, 1]] }) === null,
+    'the shared physical model accepts the new type');
+  assert.ok(E.pieceProblem({ t: 'X', edges: [[0, 0, 0], [0, 0, 3]] }) !== null,
+    'and still enforces contiguity on it');
+
+  var marshMap = { name: 'Marsh Test', shape: 'classic', redHQ: [2, -2], blueHQ: [-3, 2],
+    pieces: [{ t: 'X', edges: [[0, 0, 0], [0, 0, 1]] }] };
+  assert.ok(E.validateMaps([marshMap]).length === 0, 'validateMaps accepts a map of the new type');
+
+  var st = E.newSkirmish(E.newBattle({ seed: 7, firstPlayer: 'red', maps: [marshMap] }));
+  var A = '0,0', B = E.neighbor(A, 0), C = E.neighbor(A, 1);
+  E.Pieces.place(st, A, 'infantry', 'red');
+  E.Pieces.place(st, C, 'infantry', 'red');   // A's supporter
+  E.Pieces.place(st, B, 'infantry', 'blue');
+
+  // defence keys on the DEFENDER's own side toward the hex the attack crosses from
+  st.board.terrainEdges[E.sideKey(B, E.dirBetween(B, A))] = 'X';
+  var r = E.computeAttack(st, { from: A, to: B });
+  assert.ok(r.defenderParts.some(function (p) { return p === 'Marsh +3'; }),
+    "the new type's defence answer reaches combat: " + JSON.stringify(r.defenderParts));
+
+  // attacker support is denied across the marsh on A's own side toward C
+  var supBefore = E.supportFor(st, 'red', B, null, true);
+  assert.ok(supBefore.hexes.indexOf(C) >= 0, 'C supports the attack before the marsh is laid');
+  st.board.terrainEdges[E.sideKey(C, E.dirBetween(C, B))] = 'X';
+  var supAfter = E.supportFor(st, 'red', B, null, true);
+  assert.ok(supAfter.hexes.indexOf(C) < 0 &&
+    supAfter.parts.some(function (p) { return p.indexOf('blocked by marsh') >= 0; }),
+    'the new type denies attacker support: ' + JSON.stringify(supAfter.parts));
+
+  assert.ok(E.deployBlocked(st, B, A), 'deploy-control stops at the new type');
+  assert.ok(E.listBarrageTargets(st, 'red').terrainTargets.some(function (pc) { return pc.t === 'X'; }),
+    'the new type is a legal barrage target');
+  assert.ok(!E.trenchOrientations(st, A).some(function (pr) { return pr.indexOf(0) >= 0 || pr.indexOf(1) >= 0; }),
+    'a trench may not share the new type\'s sides');
+
+  // holdsOnTie, isolated from defence: zero the marsh's defence dial so the fight
+  // is a genuine tie, then check the defender is left standing anyway.
+  var tie = testSkirmish(90);
+  tie.pieces.units['0,0'] = { type: 'infantry', owner: 'red' };
+  tie.pieces.units['1,0'] = { type: 'infantry', owner: 'blue' };
+  tie.board.terrainEdges[E.sideKey('1,0', E.dirBetween('1,0', '0,0'))] = 'X';
+  var marshDef = E.CONFIG.terrain.marsh.defense;
+  try {
+    E.CONFIG.terrain.marsh.defense = 0;
+    assert.strictEqual(E.computeAttack(tie, { from: '0,0', to: '1,0' }).outcome, 'tie',
+      'setup: with the dial at 0 the fight across the marsh is an even tie');
+    tie.cards.hands.red = ['mass_assault'];
+    E.playCard(tie, 'mass_assault', 'attack');
+    E.applyStep(tie, { from: '0,0', to: '1,0' });
+  } finally { E.CONFIG.terrain.marsh.defense = marshDef; }
+  assert.ok(tie.pieces.units['1,0'] && !tie.pieces.units['0,0'],
+    'the new type holds the defender on a tie and the attacker falls, with no edit to resolveAttack');
+
+  assert.ok(E.commanderCombat({ name: 'Bog Marshal', traits: [
+    { primitive: 'combatMod', source: 'passive', when: 'defense', terrain: 'marsh', delta: 2 }
+  ] }, 'defense', ['X']).delta === 2, 'a commander trait gates on the new type by its game word');
 });

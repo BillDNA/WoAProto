@@ -161,15 +161,15 @@ function renderEditor(){
     if (ED.tool==='terrain'){
       var hit = bpEdgeHitLine(gHit, e[0], e[1], S*0.8);
       hit.addEventListener('click', function(){
-        var cur = ED.edges[ek];
-        if (!cur) ED.edges[ek] = 'F';
-        else if (cur==='F') ED.edges[ek] = 'M';
-        else if (cur==='M') ED.edges[ek] = 'R';
-        else delete ED.edges[ek];
+        // cycle empty -> each map terrain type in registration order -> empty
+        var cycle = E.mapTerrainTypes().map(function(t){ return t.letter; });
+        var next = cycle[cycle.indexOf(ED.edges[ek]) + 1];
+        if (next) ED.edges[ek] = next; else delete ED.edges[ek];
         renderEditor();
       });
     }
   });
+  renderEdTerrainHint();
   renderEdStock();
 }
 
@@ -201,36 +201,39 @@ function groupEdgesToPieces(edges){
       });
     }
     var qr = E.parseKey(it.a);
-    // physical pieces come in lengths 2-3, but several can share one hex —
-    // split longer runs into 3s and 2s (TwoSetsOfThree: a full forest ring = 3+3).
-    // Rivers come in the same physical lengths as forest/mountain.
-    var chunks = splitRun(comp.map(function(x){ return x.d; }));
+    // several pieces can share one hex — the house cuts a long run into the
+    // physical lengths the box holds
+    var chunks = E.splitPieceRun(comp.map(function(x){ return x.d; }));
     chunks.forEach(function(chunk){
       pieces.push({ t: it.t, edges: chunk.map(function(d){ return [qr[0], qr[1], d]; }) });
     });
   });
   return pieces;
 }
-function splitRun(dirs){
-  if (dirs.length <= 3) return [dirs];
-  var inSet = {};
-  dirs.forEach(function(d){ inSet[d] = true; });
-  // order the contiguous arc: start where the previous direction is absent (full ring: anywhere)
-  var start = dirs[0];
-  for (var d = 0; d < 6; d++) if (inSet[d] && !inSet[(d + 5) % 6]) { start = d; break; }
-  var seq = [];
-  for (var i = 0, cur = start; i < dirs.length; i++, cur = (cur + 1) % 6){
-    if (!inSet[cur]) return [dirs]; // not one arc (shouldn't happen) — leave untouched
-    seq.push(cur);
-  }
-  var out = [];
-  while (seq.length > 3){
-    var take = seq.length === 4 ? 2 : 3; // 4 -> 2+2, 5 -> 3+2, 6 -> 3+3
-    out.push(seq.slice(0, take));
-    seq = seq.slice(take);
-  }
-  out.push(seq);
-  return out;
+// The paint tool's own instructions, written from the registry: the cycle in the
+// order the click follows, and each type's rule from the five answers it gives.
+// A fifth terrain type changes this line by existing.
+function edTerrainRule(t){
+  var says = [];
+  if (t.attack())      says.push('+' + t.attack() + ' attacking out across it');
+  if (t.defense())     says.push('+' + t.defense() + ' defending behind it');
+  if (t.blocksSupport) says.push("attacker support can't cross it");
+  // Blocking deploy without blocking support is the counterintuitive pair, so
+  // say the half a player would otherwise assume.
+  if (t.blocksDeploy)  says.push("you can't deploy across it" +
+    (t.blocksSupport ? '' : ' (support still crosses freely)'));
+  return t.label + ' = ' + (says.length ? says.join(', ') : 'no effect on a fight');
+}
+function renderEdTerrainHint(){
+  var types = E.mapTerrainTypes();
+  var cycle = types.map(function(t){
+    return '<span style="color:' + BOARD.terrainStroke(t.letter) + ';font-weight:bold;">' + t.name + '</span>';
+  }).join(' &rarr; ') + ' &rarr; empty';
+  $('edTerrainHint').innerHTML =
+    "Terrain belongs to a hex: click just <b>inside</b> a hex's border to cycle " + cycle +
+    " on that hex's side. " + types.map(edTerrainRule).join('; ') +
+    '. Mirror copies everything point-symmetrically. <b>Board hexes</b> carves the outline itself: ' +
+    'click a dashed hex to add it, a solid one to remove it (' + E.CONFIG.mapHexCeiling + '-hex ceiling).';
 }
 
 function renderEdStock(){
@@ -242,12 +245,16 @@ function renderEdStock(){
     lens.forEach(function(l){ cnt[l] = (cnt[l]||0)+1; });
     return Object.keys(cnt).sort().map(function(l){ return cnt[l]+'&times;len'+l; }).join(', ');
   }
-  var stockNote = Object.keys(E.CONFIG.terrainStock).map(function(k){ return E.CONFIG.terrainStock[k]+'&times;len'+k.slice(1)+' '+(k[0]==='F'?'forest':k[0]==='R'?'river':'mountain'); }).join(', ');
+  // One panel per map terrain type, off the registry — a new type brings its own.
+  var types = E.mapTerrainTypes();
+  var stockNote = types.map(function(t){
+    return E.PIECE_LENGTHS.map(function(l){ return E.stockCap(t.letter, l)+'&times;len'+l; }).join(', ')+' '+t.name;
+  }).join('; ');
   $('edStock').innerHTML = (ED.hexes ? '<b>'+Object.keys(ED.hexes).length+'/'+E.CONFIG.mapHexCeiling+' hexes</b> &nbsp;|&nbsp; ' : '') +
-    'Forest pieces: '+summary('F')+' &nbsp;|&nbsp; Mountain pieces: '+summary('M')+' &nbsp;|&nbsp; River pieces: '+summary('R')+
+    types.map(function(t){ return t.label+' pieces: '+summary(t.letter); }).join(' &nbsp;|&nbsp; ') +
     ' <span class="small">(physical stock: '+stockNote+')</span>';
   var over = pieces.some(function(p){
-    var cap = E.CONFIG.terrainStock[p.t + p.edges.length];
+    var cap = E.stockCap(p.t, p.edges.length);
     if (cap === undefined) return true; // no physical piece of this size
     return pieces.filter(function(o){ return o.t===p.t && o.edges.length===p.edges.length; }).length > cap;
   });

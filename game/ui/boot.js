@@ -11,6 +11,9 @@
 // wiring below reaches into a modal body.
 uiModalsBuild();
 
+// A terrain type with no mark would draw nothing on the board; fail at load instead.
+terrainMarksCheck();
+
 // config identity: a small, read-only screen-corner overlay stamping the
 // config identity — rules version + both config-home digests — so any screenshot
 // carries a retrievable record of which dials were in force. Plain HTML (no SVG),

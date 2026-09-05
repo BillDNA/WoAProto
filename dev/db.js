@@ -93,7 +93,8 @@ var SCHEMA = [
   ');',
   'CREATE TABLE IF NOT EXISTS maps (',
   '  id TEXT, name TEXT, shape TEXT, hex_total INTEGER,',
-  '  mountain_hexes INTEGER, forest_hexes INTEGER, river_hexes INTEGER,',
+  // one <terrain>_hexes column per map terrain type, off the terrain house
+  '  ' + mapTerrains().map(function (t) { return terrainColumn(t) + ' INTEGER'; }).join(', ') + ',',
   '  version TEXT, config_digest TEXT,',
   '  PRIMARY KEY (id, version, config_digest)',
   ');',
@@ -201,23 +202,28 @@ function boardHexList(map) {
   return E.boardHexes((map && map.shape) || E.DEFAULT_SHAPE);
 }
 
+// The map terrain types, from the terrain house — the ONE list this file reads.
+// The schema column, the feature count and the group-by/filter vocabulary below
+// are all derived from it, so a new type is a new room and no edit here.
+function mapTerrains() { return E.mapTerrainTypes(); }
+function terrainColumn(t) { return t.name + '_hexes'; }
+
 // Terrain features computed from the map's edge data. The game stores terrain as
 // owned SIDES ([q,r,dir] per piece, every side of a piece inside ONE hex), not
 // counts — so a type's hex count is the distinct hexes owning any side of it.
+// Returns { hexTotal, hexes: { <terrain name>: count } }.
 function terrainFeatures(map) {
-  var byType = { M: {}, F: {}, R: {} };
+  var byType = {};
+  mapTerrains().forEach(function (t) { byType[t.letter] = {}; });
   (map && map.pieces || []).forEach(function (p) {
     if (!p || !p.edges || !p.edges.length || !byType[p.t]) return;
     // A well-formed piece's sides all lie in one hex (pieceProblem enforces it);
     // count every hex any side touches so a malformed piece is never under-counted.
     p.edges.forEach(function (e) { byType[p.t][e[0] + ',' + e[1]] = true; });
   });
-  return {
-    hexTotal: boardHexList(map).length,
-    mountainHexes: Object.keys(byType.M).length,
-    forestHexes: Object.keys(byType.F).length,
-    riverHexes: Object.keys(byType.R).length
-  };
+  var hexes = {};
+  mapTerrains().forEach(function (t) { hexes[t.name] = Object.keys(byType[t.letter]).length; });
+  return { hexTotal: boardHexList(map).length, hexes: hexes };
 }
 
 // A card's derived kind: the dominant step type, ties broken by a fixed priority
@@ -292,6 +298,19 @@ function archiveIfLegacy(file) {
   try { console.error('[db] archived pre-star-schema woa.db -> ' + path.basename(archived) + ' (fresh DB, not migrated)'); } catch (e) {}
 }
 
+// The maps dimension carries one column per map terrain type, so registering a
+// new type widens the table. CREATE TABLE IF NOT EXISTS won't add a column to a
+// table that already exists, and this is not a schema-version bump — old rows
+// stay valid and simply read NULL for the new terrain. Additive and idempotent.
+function addMissingTerrainColumns(db) {
+  var have = {};
+  db.prepare('PRAGMA table_info(maps)').all().forEach(function (c) { have[c.name] = true; });
+  mapTerrains().forEach(function (t) {
+    var col = terrainColumn(t);
+    if (!have[col]) db.exec('ALTER TABLE maps ADD COLUMN ' + col + ' INTEGER');
+  });
+}
+
 /* Open (creating if needed) the DB, ensure the star schema + views, switch on
    WAL, and prepare every statement once. Returns the handle the other calls take. */
 function open(dbPath) {
@@ -301,6 +320,7 @@ function open(dbPath) {
   var db = new sqlite.DatabaseSync(file);
   db.exec('PRAGMA journal_mode = WAL;');
   db.exec(SCHEMA);
+  addMissingTerrainColumns(db);
   db.exec(VIEWS);
   db.exec('PRAGMA user_version = ' + SCHEMA_VERSION + ';');
   var stmts = {
@@ -336,8 +356,9 @@ function open(dbPath) {
     upsertVersion: db.prepare(
       'INSERT OR REPLACE INTO versions (version, config_digest, dials, ts) VALUES (?,?,?,?)'),
     upsertMap: db.prepare(
-      'INSERT OR REPLACE INTO maps (id, name, shape, hex_total, mountain_hexes, forest_hexes, river_hexes, version, config_digest)' +
-      ' VALUES (?,?,?,?,?,?,?,?,?)'),
+      'INSERT OR REPLACE INTO maps (id, name, shape, hex_total, ' +
+      mapTerrains().map(terrainColumn).join(', ') + ', version, config_digest)' +
+      ' VALUES (' + new Array(6 + mapTerrains().length).join('?,') + '?)'),
     upsertCard: db.prepare(
       'INSERT OR REPLACE INTO cards (id, name, kind, points, steps, starting, no_opener, version, config_digest)' +
       ' VALUES (?,?,?,?,?,?,?,?,?)'),
@@ -366,8 +387,10 @@ function upsertDimensions(h, version, digest) {
   (E.MAPS || []).forEach(function (m) {
     var t = terrainFeatures(m);
     var shape = (m.shape && String(m.shape).charAt(0) === '@') || m.shapeDef ? 'custom' : (m.shape || E.DEFAULT_SHAPE);
-    h.stmts.upsertMap.run(nz(m.id || m.name), nz(m.name), shape, t.hexTotal,
-      t.mountainHexes, t.forestHexes, t.riverHexes, v, digest);
+    h.stmts.upsertMap.run.apply(h.stmts.upsertMap,
+      [nz(m.id || m.name), nz(m.name), shape, t.hexTotal]
+        .concat(mapTerrains().map(function (ty) { return t.hexes[ty.name]; }))
+        .concat([v, digest]));
   });
   // The full card POOL (not just the active battalion's slice) — every card any
   // battalion can reference is a queryable dimension row.
@@ -518,19 +541,22 @@ var AGG_METRICS = {
 // numeric x-axis in the chart). The mountain_hexes bucket IS the ADR litmus.
 var AGG_GROUPBYS = {
   map:            { sql: 's.map',            join: false, num: false },
-  shape:          { sql: 'm.shape',          join: true,  num: false },
-  mountain_hexes: { sql: 'm.mountain_hexes', join: true,  num: true },
-  forest_hexes:   { sql: 'm.forest_hexes',   join: true,  num: true },
-  river_hexes:    { sql: 'm.river_hexes',    join: true,  num: true },
-  hex_total:      { sql: 'm.hex_total',      join: true,  num: true },
-  first_player:   { sql: 's.first_player',   join: false, num: false },
-  win_type:       { sql: 's.win_type',       join: false, num: false },
-  winner:         { sql: 's.winner',         join: false, num: false },
-  battalion_red:  { sql: 's.battalion_red',  join: false, num: false }
+  shape:          { sql: 'm.shape',          join: true,  num: false }
 };
+// one terrain bucket per map terrain type, off the terrain house
+mapTerrains().forEach(function (t) {
+  AGG_GROUPBYS[terrainColumn(t)] = { sql: 'm.' + terrainColumn(t), join: true, num: true };
+});
+AGG_GROUPBYS.hex_total     = { sql: 'm.hex_total',     join: true,  num: true };
+AGG_GROUPBYS.first_player  = { sql: 's.first_player',  join: false, num: false };
+AGG_GROUPBYS.win_type      = { sql: 's.win_type',      join: false, num: false };
+AGG_GROUPBYS.winner        = { sql: 's.winner',        join: false, num: false };
+AGG_GROUPBYS.battalion_red = { sql: 's.battalion_red', join: false, num: false };
+
 // card_events terrain cross-cut: which maps-dimension terrain column the card's
-// play-timing is bucketed against.
-var CARD_TERRAINS = { mountain: 'm.mountain_hexes', forest: 'm.forest_hexes', river: 'm.river_hexes' };
+// play-timing is bucketed against. Keyed by the terrain's own game word.
+var CARD_TERRAINS = {};
+mapTerrains().forEach(function (t) { CARD_TERRAINS[t.name] = 'm.' + terrainColumn(t); });
 
 // maps dimension is keyed by NAME to the fact's `map` column (= st.mapName), and
 // by the (version, config_digest) slice so two configs never cross-join.

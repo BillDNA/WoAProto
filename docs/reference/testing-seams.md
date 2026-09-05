@@ -79,7 +79,7 @@ gap. Least-covered, most-load-bearing first.
 Content-value pins were removed across the suite: battalion total / card points
 (`test.cards.js`), map count (`test.maps.js`), the default + shock-army unit
 composition/stats (`test.ai.js`), and every **absolute combat power** in
-`test.terrain.js` (`combat math`, `terrain attack table`, `multiple trenches`,
+`engine/board/terrain/terrain.test.js` (`combat math`, `terrain attack table`, `multiple trenches`,
 `terrain-crossing`) — those now read the live stats (`E.UNITS.*`) and assert deltas
 (support adds the supporter's `sup`; terrain/HQ/card mod are flat `+1` rules
 constants). Verified: mutating infantry `sup` or artillery `sup` in `maps.js` reds

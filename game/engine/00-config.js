@@ -55,9 +55,8 @@
       tieSpare: 1, noAdvance: 0.5, anywhere: 1           // flag surcharges
     },
 
-    // Piece stocks (editable in maps.js): terrain chit counts + trench pieces.
-    terrainStock: CORE.terrainStock || { F3: 2, F2: 4, M3: 2, M2: 4 },
-    trenchCount: CORE.trenchCount || 3,
+    // Terrain dials are the terrain house's own file, installed here as
+    // CONFIG.terrain: engine/board/terrain/terrain-config.js.
 
     // Map hex-count band — the physical board-size guardrail. Ceiling is the
     // laser-cutter max, enforced by validateMaps AND the map editor; floor is the
@@ -71,11 +70,9 @@
     pieceTotal: 10,
 
     // --- combat: per-fight power bonuses (read in 03-rules) ---
-    // Grouped because each is a flat power swing on one side of a single fight —
-    // the levers for how much terrain and position matter in combat.
+    // A flat power swing on one side of a single fight. Terrain's own swings
+    // are in its house's config, not here.
     combat: {
-      forestAttack: 1,     // attacking ACROSS a forest edge adds this to attack
-      mountainDefense: 1,  // defending BEHIND a mountain edge adds this to defense
       hqSupport: 1         // an adjacent friendly HQ lends this much support to a fight
     },
 
