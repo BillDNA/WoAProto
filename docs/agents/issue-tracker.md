@@ -28,12 +28,14 @@ alongside it, or the omitted ones are removed. Read them first with `issue_read`
 When set to `yes`, PRs run through the same labels and states as issues:
 
 - **Read a PR**: `pull_request_read` — `method: "get"`, `"get_diff"`, `"get_comments"`.
-- **List external PRs for triage**: `list_pull_requests`, then keep only `authorAssociation` of `CONTRIBUTOR`, `FIRST_TIME_CONTRIBUTOR` or `NONE` (drop `OWNER`/`MEMBER`/`COLLABORATOR`).
+- **List external PRs for triage**: `search_pull_requests` — `query: "is:open"` with `author_association` in `fields`, then keep only `CONTRIBUTOR`, `FIRST_TIME_CONTRIBUTOR` or `NONE` (drop `OWNER`/`MEMBER`/`COLLABORATOR`). Not `list_pull_requests`: it cannot return that field.
 - **Comment**: `add_issue_comment` with the PR number.
 - **Label**: `issue_write` — `method: "update"`; issues and PRs share one number space.
 - **Close**: `update_pull_request` — `state: "closed"`.
 
-That shared number space means a bare `#42` may be either: try `pull_request_read` and fall back to `issue_read`.
+Because of that shared number space the issue tools accept a PR number and answer normally, so a
+bare `#42` of unknown kind is resolved by reading it: `issue_read` `method: "get"`, then check
+whether `html_url` contains `/pull/`.
 
 ## When a skill says "publish to the issue tracker"
 
