@@ -12,6 +12,7 @@
     defense: function () { return I.CONFIG.terrain.mountain.defense; },
     blocksSupport: false,
     blocksDeploy: false,
+    holdsOnTie: false,
     barrageable: false
   });
 })(typeof window !== 'undefined' ? window : globalThis);

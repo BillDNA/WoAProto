@@ -6,9 +6,9 @@
    rules ask through terrainAt / sideEffect / supportBlocker / deployBlocked and
    never name a type.
 
-   Storage is NOT unified. Map terrain is authored into st.board.terrainEdges;
-   trenches are dug at runtime into st.pieces.trenches. terrainAt reads both.
-   Unifying them would break barrage and edgeFreeForTrench.
+   Map terrain is authored into st.board.terrainEdges, trenches are dug at
+   runtime into st.pieces.trenches; a room says which it uses and terrainAt
+   reads both, so nothing downstream cares.
 
    Classic script (browser + node), shared namespace g.WOA_E. Prose: terrain.md */
 (function (global) {
@@ -28,6 +28,7 @@
     defense:       'function',  // () -> power added defending BEHIND this side
     blocksSupport: 'boolean',   // deny the attacker's support across this border
     blocksDeploy:  'boolean',   // deny deploy control across this border
+    holdsOnTie:    'boolean',   // the defender behind this side survives a tied fight
     barrageable:   'boolean'    // the naval guns can remove it
   };
 
@@ -84,7 +85,7 @@
     return out;
   }
 
-  /* ---------- the five questions, asked of a side ---------- */
+  /* ---------- what a side does to a fight ---------- */
   // What the terrain on one side of one hex contributes to a fight, as the
   // combat breakdown wants it: `when` is 'attack' (the attacker crossing OUT
   // across this side) or 'defense' (this hex attacked ACROSS it). Both sides of
@@ -93,6 +94,13 @@
     var t = terrainAt(st, hex, dir);
     var delta = t ? t[when]() : 0;
     return { delta: delta, part: delta ? t.label + ' +' + delta : null };
+  }
+  // The terrain on the defender's attacked side that lets it survive a tie, or
+  // null. Read with the defender's own side toward the hex the attack crosses
+  // from, so it is the same side `defense` keys on.
+  function tieHolder(st, hex, dir) {
+    var t = terrainAt(st, hex, dir);
+    return t && t.holdsOnTie ? t : null;
   }
   // The terrain denying attacker support across this border, or null.
   function supportBlocker(st, from, to) {
@@ -176,6 +184,7 @@
   I.mapTerrainTypes = mapTerrainTypes;
   I.terrainAt = terrainAt;
   I.sideEffect = sideEffect;
+  I.tieHolder = tieHolder;
   I.supportBlocker = supportBlocker;
   I.deployBlocked = deployBlocked;
   I.pieceProblem = pieceProblem;

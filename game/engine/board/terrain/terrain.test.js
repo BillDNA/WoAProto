@@ -394,7 +394,7 @@ test('the terrain house: a fifth type needs only its own answers', () => {
     letter: 'X', name: 'marsh', label: 'Marsh', storage: 'edges',
     attack: function () { return 0; },
     defense: function () { return E.CONFIG.terrain.marsh.defense; },
-    blocksSupport: true, blocksDeploy: true, barrageable: true
+    blocksSupport: true, blocksDeploy: true, holdsOnTie: true, barrageable: true
   });
 
   assert.ok(E.pieceProblem({ t: 'X', edges: [[0, 0, 0], [0, 0, 1]] }) === null,
@@ -432,6 +432,24 @@ test('the terrain house: a fifth type needs only its own answers', () => {
     'the new type is a legal barrage target');
   assert.ok(!E.trenchOrientations(st, A).some(function (pr) { return pr.indexOf(0) >= 0 || pr.indexOf(1) >= 0; }),
     'a trench may not share the new type\'s sides');
+
+  // holdsOnTie, isolated from defence: zero the marsh's defence dial so the fight
+  // is a genuine tie, then check the defender is left standing anyway.
+  var tie = testSkirmish(90);
+  tie.pieces.units['0,0'] = { type: 'infantry', owner: 'red' };
+  tie.pieces.units['1,0'] = { type: 'infantry', owner: 'blue' };
+  tie.board.terrainEdges[E.sideKey('1,0', E.dirBetween('1,0', '0,0'))] = 'X';
+  var marshDef = E.CONFIG.terrain.marsh.defense;
+  try {
+    E.CONFIG.terrain.marsh.defense = 0;
+    assert.strictEqual(E.computeAttack(tie, { from: '0,0', to: '1,0' }).outcome, 'tie',
+      'setup: with the dial at 0 the fight across the marsh is an even tie');
+    tie.cards.hands.red = ['mass_assault'];
+    E.playCard(tie, 'mass_assault', 'attack');
+    E.applyStep(tie, { from: '0,0', to: '1,0' });
+  } finally { E.CONFIG.terrain.marsh.defense = marshDef; }
+  assert.ok(tie.pieces.units['1,0'] && !tie.pieces.units['0,0'],
+    'the new type holds the defender on a tie and the attacker falls, with no edit to resolveAttack');
 
   assert.ok(E.commanderCombat({ name: 'Bog Marshal', traits: [
     { primitive: 'combatMod', source: 'passive', when: 'defense', terrain: 'marsh', delta: 2 }

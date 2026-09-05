@@ -14,6 +14,7 @@
     defense: function () { return 0; },
     blocksSupport: false,
     blocksDeploy: true,
+    holdsOnTie: false,
     barrageable: false
   });
 })(typeof window !== 'undefined' ? window : globalThis);

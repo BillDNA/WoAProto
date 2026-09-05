@@ -246,11 +246,9 @@
     var au = unitAt(st, atk.from), p = au.owner, e = I.other(p);
     var res = computeAttack(st, atk);
     var du = unitAt(st, atk.to), dHQ = isHQ(st, atk.to);
-    // A trench on the ATTACKED border of the defending hex lets the defender
-    // survive an even fight, and stops a tie from capturing a trenched HQ. Same
-    // edge test borderBlocked uses (dIn = the defender's side toward the hex the
-    // attack crosses from); trench OWNERSHIP is irrelevant.
-    var borderTrenched = trenchCovers(st, atk.to, I.dirBetween(atk.to, atk.via || atk.from));
+    // Terrain on the defending hex's ATTACKED side may let the defender hold an
+    // even fight (and keep a tie from taking the HQ). Ownership is irrelevant.
+    var holder = I.tieHolder(st, atk.to, I.dirBetween(atk.to, atk.via || atk.from));
     I.ensureStats(st).attacks++;
     // Tag the play as an attack + tally attacks-made/absorbed by unit type.
     // 'attack' is sticky on the trace entry (see I.recordPlay) so
@@ -298,16 +296,15 @@
       killAttacker();
       msg += 'attack repelled, attacker destroyed.';
     } else { // tie
-      if (borderTrenched) {
-        // A trenched border spares the defender on a tie — an even assault
-        // bounces off the dug-in line. The attacker still dies as in a normal
-        // tie UNLESS it has tieSpare (Ordered Withdraw / Over the Top); tieSpare
-        // + trench = a whiff where nobody falls.
+      if (holder) {
+        // The defender holds, so an even assault bounces off. The attacker still
+        // dies as in a normal tie UNLESS it has tieSpare (Ordered Withdraw /
+        // Over the Top) — tieSpare here is a whiff where nobody falls.
         if (atk.tieSpare) {
-          msg += 'a tie against the trench — the assault is thrown back; the attacker withdraws in good order and neither side falls.';
+          msg += 'a tie against the ' + holder.name + ' — the assault is thrown back; the attacker withdraws in good order and neither side falls.';
         } else {
           killAttacker();
-          msg += 'a tie against the trench — the defender holds the line; the attacker is destroyed.';
+          msg += 'a tie against the ' + holder.name + ' — the defender holds the line; the attacker is destroyed.';
         }
       } else if (atk.tieSpare) {
         killDefender();
@@ -319,10 +316,9 @@
       }
     }
     I.log(st, msg);
-    // HQ capture: an attacker win always takes it; a tie takes it too UNLESS the
-    // attacked HQ border is trenched (trench your HQ and a tie can't take it).
-    // An untrenched-HQ tie still captures.
-    if (dHQ && (res.outcome === 'attacker' || (res.outcome === 'tie' && !borderTrenched))) {
+    // HQ capture: an attacker win always takes it; a tie takes it too unless the
+    // attacked HQ side holds.
+    if (dHQ && (res.outcome === 'attacker' || (res.outcome === 'tie' && !holder))) {
       I.finishSkirmish(st, p, 'hq');
     }
     return res;

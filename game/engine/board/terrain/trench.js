@@ -19,6 +19,7 @@
     defense: function () { return 0; },
     blocksSupport: true,
     blocksDeploy: false,
+    holdsOnTie: true,
     barrageable: true
   });
 })(typeof window !== 'undefined' ? window : globalThis);
