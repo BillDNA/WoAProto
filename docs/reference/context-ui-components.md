@@ -11,10 +11,11 @@ draws raw SVG, and the home pointers here are machine-checked by
 that must appear in it (no line numbers), so only a renamed or relocated primitive
 fails, fixed in the same commit.
 
-Four modules, one implementation of each primitive, many callers:
+Five modules, one implementation of each primitive, many callers:
 
-- **hex/hex-screen.js** — where a hex and its faces sit on screen, at any scale.
-  The screen dialect of the hex house (`game/engine/hex/hex.md`).
+- **hex/hex-screen.js** — where a hex and its faces sit on screen, at any scale,
+  with `hex/hex-config.js` holding the size each board draws at. The screen half
+  of the hex house (`game/engine/hex/hex.md`).
 - **board-primitives.js** (`BOARD` palette) — the hex board: tiles, terrain,
   trenches, HQs, unit tokens, attack pills, highlights, thumbnails, previews.
 - **chart-primitives.js** (`CHART` palette) — the dashboard: svg frames, marks,
@@ -29,8 +30,12 @@ Four modules, one implementation of each primitive, many callers:
 Where a hex sits (the hex house's screen dialect) + the single element factory
 every board primitive builds on.
 
+**HEX_CONFIG**:
+The size each board draws hexes at, one row per board.
+_Home_: `game/ui/hex/hex-config.js` — `var HEX_CONFIG`
+
 **hexXY**:
-Pixel centre of a hex key, at board scale `S`.
+Pixel centre of a hex key, at that board's scale.
 _Home_: `game/ui/hex/hex-screen.js` — `function hexXY`
 
 **hexCornerAngles**:

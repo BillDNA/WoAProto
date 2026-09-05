@@ -34,7 +34,7 @@ function shippedTypes() {
 // in a new context is how a test gets a clean one.
 function loadMarks() {
   const ctx = {
-    E, S: 44, BOARD: { outline: '#000', brass: '#b5a642', barrage: '#a33' },
+    E, HEX_CONFIG: { board: { size: 44 } }, BOARD: { outline: '#000', brass: '#b5a642', barrage: '#a33' },
     svgEl: (tag, attrs) => ({ tag, attrs, appendChild() {} }),
     hexXY: () => [0, 0],
     hexCornerPt: () => [0, 0],

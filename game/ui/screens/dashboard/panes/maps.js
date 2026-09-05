@@ -173,7 +173,6 @@ var MD_HEX_LENSES = [
   { key: 'flips', title: 'ownership flips', sub: 'flips / skirmish',  fmt: function (v) { return WOA_REPORT.f1(v); } },
   { key: 'kills', title: 'kills',           sub: 'kills / skirmish',  fmt: function (v) { return WOA_REPORT.f1(v); } }
 ];
-var MDHEX_R = 40; // hex draw radius; hexXY spacing is S=44 -> ~4px gutters
 
 /* map NAME (the DB/trace `map` field IS st.mapName = map.name) -> its map def
    on disk, or null if it's been deleted since the run. Searched over the whole
@@ -241,7 +240,7 @@ function mdHexLensSection(mapName, hex) {
 
     var cells = '', overlays = '', hits = '';
     hexList.forEach(function (k) {
-      var xy = hexXY(k), pts = hexPoints(xy[0], xy[1], MDHEX_R);
+      var xy = hexXY(k, HEX_CONFIG.mapPane.size), pts = hexPoints(xy[0], xy[1], HEX_CONFIG.mapPane.tile);
       var d = solid.hexes[k], g = ghost ? ghost.hexes[k] : null, isHQ = (k === hqRed || k === hqBlue);
       // dead = <5% occupancy — a never-touched hex (absent from the fold, occ 0)
       // is the deadest of all, so hatch it too; HQ exempt (always held, but the
@@ -251,16 +250,16 @@ function mdHexLensSection(mapName, hex) {
       cells += chPolygon(pts, { fill: mdLensFill(d ? d[lens.key] : 0, max), stroke: CHART.axis, sw: 1 });
       if (dead) overlays += chPolygon(pts, { fill: 'url(#mdHatch)', stroke: 'none' });
       // avenue of attack: a NESTED hex red ring (real polygon stroke, never a css outline on a clip — AC2)
-      if (d && d.avenue) overlays += chPolygon(hexPoints(xy[0], xy[1], MDHEX_R * 0.62), { stroke: CHART.breach, sw: 2.5 });
+      if (d && d.avenue) overlays += chPolygon(hexPoints(xy[0], xy[1], HEX_CONFIG.mapPane.tile * 0.62), { stroke: CHART.breach, sw: 2.5 });
       // A/B ghost: dashed inner hex sized by run A's value on the shared max
       if (g && g[lens.key] > 0 && max > 0) {
-        var gr = MDHEX_R * (0.16 + 0.74 * Math.min(1, g[lens.key] / max));
+        var gr = HEX_CONFIG.mapPane.tile * (0.16 + 0.74 * Math.min(1, g[lens.key] / max));
         overlays += chPolygon(hexPoints(xy[0], xy[1], gr), { stroke: CHART.ink, sw: 1.3, dash: '3 2' });
       }
       // HQ marker: thick side-coloured border + star
       if (isHQ) {
         var hc = (k === hqRed) ? CHART.divRed[2] : CHART.divBlue[2];
-        overlays += chPolygon(hexPoints(xy[0], xy[1], MDHEX_R - 2), { stroke: hc, sw: 3 }) +
+        overlays += chPolygon(hexPoints(xy[0], xy[1], HEX_CONFIG.mapPane.tile - 2), { stroke: hc, sw: 3 }) +
           chText(xy[0].toFixed(1), (xy[1] + 5.5).toFixed(1), '★', { fs: 16, fill: hc, anchor: 'middle' });
       }
       // hover: per-hex values for BOTH runs (A -> B), plus the classification tags

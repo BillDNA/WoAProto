@@ -36,7 +36,7 @@ function ringAt(hex, color){
   var svg = $('board');
   if (!hex || !svg.firstChild) return;
   var xy = hexXY(hex);
-  var c = svgEl('circle',{cx:xy[0], cy:xy[1], r:S*0.8, fill:'none', stroke:color, 'stroke-width':5, 'class':'fx-ring'});
+  var c = svgEl('circle',{cx:xy[0], cy:xy[1], r:HEX_CONFIG.board.size*0.8, fill:'none', stroke:color, 'stroke-width':5, 'class':'fx-ring'});
   svg.appendChild(c);
   setTimeout(function(){ if (c.parentNode) c.parentNode.removeChild(c); }, 600);
 }
@@ -53,7 +53,7 @@ function fxStrike(fromHex, toHex, viaHex, color){
   // arrowhead just short of the target's centre
   var a = pts[pts.length-2], b = pts[pts.length-1];
   var ang = Math.atan2(b[1]-a[1], b[0]-a[0]);
-  var tip = [b[0]-Math.cos(ang)*S*0.42, b[1]-Math.sin(ang)*S*0.42];
+  var tip = [b[0]-Math.cos(ang)*HEX_CONFIG.board.size*0.42, b[1]-Math.sin(ang)*HEX_CONFIG.board.size*0.42];
   var l = 14, wdt = 8;
   var p1 = [tip[0]-Math.cos(ang)*l+Math.sin(ang)*wdt, tip[1]-Math.sin(ang)*l-Math.cos(ang)*wdt];
   var p2 = [tip[0]-Math.cos(ang)*l-Math.sin(ang)*wdt, tip[1]-Math.sin(ang)*l+Math.cos(ang)*wdt];

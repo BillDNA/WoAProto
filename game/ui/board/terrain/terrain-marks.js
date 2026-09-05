@@ -8,7 +8,7 @@
    the same everywhere and no caller names one.
 
    Classic script, no wrapper. Loads after ui/hex/hex-screen.js, whose geometry
-   (S, hexXY, hexEdgePts) it draws with, and ui/board-primitives.js, whose svgEl
+   (hexXY, hexEdgePts, hex-config's sizes) it draws with, and ui/board-primitives.js, whose svgEl
    and BOARD palette it uses. Prose: terrain.md */
 'use strict';
 
@@ -31,7 +31,7 @@ function terrainMark(letter){ return TERRAIN_MARK[letter] || null; }
 // (a barrage target, a dig ghost) read it so their mark lands on the line.
 function terrainInset(letter, s){
   var m = terrainMark(letter);
-  return (m ? m.inset : 0.85) * (s || S);
+  return (m ? m.inset : 0.85) * (s || HEX_CONFIG.board.size);
 }
 // Called once at boot: a registered terrain type with no mark would draw nothing
 // on the board, which is worse to debug than a load-time throw.
@@ -51,7 +51,7 @@ BOARD.terrainStroke = function(letter){
 // o: {s, rad, sw, pe, edgeData} — edgeData:false skips the hover attr.
 function bpTerrainStroke(g, hexKey, dir, letter, o){
   o = o || {};
-  var s = o.s || S, rad = o.rad != null ? o.rad : terrainInset(letter, s);
+  var s = o.s || HEX_CONFIG.board.size, rad = o.rad != null ? o.rad : terrainInset(letter, s);
   var pt = hexEdgePts(hexKey, dir, rad, s), p1 = pt[0], p2 = pt[1];
   var attrs = { x1:p1[0], y1:p1[1], x2:p2[0], y2:p2[1], stroke: BOARD.terrainStroke(letter),
     'stroke-width': o.sw != null ? o.sw : 8, 'stroke-linecap':'round' };
@@ -63,11 +63,11 @@ function bpTerrainStroke(g, hexKey, dir, letter, o){
 }
 
 // One terrain side, drawn inside its owning hex: the line plus the type's glyph.
-// Board defaults at S; a mini-board passes o = {s, sw, edgeData, …} plus any
+// Board defaults to the live size; a mini-board passes o = {s, sw, edgeData, …} plus any
 // options the glyph reads, so the SAME mark renders at that scale.
 function bpTerrainEdge(g, side, letter, o){
   o = o || {};
-  var s = o.s || S, parts = E.parseSideKey(side), d = parts[1];
+  var s = o.s || HEX_CONFIG.board.size, parts = E.parseSideKey(side), d = parts[1];
   var ep = bpTerrainStroke(g, parts[0], d, letter, { s:s, rad:o.rad, sw:o.sw, edgeData:o.edgeData });
   var mark = terrainMark(letter);
   if (!mark || !mark.glyph) return;

@@ -57,13 +57,9 @@ _Home_: `game/engine/01-core.js` — `MAPS`
 One cell of the board; a piece occupies at most one.
 _Home_: `game/engine/hex/hex.js` — `function key(q, r)`
 
-**Hex edge**:
-The border between two adjacent Hexes, named the same from either end.
-_Home_: `game/engine/hex/hex.js` — `function edgeKey(hexA, hexB)`
-
 **Hex side**:
-One Hex's face of a Hex edge — the two Hexes on a border own their faces separately, so
-anything sitting on a border is stored per side.
+One Hex's face of a border. Both Hexes own their own face, so Terrain is stored per side
+and can differ across one border.
 _Home_: `game/engine/hex/hex.js` — `function sideKey(h, d)`
 
 **Board shape**:

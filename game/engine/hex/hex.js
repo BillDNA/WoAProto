@@ -1,28 +1,15 @@
-/* The hex house — the engine's dialect: a hex as a COORDINATE.
+/* A hex as a COORDINATE. Nothing here names a board, a map, a unit or a rule.
 
-   Bottom of the vocabulary. Nothing here names a board, a map, a unit or a
-   rule; everything above names a hex. A hex IS its key, the string 'q,r' —
-   state keys, map data and log lines all spell it that way, and this file is
-   the only place that spelling is written.
-
-   Pointy-top axial. What is written once: the identity (key/parseKey), the six
-   directions and their names, the step to a neighbouring coordinate, the
-   distance between two, and the names of a border (edgeKey) and of one hex's
-   face of a border (sideKey).
-
-   The abstract hex always has six neighbours. WHICH of them exist is the
-   board's outline question, so the on-board filter and the per-shape neighbour
-   cache are 02-board.js's (I.neighbor/I.neighbors), written over step().
-
-   The screen's dialect — where a hex sits in pixels — is game/ui/hex/hex-screen.js.
+   Which of a hex's six neighbours EXIST needs an outline, so that filter is
+   02-board.js's (I.neighbor/I.neighbors), written over step().
 
    Classic script (browser + node), shared namespace g.WOA_E. Prose: hex.md */
 (function (global) {
   'use strict';
   var I = global.WOA_E = global.WOA_E || {};
 
-  // Directions are an ORDER, not a set: d is an index into both tables, and a
-  // side key stores that index. Rotating this list renumbers every map file.
+  // An ORDER, not a set: d indexes both tables and is what a side key stores.
+  // Rotating this list renumbers every map file.
   var DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
   var DIR_NAMES = ['E', 'NE', 'NW', 'W', 'SW', 'SE'];
 
@@ -61,10 +48,8 @@
   }
 
   /* ---------- borders ----------
-     An EDGE is the border between two hexes, named the same from either end.
-     A SIDE is one hex's face of that border (see docs/HexClarificationDiagram.png):
-     the two hexes on a border own their faces separately, so anything that
-     sits on a border is stored per side. */
+     Both hexes on a border own their own face of it, so a border has one edge
+     name and two side names (docs/HexClarificationDiagram.png). */
   function edgeKey(hexA, hexB) { return hexA < hexB ? hexA + '|' + hexB : hexB + '|' + hexA; }
   function sideKey(h, d) { return h + '>' + d; }
   function parseSideKey(sk) {

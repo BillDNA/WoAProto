@@ -5,6 +5,10 @@
    script; the editor's tool/button wiring lives in ui/boot.js. */
 'use strict';
 
+// the editor paints terrain further out than the live board's marks do, so a
+// bare side is easy to hit and easy to see
+var ED_TERRAIN_INSET = HEX_CONFIG.board.size * 0.8;
+
 /* =================== map editor =================== */
 // ED.hexes: null = a named template shape; {'q,r':true,...} = a custom outline
 // (saved as def.shapeDef, registered by the engine under '@<map id>')
@@ -117,7 +121,7 @@ function renderEditor(){
   svg.appendChild(gHex); svg.appendChild(gTer); svg.appendChild(gHit);
   hexList.forEach(function(k){
     var xy = hexXY(k);
-    var p = bpHexPoly(xy[0], xy[1], S-1, false); // editor tiles are uniform, no dark parity
+    var p = bpHexPoly(xy[0], xy[1], HEX_CONFIG.board.tile, false); // editor tiles are uniform, no dark parity
     if (ED.tool==='redhq' || ED.tool==='bluehq'){
       p.style.cursor = 'pointer';
       p.addEventListener('click', function(){
@@ -131,11 +135,11 @@ function renderEditor(){
       p.addEventListener('click', function(){ edRemoveHex(k); renderEditor(); });
     }
     gHex.appendChild(p);
-    bpCoordLabel(gHex, xy[0], xy[1], E.hexLabel(k), S, 'none');
+    bpCoordLabel(gHex, xy[0], xy[1], E.hexLabel(k), HEX_CONFIG.board.size, 'none');
   });
   ghosts.forEach(function(k){
     var xy = hexXY(k);
-    var p = bpGhostHex(gHex, xy[0], xy[1], S-4);
+    var p = bpGhostHex(gHex, xy[0], xy[1], HEX_CONFIG.board.tile-3);
     p.style.cursor = 'pointer';
     p.addEventListener('click', function(){
       if (hexList.length >= E.CONFIG.mapHexCeiling){ toast(E.CONFIG.mapHexCeiling + ' hexes is the ceiling (laser-cutter max — and big empty maps are not fun).', 3600); return; }
@@ -155,11 +159,11 @@ function renderEditor(){
   edInternalSides().forEach(function(e){
     var ek = E.sideKey(e[0], e[1]);
     var t = ED.edges[ek];
-    // the editor draws the bare terrain STROKE (no glyph) at inset S*0.8; the
+    // the editor draws the bare terrain STROKE (no glyph) at ED_TERRAIN_INSET; the
     // shared mark owns colour/width/linecap. Empty sides get only the hit line.
-    if (t) bpTerrainStroke(gTer, e[0], e[1], t, { rad: S*0.8, pe: 'none', edgeData: false });
+    if (t) bpTerrainStroke(gTer, e[0], e[1], t, { rad: ED_TERRAIN_INSET, pe: 'none', edgeData: false });
     if (ED.tool==='terrain'){
-      var hit = bpEdgeHitLine(gHit, e[0], e[1], S*0.8);
+      var hit = bpEdgeHitLine(gHit, e[0], e[1], ED_TERRAIN_INSET);
       hit.addEventListener('click', function(){
         // cycle empty -> each map terrain type in registration order -> empty
         var cycle = E.mapTerrainTypes().map(function(t){ return t.letter; });
@@ -183,7 +187,8 @@ function groupEdgesToPieces(edges){
     var c = hexXY(parts[0]);
     var aa = hexCornerAngles(d);
     return { ek: ek, t: edges[ek], a: parts[0], d: d,
-      v1: vkey(parts[0], hexCornerPt(c[0],c[1],aa[0],S)), v2: vkey(parts[0], hexCornerPt(c[0],c[1],aa[1],S)) };
+      v1: vkey(parts[0], hexCornerPt(c[0],c[1],aa[0],HEX_CONFIG.board.size)),
+      v2: vkey(parts[0], hexCornerPt(c[0],c[1],aa[1],HEX_CONFIG.board.size)) };
   });
   var used = {}, pieces = [];
   items.forEach(function(it, i){

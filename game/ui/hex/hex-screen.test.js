@@ -13,11 +13,13 @@ const fs = require('fs');
 const path = require('path');
 const E = require('../../engine.js');
 
+// The config home and the dialect are two classic scripts; load both into one
+// context, which is also the check that the dialect really reads the home.
 function load() {
-  const ctx = { E };
+  const ctx = { E, window: { Engine: E } };
   vm.createContext(ctx);
-  vm.runInContext(fs.readFileSync(path.join(__dirname, 'hex-screen.js'), 'utf8'), ctx,
-    { filename: 'hex-screen.js' });
+  ['hex-config.js', 'hex-screen.js'].forEach(f =>
+    vm.runInContext(fs.readFileSync(path.join(__dirname, f), 'utf8'), ctx, { filename: f }));
   return ctx;
 }
 const G = load();
@@ -33,7 +35,7 @@ test('the screen reads the engine\'s key — a hex\'s identity is not respelled 
 
 test('the origin is at the origin, and a step of one hex is one hex of pixels', () => {
   assert.deepEqual(G.hexXY('0,0'), [0, 0]);
-  const S = G.S;
+  const S = G.HEX_CONFIG.board.size;
   for (let d = 0; d < 6; d++) {
     const a = G.hexXY('0,0'), b = G.hexXY(E.step('0,0', d));
     const gap = Math.hypot(b[0] - a[0], b[1] - a[1]);
@@ -57,7 +59,7 @@ test('the two hexes on a border draw the same line', () => {
   const a = '0,0';
   for (let d = 0; d < 6; d++) {
     const b = E.step(a, d);
-    const here = G.hexEdgePts(a, d, G.S), there = G.hexEdgePts(b, E.oppositeDir(d), G.S);
+    const here = G.hexEdgePts(a, d, G.HEX_CONFIG.board.size), there = G.hexEdgePts(b, E.oppositeDir(d), G.HEX_CONFIG.board.size);
     const mid = p => [(p[0][0] + p[1][0]) / 2, (p[0][1] + p[1][1]) / 2];
     const m1 = mid(here), m2 = mid(there);
     near(m1[0], m2[0], 'shared border, same x');
@@ -66,16 +68,30 @@ test('the two hexes on a border draw the same line', () => {
 });
 
 test('the six corners of a hex are its six face corners', () => {
-  const pts = G.hexPoints(0, 0, G.S).split(' ').map(p => p.split(',').map(Number));
+  const pts = G.hexPoints(0, 0, G.HEX_CONFIG.board.size).split(' ').map(p => p.split(',').map(Number));
   assert.equal(pts.length, 6);
-  pts.forEach(p => near(Math.round(Math.hypot(p[0], p[1])), G.S, 'a corner is a radius out'));
+  pts.forEach(p => near(Math.round(Math.hypot(p[0], p[1])), G.HEX_CONFIG.board.size, 'a corner is a radius out'));
   // every face endpoint is one of the corners
   for (let d = 0; d < 6; d++) {
-    G.hexEdgePts('0,0', d, G.S).forEach(e => {
+    G.hexEdgePts('0,0', d, G.HEX_CONFIG.board.size).forEach(e => {
       assert.ok(pts.some(p => Math.abs(p[0] - e[0]) < 0.2 && Math.abs(p[1] - e[1]) < 0.2),
         'face ' + E.dirName(d) + ' ends on a corner');
     });
   }
+});
+
+test('every board that draws hexes takes its size from the config home', () => {
+  const home = G.HEX_CONFIG;
+  ['board', 'manual', 'mapPane', 'thumb'].forEach(b => {
+    assert.ok(home[b] && home[b].size > 0, b + ' has a size');
+    assert.ok(home[b].tile > 0 && home[b].tile <= home[b].size, b + "'s tile sits inside its hex");
+  });
+  // no board keeps its own copy of a size: the literals are gone from the files
+  const UI = path.join(__dirname, '..');
+  const owned = [['manual.js', /MP_S/], ['screens/dashboard/panes/maps.js', /MDHEX_R/],
+                 ['board-primitives.js', /\bvar S\b/], ['hex/hex-screen.js', /\bvar S\b/]];
+  owned.forEach(([f, re]) => assert.ok(!re.test(fs.readFileSync(path.join(UI, f), 'utf8')),
+    f + ' reads the home instead of naming its own size'));
 });
 
 /* The screen dialect's extension check: the one thing that varies between the

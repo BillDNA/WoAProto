@@ -20,7 +20,7 @@ defineTerrainMark(TRENCH_MARK);
 // draw the same mark at its scale.
 function bpTrenchLine(g, hexKey, dir, o){
   o = o || {};
-  var s = o.s || S, rad = o.rad != null ? o.rad : terrainInset('T', s);
+  var s = o.s || HEX_CONFIG.board.size, rad = o.rad != null ? o.rad : terrainInset('T', s);
   var pt = hexEdgePts(hexKey, dir, rad, s);
   g.appendChild(svgEl('line',{ x1:pt[0][0], y1:pt[0][1], x2:pt[1][0], y2:pt[1][1],
     stroke:TRENCH_MARK.stroke, 'stroke-width':o.sw != null ? o.sw : 6.5,

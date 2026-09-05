@@ -35,7 +35,7 @@ function svgEl(tag, attrs){
 }
 // the viewBox that frames a list of hexes, at the hex house's positions.
 function viewBoxFor(hexList, s){
-  s = s || S;
+  s = s || HEX_CONFIG.board.size;
   var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
   hexList.forEach(function(k){
     var xy = hexXY(k, s);
@@ -47,9 +47,9 @@ function viewBoxFor(hexList, s){
 }
 
 /* =================== mark radii + stroke tokens =================== */
-// board glyph radii, as a fraction of the hex size S — the inset a mark sits at.
+// board glyph radii, as a fraction of the live board's hex size.
 // (terrain insets are per type, declared with each mark in ui/board/terrain/)
-var BOARD_R = { hqOuter:S*0.62, hqInner:S*0.5, unit:S*0.5 };
+var BOARD_R = { hqOuter:HEX_CONFIG.board.size*0.62, hqInner:HEX_CONFIG.board.size*0.5, unit:HEX_CONFIG.board.size*0.5 };
 // line weights reused across marks/consumers (the twin of BOARD_R). A mark's own
 // one-off default width stays inline at the mark; only shared widths live here.
 var BOARD_SW = { unit:2.5 }; // unit-token outline — fx.js's fallen-unit ghost mirrors it
@@ -107,7 +107,7 @@ function bpHexPoly(cx, cy, rad, dark){
 // the grid coord label above a hex centre. ONE impl for every board (live board,
 // manual, editor); s scales the offset, pe optionally makes it click-through.
 function bpCoordLabel(g, cx, cy, text, s, pe){
-  s = s || S;
+  s = s || HEX_CONFIG.board.size;
   var lbl = svgEl('text', { x:cx, y:cy - s*0.58, 'text-anchor':'middle', 'class':'coordlbl' });
   if (pe) lbl.setAttribute('pointer-events', pe);
   lbl.textContent = text;
@@ -117,7 +117,7 @@ function bpCoordLabel(g, cx, cy, text, s, pe){
 // one parchment hex + its coord label
 function bpHexTile(g, key){
   var xy = hexXY(key), qr = E.parseKey(key);
-  var p = bpHexPoly(xy[0], xy[1], S-1, ((qr[0]-qr[1])%2+2)%2);
+  var p = bpHexPoly(xy[0], xy[1], HEX_CONFIG.board.tile, ((qr[0]-qr[1])%2+2)%2);
   p.dataset.hex = key;
   g.appendChild(p);
   bpCoordLabel(g, xy[0], xy[1], E.hexLabel(key));
@@ -197,9 +197,9 @@ function bpAttackPill(g, hexKey, text, outcome){
   var xy = hexXY(hexKey);
   var fill = BOARD.hint[outcome] || BOARD.hint.defender; // matches the old else-branch (defender/red default)
   var w = text.length * 6.6 + 12;
-  g.appendChild(svgEl('rect', { x: xy[0]-w/2, y: xy[1]+S*0.18, width: w, height: 17, rx: 8.5,
+  g.appendChild(svgEl('rect', { x: xy[0]-w/2, y: xy[1]+HEX_CONFIG.board.size*0.18, width: w, height: 17, rx: 8.5,
     fill: fill, stroke: BOARD.outline, 'stroke-width': 1 }));
-  var t = svgEl('text', { x: xy[0], y: xy[1]+S*0.18+12.5, 'text-anchor': 'middle',
+  var t = svgEl('text', { x: xy[0], y: xy[1]+HEX_CONFIG.board.size*0.18+12.5, 'text-anchor': 'middle',
     'font-size': 11, 'font-weight': 'bold', fill: BOARD.star });
   t.textContent = text;
   g.appendChild(t);
@@ -208,7 +208,7 @@ function bpAttackPill(g, hexKey, text, outcome){
 // a hex-fill highlight polygon (caller attaches the click handler)
 function bpHighlight(g, key, cls){
   var xy = hexXY(key);
-  var p = svgEl('polygon',{ points: hexPoints(xy[0], xy[1], S-3), 'class':'hl '+cls });
+  var p = svgEl('polygon',{ points: hexPoints(xy[0], xy[1], HEX_CONFIG.board.tile-2), 'class':'hl '+cls });
   g.appendChild(p);
   return p;
 }
@@ -235,7 +235,7 @@ function bpGhostHex(g, cx, cy, rad){
    The one STRING board renderer: the map-library thumbnails go into innerHTML
    (var(--…) resolves in the DOM), so previewSVG builds an SVG string — the same
    geometry (the hex house's screen dialect) + BOARD palette as the live board, at
-   its own tiny s=11 scale. The tile is deliberately its OWN look (BOARD.thumbTile,
+   its own tiny scale (hex-config's thumb row). The tile is deliberately its OWN look (BOARD.thumbTile,
    not the .hex CSS class), and the HQ is a plain side-coloured hex (no brass ring
    / star). Each thumbnail mark lives in one bpThumb* builder, so maps-screen.js
    builds nothing by hand. */
@@ -247,14 +247,14 @@ function bpThumbHQ(cx, cy, side, rad){
 }
 // self-contained map thumbnail (no global board state): tiles, terrain sides, HQs.
 function previewSVG(def){
-  var s = 11;
+  var s = HEX_CONFIG.thumb.size;
   var hexList = E.boardHexes(E.ensureMapShape(def));
   var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
   var body = '';
   hexList.forEach(function(k){
     var p = hexXY(k, s);
     minX=Math.min(minX,p[0]); maxX=Math.max(maxX,p[0]); minY=Math.min(minY,p[1]); maxY=Math.max(maxY,p[1]);
-    body += bpThumbHex(p[0], p[1], s-0.6);
+    body += bpThumbHex(p[0], p[1], HEX_CONFIG.thumb.tile);
   });
   (def.pieces||[]).forEach(function(pc){
     pc.edges.forEach(function(e){
