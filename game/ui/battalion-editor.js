@@ -101,7 +101,7 @@ function battalionProblems(cards){
       var st = tag + ' step ' + (si+1);
       if (!s || !DK_STEP_FLAGS[s.type]){ probs.push(st + ': unknown type "' + (s && s.type) + '" (deploy / trench / attack / reposition / barrage)'); return; }
       Object.keys(s).forEach(function(k){ if (k !== 'type' && !DK_STEP_FLAGS[s.type][k]) probs.push(st + ': "' + k + '" is not a ' + s.type + ' option'); });
-      if (s.type === 'deploy' && !E.UNITS[s.unit]) probs.push(st + ': unknown unit "' + s.unit + '" (' + Object.keys(E.UNITS).join(' / ') + ')');
+      if (s.type === 'deploy' && !E.UNITS[s.unit]) probs.push(st + ': unknown unit "' + s.unit + '" (' + E.unitTypes().join(' / ') + ')');
       if (s.type === 'attack' && s.mod !== undefined && typeof s.mod !== 'number') probs.push(st + ': mod must be a number');
     });
   });
@@ -248,7 +248,7 @@ function renderSteps(c){
     var typeSel = '<select class="ds-type">'+DK_STEP_TYPES.map(function(t){ return '<option '+(s.type===t?'selected':'')+'>'+t+'</option>'; }).join('')+'</select>';
     var extra = '';
     if (s.type === 'deploy'){
-      extra = '<label>unit <select class="ds-unit">'+Object.keys(E.UNITS).map(function(u){ return '<option value="'+u+'" '+(s.unit===u?'selected':'')+'>'+E.UNITS[u].name+'</option>'; }).join('')+'</select></label>' +
+      extra = '<label>unit <select class="ds-unit">'+E.unitTypes().map(function(u){ return '<option value="'+u+'" '+(s.unit===u?'selected':'')+'>'+E.UNITS[u].name+'</option>'; }).join('')+'</select></label>' +
         '<label title="place on ANY empty hex (Airdrop)"><input type="checkbox" class="ds-any" '+(s.anywhere?'checked':'')+'> anywhere</label>';
     } else if (s.type === 'attack'){
       extra = '<label title="&plusmn; attacker power">power <input type="number" class="ds-mod" style="width:48px;" value="'+(s.mod||0)+'"></label>' +
@@ -265,7 +265,7 @@ function renderSteps(c){
       '<button class="ds-del" title="remove step" style="font-size:14px;padding:0 8px;">&times;</button>';
     row.querySelector('.ds-type').onchange = function(){
       var nt = this.value;
-      DK.cards[DK.sel].steps[si] = nt==='deploy' ? { type:'deploy', unit: s.unit||'infantry' } : { type:nt }; // fresh step drops stale flags
+      DK.cards[DK.sel].steps[si] = nt==='deploy' ? { type:'deploy', unit: s.unit||E.unitTypes()[0] } : { type:nt }; // fresh step drops stale flags
       renderSteps(DK.cards[DK.sel]); dkStatus();
     };
     // mod/flag edits keep focus (no re-render), so refresh this step's own pts inline

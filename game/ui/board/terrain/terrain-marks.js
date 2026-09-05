@@ -8,8 +8,9 @@
    the same everywhere and no caller names one.
 
    Classic script, no wrapper. Loads after ui/board/hex/hex-screen.js, whose geometry
-   (hexXY, hexEdgePts, hex-config's sizes) it draws with, and ui/board-primitives.js, whose svgEl
-   and BOARD palette it uses. Prose: terrain.md */
+   (hexXY, hexEdgePts, hex-config's sizes) it draws with, ui/board-primitives.js, whose svgEl
+   and BOARD palette it uses, and terrain-config.js, whose sizes it draws at.
+   Prose: engine/board/terrain/terrain.md */
 'use strict';
 
 var TERRAIN_MARK = {};
@@ -31,7 +32,7 @@ function terrainMark(letter){ return TERRAIN_MARK[letter] || null; }
 // (a barrage target, a dig ghost) read it so their mark lands on the line.
 function terrainInset(letter, s){
   var m = terrainMark(letter);
-  return (m ? m.inset : 0.85) * (s || HEX_CONFIG.board.size);
+  return (m ? m.inset : TERRAIN_CONFIG.edge.inset) * (s || HEX_CONFIG.board.size);
 }
 // Called once at boot: a registered terrain type with no mark would draw nothing
 // on the board, which is worse to debug than a load-time throw.
@@ -54,7 +55,7 @@ function bpTerrainStroke(g, hexKey, dir, letter, o){
   var s = o.s || HEX_CONFIG.board.size, rad = o.rad != null ? o.rad : terrainInset(letter, s);
   var pt = hexEdgePts(hexKey, dir, rad, s), p1 = pt[0], p2 = pt[1];
   var attrs = { x1:p1[0], y1:p1[1], x2:p2[0], y2:p2[1], stroke: BOARD.terrainStroke(letter),
-    'stroke-width': o.sw != null ? o.sw : 8, 'stroke-linecap':'round' };
+    'stroke-width': o.sw != null ? o.sw : TERRAIN_CONFIG.edge.sw, 'stroke-linecap':'round' };
   if (o.pe) attrs['pointer-events'] = o.pe;
   var line = svgEl('line', attrs);
   if (o.edgeData !== false) line.dataset.edge = E.sideKey(hexKey, dir);
@@ -81,7 +82,8 @@ function bpTerrainEdge(g, side, letter, o){
 function bpBarrageTerrain(g, hexKey, dir, letter){
   var pt = hexEdgePts(hexKey, dir, terrainInset(letter));
   var line = svgEl('line',{ x1:pt[0][0], y1:pt[0][1], x2:pt[1][0], y2:pt[1][1],
-    stroke:BOARD.barrage, 'stroke-width':12, 'stroke-linecap':'round', opacity:.55, 'class':'hl' });
+    stroke:BOARD.barrage, 'stroke-width':TERRAIN_CONFIG.barrage.sw, 'stroke-linecap':'round',
+    opacity:TERRAIN_CONFIG.barrage.opacity, 'class':'hl' });
   g.appendChild(line);
   return line;
 }
@@ -90,5 +92,5 @@ function bpBarrageTerrain(g, hexKey, dir, letter){
 // thumbnail's own tiny scale (maps-screen builds its previews as markup).
 function bpThumbTerrain(p1, p2, letter){
   return '<line x1="'+p1[0].toFixed(1)+'" y1="'+p1[1].toFixed(1)+'" x2="'+p2[0].toFixed(1)+'" y2="'+p2[1].toFixed(1)+
-    '" stroke="'+BOARD.terrainStroke(letter)+'" stroke-width="2.6" stroke-linecap="round"/>';
+    '" stroke="'+BOARD.terrainStroke(letter)+'" stroke-width="'+TERRAIN_CONFIG.thumb.sw+'" stroke-linecap="round"/>';
 }

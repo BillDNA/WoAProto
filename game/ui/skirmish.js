@@ -89,7 +89,7 @@ function saveLocal(){
 function clearSave(){ try{ localStorage.removeItem('woa-save'); }catch(e){} }
 
 /* =================== side mats / topbar / hand =================== */
-// mini piece glyphs are bpPieceGlyph (board-primitives) — the mats twin of the
+// mini piece glyphs come from each piece's own house — the mats twin of the
 // board unit token; restyling the mark is one edit there.
 function statTip(type){
   if (type==='trench') return 'Trench — enemy attacks across its two covered edges get no support';
@@ -125,16 +125,16 @@ function renderMat(p){
     var total = totals[type];
     var res = r[type==='trench'?'trench':type];
     var field = Math.min(onField[type], total - res);
-    var boxes = '';
+    var boxes = '', glyph = type==='trench' ? bpTrenchMatGlyph() : bpUnitSlot(type,col,colD);
     for (var i=0;i<total;i++){
-      if (i < res) boxes += '<span class="slot" title="'+label+' in reserve">'+bpPieceGlyph(type,col,colD)+'</span>';
+      if (i < res) boxes += '<span class="slot" title="'+label+' in reserve">'+glyph+'</span>';
       else if (i < res+field) boxes += '<span class="slot field" title="'+label+' on the field"></span>';
       else boxes += '<span class="slot lost" title="'+label+' destroyed">&#10006;</span>';
     }
     return '<div class="srow"><span class="slbl" title="'+statTip(type)+'">'+label+'</span><span class="sboxes">'+boxes+'</span></div>';
   }
   var rowsHtml = '';
-  Object.keys(E.UNITS).forEach(function(t){ rowsHtml += row(E.UNITS[t].name, t); });
+  E.unitTypes().forEach(function(t){ rowsHtml += row(E.UNITS[t].name, t); });
   rowsHtml += row('Trenches','trench');
 
   var spent = '';
@@ -181,7 +181,7 @@ function renderTop(){
   // deploys (fieldScore + reserves x worth); the seam marks the projected front
   function ceiling(side){
     var cur = E.fieldScore(st, side), extra = 0, res = v.reserves(side);
-    Object.keys(E.UNITS).forEach(function(t){ extra += (res[t]||0) * E.UNITS[t].worth; });
+    E.unitTypes().forEach(function(t){ extra += (res[t]||0) * E.UNITS[t].worth; });
     return { cur: cur, max: cur + extra };
   }
   var R = ceiling('red'), B = ceiling('blue');

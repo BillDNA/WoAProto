@@ -1,0 +1,20 @@
+/* The colour a unit is drawn in that is its own, and the motion of its token.
+   The disc's red or blue is the seat's, not the unit's, so it is not here.
+   fx.js adds and removes the classes below; unit-marks.js builds what they move.
+
+   Loaded by style.css's @import chain. Prose: engine/board/unit/unit.md */
+
+:root{
+  --chit:#ece1c4;   /* the parchment the type's glyph is printed on */
+}
+
+/* every token transforms about its own centre, which is what makes it animatable */
+#board g.unit{transform-box:fill-box; transform-origin:center;}
+
+/* a deployed unit lands on its hex */
+#board g.unit.fx-pop{animation:popIn var(--dur-enter) ease backwards;}
+@keyframes popIn{from{transform:scale(.15); opacity:0;} to{transform:scale(1); opacity:1;}}
+
+/* a destroyed unit sinks and fades — fx.js draws the ghost, this moves it */
+.fx-ghost{transform-box:fill-box; transform-origin:center; animation:ghostOut .65s ease forwards; pointer-events:none;}
+@keyframes ghostOut{to{opacity:0; transform:translateY(12px) scale(.7);}}

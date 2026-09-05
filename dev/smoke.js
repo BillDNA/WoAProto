@@ -10,7 +10,7 @@ var { JSDOM } = require(path.join(__dirname, 'node_modules', 'jsdom'));
 var harness = require('./page-harness.js');
 var GAME = harness.GAME;
 var read = harness.read;
-var html = harness.pageHtml(['cards', 'battalions', 'maps', 'commanders']);
+var html = harness.pageHtml(['cards', 'battalions', 'maps', 'units', 'commanders']);
 
 // One async node:test: the whole play-through is a single linear flow, so any
 // failed assertion (or app error) thrown in a scheduled callback rejects this

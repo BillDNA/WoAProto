@@ -17,3 +17,7 @@ require('./test.reports.js');
 require('./test.seams.js');
 require('./test.ui.js');
 require('./test.integration.js');
+// The unit house last: its contract test registers a fourth type, and the
+// registry is append-only, so every file above sees the shipped three.
+require('../engine/board/unit/unit.test.js');        // the unit house — the pieces a side owns
+require('../ui/board/unit/unit-marks.test.js');      // and its drawing half likewise

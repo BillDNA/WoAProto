@@ -4,7 +4,7 @@
 defineTerrainMark({
   letter: 'M',
   stroke: 'var(--mountain)',
-  ink: '#5d5a52',
+  ink: 'var(--mountain-ink)',
   inset: 0.85,
   glyph: function(g, m){
     var ex = m.p2[0] - m.p1[0], ey = m.p2[1] - m.p1[1];

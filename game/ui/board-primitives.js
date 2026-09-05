@@ -1,28 +1,29 @@
 /* War of Attrition — ui part: the shared BOARD primitives toolkit. The
    board-side twin of chart-primitives.js. Holds the board's framing
    (viewBoxFor), the BOARD palette, and a bp* primitive for
-   every mark the game board draws — hex tiles, HQs, unit tokens, attack-math
-   pills, the highlight polygon. board.js draws over this toolkit and builds
+   every mark the game board draws that has no house of its own — hex tiles, HQs,
+   attack-math pills, the highlight polygon. board.js draws over this toolkit and builds
    nothing by hand: one implementation of each mark, restyled in one place,
    reflected everywhere the board draws it.
 
    WHERE a hex and its faces sit is not here: that is the hex house's screen
    dialect (ui/board/hex/hex-screen.js), which loads first and this file calls.
    Terrain marks are NOT here either: each type draws itself in ui/board/terrain/,
-   which loads after this file and uses both.
+   which loads after this file and uses both. Nor is the unit token: that is the
+   unit house's screen dialect (ui/board/unit/), which also loads after this file.
 
    Every board consumer draws from ONE palette + shared builders: fx.js (live-board
-   flourishes) takes its colours + unit radius from BOARD/BOARD_R; the manual
-   diagram (manual.js, MP_S scale) and the map editor (map-editor.js) draw
-   their hexes/terrain/HQ/units through hexXY(k,s) + bpUnitToken / bpHQMarker
+   flourishes) takes its colours from BOARD; the manual diagram (manual.js, MP_S
+   scale) and the map editor (map-editor.js) draw their hexes/terrain/HQ/units
+   through hexXY(k,s) + bpHQMarker and the unit house's bpUnitToken
    (sizes are options, colours from BOARD) and route every board colour through
    BOARD — so restyling a terrain glyph, a side colour, or the unit token is
    one edit reflected on every board in the game. The mini-boards keep their
    own scale-tuned line widths + editing/animation overlays; only the marks and
    the palette are shared. A colour the stylesheet also paints stays a CSS var
    here (terrain, sides, brass; the board ink + star + attack red read
-   var(--ink-plate)/var(--star)/var(--attack)); the glyph inks the stylesheet
-   never sees (the chit) — plus the ghost-hex wash — are named once in BOARD. */
+   var(--ink-plate)/var(--star)/var(--attack)); the ghost-hex wash the stylesheet
+   never sees is named once in BOARD. */
 'use strict';
 
 /* =================== the board's frame =================== */
@@ -42,26 +43,25 @@ function viewBoxFor(hexList, s){
 /* =================== mark radii + stroke tokens =================== */
 // board glyph radii, as a fraction of the live board's hex size.
 // (terrain insets are per type, declared with each mark in ui/board/terrain/)
-var BOARD_R = { hqOuter:HEX_CONFIG.board.size*0.62, hqInner:HEX_CONFIG.board.size*0.5, unit:HEX_CONFIG.board.size*0.5 };
-// line weights reused across marks/consumers (the twin of BOARD_R). A mark's own
-// one-off default width stays inline at the mark; only shared widths live here.
-var BOARD_SW = { unit:2.5 }; // unit-token outline — fx.js's fallen-unit ghost mirrors it
+// (the unit token's radius is its own house's — ui/board/unit/unit-config.js)
+var BOARD_R = { hqOuter:HEX_CONFIG.board.size*0.62, hqInner:HEX_CONFIG.board.size*0.5 };
 
 /* =================== palette =================== */
 // The board palette: the twin of :root for the board's SVG. A colour the
 // stylesheet also paints lives in :root once and is read here as var(--…)
-// (resolves in an SVG attribute, same as the unit fills). The glyph inks the
-// stylesheet never sees are named once here.
-// What is left in here has several owners and no house yet: the side colours and
-// the chit are a unit's, the star and brass are the HQ mark's, hint is the
+// (resolves in an SVG attribute, same as the unit fills). The fills the
+// stylesheet never sees — the pill and support washes — are named once here.
+// What is left in here has several owners and no house yet: red/redDark/blue/
+// blueDark and side() are the SEAT's — a side is red or blue whether or not a
+// unit is standing on it — the star and brass are the HQ mark's, hint is the
 // attack-math pill's, support* are fx's. Terrain's colours went to its house
-// (ui/board/terrain/terrain.css) and the hex tile's to its own (HEX_CONFIG.ink).
+// (ui/board/terrain/terrain.css), the hex tile's to its own (HEX_CONFIG.ink),
+// and the unit's chit to its own (UNIT_CONFIG.ink.chit).
 var BOARD = {
-  // side colours (units + HQ) from CSS
+  // seat colours (whatever the side owns — units, HQ, marks) from CSS
   red:'var(--red)', redDark:'var(--red-dark)', blue:'var(--blue)', blueDark:'var(--blue-dark)',
   brass:'var(--brass)',
   outline:'var(--ink-plate)',   // the near-black board ink (piece + pill strokes)
-  chit:'#ece1c4',       // the unit chit
   star:'var(--star)',   // HQ star + pill text
   barrage:'var(--attack)',      // barrage action marks
   // attack-math pill fill by combat outcome (neutral = manual's "no clear side")
@@ -140,49 +140,6 @@ function bpHQMarker(g, cx, cy, side, o){
 }
 function bpHQ(g, hexKey, side){ var xy = hexXY(hexKey); bpHQMarker(g, xy[0], xy[1], side, {}); }
 
-// a unit token (circle + chit + type glyph) drawn into a caller-owned group at
-// an explicit centre. ONE implementation shared by the live board and the
-// manual diagram; sizes are options (board defaults), colours from BOARD.
-// o: { r, circSW, chitHW, chitHH, chitSW, glyphSW, artR }
-function bpUnitToken(g, cx, cy, owner, type, o){
-  o = o || {};
-  var sc = BOARD.side(owner), col = sc.fill, colD = sc.dark;
-  var r = o.r!=null?o.r:BOARD_R.unit, hw = o.chitHW!=null?o.chitHW:13, hh = o.chitHH!=null?o.chitHH:9, gsw = o.glyphSW!=null?o.glyphSW:2;
-  g.appendChild(svgEl('circle',{ cx:cx, cy:cy, r:r, fill:col, stroke:colD, 'stroke-width':o.circSW!=null?o.circSW:BOARD_SW.unit }));
-  g.appendChild(svgEl('rect',{ x:cx-hw, y:cy-hh, width:hw*2, height:hh*2, fill:BOARD.chit, stroke:colD, 'stroke-width':o.chitSW!=null?o.chitSW:1.4, rx:1.5 }));
-  if (type==='infantry'){
-    g.appendChild(svgEl('line',{ x1:cx-hw, y1:cy-hh, x2:cx+hw, y2:cy+hh, stroke:colD, 'stroke-width':gsw }));
-    g.appendChild(svgEl('line',{ x1:cx-hw, y1:cy+hh, x2:cx+hw, y2:cy-hh, stroke:colD, 'stroke-width':gsw }));
-  } else if (type==='cavalry'){
-    g.appendChild(svgEl('line',{ x1:cx-hw, y1:cy+hh, x2:cx+hw, y2:cy-hh, stroke:colD, 'stroke-width':gsw }));
-  } else {
-    g.appendChild(svgEl('circle',{ cx:cx, cy:cy, r:o.artR!=null?o.artR:4.5, fill:colD }));
-  }
-}
-// the live-board unit: own <g class="unit" data-hex> for the attack-math hover.
-function bpUnit(g, hexKey, unit){
-  var xy = hexXY(hexKey);
-  var u = svgEl('g',{ 'class':'unit', 'data-hex':hexKey });
-  bpUnitToken(u, xy[0], xy[1], unit.owner, unit.type, {});
-  g.appendChild(u);
-  return u;
-}
-
-// a standalone mini piece glyph (its own 20x20 <svg> string), echoing the board
-// markings — infantry X, cavalry slash, artillery shot, trench arc. The mats
-// twin of bpUnitToken; col/colD are the caller's side colours (the chit
-// ink and trench colour stay BOARD, one edit for both). Returns a string for
-// innerHTML, not a DOM append, because the slot spans are built by concat.
-function bpPieceGlyph(type, col, colD){
-  var pre = '<svg viewBox="0 0 20 20">';
-  if (type==='trench')
-    return pre+'<path d="M3 13 Q10 5 17 13" stroke="'+terrainMark('T').stroke+'" stroke-width="2.6" stroke-dasharray="3.4 2.4" fill="none" stroke-linecap="round"/></svg>';
-  var s = pre+'<circle cx="10" cy="10" r="8.4" fill="'+col+'" stroke="'+colD+'" stroke-width="1.6"/>';
-  if (type==='infantry') s += '<path d="M5.5 13.5 L14.5 6.5 M5.5 6.5 L14.5 13.5" stroke="'+BOARD.chit+'" stroke-width="2" stroke-linecap="round"/>';
-  else if (type==='cavalry') s += '<path d="M5.5 14 L14.5 6" stroke="'+BOARD.chit+'" stroke-width="2.3" stroke-linecap="round"/>';
-  else s += '<circle cx="10" cy="10" r="3.4" fill="'+BOARD.chit+'"/>';
-  return s+'</svg>';
-}
 // the hover-only attack-math layer + one pill on it
 function bpAttackLayer(){ return svgEl('g', { 'class':'atk-hints', 'pointer-events':'none' }); }
 function bpAttackPill(g, hexKey, text, outcome){

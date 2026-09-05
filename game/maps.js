@@ -9,12 +9,10 @@
    files under game/content/ (maps/<slug>.js,
    battalions/<slug>.js) that each register into a WOA_CONTENT global, so you can
    delete a map or a battalion by deleting its file (no more localStorage tombstones).
-   The engine assembles the full data set from THIS file (shapes/units/stock/ai)
-   plus WOA_CONTENT (maps + the active battalion's cards). See content/manifest.js.
-
-   UNITS — stats per unit type: atk/def/sup (support given to adjacent
-   fights), worth (bounty the enemy scores for killing it), count (pieces per
-   player). Terrain dials live in "terrain" below.
+   UNIT STATS are not here either — they are a content kind of their own
+   (content/units/<slug>.js, one active), so a whole alternative army is a file
+   you can delete. The engine assembles the full data set from THIS file
+   (shapes/terrain stock/ai) plus WOA_CONTENT. See content/manifest.js.
 
    SHAPES — a board outline. "rows" is a list of [r, qFrom, qTo] spans of
    pointy-top axial coordinates (row r, hexes q=qFrom..qTo inclusive).
@@ -24,17 +22,12 @@
    laser-cutter ceiling for the physical board, and with all units deployed
    both sides only ever control 22 hexes.
 
-   Card + map field guides now live with the content files and in
-   ../docs/reference/card-cheatsheet.md. What a terrain does is written in its
-   own file in engine/board/terrain/.
+   Card, map and unit field guides live with the content files and in
+   ../docs/reference/card-cheatsheet.md. What a terrain or a unit does is
+   written in its own file in engine/board/terrain/ and engine/board/unit/.
    ============================================================================ */
 var WOA_BUILTIN =
 {
-  "units": {
-    "infantry":  { "name": "Infantry",  "atk": 1, "def": 1, "sup": 1, "worth": 1, "count": 7 },
-    "cavalry":   { "name": "Cavalry",   "atk": 3, "def": 0, "sup": 0, "worth": 2, "count": 2 },
-    "artillery": { "name": "Artillery", "atk": 0, "def": 0, "sup": 2, "worth": 3, "count": 1 }
-  },
   /* TERRAIN — one row per type, keyed by its game word (the rooms in
      engine/board/terrain/). "pieces" is how many physical chits of each side
      length the box holds; the editor warns past it. Trench "perSide" is

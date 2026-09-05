@@ -290,9 +290,9 @@ test('both facing sides of a border are asked, not just the first', () => {
 
   // support: a forest on A's side (blocks nothing) must not hide a trench dug on
   // the supporter's side of the same border
-  E.Pieces.place(st, A, 'infantry', 'blue');          // the defender under attack
-  E.Pieces.place(st, B, 'infantry', 'red');           // the attacker
-  E.Pieces.place(st, C, 'infantry', 'red');           // C supports the attack on A
+  E.Units.place(st, A, 'infantry', 'blue');          // the defender under attack
+  E.Units.place(st, B, 'infantry', 'red');           // the attacker
+  E.Units.place(st, C, 'infantry', 'red');           // C supports the attack on A
   st.board.terrainEdges[E.sideKey(A, E.dirBetween(A, C))] = 'F';
   assert.ok(E.supportFor(st, 'red', A, B, true).hexes.indexOf(C) >= 0,
     'a forest on the border blocks nothing, so C still supports');
@@ -335,9 +335,9 @@ test('the terrain house: a fifth type needs only its own answers', () => {
 
   var st = E.newSkirmish(E.newBattle({ seed: 7, firstPlayer: 'red', maps: [marshMap] }));
   var A = '0,0', B = E.neighbor(A, 0), C = E.neighbor(A, 1);
-  E.Pieces.place(st, A, 'infantry', 'red');
-  E.Pieces.place(st, C, 'infantry', 'red');   // A's supporter
-  E.Pieces.place(st, B, 'infantry', 'blue');
+  E.Units.place(st, A, 'infantry', 'red');
+  E.Units.place(st, C, 'infantry', 'red');   // A's supporter
+  E.Units.place(st, B, 'infantry', 'blue');
 
   // defence keys on the DEFENDER's own side toward the hex the attack crosses from
   st.board.terrainEdges[E.sideKey(B, E.dirBetween(B, A))] = 'X';

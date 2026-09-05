@@ -185,7 +185,7 @@ function mpDrawUnit(svg, hex, u, ghost){
   var xy = mpXY(hex);
   var g = svgEl('g', ghost ? {'class':'mghost'} : {});
   // same token as the live board, at HEX_CONFIG.manual.size sizes (see bpUnitToken)
-  bpUnitToken(g, xy[0], xy[1], u.owner, u.type, { r:HEX_CONFIG.manual.size*0.5, circSW:2, chitHW:10, chitHH:7, chitSW:1.2, glyphSW:1.7, artR:3.6 });
+  bpUnitToken(g, xy[0], xy[1], u.owner, u.type, { r:unitTokenR(HEX_CONFIG.manual.size), circSW:2, chitHW:10, chitHH:7, chitSW:1.2, glyphSW:1.7, dotR:3.6 });
   if (ghost){ // fallen: the ✕ over the counter
     g.appendChild(svgEl('line',{x1:xy[0]-12,y1:xy[1]-12,x2:xy[0]+12,y2:xy[1]+12,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));
     g.appendChild(svgEl('line',{x1:xy[0]-12,y1:xy[1]+12,x2:xy[0]+12,y2:xy[1]-12,stroke:BOARD.outline,'stroke-width':MP_GHOST_SW}));

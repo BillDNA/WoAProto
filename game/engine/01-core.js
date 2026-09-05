@@ -13,12 +13,12 @@
   // Must track the rule book header (docs/War Of Attrition rule book.md).
   var RULES_VERSION = '1.2';
 
-  // CORE data (units/shapes/stock/ai) is hand-editable JSON in maps.js, which
+  // CORE data (shapes/terrain stock/ai) is hand-editable JSON in maps.js, which
   // loads first (browser) / sits next to this file (node).
   var CORE = global.WOA_BUILTIN ||
     (typeof require === 'function' ? require('../maps.js') : null);
-  if (!CORE || !CORE.shapes || !CORE.units)
-    throw new Error('War of Attrition: maps.js missing or malformed (must define WOA_BUILTIN with shapes + units)');
+  if (!CORE || !CORE.shapes)
+    throw new Error('War of Attrition: maps.js missing or malformed (must define WOA_BUILTIN with shapes)');
 
   // CONTENT (the map library + the card battalions) lives in per-item files under
   // content/ — delete a map/battalion by deleting its file. In the browser
@@ -74,16 +74,11 @@
   var ACTIVE_BATTALION = (CONTENT.battalions || []).filter(function (d) { return d && d.active; })[0] ||
     (CONTENT.battalions || [])[0] || null;
   var CARD_LIST = (ACTIVE_BATTALION && ACTIVE_BATTALION.cards && ACTIVE_BATTALION.cards.length) ? hydrateBattalionCards(ACTIVE_BATTALION.cards) : (CONTENT.cards || []);
-  // Unit composition & values as a content lever: a units variant in
-  // content/units/*.js (exactly one flagged active — the battalion/mapset pattern)
-  // fully REPLACES the default unit block, so composition (counts), worth, and
-  // atk/def/sup are all editable as data. No active variant falls back to
-  // maps.js CORE.units — the shipped 7/2/1 default — so this is the ONE place
-  // unit stats resolve (every other layer reads I.UNITS).
-  var UNITS_VARIANT = (CONTENT.units || []).filter(function (u) { return u && u.active; })[0] || null;
-  var UNIT_DEFS = (UNITS_VARIANT && UNITS_VARIANT.units) || CORE.units;
+  // Units are not assembled here: the unit house (engine/board/unit/) resolves
+  // the active content/units/*.js set itself, and every layer reads it through
+  // I.UNITS.
   var BUILTIN = {
-    shapes: CORE.shapes, units: UNIT_DEFS, terrain: CORE.terrain,
+    shapes: CORE.shapes, terrain: CORE.terrain,
     ai: CORE.ai,
     maps: (CONTENT.maps || []).slice(),
     cards: CARD_LIST
@@ -125,17 +120,8 @@
   }
 
   /* ---------- static data (all tunable in maps.js) ---------- */
-  var UNITS = BUILTIN.units;
-  // Physical-board guardrail: a side always fields exactly CONFIG.pieceTotal pieces
-  // (default 7 inf / 2 cav / 1 art). Values are free data; the TOTAL count is the
-  // invariant — enforce it at load so a bad units variant fails loud instead of
-  // quietly skewing every skirmish.
-  var UNIT_COUNT = Object.keys(UNITS).reduce(function (s, t) { return s + (UNITS[t].count || 0); }, 0);
-  if (UNIT_COUNT !== I.CONFIG.pieceTotal)
-    throw new Error('War of Attrition: unit composition must total ' + I.CONFIG.pieceTotal + ' pieces (got ' + UNIT_COUNT +
-      (UNITS_VARIANT ? ' from units variant "' + UNITS_VARIANT.id + '"' : ' in maps.js') + ')');
   var CARDS = BUILTIN.cards;
-  if (!UNITS || !CARDS) throw new Error('War of Attrition: maps.js must define units and cards');
+  if (!CARDS) throw new Error('War of Attrition: no cards resolved (content/battalions/*.js)');
   // A card registry is "everything the skirmish needs to know about one battalion's
   // cards": the id->def map + which card opens. Built once for the active battalion
   // (the global default) and once per side when a skirmish seats asymmetric
@@ -189,10 +175,6 @@
     return sel; // an inline Commander object (tests / a custom pick)
   }
 
-  // one slot per physical piece on the player mat
-  var PIECE_TOTALS = { trench: I.CONFIG.terrain.trench.perSide };
-  Object.keys(UNITS).forEach(function (t) { PIECE_TOTALS[t] = UNITS[t].count || 0; });
-
   var MAPS = BUILTIN.maps;
 
   /* ---------- army-points (weights owned by the config home, 00-config.js) ----------
@@ -203,7 +185,7 @@
     if (!step || !step.type) return 0;
     var pts = I.CONFIG.points;
     var p = pts.step[step.type] || 0;
-    p += pts.tier[step.unit] || 0;                     // 0 when the step has no unit
+    p += I.deployPoints(step.unit);                    // 0 when the step has no unit
     if (step.mod) p += Math.abs(step.mod) * pts.mod;
     if (step.tieSpare) p += pts.tieSpare;
     if (step.noAdvance) p += pts.noAdvance;
@@ -244,11 +226,9 @@
   I.resolveCommander = resolveCommander;
   I.rnd = rnd;
   I.shuffle = shuffle;
-  I.UNITS = UNITS;
   I.CARDS = CARDS;
   I.CARD_BY_ID = CARD_BY_ID;
   I.STARTING_CARD = STARTING_CARD;
-  I.PIECE_TOTALS = PIECE_TOTALS;
   I.cardPoints = cardPoints;
   I.battalionPoints = battalionPoints;
   I.MAPS = MAPS;

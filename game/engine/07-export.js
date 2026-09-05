@@ -5,6 +5,11 @@
   'use strict';
   var I = global.WOA_E = global.WOA_E || {};
 
+  // The unit stock guardrail runs here, where the whole namespace is up: a units
+  // variant that does not total CONFIG.pieceTotal pieces fails at load rather
+  // than quietly skewing every skirmish.
+  I.checkUnitStock();
+
   var Engine = {
     VERSION: I.RULES_VERSION,
     UNITS: I.UNITS, CARDS: I.CARDS, CARD_BY_ID: I.CARD_BY_ID, MAPS: I.MAPS,
@@ -16,7 +21,14 @@
     CARD_POOL: I.CARD_POOL, hydrateBattalionCards: I.hydrateBattalionCards,
     cardPoints: I.cardPoints, battalionPoints: I.battalionPoints,
     CONFIG: I.CONFIG, configDigest: I.configDigest, defineConfigHome: I.defineConfigHome,
-    PIECE_TOTALS: I.PIECE_TOTALS,
+    // The unit house (engine/board/unit/) — the registry, the stat record, where
+    // the pieces are, and what a type is worth to each layer. Its screen dialect
+    // is game/ui/board/unit/.
+    Units: I.Units,
+    defineUnit: I.defineUnit, unitTypes: I.unitTypes, unitOf: I.unitOf,
+    unitStock: I.unitStock, unitValue: I.unitValue, deployPoints: I.deployPoints,
+    unitStockProblem: I.unitStockProblem, orphanRowProblem: I.orphanRowProblem,
+    checkUnitStock: I.checkUnitStock,
     SHAPES: I.SHAPES, DEFAULT_SHAPE: I.DEFAULT_SHAPE, boardHexes: I.boardHexes, setBoard: I.setBoard, hexes: I.hexes,
     buildShape: I.buildShape, ensureMapShape: I.ensureMapShape,
     currentShape: I.currentShape, rot180: I.rot180, buildTerrain: I.buildTerrain, hexLabel: I.hexLabel,
@@ -25,7 +37,7 @@
     // here rather than respelling the list.
     defineTerrain: I.defineTerrain, terrainTypes: I.terrainTypes, terrainOf: I.terrainOf,
     terrainNamed: I.terrainNamed, mapTerrainTypes: I.mapTerrainTypes,
-    terrainAt: I.terrainAt, sideEffect: I.sideEffect,
+    terrainAt: I.terrainAt, sideEffect: I.sideEffect, Trenches: I.Trenches,
     pieceProblem: I.pieceProblem, stockCap: I.stockCap, splitPieceRun: I.splitPieceRun,
     PIECE_LENGTHS: I.PIECE_LENGTHS,
     // The hex house (engine/board/hex/hex.js) — the coordinate vocabulary everything
@@ -38,7 +50,6 @@
     inBoard: I.inBoard, neighbor: I.neighbor, neighbors: I.neighbors, edgeFrom: I.edgeFrom,
     other: I.other,
     newBattle: I.newBattle, newSkirmish: I.newSkirmish, view: I.view,
-    Pieces: I.Pieces,
     unitAt: I.unitAt, isHQ: I.isHQ, isEmpty: I.isEmpty, controlledHexes: I.controlledHexes,
     deployTargets: I.deployTargets, deployBlocked: I.deployBlocked, trenchTargets: I.trenchTargets, trenchOrientations: I.trenchOrientations,
     listAttacks: I.listAttacks, listRepositions: I.listRepositions, listBarrageTargets: I.listBarrageTargets,
@@ -53,5 +64,10 @@
     // engine surface — it lives in game/sim.js (WOA_SIM), built on playToEnd.
     playToEnd: I.playToEnd
   };
+  // One slot per physical piece on the player mat: a reserve nobody has spent.
+  // Read live, not snapshotted, so the mat and a full reserve can never disagree
+  // about what the box holds.
+  Object.defineProperty(Engine, 'PIECE_TOTALS', { enumerable: true, get: I.copyReserves });
+
   global.Engine = Engine;
 })(typeof window !== 'undefined' ? window : globalThis);

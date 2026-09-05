@@ -5,7 +5,7 @@
 defineTerrainMark({
   letter: 'R',
   stroke: 'var(--river)',
-  ink: '#a9c6dd',
+  ink: 'var(--river-ink)',
   inset: 0.85,
   glyph: function(g, m, o){
     g.appendChild(svgEl('line',{

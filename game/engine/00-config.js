@@ -50,13 +50,14 @@
     points: {
       combo: [1, 2, 3, 5, 8, 13, 21, 34, 55],           // Nth stacked action costs base x combo[N] (Fibonacci)
       step: { deploy: 3, attack: 2, reposition: 1, trench: 1, barrage: 2 },
-      tier: { infantry: 0, cavalry: 1, artillery: 2 },   // deploy unit surcharge
       mod: 1,                                             // per point of |attack mod|
       tieSpare: 1, noAdvance: 0.5, anywhere: 1           // flag surcharges
     },
 
     // Terrain dials are the terrain house's own file, installed here as
-    // CONFIG.terrain: engine/board/terrain/terrain-config.js.
+    // CONFIG.terrain: engine/board/terrain/terrain-config.js. The unit's are
+    // likewise CONFIG.unit, from engine/board/unit/unit-config.js — including
+    // the per-type deploy surcharge the points table above used to spell out.
 
     // Map hex-count band — the physical board-size guardrail. Ceiling is the
     // laser-cutter max, enforced by validateMaps AND the map editor; floor is the

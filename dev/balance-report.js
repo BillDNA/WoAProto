@@ -62,8 +62,8 @@ var DECK = '', UNITSET = '';
   DECK = take('--battalion');
   UNITSET = take('--units');
   if (!DECK && !UNITSET) return;
-  global.WOA_CONTENT = { maps: [], cards: [], battalions: [], mapsets: [], units: [] };
-  ['battalions', 'maps', 'mapsets', 'units'].forEach(function (kind) {
+  global.WOA_CONTENT = { maps: [], cards: [], battalions: [], mapsets: [], units: [], commanders: [] };
+  require('../game/content/kinds.js').forEach(function (kind) {
     var dir = path.join(__dirname, '..', 'game', 'content', kind);
     var files = [];
     try { files = fs.readdirSync(dir).filter(function (f) { return /\.js$/.test(f); }).sort(); } catch (e) { return; }

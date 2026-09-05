@@ -63,7 +63,7 @@
     // across unrelated ones. Blocks group by concept —
     // board / pieces / cards / flow (turn) / result / journal. Identity keys
     // (seed, battle, mapIndex, mapName) stay top-level. Piece storage is
-    // reached only through the I.Pieces accessors, never poked directly, so its
+    // reached only through the house doors (I.Units, I.Trenches), never poked directly, so its
     // shape is a one-place seam.
     var st = {
       seed: battle.seed,
@@ -142,13 +142,16 @@
     drawHand(st, st.flow.current);
     return st;
   }
+  // A full reserve: every piece a side starts the skirmish holding. Each house
+  // states its own stock — units through I.Units.fullReserve(), the trench
+  // through the terrain dial — and this is the only place the two share a bag.
   function copyReserves() {
-    var r = { trench: I.CONFIG.terrain.trench.perSide };
-    Object.keys(I.UNITS).forEach(function (t) { r[t] = I.UNITS[t].count || 0; });
+    var r = { trench: I.CONFIG.terrain.trench.perSide }, stock = I.Units.fullReserve();
+    Object.keys(stock).forEach(function (t) { r[t] = stock[t]; });
     return r;
   }
-  // Per-skirmish, per-unit-type fold — keyed by I.UNITS' own type keys
-  // (infantry/cavalry/artillery). Named unitMetrics (not "units") because
+  // Per-skirmish, per-unit-type fold — one entry per type the unit house
+  // registers. Named unitMetrics (not "units") because
   // st.pieces.units already means the hexKey->{type,owner} board map.
   // dieT is a death-TURN list, symmetric to dep[] — pushed wherever die++ is
   // tallied (engine/03-rules.js killDefender/killAttacker). Capture only: no
@@ -157,7 +160,7 @@
   // skirmish to derive lifespan.
   function initUnitMetrics() {
     var u = {};
-    Object.keys(I.UNITS).forEach(function (t) { u[t] = { dep: [], atk: 0, abs: 0, kill: 0, die: 0, dieT: [] }; });
+    I.unitTypes().forEach(function (t) { u[t] = { dep: [], atk: 0, abs: 0, kill: 0, die: 0, dieT: [] }; });
     return u;
   }
   function ensureUnitMetrics(st) { // self-heal pre-metrics saves/sims
@@ -165,7 +168,7 @@
     // A save resumed from just before dieT existed has per-type
     // {dep,atk,abs,kill,die} but no dieT array — heal it in place so
     // killDefender/killAttacker's dieT.push never hits undefined.
-    Object.keys(I.UNITS).forEach(function (t) {
+    I.unitTypes().forEach(function (t) {
       var u = st.journal.unitMetrics[t];
       if (u && !Array.isArray(u.dieT)) u.dieT = [];
     });
@@ -220,7 +223,7 @@
   // for stats/journal, but victory reads the board.)
   function fieldScore(st, p) {
     var s = 0;
-    I.Pieces.eachUnit(st, function (h, u) { if (u.owner === p) s += I.UNITS[u.type].worth; });
+    I.Units.each(st, function (h, u) { if (u.owner === p) s += I.UNITS[u.type].worth; });
     return s;
   }
 
@@ -282,7 +285,7 @@
     var gain = 3 * turnsLeft;              // best case: a 3-point swing every remaining turn
     if (gain >= need) return null;         // the gap can still be closed in principle
     if (st.board.hqAlive[e] && turnsLeft > 0) {
-      var hasReserve = Object.keys(I.UNITS).some(function (t) { return st.pieces.reserves[p][t] > 0; });
+      var hasReserve = I.unitTypes().some(function (t) { return st.pieces.reserves[p][t] > 0; });
       if (hasReserve && turnsLeft >= 2 && st.cards.removed[p].indexOf('airdrop') < 0) return null; // Airdrop snipe still possible
       var hq = st.board.hq[e], reach = Infinity;
       for (var h2 in st.pieces.units) if (st.pieces.units[h2].owner === p) reach = Math.min(reach, I.dist(h2, hq));
@@ -473,21 +476,21 @@
     }
     if (step.type === 'deploy') {
       var targets = I.deployTargets(st, p, step.anywhere);
-      if (I.Pieces.reserve(st, p, step.unit) <= 0 || targets.indexOf(choice.hex) < 0) throw new Error('invalid deploy');
-      I.Pieces.spendReserve(st, p, step.unit);
-      I.Pieces.place(st, choice.hex, step.unit, p);
+      if (I.Units.reserve(st, p, step.unit) <= 0 || targets.indexOf(choice.hex) < 0) throw new Error('invalid deploy');
+      I.Units.spendReserve(st, p, step.unit);
+      I.Units.place(st, choice.hex, step.unit, p);
       st.journal.stats.deploys++;
       recordPlay(st, 'deploy', choice.hex, step.unit);
       ensureUnitMetrics(st)[step.unit].dep.push(st.flow.turnNumber);
       log(st, I.cap(p) + ' deploys ' + I.UNITS[step.unit].name + ' at ' + I.hexLabel(choice.hex) + '.');
     } else if (step.type === 'trench') {
-      if (I.Pieces.reserve(st, p, 'trench') <= 0 || I.trenchTargets(st, p).indexOf(choice.hex) < 0) throw new Error('invalid trench hex');
+      if (I.Units.reserve(st, p, 'trench') <= 0 || I.trenchTargets(st, p).indexOf(choice.hex) < 0) throw new Error('invalid trench hex');
       var dirs = choice.dirs;
       var pairOk = dirs && dirs.length === 2 && I.trenchOrientations(st, choice.hex).some(function (pr) {
         return (pr[0] === dirs[0] && pr[1] === dirs[1]) || (pr[0] === dirs[1] && pr[1] === dirs[0]);
       });
       if (!pairOk) throw new Error('invalid trench orientation');
-      I.Pieces.spendReserve(st, p, 'trench');
+      I.Units.spendReserve(st, p, 'trench');
       if (!st.pieces.trenches[choice.hex]) st.pieces.trenches[choice.hex] = [];
       st.pieces.trenches[choice.hex].push({ dirs: dirs.slice(), owner: p }); // owner is UI-only info; trenches aid any defender
       log(st, I.cap(p) + ' digs a trench at ' + I.hexLabel(choice.hex) +
@@ -504,7 +507,7 @@
       if (choice.swap) {
         var ok = r.swaps.some(function (s) { return (s.a === choice.a && s.b === choice.b) || (s.a === choice.b && s.b === choice.a); });
         if (!ok) throw new Error('invalid swap');
-        I.Pieces.swap(st, choice.a, choice.b);
+        I.Units.swap(st, choice.a, choice.b);
         st.journal.lastSwap[p] = swapKey(choice.a, choice.b);
         st.journal.stats.swaps++;
         recordPlay(st, 'swap', choice.a);
@@ -512,10 +515,10 @@
       } else {
         var okm = r.moves.some(function (m) { return m.from === choice.from && m.to === choice.to; });
         if (!okm) throw new Error('invalid move');
-        I.Pieces.advance(st, choice.from, choice.to);
+        I.Units.advance(st, choice.from, choice.to);
         st.journal.stats.marches++;
         recordPlay(st, 'march', choice.to);
-        log(st, I.cap(p) + ' marches ' + I.UNITS[I.Pieces.unitAt(st, choice.to).type].name + ' from ' + I.hexLabel(choice.from) + ' to ' + I.hexLabel(choice.to) + '.');
+        log(st, I.cap(p) + ' marches ' + I.UNITS[I.Units.at(st, choice.to).type].name + ' from ' + I.hexLabel(choice.from) + ' to ' + I.hexLabel(choice.to) + '.');
       }
     } else if (step.type === 'barrage') {
       var b = I.listBarrageTargets(st, p);

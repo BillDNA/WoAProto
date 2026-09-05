@@ -62,6 +62,15 @@
     return all.filter(function (t) { return t.storage === 'edges'; });
   }
 
+  /* ---------- where the dug pieces are ----------
+     st.pieces.trenches is hexKey -> [{dirs:[d,d+1], owner}]. The trench is the
+     one terrain a player places during a game, so it is the one with storage;
+     map terrain is authored into st.board.terrainEdges and never moves. */
+  var Trenches = {
+    all: function (st) { return st.pieces.trenches; },
+    at: function (st, h) { return st.pieces.trenches[h]; }
+  };
+
   /* ---------- what occupies a side ----------
      The one dispatch over storage: a side carries at most one terrain, whether
      it was authored into the map or dug during the game. Every rules question
@@ -202,6 +211,7 @@
 
   /* shared-namespace exports */
   I.PIECE_LENGTHS = PIECE_LENGTHS;
+  I.Trenches = Trenches;
   I.defineTerrain = defineTerrain;
   I.terrainTypes = terrainTypes;
   I.terrainOf = terrainOf;

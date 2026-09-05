@@ -129,8 +129,8 @@ test('seam: the engine dials are grouped into named sections, not one flat blob'
 test('seam: CONFIG.terrain.forest.attack drives the forest attack bonus', () => {
   const C = E.CONFIG, base = C.terrain.forest.attack;
   const st = testSkirmish(1);
-  E.Pieces.place(st, '0,0', 'infantry', 'red');
-  E.Pieces.place(st, '0,1', 'infantry', 'blue');
+  E.Units.place(st, '0,0', 'infantry', 'red');
+  E.Units.place(st, '0,1', 'infantry', 'blue');
   st.board.terrainEdges[E.sideKey('0,0', E.dirBetween('0,0', '0,1'))] = 'F'; // forest the attack crosses
   const p0 = E.computeAttack(st, { from: '0,0', to: '0,1' }).attackerPower;
   try {
