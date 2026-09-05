@@ -6,15 +6,16 @@
 
    Assembly, not authoring: the player picks finished pool cards and sets counts;
    authoring a card's steps stays in the dev Battalion Editor. Same data, one
-   model — the built battalion round-trips through the shared 'woa-battalions'
-   active slot, and legality / points reuse the exported engine surface
+   model — the built battalion round-trips through the session house's
+   `battalions` record, and legality / points reuse the exported engine surface
    (battalionProblems, battalionPoints, cardPoints, CONFIG.pointsCap). */
 'use strict';
 
 var PB = { cards: null, opponent: null };
 
-// The player's battalion lives in the shared 'woa-battalions' active slot (the
-// same store the dev editor writes), so the two are views over one model.
+// The player's battalion lives in the active slot of the session house's
+// `battalions` record — the same one the dev editor writes, so the two are views
+// over one model.
 function pbLoad(){
   var d = loadBattalions();
   var slot = d.slots[d.active | 0];
@@ -26,7 +27,7 @@ function pbStore(){
   var i = d.active | 0;
   d.slots[i] = d.slots[i] || { name: 'Battalion ' + (i + 1) };
   d.slots[i].cards = shipCards(PB.cards); // benched cards / transient flags stripped
-  try { localStorage.setItem('woa-battalions', JSON.stringify(d)); } catch(e){}
+  STORE_BATTALIONS.write(d);
 }
 
 function pbPool(){ return (typeof WOA_CONTENT !== 'undefined' && WOA_CONTENT.cards) || (E.CARD_POOL || []); }

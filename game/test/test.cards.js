@@ -429,3 +429,20 @@ test('no-op plays are logged and marked (skipped-turn report)', () => {
   assert.ok('noop' in r.cards[anyCard], 'balanceMap aggregates noop per card');
 })();
 });
+
+// The mat's spent-orders track shows one chip per card copy, labelled by the
+// card's own `abbr`. Two cards sharing a label are indistinguishable there, so
+// the pool must carry distinct ones. Asserts the mechanism, not the letters: any
+// abbr is fine as long as every card in the pool has one and no two collide.
+test('every card in the pool carries its own distinct abbreviation', () => {
+  const pool = E.CARD_POOL || E.CARDS;
+  assert.ok(pool.length > 0, 'found the card pool');
+  const missing = pool.filter(c => !c.abbr).map(c => c.id);
+  assert.deepStrictEqual(missing, [], 'cards with no abbr: ' + missing.join(', '));
+  const seen = {}, clashes = [];
+  pool.forEach(c => {
+    if (seen[c.abbr]) clashes.push(seen[c.abbr] + ' / ' + c.id + ' -> "' + c.abbr + '"');
+    seen[c.abbr] = c.id;
+  });
+  assert.deepStrictEqual(clashes, [], 'colliding abbreviations: ' + clashes.join('; '));
+});

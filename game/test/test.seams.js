@@ -216,3 +216,34 @@ test('seam: limits.turnCap bounds the drive loop', () => {
     assert.ok(burnGame(2).flow.phase !== 'skirmish-over', 'a cap of 2 stops the loop before that finish (the guard bit)');
   } finally { C.limits.turnCap = base; }
 });
+
+// The gate has to reach every test in the tree. `npm test` runs
+// game/test/test.js plus a FLAT dev/*.test.js glob, so a test file that moves
+// into a subdirectory stops running — silently, and green. Both halves are
+// checked here: a house test must be required by test.js, and dev tests must
+// stay flat (or the script's pattern must be widened in the same commit).
+test('seam: every test file in the tree is reached by the gate', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const ROOT = path.join(__dirname, '..', '..');
+  const SKIP = new Set(['node_modules', '.git', 'graphify-out', 'logs', '.claude', 'art']);
+  function walk(dir, out) {
+    fs.readdirSync(dir, { withFileTypes: true }).forEach(d => {
+      if (SKIP.has(d.name)) return;
+      const full = path.join(dir, d.name);
+      if (d.isDirectory()) walk(full, out);
+      else if (d.name.endsWith('.test.js')) out.push(path.relative(ROOT, full).split(path.sep).join('/'));
+    });
+    return out;
+  }
+  const files = walk(ROOT, []);
+  assert.ok(files.length > 5, 'found the test files (guards a broken walk)');
+
+  const entry = fs.readFileSync(path.join(ROOT, 'game', 'test', 'test.js'), 'utf8');
+  const unreached = files.filter(f => {
+    if (f.startsWith('dev/')) return f.split('/').length !== 2;      // the flat glob reaches dev/*.test.js only
+    return !entry.includes(path.basename(f)) || !entry.includes(f.replace('game/test/', './').replace('game/', '../'));
+  });
+  assert.deepStrictEqual(unreached, [],
+    'test files the gate never runs — require them from game/test/test.js, or widen the npm pattern:\n' + unreached.join('\n'));
+});

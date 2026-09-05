@@ -2,6 +2,7 @@
 {
  "id": "cavalry_muster",
  "name": "Cavalry Muster",
+ "abbr": "Mu",
  "faction": null,
  "text": "Place two Cavalry units adjacent to any controlled hex, in sequence.",
  "steps": [

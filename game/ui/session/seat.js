@@ -1,16 +1,17 @@
 /* The SEAT: who is at the controls, and what that implies.
 
    Four modes seat a skirmish — one human against an AI, two humans on one
-   device, two humans over a wire, and nobody at all. Every screen asks the same
-   questions of them, so each mode answers them once here and nothing else
-   switches on APP.mode.
+   device, two humans over a wire, and two AIs with nobody playing — plus `none`
+   for a menu with no skirmish at all. Every screen asks the same questions of
+   them, so each mode answers them once here and nothing else switches on
+   APP.mode.
 
-   A seat answers: is my input live, whose hand do I see, which side is "you",
-   which side is an AI, what does the screen say while I wait, what happens when
-   which side a local human drives, what the screen says while I wait, what
-   happens when a turn begins, does a save get written, does a change go over the
-   wire, may this seat concede, whether the hand is gated behind a hand-off, and
-   what a finished skirmish records for a side — its AI name and its run kind. */
+   A seat answers: is my input live, whose hand do I see, which side do I drive,
+   which side is "you", which side is an AI, what the screen says while I wait,
+   what happens when a turn begins, whether a save is written, whether a change
+   goes over the wire, whether this seat may concede, whether the hand is gated
+   behind a hand-off, and what a finished skirmish records for a side — its AI
+   name and its run kind. */
 'use strict';
 
 var UI_SEATS = {};
@@ -24,9 +25,9 @@ function uiSeat(spec){
   return spec;
 }
 
-// The seat this browser is sitting in. No skirmish in progress = no seat, and
-// every question below then answers the way an empty screen needs.
-function seat(){ return UI_SEATS[APP.mode] || UI_SEATS.hotseat; }
+// The seat this browser is sitting in. Nothing seated is itself a seat, so no
+// question below has to guess.
+function seat(){ return UI_SEATS[APP.mode] || UI_SEATS.none; }
 
 /* ---- the questions, asked of the live seat ---- */
 // Input is dead while the engine is mid-AI-turn or the skirmish is decided,
@@ -51,7 +52,20 @@ function seatGatesHand(){ return seat().gatesHand; }
 function seatAiName(side){ return seat().aiName(side); }
 function seatRunKind(){ return seat().runKind; }
 
-/* ---- the four seats ---- */
+/* ---- the seats ---- */
+uiSeat({
+  mode: 'none',                                 // the menu: nothing is being played
+  live: function(){ return false; },
+  viewSide: function(v){ return v.current; },
+  drives: function(){ return false; },
+  you: function(){ return null; },
+  aiSide: function(){ return false; },
+  waiting: function(){ return ''; },
+  beginTurn: function(){},
+  persists: false, wire: false, concedable: false, gatesHand: false,
+  aiName: function(){ return 'human'; }, runKind: 'human'
+});
+
 uiSeat({
   mode: 'ai',                                   // you against the enemy general
   live: function(v){ return v.current === APP.mySide; },

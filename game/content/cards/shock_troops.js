@@ -2,6 +2,7 @@
 {
  "id": "shock_troops",
  "name": "Shock Troops",
+ "abbr": "ST",
  "faction": null,
  "text": "Place an Infantry unit adjacent to any controlled hex. Then order an attack.",
  "steps": [

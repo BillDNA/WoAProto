@@ -2,6 +2,7 @@
 {
  "id": "vanguard",
  "name": "Vanguard",
+ "abbr": "Vg",
  "faction": null,
  "starting": true,
  "text": "Place an Infantry unit adjacent to any controlled hex. Then reposition a unit.",

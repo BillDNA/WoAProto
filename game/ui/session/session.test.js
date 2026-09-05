@@ -87,7 +87,7 @@ const QUESTIONS = ['live', 'viewSide', 'drives', 'you', 'aiSide', 'waiting', 'be
 test('every seat answers every question', () => {
   const ctx = loadSession();
   const modes = Object.keys(ctx.UI_SEATS);
-  assert.deepEqual(modes.sort(), ['ai', 'hotseat', 'net', 'watch']);
+  assert.deepEqual(modes.sort(), ['ai', 'hotseat', 'net', 'none', 'watch']);
   modes.forEach(m => QUESTIONS.forEach(q =>
     assert.notStrictEqual(ctx.UI_SEATS[m][q], undefined, m + ' answers ' + q)));
 });
@@ -136,6 +136,16 @@ test('a decided skirmish and a busy screen kill input whatever the seat says', (
   busy.APP.mode = 'hotseat';
   busy.APP.ui.busy = true;
   assert.strictEqual(busy.inputLive(), false, 'mid-AI-turn');
+});
+
+test('nothing seated is a seat of its own — no guessing on the menu', () => {
+  const ctx = loadSession();
+  ctx.APP.mode = null;
+  assert.strictEqual(ctx.seat().mode, 'none');
+  assert.strictEqual(ctx.inputLive(), false);
+  assert.strictEqual(ctx.seatYou(), null);
+  assert.strictEqual(ctx.seatPersists(), false);
+  assert.strictEqual(ctx.seatConcedable(), false);
 });
 
 test('watch mode has no "you" and cannot concede', () => {

@@ -2,6 +2,7 @@
 {
  "id": "storm_and_hold",
  "name": "Storm and Hold",
+ "abbr": "SH",
  "faction": null,
  "text": "Order an attack with +1 support. Then build a trench on any controlled hex.",
  "steps": [

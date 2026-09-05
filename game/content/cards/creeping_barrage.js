@@ -2,6 +2,7 @@
 {
  "id": "creeping_barrage",
  "name": "Creeping Barrage",
+ "abbr": "CB",
  "faction": null,
  "text": "Remove any trench or forest on the board (optional). Then order an attack with +1 support; your attacker holds its ground.",
  "steps": [

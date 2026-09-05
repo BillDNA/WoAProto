@@ -35,8 +35,7 @@ var CONTEXT_DIR = path.join(ROOT, 'docs', 'context');
 // The spine: every area page of the address book, plus the UI primitive catalog.
 // A new area page is gated by existing — there is no list here to keep in step.
 var SPINE = fs.readdirSync(CONTEXT_DIR).filter(function (f) { return path.extname(f) === '.md'; })
-  .sort().map(function (f) { return path.join(CONTEXT_DIR, f); })
-;
+  .sort().map(function (f) { return path.join(CONTEXT_DIR, f); });
 
 /* ---- the tree we scan for alias residuals ------------------------------- */
 var SCAN_EXT = ['.js', '.md', '.css', '.html'];
@@ -102,7 +101,7 @@ var ALIASES = [
   // the only allowed "roster" is the player piece-mats overlay UI (a distinct
   // concept) and the `map-roster-and-shapes` spec codename.
   { term: 'roster (→ Mapset / map library)', pattern: /\broster/gi,
-    ignore: /rostersOvr|rostersBody|fabRosters|BOTH rosters|>Rosters<|title:'Rosters'|map-roster-and-shapes/, status: 'locked',
+    ignore: /fabRosters|BOTH rosters|>Rosters<|title:'Rosters'|map-roster-and-shapes/, status: 'locked',
     note: 'active-set → Mapset; full collection → map library; piece mats stay the mats overlay' },
   // The engine best-of object is now st.battle / newBattle. What stays "match":
   // the claude-plays `--match` CLI flag + its jsonl log schema, the `matchup`

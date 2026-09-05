@@ -1,8 +1,8 @@
 /* The hand: the cards this turn may be spent on.
 
-   A card's short form is the card's own business — `abbr` in content/cards/ —
-   so a card added to the pool is either explicitly abbreviated or predictably
-   initialled, and none is silently missed. */
+   A card's short form is the card's own business — `abbr` in content/cards/.
+   Every shipped card declares one and no two collide (game/test/test.cards.js
+   holds that); a card that arrives without one falls back to its initials. */
 'use strict';
 
 function cardAbbr(c){

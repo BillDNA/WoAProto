@@ -236,8 +236,7 @@ $('dkSave').onclick = function(){
   var actProbs = act ? battalionProblems(act.cards) : ['the active battalion slot is empty'];
   if (actProbs.length){ toast('Slots saved, but the ACTIVE battalion ("'+(act?act.name:'—')+'") is invalid: '+actProbs[0]+' — Set active on a valid battalion.', 5600); return; }
   var ship = shipCards(act.cards);
-  try { localStorage.setItem('woa-custom-battalion', JSON.stringify(ship)); }
-  catch(e){ toast('The browser refused to store the battalion (private mode?). Use Export instead.', 5000); return; }
+  if (!STORE_BATTALION.write(ship)){ toast('The browser refused to store the battalion (private mode?). Use Export instead.', 5000); return; }
   clearSave(); // an in-flight skirmish from another battalion would confuse the resume path
   toast('Battalion "'+act.name+'" is now active — reloading with its cards…', 1800);
   syncBattalionFile(ship, function(){ setTimeout(function(){ location.reload(); }, 600); });

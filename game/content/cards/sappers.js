@@ -2,6 +2,7 @@
 {
  "id": "sappers",
  "name": "Sappers",
+ "abbr": "Sp",
  "faction": null,
  "text": "Remove any trench or forest on the board (optional). Then build a trench on any controlled hex.",
  "steps": [

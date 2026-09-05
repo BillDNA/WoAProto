@@ -2,6 +2,7 @@
 {
  "id": "over_the_top",
  "name": "Over the Top",
+ "abbr": "OT",
  "faction": null,
  "text": "Reposition a unit. Then order an attack; your attacker survives a tie.",
  "steps": [

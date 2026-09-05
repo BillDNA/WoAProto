@@ -5,7 +5,7 @@ What survives an interruption, and who is at the controls.
 ## The two bases
 
 **`seat.js`** — a seat is one of the four modes (`ai`, `hotseat`, `net`,
-`watch`), and it answers every question that follows from being in it: is my
+`watch`), plus `none` for a menu with nothing being played, and it answers every question that follows from being in it: is my
 input live, whose hand do I see, which side do I drive, which side is "you",
 which is an AI, what the screen says while I wait, what happens when a turn
 begins, whether a save is written, whether a change goes over the wire, whether

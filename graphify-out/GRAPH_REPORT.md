@@ -5,12 +5,12 @@
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1393 nodes · 1869 edges · 219 communities (182 shown, 37 thin omitted)
-- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 146 edges (avg confidence: 0.66)
+- 1393 nodes · 1866 edges · 222 communities (185 shown, 37 thin omitted)
+- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 143 edges (avg confidence: 0.66)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `292fbf75`
+- Built from commit: `c8b4cf64`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -39,7 +39,7 @@
 - server.js
 - 01-core.js
 - app.js
-- dashboard.js
+- boot.test.js
 - claude-plays.test.js
 - test.ui.js
 - fx.js
@@ -136,6 +136,9 @@
 - board.js
 - thumbnail.js
 - debug.js
+- panes/maps.js
+- dashboard.js
+- overview.js
 
 ## God Nodes (most connected - your core abstractions)
 1. `seat()` - 15 edges
@@ -143,17 +146,17 @@
 3. `Engine model (rules kernel)` - 13 edges
 4. `testSkirmish()` - 12 edges
 5. `Report model (reporting subsystem)` - 11 edges
-6. `LlmSession()` - 10 edges
-7. `R` - 10 edges
-8. `applyStep()` - 10 edges
-9. `svgEl()` - 10 edges
+6. `svgEl()` - 10 edges
+7. `LlmSession()` - 10 edges
+8. `R` - 10 edges
+9. `applyStep()` - 10 edges
 10. `Game concepts` - 10 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `reportMarkdown()` --indirect_call--> `done()`  [INFERRED]
-  game/report-model.js → dev/smoke.js
 - `dashReportMarkdown()` --indirect_call--> `done()`  [INFERRED]
   game/ui/screens/dashboard/dashboard.js → dev/smoke.js
+- `reportMarkdown()` --indirect_call--> `done()`  [INFERRED]
+  game/report-model.js → dev/smoke.js
 - `run()` --indirect_call--> `key()`  [INFERRED]
   dev/tune-weights.js → game/engine/02-board.js
 - `generate-reports skill` --conceptually_related_to--> `Balance loop (concept)`  [INFERRED]
@@ -171,15 +174,15 @@
 - **War of Attrition content rubrics (findings-not-score)** — docs_rubrics_card_rubric_card_rubric, docs_rubrics_map_rubric_map_rubric, docs_rubrics_personality_rubric_personality_rubric, docs_rubrics_ui_rubric_ui_rubric, docs_rubrics_unit_rubric_unit_rubric [INFERRED 0.85]
 - **Balance measurement pipeline (sweep to graded report)** — docs_human_instructions_standard_runs_runbook_standard_runs, docs_reference_report_model_report_model, game_readme_balance_lab, logs_readme_playtest_data [INFERRED 0.75]
 
-## Communities (219 total, 37 thin omitted)
+## Communities (222 total, 37 thin omitted)
 
 ### Community 0 - "Engine model (rules kernel)"
 Cohesion: 0.05
 Nodes (53): Apples-to-apples determinism, Standard runs runbook, AI heuristic model, AI_PRESETS (easy/normal/hard), AI_WEIGHTS, Anti-degeneracy guards (noopPenalty/antiShuffle/attrWin), CARD_KEEP burn priority, evalState board scoring (+45 more)
 
 ### Community 1 - "chart-model.js"
-Cohesion: 0.06
-Nodes (42): assert, E, fs, http, os, path, R, server (+34 more)
+Cohesion: 0.08
+Nodes (24): assert, E, fs, http, os, path, R, server (+16 more)
 
 ### Community 2 - "War of Attrition Rule Book (v1.1)"
 Cohesion: 0.06
@@ -265,9 +268,9 @@ Nodes (5): handler(), json(), listen(), readBody(), saveUnderRepo()
 Cohesion: 0.20
 Nodes (12): activeMaps(), activeMapset(), battalionPoints(), battalionRegistry(), cardPoints(), comboWeight(), hydrateBattalionCards(), hydrateCardRef() (+4 more)
 
-### Community 24 - "dashboard.js"
-Cohesion: 0.07
-Nodes (36): accFilePath(), readAcc(), run(), assert, bootHtml(), fs, harness, { JSDOM } (+28 more)
+### Community 24 - "boot.test.js"
+Cohesion: 0.09
+Nodes (27): accFilePath(), readAcc(), run(), assert, bootHtml(), fs, harness, { JSDOM } (+19 more)
 
 ### Community 25 - "claude-plays.test.js"
 Cohesion: 0.18
@@ -509,25 +512,37 @@ Nodes (3): hl(), renderBoard(), renderHighlights()
 Cohesion: 0.83
 Nodes (3): bpThumbHex(), bpThumbHQ(), previewSVG()
 
+### Community 219 - "panes/maps.js"
+Cohesion: 0.27
+Nodes (13): mdBandBoard(), mdFsDiffTrackHtml(), mdHeaderHtml(), mdHexLabelFor(), mdHexLensSection(), mdLaneBars(), mdLensFill(), mdMapDef() (+5 more)
+
+### Community 220 - "dashboard.js"
+Cohesion: 0.33
+Nodes (9): dashFillRunSelect(), dashLoadRuns(), dashPickDefaultRuns(), dashReportMarkdown(), dashRunLabel(), openDash(), openDashDef(), renderDash() (+1 more)
+
+### Community 221 - "overview.js"
+Cohesion: 0.60
+Nodes (5): ovMapDumbbells(), ovPacingMinis(), ovRenderBody(), ovVerdictBanner(), renderOverview()
+
 ## Knowledge Gaps
-- **356 isolated node(s):** `fs`, `os`, `path`, `{ test }`, `assert` (+351 more)
+- **356 isolated node(s):** `{ test }`, `assert`, `{ spawnSync }`, `path`, `{ checkHomes }` (+351 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **37 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `done()` connect `dashboard.js` to `balance.js`, `report-model.js`?**
+- **Why does `done()` connect `boot.test.js` to `balance.js`, `report-model.js`, `dashboard.js`?**
   _High betweenness centrality (0.019) - this node is a cross-community bridge._
-- **Why does `mapReport()` connect `balance.js` to `dashboard.js`, `chart-model.js`, `report-model.js`?**
-  _High betweenness centrality (0.013) - this node is a cross-community bridge._
+- **Why does `mapReport()` connect `balance.js` to `boot.test.js`, `chart-model.js`, `report-model.js`?**
+  _High betweenness centrality (0.017) - this node is a cross-community bridge._
 - **Why does `send()` connect `llm-session.test.js` to `claude-plays.js`?**
   _High betweenness centrality (0.013) - this node is a cross-community bridge._
 - **Are the 3 inferred relationships involving `Engine model (rules kernel)` (e.g. with `Anti-degeneracy guards (noopPenalty/antiShuffle/attrWin)` and `Unit rubric`) actually correct?**
   _`Engine model (rules kernel)` has 3 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 3 inferred relationships involving `Report model (reporting subsystem)` (e.g. with `Standard runs runbook` and `Balance lab (dev/balance.js + Balance Dashboard)`) actually correct?**
   _`Report model (reporting subsystem)` has 3 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `fs`, `os`, `path` to the rest of the system?**
+- **What connects `{ test }`, `assert`, `{ spawnSync }` to the rest of the system?**
   _356 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Engine model (rules kernel)` be split into smaller, more focused modules?**
   _Cohesion score 0.05224963715529753 - nodes in this community are weakly interconnected._
