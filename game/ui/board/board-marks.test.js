@@ -133,6 +133,21 @@ test('a row names only what its board does differently', () => {
     'a named one wins');
 });
 
+// The Red / Blue house is not built (docs/context, "Red / Blue"); ui/kit/palette.js
+// is its share. When it is built, this is the seam it takes over, and this test is
+// what says the board house will not have to move.
+test('the board paints whatever the seat says red and blue are', () => {
+  const ctx = loadMarks();
+  ctx.BOARD.side = o => ({ fill: 'SEAT-' + o, dark: 'SEAT-' + o + '-dark' });
+  const g = group(ctx);
+  ctx.bpMark('hq', g, { hex:'0,0', side:'red' });
+  assert.strictEqual(g.children[0].attrs.fill, 'SEAT-red',
+    'the HQ takes its fill from the seat, and names no colour of its own');
+  const src = markFiles().map(f => fs.readFileSync(path.join(HERE, f), 'utf8')).join('\n');
+  assert.ok(!/#[0-9a-fA-F]{3,8}\b/.test(src),
+    'no mark spells a colour: every one is a seat answer or a var(--…) in board-config');
+});
+
 test('a row may name one dial inside a group without dropping its siblings', () => {
   const ctx = loadMarks();
   ctx.BOARD_CONFIG.manual.struck = { r: { unit: 9 } };   // a row naming half a group

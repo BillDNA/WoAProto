@@ -1,7 +1,11 @@
 /* Every dial for a unit on screen, one row per surface it is drawn on. What a
    TYPE is drawn like — its glyph, its dashboard colour — is on that type's own
-   mark; these are the numbers every type shares. A board at another scale (the
-   Field Manual's mini-board) passes them as options.
+   mark; these are the numbers every type shares.
+
+   `token` is the live board, and a board that draws the token at another scale
+   is a row read OVER it, naming only what it does differently — the same shape
+   board-config.js and terrain-config.js use, and the row name is that board's
+   row in hex-config.js. `mat` is not a board at all, so it stands alone.
 
    Classic script, no wrapper; loads after the engine, before unit-marks.js. */
 'use strict';
@@ -16,6 +20,19 @@ var UNIT_CONFIG = window.Engine.defineConfigHome({
     chitSW: 1.4,     // the chit's border; 0 draws no chit at all
     glyphSW: 2,      // the glyph's line weight
     dotR: 4.5        // the radius a round glyph draws at — the artillery shot reads it
+  },
+  // the Field Manual's mini-board: the same token, lighter, at 34px hexes. The
+  // disc's radius is not here — token.r is a fraction, so it scales itself.
+  manual: {
+    chitHW: 10, chitHH: 7, outlineSW: 2, chitSW: 1.2, glyphSW: 1.7, dotR: 3.6
+  },
+  // a fallen unit: the disc alone, left behind where it stood and taken away again
+  fallen: {
+    ms: 750           // how long the ghost lingers (unit.css's ghostOut rides it out)
+  },
+  // a unit that moved or was just placed — the motion, not the mark
+  motion: {
+    slideMs: 300      // a token sliding from the hex it left to the one it took
   },
   // the player mat's slot: the same shapes at 20px, with the glyph cut straight
   // out of the disc, because at this size a chit is a smudge

@@ -240,14 +240,15 @@ function mdHexLensSection(mapName, hex) {
         bpMark('tile', g, { hex: k, on: on, fill: 'url(#mdHatch)', stroke: 'none' });
       });
       // avenue of attack: a NESTED hex red ring (real polygon stroke, never a css outline on a clip — AC2)
+      var ring = BOARD_CONFIG.mapPane.hexRing;
       if (d && d.avenue) overlays += bpMarkup(function (g) {
-        bpMark('hexRing', g, { hex: k, on: on, of: 0.62, stroke: CHART.breach, sw: 2.5 });
+        bpMark('hexRing', g, { hex: k, on: on, of: ring.avenue, stroke: CHART.breach, sw: ring.avenueSW });
       });
       // A/B ghost: dashed inner hex sized by run A's value on the shared max
       if (g && g[lens.key] > 0 && max > 0) {
-        var gr = 0.16 + 0.74 * Math.min(1, g[lens.key] / max);
+        var gr = ring.runAFloor + ring.runASpan * Math.min(1, g[lens.key] / max);
         overlays += bpMarkup(function (gg) {
-          bpMark('hexRing', gg, { hex: k, on: on, of: gr, stroke: CHART.ink, sw: 1.3, dash: '3 2' });
+          bpMark('hexRing', gg, { hex: k, on: on, of: gr, stroke: CHART.ink, sw: ring.runASW, dash: ring.runADash });
         });
       }
       // HQ marker: thick side-coloured border + star

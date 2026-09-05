@@ -22,8 +22,8 @@
    Every mark on it is the live board's, drawn through bpMark at the 'manual'
    surface — that row in board-config.js and hex-config.js is where its scale and
    its lighter line weights live, so nothing here is a second spelling. The
-   terrain glyph and the unit token still carry their weights at the call site;
-   those are the terrain and unit houses' rows to grow, not this file's. */
+   terrain glyph and the unit token read their own houses' `manual` rows the
+   same way, so this file names a board and never a number. */
 function mpXY(k){ return hexXY(k, HEX_CONFIG.manual.size); }
 
 /* ============ fixture states (real engine states, tiny inline maps) ============ */
@@ -111,17 +111,14 @@ function mpDrawFrame(f){
     });
   }
 
-  // terrain sides — the live board's terrain mark (bpTerrainEdge) at HEX_CONFIG.manual.size scale,
-  // its glyph sizes/line widths tuned for the mini board (no data-edge hover).
+  // terrain sides and trenches — the live board's marks at the manual's row
+  // (no data-edge hover: a diagram has nothing to paint)
   for (var ek in st.board.terrainEdges){
-    bpTerrainEdge(svg, ek, st.board.terrainEdges[ek],
-      { s:HEX_CONFIG.manual.size, sw:6, riverSW:1.8, riverDash:'5 4', forestR:3.4, forestR2:2.6, edgeData:false });
+    bpTerrainEdge(svg, ek, st.board.terrainEdges[ek], { on:'manual', edgeData:false });
   }
-
-  // trenches — the live board's trench mark (bpTrenchLine) at HEX_CONFIG.manual.size scale
   for (var th in st.pieces.trenches){
     st.pieces.trenches[th].forEach(function(tr){
-      tr.dirs.forEach(function(d2){ bpTrenchLine(svg, th, d2, { s:HEX_CONFIG.manual.size, sw:5, dash:'5.5 3' }); });
+      tr.dirs.forEach(function(d2){ bpTrenchLine(svg, th, d2, { on:'manual' }); });
     });
   }
 
@@ -153,8 +150,7 @@ function mpDrawFrame(f){
 function mpDrawUnit(svg, hex, u, ghost){
   var xy = mpXY(hex);
   var g = svgEl('g', ghost ? {'class':'mghost'} : {});
-  // same token as the live board, at HEX_CONFIG.manual.size sizes (see bpUnitToken)
-  bpUnitToken(g, xy[0], xy[1], u.owner, u.type, { r:unitTokenR(HEX_CONFIG.manual.size), circSW:2, chitHW:10, chitHH:7, chitSW:1.2, glyphSW:1.7, dotR:3.6 });
+  bpUnitToken(g, xy[0], xy[1], u.owner, u.type, { on:'manual' });
   if (ghost) bpMark('struck', g, { hex:hex, of:'unit', on:'manual' });
   svg.appendChild(g);
 }

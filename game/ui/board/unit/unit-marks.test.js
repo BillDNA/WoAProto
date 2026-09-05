@@ -37,7 +37,7 @@ function loadMarks(seat) {
   const ctx = {
     E,
     window: { Engine: E },
-    HEX_CONFIG: { board: { size: 44 } },
+    HEX_CONFIG: { board: { size: 44 }, manual: { size: 34 } },
     CHART: { divRed: ['a', 'chart-red', 'c'], divBlue: ['a', 'chart-blue', 'c'], improve: 'chart-improve' },
     BOARD: { side: seat || (o => ({ fill: o, dark: o + '-dark' })) },
     svgEl: (tag, attrs) => ({
@@ -134,9 +134,21 @@ test('the token scales from the hex, so a mini-board draws the same mark', () =>
   const ctx = loadMarks();
   assert.strictEqual(ctx.unitTokenR(), 44 * ctx.UNIT_CONFIG.token.r, 'the board radius is a fraction of the hex');
   assert.strictEqual(ctx.unitTokenR(34), 34 * ctx.UNIT_CONFIG.token.r, 'and follows a smaller board down');
-  const small = token(ctx, 'artillery', { r: 8, dotR: 2 });
-  assert.strictEqual(small[0].attrs.r, 8, 'an explicit radius still wins');
-  assert.strictEqual(small[2].attrs.r, 2, "and the glyph's own option reaches it");
+  // a caller names a BOARD, never a number: the disc scales from that board's
+  // hex and every weight is that board's row
+  const big = token(ctx, 'artillery', {});
+  const small = token(ctx, 'artillery', { on: 'manual' });
+  assert.strictEqual(big[0].attrs.r, 44 * ctx.UNIT_CONFIG.token.r, 'the live board draws at its own hex');
+  assert.strictEqual(small[0].attrs.r, 34 * ctx.UNIT_CONFIG.token.r, "and the manual's at its");
+  assert.strictEqual(small[2].attrs.r, ctx.UNIT_CONFIG.manual.dotR, "the glyph reads that board's row too");
+  assert.strictEqual(big[2].attrs.r, ctx.UNIT_CONFIG.token.dotR, 'and the live board reads its own');
+});
+
+test('a row names only what its board does differently', () => {
+  const ctx = loadMarks();
+  assert.strictEqual(ctx.unitDial('manual').r, ctx.UNIT_CONFIG.token.r,
+    'an unnamed dial falls through to the live board (a fraction scales itself)');
+  assert.strictEqual(ctx.unitDial('manual').chitSW, ctx.UNIT_CONFIG.manual.chitSW, 'a named one wins');
 });
 
 // The mat slot is not a second drawing path: same builder, same glyph, the mat

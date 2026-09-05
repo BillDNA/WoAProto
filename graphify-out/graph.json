@@ -277,76 +277,196 @@
       "source_location": "L206"
     },
     {
-      "id": "dev_llm_client_buildprompt",
-      "label": "buildPrompt()",
+      "id": "game_ui_board_map_editor_edbuilddef",
+      "label": "edBuildDef()",
       "_callable": true,
       "_origin": "ast",
       "community": 10,
-      "community_name": "llm-client.js",
+      "community_name": "map-editor.js",
       "file_type": "code",
-      "norm_label": "buildprompt()",
-      "source_file": "dev/llm-client.js",
-      "source_location": "L28"
+      "norm_label": "edbuilddef()",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L272"
     },
     {
-      "id": "dev_llm_client_errored",
-      "label": "errored()",
+      "id": "game_ui_board_map_editor_edgocustom",
+      "label": "edGoCustom()",
       "_callable": true,
       "_origin": "ast",
       "community": 10,
-      "community_name": "llm-client.js",
+      "community_name": "map-editor.js",
       "file_type": "code",
-      "norm_label": "errored()",
-      "source_file": "dev/llm-client.js",
-      "source_location": "L22"
+      "norm_label": "edgocustom()",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L62"
     },
     {
-      "id": "dev_llm_client_parseenvelope",
-      "label": "parseEnvelope()",
+      "id": "game_ui_board_map_editor_edhexpairs",
+      "label": "edHexPairs()",
       "_callable": true,
       "_origin": "ast",
       "community": 10,
-      "community_name": "llm-client.js",
+      "community_name": "map-editor.js",
       "file_type": "code",
-      "norm_label": "parseenvelope()",
-      "source_file": "dev/llm-client.js",
-      "source_location": "L37"
+      "norm_label": "edhexpairs()",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L76"
     },
     {
-      "id": "dev_llm_client_resolvebinary",
-      "label": "resolveBinary()",
+      "id": "game_ui_board_map_editor_edhexset",
+      "label": "edHexSet()",
       "_callable": true,
       "_origin": "ast",
       "community": 10,
-      "community_name": "llm-client.js",
+      "community_name": "map-editor.js",
       "file_type": "code",
-      "norm_label": "resolvebinary()",
-      "source_file": "dev/llm-client.js",
-      "source_location": "L58"
+      "norm_label": "edhexset()",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L70"
     },
     {
-      "id": "dev_llm_client_send",
-      "label": "send()",
+      "id": "game_ui_board_map_editor_edinternalsides",
+      "label": "edInternalSides()",
       "_callable": true,
       "_origin": "ast",
       "community": 10,
-      "community_name": "llm-client.js",
+      "community_name": "map-editor.js",
       "file_type": "code",
-      "norm_label": "send()",
-      "source_file": "dev/llm-client.js",
-      "source_location": "L82"
+      "norm_label": "edinternalsides()",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L99"
     },
     {
-      "id": "dev_llm_client_send_finish",
-      "label": "finish()",
+      "id": "game_ui_board_map_editor_edliveshape",
+      "label": "edLiveShape()",
       "_callable": true,
       "_origin": "ast",
       "community": 10,
-      "community_name": "llm-client.js",
+      "community_name": "map-editor.js",
       "file_type": "code",
-      "norm_label": "finish()",
-      "source_file": "dev/llm-client.js",
-      "source_location": "L101"
+      "norm_label": "edliveshape()",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L83"
+    },
+    {
+      "id": "game_ui_board_map_editor_edremovehex",
+      "label": "edRemoveHex()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "map-editor.js",
+      "file_type": "code",
+      "norm_label": "edremovehex()",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L87"
+    },
+    {
+      "id": "game_ui_board_map_editor_edsavedef",
+      "label": "edSaveDef()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "map-editor.js",
+      "file_type": "code",
+      "norm_label": "edsavedef()",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L295"
+    },
+    {
+      "id": "game_ui_board_map_editor_edterrainrule",
+      "label": "edTerrainRule()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "map-editor.js",
+      "file_type": "code",
+      "norm_label": "edterrainrule()",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L224"
+    },
+    {
+      "id": "game_ui_board_map_editor_groupedgestopieces",
+      "label": "groupEdgesToPieces()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "map-editor.js",
+      "file_type": "code",
+      "norm_label": "groupedgestopieces()",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L183"
+    },
+    {
+      "id": "game_ui_board_map_editor_groupedgestopieces_vkey",
+      "label": "vkey()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "map-editor.js",
+      "file_type": "code",
+      "norm_label": "vkey()",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L186"
+    },
+    {
+      "id": "game_ui_board_map_editor_openeditor",
+      "label": "openEditor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "map-editor.js",
+      "file_type": "code",
+      "norm_label": "openeditor()",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L24"
+    },
+    {
+      "id": "game_ui_board_map_editor_rendereditor",
+      "label": "renderEditor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "map-editor.js",
+      "file_type": "code",
+      "norm_label": "rendereditor()",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L109"
+    },
+    {
+      "id": "game_ui_board_map_editor_renderedstock",
+      "label": "renderEdStock()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "map-editor.js",
+      "file_type": "code",
+      "norm_label": "renderedstock()",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L247"
+    },
+    {
+      "id": "game_ui_board_map_editor_renderedstock_summary",
+      "label": "summary()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "map-editor.js",
+      "file_type": "code",
+      "norm_label": "summary()",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L249"
+    },
+    {
+      "id": "game_ui_board_map_editor_renderedterrainhint",
+      "label": "renderEdTerrainHint()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "map-editor.js",
+      "file_type": "code",
+      "norm_label": "renderedterrainhint()",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L235"
     },
     {
       "id": "game_ui_manual_manualkey",
@@ -358,7 +478,7 @@
       "file_type": "code",
       "norm_label": "manualkey()",
       "source_file": "game/ui/manual.js",
-      "source_location": "L404"
+      "source_location": "L400"
     },
     {
       "id": "game_ui_manual_manualstep",
@@ -370,7 +490,7 @@
       "file_type": "code",
       "norm_label": "manualstep()",
       "source_file": "game/ui/manual.js",
-      "source_location": "L390"
+      "source_location": "L386"
     },
     {
       "id": "game_ui_manual_manualtabclick",
@@ -382,7 +502,7 @@
       "file_type": "code",
       "norm_label": "manualtabclick()",
       "source_file": "game/ui/manual.js",
-      "source_location": "L395"
+      "source_location": "L391"
     },
     {
       "id": "game_ui_manual_mpaftermath",
@@ -406,7 +526,7 @@
       "file_type": "code",
       "norm_label": "mpaftermathwords()",
       "source_file": "game/ui/manual.js",
-      "source_location": "L171"
+      "source_location": "L167"
     },
     {
       "id": "game_ui_manual_mpdef",
@@ -442,7 +562,7 @@
       "file_type": "code",
       "norm_label": "mpdrawhq()",
       "source_file": "game/ui/manual.js",
-      "source_location": "L161"
+      "source_location": "L157"
     },
     {
       "id": "game_ui_manual_mpdrawunit",
@@ -454,7 +574,7 @@
       "file_type": "code",
       "norm_label": "mpdrawunit()",
       "source_file": "game/ui/manual.js",
-      "source_location": "L153"
+      "source_location": "L150"
     },
     {
       "id": "game_ui_manual_mpresolve",
@@ -478,7 +598,7 @@
       "file_type": "code",
       "norm_label": "mpsidename()",
       "source_file": "game/ui/manual.js",
-      "source_location": "L168"
+      "source_location": "L164"
     },
     {
       "id": "game_ui_manual_mpstate",
@@ -538,7 +658,7 @@
       "file_type": "code",
       "norm_label": "openmanual()",
       "source_file": "game/ui/manual.js",
-      "source_location": "L374"
+      "source_location": "L370"
     },
     {
       "id": "game_ui_manual_rendermanual",
@@ -550,7 +670,7 @@
       "file_type": "code",
       "norm_label": "rendermanual()",
       "source_file": "game/ui/manual.js",
-      "source_location": "L349"
+      "source_location": "L345"
     },
     {
       "id": "game_ui_chart_primitives_chbindhits",
@@ -2449,6 +2569,18 @@
       "source_location": "L109"
     },
     {
+      "id": "game_ui_board_board_marks_bpboardshake",
+      "label": "bpBoardShake()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 163,
+      "community_name": "board-marks.js",
+      "file_type": "code",
+      "norm_label": "bpboardshake()",
+      "source_file": "game/ui/board/board-marks.js",
+      "source_location": "L125"
+    },
+    {
       "id": "game_ui_board_board_marks_bpmark",
       "label": "bpMark()",
       "_callable": true,
@@ -2530,7 +2662,7 @@
       "file_type": "code",
       "norm_label": "bpbarrageterrain()",
       "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L82"
+      "source_location": "L106"
     },
     {
       "id": "game_ui_board_terrain_terrain_marks_bpterrainedge",
@@ -2542,7 +2674,7 @@
       "file_type": "code",
       "norm_label": "bpterrainedge()",
       "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L69"
+      "source_location": "L93"
     },
     {
       "id": "game_ui_board_terrain_terrain_marks_bpterrainstroke",
@@ -2554,7 +2686,7 @@
       "file_type": "code",
       "norm_label": "bpterrainstroke()",
       "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L53"
+      "source_location": "L77"
     },
     {
       "id": "game_ui_board_terrain_terrain_marks_bpthumbterrain",
@@ -2566,7 +2698,7 @@
       "file_type": "code",
       "norm_label": "bpthumbterrain()",
       "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L93"
+      "source_location": "L117"
     },
     {
       "id": "game_ui_board_terrain_terrain_marks_defineterrainmark",
@@ -2578,7 +2710,31 @@
       "file_type": "code",
       "norm_label": "defineterrainmark()",
       "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L23"
+      "source_location": "L27"
+    },
+    {
+      "id": "game_ui_board_terrain_terrain_marks_terraindial",
+      "label": "terrainDial()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 165,
+      "community_name": "terrain-marks.js",
+      "file_type": "code",
+      "norm_label": "terraindial()",
+      "source_file": "game/ui/board/terrain/terrain-marks.js",
+      "source_location": "L43"
+    },
+    {
+      "id": "game_ui_board_terrain_terrain_marks_terrainhexrow",
+      "label": "terrainHexRow()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 165,
+      "community_name": "terrain-marks.js",
+      "file_type": "code",
+      "norm_label": "terrainhexrow()",
+      "source_file": "game/ui/board/terrain/terrain-marks.js",
+      "source_location": "L37"
     },
     {
       "id": "game_ui_board_terrain_terrain_marks_terraininset",
@@ -2590,7 +2746,7 @@
       "file_type": "code",
       "norm_label": "terraininset()",
       "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L33"
+      "source_location": "L55"
     },
     {
       "id": "game_ui_board_terrain_terrain_marks_terrainmark",
@@ -2602,7 +2758,7 @@
       "file_type": "code",
       "norm_label": "terrainmark()",
       "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L30"
+      "source_location": "L34"
     },
     {
       "id": "game_ui_board_terrain_terrain_marks_terrainmarkscheck",
@@ -2614,7 +2770,7 @@
       "file_type": "code",
       "norm_label": "terrainmarkscheck()",
       "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L39"
+      "source_location": "L63"
     },
     {
       "id": "dev_balance_report_accfilepath",
@@ -2689,12 +2845,120 @@
       "source_location": "L54"
     },
     {
+      "id": "dev_balance_mapreport",
+      "label": "mapReport()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 169,
+      "community_name": "balance.js",
+      "file_type": "code",
+      "norm_label": "mapreport()",
+      "source_file": "dev/balance.js",
+      "source_location": "L171"
+    },
+    {
+      "id": "dev_balance_mapreport_hqres",
+      "label": "hqRes()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 169,
+      "community_name": "balance.js",
+      "file_type": "code",
+      "norm_label": "hqres()",
+      "source_file": "dev/balance.js",
+      "source_location": "L247"
+    },
+    {
+      "id": "dev_balance_mapreport_nnote",
+      "label": "nNote()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 169,
+      "community_name": "balance.js",
+      "file_type": "code",
+      "norm_label": "nnote()",
+      "source_file": "dev/balance.js",
+      "source_location": "L246"
+    },
+    {
+      "id": "dev_balance_mapreport_seedbasefor",
+      "label": "seedBaseFor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 169,
+      "community_name": "balance.js",
+      "file_type": "code",
+      "norm_label": "seedbasefor()",
+      "source_file": "dev/balance.js",
+      "source_location": "L208"
+    },
+    {
+      "id": "dev_balance_mapsforset",
+      "label": "mapsForSet()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 169,
+      "community_name": "balance.js",
+      "file_type": "code",
+      "norm_label": "mapsforset()",
+      "source_file": "dev/balance.js",
+      "source_location": "L78"
+    },
+    {
+      "id": "dev_balance_matchup",
+      "label": "matchup()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 169,
+      "community_name": "balance.js",
+      "file_type": "code",
+      "norm_label": "matchup()",
+      "source_file": "dev/balance.js",
+      "source_location": "L126"
+    },
+    {
+      "id": "dev_balance_pad",
+      "label": "pad()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 169,
+      "community_name": "balance.js",
+      "file_type": "code",
+      "norm_label": "pad()",
+      "source_file": "dev/balance.js",
+      "source_location": "L69"
+    },
+    {
+      "id": "dev_balance_sweepmaps",
+      "label": "sweepMaps()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 169,
+      "community_name": "balance.js",
+      "file_type": "code",
+      "norm_label": "sweepmaps()",
+      "source_file": "dev/balance.js",
+      "source_location": "L97"
+    },
+    {
+      "id": "dev_balance_sweepworkers",
+      "label": "sweepWorkers()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 169,
+      "community_name": "balance.js",
+      "file_type": "code",
+      "norm_label": "sweepworkers()",
+      "source_file": "dev/balance.js",
+      "source_location": "L120"
+    },
+    {
       "id": "dev_sweep_defaultworkers",
       "label": "defaultWorkers()",
       "_callable": true,
       "_origin": "ast",
       "community": 169,
-      "community_name": "sweep.js",
+      "community_name": "balance.js",
       "file_type": "code",
       "norm_label": "defaultworkers()",
       "source_file": "dev/sweep.js",
@@ -2706,7 +2970,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 169,
-      "community_name": "sweep.js",
+      "community_name": "balance.js",
       "file_type": "code",
       "norm_label": "planbatches()",
       "source_file": "dev/sweep.js",
@@ -2718,7 +2982,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 169,
-      "community_name": "sweep.js",
+      "community_name": "balance.js",
       "file_type": "code",
       "norm_label": "runparallelsweep()",
       "source_file": "dev/sweep.js",
@@ -2730,7 +2994,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 169,
-      "community_name": "sweep.js",
+      "community_name": "balance.js",
       "file_type": "code",
       "norm_label": "fail()",
       "source_file": "dev/sweep.js",
@@ -2742,7 +3006,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 169,
-      "community_name": "sweep.js",
+      "community_name": "balance.js",
       "file_type": "code",
       "norm_label": "flushready()",
       "source_file": "dev/sweep.js",
@@ -2754,11 +3018,59 @@
       "_callable": true,
       "_origin": "ast",
       "community": 169,
-      "community_name": "sweep.js",
+      "community_name": "balance.js",
       "file_type": "code",
       "norm_label": "launch()",
       "source_file": "dev/sweep.js",
       "source_location": "L136"
+    },
+    {
+      "id": "game_engine_00_config_configcanon",
+      "label": "configCanon()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 169,
+      "community_name": "balance.js",
+      "file_type": "code",
+      "norm_label": "configcanon()",
+      "source_file": "game/engine/00-config.js",
+      "source_location": "L18"
+    },
+    {
+      "id": "game_engine_00_config_configdigest",
+      "label": "configDigest()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 169,
+      "community_name": "balance.js",
+      "file_type": "code",
+      "norm_label": "configdigest()",
+      "source_file": "game/engine/00-config.js",
+      "source_location": "L24"
+    },
+    {
+      "id": "game_engine_00_config_defineconfighome",
+      "label": "defineConfigHome()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 169,
+      "community_name": "balance.js",
+      "file_type": "code",
+      "norm_label": "defineconfighome()",
+      "source_file": "game/engine/00-config.js",
+      "source_location": "L33"
+    },
+    {
+      "id": "game_engine_00_config_homedigest",
+      "label": "homeDigest()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 169,
+      "community_name": "balance.js",
+      "file_type": "code",
+      "norm_label": "homedigest()",
+      "source_file": "game/engine/00-config.js",
+      "source_location": "L32"
     },
     {
       "id": "game_engine_05_ai_aiconfig",
@@ -2974,7 +3286,31 @@
       "file_type": "code",
       "norm_label": "bpunit()",
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L85"
+      "source_location": "L90"
+    },
+    {
+      "id": "game_ui_board_unit_unit_marks_bpunitghost",
+      "label": "bpUnitGhost()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 171,
+      "community_name": "unit-marks.js",
+      "file_type": "code",
+      "norm_label": "bpunitghost()",
+      "source_file": "game/ui/board/unit/unit-marks.js",
+      "source_location": "L124"
+    },
+    {
+      "id": "game_ui_board_unit_unit_marks_bpunitpop",
+      "label": "bpUnitPop()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 171,
+      "community_name": "unit-marks.js",
+      "file_type": "code",
+      "norm_label": "bpunitpop()",
+      "source_file": "game/ui/board/unit/unit-marks.js",
+      "source_location": "L105"
     },
     {
       "id": "game_ui_board_unit_unit_marks_bpunitshape",
@@ -2986,7 +3322,19 @@
       "file_type": "code",
       "norm_label": "bpunitshape()",
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L69"
+      "source_location": "L74"
+    },
+    {
+      "id": "game_ui_board_unit_unit_marks_bpunitslide",
+      "label": "bpUnitSlide()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 171,
+      "community_name": "unit-marks.js",
+      "file_type": "code",
+      "norm_label": "bpunitslide()",
+      "source_file": "game/ui/board/unit/unit-marks.js",
+      "source_location": "L110"
     },
     {
       "id": "game_ui_board_unit_unit_marks_bpunitslot",
@@ -2998,7 +3346,7 @@
       "file_type": "code",
       "norm_label": "bpunitslot()",
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L97"
+      "source_location": "L139"
     },
     {
       "id": "game_ui_board_unit_unit_marks_bpunittoken",
@@ -3010,7 +3358,7 @@
       "file_type": "code",
       "norm_label": "bpunittoken()",
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L58"
+      "source_location": "L65"
     },
     {
       "id": "game_ui_board_unit_unit_marks_defineunitmark",
@@ -3034,7 +3382,31 @@
       "file_type": "code",
       "norm_label": "unitchartcolor()",
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L41"
+      "source_location": "L49"
+    },
+    {
+      "id": "game_ui_board_unit_unit_marks_unitdial",
+      "label": "unitDial()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 171,
+      "community_name": "unit-marks.js",
+      "file_type": "code",
+      "norm_label": "unitdial()",
+      "source_file": "game/ui/board/unit/unit-marks.js",
+      "source_location": "L37"
+    },
+    {
+      "id": "game_ui_board_unit_unit_marks_unitel",
+      "label": "unitEl()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 171,
+      "community_name": "unit-marks.js",
+      "file_type": "code",
+      "norm_label": "unitel()",
+      "source_file": "game/ui/board/unit/unit-marks.js",
+      "source_location": "L103"
     },
     {
       "id": "game_ui_board_unit_unit_marks_unitmark",
@@ -3058,7 +3430,7 @@
       "file_type": "code",
       "norm_label": "unitmarkscheck()",
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L47"
+      "source_location": "L55"
     },
     {
       "id": "game_ui_board_unit_unit_marks_unittokenr",
@@ -3070,7 +3442,7 @@
       "file_type": "code",
       "norm_label": "unittokenr()",
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L38"
+      "source_location": "L46"
     },
     {
       "id": "game_engine_03a_commander_effects_commandercombat",
@@ -3874,7 +4246,7 @@
       "file_type": "code",
       "norm_label": "bptrenchghost()",
       "source_file": "game/ui/board/terrain/trench-mark.js",
-      "source_location": "L40"
+      "source_location": "L38"
     },
     {
       "id": "game_ui_board_terrain_trench_mark_bptrenchknob",
@@ -3886,7 +4258,7 @@
       "file_type": "code",
       "norm_label": "bptrenchknob()",
       "source_file": "game/ui/board/terrain/trench-mark.js",
-      "source_location": "L51"
+      "source_location": "L49"
     },
     {
       "id": "game_ui_board_terrain_trench_mark_bptrenchline",
@@ -3898,7 +4270,7 @@
       "file_type": "code",
       "norm_label": "bptrenchline()",
       "source_file": "game/ui/board/terrain/trench-mark.js",
-      "source_location": "L29"
+      "source_location": "L27"
     },
     {
       "id": "game_ui_board_terrain_trench_mark_bptrenchmatglyph",
@@ -3910,7 +4282,7 @@
       "file_type": "code",
       "norm_label": "bptrenchmatglyph()",
       "source_file": "game/ui/board/terrain/trench-mark.js",
-      "source_location": "L22"
+      "source_location": "L20"
     },
     {
       "id": "game_ui_modals_confirm_confirmdialog",
@@ -3971,330 +4343,6 @@
       "norm_label": "reservesleft()",
       "source_file": "dev/db.test.js",
       "source_location": "L87"
-    },
-    {
-      "id": "game_ui_map_editor_edbuilddef",
-      "label": "edBuildDef()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "map-editor.js",
-      "file_type": "code",
-      "norm_label": "edbuilddef()",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L265"
-    },
-    {
-      "id": "game_ui_map_editor_edgocustom",
-      "label": "edGoCustom()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "map-editor.js",
-      "file_type": "code",
-      "norm_label": "edgocustom()",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L55"
-    },
-    {
-      "id": "game_ui_map_editor_edhexpairs",
-      "label": "edHexPairs()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "map-editor.js",
-      "file_type": "code",
-      "norm_label": "edhexpairs()",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L69"
-    },
-    {
-      "id": "game_ui_map_editor_edhexset",
-      "label": "edHexSet()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "map-editor.js",
-      "file_type": "code",
-      "norm_label": "edhexset()",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L63"
-    },
-    {
-      "id": "game_ui_map_editor_edinternalsides",
-      "label": "edInternalSides()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "map-editor.js",
-      "file_type": "code",
-      "norm_label": "edinternalsides()",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L92"
-    },
-    {
-      "id": "game_ui_map_editor_edliveshape",
-      "label": "edLiveShape()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "map-editor.js",
-      "file_type": "code",
-      "norm_label": "edliveshape()",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L76"
-    },
-    {
-      "id": "game_ui_map_editor_edremovehex",
-      "label": "edRemoveHex()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "map-editor.js",
-      "file_type": "code",
-      "norm_label": "edremovehex()",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L80"
-    },
-    {
-      "id": "game_ui_map_editor_edsavedef",
-      "label": "edSaveDef()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "map-editor.js",
-      "file_type": "code",
-      "norm_label": "edsavedef()",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L288"
-    },
-    {
-      "id": "game_ui_map_editor_edterrainrule",
-      "label": "edTerrainRule()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "map-editor.js",
-      "file_type": "code",
-      "norm_label": "edterrainrule()",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L217"
-    },
-    {
-      "id": "game_ui_map_editor_groupedgestopieces",
-      "label": "groupEdgesToPieces()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "map-editor.js",
-      "file_type": "code",
-      "norm_label": "groupedgestopieces()",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L176"
-    },
-    {
-      "id": "game_ui_map_editor_groupedgestopieces_vkey",
-      "label": "vkey()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "map-editor.js",
-      "file_type": "code",
-      "norm_label": "vkey()",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L179"
-    },
-    {
-      "id": "game_ui_map_editor_openeditor",
-      "label": "openEditor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "map-editor.js",
-      "file_type": "code",
-      "norm_label": "openeditor()",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L17"
-    },
-    {
-      "id": "game_ui_map_editor_rendereditor",
-      "label": "renderEditor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "map-editor.js",
-      "file_type": "code",
-      "norm_label": "rendereditor()",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L102"
-    },
-    {
-      "id": "game_ui_map_editor_renderedstock",
-      "label": "renderEdStock()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "map-editor.js",
-      "file_type": "code",
-      "norm_label": "renderedstock()",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L240"
-    },
-    {
-      "id": "game_ui_map_editor_renderedstock_summary",
-      "label": "summary()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "map-editor.js",
-      "file_type": "code",
-      "norm_label": "summary()",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L242"
-    },
-    {
-      "id": "game_ui_map_editor_renderedterrainhint",
-      "label": "renderEdTerrainHint()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "map-editor.js",
-      "file_type": "code",
-      "norm_label": "renderedterrainhint()",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L228"
-    },
-    {
-      "id": "game_engine_00_config_configcanon",
-      "label": "configCanon()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 206,
-      "community_name": "lab-config.js",
-      "file_type": "code",
-      "norm_label": "configcanon()",
-      "source_file": "game/engine/00-config.js",
-      "source_location": "L18"
-    },
-    {
-      "id": "game_engine_00_config_configdigest",
-      "label": "configDigest()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 206,
-      "community_name": "lab-config.js",
-      "file_type": "code",
-      "norm_label": "configdigest()",
-      "source_file": "game/engine/00-config.js",
-      "source_location": "L24"
-    },
-    {
-      "id": "game_engine_00_config_defineconfighome",
-      "label": "defineConfigHome()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 206,
-      "community_name": "lab-config.js",
-      "file_type": "code",
-      "norm_label": "defineconfighome()",
-      "source_file": "game/engine/00-config.js",
-      "source_location": "L33"
-    },
-    {
-      "id": "game_engine_00_config_homedigest",
-      "label": "homeDigest()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 206,
-      "community_name": "lab-config.js",
-      "file_type": "code",
-      "norm_label": "homedigest()",
-      "source_file": "game/engine/00-config.js",
-      "source_location": "L32"
-    },
-    {
-      "id": "dev_llm_session_llmsession",
-      "label": "LlmSession()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 207,
-      "community_name": "LlmSession",
-      "file_type": "code",
-      "norm_label": "llmsession()",
-      "source_file": "dev/llm-session.js",
-      "source_location": "L107"
-    },
-    {
-      "id": "dev_llm_session_llmsession_close",
-      "label": ".close()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 207,
-      "community_name": "LlmSession",
-      "file_type": "code",
-      "norm_label": ".close()",
-      "source_file": "dev/llm-session.js",
-      "source_location": "L146"
-    },
-    {
-      "id": "dev_llm_session_llmsession_die",
-      "label": "._die()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 207,
-      "community_name": "LlmSession",
-      "file_type": "code",
-      "norm_label": "._die()",
-      "source_file": "dev/llm-session.js",
-      "source_location": "L151"
-    },
-    {
-      "id": "dev_llm_session_llmsession_ondata",
-      "label": "._onData()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 207,
-      "community_name": "LlmSession",
-      "file_type": "code",
-      "norm_label": "._ondata()",
-      "source_file": "dev/llm-session.js",
-      "source_location": "L208"
-    },
-    {
-      "id": "dev_llm_session_llmsession_pump",
-      "label": "._pump()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 207,
-      "community_name": "LlmSession",
-      "file_type": "code",
-      "norm_label": "._pump()",
-      "source_file": "dev/llm-session.js",
-      "source_location": "L193"
-    },
-    {
-      "id": "dev_llm_session_llmsession_spawn",
-      "label": "._spawn()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 207,
-      "community_name": "LlmSession",
-      "file_type": "code",
-      "norm_label": "._spawn()",
-      "source_file": "dev/llm-session.js",
-      "source_location": "L165"
-    },
-    {
-      "id": "dev_llm_session_llmsession_start",
-      "label": ".start()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 207,
-      "community_name": "LlmSession",
-      "file_type": "code",
-      "norm_label": ".start()",
-      "source_file": "dev/llm-session.js",
-      "source_location": "L126"
     },
     {
       "id": "game_ui_board_live_board_attackpreviewsfor",
@@ -5206,7 +5254,7 @@
       "file_type": "code",
       "norm_label": "capturepre()",
       "source_file": "game/ui/fx.js",
-      "source_location": "L49"
+      "source_location": "L15"
     },
     {
       "id": "game_ui_fx_fxpiecehex",
@@ -5218,31 +5266,19 @@
       "file_type": "code",
       "norm_label": "fxpiecehex()",
       "source_file": "game/ui/fx.js",
-      "source_location": "L95"
+      "source_location": "L64"
     },
     {
-      "id": "game_ui_fx_fxstrike",
-      "label": "fxStrike()",
+      "id": "game_ui_fx_fxring",
+      "label": "fxRing()",
       "_callable": true,
       "_origin": "ast",
       "community": 27,
       "community_name": "fx.js",
       "file_type": "code",
-      "norm_label": "fxstrike()",
+      "norm_label": "fxring()",
       "source_file": "game/ui/fx.js",
-      "source_location": "L39"
-    },
-    {
-      "id": "game_ui_fx_ghostunit",
-      "label": "ghostUnit()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "fx.js",
-      "file_type": "code",
-      "norm_label": "ghostunit()",
-      "source_file": "game/ui/fx.js",
-      "source_location": "L27"
+      "source_location": "L35"
     },
     {
       "id": "game_ui_fx_playfx",
@@ -5254,67 +5290,7 @@
       "file_type": "code",
       "norm_label": "playfx()",
       "source_file": "game/ui/fx.js",
-      "source_location": "L68"
-    },
-    {
-      "id": "game_ui_fx_popunit",
-      "label": "popUnit()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "fx.js",
-      "file_type": "code",
-      "norm_label": "popunit()",
-      "source_file": "game/ui/fx.js",
-      "source_location": "L23"
-    },
-    {
-      "id": "game_ui_fx_ringat",
-      "label": "ringAt()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "fx.js",
-      "file_type": "code",
-      "norm_label": "ringat()",
-      "source_file": "game/ui/fx.js",
-      "source_location": "L36"
-    },
-    {
-      "id": "game_ui_fx_shakeboard",
-      "label": "shakeBoard()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "fx.js",
-      "file_type": "code",
-      "norm_label": "shakeboard()",
-      "source_file": "game/ui/fx.js",
-      "source_location": "L42"
-    },
-    {
-      "id": "game_ui_fx_slideunit",
-      "label": "slideUnit()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "fx.js",
-      "file_type": "code",
-      "norm_label": "slideunit()",
-      "source_file": "game/ui/fx.js",
-      "source_location": "L12"
-    },
-    {
-      "id": "game_ui_fx_unitel",
-      "label": "unitEl()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "fx.js",
-      "file_type": "code",
-      "norm_label": "unitel()",
-      "source_file": "game/ui/fx.js",
-      "source_location": "L11"
+      "source_location": "L37"
     },
     {
       "id": "game_sim_balanceadd",
@@ -5627,114 +5603,6 @@
       "norm_label": "synccommandersfromstate()",
       "source_file": "game/ui/commander-panel.js",
       "source_location": "L110"
-    },
-    {
-      "id": "dev_balance_mapreport",
-      "label": "mapReport()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "report-model.js",
-      "file_type": "code",
-      "norm_label": "mapreport()",
-      "source_file": "dev/balance.js",
-      "source_location": "L171"
-    },
-    {
-      "id": "dev_balance_mapreport_hqres",
-      "label": "hqRes()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "report-model.js",
-      "file_type": "code",
-      "norm_label": "hqres()",
-      "source_file": "dev/balance.js",
-      "source_location": "L247"
-    },
-    {
-      "id": "dev_balance_mapreport_nnote",
-      "label": "nNote()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "report-model.js",
-      "file_type": "code",
-      "norm_label": "nnote()",
-      "source_file": "dev/balance.js",
-      "source_location": "L246"
-    },
-    {
-      "id": "dev_balance_mapreport_seedbasefor",
-      "label": "seedBaseFor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "report-model.js",
-      "file_type": "code",
-      "norm_label": "seedbasefor()",
-      "source_file": "dev/balance.js",
-      "source_location": "L208"
-    },
-    {
-      "id": "dev_balance_mapsforset",
-      "label": "mapsForSet()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "report-model.js",
-      "file_type": "code",
-      "norm_label": "mapsforset()",
-      "source_file": "dev/balance.js",
-      "source_location": "L78"
-    },
-    {
-      "id": "dev_balance_matchup",
-      "label": "matchup()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "report-model.js",
-      "file_type": "code",
-      "norm_label": "matchup()",
-      "source_file": "dev/balance.js",
-      "source_location": "L126"
-    },
-    {
-      "id": "dev_balance_pad",
-      "label": "pad()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "report-model.js",
-      "file_type": "code",
-      "norm_label": "pad()",
-      "source_file": "dev/balance.js",
-      "source_location": "L69"
-    },
-    {
-      "id": "dev_balance_sweepmaps",
-      "label": "sweepMaps()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "report-model.js",
-      "file_type": "code",
-      "norm_label": "sweepmaps()",
-      "source_file": "dev/balance.js",
-      "source_location": "L97"
-    },
-    {
-      "id": "dev_balance_sweepworkers",
-      "label": "sweepWorkers()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "report-model.js",
-      "file_type": "code",
-      "norm_label": "sweepworkers()",
-      "source_file": "dev/balance.js",
-      "source_location": "L120"
     },
     {
       "id": "game_report_model_actionoctilelanes",
@@ -6769,6 +6637,78 @@
       "source_location": "L42"
     },
     {
+      "id": "dev_llm_client_buildprompt",
+      "label": "buildPrompt()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "buildprompt()",
+      "source_file": "dev/llm-client.js",
+      "source_location": "L28"
+    },
+    {
+      "id": "dev_llm_client_errored",
+      "label": "errored()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "errored()",
+      "source_file": "dev/llm-client.js",
+      "source_location": "L22"
+    },
+    {
+      "id": "dev_llm_client_parseenvelope",
+      "label": "parseEnvelope()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "parseenvelope()",
+      "source_file": "dev/llm-client.js",
+      "source_location": "L37"
+    },
+    {
+      "id": "dev_llm_client_resolvebinary",
+      "label": "resolveBinary()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "resolvebinary()",
+      "source_file": "dev/llm-client.js",
+      "source_location": "L58"
+    },
+    {
+      "id": "dev_llm_client_send",
+      "label": "send()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "send()",
+      "source_file": "dev/llm-client.js",
+      "source_location": "L82"
+    },
+    {
+      "id": "dev_llm_client_send_finish",
+      "label": "finish()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "finish()",
+      "source_file": "dev/llm-client.js",
+      "source_location": "L101"
+    },
+    {
       "id": "dev_llm_session_buildprompt",
       "label": "buildPrompt()",
       "_callable": true,
@@ -6805,6 +6745,18 @@
       "source_location": "L58"
     },
     {
+      "id": "dev_llm_session_llmsession",
+      "label": "LlmSession()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "llmsession()",
+      "source_file": "dev/llm-session.js",
+      "source_location": "L107"
+    },
+    {
       "id": "dev_llm_session_llmsession_ask",
       "label": ".ask()",
       "_callable": true,
@@ -6815,6 +6767,78 @@
       "norm_label": ".ask()",
       "source_file": "dev/llm-session.js",
       "source_location": "L132"
+    },
+    {
+      "id": "dev_llm_session_llmsession_close",
+      "label": ".close()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": ".close()",
+      "source_file": "dev/llm-session.js",
+      "source_location": "L146"
+    },
+    {
+      "id": "dev_llm_session_llmsession_die",
+      "label": "._die()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "._die()",
+      "source_file": "dev/llm-session.js",
+      "source_location": "L151"
+    },
+    {
+      "id": "dev_llm_session_llmsession_ondata",
+      "label": "._onData()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "._ondata()",
+      "source_file": "dev/llm-session.js",
+      "source_location": "L208"
+    },
+    {
+      "id": "dev_llm_session_llmsession_pump",
+      "label": "._pump()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "._pump()",
+      "source_file": "dev/llm-session.js",
+      "source_location": "L193"
+    },
+    {
+      "id": "dev_llm_session_llmsession_spawn",
+      "label": "._spawn()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "._spawn()",
+      "source_file": "dev/llm-session.js",
+      "source_location": "L165"
+    },
+    {
+      "id": "dev_llm_session_llmsession_start",
+      "label": ".start()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": ".start()",
+      "source_file": "dev/llm-session.js",
+      "source_location": "L126"
     },
     {
       "id": "dev_llm_session_parseeventline",
@@ -8806,7 +8830,7 @@
       "file_type": "code",
       "norm_label": "mdsw()",
       "source_file": "game/ui/screens/dashboard/panes/maps.js",
-      "source_location": "L283"
+      "source_location": "L284"
     },
     {
       "id": "game_ui_screens_dashboard_panes_maps_mdlanebars",
@@ -8866,7 +8890,7 @@
       "file_type": "code",
       "norm_label": "mdrenderbody()",
       "source_file": "game/ui/screens/dashboard/panes/maps.js",
-      "source_location": "L302"
+      "source_location": "L303"
     },
     {
       "id": "game_ui_screens_dashboard_panes_maps_mdsettlecurve",
@@ -8902,7 +8926,7 @@
       "file_type": "code",
       "norm_label": "rendermapdrill()",
       "source_file": "game/ui/screens/dashboard/panes/maps.js",
-      "source_location": "L335"
+      "source_location": "L336"
     },
     {
       "id": "dev_db_query_test_query",
@@ -9656,125 +9680,15 @@
       "source_location": "L1"
     },
     {
-      "id": "dev_llm_client",
-      "label": "llm-client.js",
+      "id": "game_ui_board_map_editor",
+      "label": "map-editor.js",
       "_origin": "ast",
       "community": 10,
-      "community_name": "llm-client.js",
+      "community_name": "map-editor.js",
       "file_type": "code",
-      "norm_label": "llm-client.js",
-      "source_file": "dev/llm-client.js",
+      "norm_label": "map-editor.js",
+      "source_file": "game/ui/board/map-editor.js",
       "source_location": "L1"
-    },
-    {
-      "id": "dev_llm_client_fs",
-      "label": "fs",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "llm-client.js",
-      "file_type": "code",
-      "norm_label": "fs",
-      "source_file": "dev/llm-client.js",
-      "source_location": "L17"
-    },
-    {
-      "id": "dev_llm_client_lab",
-      "label": "LAB",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "llm-client.js",
-      "file_type": "code",
-      "norm_label": "lab",
-      "source_file": "dev/llm-client.js",
-      "source_location": "L18"
-    },
-    {
-      "id": "dev_llm_client_path",
-      "label": "path",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "llm-client.js",
-      "file_type": "code",
-      "norm_label": "path",
-      "source_file": "dev/llm-client.js",
-      "source_location": "L16"
-    },
-    {
-      "id": "dev_llm_client_spawn_spawnsync",
-      "label": "{ spawn, spawnSync }",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "llm-client.js",
-      "file_type": "code",
-      "norm_label": "{ spawn, spawnsync }",
-      "source_file": "dev/llm-client.js",
-      "source_location": "L15"
-    },
-    {
-      "id": "dev_llm_client_test",
-      "label": "llm-client.test.js",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "llm-client.js",
-      "file_type": "code",
-      "norm_label": "llm-client.test.js",
-      "source_file": "dev/llm-client.test.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "dev_llm_client_test_assert",
-      "label": "assert",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "llm-client.js",
-      "file_type": "code",
-      "norm_label": "assert",
-      "source_file": "dev/llm-client.test.js",
-      "source_location": "L6"
-    },
-    {
-      "id": "dev_llm_client_test_buildprompt_parseenvelope_send",
-      "label": "{ buildPrompt, parseEnvelope, send }",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "llm-client.js",
-      "file_type": "code",
-      "norm_label": "{ buildprompt, parseenvelope, send }",
-      "source_file": "dev/llm-client.test.js",
-      "source_location": "L7"
-    },
-    {
-      "id": "dev_llm_client_test_errored",
-      "label": "ERRORED",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "llm-client.js",
-      "file_type": "code",
-      "norm_label": "errored",
-      "source_file": "dev/llm-client.test.js",
-      "source_location": "L9"
-    },
-    {
-      "id": "dev_llm_client_test_happy",
-      "label": "HAPPY",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "llm-client.js",
-      "file_type": "code",
-      "norm_label": "happy",
-      "source_file": "dev/llm-client.test.js",
-      "source_location": "L31"
-    },
-    {
-      "id": "dev_llm_client_test_test",
-      "label": "{ test }",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "llm-client.js",
-      "file_type": "code",
-      "norm_label": "{ test }",
-      "source_file": "dev/llm-client.test.js",
-      "source_location": "L5"
     },
     {
       "id": "game_content_maps_riverbend",
@@ -11484,15 +11398,59 @@
       "source_location": "L1"
     },
     {
+      "id": "dev_balance",
+      "label": "balance.js",
+      "_origin": "ast",
+      "community": 169,
+      "community_name": "balance.js",
+      "file_type": "code",
+      "norm_label": "balance.js",
+      "source_file": "dev/balance.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "dev_lab_config",
+      "label": "lab-config.js",
+      "_origin": "ast",
+      "community": 169,
+      "community_name": "balance.js",
+      "file_type": "code",
+      "norm_label": "lab-config.js",
+      "source_file": "dev/lab-config.js",
+      "source_location": "L1"
+    },
+    {
       "id": "dev_sweep",
       "label": "sweep.js",
       "_origin": "ast",
       "community": 169,
-      "community_name": "sweep.js",
+      "community_name": "balance.js",
       "file_type": "code",
       "norm_label": "sweep.js",
       "source_file": "dev/sweep.js",
       "source_location": "L1"
+    },
+    {
+      "id": "game_engine_00_config",
+      "label": "00-config.js",
+      "_origin": "ast",
+      "community": 169,
+      "community_name": "balance.js",
+      "file_type": "code",
+      "norm_label": "00-config.js",
+      "source_file": "game/engine/00-config.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "game_engine_00_config_js_docref_adr_0002",
+      "label": "ADR-0002",
+      "_origin": "ast",
+      "community": 169,
+      "community_name": "balance.js",
+      "file_type": "concept",
+      "norm_label": "adr-0002",
+      "source_file": "game/engine/00-config.js",
+      "source_location": "L47"
     },
     {
       "id": "game_engine_05_ai",
@@ -11645,92 +11603,76 @@
       "source_location": "L1"
     },
     {
-      "id": "dev_lab_config_test",
-      "label": "lab-config.test.js",
+      "id": "docs_context_heuristic_ai_context",
+      "label": "heuristic-ai-context.md",
       "_origin": "ast",
       "community": 176,
-      "community_name": "lab-config.test.js",
-      "file_type": "code",
-      "norm_label": "lab-config.test.js",
-      "source_file": "dev/lab-config.test.js",
+      "community_name": "Heuristic AI",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "heuristic-ai-context.md",
+      "source_file": "docs/context/heuristic-ai-context.md",
       "source_location": "L1"
     },
     {
-      "id": "dev_lab_config_test_assert",
-      "label": "assert",
+      "id": "docs_context_heuristic_ai_context_choosing_a_move",
+      "label": "Choosing a move",
       "_origin": "ast",
       "community": 176,
-      "community_name": "lab-config.test.js",
-      "file_type": "code",
-      "norm_label": "assert",
-      "source_file": "dev/lab-config.test.js",
-      "source_location": "L11"
+      "community_name": "Heuristic AI",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "choosing a move",
+      "source_file": "docs/context/heuristic-ai-context.md",
+      "source_location": "L26"
     },
     {
-      "id": "dev_lab_config_test_e",
-      "label": "E",
+      "id": "docs_context_heuristic_ai_context_guards_against_degenerate_play",
+      "label": "Guards against degenerate play",
       "_origin": "ast",
       "community": 176,
-      "community_name": "lab-config.test.js",
-      "file_type": "code",
-      "norm_label": "e",
-      "source_file": "dev/lab-config.test.js",
-      "source_location": "L15"
+      "community_name": "Heuristic AI",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "guards against degenerate play",
+      "source_file": "docs/context/heuristic-ai-context.md",
+      "source_location": "L44"
     },
     {
-      "id": "dev_lab_config_test_fs",
-      "label": "fs",
+      "id": "docs_context_heuristic_ai_context_heuristic_ai",
+      "label": "Heuristic AI",
       "_origin": "ast",
       "community": 176,
-      "community_name": "lab-config.test.js",
-      "file_type": "code",
-      "norm_label": "fs",
-      "source_file": "dev/lab-config.test.js",
-      "source_location": "L12"
+      "community_name": "Heuristic AI",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "heuristic ai",
+      "source_file": "docs/context/heuristic-ai-context.md",
+      "source_location": "L1"
     },
     {
-      "id": "dev_lab_config_test_lab",
-      "label": "LAB",
+      "id": "docs_context_heuristic_ai_context_the_dials",
+      "label": "The dials",
       "_origin": "ast",
       "community": 176,
-      "community_name": "lab-config.test.js",
-      "file_type": "code",
-      "norm_label": "lab",
-      "source_file": "dev/lab-config.test.js",
-      "source_location": "L16"
+      "community_name": "Heuristic AI",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "the dials",
+      "source_file": "docs/context/heuristic-ai-context.md",
+      "source_location": "L58"
     },
     {
-      "id": "dev_lab_config_test_llmsession",
-      "label": "{ LlmSession }",
+      "id": "docs_context_heuristic_ai_context_the_seat",
+      "label": "The seat",
       "_origin": "ast",
       "community": 176,
-      "community_name": "lab-config.test.js",
-      "file_type": "code",
-      "norm_label": "{ llmsession }",
-      "source_file": "dev/lab-config.test.js",
-      "source_location": "L17"
-    },
-    {
-      "id": "dev_lab_config_test_path",
-      "label": "path",
-      "_origin": "ast",
-      "community": 176,
-      "community_name": "lab-config.test.js",
-      "file_type": "code",
-      "norm_label": "path",
-      "source_file": "dev/lab-config.test.js",
-      "source_location": "L13"
-    },
-    {
-      "id": "dev_lab_config_test_test",
-      "label": "{ test }",
-      "_origin": "ast",
-      "community": 176,
-      "community_name": "lab-config.test.js",
-      "file_type": "code",
-      "norm_label": "{ test }",
-      "source_file": "dev/lab-config.test.js",
-      "source_location": "L10"
+      "community_name": "Heuristic AI",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "the seat",
+      "source_file": "docs/context/heuristic-ai-context.md",
+      "source_location": "L7"
     },
     {
       "id": "game_ui_modals_modal",
@@ -12209,15 +12151,88 @@
       "source_location": "L1"
     },
     {
-      "id": "game_ui_map_editor",
-      "label": "map-editor.js",
+      "id": "docs_context_dev_tooling_context_dev_tooling",
+      "label": "Dev-tooling",
       "_origin": "ast",
       "community": 20,
-      "community_name": "map-editor.js",
-      "file_type": "code",
-      "norm_label": "map-editor.js",
-      "source_file": "game/ui/map-editor.js",
+      "community_name": "Dev-tooling",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "dev-tooling",
+      "source_file": "docs/context/dev-tooling-context.md",
       "source_location": "L1"
+    },
+    {
+      "id": "docs_context_dev_tooling_context_judging",
+      "label": "Judging",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Dev-tooling",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "judging",
+      "source_file": "docs/context/dev-tooling-context.md",
+      "source_location": "L109"
+    },
+    {
+      "id": "docs_context_dev_tooling_context_organising_the_code",
+      "label": "Organising the code",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Dev-tooling",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "organising the code",
+      "source_file": "docs/context/dev-tooling-context.md",
+      "source_location": "L144"
+    },
+    {
+      "id": "docs_context_dev_tooling_context_reading_the_numbers",
+      "label": "Reading the numbers",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Dev-tooling",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "reading the numbers",
+      "source_file": "docs/context/dev-tooling-context.md",
+      "source_location": "L79"
+    },
+    {
+      "id": "docs_context_dev_tooling_context_running_games_in_bulk",
+      "label": "Running games in bulk",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Dev-tooling",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "running games in bulk",
+      "source_file": "docs/context/dev-tooling-context.md",
+      "source_location": "L18"
+    },
+    {
+      "id": "docs_context_dev_tooling_context_the_loop",
+      "label": "The loop",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Dev-tooling",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "the loop",
+      "source_file": "docs/context/dev-tooling-context.md",
+      "source_location": "L7"
+    },
+    {
+      "id": "docs_context_dev_tooling_context_what_gets_recorded",
+      "label": "What gets recorded",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Dev-tooling",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "what gets recorded",
+      "source_file": "docs/context/dev-tooling-context.md",
+      "source_location": "L37"
     },
     {
       "id": "game_ui_modals_journal",
@@ -12275,37 +12290,148 @@
       "source_location": "L1"
     },
     {
-      "id": "dev_lab_config",
-      "label": "lab-config.js",
+      "id": "docs_context_integration_context",
+      "label": "integration-context.md",
       "_origin": "ast",
       "community": 206,
-      "community_name": "lab-config.js",
-      "file_type": "code",
-      "norm_label": "lab-config.js",
-      "source_file": "dev/lab-config.js",
+      "community_name": "Integration",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "integration-context.md",
+      "source_file": "docs/context/integration-context.md",
       "source_location": "L1"
     },
     {
-      "id": "game_engine_00_config",
-      "label": "00-config.js",
+      "id": "docs_context_integration_context_across_the_wire",
+      "label": "Across the wire",
       "_origin": "ast",
       "community": 206,
-      "community_name": "lab-config.js",
-      "file_type": "code",
-      "norm_label": "00-config.js",
-      "source_file": "game/engine/00-config.js",
+      "community_name": "Integration",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "across the wire",
+      "source_file": "docs/context/integration-context.md",
+      "source_location": "L51"
+    },
+    {
+      "id": "docs_context_integration_context_content_to_engine",
+      "label": "Content to engine",
+      "_origin": "ast",
+      "community": 206,
+      "community_name": "Integration",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "content to engine",
+      "source_file": "docs/context/integration-context.md",
+      "source_location": "L29"
+    },
+    {
+      "id": "docs_context_integration_context_engine_to_everything_else",
+      "label": "Engine to everything else",
+      "_origin": "ast",
+      "community": 206,
+      "community_name": "Integration",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "engine to everything else",
+      "source_file": "docs/context/integration-context.md",
+      "source_location": "L7"
+    },
+    {
+      "id": "docs_context_integration_context_identity_of_a_run",
+      "label": "Identity of a run",
+      "_origin": "ast",
+      "community": 206,
+      "community_name": "Integration",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "identity of a run",
+      "source_file": "docs/context/integration-context.md",
+      "source_location": "L65"
+    },
+    {
+      "id": "docs_context_integration_context_integration",
+      "label": "Integration",
+      "_origin": "ast",
+      "community": 206,
+      "community_name": "Integration",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "integration",
+      "source_file": "docs/context/integration-context.md",
       "source_location": "L1"
     },
     {
-      "id": "game_engine_00_config_js_docref_adr_0002",
-      "label": "ADR-0002",
+      "id": "docs_context_interface_context",
+      "label": "interface-context.md",
       "_origin": "ast",
-      "community": 206,
-      "community_name": "lab-config.js",
-      "file_type": "concept",
-      "norm_label": "adr-0002",
-      "source_file": "game/engine/00-config.js",
-      "source_location": "L47"
+      "community": 207,
+      "community_name": "Interface",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "interface-context.md",
+      "source_file": "docs/context/interface-context.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_context_interface_context_families_that_share_a_shell",
+      "label": "Families that share a shell",
+      "_origin": "ast",
+      "community": 207,
+      "community_name": "Interface",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "families that share a shell",
+      "source_file": "docs/context/interface-context.md",
+      "source_location": "L57"
+    },
+    {
+      "id": "docs_context_interface_context_interface",
+      "label": "Interface",
+      "_origin": "ast",
+      "community": 207,
+      "community_name": "Interface",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "interface",
+      "source_file": "docs/context/interface-context.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_context_interface_context_places_you_go",
+      "label": "Places you go",
+      "_origin": "ast",
+      "community": 207,
+      "community_name": "Interface",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "places you go",
+      "source_file": "docs/context/interface-context.md",
+      "source_location": "L7"
+    },
+    {
+      "id": "docs_context_interface_context_staying_in_the_game",
+      "label": "Staying in the game",
+      "_origin": "ast",
+      "community": 207,
+      "community_name": "Interface",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "staying in the game",
+      "source_file": "docs/context/interface-context.md",
+      "source_location": "L43"
+    },
+    {
+      "id": "docs_context_interface_context_the_drawing_kit",
+      "label": "The drawing kit",
+      "_origin": "ast",
+      "community": 207,
+      "community_name": "Interface",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "the drawing kit",
+      "source_file": "docs/context/interface-context.md",
+      "source_location": "L78"
     },
     {
       "id": "game_ui_board_live_board",
@@ -12330,6 +12456,18 @@
       "source_location": "L1"
     },
     {
+      "id": "game_engine_board_board_a_map_is_a_board",
+      "label": "A map is a board",
+      "_origin": "ast",
+      "community": 210,
+      "community_name": "Board",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "a map is a board",
+      "source_file": "game/engine/board/board.md",
+      "source_location": "L20"
+    },
+    {
       "id": "game_engine_board_board_adding_a_mark",
       "label": "Adding a mark",
       "_origin": "ast",
@@ -12339,7 +12477,7 @@
       "node_kind": "heading",
       "norm_label": "adding a mark",
       "source_file": "game/engine/board/board.md",
-      "source_location": "L32"
+      "source_location": "L40"
     },
     {
       "id": "game_engine_board_board_adding_an_authored_outline_form",
@@ -12351,7 +12489,7 @@
       "node_kind": "heading",
       "norm_label": "adding an authored outline form",
       "source_file": "game/engine/board/board.md",
-      "source_location": "L19"
+      "source_location": "L27"
     },
     {
       "id": "game_engine_board_board_asking_about_a_board_that_is_not_the_live_one",
@@ -12363,7 +12501,7 @@
       "node_kind": "heading",
       "norm_label": "asking about a board that is not the live one",
       "source_file": "game/engine/board/board.md",
-      "source_location": "L56"
+      "source_location": "L66"
     },
     {
       "id": "game_engine_board_board_board",
@@ -12378,6 +12516,18 @@
       "source_location": "L1"
     },
     {
+      "id": "game_engine_board_board_changing_how_a_board_looks",
+      "label": "Changing how a board looks",
+      "_origin": "ast",
+      "community": 210,
+      "community_name": "Board",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "changing how a board looks",
+      "source_file": "game/engine/board/board.md",
+      "source_location": "L47"
+    },
+    {
       "id": "game_engine_board_board_md_game_engine_board_board",
       "label": "board.md",
       "_origin": "ast",
@@ -12390,16 +12540,16 @@
       "source_location": "L1"
     },
     {
-      "id": "game_engine_board_board_retuning_a_board",
-      "label": "Retuning a board",
+      "id": "game_engine_board_board_what_this_house_does_not_own",
+      "label": "What this house does not own",
       "_origin": "ast",
       "community": 210,
       "community_name": "Board",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "retuning a board",
+      "norm_label": "what this house does not own",
       "source_file": "game/engine/board/board.md",
-      "source_location": "L43"
+      "source_location": "L72"
     },
     {
       "id": "game_ui_board_hex_hex_screen",
@@ -13058,6 +13208,30 @@
       "source_location": "L1"
     },
     {
+      "id": "docs_context_dev_tooling_context",
+      "label": "dev-tooling-context.md",
+      "_origin": "ast",
+      "community": 247,
+      "community_name": "War of Attrition domain glossary (CONTEXT.md)",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "dev-tooling-context.md",
+      "source_file": "docs/context/dev-tooling-context.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_context_game_concepts_context",
+      "label": "game-concepts-context.md",
+      "_origin": "ast",
+      "community": 247,
+      "community_name": "War of Attrition domain glossary (CONTEXT.md)",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "game-concepts-context.md",
+      "source_file": "docs/context/game-concepts-context.md",
+      "source_location": "L1"
+    },
+    {
       "id": "dev_claude_plays_test",
       "label": "claude-plays.test.js",
       "_origin": "ast",
@@ -13286,17 +13460,6 @@
       "file_type": "code",
       "norm_label": "commander-panel.js",
       "source_file": "game/ui/commander-panel.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "dev_balance",
-      "label": "balance.js",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "report-model.js",
-      "file_type": "code",
-      "norm_label": "balance.js",
-      "source_file": "dev/balance.js",
       "source_location": "L1"
     },
     {
@@ -13936,6 +14099,215 @@
       "norm_label": "net.js",
       "source_file": "game/ui/net.js",
       "source_location": "L1"
+    },
+    {
+      "id": "dev_lab_config_test",
+      "label": "lab-config.test.js",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "lab-config.test.js",
+      "source_file": "dev/lab-config.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "dev_lab_config_test_assert",
+      "label": "assert",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "assert",
+      "source_file": "dev/lab-config.test.js",
+      "source_location": "L11"
+    },
+    {
+      "id": "dev_lab_config_test_e",
+      "label": "E",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "e",
+      "source_file": "dev/lab-config.test.js",
+      "source_location": "L15"
+    },
+    {
+      "id": "dev_lab_config_test_fs",
+      "label": "fs",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "fs",
+      "source_file": "dev/lab-config.test.js",
+      "source_location": "L12"
+    },
+    {
+      "id": "dev_lab_config_test_lab",
+      "label": "LAB",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "lab",
+      "source_file": "dev/lab-config.test.js",
+      "source_location": "L16"
+    },
+    {
+      "id": "dev_lab_config_test_llmsession",
+      "label": "{ LlmSession }",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "{ llmsession }",
+      "source_file": "dev/lab-config.test.js",
+      "source_location": "L17"
+    },
+    {
+      "id": "dev_lab_config_test_path",
+      "label": "path",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "path",
+      "source_file": "dev/lab-config.test.js",
+      "source_location": "L13"
+    },
+    {
+      "id": "dev_lab_config_test_test",
+      "label": "{ test }",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "{ test }",
+      "source_file": "dev/lab-config.test.js",
+      "source_location": "L10"
+    },
+    {
+      "id": "dev_llm_client",
+      "label": "llm-client.js",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "llm-client.js",
+      "source_file": "dev/llm-client.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "dev_llm_client_fs",
+      "label": "fs",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "fs",
+      "source_file": "dev/llm-client.js",
+      "source_location": "L17"
+    },
+    {
+      "id": "dev_llm_client_lab",
+      "label": "LAB",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "lab",
+      "source_file": "dev/llm-client.js",
+      "source_location": "L18"
+    },
+    {
+      "id": "dev_llm_client_path",
+      "label": "path",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "path",
+      "source_file": "dev/llm-client.js",
+      "source_location": "L16"
+    },
+    {
+      "id": "dev_llm_client_spawn_spawnsync",
+      "label": "{ spawn, spawnSync }",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "{ spawn, spawnsync }",
+      "source_file": "dev/llm-client.js",
+      "source_location": "L15"
+    },
+    {
+      "id": "dev_llm_client_test",
+      "label": "llm-client.test.js",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "llm-client.test.js",
+      "source_file": "dev/llm-client.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "dev_llm_client_test_assert",
+      "label": "assert",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "assert",
+      "source_file": "dev/llm-client.test.js",
+      "source_location": "L6"
+    },
+    {
+      "id": "dev_llm_client_test_buildprompt_parseenvelope_send",
+      "label": "{ buildPrompt, parseEnvelope, send }",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "{ buildprompt, parseenvelope, send }",
+      "source_file": "dev/llm-client.test.js",
+      "source_location": "L7"
+    },
+    {
+      "id": "dev_llm_client_test_errored",
+      "label": "ERRORED",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "errored",
+      "source_file": "dev/llm-client.test.js",
+      "source_location": "L9"
+    },
+    {
+      "id": "dev_llm_client_test_happy",
+      "label": "HAPPY",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "happy",
+      "source_file": "dev/llm-client.test.js",
+      "source_location": "L31"
+    },
+    {
+      "id": "dev_llm_client_test_test",
+      "label": "{ test }",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "llm-session.test.js",
+      "file_type": "code",
+      "norm_label": "{ test }",
+      "source_file": "dev/llm-client.test.js",
+      "source_location": "L5"
     },
     {
       "id": "dev_llm_session",
@@ -14584,114 +14956,6 @@
       "source_location": "L1"
     },
     {
-      "id": "docs_context_dev_tooling_context",
-      "label": "dev-tooling-context.md",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "dev-tooling-context.md",
-      "source_file": "docs/context/dev-tooling-context.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_context_dev_tooling_context_dev_tooling",
-      "label": "Dev-tooling",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "dev-tooling",
-      "source_file": "docs/context/dev-tooling-context.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_context_dev_tooling_context_judging",
-      "label": "Judging",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "judging",
-      "source_file": "docs/context/dev-tooling-context.md",
-      "source_location": "L109"
-    },
-    {
-      "id": "docs_context_dev_tooling_context_organising_the_code",
-      "label": "Organising the code",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "organising the code",
-      "source_file": "docs/context/dev-tooling-context.md",
-      "source_location": "L144"
-    },
-    {
-      "id": "docs_context_dev_tooling_context_reading_the_numbers",
-      "label": "Reading the numbers",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "reading the numbers",
-      "source_file": "docs/context/dev-tooling-context.md",
-      "source_location": "L79"
-    },
-    {
-      "id": "docs_context_dev_tooling_context_running_games_in_bulk",
-      "label": "Running games in bulk",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "running games in bulk",
-      "source_file": "docs/context/dev-tooling-context.md",
-      "source_location": "L18"
-    },
-    {
-      "id": "docs_context_dev_tooling_context_the_loop",
-      "label": "The loop",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "the loop",
-      "source_file": "docs/context/dev-tooling-context.md",
-      "source_location": "L7"
-    },
-    {
-      "id": "docs_context_dev_tooling_context_what_gets_recorded",
-      "label": "What gets recorded",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "what gets recorded",
-      "source_file": "docs/context/dev-tooling-context.md",
-      "source_location": "L37"
-    },
-    {
-      "id": "docs_context_game_concepts_context",
-      "label": "game-concepts-context.md",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "game-concepts-context.md",
-      "source_file": "docs/context/game-concepts-context.md",
-      "source_location": "L1"
-    },
-    {
       "id": "docs_context_game_concepts_context_acting",
       "label": "Acting",
       "_origin": "ast",
@@ -14701,7 +14965,7 @@
       "node_kind": "heading",
       "norm_label": "acting",
       "source_file": "docs/context/game-concepts-context.md",
-      "source_location": "L206"
+      "source_location": "L208"
     },
     {
       "id": "docs_context_game_concepts_context_budget",
@@ -14713,7 +14977,7 @@
       "node_kind": "heading",
       "norm_label": "budget",
       "source_file": "docs/context/game-concepts-context.md",
-      "source_location": "L277"
+      "source_location": "L279"
     },
     {
       "id": "docs_context_game_concepts_context_commanders",
@@ -14725,7 +14989,7 @@
       "node_kind": "heading",
       "norm_label": "commanders",
       "source_file": "docs/context/game-concepts-context.md",
-      "source_location": "L261"
+      "source_location": "L263"
     },
     {
       "id": "docs_context_game_concepts_context_ending_it",
@@ -14737,7 +15001,7 @@
       "node_kind": "heading",
       "norm_label": "ending it",
       "source_file": "docs/context/game-concepts-context.md",
-      "source_location": "L238"
+      "source_location": "L240"
     },
     {
       "id": "docs_context_game_concepts_context_game_concepts",
@@ -14761,7 +15025,7 @@
       "node_kind": "heading",
       "norm_label": "pieces",
       "source_file": "docs/context/game-concepts-context.md",
-      "source_location": "L98"
+      "source_location": "L100"
     },
     {
       "id": "docs_context_game_concepts_context_taking_a_turn",
@@ -14773,7 +15037,7 @@
       "node_kind": "heading",
       "norm_label": "taking a turn",
       "source_file": "docs/context/game-concepts-context.md",
-      "source_location": "L153"
+      "source_location": "L155"
     },
     {
       "id": "docs_context_game_concepts_context_the_board",
@@ -14809,223 +15073,7 @@
       "node_kind": "heading",
       "norm_label": "where the rules are written",
       "source_file": "docs/context/game-concepts-context.md",
-      "source_location": "L293"
-    },
-    {
-      "id": "docs_context_heuristic_ai_context",
-      "label": "heuristic-ai-context.md",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "heuristic-ai-context.md",
-      "source_file": "docs/context/heuristic-ai-context.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_context_heuristic_ai_context_choosing_a_move",
-      "label": "Choosing a move",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "choosing a move",
-      "source_file": "docs/context/heuristic-ai-context.md",
-      "source_location": "L26"
-    },
-    {
-      "id": "docs_context_heuristic_ai_context_guards_against_degenerate_play",
-      "label": "Guards against degenerate play",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "guards against degenerate play",
-      "source_file": "docs/context/heuristic-ai-context.md",
-      "source_location": "L44"
-    },
-    {
-      "id": "docs_context_heuristic_ai_context_heuristic_ai",
-      "label": "Heuristic AI",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "heuristic ai",
-      "source_file": "docs/context/heuristic-ai-context.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_context_heuristic_ai_context_the_dials",
-      "label": "The dials",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "the dials",
-      "source_file": "docs/context/heuristic-ai-context.md",
-      "source_location": "L58"
-    },
-    {
-      "id": "docs_context_heuristic_ai_context_the_seat",
-      "label": "The seat",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "the seat",
-      "source_file": "docs/context/heuristic-ai-context.md",
-      "source_location": "L7"
-    },
-    {
-      "id": "docs_context_integration_context",
-      "label": "integration-context.md",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "integration-context.md",
-      "source_file": "docs/context/integration-context.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_context_integration_context_across_the_wire",
-      "label": "Across the wire",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "across the wire",
-      "source_file": "docs/context/integration-context.md",
-      "source_location": "L51"
-    },
-    {
-      "id": "docs_context_integration_context_content_to_engine",
-      "label": "Content to engine",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "content to engine",
-      "source_file": "docs/context/integration-context.md",
-      "source_location": "L29"
-    },
-    {
-      "id": "docs_context_integration_context_engine_to_everything_else",
-      "label": "Engine to everything else",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "engine to everything else",
-      "source_file": "docs/context/integration-context.md",
-      "source_location": "L7"
-    },
-    {
-      "id": "docs_context_integration_context_identity_of_a_run",
-      "label": "Identity of a run",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "identity of a run",
-      "source_file": "docs/context/integration-context.md",
-      "source_location": "L65"
-    },
-    {
-      "id": "docs_context_integration_context_integration",
-      "label": "Integration",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "integration",
-      "source_file": "docs/context/integration-context.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_context_interface_context",
-      "label": "interface-context.md",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "interface-context.md",
-      "source_file": "docs/context/interface-context.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_context_interface_context_families_that_share_a_shell",
-      "label": "Families that share a shell",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "families that share a shell",
-      "source_file": "docs/context/interface-context.md",
-      "source_location": "L57"
-    },
-    {
-      "id": "docs_context_interface_context_interface",
-      "label": "Interface",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "interface",
-      "source_file": "docs/context/interface-context.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_context_interface_context_places_you_go",
-      "label": "Places you go",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "places you go",
-      "source_file": "docs/context/interface-context.md",
-      "source_location": "L7"
-    },
-    {
-      "id": "docs_context_interface_context_staying_in_the_game",
-      "label": "Staying in the game",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "staying in the game",
-      "source_file": "docs/context/interface-context.md",
-      "source_location": "L43"
-    },
-    {
-      "id": "docs_context_interface_context_the_drawing_kit",
-      "label": "The drawing kit",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Game concepts",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "the drawing kit",
-      "source_file": "docs/context/interface-context.md",
-      "source_location": "L78"
+      "source_location": "L295"
     },
     {
       "id": "game_engine_board_board_js_game_engine_board_board",
@@ -16259,22 +16307,6 @@
       "source_url": null
     },
     {
-      "id": "context_ai_personality",
-      "label": "AI personality",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 2,
-      "community_name": "War of Attrition Rule Book (v1.1)",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "ai personality",
-      "rationale": "A named heuristic weight-set giving the bot a character/playstyle rather than maximal strength. Distinct from a Commander trait.",
-      "source_file": "CONTEXT.md",
-      "source_location": null,
-      "source_url": null
-    },
-    {
       "id": "context_attack",
       "label": "Attack",
       "_origin": "semantic",
@@ -16305,67 +16337,6 @@
       "source_url": null
     },
     {
-      "id": "context_battle",
-      "label": "Battle",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 2,
-      "community_name": "War of Attrition Rule Book (v1.1)",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "battle",
-      "source_file": "CONTEXT.md",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "context_campaign",
-      "label": "Campaign",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 2,
-      "community_name": "War of Attrition Rule Book (v1.1)",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "campaign",
-      "source_file": "CONTEXT.md",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "context_card",
-      "label": "Card (one-shot order)",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 2,
-      "community_name": "War of Attrition Rule Book (v1.1)",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "card (one-shot order)",
-      "source_file": "CONTEXT.md",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "context_commander_trait",
-      "label": "Commander trait",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 2,
-      "community_name": "War of Attrition Rule Book (v1.1)",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "commander trait",
-      "rationale": "A run-layer ability that bends the rules for a side; belongs to the not-yet-in-code Campaign layer. A rule-bender, not a playstyle.",
-      "source_file": "CONTEXT.md",
-      "source_location": null,
-      "source_url": null
-    },
-    {
       "id": "context_control",
       "label": "Control (deploy reach)",
       "_origin": "semantic",
@@ -16376,21 +16347,6 @@
       "contributor": null,
       "file_type": "concept",
       "norm_label": "control (deploy reach)",
-      "source_file": "CONTEXT.md",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "context_deck",
-      "label": "Deck",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 2,
-      "community_name": "War of Attrition Rule Book (v1.1)",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "deck",
       "source_file": "CONTEXT.md",
       "source_location": null,
       "source_url": null
@@ -16471,21 +16427,6 @@
       "source_url": null
     },
     {
-      "id": "context_skirmish",
-      "label": "Skirmish",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 2,
-      "community_name": "War of Attrition Rule Book (v1.1)",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "skirmish",
-      "source_file": "CONTEXT.md",
-      "source_location": null,
-      "source_url": null
-    },
-    {
       "id": "context_support",
       "label": "Support",
       "_origin": "semantic",
@@ -16557,21 +16498,6 @@
       "file_type": "concept",
       "norm_label": "unit (infantry/cavalry/artillery)",
       "source_file": "CONTEXT.md",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "_claude_skills_create_card_skill_create_card",
-      "label": "create-card skill",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 2,
-      "community_name": "War of Attrition Rule Book (v1.1)",
-      "contributor": null,
-      "file_type": "document",
-      "norm_label": "create-card skill",
-      "source_file": ".claude/skills/create-card/SKILL.md",
       "source_location": null,
       "source_url": null
     },
@@ -16857,6 +16783,173 @@
       "file_type": "rationale",
       "norm_label": "one primitive per fact contract",
       "source_file": "docs/reference/context-ui-components.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "_claude_skills_review_with_rubric_skill_review_with_rubric",
+      "label": "review-with-rubric skill",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 247,
+      "community_name": "War of Attrition domain glossary (CONTEXT.md)",
+      "contributor": null,
+      "file_type": "document",
+      "norm_label": "review-with-rubric skill",
+      "source_file": ".claude/skills/review-with-rubric/SKILL.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "context_glossary",
+      "label": "War of Attrition domain glossary (CONTEXT.md)",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 247,
+      "community_name": "War of Attrition domain glossary (CONTEXT.md)",
+      "contributor": null,
+      "file_type": "document",
+      "norm_label": "war of attrition domain glossary (context.md)",
+      "source_file": "CONTEXT.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_readme_index",
+      "label": "docs/ folder index",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 247,
+      "community_name": "War of Attrition domain glossary (CONTEXT.md)",
+      "contributor": null,
+      "file_type": "document",
+      "norm_label": "docs/ folder index",
+      "source_file": "docs/README.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "context_ai_personality",
+      "label": "AI personality",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 248,
+      "community_name": "Battle",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "ai personality",
+      "rationale": "A named heuristic weight-set giving the bot a character/playstyle rather than maximal strength. Distinct from a Commander trait.",
+      "source_file": "CONTEXT.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "context_battle",
+      "label": "Battle",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 248,
+      "community_name": "Battle",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "battle",
+      "source_file": "CONTEXT.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "context_campaign",
+      "label": "Campaign",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 248,
+      "community_name": "Battle",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "campaign",
+      "source_file": "CONTEXT.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "context_commander_trait",
+      "label": "Commander trait",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 248,
+      "community_name": "Battle",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "commander trait",
+      "rationale": "A run-layer ability that bends the rules for a side; belongs to the not-yet-in-code Campaign layer. A rule-bender, not a playstyle.",
+      "source_file": "CONTEXT.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "context_skirmish",
+      "label": "Skirmish",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 248,
+      "community_name": "Battle",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "skirmish",
+      "source_file": "CONTEXT.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "context_card",
+      "label": "Card (one-shot order)",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 249,
+      "community_name": "create-card skill",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "card (one-shot order)",
+      "source_file": "CONTEXT.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "context_deck",
+      "label": "Deck",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 249,
+      "community_name": "create-card skill",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "deck",
+      "source_file": "CONTEXT.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "_claude_skills_create_card_skill_create_card",
+      "label": "create-card skill",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 249,
+      "community_name": "create-card skill",
+      "contributor": null,
+      "file_type": "document",
+      "norm_label": "create-card skill",
+      "source_file": ".claude/skills/create-card/SKILL.md",
       "source_location": null,
       "source_url": null
     },
@@ -17262,51 +17355,6 @@
       "file_type": "image",
       "norm_label": "careful maneuvers card art: soldiers marching cautiously along a hedgerow toward a fortified gate",
       "source_file": "game/art/careful_maneuvers.jpg",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "_claude_skills_review_with_rubric_skill_review_with_rubric",
-      "label": "review-with-rubric skill",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 6,
-      "community_name": "Game concepts",
-      "contributor": null,
-      "file_type": "document",
-      "norm_label": "review-with-rubric skill",
-      "source_file": ".claude/skills/review-with-rubric/SKILL.md",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "context_glossary",
-      "label": "War of Attrition domain glossary (CONTEXT.md)",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 6,
-      "community_name": "Game concepts",
-      "contributor": null,
-      "file_type": "document",
-      "norm_label": "war of attrition domain glossary (context.md)",
-      "source_file": "CONTEXT.md",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "docs_readme_index",
-      "label": "docs/ folder index",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 6,
-      "community_name": "Game concepts",
-      "contributor": null,
-      "file_type": "document",
-      "norm_label": "docs/ folder index",
-      "source_file": "docs/README.md",
       "source_location": null,
       "source_url": null
     },
@@ -22515,6 +22563,162 @@
       "weight": 1.0
     },
     {
+      "source": "game_ui_board_map_editor_edbuilddef",
+      "target": "game_ui_board_map_editor_groupedgestopieces",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L278",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor_edbuilddef",
+      "target": "game_ui_board_map_editor_edhexpairs",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L282",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor_edhexpairs",
+      "target": "game_ui_board_map_editor_edhexset",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor_edinternalsides",
+      "target": "game_ui_board_map_editor_edhexset",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L102",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor_edliveshape",
+      "target": "game_ui_board_map_editor_edhexpairs",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L85",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor_openeditor",
+      "target": "game_ui_board_map_editor_rendereditor",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L59",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor_rendereditor",
+      "target": "game_ui_board_map_editor_edliveshape",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L112",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor_rendereditor",
+      "target": "game_ui_board_map_editor_edhexset",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L118",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor_rendereditor",
+      "target": "game_ui_board_map_editor_edremovehex",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L141",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor_rendereditor",
+      "target": "game_ui_board_map_editor_edinternalsides",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L162",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor_rendereditor",
+      "target": "game_ui_board_map_editor_renderedterrainhint",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L179",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor_rendereditor",
+      "target": "game_ui_board_map_editor_renderedstock",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L180",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor_renderedstock",
+      "target": "game_ui_board_map_editor_groupedgestopieces",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L248",
+      "weight": 1.0
+    },
+    {
       "source": "game_ui_board_terrain_terrain_marks_bpbarrageterrain",
       "target": "game_ui_board_terrain_terrain_marks_terraininset",
       "relation": "calls",
@@ -22523,7 +22727,31 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L83",
+      "source_location": "L107",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_terrain_terrain_marks_bpterrainedge",
+      "target": "game_ui_board_terrain_terrain_marks_terraindial",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/terrain/terrain-marks.js",
+      "source_location": "L101",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_terrain_terrain_marks_bpterrainedge",
+      "target": "game_ui_board_terrain_terrain_marks_terrainhexrow",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/terrain/terrain-marks.js",
+      "source_location": "L95",
       "weight": 1.0
     },
     {
@@ -22535,7 +22763,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L72",
+      "source_location": "L96",
       "weight": 1.0
     },
     {
@@ -22547,7 +22775,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L73",
+      "source_location": "L97",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_terrain_terrain_marks_bpterrainstroke",
+      "target": "game_ui_board_terrain_terrain_marks_terrainhexrow",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/terrain/terrain-marks.js",
+      "source_location": "L79",
       "weight": 1.0
     },
     {
@@ -22559,7 +22799,43 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L55",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_terrain_terrain_marks_bpterrainstroke",
+      "target": "game_ui_board_terrain_terrain_marks_terraindial",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/terrain/terrain-marks.js",
+      "source_location": "L82",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_terrain_terrain_marks_bpthumbterrain",
+      "target": "game_ui_board_terrain_terrain_marks_terraindial",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/terrain/terrain-marks.js",
+      "source_location": "L119",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_terrain_terrain_marks_terraininset",
+      "target": "game_ui_board_terrain_terrain_marks_terraindial",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/terrain/terrain-marks.js",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -22571,7 +22847,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L34",
+      "source_location": "L56",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_terrain_terrain_marks_terraininset",
+      "target": "game_ui_board_terrain_terrain_marks_terrainhexrow",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/terrain/terrain-marks.js",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -22583,7 +22871,31 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L88",
+      "source_location": "L93",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_unit_unit_marks_bpunitghost",
+      "target": "game_ui_board_unit_unit_marks_unittokenr",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/unit/unit-marks.js",
+      "source_location": "L128",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_unit_unit_marks_bpunitpop",
+      "target": "game_ui_board_unit_unit_marks_unitel",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/unit/unit-marks.js",
+      "source_location": "L106",
       "weight": 1.0
     },
     {
@@ -22595,7 +22907,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L76",
+      "source_location": "L81",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_unit_unit_marks_bpunitslide",
+      "target": "game_ui_board_unit_unit_marks_unitel",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/unit/unit-marks.js",
+      "source_location": "L111",
       "weight": 1.0
     },
     {
@@ -22607,7 +22931,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L100",
+      "source_location": "L142",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_unit_unit_marks_bpunittoken",
+      "target": "game_ui_board_unit_unit_marks_unitdial",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/unit/unit-marks.js",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -22619,7 +22955,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L62",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -22631,7 +22967,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L63",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -22643,7 +22979,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L42",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -23476,30 +23812,6 @@
     },
     {
       "source": "game_ui_fx_playfx",
-      "target": "game_ui_fx_popunit",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/fx.js",
-      "source_location": "L71",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_fx_playfx",
-      "target": "game_ui_fx_ringat",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/fx.js",
-      "source_location": "L72",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_fx_playfx",
       "target": "game_ui_fx_fxpiecehex",
       "relation": "calls",
       "_origin": "ast",
@@ -23507,79 +23819,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/fx.js",
-      "source_location": "L73",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
       "source": "game_ui_fx_playfx",
-      "target": "game_ui_fx_slideunit",
+      "target": "game_ui_fx_fxring",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/fx.js",
-      "source_location": "L75",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_fx_playfx",
-      "target": "game_ui_fx_fxstrike",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/fx.js",
-      "source_location": "L82",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_fx_playfx",
-      "target": "game_ui_fx_ghostunit",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/fx.js",
-      "source_location": "L90",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_fx_playfx",
-      "target": "game_ui_fx_shakeboard",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/fx.js",
-      "source_location": "L92",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_fx_popunit",
-      "target": "game_ui_fx_unitel",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/fx.js",
-      "source_location": "L24",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_fx_slideunit",
-      "target": "game_ui_fx_unitel",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/fx.js",
-      "source_location": "L13",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -23627,7 +23879,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/manual.js",
-      "source_location": "L408",
+      "source_location": "L404",
       "weight": 1.0
     },
     {
@@ -23639,7 +23891,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/manual.js",
-      "source_location": "L392",
+      "source_location": "L388",
       "weight": 1.0
     },
     {
@@ -23651,7 +23903,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/manual.js",
-      "source_location": "L401",
+      "source_location": "L397",
       "weight": 1.0
     },
     {
@@ -23663,7 +23915,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/manual.js",
-      "source_location": "L173",
+      "source_location": "L169",
       "weight": 1.0
     },
     {
@@ -23675,7 +23927,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/manual.js",
-      "source_location": "L130",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -23687,7 +23939,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/manual.js",
-      "source_location": "L135",
+      "source_location": "L132",
       "weight": 1.0
     },
     {
@@ -23699,7 +23951,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/manual.js",
-      "source_location": "L154",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
@@ -23723,7 +23975,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/manual.js",
-      "source_location": "L387",
+      "source_location": "L383",
       "weight": 1.0
     },
     {
@@ -23735,163 +23987,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/manual.js",
-      "source_location": "L361",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor_edbuilddef",
-      "target": "game_ui_map_editor_groupedgestopieces",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L271",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor_edbuilddef",
-      "target": "game_ui_map_editor_edhexpairs",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L275",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor_edhexpairs",
-      "target": "game_ui_map_editor_edhexset",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L72",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor_edinternalsides",
-      "target": "game_ui_map_editor_edhexset",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L95",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor_edliveshape",
-      "target": "game_ui_map_editor_edhexpairs",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L78",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor_openeditor",
-      "target": "game_ui_map_editor_rendereditor",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L52",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor_rendereditor",
-      "target": "game_ui_map_editor_edliveshape",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L105",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor_rendereditor",
-      "target": "game_ui_map_editor_edhexset",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L111",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor_rendereditor",
-      "target": "game_ui_map_editor_edremovehex",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L134",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor_rendereditor",
-      "target": "game_ui_map_editor_edinternalsides",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L155",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor_rendereditor",
-      "target": "game_ui_map_editor_renderedterrainhint",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L172",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor_rendereditor",
-      "target": "game_ui_map_editor_renderedstock",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L173",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor_renderedstock",
-      "target": "game_ui_map_editor_groupedgestopieces",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L241",
+      "source_location": "L357",
       "weight": 1.0
     },
     {
@@ -24659,7 +24755,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/screens/dashboard/panes/maps.js",
-      "source_location": "L309",
+      "source_location": "L310",
       "weight": 1.0
     },
     {
@@ -24671,7 +24767,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/screens/dashboard/panes/maps.js",
-      "source_location": "L310",
+      "source_location": "L311",
       "weight": 1.0
     },
     {
@@ -24683,7 +24779,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/screens/dashboard/panes/maps.js",
-      "source_location": "L310",
+      "source_location": "L311",
       "weight": 1.0
     },
     {
@@ -24695,7 +24791,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/screens/dashboard/panes/maps.js",
-      "source_location": "L311",
+      "source_location": "L312",
       "weight": 1.0
     },
     {
@@ -24707,7 +24803,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/screens/dashboard/panes/maps.js",
-      "source_location": "L313",
+      "source_location": "L314",
       "weight": 1.0
     },
     {
@@ -24743,7 +24839,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/screens/dashboard/panes/maps.js",
-      "source_location": "L338",
+      "source_location": "L339",
       "weight": 1.0
     },
     {
@@ -25863,6 +25959,30 @@
       "weight": 1.0
     },
     {
+      "source": "game_ui_board_map_editor_groupedgestopieces",
+      "target": "game_ui_board_map_editor_groupedgestopieces_vkey",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L186",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor_renderedstock",
+      "target": "game_ui_board_map_editor_renderedstock_summary",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L249",
+      "weight": 1.0
+    },
+    {
       "source": "game_ui_boot_recordskirmish",
       "target": "game_ui_boot_recordskirmish_aiof",
       "relation": "contains",
@@ -26007,30 +26127,6 @@
       "weight": 1.0
     },
     {
-      "source": "game_ui_map_editor_groupedgestopieces",
-      "target": "game_ui_map_editor_groupedgestopieces_vkey",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L179",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor_renderedstock",
-      "target": "game_ui_map_editor_renderedstock_summary",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L242",
-      "weight": 1.0
-    },
-    {
       "source": "game_ui_screens_dashboard_panes_cards_chartcardsightquadrant",
       "target": "game_ui_screens_dashboard_panes_cards_chartcardsightquadrant_sx",
       "relation": "contains",
@@ -26111,7 +26207,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "game/ui/screens/dashboard/panes/maps.js",
-      "source_location": "L283",
+      "source_location": "L284",
       "weight": 1.0
     },
     {
@@ -29766,13 +29862,24 @@
     },
     {
       "source": "docs_context_game_concepts_context_game_concepts",
+      "target": "docs_context_game_concepts_context_pieces",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/context/game-concepts-context.md",
+      "source_location": "L100",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_context_game_concepts_context_game_concepts",
       "target": "docs_context_game_concepts_context_taking_a_turn",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/context/game-concepts-context.md",
-      "source_location": "L153",
+      "source_location": "L155",
       "weight": 1.0
     },
     {
@@ -29783,7 +29890,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/context/game-concepts-context.md",
-      "source_location": "L206",
+      "source_location": "L208",
       "weight": 1.0
     },
     {
@@ -29794,7 +29901,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/context/game-concepts-context.md",
-      "source_location": "L238",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
@@ -29805,7 +29912,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/context/game-concepts-context.md",
-      "source_location": "L261",
+      "source_location": "L263",
       "weight": 1.0
     },
     {
@@ -29816,7 +29923,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/context/game-concepts-context.md",
-      "source_location": "L277",
+      "source_location": "L279",
       "weight": 1.0
     },
     {
@@ -29827,7 +29934,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/context/game-concepts-context.md",
-      "source_location": "L293",
+      "source_location": "L295",
       "weight": 1.0
     },
     {
@@ -29850,17 +29957,6 @@
       "confidence_score": 1.0,
       "source_file": "docs/context/game-concepts-context.md",
       "source_location": "L7",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_context_game_concepts_context_game_concepts",
-      "target": "docs_context_game_concepts_context_pieces",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/context/game-concepts-context.md",
-      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -31163,13 +31259,24 @@
     },
     {
       "source": "game_engine_board_board_board",
+      "target": "game_engine_board_board_a_map_is_a_board",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/engine/board/board.md",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "game_engine_board_board_board",
       "target": "game_engine_board_board_adding_an_authored_outline_form",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/engine/board/board.md",
-      "source_location": "L19",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -31180,18 +31287,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/engine/board/board.md",
-      "source_location": "L32",
+      "source_location": "L40",
       "weight": 1.0
     },
     {
       "source": "game_engine_board_board_board",
-      "target": "game_engine_board_board_retuning_a_board",
+      "target": "game_engine_board_board_changing_how_a_board_looks",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/engine/board/board.md",
-      "source_location": "L43",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -31202,7 +31309,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/engine/board/board.md",
-      "source_location": "L56",
+      "source_location": "L66",
+      "weight": 1.0
+    },
+    {
+      "source": "game_engine_board_board_board",
+      "target": "game_engine_board_board_what_this_house_does_not_own",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/engine/board/board.md",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -33880,6 +33998,17 @@
     },
     {
       "source": "game_ui_board_board_marks",
+      "target": "game_ui_board_board_marks_bpboardshake",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/board-marks.js",
+      "source_location": "L125",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_board_marks",
       "target": "game_ui_board_board_marks_defineboardmark",
       "relation": "contains",
       "_origin": "ast",
@@ -34319,69 +34448,157 @@
       "weight": 1.0
     },
     {
-      "source": "game_ui_board_terrain_terrain_marks",
-      "target": "game_ui_board_terrain_terrain_marks_defineterrainmark",
+      "source": "game_ui_board_map_editor",
+      "target": "game_ui_board_map_editor_rendereditor",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L23",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L109",
       "weight": 1.0
     },
     {
-      "source": "game_ui_board_terrain_terrain_marks",
-      "target": "game_ui_board_terrain_terrain_marks_terrainmark",
+      "source": "game_ui_board_map_editor",
+      "target": "game_ui_board_map_editor_groupedgestopieces",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L30",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L183",
       "weight": 1.0
     },
     {
-      "source": "game_ui_board_terrain_terrain_marks",
-      "target": "game_ui_board_terrain_terrain_marks_terraininset",
+      "source": "game_ui_board_map_editor",
+      "target": "game_ui_board_map_editor_edterrainrule",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L33",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L224",
       "weight": 1.0
     },
     {
-      "source": "game_ui_board_terrain_terrain_marks",
-      "target": "game_ui_board_terrain_terrain_marks_terrainmarkscheck",
+      "source": "game_ui_board_map_editor",
+      "target": "game_ui_board_map_editor_renderedterrainhint",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L39",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L235",
       "weight": 1.0
     },
     {
-      "source": "game_ui_board_terrain_terrain_marks",
-      "target": "game_ui_board_terrain_terrain_marks_bpterrainstroke",
+      "source": "game_ui_board_map_editor",
+      "target": "game_ui_board_map_editor_openeditor",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L53",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L24",
       "weight": 1.0
     },
     {
-      "source": "game_ui_board_terrain_terrain_marks",
-      "target": "game_ui_board_terrain_terrain_marks_bpterrainedge",
+      "source": "game_ui_board_map_editor",
+      "target": "game_ui_board_map_editor_renderedstock",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L69",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L247",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor",
+      "target": "game_ui_board_map_editor_edbuilddef",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L272",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor",
+      "target": "game_ui_board_map_editor_edsavedef",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L295",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor",
+      "target": "game_ui_board_map_editor_edgocustom",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L62",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor",
+      "target": "game_ui_board_map_editor_edhexset",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L70",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor",
+      "target": "game_ui_board_map_editor_edhexpairs",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L76",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor",
+      "target": "game_ui_board_map_editor_edliveshape",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L83",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor",
+      "target": "game_ui_board_map_editor_edremovehex",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L87",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_map_editor",
+      "target": "game_ui_board_map_editor_edinternalsides",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -34392,12 +34609,100 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/board/terrain/terrain-marks.js",
-      "source_location": "L82",
+      "source_location": "L106",
       "weight": 1.0
     },
     {
       "source": "game_ui_board_terrain_terrain_marks",
       "target": "game_ui_board_terrain_terrain_marks_bpthumbterrain",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/terrain/terrain-marks.js",
+      "source_location": "L117",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_terrain_terrain_marks",
+      "target": "game_ui_board_terrain_terrain_marks_defineterrainmark",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/terrain/terrain-marks.js",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_terrain_terrain_marks",
+      "target": "game_ui_board_terrain_terrain_marks_terrainmark",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/terrain/terrain-marks.js",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_terrain_terrain_marks",
+      "target": "game_ui_board_terrain_terrain_marks_terrainhexrow",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/terrain/terrain-marks.js",
+      "source_location": "L37",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_terrain_terrain_marks",
+      "target": "game_ui_board_terrain_terrain_marks_terraindial",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/terrain/terrain-marks.js",
+      "source_location": "L43",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_terrain_terrain_marks",
+      "target": "game_ui_board_terrain_terrain_marks_terraininset",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/terrain/terrain-marks.js",
+      "source_location": "L55",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_terrain_terrain_marks",
+      "target": "game_ui_board_terrain_terrain_marks_terrainmarkscheck",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/terrain/terrain-marks.js",
+      "source_location": "L63",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_terrain_terrain_marks",
+      "target": "game_ui_board_terrain_terrain_marks_bpterrainstroke",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/terrain/terrain-marks.js",
+      "source_location": "L77",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_terrain_terrain_marks",
+      "target": "game_ui_board_terrain_terrain_marks_bpterrainedge",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -34513,7 +34818,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/board/terrain/trench-mark.js",
-      "source_location": "L22",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -34524,7 +34829,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/board/terrain/trench-mark.js",
-      "source_location": "L29",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -34535,7 +34840,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/board/terrain/trench-mark.js",
-      "source_location": "L40",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -34546,7 +34851,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/board/terrain/trench-mark.js",
-      "source_location": "L51",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -34558,6 +34863,61 @@
       "confidence_score": 1.0,
       "source_file": "game/ui/board/thumb-board.js",
       "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_unit_unit_marks",
+      "target": "game_ui_board_unit_unit_marks_unitel",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/unit/unit-marks.js",
+      "source_location": "L103",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_unit_unit_marks",
+      "target": "game_ui_board_unit_unit_marks_bpunitpop",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/unit/unit-marks.js",
+      "source_location": "L105",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_unit_unit_marks",
+      "target": "game_ui_board_unit_unit_marks_bpunitslide",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/unit/unit-marks.js",
+      "source_location": "L110",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_unit_unit_marks",
+      "target": "game_ui_board_unit_unit_marks_bpunitghost",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/unit/unit-marks.js",
+      "source_location": "L124",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_unit_unit_marks",
+      "target": "game_ui_board_unit_unit_marks_bpunitslot",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/unit/unit-marks.js",
+      "source_location": "L139",
       "weight": 1.0
     },
     {
@@ -34584,13 +34944,24 @@
     },
     {
       "source": "game_ui_board_unit_unit_marks",
+      "target": "game_ui_board_unit_unit_marks_unitdial",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/board/unit/unit-marks.js",
+      "source_location": "L37",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_board_unit_unit_marks",
       "target": "game_ui_board_unit_unit_marks_unittokenr",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L38",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -34601,7 +34972,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L41",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -34612,7 +34983,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L47",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -34623,7 +34994,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L58",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -34634,7 +35005,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L69",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -34645,18 +35016,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L85",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_board_unit_unit_marks",
-      "target": "game_ui_board_unit_unit_marks_bpunitslot",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/board/unit/unit-marks.js",
-      "source_location": "L97",
+      "source_location": "L90",
       "weight": 1.0
     },
     {
@@ -35585,90 +35945,24 @@
     },
     {
       "source": "game_ui_fx",
-      "target": "game_ui_fx_unitel",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/fx.js",
-      "source_location": "L11",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_fx",
-      "target": "game_ui_fx_slideunit",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/fx.js",
-      "source_location": "L12",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_fx",
-      "target": "game_ui_fx_popunit",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/fx.js",
-      "source_location": "L23",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_fx",
-      "target": "game_ui_fx_ghostunit",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/fx.js",
-      "source_location": "L27",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_fx",
-      "target": "game_ui_fx_ringat",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/fx.js",
-      "source_location": "L36",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_fx",
-      "target": "game_ui_fx_fxstrike",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/fx.js",
-      "source_location": "L39",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_fx",
-      "target": "game_ui_fx_shakeboard",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/fx.js",
-      "source_location": "L42",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_fx",
       "target": "game_ui_fx_capturepre",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/fx.js",
-      "source_location": "L49",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "game_ui_fx",
+      "target": "game_ui_fx_fxring",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "game/ui/fx.js",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -35679,7 +35973,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/fx.js",
-      "source_location": "L68",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -35690,7 +35984,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/fx.js",
-      "source_location": "L95",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -35756,7 +36050,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/manual.js",
-      "source_location": "L153",
+      "source_location": "L150",
       "weight": 1.0
     },
     {
@@ -35767,7 +36061,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/manual.js",
-      "source_location": "L161",
+      "source_location": "L157",
       "weight": 1.0
     },
     {
@@ -35778,7 +36072,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/manual.js",
-      "source_location": "L168",
+      "source_location": "L164",
       "weight": 1.0
     },
     {
@@ -35789,7 +36083,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/manual.js",
-      "source_location": "L171",
+      "source_location": "L167",
       "weight": 1.0
     },
     {
@@ -35822,7 +36116,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/manual.js",
-      "source_location": "L349",
+      "source_location": "L345",
       "weight": 1.0
     },
     {
@@ -35833,7 +36127,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/manual.js",
-      "source_location": "L374",
+      "source_location": "L370",
       "weight": 1.0
     },
     {
@@ -35844,7 +36138,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/manual.js",
-      "source_location": "L390",
+      "source_location": "L386",
       "weight": 1.0
     },
     {
@@ -35855,7 +36149,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/manual.js",
-      "source_location": "L395",
+      "source_location": "L391",
       "weight": 1.0
     },
     {
@@ -35866,7 +36160,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/manual.js",
-      "source_location": "L404",
+      "source_location": "L400",
       "weight": 1.0
     },
     {
@@ -35932,160 +36226,6 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/manual.js",
-      "source_location": "L92",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor",
-      "target": "game_ui_map_editor_rendereditor",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L102",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor",
-      "target": "game_ui_map_editor_openeditor",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L17",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor",
-      "target": "game_ui_map_editor_groupedgestopieces",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L176",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor",
-      "target": "game_ui_map_editor_edterrainrule",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L217",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor",
-      "target": "game_ui_map_editor_renderedterrainhint",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L228",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor",
-      "target": "game_ui_map_editor_renderedstock",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L240",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor",
-      "target": "game_ui_map_editor_edbuilddef",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L265",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor",
-      "target": "game_ui_map_editor_edsavedef",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L288",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor",
-      "target": "game_ui_map_editor_edgocustom",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L55",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor",
-      "target": "game_ui_map_editor_edhexset",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L63",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor",
-      "target": "game_ui_map_editor_edhexpairs",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L69",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor",
-      "target": "game_ui_map_editor_edliveshape",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L76",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor",
-      "target": "game_ui_map_editor_edremovehex",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L80",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor",
-      "target": "game_ui_map_editor_edinternalsides",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "game/ui/map-editor.js",
       "source_location": "L92",
       "weight": 1.0
     },
@@ -36889,7 +37029,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "game/ui/screens/dashboard/panes/maps.js",
-      "source_location": "L302",
+      "source_location": "L303",
       "weight": 1.0
     },
     {
@@ -38105,6 +38245,18 @@
       "weight": 1.0
     },
     {
+      "source": "game_ui_board_map_editor_renderedterrainhint",
+      "target": "game_ui_board_map_editor_edterrainrule",
+      "relation": "indirect_call",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "argument",
+      "source_file": "game/ui/board/map-editor.js",
+      "source_location": "L242",
+      "weight": 1.0
+    },
+    {
       "source": "game_ui_boot",
       "target": "game_ui_manual_manualkey",
       "relation": "indirect_call",
@@ -38150,18 +38302,6 @@
       "context": "argument",
       "source_file": "game/ui/boot.js",
       "source_location": "L97",
-      "weight": 1.0
-    },
-    {
-      "source": "game_ui_map_editor_renderedterrainhint",
-      "target": "game_ui_map_editor_edterrainrule",
-      "relation": "indirect_call",
-      "_origin": "ast",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "context": "argument",
-      "source_file": "game/ui/map-editor.js",
-      "source_location": "L235",
       "weight": 1.0
     },
     {
@@ -38833,7 +38973,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "game/ui/screens/dashboard/panes/maps.js",
-      "source_location": "L343",
+      "source_location": "L344",
       "weight": 1.0
     },
     {
@@ -41001,5 +41141,5 @@
       "source_file": "docs/rubrics/card-rubric.md"
     }
   ],
-  "built_at_commit": "0d512f9980823b0104478862265cbc74a1b5d78a"
+  "built_at_commit": "8c13aa1a4ba29902715e7a3cf3d6822fa1a35d92"
 }

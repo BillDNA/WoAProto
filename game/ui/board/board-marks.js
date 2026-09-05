@@ -118,3 +118,14 @@ function bpBeginBoard(svg){
 }
 // the hover-only attack-math layer the pills go on
 function bpAttackLayer(){ return svgEl('g', { 'class':'atk-hints', 'pointer-events':'none' }); }
+
+// The whole board recoiling — the one mark that is about the board itself and
+// not about anything standing on it, so it moves the element rather than
+// drawing. Retriggerable: strip the class, force a reflow, put it back.
+function bpBoardShake(){
+  var w = document.getElementById('boardwrap');
+  if (!w) return;
+  w.classList.remove('fx-shake');
+  void w.offsetWidth;
+  w.classList.add('fx-shake');
+}

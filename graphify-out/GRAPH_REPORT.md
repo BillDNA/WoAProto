@@ -1,16 +1,16 @@
 # Graph Report - board-house-337  (2026-09-05)
 
 ## Corpus Check
-- 275 files · ~285,276 words
+- 275 files · ~286,646 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1480 nodes · 2012 edges · 247 communities (91 shown, 36 thin omitted)
+- 1484 nodes · 2020 edges · 250 communities (95 shown, 35 thin omitted)
 - Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 136 edges (avg confidence: 0.84)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0d512f99`
+- Built from commit: `8c13aa1a`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -25,7 +25,7 @@
 - board.js
 - 04-skirmish.js
 - ui/skirmish.js
-- llm-client.js
+- map-editor.js
 - ui/manual.js
 - chart-primitives.js
 - 03-rules.js
@@ -35,7 +35,7 @@
 - 05-ai.js
 - db.js
 - db.test.js
-- map-editor.js
+- Dev-tooling
 - server.js
 - 01-core.js
 - app.js
@@ -117,14 +117,14 @@
 - War of Attrition digital edition manual
 - ADR-0002: army-points is a descriptive yardstick
 - run
-- sweep.js
+- balance.js
 - Commander schema
 - unit-marks.js
 - 03a-commander-effects.js
 - commander-picker.js
 - defineKind
 - tune-weights.js
-- lab-config.test.js
+- Heuristic AI
 - modal.js
 - overview.js
 - test.combat.js
@@ -132,8 +132,8 @@
 - tables.js
 - Terrain
 - Engine model (rules kernel)
-- lab-config.js
-- LlmSession
+- Integration
+- Interface
 - live-board.js
 - UI invariants (browser app)
 - Board
@@ -142,6 +142,9 @@
 - board.test.js
 - Unit
 - Hex
+- War of Attrition domain glossary (CONTEXT.md)
+- Battle
+- create-card skill
 
 ## God Nodes (most connected - your core abstractions)
 1. `Code architecture — start here (front door)` - 20 edges
@@ -178,7 +181,7 @@
 - **docs/reference how-the-code-works set** — docs_reference_engine_model_engine_model, docs_reference_report_model_report_model, docs_reference_ai_heuristic_model_ai_heuristic_model, docs_reference_card_cheatsheet_card_cheatsheet, docs_reference_ui_invariants_ui_invariants, docs_reference_context_ui_components_ui_components, docs_reference_testing_seams_testing_seams, docs_reference_workflow_workflow [INFERRED 0.80]
 - **War of Attrition content rubrics (findings-not-score)** — docs_rubrics_card_rubric_card_rubric, docs_rubrics_map_rubric_map_rubric, docs_rubrics_personality_rubric_personality_rubric, docs_rubrics_ui_rubric_ui_rubric, docs_rubrics_unit_rubric_unit_rubric [INFERRED 0.85]
 
-## Communities (247 total, 36 thin omitted)
+## Communities (250 total, 35 thin omitted)
 
 ### Community 0 - "Report model (reporting subsystem)"
 Cohesion: 0.22
@@ -189,24 +192,24 @@ Cohesion: 0.12
 Nodes (8): assert, ADR-0003, { test }, buildOverviewModel(), ovAvg(), ovFmt(), ovHist(), ovPacing()
 
 ### Community 2 - "War of Attrition Rule Book (v1.1)"
-Cohesion: 0.10
-Nodes (23): create-card skill, AI personality, Attack, Attrition (skirmish ending), Battle, Campaign, Card (one-shot order), Commander trait (+15 more)
+Cohesion: 0.17
+Nodes (15): Attack, Attrition (skirmish ending), Control (deploy reach), Deploy / Build, Field score, HQ capture (skirmish ending), Reposition (Move/Swap), Reserve (+7 more)
 
 ### Community 3 - "report-model.js"
-Cohesion: 0.08
-Nodes (40): mapReport(), seedBaseFor(), matchup(), pad(), sweepMaps(), sweepWorkers(), actionOctileLanes(), actionTotal() (+32 more)
+Cohesion: 0.11
+Nodes (34): actionOctileLanes(), actionTotal(), balanceScore(), cardAggFromEnvelopes(), cardFleetFireTimes(), cardHqWinSlice(), cardPlayTurnQuartiles(), cardRows() (+26 more)
 
 ### Community 4 - "llm-session.test.js"
-Cohesion: 0.13
-Nodes (17): buildPrompt(), encodeUserTurn(), errored(), LAB, parseEventLine(), { resolveBinary }, { spawn }, splitLines() (+9 more)
+Cohesion: 0.06
+Nodes (39): assert, E, fs, LAB, { LlmSession }, path, { test }, buildPrompt() (+31 more)
 
 ### Community 5 - "claude-plays.js"
 Cohesion: 0.07
 Nodes (43): ARGS, cap(), cardOptions(), CHOICE_SCHEMA, describeChoice(), E, feltNotes(), fs (+35 more)
 
 ### Community 6 - "Game concepts"
-Cohesion: 0.05
-Nodes (35): review-with-rubric skill, War of Attrition domain glossary (CONTEXT.md), Dev-tooling, Judging, Organising the code, Reading the numbers, Running games in bulk, The loop (+27 more)
+Cohesion: 0.20
+Nodes (10): Acting, Budget, Commanders, Ending it, Game concepts, Pieces, Taking a turn, The board (+2 more)
 
 ### Community 7 - "board.js"
 Cohesion: 0.13
@@ -220,9 +223,9 @@ Nodes (28): advanceStep(), applyStep(), buildDeck(), cardsRemaining(), concede()
 Cohesion: 0.11
 Nodes (32): act(), afterChange(), canReset(), cardAbbr(), cardsGlossaryHtml(), checkResume(), clearIfBattleOver(), clearSave() (+24 more)
 
-### Community 10 - "llm-client.js"
-Cohesion: 0.18
-Nodes (14): buildPrompt(), errored(), fs, LAB, parseEnvelope(), path, resolveBinary(), send() (+6 more)
+### Community 10 - "map-editor.js"
+Cohesion: 0.22
+Nodes (12): edBuildDef(), edHexPairs(), edHexSet(), edInternalSides(), edLiveShape(), edRemoveHex(), edTerrainRule(), groupEdgesToPieces() (+4 more)
 
 ### Community 11 - "ui/manual.js"
 Cohesion: 0.16
@@ -260,9 +263,9 @@ Nodes (22): addMissingTerrainColumns(), aggregate(), archiveIfLegacy(), badReque
 Cohesion: 0.13
 Nodes (11): assert, cp, db, dbFile, E, fs, os, path (+3 more)
 
-### Community 20 - "map-editor.js"
-Cohesion: 0.22
-Nodes (12): edBuildDef(), edHexPairs(), edHexSet(), edInternalSides(), edLiveShape(), edRemoveHex(), edTerrainRule(), groupEdgesToPieces() (+4 more)
+### Community 20 - "Dev-tooling"
+Cohesion: 0.29
+Nodes (7): Dev-tooling, Judging, Organising the code, Reading the numbers, Running games in bulk, The loop, What gets recorded
 
 ### Community 21 - "server.js"
 Cohesion: 0.23
@@ -289,8 +292,8 @@ Cohesion: 0.20
 Nodes (7): assert, fs, path, SVG_LITERAL, SVG_TAGS, { test }, UI_DIR
 
 ### Community 27 - "fx.js"
-Cohesion: 0.35
-Nodes (9): fxPieceHex(), fxStrike(), ghostUnit(), playFX(), popUnit(), ringAt(), shakeBoard(), slideUnit() (+1 more)
+Cohesion: 0.60
+Nodes (3): fxPieceHex(), fxRing(), playFX()
 
 ### Community 28 - "sim.js"
 Cohesion: 0.36
@@ -433,7 +436,7 @@ Cohesion: 0.33
 Nodes (8): dashFillRunSelect(), dashLoadRuns(), dashPickDefaultRuns(), dashRunLabel(), openDash(), openDashDef(), renderDash(), renderDashChrome()
 
 ### Community 163 - "board-marks.js"
-Cohesion: 0.27
+Cohesion: 0.24
 Nodes (7): boardDial(), boardDialMerge(), bpBeginBoard(), bpMark(), bpPlay(), isDialGroup(), viewBoxFor()
 
 ### Community 164 - "AI heuristic model"
@@ -441,8 +444,8 @@ Cohesion: 0.28
 Nodes (9): AI heuristic model, AI_WEIGHTS, Anti-degeneracy guards (noopPenalty/antiShuffle/attrWin), CARD_KEEP burn priority, evalState board scoring, AI personalities (brawler/turtle/hawk/tuned), Personality rubric, Punch-Out (readable, beatable puzzle) (+1 more)
 
 ### Community 165 - "terrain-marks.js"
-Cohesion: 0.36
-Nodes (5): bpBarrageTerrain(), bpTerrainEdge(), bpTerrainStroke(), terrainInset(), terrainMark()
+Cohesion: 0.40
+Nodes (8): bpBarrageTerrain(), bpTerrainEdge(), bpTerrainStroke(), bpThumbTerrain(), terrainDial(), terrainHexRow(), terrainInset(), terrainMark()
 
 ### Community 166 - "War of Attrition digital edition manual"
 Cohesion: 0.25
@@ -456,17 +459,17 @@ Nodes (7): Army-points, Exploration temperature, Mispricing residual, Points cap
 Cohesion: 0.43
 Nodes (3): accFilePath(), readAcc(), run()
 
-### Community 169 - "sweep.js"
-Cohesion: 0.43
-Nodes (5): planBatches(), runParallelSweep(), fail(), flushReady(), launch()
+### Community 169 - "balance.js"
+Cohesion: 0.14
+Nodes (16): mapReport(), seedBaseFor(), matchup(), pad(), sweepMaps(), sweepWorkers(), planBatches(), runParallelSweep() (+8 more)
 
 ### Community 170 - "Commander schema"
 Cohesion: 0.29
 Nodes (6): Commander, Commander schema, Runtime state (supplied, not authored), Selection → application → render, Trait, What the panel resolves
 
 ### Community 171 - "unit-marks.js"
-Cohesion: 0.33
-Nodes (7): bpUnit(), bpUnitShape(), bpUnitSlot(), bpUnitToken(), unitChartColor(), unitMark(), unitTokenR()
+Cohesion: 0.23
+Nodes (12): bpUnit(), bpUnitGhost(), bpUnitPop(), bpUnitShape(), bpUnitSlide(), bpUnitSlot(), bpUnitToken(), unitChartColor() (+4 more)
 
 ### Community 172 - "03a-commander-effects.js"
 Cohesion: 0.43
@@ -484,9 +487,9 @@ Nodes (5): defineKind(), bad(), mountId(), register(), typeOk()
 Cohesion: 0.60
 Nodes (5): guardrails(), measure(), parseArgs(), pickMaps(), run()
 
-### Community 176 - "lab-config.test.js"
-Cohesion: 0.25
-Nodes (7): assert, E, fs, LAB, { LlmSession }, path, { test }
+### Community 176 - "Heuristic AI"
+Cohesion: 0.33
+Nodes (5): Choosing a move, Guards against degenerate play, Heuristic AI, The dials, The seat
 
 ### Community 177 - "modal.js"
 Cohesion: 0.47
@@ -512,9 +515,13 @@ Nodes (4): dashSort(), dbar(), dstat(), renderDashTables()
 Cohesion: 0.22
 Nodes (10): Card step types (deploy/trench/attack/reposition/barrage), Combat resolution (attacker/defender/support), Engine model (rules kernel), Directional hex-owned terrain, Trenches (attacker-support denial), Victory conditions (HQ capture / attrition), Card rubric, Map rubric (+2 more)
 
-### Community 206 - "lab-config.js"
-Cohesion: 0.48
-Nodes (5): configCanon(), configDigest(), defineConfigHome(), homeDigest(), ADR-0002
+### Community 206 - "Integration"
+Cohesion: 0.33
+Nodes (5): Across the wire, Content to engine, Engine to everything else, Identity of a run, Integration
+
+### Community 207 - "Interface"
+Cohesion: 0.33
+Nodes (5): Families that share a shell, Interface, Places you go, Staying in the game, The drawing kit
 
 ### Community 208 - "live-board.js"
 Cohesion: 0.67
@@ -525,8 +532,8 @@ Cohesion: 0.33
 Nodes (7): One primitive per fact contract, UI component primitive set, Board FX layer (pure flourish, never rules), Responsive ladder (mats never scroll), UI invariants (browser app), Whole-state JSON push/poll multiplayer, UI rubric
 
 ### Community 210 - "Board"
-Cohesion: 0.33
-Nodes (5): Adding a mark, Adding an authored outline form, Asking about a board that is not the live one, Board, Retuning a board
+Cohesion: 0.25
+Nodes (7): A map is a board, Adding a mark, Adding an authored outline form, Asking about a board that is not the live one, Board, Changing how a board looks, What this house does not own
 
 ### Community 211 - "hex-screen.js"
 Cohesion: 0.53
@@ -544,25 +551,37 @@ Nodes (3): assert, { E, SIM }, { test }
 Cohesion: 0.50
 Nodes (3): Adding a type, Trying a whole other army, Unit
 
+### Community 247 - "War of Attrition domain glossary (CONTEXT.md)"
+Cohesion: 0.40
+Nodes (3): review-with-rubric skill, War of Attrition domain glossary (CONTEXT.md), docs/ folder index
+
+### Community 248 - "Battle"
+Cohesion: 0.40
+Nodes (5): AI personality, Battle, Campaign, Commander trait, Skirmish
+
+### Community 249 - "create-card skill"
+Cohesion: 0.67
+Nodes (3): create-card skill, Card (one-shot order), Deck
+
 ## Knowledge Gaps
-- **352 isolated node(s):** `fs`, `os`, `path`, `{ test }`, `assert` (+347 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 688 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **36 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **354 isolated node(s):** `fs`, `os`, `path`, `{ test }`, `assert` (+349 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 690 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **35 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Code architecture — start here (front door)` connect `Code architecture — start here (front door)` to `Report model (reporting subsystem)`, `War of Attrition Rule Book (v1.1)`, `AI heuristic model`, `Game concepts`, `Commander schema`, `Engine model (rules kernel)`, `UI invariants (browser app)`, `WarOfAttrition project doctrine (CLAUDE.md)`, `Balance target bands & north stars`, `Hand-off seams & real-path gates`?**
-  _High betweenness centrality (0.009) - this node is a cross-community bridge._
-- **Why does `War of Attrition domain glossary (CONTEXT.md)` connect `Game concepts` to `WarOfAttrition project doctrine (CLAUDE.md)`, `Code architecture — start here (front door)`?**
+- **Why does `Code architecture — start here (front door)` connect `Code architecture — start here (front door)` to `Report model (reporting subsystem)`, `War of Attrition Rule Book (v1.1)`, `AI heuristic model`, `Commander schema`, `Engine model (rules kernel)`, `UI invariants (browser app)`, `War of Attrition domain glossary (CONTEXT.md)`, `WarOfAttrition project doctrine (CLAUDE.md)`, `Balance target bands & north stars`, `Hand-off seams & real-path gates`?**
+  _High betweenness centrality (0.008) - this node is a cross-community bridge._
+- **Why does `War of Attrition domain glossary (CONTEXT.md)` connect `War of Attrition domain glossary (CONTEXT.md)` to `Integration`, `Interface`, `Heuristic AI`, `Code architecture — start here (front door)`, `WarOfAttrition project doctrine (CLAUDE.md)`?**
   _High betweenness centrality (0.005) - this node is a cross-community bridge._
-- **Why does `War of Attrition Rule Book (v1.1)` connect `War of Attrition Rule Book (v1.1)` to `Code architecture — start here (front door)`, `Engine model (rules kernel)`, `Game concepts`?**
+- **Why does `WarOfAttrition project doctrine (CLAUDE.md)` connect `WarOfAttrition project doctrine (CLAUDE.md)` to `Hand-off seams & real-path gates`, `Code architecture — start here (front door)`, `Balance target bands & north stars`, `War of Attrition domain glossary (CONTEXT.md)`?**
   _High betweenness centrality (0.004) - this node is a cross-community bridge._
 - **Are the 3 inferred relationships involving `Engine model (rules kernel)` (e.g. with `Anti-degeneracy guards (noopPenalty/antiShuffle/attrWin)` and `Unit rubric`) actually correct?**
   _`Engine model (rules kernel)` has 3 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `fs`, `os`, `path` to the rest of the system?**
-  _352 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _354 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `chart-model.js` be split into smaller, more focused modules?**
   _Cohesion score 0.12105263157894737 - nodes in this community are weakly interconnected._
-- **Should `War of Attrition Rule Book (v1.1)` be split into smaller, more focused modules?**
-  _Cohesion score 0.10276679841897234 - nodes in this community are weakly interconnected._
+- **Should `report-model.js` be split into smaller, more focused modules?**
+  _Cohesion score 0.10512820512820513 - nodes in this community are weakly interconnected._

@@ -420,8 +420,8 @@
     "semantic_hash": ""
   },
   "game/content/manifest.js": {
-    "mtime": 1788644657.8937101,
-    "seen": 1788644674.861459,
+    "mtime": 1788647676.7407568,
+    "seen": 1788647807.120606,
     "ast_hash": "7e620246e90278780e8700a3fee0a43d",
     "semantic_hash": ""
   },
@@ -576,8 +576,8 @@
     "semantic_hash": ""
   },
   "game/custom-battalion.js": {
-    "mtime": 1788644632.9893122,
-    "seen": 1788644674.8614788,
+    "mtime": 1788647650.8171582,
+    "seen": 1788647807.120624,
     "ast_hash": "706a75eaf1029304647583b716732116",
     "semantic_hash": ""
   },
@@ -690,9 +690,9 @@
     "semantic_hash": ""
   },
   "game/load-order.js": {
-    "mtime": 1788642720.706779,
-    "seen": 1788643900.118073,
-    "ast_hash": "4c646253b7cf18f421e54bbd36802c91",
+    "mtime": 1788647534.537857,
+    "seen": 1788647807.120646,
+    "ast_hash": "6b291364e90d0e452c909f1058efe1c9",
     "semantic_hash": ""
   },
   "game/maps.js": {
@@ -804,9 +804,9 @@
     "semantic_hash": ""
   },
   "game/ui/board/terrain/forest-mark.js": {
-    "mtime": 1788641811.7467065,
-    "seen": 1788643900.1180959,
-    "ast_hash": "d6117f3d60cc9ab7173e278f4203b650",
+    "mtime": 1788647235.0595634,
+    "seen": 1788647807.120673,
+    "ast_hash": "48b75bbb35938617efe72c4409279582",
     "semantic_hash": ""
   },
   "game/ui/board/terrain/mountain-mark.js": {
@@ -816,15 +816,15 @@
     "semantic_hash": ""
   },
   "game/ui/board/terrain/river-mark.js": {
-    "mtime": 1788641811.7473762,
-    "seen": 1788643900.1180968,
-    "ast_hash": "96b134266a0c9e524d842dfe8e43e490",
+    "mtime": 1788647235.059097,
+    "seen": 1788647807.1206741,
+    "ast_hash": "19affbb615ace7e41ea39882d46f7999",
     "semantic_hash": ""
   },
   "game/ui/board/terrain/terrain-marks.js": {
-    "mtime": 1788642539.771519,
-    "seen": 1788643900.118098,
-    "ast_hash": "5f7510cf6ed2ccc32fabbe55d4525019",
+    "mtime": 1788647462.3742251,
+    "seen": 1788647807.120675,
+    "ast_hash": "98d76062d339249dbc6972073702f6a8",
     "semantic_hash": ""
   },
   "game/ui/board/terrain/terrain-marks.test.js": {
@@ -834,9 +834,9 @@
     "semantic_hash": ""
   },
   "game/ui/board/terrain/trench-mark.js": {
-    "mtime": 1788642375.0111625,
-    "seen": 1788643900.118099,
-    "ast_hash": "ea08bac578effbf5e61de20103f164ab",
+    "mtime": 1788647462.3744612,
+    "seen": 1788647807.1206772,
+    "ast_hash": "bb4a5880ca2af364d47680a77e2deba7",
     "semantic_hash": ""
   },
   "game/ui/boot.js": {
@@ -876,9 +876,9 @@
     "semantic_hash": ""
   },
   "game/ui/fx.js": {
-    "mtime": 1788642387.557612,
-    "seen": 1788643900.1181078,
-    "ast_hash": "ac141f85cde8b292b61a5d6c33b9dec6",
+    "mtime": 1788647304.9681344,
+    "seen": 1788647807.120687,
+    "ast_hash": "8e6e0b8cca98baa6b633530820857cf2",
     "semantic_hash": ""
   },
   "game/ui/kit/kind.js": {
@@ -888,15 +888,9 @@
     "semantic_hash": ""
   },
   "game/ui/manual.js": {
-    "mtime": 1788644987.1411057,
-    "seen": 1788645069.2316,
-    "ast_hash": "1a9fa673bbe2bbb554a966a7dc12e5b8",
-    "semantic_hash": ""
-  },
-  "game/ui/map-editor.js": {
-    "mtime": 1788642452.019936,
-    "seen": 1788643900.11811,
-    "ast_hash": "73567158c42cf05828fe731499700a3d",
+    "mtime": 1788647329.9196436,
+    "seen": 1788647807.1206899,
+    "ast_hash": "4b88ad9ccf43757bb634b9573f378019",
     "semantic_hash": ""
   },
   "game/ui/maps-screen.js": {
@@ -990,9 +984,9 @@
     "semantic_hash": ""
   },
   "game/ui/screens/dashboard/panes/maps.js": {
-    "mtime": 1788642714.5176644,
-    "seen": 1788643900.11812,
-    "ast_hash": "291003c02da74e8b16075fc6b2b18456",
+    "mtime": 1788647551.621698,
+    "seen": 1788647807.1207,
+    "ast_hash": "e17ce056b18895398fb08efb509e9125",
     "semantic_hash": ""
   },
   "game/ui/screens/dashboard/panes/overview.js": {
@@ -1206,9 +1200,9 @@
     "semantic_hash": ""
   },
   "docs/code-architecture.md": {
-    "mtime": 1788642924.133317,
-    "seen": 1788643900.118141,
-    "ast_hash": "266bb280f8461067ac8df58fa3f110e9",
+    "mtime": 1788647551.6223953,
+    "seen": 1788647807.120724,
+    "ast_hash": "d8a16b9ad49555eafe315c20a27d9930",
     "semantic_hash": ""
   },
   "docs/context/dev-tooling-context.md": {
@@ -1218,9 +1212,9 @@
     "semantic_hash": ""
   },
   "docs/context/game-concepts-context.md": {
-    "mtime": 1788642888.7910275,
-    "seen": 1788643900.118142,
-    "ast_hash": "cd88bcff8ac8955bb79fd59fbba8fba3",
+    "mtime": 1788647591.522972,
+    "seen": 1788647807.120726,
+    "ast_hash": "e2f23d118727d9473e466a76ae224115",
     "semantic_hash": ""
   },
   "docs/context/heuristic-ai-context.md": {
@@ -1614,21 +1608,21 @@
     "semantic_hash": ""
   },
   "game/ui/board/board-config.js": {
-    "mtime": 1788643918.7064922,
-    "seen": 1788644674.861519,
-    "ast_hash": "5e03534feee83313830ebb82949f0398",
+    "mtime": 1788647551.6209219,
+    "seen": 1788647807.1206589,
+    "ast_hash": "7673b4e27fa0c2d4ec643195cf0a79ce",
     "semantic_hash": ""
   },
   "game/ui/board/board-marks.js": {
-    "mtime": 1788644531.78575,
-    "seen": 1788644674.861519,
-    "ast_hash": "a6072c34b3e893ca1b061cee924ef2e9",
+    "mtime": 1788647329.9154487,
+    "seen": 1788647807.12066,
+    "ast_hash": "d1cb2db64442c26e5b050e459fe3a9f1",
     "semantic_hash": ""
   },
   "game/ui/board/board-marks.test.js": {
-    "mtime": 1788644552.1530514,
-    "seen": 1788644674.8615198,
-    "ast_hash": "0b8bc57f523850073b9592758eabe87f",
+    "mtime": 1788647522.6428413,
+    "seen": 1788647807.12066,
+    "ast_hash": "b4b0ea3c8efcf1f7ab59590f1ab7bb6d",
     "semantic_hash": ""
   },
   "game/ui/board/coord-mark.js": {
@@ -1728,9 +1722,9 @@
     "semantic_hash": ""
   },
   "game/ui/board/terrain/terrain-config.js": {
-    "mtime": 1788641811.7476652,
-    "seen": 1788643900.118098,
-    "ast_hash": "e7f65a8845a2c0f99aa33d5a6b47753e",
+    "mtime": 1788647462.3732178,
+    "seen": 1788647807.120675,
+    "ast_hash": "51bf2bcfd19d406d04b0806f5ee6d254",
     "semantic_hash": ""
   },
   "game/ui/board/thumb-board.js": {
@@ -1764,27 +1758,27 @@
     "semantic_hash": ""
   },
   "game/ui/board/unit/unit-config.js": {
-    "mtime": 1788641811.7503922,
-    "seen": 1788643900.118102,
-    "ast_hash": "ff9c43fff2f08e2d8b84f07d2cd46fcd",
+    "mtime": 1788647251.2854717,
+    "seen": 1788647807.120681,
+    "ast_hash": "71b2bd0fb7f2a24063c63cf7d21852cb",
     "semantic_hash": ""
   },
   "game/ui/board/unit/unit-marks.js": {
-    "mtime": 1788642539.770981,
-    "seen": 1788643900.118103,
-    "ast_hash": "b2b7eed5fa1a17e428a2583214415e90",
+    "mtime": 1788647276.6576433,
+    "seen": 1788647807.120682,
+    "ast_hash": "6cd6266272a1d412e224f4a19ce3f268",
     "semantic_hash": ""
   },
   "game/ui/board/unit/unit-marks.test.js": {
-    "mtime": 1788641811.7507517,
-    "seen": 1788643900.118104,
-    "ast_hash": "32a852f8eb6410e285c7c8fb3cca8383",
+    "mtime": 1788647354.39383,
+    "seen": 1788647807.120683,
+    "ast_hash": "5ec895a969c55f8410fa6ca9968f991f",
     "semantic_hash": ""
   },
   "game/ui/kit/palette.js": {
-    "mtime": 1788642310.290784,
-    "seen": 1788643900.118109,
-    "ast_hash": "e64f0ab872e518799499e7f8ac818d4c",
+    "mtime": 1788647511.1509564,
+    "seen": 1788647807.120689,
+    "ast_hash": "8a4d04ebffbd8aa7a1858a65dfd91b87",
     "semantic_hash": ""
   },
   "game/ui/kit/svg.js": {
@@ -1794,9 +1788,9 @@
     "semantic_hash": ""
   },
   "game/engine/board/board.md": {
-    "mtime": 1788642906.9409885,
-    "seen": 1788643900.118156,
-    "ast_hash": "903138b797ca35c1695652f83d2d9aeb",
+    "mtime": 1788647581.052339,
+    "seen": 1788647807.1207428,
+    "ast_hash": "c0af89ba18e9551a737fcdf5c4d551b8",
     "semantic_hash": ""
   },
   "game/engine/board/hex/hex.md": {
@@ -1809,6 +1803,12 @@
     "mtime": 1788641811.7337577,
     "seen": 1788643900.118158,
     "ast_hash": "086ed33481d2e71a1691c29da59d7660",
+    "semantic_hash": ""
+  },
+  "game/ui/board/map-editor.js": {
+    "mtime": 1788647534.538294,
+    "seen": 1788647807.1206698,
+    "ast_hash": "c5ab55eaab4190acaeb6be457c93086d",
     "semantic_hash": ""
   }
 }

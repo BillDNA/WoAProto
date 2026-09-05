@@ -33,8 +33,16 @@ function defineUnitMark(spec){
   UNIT_MARK[spec.type] = spec;
 }
 function unitMark(type){ return UNIT_MARK[type] || null; }
-// The token's radius on a board of hex size s — what fx.js's fallen-unit ghost
-// and any mini-board scale from.
+// The token's dials on one board: that board's row read over the live board's.
+function unitDial(on){
+  var base = UNIT_CONFIG.token;
+  var row = (on && on !== 'board' && UNIT_CONFIG[on]) || {};
+  var out = {}, k;
+  for (k in base) out[k] = base[k];
+  for (k in row) out[k] = row[k];
+  return out;
+}
+// The token's radius on a board of hex size s — what any mini-board scales from.
 function unitTokenR(s){ return (s || HEX_CONFIG.board.size) * UNIT_CONFIG.token.r; }
 // The type's colour wherever the dashboard identifies it; null when the pane
 // should fall back to a sequential ramp.
@@ -52,16 +60,13 @@ function unitMarksCheck(){
 
 // a unit token (disc + chit + type glyph) drawn into a caller-owned group at an
 // explicit centre. ONE implementation shared by the live board, the editor, the
-// manual diagram and the mat slot; every size is an option over the config
-// defaults, and the colours are the caller's seat.
-// o: { r, circSW, chitHW, chitHH, chitSW, glyphSW, dotR }
+// manual diagram and the mat slot. o = { on } names the board and nothing else:
+// every size is that row's, and the colours are the caller's seat.
 function bpUnitToken(g, cx, cy, owner, type, o){
   o = o || {};
-  var sc = BOARD.side(owner);
-  // token.r is a FRACTION of the hex, resolved here; every other size is absolute
-  bpUnitShape(g, cx, cy, type, sc.fill, sc.dark,
-    { r: o.r != null ? o.r : unitTokenR(), circSW:o.circSW, chitHW:o.chitHW, chitHH:o.chitHH,
-      chitSW:o.chitSW, glyphSW:o.glyphSW, dotR:o.dotR }, UNIT_CONFIG.token);
+  var on = o.on || 'board', d = unitDial(on), sc = BOARD.side(owner);
+  // token.r is a FRACTION of the hex, resolved against that board's hex size
+  bpUnitShape(g, cx, cy, type, sc.fill, sc.dark, { r: unitTokenR(HEX_CONFIG[on].size) }, d);
 }
 
 // The same token from explicit colours rather than a seat — what the mat draws,
@@ -88,6 +93,43 @@ function bpUnit(g, hexKey, unit){
   bpUnitToken(u, xy[0], xy[1], unit.owner, unit.type, {});
   g.appendChild(u);
   return u;
+}
+
+/* =================== a token that is not standing still ===================
+   The board draws a token; these three say what one DOES. What is drawn is
+   here, with the token itself; WHEN it happens is fx.js's, and the motion the
+   classes carry is unit.css's. */
+// the unit standing on a hex, if the live board has drawn one
+function unitEl(hexKey){ return document.querySelector('#board g.unit[data-hex="' + hexKey + '"]'); }
+// a unit that was just placed
+function bpUnitPop(hexKey){
+  var el = unitEl(hexKey);
+  if (el) el.classList.add('fx-pop');
+}
+// a unit that took a hex: start it on the one it left, then let it travel
+function bpUnitSlide(fromHex, toHex){
+  var el = unitEl(toHex);
+  if (!el) return;
+  var a = hexXY(fromHex), b = hexXY(toHex);
+  el.style.transition = 'none';
+  el.style.transform = 'translate(' + (a[0]-b[0]) + 'px,' + (a[1]-b[1]) + 'px)';
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    el.style.transition = 'transform ' + (UNIT_CONFIG.motion.slideMs/1000) + 's ease';
+    el.style.transform = 'translate(0,0)';
+  }); });
+}
+// a unit that fell: its disc alone, left where it stood and taken away again.
+// The type's glyph is deliberately not drawn — what is gone is a PIECE, not a
+// kind of piece.
+function bpUnitGhost(svg, hexKey, unit){
+  if (!svg || !svg.firstChild || !unit) return null;
+  var xy = hexXY(hexKey), sc = BOARD.side(unit.owner);
+  var g = svgEl('g',{ 'class':'fx-ghost' });
+  g.appendChild(svgEl('circle',{ cx:xy[0], cy:xy[1], r:unitTokenR(), fill:sc.fill, stroke:sc.dark,
+    'stroke-width':UNIT_CONFIG.token.outlineSW }));
+  svg.appendChild(g);
+  setTimeout(function(){ if (g.parentNode) g.parentNode.removeChild(g); }, UNIT_CONFIG.fallen.ms);
+  return g;
 }
 
 // the mat slot's mini token, in its own square viewBox. Same shapes, same glyph,

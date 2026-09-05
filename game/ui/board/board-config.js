@@ -60,6 +60,10 @@ var BOARD_CONFIG = window.Engine.defineConfigHome({
   // shape is a dial here — a ring just inside the tile (0.864 * 44 = 38 = tile - 2)
   mapPane: {
     tile: { sw: 1, inline: true },
-    hq:   { outer: 0.864, inner: false, outerSW: 3, starFS: 16, starDY: 5.5, opacity: 1 }
+    hq:   { outer: 0.864, inner: false, outerSW: 3, starFS: 16, starDY: 5.5, opacity: 1 },
+    // the two rings a lens draws inside a hex. `avenue` is a fixed fraction of
+    // the tile; `runA` is a floor plus a span, so a value scales between them
+    // and the smallest reading is still visible.
+    hexRing: { avenue: 0.62, avenueSW: 2.5, runAFloor: 0.16, runASpan: 0.74, runASW: 1.3, runADash: '3 2' }
   }
 });

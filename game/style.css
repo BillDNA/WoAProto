@@ -1,7 +1,19 @@
 /* Each house owns its look. A household's stylesheet is imported here — this is
    where the chain is written, the way load-order.js writes the script chain —
-   and it holds every rule and :root var about that one concept. What stays in
-   this file is the page: chrome, layout, screens, and the shared palette. */
+   and it holds every rule and :root var about that one concept.
+
+   This file is the leftovers, and it is meant to end up nearly empty. What is
+   still here has exactly two owners, neither of which has a household yet:
+
+     the PAGE — its chrome, its layout, its screens, and the paper-and-brass
+       palette they are printed on (--parch*, --ink*, --brass*, --gold, --steel,
+       the radii, the durations). Every house reads these by name; none owns them.
+     RED / BLUE — --red*, --blue* and their ink. The lexicon names this concept
+       (docs/context/game-concepts-context.md); ui/kit/palette.js is its script
+       share, and these four lines are its stylesheet share.
+
+   Neither is "shared" in the sense of unowned: each is one house that has not
+   been built. When it is, its share leaves here and this file shrinks again. */
 @import url('ui/board/board.css');
 @import url('ui/board/hex/hex.css');
 @import url('ui/board/terrain/terrain.css');
@@ -35,7 +47,7 @@
     --lost:#7a2c20;                     /* a destroyed piece slot */
     --lost-edge:#8a6c3c55;              /* its faint brass border */
 
-    /* — sides (red vs blue factions) — */
+    /* — sides (red vs blue) — the Red / Blue house's share, see the header — */
     --red:#9e2b25; --red-dark:#6f1d19; --red-rgb:158,43,37;
     --blue:#28527a; --blue-dark:#1b3a59; --blue-rgb:40,82,122;
     --red-ink:#eba9a2; --blue-ink:#a8cbec;   /* side text on the dark journal */
@@ -341,8 +353,6 @@
   .fab i{display:block; width:16px; height:2px; background:var(--ink-plate); box-shadow:0 5px 0 var(--ink-plate), 0 -5px 0 var(--ink-plate);}
   #fabRosters{top:14px; left:10px;}
   #fabJournal{top:14px; right:10px; outline:2px solid var(--brass); outline-offset:2px;} /* the journal fab carries the brass ring */
-  #boardwrap.fx-shake{animation:shake .35s ease;}
-  @keyframes shake{0%,100%{transform:translate(0,0);}25%{transform:translate(-5px,2px);}50%{transform:translate(4px,-2px);}75%{transform:translate(-2px,1px);}}
 
   /* ===== card animations ===== */
   .card.deal{animation:dealIn var(--dur-enter) ease backwards;}

@@ -1,50 +1,16 @@
-/* War of Attrition — ui part: board effects (pure flourish, no rules) — timing
-   over an element that is already there. What is DRAWN is never here: the
-   transient marks are the board house's (bpPlay plays them for their own
-   declared life), the token the unit house's; this file decides when.
+/* War of Attrition — ui part: what a resolved order LOOKS like happening. This
+   file owns the WHEN and nothing else — which flourishes an order earns, and in
+   what order they fire.
+
+   Nothing is drawn here. Every mark belongs to the house of the thing it is
+   about: the ring, the strike and the board's recoil are the board's
+   (ui/board/), the token's pop, slide and ghost are the unit's
+   (ui/board/unit/). A flourish this file cannot name in one of those houses is
+   a mark that has no home yet, not a reason to draw one here.
 
    Classic script, no wrapper — top-level names attach to window (see
    ui/app.js header). */
 'use strict';
-
-/* =================== board effects (pure flourish, no rules) =================== */
-function unitEl(hex){ return document.querySelector('#board g.unit[data-hex="'+hex+'"]'); }
-function slideUnit(fromHex, toHex){
-  var el = unitEl(toHex);
-  if (!el) return;
-  var a = hexXY(fromHex), b = hexXY(toHex);
-  el.style.transition = 'none';
-  el.style.transform = 'translate('+(a[0]-b[0])+'px,'+(a[1]-b[1])+'px)';
-  requestAnimationFrame(function(){ requestAnimationFrame(function(){
-    el.style.transition = 'transform .3s ease';
-    el.style.transform = 'translate(0,0)';
-  }); });
-}
-function popUnit(hex){
-  var el = unitEl(hex);
-  if (el) el.classList.add('fx-pop');
-}
-function ghostUnit(hex, unit){
-  var svg = $('board');
-  if (!svg.firstChild || !unit) return;
-  var xy = hexXY(hex), sc = BOARD.side(unit.owner);
-  var g = svgEl('g',{'class':'fx-ghost'});
-  g.appendChild(svgEl('circle',{cx:xy[0], cy:xy[1], r:unitTokenR(), fill:sc.fill, stroke:sc.dark, 'stroke-width':UNIT_CONFIG.token.outlineSW}));
-  svg.appendChild(g);
-  setTimeout(function(){ if (g.parentNode) g.parentNode.removeChild(g); }, 750);
-}
-function ringAt(hex, color){
-  if (hex) bpPlay($('board'), 'ring', { hex:hex, color:color });
-}
-function fxStrike(fromHex, toHex, viaHex, color){
-  bpPlay($('board'), 'strike', { from:fromHex, to:toHex, via:viaHex, color:color });
-}
-function shakeBoard(){
-  var w = $('boardwrap');
-  w.classList.remove('fx-shake');
-  void w.offsetWidth;
-  w.classList.add('fx-shake');
-}
 // snapshot what is about to happen so we can animate the aftermath
 function capturePre(st, choice){
   var v = E.view(st);
@@ -65,31 +31,34 @@ function capturePre(st, choice){
   }
   return pre;
 }
+// a ring on a hex that may not exist (a barrage target is looked up, not given)
+function fxRing(hex, color){ if (hex) bpPlay($('board'), 'ring', { hex:hex, color:color }); }
+
 function playFX(pre){
   if (!pre) return;
   var st = APP.st, v = E.view(st), c = pre.choice;
-  if (pre.type==='deploy' && c.hex){ popUnit(c.hex); }
-  else if (pre.type==='trench' && c.hex){ ringAt(c.hex, BOARD.terrainStroke('T')); }
-  else if (pre.type==='barrage'){ ringAt(c.trenchHex || fxPieceHex(c.pieceId), BOARD_CONFIG.board.ink.barrage); }
+  if (pre.type==='deploy' && c.hex){ bpUnitPop(c.hex); }
+  else if (pre.type==='trench' && c.hex){ bpPlay($('board'), 'ring', { hex:c.hex, color:BOARD.terrainStroke('T') }); }
+  else if (pre.type==='barrage'){ fxRing(c.trenchHex || fxPieceHex(c.pieceId), BOARD_CONFIG.board.ink.barrage); }
   else if (pre.type==='reposition'){
-    if (c.swap){ slideUnit(c.b, c.a); slideUnit(c.a, c.b); }
-    else slideUnit(c.from, c.to);
+    if (c.swap){ bpUnitSlide(c.b, c.a); bpUnitSlide(c.a, c.b); }
+    else bpUnitSlide(c.from, c.to);
   }
   else if (pre.type==='attack' && c.to){
     // where the blow comes from — a strike line (bending through the HQ on a
     // via-attack) plus a ring on every unit whose support actually counted
     if (pre.attacker){
-      fxStrike(c.from, c.to, c.via, BOARD.side(pre.attacker.owner).fill);
-      (pre.supporters || []).forEach(function(h){ ringAt(h, BOARD.supportAlly); });
-      (pre.defSupporters || []).forEach(function(h){ ringAt(h, BOARD.supportEnemy); });
+      bpPlay($('board'), 'strike', { from:c.from, to:c.to, via:c.via, color:BOARD.side(pre.attacker.owner).fill });
+      (pre.supporters || []).forEach(function(h){ fxRing(h, BOARD.supportAlly); });
+      (pre.defSupporters || []).forEach(function(h){ fxRing(h, BOARD.supportEnemy); });
     }
-    ringAt(c.to, BOARD_CONFIG.board.ink.barrage);
+    fxRing(c.to, BOARD_CONFIG.board.ink.barrage);
     var now = v.units[c.to];
     var advanced = now && pre.attacker && now.owner===pre.attacker.owner && !v.units[c.from];
-    if (advanced) slideUnit(c.from, c.to);
-    if (pre.defender && (!now || advanced)) ghostUnit(c.to, pre.defender);            // defender fell
-    if (pre.attacker && !v.units[c.from] && !advanced) ghostUnit(c.from, pre.attacker); // attacker fell
-    if (pre.defenderHQ && !E.isHQ(st, c.to)) shakeBoard();                            // HQ captured!
+    if (advanced) bpUnitSlide(c.from, c.to);
+    if (pre.defender && (!now || advanced)) bpUnitGhost($('board'), c.to, pre.defender);            // defender fell
+    if (pre.attacker && !v.units[c.from] && !advanced) bpUnitGhost($('board'), c.from, pre.attacker); // attacker fell
+    if (pre.defenderHQ && !E.isHQ(st, c.to)) bpBoardShake();                                       // HQ captured!
   }
 }
 function fxPieceHex(pieceId){
