@@ -3,7 +3,7 @@
    Pure flourish — it never touches a rule — and it must survive a full board
    re-render, so it captures from/to information BEFORE the engine resolves and
    animates after the repaint. The marks it lays down are the house's transient
-   marks (board/overlay.js); what is its own is the timing, the token slides,
+   marks (board/marks/); what is its own is the timing, the token slides,
    and reading the engine for who actually supported. */
 'use strict';
 
@@ -35,15 +35,15 @@ function shakeBoard(){
 function liveBoard(){ var svg = $('board'); return svg && svg.firstChild ? svg : null; }
 function ghostUnit(hex, unit){
   var svg = liveBoard();
-  if (svg && unit) bpOverlay(svg, 'fallen', { hex:hex, owner:unit.owner, cls:'fx-ghost', ttl:750 });
+  if (svg && unit) bpDraw(svg, 'fallen', { hex:hex, owner:unit.owner, cls:'fx-ghost', ttl:750 });
 }
 function ringAt(hex, color){
   var svg = liveBoard();
-  if (svg && hex) bpOverlay(svg, 'ring', { hex:hex, color:color, cls:'fx-ring', ttl:600 });
+  if (svg && hex) bpDraw(svg, 'ring', { hex:hex, color:color, cls:'fx-ring', ttl:600 });
 }
 function fxStrike(fromHex, toHex, viaHex, color){
   var svg = liveBoard();
-  if (svg) bpOverlay(svg, 'strike', { from:fromHex, to:toHex, via:viaHex, color:color, cls:'fx-strike', ttl:900 });
+  if (svg) bpDraw(svg, 'strike', { from:fromHex, to:toHex, via:viaHex, color:color, cls:'fx-strike', ttl:900 });
 }
 
 // snapshot what is about to happen so we can animate the aftermath

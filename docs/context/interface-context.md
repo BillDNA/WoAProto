@@ -47,7 +47,7 @@ _Home_: `game/ui/session/seat.js` — `uiSeat`
 
 **Save / resume**:
 A Skirmish persisted mid-play and picked back up on a later visit.
-_Home_: `game/ui/session/save.js` — `saveLocal`
+_Home_: `game/ui/session/stores/save.js` — `saveLocal`
 
 **Turn snapshot**:
 The state kept so a player can take the current turn back.
@@ -55,12 +55,12 @@ _Home_: `game/ui/session/snapshot.js` — `ensureSnapshot`
 
 **Hotseat handoff**:
 Passing one device between two people between turns.
-_Home_: `game/ui/session/seat.js` — `showHandoff`
+_Home_: `game/ui/session/seats/hotseat.js` — `showHandoff`
 
 **Battalion slot**:
 One of the five named battalions kept in this browser, distinct from the
 Battalion a content file describes.
-_Home_: `game/ui/session/store.js` — `id: 'battalions'`
+_Home_: `game/ui/session/stores/battalions.js` — `id: 'battalions'`
 
 ## Families that share a shell
 
@@ -87,14 +87,16 @@ _Home_: `game/ui/modals/modal.js` — `uiModal`
 
 Ink with no opinion about what it is drawing. If the thing could name whose turn it is or which run is loaded, it is not one of these.
 
-**Board primitive**:
-A builder for one mark on the game board, shared by every board that renders.
-_Home_: `game/ui/board/mark.js` — `bpHexTile`
+**Board mark**:
+One thing drawn on a hex board, in its own room of `game/ui/board/marks/`,
+shared by every board that renders. Its _lifetime_ is its own answer: **kept**
+is what is on the board, **transient** is what just happened on it.
+_Home_: `game/ui/board/mark.js` — `bpMark`
 
-**Board overlay mark**:
-A builder for one transient mark — what just happened on the board rather than
-what is on it.
-_Home_: `game/ui/board/overlay.js` — `bpOverlayMark`
+**Shape form**:
+One way a board outline may be authored — row spans, or an explicit hex set —
+in its own room of `game/engine/board/shapes/`.
+_Home_: `game/engine/board/shape.js` — `defineShapeForm`
 
 **Chart mark**:
 A builder for one mark in a chart.

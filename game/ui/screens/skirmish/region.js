@@ -1,8 +1,9 @@
 /* The SKIRMISH SCREEN's REGION base.
 
-   The screen is a list of regions. A region says which element it owns, which
-   household paints it, and — for the two rails a small screen cannot afford —
-   which modal it mirrors into behind a floating button.
+   The screen is a list of regions, one room each in regions/. A region says
+   which element it owns, which household paints it, and — for the two rails a
+   small screen cannot afford — which modal it mirrors into behind a floating
+   button.
 
    The mirror is the reason this is a base rather than a list. It is the same
    act both times: copy the rail's markup across, drop the part the modal
@@ -10,9 +11,10 @@
    written out in full, each with its own sync function, its own re-sync call
    buried inside a render, and its own wiring.
 
-   uiRegion({id, el, paint, mirror}); `mirror` is {modal, body, strip, wire}.
+   uiRegion({id, el, paint, mirror}); `mirror` is {modal, fab, body, strip, wire}.
    regionsPaint() repaints the screen in declaration order; regionsSync()
-   refreshes whichever mirrors are open. */
+   refreshes whichever mirrors are open; regionsInit() wires each mirror's
+   floating button. */
 'use strict';
 
 var UI_REGIONS = [], UI_REGION_BY_ID = {};
@@ -42,5 +44,13 @@ function regionMirror(id){
 function regionsSync(){
   UI_REGIONS.forEach(function(r){
     if (r.mirror && modalIsOpen(r.mirror.modal)) regionMirror(r.id);
+  });
+}
+
+function regionsInit(){
+  UI_REGIONS.forEach(function(r){
+    if (!r.mirror || !r.mirror.fab) return;
+    var b = $(r.mirror.fab);
+    if (b) b.onclick = function(){ modalOpen(r.mirror.modal); };
   });
 }

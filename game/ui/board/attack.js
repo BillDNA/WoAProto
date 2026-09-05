@@ -37,10 +37,10 @@ function showAttackHints(fromHex){
   } else if (v.phase !== 'choose-card') return;
   var u = v.units[fromHex];
   if (!u || u.owner !== v.current) return;
-  var g = bpAttackLayer();
+  var g = svgEl('g', { 'class':'atk-hints', 'pointer-events':'none' });
   attackPreviewsFor(st, fromHex).forEach(function(a){
     var pv = a.preview;
-    bpOverlay(g, 'pill', { hex: a.to, text: pv.attackerPower + ' vs ' + pv.defenderPower, tone: pv.outcome });
+    bpDraw(g, 'pill', { hex: a.to, text: pv.attackerPower + ' vs ' + pv.defenderPower, tone: pv.outcome });
   });
   $('board').appendChild(g);
 }

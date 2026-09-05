@@ -11,15 +11,12 @@
 var E = window.Engine;
 
 /* =================== app state =================== */
-var APP = {
-  mode: null,            // 'ai' | 'hotseat' | 'net'
-  mySide: 'red',         // for ai/net
-  diff: 'normal',
-  st: null,              // skirmish state (includes .match)
-  net: { room: null, seq: 0, poller: null },
-  ui: { sel: null, stage: null, busy: false, handoffPending: false },
-  snap: null
-};
+// The one mutable app-state object, because the save is a slice of it and the
+// ui files reach it by bare name. It is EMPTY here on purpose: each house
+// declares the fields it answers for, beside the code that answers — the
+// session's seat and its saved state in ui/session/session.js, the turn in
+// progress in ui/turn/turn.js.
+var APP = {};
 
 function $(id){ return document.getElementById(id); }
 function show(scr){ document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');}); $(scr).classList.add('active'); }

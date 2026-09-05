@@ -105,19 +105,19 @@ function mpDrawFrame(f){
 
   // hexes + grid labels (same classes as the live board)
   list.forEach(function(k){
-    var xy = mpXY(k), p = E.parseKey(k);
-    svg.appendChild(bpHexPoly(xy[0], xy[1], MP_S-1, ((p[0]-p[1])%2+2)%2));
-    bpCoordLabel(svg, xy[0], xy[1], E.hexLabel(k), MP_S);
+    var p = E.parseKey(k);
+    bpDraw(svg, 'tile', { hex:k, dark: ((p[0]-p[1])%2+2)%2 === 1, s:MP_S });
+    bpDraw(svg, 'coord', { hex:k, s:MP_S });
   });
 
   // attention halos go UNDER the terrain/trench lines they highlight
   (f.glowSides||[]).forEach(function(sk){
     var parts = sk.split('>');
-    bpOverlay(svg, 'sideglow', { hex:parts[0], dir:+parts[1], rad:0.85, sw:MP_GLOW_SW.side, s:MP_S, cls:'medge-glow' });
+    bpDraw(svg, 'side-glow', { hex:parts[0], dir:+parts[1], rad:0.85, sw:MP_GLOW_SW.side, s:MP_S, cls:'medge-glow' });
   });
   if (f.glowTrench){
     f.glowTrench.dirs.forEach(function(d){
-      bpOverlay(svg, 'sideglow', { hex:f.glowTrench.hex, dir:d, rad:0.74, sw:MP_GLOW_SW.trench, s:MP_S, cls:'medge-glow' });
+      bpDraw(svg, 'side-glow', { hex:f.glowTrench.hex, dir:d, rad:0.74, sw:MP_GLOW_SW.trench, s:MP_S, cls:'medge-glow' });
     });
   }
 
@@ -146,33 +146,28 @@ function mpDrawFrame(f){
   (f.ghosts||[]).forEach(function(g){ mpDrawUnit(svg, g.hex, g.unit, true); });
 
   // support rings — the live FX colors: gold attacker / steel defender / grey denied
-  (f.rings||[]).forEach(function(r){ bpOverlay(svg, 'ring', { hex:r.hex, s:MP_S, cls:'mring '+r.cls }); });
+  (f.rings||[]).forEach(function(r){ bpDraw(svg, 'ring', { hex:r.hex, s:MP_S, cls:'mring '+r.cls }); });
 
   // strike arrow (the live fxStrike, persistent, bending through a via-HQ)
-  if (f.strike) bpOverlay(svg, 'strike', { from:f.strike.from, to:f.strike.to, via:f.strike.via,
+  if (f.strike) bpDraw(svg, 'strike', { from:f.strike.from, to:f.strike.to, via:f.strike.via,
     color:f.strike.color, s:MP_S, cls:'mstrike' });
 
   // "unit fell here but the hex is re-occupied" badge (advance-into-kill)
-  (f.badges||[]).forEach(function(h){ bpOverlay(svg, 'fellbadge', { hex:h, s:MP_S }); });
+  (f.badges||[]).forEach(function(h){ bpDraw(svg, 'fell-badge', { hex:h, s:MP_S }); });
 
   // the A-vs-D pill (same maths pills the live board hovers)
-  if (f.pill) bpOverlay(svg, 'pill', { hex:f.pill.at, text:f.pill.text, tone:f.pill.tone,
+  if (f.pill) bpDraw(svg, 'pill', { hex:f.pill.at, text:f.pill.text, tone:f.pill.tone,
     dy: MP_S*0.52, s:MP_S });
 }
+// The live board's own unit and HQ marks at MP_S — every size in them derives
+// from that scale, so the diagram is the board, smaller.
 function mpDrawUnit(svg, hex, u, ghost){
-  var xy = mpXY(hex);
-  var g = svgEl('g', ghost ? {'class':'mghost'} : {});
-  // same token as the live board, at MP_S sizes (see bpUnitToken)
-  bpUnitToken(g, xy[0], xy[1], u.owner, u.type, { r:MP_S*0.5, circSW:2, chitHW:10, chitHH:7, chitSW:1.2, glyphSW:1.7, artR:3.6 });
-  if (ghost) bpOverlay(g, 'struck', { hex:hex, r:12, sw:MP_GHOST_SW, s:MP_S }); // fallen: the ✕ over the counter
-  svg.appendChild(g);
+  var g = bpDraw(svg, 'unit', { hex:hex, unit:u, s:MP_S, cls: ghost ? 'mghost' : '' });
+  if (ghost) bpDraw(g, 'struck', { hex:hex, r:12, sw:MP_GHOST_SW, s:MP_S }); // fallen: the ✕ over the counter
 }
 function mpDrawHQ(svg, hex, p, ghost){
-  var xy = mpXY(hex);
-  var g = svgEl('g', ghost ? {'class':'mghost'} : {});
-  bpHQMarker(g, xy[0], xy[1], p, { rOuter:MP_S*0.62, outerSW:1.6, rInner:MP_S*0.5, brassSW:1.3, starFS:15, starDY:5.5 });
-  if (ghost) bpOverlay(g, 'struck', { hex:hex, r:13, sw:MP_GHOST_SW, s:MP_S });
-  svg.appendChild(g);
+  var g = bpDraw(svg, 'hq', { hex:hex, side:p, s:MP_S, cls: ghost ? 'mghost' : '' });
+  if (ghost) bpDraw(g, 'struck', { hex:hex, r:13, sw:MP_GHOST_SW, s:MP_S });
 }
 /* ============ helpers for captions ============ */
 function mpSideName(p){ return p === 'red' ? 'Red' : 'Blue'; }

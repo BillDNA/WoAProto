@@ -5,6 +5,22 @@
    piece glyph, so restyling the board's unit token restyles the mat with it. */
 'use strict';
 
+// The mat's piece glyph: a standalone 20x20 <svg> STRING, because the slots are
+// built by concatenation into innerHTML. It echoes the board's markings —
+// infantry X, cavalry slash, artillery shot, trench arc — but it is not a mark:
+// a string is not an element, and the trench colour it borrows is the terrain
+// room's, so restyling that restyles this.
+function bpPieceGlyph(type, col, colD){
+  var pre = '<svg viewBox="0 0 20 20">';
+  if (type==='trench')
+    return pre+'<path d="M3 13 Q10 5 17 13" stroke="'+terrainMark('T').stroke+'" stroke-width="2.6" stroke-dasharray="3.4 2.4" fill="none" stroke-linecap="round"/></svg>';
+  var s = pre+'<circle cx="10" cy="10" r="8.4" fill="'+col+'" stroke="'+colD+'" stroke-width="1.6"/>';
+  if (type==='infantry') s += '<path d="M5.5 13.5 L14.5 6.5 M5.5 6.5 L14.5 13.5" stroke="'+BOARD.chit+'" stroke-width="2" stroke-linecap="round"/>';
+  else if (type==='cavalry') s += '<path d="M5.5 14 L14.5 6" stroke="'+BOARD.chit+'" stroke-width="2.3" stroke-linecap="round"/>';
+  else s += '<circle cx="10" cy="10" r="3.4" fill="'+BOARD.chit+'"/>';
+  return s+'</svg>';
+}
+
 function statTip(type){
   if (type==='trench') return 'Trench — enemy attacks across its two covered edges get no support';
   var u = E.UNITS[type];

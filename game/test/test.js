@@ -5,6 +5,7 @@
 'use strict';
 require('./test.geometry.js');
 require('./test.combat.js');
+require('../engine/board/board.test.js');            // the board house, engine half
 require('../engine/board/terrain/terrain.test.js');   // the terrain house keeps its own tests
 require('../ui/board/terrain/terrain-marks.test.js'); // and its drawing half likewise
 require('../ui/board/board.test.js');                 // the board house

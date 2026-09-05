@@ -1,6 +1,7 @@
-/* The turn house's own tests: the action base, which is what every way of
-   advancing a turn now shares. Loaded into a vm with the engine, the screen and
-   the session stubbed, so what is under test is the sequence itself.
+/* The turn house's own tests: the action base and its rooms — every way of
+   advancing a turn. Loaded into a vm with the engine, the screen and the session
+   stubbed, so what is under test is the sequence itself; the rooms are taken
+   from load-order.js, so a room that exists but is not scheduled fails here.
 
    Run alone with `node game/ui/turn/turn.test.js`, or the whole gate with
    `node game/test/test.js`. */
@@ -11,18 +12,24 @@ const vm = require('vm');
 const fs = require('fs');
 const path = require('path');
 
+const GAME = path.join(__dirname, '..', '..');
+const ORDER = require(path.join(GAME, 'load-order.js'));
+const HOUSE = ORDER.APP.filter(p => /^ui\/turn\/(turn\.js|actions\/)/.test(p));
+
 function loadTurn(o) {
   o = o || {};
   const log = [];
   const view = { phase: o.phase || 'step', battle: { winner: o.winner || null } };
   const ctx = {
     log: log,
-    APP: { st: {}, ui: { sel: 'A1' } },
+    APP: {},
     E: {
       view: () => view,
       applyStep(){ log.push('applyStep'); if (o.reject) throw new Error('illegal'); },
       playCard(){ log.push('playCard'); if (o.reject) throw new Error('illegal'); },
       concede(){ log.push('concede'); },
+      concedeAdvised: () => false,
+      aiPlanTurn: () => ({ cardId: 'x', choices: [] }),
       listAttacks: () => [], listRepositions: () => ({ moves: [], swaps: [] })
     },
     view: view,
@@ -46,15 +53,39 @@ function loadTurn(o) {
     setTimeout: (fn) => { log.push('deferred'); ctx.deferred = fn; },
     $: () => null
   };
+  ctx.seatAiSide = () => false;
   vm.createContext(ctx);
-  vm.runInContext(fs.readFileSync(path.join(__dirname, 'turn.js'), 'utf8'), ctx, { filename: 'turn.js' });
+  HOUSE.forEach(p =>
+    vm.runInContext(fs.readFileSync(path.join(GAME, p), 'utf8'), ctx, { filename: p }));
+  // the house declares APP.ui itself; a test starts mid-turn with something picked
+  ctx.APP.st = {};
+  ctx.APP.ui.sel = 'A1';
   return ctx;
 }
 
-test('every way of advancing a turn is one declared action', () => {
+test('every way of advancing a turn is one declared action, in its own room', () => {
   const ctx = loadTurn();
-  assert.deepEqual(Object.keys(ctx.UI_ACTIONS).sort(), ['card', 'concede', 'step']);
+  assert.deepEqual(Object.keys(ctx.UI_ACTIONS).sort(),
+    ['ai-card', 'ai-step', 'card', 'concede', 'step']);
   assert.throws(() => ctx.uiAction({ id: 'step', run(){} }), /duplicate/);
+  ['card', 'step', 'concede', 'ai'].forEach(room =>
+    assert.ok(HOUSE.includes('ui/turn/actions/' + room + '.js'), room + ' has its own room'));
+});
+
+// The AI used to call the engine itself, which is how the sixth spelling of
+// advancing a turn drifted from the other five.
+test('the AI takes its turn through the same door a player does', () => {
+  const ctx = loadTurn({ phase: 'step' });
+  ctx.aiStep({ skip: true });
+   assert.deepEqual(ctx.log, ['applyStep', 'renderAll', 'playFX'],
+    'it repaints but does not settle — the plan is still running');
+  const bad = loadTurn({ phase: 'step', reject: true });
+  bad.$ = () => null;
+  bad.aiStep({ hex: 'B2' });
+  assert.ok(!bad.log.includes('toast') || bad.log.filter(l => l === 'toast').length === 1,
+    'a stale plan does not accuse the player');
+  assert.strictEqual(bad.log.filter(l => l === 'applyStep').length, 2,
+    'a refused step is skipped, not abandoned');
 });
 
 test('a resolved action repaints, persists and hands the turn on', () => {

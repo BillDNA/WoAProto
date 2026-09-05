@@ -1,19 +1,21 @@
 /* The BOARD house's door: the live board a player looks at, and what a click on
    it means.
 
-   Orchestration and interaction only — every mark comes from the house's mark
-   base (board/mark.js) or its terrain rooms, and every transient mark from
-   board/overlay.js. This file decides WHAT to draw and wires the clicks and the
-   attack-math hover; it never builds raw SVG. Prose: board.md. */
+   Orchestration and interaction only — every mark comes through bpDraw from the
+   house's rooms (board/marks/, board/terrain/). This file decides WHAT to draw
+   and wires the clicks and the attack-math hover; it never builds raw SVG.
+   Prose: ../../engine/board/board.md — one file for both halves. */
 'use strict';
 
-
-/* =================== board rendering =================== */
 function renderBoard(){
   var st = APP.st, v = E.view(st), svg = $('board');
   var L = bpBeginBoard(svg);
 
-  E.hexes().forEach(function(k){ bpHexTile(L.hex, k); });
+  E.hexes().forEach(function(k){
+    var qr = E.parseKey(k);
+    bpDraw(L.hex, 'tile', { hex:k, dark: ((qr[0]-qr[1])%2+2)%2 === 1 });
+    bpDraw(L.hex, 'coord', { hex:k });
+  });
 
   // terrain sides (hex-owned: drawn inset inside the owning hex)
   for (var ek in v.terrainEdges) bpTerrainEdge(L.ter, ek, v.terrainEdges[ek]);
@@ -25,23 +27,22 @@ function renderBoard(){
     });
   }
 
-  // HQs
   ['red','blue'].forEach(function(p){
-    if (v.hqAlive(p)) bpHQ(L.pc, v.hq(p), p);
+    if (v.hqAlive(p)) bpDraw(L.pc, 'hq', { hex:v.hq(p), side:p });
   });
 
-  // units — the primitive draws the token, this file wires the attack-math
-  // hover (works when idle in choose-card; during the attack step the highlight
-  // layer carries the same hover)
+  // units — the mark draws the token, this file wires the attack-math hover
+  // (works when idle in choose-card; during the attack step the highlight layer
+  // carries the same hover)
   for (var uh in v.units){
-    attackHoverable(bpUnit(L.pc, uh, v.units[uh]), uh);
+    attackHoverable(bpDraw(L.pc, 'unit', { hex:uh, unit:v.units[uh] }), uh);
   }
 
   renderHighlights(L.hl);
 }
 
-function hl(g, k, cls, handler){
-  var p = bpHighlight(g, k, cls);
+function hl(g, k, kind, handler){
+  var p = bpDraw(g, 'highlight', { hex:k, kind:kind });
   p.addEventListener('click', handler);
   return p;
 }

@@ -1,4 +1,4 @@
-#claude-orientation #code-architecture
+| the board — the grid, the outline, and every mark on it | `engine/board/board.js` + `ui/board/board.js` | `engine/board/board.md` || The board: grid, outline, terrain | `game/engine/board/` + `game/ui/board/` | `game/engine/board/board.md` |#claude-orientation #code-architecture
 # War of Attrition — start here
 
 A digital version of Bill's physical board game **War of Attrition**: a browser deck-builder wargame you can playtest and balance-iterate fast. Read this page top-to-bottom, then follow the one link that fits your task.

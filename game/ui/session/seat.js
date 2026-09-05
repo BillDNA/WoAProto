@@ -1,26 +1,31 @@
-/* The SEAT: who is at the controls, and what that implies.
+/* The SESSION house's SEAT base: who is at the controls, and what that implies.
 
    Four modes seat a skirmish — one human against an AI, two humans on one
    device, two humans over a wire, and two AIs with nobody playing — plus `none`
    for a menu with no skirmish at all. Every screen asks the same questions of
-   them, so each mode answers them once here and nothing else switches on
-   APP.mode.
+   them, so each mode answers them once in its own room of seats/ and nothing
+   else in the UI switches on APP.mode.
 
    A seat answers: is my input live, whose hand do I see, which side do I drive,
    which side is "you", which side is an AI, what the screen says while I wait,
    what happens when a turn begins, whether a save is written, whether a change
    goes over the wire, whether this seat may concede, whether the hand is gated
    behind a hand-off, and what a finished skirmish records for a side — its AI
-   name and its run kind. */
+   name and its run kind.
+
+   Every answer is required: a room that forgets one fails at load rather than
+   silently taking another seat's. */
 'use strict';
 
 var UI_SEATS = {};
+var SEAT_ANSWERS = ['live', 'viewSide', 'drives', 'you', 'aiSide', 'waiting', 'beginTurn',
+  'persists', 'wire', 'concedable', 'gatesHand', 'aiName', 'runKind'];
 
 function uiSeat(spec){
   if (UI_SEATS[spec.mode]) throw new Error('uiSeat: duplicate mode ' + JSON.stringify(spec.mode));
-  ['live', 'viewSide', 'drives', 'you', 'aiSide', 'waiting', 'beginTurn', 'persists', 'wire',
-   'concedable', 'gatesHand', 'aiName', 'runKind']
-    .forEach(function(f){ if (spec[f] == null) throw new Error('uiSeat(' + spec.mode + '): missing ' + f); });
+  SEAT_ANSWERS.forEach(function(f){
+    if (spec[f] == null) throw new Error('uiSeat(' + spec.mode + '): missing ' + f);
+  });
   UI_SEATS[spec.mode] = spec;
   return spec;
 }
@@ -51,79 +56,3 @@ function seatHidesHand(){ return seat().gatesHand && APP.ui.handoffPending; }
 function seatGatesHand(){ return seat().gatesHand; }
 function seatAiName(side){ return seat().aiName(side); }
 function seatRunKind(){ return seat().runKind; }
-
-/* ---- the seats ---- */
-uiSeat({
-  mode: 'none',                                 // the menu: nothing is being played
-  live: function(){ return false; },
-  viewSide: function(v){ return v.current; },
-  drives: function(){ return false; },
-  you: function(){ return null; },
-  aiSide: function(){ return false; },
-  waiting: function(){ return ''; },
-  beginTurn: function(){},
-  persists: false, wire: false, concedable: false, gatesHand: false,
-  aiName: function(){ return 'human'; }, runKind: 'human'
-});
-
-uiSeat({
-  mode: 'ai',                                   // you against the enemy general
-  live: function(v){ return v.current === APP.mySide; },
-  viewSide: function(){ return APP.mySide; },
-  drives: function(v, p){ return p === APP.mySide; },
-  you: function(){ return APP.mySide; },
-  aiSide: function(p){ return p !== APP.mySide; },
-  waiting: function(v){ return '<b>' + capName(v.current) + '</b> (the enemy general) is thinking…'; },
-  beginTurn: function(){ maybeAI(); },
-  persists: true, wire: false, concedable: true, gatesHand: false,
-  aiName: function(side){ return side === APP.mySide ? 'human' : (APP.diff || 'normal'); },
-  runKind: 'human'
-});
-
-uiSeat({
-  mode: 'hotseat',                              // two humans, one device
-  live: function(){ return true; },
-  viewSide: function(v){ return v.current; },
-  drives: function(v, p){ return p === v.current; },
-  you: function(){ return null; },
-  aiSide: function(){ return false; },
-  waiting: function(v){ return 'Waiting for <b>' + capName(v.current) + '</b>…'; },
-  beginTurn: function(){ showHandoff(); },
-  persists: true, wire: false, concedable: true, gatesHand: true,
-  aiName: function(){ return 'human'; }, runKind: 'human'
-});
-
-uiSeat({
-  mode: 'net',                                  // two humans, two devices
-  live: function(v){ return v.current === APP.mySide; },
-  viewSide: function(){ return APP.mySide; },
-  drives: function(v, p){ return p === APP.mySide; },
-  you: function(){ return APP.mySide; },
-  aiSide: function(){ return false; },
-  waiting: function(v){ return 'Waiting for <b>' + capName(v.current) + '</b>…'; },
-  beginTurn: function(){},                      // the peer moves; the poller brings it back
-  persists: false, wire: true, concedable: true, gatesHand: false,
-  aiName: function(){ return 'human'; }, runKind: 'human'
-});
-
-uiSeat({
-  mode: 'watch',                                // nobody is playing; two AIs are
-  live: function(){ return false; },
-  viewSide: function(v){ return v.current; },
-  drives: function(){ return false; },
-  you: function(){ return null; },
-  aiSide: function(){ return true; },
-  waiting: function(v){ return 'General <b>' + capName(v.current) + '</b> surveys the field… ' +
-    '<span class="small" style="color:var(--note);">(you are spectating)</span>'; },
-  beginTurn: function(){ maybeAI(); },
-  persists: true, wire: false, concedable: false, gatesHand: false,
-  aiName: function(){ return APP.diff || 'normal'; }, runKind: 'watch'
-});
-
-/* ---- hotseat's own room: hold the screen until the next commander takes it ---- */
-function showHandoff(){
-  if (E.view(APP.st).phase === 'skirmish-over') return;
-  APP.ui.handoffPending = true;
-  modalOpen('handoff', E.view(APP.st).current);
-  renderHand();
-}

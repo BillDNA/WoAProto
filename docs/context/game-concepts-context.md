@@ -55,11 +55,11 @@ _Home_: `game/engine/01-core.js` — `MAPS`
 
 **Hex**:
 One cell of the board; a piece occupies at most one.
-_Home_: `game/engine/02-board.js` — `key(q, r)`
+_Home_: `game/engine/board/board.js` — `key(q, r)`
 
 **Board shape**:
 The outline of hexes a Map is cut from, either a named family or an outline the Map carries itself.
-_Home_: `game/engine/02-board.js` — `shapeDef`
+_Home_: `game/engine/board/shape.js` — `shapeDef`
 
 **Terrain**:
 A feature sitting on a hex or on one of its borders.

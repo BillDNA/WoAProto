@@ -17,8 +17,11 @@
     cardPoints: I.cardPoints, battalionPoints: I.battalionPoints,
     CONFIG: I.CONFIG, configDigest: I.configDigest, defineConfigHome: I.defineConfigHome,
     PIECE_TOTALS: I.PIECE_TOTALS,
+    // The board house (engine/board/) — the grid, the outline being played, and
+    // the form rooms an outline may be authored in.
     SHAPES: I.SHAPES, DEFAULT_SHAPE: I.DEFAULT_SHAPE, boardHexes: I.boardHexes, setBoard: I.setBoard, hexes: I.hexes,
-    buildShape: I.buildShape, ensureMapShape: I.ensureMapShape,
+    buildShape: I.buildShape, ensureMapShape: I.ensureMapShape, defineShapeForm: I.defineShapeForm,
+    shapeForms: I.shapeForms, boardRows: I.boardRows, boardShapeProblem: I.boardShapeProblem,
     currentShape: I.currentShape, rot180: I.rot180, buildTerrain: I.buildTerrain, hexLabel: I.hexLabel,
     // The terrain house (engine/board/terrain/) — the registry, the side questions
     // and the shared physical model. UI, editor and dev tools read the types from

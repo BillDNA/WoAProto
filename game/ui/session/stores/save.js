@@ -1,9 +1,12 @@
-/* Save and resume: the skirmish picked back up on a later visit.
+/* The SAVE record: the skirmish picked back up on a later visit.
 
-   One room of the session house over STORE_SAVE — a seat that does not persist
-   (LAN, whose truth is on the wire) writes nothing, and a save from an older
-   record version is discarded by the store rather than crashing the resume. */
+   Bump the version whenever an older saved state can no longer be loaded; the
+   store then discards it on read and resume clears instead of crashing. A seat
+   that does not persist — the LAN room, whose truth is on the wire — writes
+   nothing. */
 'use strict';
+
+var STORE_SAVE = uiStore({ id: 'save', key: 'woa-save', version: 7 });
 
 function saveLocal(){
   if (!APP.st || !seatPersists()) return;

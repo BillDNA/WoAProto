@@ -1,10 +1,13 @@
-/* The screen's TOPBAR region: who is up, how the campaign stands, and the
-   controls that are not part of a turn.
+/* The TOPBAR region: who is up, how the campaign stands, and the controls that
+   are not part of a turn.
 
-   The tug bar reads the same fieldScore the mats do, so the two agree by
-   construction: solid is the score now, hatched the ceiling if every reserve
-   deploys, and the cream seam is the projected front. */
+   The screen's own chrome — it draws no board mark. The tug bar reads the same
+   fieldScore the mats do, so the two agree by construction: solid is the score
+   now, hatched the ceiling if every reserve deploys, and the cream seam is the
+   projected front. */
 'use strict';
+
+uiRegion({ id:'topbar', el:'topbar', paint: function(){ renderTop(); } });
 
 function renderTop(){
   var st = APP.st, v = E.view(st), m = v.battle;

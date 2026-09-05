@@ -116,8 +116,7 @@ function renderEditor(){
   var gHex = svgEl('g',{}), gTer = svgEl('g',{}), gHit = svgEl('g',{});
   svg.appendChild(gHex); svg.appendChild(gTer); svg.appendChild(gHit);
   hexList.forEach(function(k){
-    var xy = hexXY(k);
-    var p = bpHexPoly(xy[0], xy[1], S-1, false); // editor tiles are uniform, no dark parity
+    var p = bpDraw(gHex, 'tile', { hex:k }); // editor tiles are uniform, no dark parity
     if (ED.tool==='redhq' || ED.tool==='bluehq'){
       p.style.cursor = 'pointer';
       p.addEventListener('click', function(){
@@ -130,12 +129,10 @@ function renderEditor(){
       p.style.cursor = 'pointer';
       p.addEventListener('click', function(){ edRemoveHex(k); renderEditor(); });
     }
-    gHex.appendChild(p);
-    bpCoordLabel(gHex, xy[0], xy[1], E.hexLabel(k), S, 'none');
+    bpDraw(gHex, 'coord', { hex:k, pe:'none' });
   });
   ghosts.forEach(function(k){
-    var xy = hexXY(k);
-    var p = bpGhostHex(gHex, xy[0], xy[1], S-4);
+    var p = bpDraw(gHex, 'ghost-hex', { hex:k });
     p.style.cursor = 'pointer';
     p.addEventListener('click', function(){
       if (hexList.length >= E.CONFIG.mapHexCeiling){ toast(E.CONFIG.mapHexCeiling + ' hexes is the ceiling (laser-cutter max — and big empty maps are not fun).', 3600); return; }
@@ -148,9 +145,8 @@ function renderEditor(){
   ['red','blue'].forEach(function(side){
     var hq = ED[side];
     if (!hq) return;
-    var xy = hexXY(E.key(hq[0],hq[1]));
-    // the live board's HQ marker sans brass ring (the editor's plain flag)
-    bpHQMarker(gHex, xy[0], xy[1], side, { rInner:false, pe:'none' });
+    // the live board's HQ mark sans brass ring (the editor's plain flag)
+    bpDraw(gHex, 'hq', { hex:E.key(hq[0],hq[1]), side:side, ring:false, pe:'none' });
   });
   edInternalSides().forEach(function(e){
     var ek = e[0] + '>' + e[1];
@@ -159,7 +155,7 @@ function renderEditor(){
     // shared mark owns colour/width/linecap. Empty sides get only the hit line.
     if (t) bpTerrainStroke(gTer, e[0], e[1], t, { rad: S*0.8, pe: 'none', edgeData: false });
     if (ED.tool==='terrain'){
-      var hit = bpEdgeHitLine(gHit, e[0], e[1], S*0.8);
+      var hit = bpDraw(gHit, 'edge-hit', { hex:e[0], dir:e[1], rad:S*0.8 });
       hit.addEventListener('click', function(){
         // cycle empty -> each map terrain type in registration order -> empty
         var cycle = E.mapTerrainTypes().map(function(t){ return t.letter; });

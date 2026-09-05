@@ -1,13 +1,23 @@
 /* The SESSION house: what survives an interruption, and who is at the controls.
 
-   The door. Two bases hold the house up — seat.js (which mode is seated, and
-   every consequence of that) and store.js (every record this browser keeps) —
-   and the rooms are the skirmish save, the turn snapshot, the hot-seat gate and
-   the LAN room's browser half. Prose: session.md.
+   The door. Two bases hold the house up — seat.js, which mode is seated and
+   every consequence of that, with a room per mode in seats/; and store.js, what
+   this browser keeps between visits, with a room per record in stores/. Beside
+   them sit the turn snapshot and the LAN room's browser half. Prose:
+   session.md.
 
    This file owns the lifecycle: taking a seat, moving to the next skirmish, and
    giving the seat up. */
 'use strict';
+
+/* The session's own app state. Which seat is taken is answered by seats/, so the
+   value here is only the starting one; `null` is the menu. */
+APP.mode = null;
+APP.mySide = 'red';                                  // the side you take in a seat that gives you one
+APP.diff = 'normal';                                 // the enemy general
+APP.st = null;                                       // the skirmish being played
+APP.net = { room: null, seq: 0, poller: null };      // the LAN room, while in one
+APP.snap = null;                                     // the turn that can be taken back
 
 function startLocal(mode, mapsOverride, battalionsOverride, commandersOverride){
   var pool = mapsOverride || getActiveMaps();
@@ -56,9 +66,19 @@ function returnToMenu(){
   show('menu'); checkResume();
 }
 
-// The session's own controls: resuming a saved skirmish, hosting or joining a
-// LAN room, and leaving one.
+// The session's own controls: the two choices that decide the seat you take —
+// which side you play and who the enemy general is — plus resuming a saved
+// skirmish, hosting or joining a LAN room, and leaving one. The side and the
+// general are picked on the Settings screen; what they set is answered here.
 function initSession(){
+  document.querySelectorAll('#sideRow .choice').forEach(function(el){
+    el.onclick = function(){
+      document.querySelectorAll('#sideRow .choice').forEach(function(x){ x.classList.remove('sel'); });
+      el.classList.add('sel');
+      APP.mySide = el.dataset.side;
+    };
+  });
+  $('diffSel').onchange = function(){ APP.diff = this.value; };
   $('btnResume').onclick = resumeSaved;
   $('btnHost').onclick = hostRoom;
   $('btnJoin').onclick = function(){ joinRoom($('joinCode').value); };

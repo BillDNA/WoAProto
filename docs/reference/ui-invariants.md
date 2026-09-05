@@ -3,7 +3,7 @@
 
 *What the browser UI guarantees outside the households that document themselves. The UI is classic scripts under `game/ui/` with no wrappers — top-level names attach to `window`; `boot.js` loads last and owns every load-time statement. The engine is truth; the UI never encodes a rule. Start in [[code-architecture]].*
 
-*The skirmish screen's guarantees live with the code: `game/ui/turn/turn.md`, `game/ui/board/board.md`, `game/ui/session/session.md`, `game/ui/screens/skirmish/skirmish.md`.*
+*The skirmish screen's guarantees live with the code: `game/ui/turn/turn.md`, `game/engine/board/board.md`, `game/ui/session/session.md`, `game/ui/screens/skirmish/skirmish.md`.*
 
 ## Maps & editor
 

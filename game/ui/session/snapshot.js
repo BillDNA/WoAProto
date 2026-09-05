@@ -18,7 +18,8 @@ function resetTurn(){
   if (!canReset()) return;
   APP.st = JSON.parse(APP.snap.data);
   APP.ui.sel = null; APP.ui.stage = null;
-  renderAll(); saveLocal();
-  if (seatWire()) pushState();
+  // kept, not settled: the turn is yours again, so the seat must not re-open it
+  // (a hot-seat hand-off would gate the hand you are still holding).
+  turnKept();
   toast('Turn reset — choose a card.', 1800);
 }

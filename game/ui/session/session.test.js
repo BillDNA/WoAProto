@@ -12,7 +12,10 @@ const vm = require('vm');
 const fs = require('fs');
 const path = require('path');
 
-const HERE = __dirname;
+const GAME = path.join(__dirname, '..', '..');
+const ORDER = require(path.join(GAME, 'load-order.js'));
+// the two bases and every room of each, in the order the page loads them
+const HOUSE = ORDER.APP.filter(p => /^ui\/session\/(store|seat)/.test(p));
 
 // A fresh house per test: the files declare their seats and records at load, so
 // re-running them in a new context is how a test gets a clean registry.
@@ -33,11 +36,14 @@ function loadSession(view) {
     modalOpen(id){ ctx.called.push('modal:' + id); },
     renderHand(){},
     clearSave(){},
-    syncBattalionFile(){}
+    syncBattalionFile(){},
+    $: () => null,
+    show(){}, renderAll(){}, showSkirmishOver(){}, syncCommandersFromState(){},
+    seatPersists: () => true, seatGatesHand: () => false, seatBeginTurn(){}
   };
   vm.createContext(ctx);
-  ['store.js', 'seat.js'].forEach(f =>
-    vm.runInContext(fs.readFileSync(path.join(HERE, f), 'utf8'), ctx, { filename: f }));
+  HOUSE.forEach(p =>
+    vm.runInContext(fs.readFileSync(path.join(GAME, p), 'utf8'), ctx, { filename: p }));
   return ctx;
 }
 
@@ -83,6 +89,16 @@ test('a record survives a browser that refuses storage', () => {
 /* ---- the seat ---- */
 const QUESTIONS = ['live', 'viewSide', 'drives', 'you', 'aiSide', 'waiting', 'beginTurn',
   'persists', 'wire', 'concedable', 'gatesHand', 'aiName', 'runKind'];
+
+test('every seat and every record is a room of its own, scheduled by load-order', () => {
+  const ctx = loadSession();
+  ['none', 'ai', 'hotseat', 'net', 'watch'].forEach(m =>
+    assert.ok(HOUSE.includes('ui/session/seats/' + m + '.js'), m + ' has its own room'));
+  ['save', 'dev', 'battalions', 'battalion'].forEach(r =>
+    assert.ok(HOUSE.includes('ui/session/stores/' + r + '.js'), r + ' has its own room'));
+  assert.deepEqual(Object.keys(ctx.UI_STORES).sort(),
+    ['battalion', 'battalions', 'dev', 'save']);
+});
 
 test('every seat answers every question', () => {
   const ctx = loadSession();

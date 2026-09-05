@@ -66,12 +66,6 @@ if (/[?&]dev=1/.test(location.search)) setDevMode(true);
 applyDevMode();
 document.addEventListener('keydown', devHotkey);
 
-// side + enemy general live in Settings now; the ids are unchanged so this
-// wiring is the same, it just fires from the Settings screen.
-document.querySelectorAll('#sideRow .choice').forEach(function(el){
-  el.onclick = function(){ document.querySelectorAll('#sideRow .choice').forEach(function(x){x.classList.remove('sel');}); el.classList.add('sel'); APP.mySide = el.dataset.side; };
-});
-$('diffSel').onchange = function(){ APP.diff = this.value; };
 $('setDevToggle').onchange = function(){ setDevMode(this.checked); };
 
 // Play (New Campaign) opens the run-flow entry (campaign stub), not a battle
@@ -278,44 +272,8 @@ $('dkImportFile').onchange = function(){
   rd.readAsText(f);
 };
 
-// persistence: every REAL finished skirmish in this browser becomes a row in
-// logs/woa.db via POST /api/recordskirmish (fail-open: a server without dev/
-// simply skips it). One subscription covers every source —
-// finishSkirmish fires the hook for human play, hotseat, watch, the LAN peer
-// that dealt the final blow (exactly one of the two), and each dashboard
-// simulation skirmish. Search clones never fire it (__sim).
-// One implementation of "turn a finished skirmish into a DB row": the live hook
-// (human/hotseat/watch/LAN + the serial dashboard loop) AND the parallel sweep's
-// main-thread result handler both call this. The parallel workers run the engine
-// with no onSkirmishEnd subscriber, so persistence happens exactly once — here.
-function recordSkirmish(st) {
-  var v = E.view(st);
-  var dash = (typeof DASH !== 'undefined') && DASH.running;
-  var kind = dash ? 'balance' : seatRunKind();
-  function aiOf(side){
-    if (dash) return side === 'red' ? DASH.meta.dr : DASH.meta.db;
-    return seatAiName(side);
-  }
-  var m = st.battle; st.battle = null; // the cycle never crosses the wire (battle is the identity handle)
-  try {
-    api('recordskirmish', {
-      runKey: dash ? DASH.runKey : undefined,
-      run: { version: E.VERSION, kind: kind, redAi: aiOf('red'), blueAi: aiOf('blue'),
-        n: dash ? DASH.meta.n : 1, tool: dash ? 'dashboard' : 'browser',
-        // run identity for the A/B picker: both battalions fielded, read from the
-        // battalion the ENGINE actually resolved THIS load — never
-        // content/battalions/'s active flag directly (the Battalion Editor's
-        // applied override sandbox overrides it, see index.html's
-        // WOA_APPLIED_BATTALION wiring). Symmetric today: both sides field it.
-        battalionRed: E.ACTIVE_BATTALION && E.ACTIVE_BATTALION.id,
-        battalionBlue: E.ACTIVE_BATTALION && E.ACTIVE_BATTALION.id,
-        mapset: dash ? DASH.meta.mapset : undefined,
-        seedBase: dash ? DASH.meta.seedBase : undefined },
-      state: st, firstPlayer: E.other(v.second), seed: v.seed
-    }).catch(function(){ /* persistence is best-effort */ });
-  } finally { st.battle = m; }
-}
-E.hooks.onSkirmishEnd.push(recordSkirmish);
+// The skirmish row this browser writes is the session house's
+// (ui/session/record.js); the sweep's worker results are folded in below.
 
 $('dashBack').onclick = function(){ DASH.cancel = true; SCREENS.devhub.entry(); };
 $('dashStop').onclick = function(){ DASH.cancel = true; };

@@ -7,7 +7,8 @@ in the middle, the journal on the right.
 ## The base
 
 A `uiRegion` says which element it owns, which household paints it, and — for a
-rail a small screen cannot afford — which modal it mirrors into. `regionsPaint`
+rail a small screen cannot afford — which modal it mirrors into and the floating
+button that opens it. Each region is a room of `regions/`. `regionsPaint`
 repaints in declaration order; `regionsSync` refreshes whichever mirrors are
 open. A mirror copies the rail's markup, drops what the modal already provides,
 and puts back the handlers `innerHTML` dropped.
@@ -20,10 +21,18 @@ the mats; the session decides whose they are.
 
 | file | is |
 | --- | --- |
-| `skirmish.js` | the door: the region list and the repaint |
-| `region.js` | the region base |
-| `topbar.js` | who is up, the campaign score, the field-score tug bar |
+| `skirmish.js` | the door: the repaint, the win card, the controls that belong to no region |
+| `region.js` | the region base, and the mirror |
+| `regions/topbar.js` | who is up, the campaign score, the field-score tug bar |
+| `regions/mats.js` | the left rail, mirrored into the mats overlay |
+| `regions/board.js` | the field itself — the region with no mirror |
+| `regions/hand.js` | the cards under the board |
+| `regions/prompt.js` | the bar that says what the step wants |
+| `regions/journal.js` | the right rail, mirrored into the journal overlay |
 | `debug.js` | this exact state, saved for a bug report |
+
+Adding a region is one file in `regions/`, scheduled in `game/load-order.js`;
+the order they are scheduled in is the order they repaint.
 
 ## Layout rules
 
