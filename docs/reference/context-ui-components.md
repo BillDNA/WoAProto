@@ -261,5 +261,5 @@ A sortable table header cell (active key + direction arrow).
 _Home_: `game/ui/ui-primitives.js` — `uiSortableTh`
 
 **confirmDialog**:
-The shared confirm/cancel modal.
-_Home_: `game/ui/ui-primitives.js` — `confirmDialog`
+The shared confirm/cancel modal, one entry in the Modal registry.
+_Home_: `game/ui/modals/confirm.js` — `confirmDialog`

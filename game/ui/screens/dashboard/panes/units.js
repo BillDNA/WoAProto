@@ -109,7 +109,7 @@ function chartUnitsRoleMap(rows) {
     var b = (r.b && r.b.depMedian != null && r.b.roleY != null) ? { x: sx(r.b.depMedian * 100), y: sy(r.b.roleY), small: WOA_REPORT.smallN(r.b.n, 'fleet') } : null;
     return { r: r, a: a, b: b, rad: pr };
   }).filter(function (p) { return p.a || p.b; })
-    .sort(function (x, y) { return y.rad - x.rad; }); // big dots block space first, same convention as chartCardSightQuadrant (pane-cards.js)
+    .sort(function (x, y) { return y.rad - x.rad; }); // big dots block space first, same convention as chartCardSightQuadrant (panes/cards.js)
 
   var placer = chMakePlacer(W, H);
   pts.forEach(function (p) {
@@ -231,3 +231,5 @@ function renderUnits(el) {
   });
   if (!loaded) el.innerHTML = '<p class="small">Loading skirmish rows for run A &amp; B&hellip;</p>';
 }
+
+dashPane({ id:'units', label:'Units', needsRuns:true, render: renderUnits });

@@ -1,12 +1,12 @@
 /* War of Attrition — ui part: the shared CHROME primitives toolkit. The
    HTML-string twin of chart-primitives.js (SVG marks) and board-primitives.js
    (board marks): the repeated bits of in-game HTML that were hand-typed in
-   many places — the html-escape, the modal confirm dialog, the legend swatch,
-   the sortable table header — each live here once, so restyling one is a
-   one-function edit. Behaviour verbs that touch the live DOM (openOverlay /
-   closeOverlay, show, toast) live in app.js next to $; this file builds
-   strings. Card tiles, pips, the tug bar, unit slots, key-value rows are
-   already single-sourced by CSS classes (style.css) — no primitive needed.
+   many places — the html-escape, the legend swatch, the sortable table header
+   — each live here once, so restyling one is a one-function edit. Modals are
+   a kind, not a primitive: ui/modals/modal.js. Behaviour verbs that touch the
+   live DOM (show, toast) live in app.js next to $; this file builds strings.
+   Card tiles, pips, the tug bar, unit slots, key-value rows are already
+   single-sourced by CSS classes (style.css) — no primitive needed.
 
    Classic script, no wrapper — top-level names attach to window; loads right
    after app.js so every ui file can build over it. */
@@ -32,20 +32,4 @@ function uiSortableTh(col, activeKey, dir, tip, keyAttr){
   var active = activeKey === col[0];
   return '<th class="sortable'+(active?' sorted':'')+'" '+(keyAttr||'data-key')+'="'+col[0]+'" title="'+(tip||'')+' &middot; click to sort">'+
     col[1]+(active?(dir>0?' &#9650;':' &#9660;'):'')+'</th>';
-}
-
-/* the modal confirm dialog — ONE scaffold for the yes/no overlays (concede,
-   confirm-attack, …). Fills the panel, opens the overlay, and wires the two
-   buttons: yes runs onYes (after closing), no just closes.
-   o: { title, titleClass, body, yesLabel, noLabel, onYes, ovr, panel } */
-function confirmDialog(o){
-  var ovr = o.ovr || 'confirmOvr', panel = o.panel || 'confirmPanel';
-  $(panel).innerHTML =
-    '<h2'+(o.titleClass?' class="'+o.titleClass+'"':'')+'>'+o.title+'</h2>' +
-    (o.body || '') +
-    '<div class="ovr-btns"><button id="ovYes">'+(o.yesLabel||'OK')+'</button>' +
-    '<button id="ovNo" class="ghost btn-ghost-dark">'+(o.noLabel||'Cancel')+'</button></div>';
-  openOverlay(ovr);
-  $('ovYes').onclick = function(){ closeOverlay(ovr); if (o.onYes) o.onYes(); };
-  $('ovNo').onclick = function(){ closeOverlay(ovr); };
 }

@@ -34,7 +34,7 @@ _Home_: `game/ui/manual.js` — `Field Manual`
 **Mats**:
 The overlay showing the physical pieces a side is holding.
 _Avoid_: roster.
-_Home_: `game/ui/skirmish.js` — `syncRostersOverlay`
+_Home_: `game/ui/modals/mats.js` — `id:'mats'`
 
 **Card art**:
 The illustration looked up for a Card by its id.
@@ -53,6 +53,27 @@ _Home_: `game/ui/skirmish.js` — `ensureSnapshot`
 **Hotseat handoff**:
 Passing one device between two people between turns.
 _Home_: `game/ui/skirmish.js` — `showHandoff`
+
+## Families that share a shell
+
+A kind is discovery plus a shared shell, so a new one of the family is a file and
+a line rather than an edit in five places. The shell is the same for every family;
+how one is *shown* is not, and that part belongs to the family.
+
+**Kind**:
+A family of concepts sharing one shell — a registry of what exists, validation at
+registration, and a mount address derived from the entry's id.
+_Home_: `game/ui/kit/kind.js` — `defineKind`
+
+**Pane**:
+One view inside a screen, reached from that screen's nav; exactly one shows at a time.
+_Home_: `game/ui/screens/dashboard/panes/pane.js` — `dashPane`
+
+**Modal**:
+One overlay dialog over whatever screen is up: a title, a body, and a row of
+buttons that dismiss it. Normally none is open.
+_Avoid_: modal card — a Card is an order in the rule book.
+_Home_: `game/ui/modals/modal.js` — `uiModal`
 
 ## The drawing kit
 

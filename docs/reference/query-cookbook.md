@@ -88,7 +88,7 @@ under the chart to lift straight into `db-query.js`.
 - **A new metric or group-by** is a one-line entry in `AGG_METRICS` / `AGG_GROUPBYS`
   (`dev/db.js`) — a whitelisted SQL expression. It then rides `/api/dimensions` into the
   pickers automatically. Add a label in `CC_METRIC_LABEL` / `CC_DIM_LABEL`
-  (`game/ui/pane-crosscuts.js`) so it reads in plain English.
+  (`game/ui/screens/dashboard/panes/crosscuts.js`) so it reads in plain English.
 - **A new cited metric** (one the reports name) is a column of a named view — see ADR-0004
   and `report-model.md`.
 - Pin it with a test in `dev/db.test.js` (the query surface) and `dev/server.test.js` (the

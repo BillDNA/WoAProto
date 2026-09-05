@@ -17,17 +17,17 @@ function downloadDebug(fname, json){
 function syncJournalOverlay(){
   // mirror the (possibly hidden) inline journal into the overlay, dropping its
   // sticky header plate since the panel already shows one; newest entry in view
-  var body = $('journalBody');
+  var body = $('journalOvrBody');
   body.innerHTML = $('log').innerHTML;
   var h = body.querySelector('.jhead'); if (h) h.remove();
   body.scrollTop = body.scrollHeight;
 }
 
 function syncRostersOverlay(){
-  $('rostersBody').innerHTML = $('leftcol').innerHTML;
+  $('matsOvrBody').innerHTML = $('leftcol').innerHTML;
   // the mirrored spent-track is CSS-hidden on small screens; that's fine — the
   // Cards glossary carries the full read
-  var sp = $('rostersBody').querySelector('.spent'); if (sp) sp.onclick = showCards;
+  var sp = $('matsOvrBody').querySelector('.spent'); if (sp) sp.onclick = showCards;
 }
 
 function startLocal(mode, mapsOverride, battalionsOverride, commandersOverride){
@@ -370,8 +370,8 @@ function renderLog(){
   });
   el.scrollTop = el.scrollHeight;
   // keep the small-screen journal overlay in sync while it's open
-  if ($('journalOvr').classList.contains('active')) syncJournalOverlay();
-  if ($('rostersOvr').classList.contains('active')) syncRostersOverlay();
+  if (modalIsOpen('journal')) syncJournalOverlay();
+  if (modalIsOpen('mats')) syncRostersOverlay();
 }
 
 function confirmAttack(a){
@@ -397,55 +397,30 @@ function confirmAttack(a){
 }
 
 function showSkirmishOver(){
-  var st = APP.st, v = E.view(st), m = v.battle;
-  var w = v.skirmishWinner;
-  var html = '<h2 class="'+w+'">'+capName(w)+' takes the field!</h2>' +
-    '<p style="font-style:italic;">"'+v.mapName+'" — ' + (v.winType==='hq' ? 'the enemy headquarters was captured.' :
-      v.winType==='concession' ? 'the enemy conceded the field.' :
-      'won by attrition, field score '+E.fieldScore(st,'red')+' to '+E.fieldScore(st,'blue')+' of surviving units.') + '</p>' +
-    '<p style="margin-top:10px;font-size:18px;">Campaign: <b style="color:var(--red-dark)">Red '+m.wins.red+'</b> — <b style="color:var(--blue-dark)">Blue '+m.wins.blue+'</b></p>';
-  var rematch = APP.mode !== 'net'
-    ? '<button id="boRematch" class="ghost btn-ghost-dark" title="Fresh skirmish, same map — for A/B testing a layout">Rematch this map</button>'
-    : '';
-  var copyBtn = '<button id="boCopy" class="ghost btn-ghost-dark" title="Copy the full campaign journal to the clipboard">Copy journal</button>';
-  if (m.winner){
-    html += '<h2 class="'+m.winner+'" style="margin-top:14px;">'+capName(m.winner)+' wins the war!</h2>' +
-      '<div class="ovr-btns"><button id="boNew">New Campaign</button>'+rematch+copyBtn+'<button id="boMenu" class="ghost btn-ghost-dark">Main Menu</button></div>';
-  } else {
-    html += '<p class="small">'+capName(m.lastLoser)+' moves first in the next skirmish.</p>' +
-      '<div class="ovr-btns"><button id="boNext">Next Skirmish</button>'+rematch+copyBtn+'<button id="boMenu" class="ghost btn-ghost-dark">Main Menu</button></div>';
-  }
-  $('skirmishPanel').innerHTML = html;
-  openOverlay('skirmishOvr');
-  if ($('boRematch')) $('boRematch').onclick = function(){
-    closeOverlay('skirmishOvr');
-    startLocal(APP.mode, [m.maps[v.mapIndex]]);
-  };
-  if ($('boNext')) $('boNext').onclick = function(){
-    closeOverlay('skirmishOvr');
-    APP.st = E.newSkirmish(m);
-    APP.ui = { sel:null, stage:null, busy:false, handoffPending: APP.mode==='hotseat' };
-    renderAll(); saveLocal();
-    if (APP.mode==='net') pushState();
-    if (APP.mode==='hotseat') showHandoff(); else maybeAI();
-  };
-  if ($('boNew')) $('boNew').onclick = function(){
-    closeOverlay('skirmishOvr');
-    clearSave();
-    if (APP.mode==='net'){
-      var pool = getActiveMaps() || E.MAPS;
-      var match = E.newBattle({ maps: pool });
-      APP.st = E.newSkirmish(match);
-      renderAll(); pushState();
-    } else startLocal(APP.mode);
-  };
-  if ($('boCopy')) $('boCopy').onclick = function(){ copyText(journalText(st), $('boCopy')); };
-  $('boMenu').onclick = function(){
-    closeOverlay('skirmishOvr');
-    if (APP.net.poller) clearInterval(APP.net.poller);
-    APP.net.poller=null; APP.mode=null;
-    show('menu'); checkResume();
-  };
+  var st = APP.st, v = E.view(st);
+  modalOpen('skirmish', { st: st, v: v, m: v.battle });
+}
+
+function startNextSkirmish(m){
+  APP.st = E.newSkirmish(m);
+  APP.ui = { sel:null, stage:null, busy:false, handoffPending: APP.mode==='hotseat' };
+  renderAll(); saveLocal();
+  if (APP.mode==='net') pushState();
+  if (APP.mode==='hotseat') showHandoff(); else maybeAI();
+}
+
+function startNewCampaign(){
+  clearSave();
+  if (APP.mode!=='net'){ startLocal(APP.mode); return; }
+  var pool = getActiveMaps() || E.MAPS;
+  APP.st = E.newSkirmish(E.newBattle({ maps: pool }));
+  renderAll(); pushState();
+}
+
+function returnToMenu(){
+  if (APP.net.poller) clearInterval(APP.net.poller);
+  APP.net.poller = null; APP.mode = null;
+  show('menu'); checkResume();
 }
 
 // Plain-text campaign journal for the clipboard.
@@ -468,52 +443,29 @@ function journalText(st){
 function showHandoff(){
   if (E.view(APP.st).phase==='skirmish-over') return;
   APP.ui.handoffPending = true;
-  var p = E.view(APP.st).current;
-  $('handoffPanel').innerHTML =
-    '<h2 class="'+p+'">'+capName(p)+'&rsquo;s turn</h2>' +
-    '<p>Pass the device to the '+capName(p)+' commander.</p>' +
-    '<div class="ovr-btns"><button id="hoGo">Take Command</button></div>';
-  openOverlay('handoffOvr');
+  modalOpen('handoff', E.view(APP.st).current);
   renderHand();
-  $('hoGo').onclick = function(){
-    closeOverlay('handoffOvr');
-    APP.ui.handoffPending = false;
-    renderHand(); renderPrompt();
-  };
 }
 
 /* =================== actions =================== */
 // House rule: any card can instead be resolved as a basic attack or a basic reposition.
 function playCardUI(cid){
-  var st = APP.st, v = E.view(st);
-  var c = cardDef(cid);
-  var side = v.current;
-  var canAtk = E.listAttacks(st, side).length > 0;
+  var st = APP.st, side = E.view(st).current;
   var rp = E.listRepositions(st, side);
-  var canRp = rp.moves.length > 0 || rp.swaps.length > 0;
-  $('playPanel').innerHTML =
-    artImg(cid, 'bigart') +
-    '<h2>'+c.name+'</h2>' +
-    '<p class="small" style="margin-bottom:10px;">'+c.text+'</p>' +
-    '<div class="menu-btns">' +
-      '<button id="pcNormal">Play the card action</button>' +
-      '<button id="pcAttack" '+(canAtk?'':'disabled')+'>Resolve as a basic Attack'+(canAtk?'':' (no targets)')+'</button>' +
-      '<button id="pcRepos" '+(canRp && !canAtk?'':'disabled')+'>Resolve as a basic Reposition'+(!canRp?' (no moves)':canAtk?' (attack available)':'')+'</button>' +
-      '<button id="pcCancel" class="ghost btn-ghost-dark">Keep it in hand</button>' +
-    '</div>' +
-    '<p class="small" style="margin-top:10px;">However it is resolved, the card is removed from the game.</p>';
-  openOverlay('playOvr');
-  function go(mode){
-    closeOverlay('playOvr');
-    try { E.playCard(st, cid, mode); } catch(e){ return; }
-    APP.ui.sel = null;
-    afterChange();
-  }
-  $('pcNormal').onclick = function(){ go('normal'); };
-  if (canAtk) $('pcAttack').onclick = function(){ go('attack'); };
-  if (canRp && !canAtk) $('pcRepos').onclick = function(){ go('reposition'); };
-  $('pcCancel').onclick = function(){ closeOverlay('playOvr'); };
+  modalOpen('play', {
+    cid: cid, card: cardDef(cid),
+    canAtk: E.listAttacks(st, side).length > 0,
+    canRp: rp.moves.length > 0 || rp.swaps.length > 0
+  });
 }
+
+// The three ways a card can be spent; the modal has already closed itself.
+function resolveCard(cid, mode){
+  try { E.playCard(APP.st, cid, mode); } catch(e){ return; }
+  APP.ui.sel = null;
+  afterChange();
+}
+
 function act(choice){
   var st = APP.st;
   var pre = capturePre(st, choice);
@@ -537,7 +489,9 @@ function afterChange(){
 function clearIfBattleOver(){ if (E.view(APP.st).battle.winner) clearSave(); }
 
 /* =================== card glossary =================== */
-function showCards(){
+function showCards(){ modalOpen('cards'); }
+
+function cardsGlossaryHtml(){
   var inGame = !!APP.st && !!APP.mode;
   var youSide = inGame && APP.mode !== 'hotseat' ? APP.mySide : null;
   var rows = '<table><tr><th style="text-align:left;">Card</th><th>#</th><th style="text-align:left;">Action</th>' +
@@ -560,8 +514,7 @@ function showCards(){
   });
   rows += '</table>';
   if (inGame) rows += '<p class="small" style="margin-top:8px;">&#10006; = that copy has been resolved this skirmish and is gone from the game; &#9675; = still in draw pile, hand, or discard. Shaded cell = every copy spent.</p>';
-  $('cardsBody').innerHTML = rows;
-  openOverlay('cardsOvr');
+  return rows;
 }
 
 /* =================== AI driver =================== */

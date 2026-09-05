@@ -2,8 +2,8 @@
    SVG builders + palette (CHART), the greedy label placer (chMakePlacer), the
    settle-curve CDF (chCdf/chSettleSvg), the hover layer (chBindHits), and the
    band-board row renderer (ovBandRect/ovDot/ovBandRowHtml) shared by the
-   Overview and Maps panes. Every dashboard pane module (pane-overview /
-   pane-maps / pane-cards / pane-units.js) draws over this toolkit — one
+   Overview and Maps panes. Every dashboard pane module (screens/dashboard/panes/overview /
+   maps / cards / units) draws over this toolkit — one
    implementation of each primitive, many callers.
 
    Inline SVG / plain divs by string concat like the rest of the ui — zero
