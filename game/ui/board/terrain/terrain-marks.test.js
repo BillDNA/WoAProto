@@ -37,9 +37,9 @@ function loadMarks() {
     E, S: 44, BOARD: { outline: '#000', brass: '#b5a642', barrage: '#a33' },
     svgEl: (tag, attrs) => ({ tag, attrs, appendChild() {} }),
     hexXY: () => [0, 0],
-    cornerPt: () => [0, 0],
-    cornerAngles: () => [0, 0],
-    bpEdgePts: () => [[0, 0], [1, 1]]
+    hexCornerPt: () => [0, 0],
+    hexCornerAngles: () => [0, 0],
+    hexEdgePts: () => [[0, 0], [1, 1]]
   };
   vm.createContext(ctx);
   ['terrain-marks.js']

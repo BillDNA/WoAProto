@@ -13,7 +13,7 @@
    shared toolkit (ui/chart-primitives.js): the band-board row renderer
    (ovBandRowHtml, shared with the Overview pane), chSettleSvg, chLine/chText/
    chTipAttrs, and the .chtip/ch-hit hover layer (chBindHits). The hex boards
-   reuse board.js's GLOBAL hexXY/hexPoints/viewBoxFor (the game's OWN board
+   reuse the GLOBAL hexXY/hexPoints (the hex house) + viewBoxFor (the game's OWN board
    renderer) so the two hex renderers stay one visual language. */
 'use strict';
 /* The cross-skirmish folds these render functions draw over — envelopesForMap,
@@ -158,7 +158,7 @@ function mdHeaderHtml(mapList, idx, scoreA, scoreB, regressed) {
    THREE spatial reads on THIS map's board — occupancy, ownership flips, kills
    — the drill-down's only SPATIAL view (tempo/FS/bands are all temporal or
    aggregate). Rendered as SVG hex boards reusing board.js's GLOBAL
-   hexXY/hexPoints/viewBoxFor (the game's OWN board renderer).
+   hexXY/hexPoints (the hex house) + viewBoxFor (the game's OWN board renderer).
 
    SVG polygons, NOT clip-path divs: the
    avenue-of-attack marker is then a real nested <polygon> stroke and the
@@ -173,7 +173,7 @@ var MD_HEX_LENSES = [
   { key: 'flips', title: 'ownership flips', sub: 'flips / skirmish',  fmt: function (v) { return WOA_REPORT.f1(v); } },
   { key: 'kills', title: 'kills',           sub: 'kills / skirmish',  fmt: function (v) { return WOA_REPORT.f1(v); } }
 ];
-var MDHEX_R = 40; // hex draw radius; board.js hexXY spacing is S=44 -> ~4px gutters
+var MDHEX_R = 40; // hex draw radius; hexXY spacing is S=44 -> ~4px gutters
 
 /* map NAME (the DB/trace `map` field IS st.mapName = map.name) -> its map def
    on disk, or null if it's been deleted since the run. Searched over the whole

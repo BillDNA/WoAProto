@@ -28,7 +28,7 @@ function openEditor(def, isNewCopy){
     ED.edges = {};
     (def.pieces||[]).forEach(function(pc){
       pc.edges.forEach(function(e){
-        ED.edges[E.key(e[0], e[1]) + '>' + e[2]] = pc.t;
+        ED.edges[E.sideKey(E.key(e[0], e[1]), e[2])] = pc.t;
       });
     });
   } else {
@@ -76,10 +76,8 @@ function edRemoveHex(k){
   delete set[k];
   // a removed hex takes its terrain with it — including neighbours' sides that faced it
   for (var d = 0; d < 6; d++){
-    delete ED.edges[k + '>' + d];
-    var qr = E.parseKey(k);
-    var n = E.key(qr[0] + E.DIRS[d][0], qr[1] + E.DIRS[d][1]);
-    delete ED.edges[n + '>' + ((d + 3) % 6)];
+    delete ED.edges[E.sideKey(k, d)];
+    delete ED.edges[E.facingSide(k, d)];
   }
   if (ED.red && E.key(ED.red[0], ED.red[1]) === k) ED.red = null;
   if (ED.blue && E.key(ED.blue[0], ED.blue[1]) === k) ED.blue = null;
@@ -105,9 +103,8 @@ function renderEditor(){
   if (ED.tool === 'hexes'){
     var set = edHexSet(), seen = {};
     hexList.forEach(function(k){
-      var qr = E.parseKey(k);
       for (var d = 0; d < 6; d++){
-        var n = E.key(qr[0] + E.DIRS[d][0], qr[1] + E.DIRS[d][1]);
+        var n = E.step(k, d);
         if (!set[n] && !seen[n]){ seen[n] = true; ghosts.push(n); }
       }
     });
@@ -153,7 +150,7 @@ function renderEditor(){
     bpHQMarker(gHex, xy[0], xy[1], side, { rInner:false, pe:'none' });
   });
   edInternalSides().forEach(function(e){
-    var ek = e[0] + '>' + e[1];
+    var ek = E.sideKey(e[0], e[1]);
     var t = ED.edges[ek];
     // the editor draws the bare terrain STROKE (no glyph) at inset S*0.8; the
     // shared mark owns colour/width/linecap. Empty sides get only the hit line.
@@ -178,12 +175,12 @@ function groupEdgesToPieces(edges){
   // (physical terrain pieces sit inside one hex, wrapping its corners)
   function vkey(h, p){ return h + '@' + Math.round(p[0])+':'+Math.round(p[1]); }
   var items = Object.keys(edges).map(function(ek){
-    var parts = ek.split('>');
-    var d = +parts[1];
+    var parts = E.parseSideKey(ek);
+    var d = parts[1];
     var c = hexXY(parts[0]);
-    var aa = cornerAngles(d);
+    var aa = hexCornerAngles(d);
     return { ek: ek, t: edges[ek], a: parts[0], d: d,
-      v1: vkey(parts[0], cornerPt(c[0],c[1],aa[0],S)), v2: vkey(parts[0], cornerPt(c[0],c[1],aa[1],S)) };
+      v1: vkey(parts[0], hexCornerPt(c[0],c[1],aa[0],S)), v2: vkey(parts[0], hexCornerPt(c[0],c[1],aa[1],S)) };
   });
   var used = {}, pieces = [];
   items.forEach(function(it, i){

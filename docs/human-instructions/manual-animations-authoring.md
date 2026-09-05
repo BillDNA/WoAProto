@@ -63,7 +63,7 @@ var st  = mpState(def, { '0,0':['infantry','blue'], '-1,0':['infantry','red'] },
   hex adds +1 support — **place HQs at distance ≥ 2 from the target unless
   the example wants them counted** (only one dist-2 corner per side exists on
   `MP_HEXES`: `[2,-1]` and `[1,1]`).
-- Directions (`DIRS` in `engine/02-board.js`): 0=E 1=NE 2=NW 3=W 4=SW 5=SE.
+- Directions (`DIRS` in `engine/hex/hex.js`): 0=E 1=NE 2=NW 3=W 4=SW 5=SE.
 
 ### The board-shape trap (important)
 

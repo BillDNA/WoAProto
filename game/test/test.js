@@ -3,6 +3,8 @@
    so `node game/test.js` (and `node --test game/test.js`) still runs the whole
    engine gate and exits non-zero on failure. */
 'use strict';
+require('../engine/hex/hex.test.js');        // the hex house — the coordinate dialect
+require('../ui/hex/hex-screen.test.js');     // and its screen dialect
 require('./test.geometry.js');
 require('./test.combat.js');
 require('../engine/board/terrain/terrain.test.js');   // the terrain house keeps its own tests

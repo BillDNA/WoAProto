@@ -112,16 +112,16 @@ function mpDrawFrame(f){
 
   // attention halos go UNDER the terrain/trench lines they highlight
   (f.glowSides||[]).forEach(function(sk){
-    var parts = sk.split('>'), c = mpXY(parts[0]), aa = cornerAngles(+parts[1]);
-    var p1 = cornerPt(c[0],c[1],aa[0],MP_S*0.85), p2 = cornerPt(c[0],c[1],aa[1],MP_S*0.85);
+    var parts = E.parseSideKey(sk), c = mpXY(parts[0]), aa = hexCornerAngles(parts[1]);
+    var p1 = hexCornerPt(c[0],c[1],aa[0],MP_S*0.85), p2 = hexCornerPt(c[0],c[1],aa[1],MP_S*0.85);
     svg.appendChild(svgEl('line', { x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
       stroke:'var(--gold-glow)','stroke-width':MP_GLOW_SW.side,'stroke-linecap':'round','class':'medge-glow' }));
   });
   if (f.glowTrench){
     var gc = mpXY(f.glowTrench.hex);
     f.glowTrench.dirs.forEach(function(d){
-      var aa = cornerAngles(d);
-      var p1 = cornerPt(gc[0],gc[1],aa[0],MP_S*0.74), p2 = cornerPt(gc[0],gc[1],aa[1],MP_S*0.74);
+      var aa = hexCornerAngles(d);
+      var p1 = hexCornerPt(gc[0],gc[1],aa[0],MP_S*0.74), p2 = hexCornerPt(gc[0],gc[1],aa[1],MP_S*0.74);
       svg.appendChild(svgEl('line', { x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],
         stroke:'var(--gold-glow)','stroke-width':MP_GLOW_SW.trench,'stroke-linecap':'round','class':'medge-glow' }));
     });

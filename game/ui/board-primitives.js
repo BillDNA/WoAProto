@@ -1,17 +1,19 @@
 /* War of Attrition — ui part: the shared BOARD primitives toolkit. The
-   board-side twin of chart-primitives.js. Holds the hex geometry (S/hexXY/
-   corner math/hexPoints/viewBoxFor), the one svgEl DOM builder, the BOARD
-   palette, and a bp* primitive for every mark the game board draws — hex
-   tiles, HQs, unit tokens, attack-math pills, the highlight polygon. board.js
-   draws over this toolkit and builds nothing by hand: one implementation of
-   each mark, restyled in one place, reflected everywhere the board draws it.
+   board-side twin of chart-primitives.js. Holds the one svgEl DOM builder, the
+   board's framing (viewBoxFor), the BOARD palette, and a bp* primitive for
+   every mark the game board draws — hex tiles, HQs, unit tokens, attack-math
+   pills, the highlight polygon. board.js draws over this toolkit and builds
+   nothing by hand: one implementation of each mark, restyled in one place,
+   reflected everywhere the board draws it.
 
-   Terrain marks are NOT here: each type draws itself in ui/board/terrain/,
-   which loads after this file and uses its geometry.
+   WHERE a hex and its faces sit is not here: that is the hex house's screen
+   dialect (ui/hex/hex-screen.js), which loads first and this file calls.
+   Terrain marks are NOT here either: each type draws itself in ui/board/terrain/,
+   which loads after this file and uses both.
 
-   The geometry + svgEl are GLOBAL on purpose — every board consumer reuses
-   them, so this file loads before them in index.html's script chain. Every
-   board consumer draws from ONE palette + shared builders: fx.js (live-board
+   svgEl is GLOBAL on purpose — every board consumer reuses it, so this file
+   loads before them in index.html's script chain. Every board consumer draws
+   from ONE palette + shared builders: fx.js (live-board
    flourishes) takes its colours + unit radius from BOARD/BOARD_R; the manual
    diagram (manual.js, MP_S scale) and the map editor (map-editor.js) draw
    their hexes/terrain/HQ/units through hexXY(k,s) + bpUnitToken / bpHQMarker
@@ -25,36 +27,13 @@
    never sees (the chit) — plus the ghost-hex wash — are named once in BOARD. */
 'use strict';
 
-/* =================== hex geometry (shared) =================== */
-// S is the live board's hex size; every geometry helper takes an optional
-// scale so a mini-board (manual.js at MP_S) shares ONE implementation.
-var S = 44, SQ3 = Math.sqrt(3);
-function hexXY(k, s){
-  s = s || S;
-  var qr = E.parseKey(k);
-  return [ s*SQ3*(qr[0] + qr[1]/2), s*1.5*qr[1] ];
-}
-function cornerAngles(d){ // dir -> [a1,a2] degrees (y down)
-  var ang = [0,-60,-120,180,120,60][d];
-  return [ang-30, ang+30];
-}
-function cornerPt(cx, cy, angDeg, rad){
-  var a = angDeg*Math.PI/180;
-  return [cx + rad*Math.cos(a), cy + rad*Math.sin(a)];
-}
-function hexPoints(cx, cy, rad){
-  var pts = [];
-  for (var i=0;i<6;i++){
-    var a = (60*i - 90)*Math.PI/180;
-    pts.push((cx+rad*Math.cos(a)).toFixed(1)+','+(cy+rad*Math.sin(a)).toFixed(1));
-  }
-  return pts.join(' ');
-}
+/* =================== the svg builder + the board's frame =================== */
 function svgEl(tag, attrs){
   var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
   for (var k in attrs) el.setAttribute(k, attrs[k]);
   return el;
 }
+// the viewBox that frames a list of hexes, at the hex house's positions.
 function viewBoxFor(hexList, s){
   s = s || S;
   var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
@@ -66,14 +45,8 @@ function viewBoxFor(hexList, s){
   var m = s*1.3;
   return (minX-m).toFixed(0)+' '+(minY-m).toFixed(0)+' '+(maxX-minX+2*m).toFixed(0)+' '+(maxY-minY+2*m).toFixed(0);
 }
-// the two endpoints of an inset edge (terrain/trench/barrage all share this).
-// s scales the hex centre so a mini-board (manual at MP_S) shares ONE impl.
-function bpEdgePts(hexKey, dir, rad, s){
-  var c = hexXY(hexKey, s), aa = cornerAngles(dir);
-  return [ cornerPt(c[0], c[1], aa[0], rad), cornerPt(c[0], c[1], aa[1], rad) ];
-}
 
-/* =================== geometry + stroke tokens =================== */
+/* =================== mark radii + stroke tokens =================== */
 // board glyph radii, as a fraction of the hex size S — the inset a mark sits at.
 // (terrain insets are per type, declared with each mark in ui/board/terrain/)
 var BOARD_R = { hqOuter:S*0.62, hqInner:S*0.5, unit:S*0.5 };
@@ -244,7 +217,7 @@ function bpHighlight(g, key, cls){
 // an invisible edge-hit line (.edge-hit CSS makes it a fat transparent click
 // target). Returns the line so the editor wires its own terrain-paint handler.
 function bpEdgeHitLine(g, hexKey, dir, rad, s){
-  var pt = bpEdgePts(hexKey, dir, rad, s);
+  var pt = hexEdgePts(hexKey, dir, rad, s);
   var hit = svgEl('line', { x1:pt[0][0], y1:pt[0][1], x2:pt[1][0], y2:pt[1][1], 'class':'edge-hit' });
   g.appendChild(hit);
   return hit;
@@ -261,7 +234,7 @@ function bpGhostHex(g, cx, cy, rad){
 /* =================== string thumbnail marks (maps-screen previews) ===================
    The one STRING board renderer: the map-library thumbnails go into innerHTML
    (var(--…) resolves in the DOM), so previewSVG builds an SVG string — the same
-   geometry (hexXY/hexPoints/corner math) + BOARD palette as the live board, at
+   geometry (the hex house's screen dialect) + BOARD palette as the live board, at
    its own tiny s=11 scale. The tile is deliberately its OWN look (BOARD.thumbTile,
    not the .hex CSS class), and the HQ is a plain side-coloured hex (no brass ring
    / star). Each thumbnail mark lives in one bpThumb* builder, so maps-screen.js
@@ -285,8 +258,8 @@ function previewSVG(def){
   });
   (def.pieces||[]).forEach(function(pc){
     pc.edges.forEach(function(e){
-      var c = hexXY(E.key(e[0],e[1]), s), aa = cornerAngles(e[2]);
-      body += bpThumbTerrain(cornerPt(c[0],c[1],aa[0],s-2.4), cornerPt(c[0],c[1],aa[1],s-2.4), pc.t);
+      var c = hexXY(E.key(e[0],e[1]), s), aa = hexCornerAngles(e[2]);
+      body += bpThumbTerrain(hexCornerPt(c[0],c[1],aa[0],s-2.4), hexCornerPt(c[0],c[1],aa[1],s-2.4), pc.t);
     });
   });
   ['red','blue'].forEach(function(side){

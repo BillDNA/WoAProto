@@ -183,8 +183,8 @@ function renderHighlights(g){
     });
     o.terrainTargets.forEach(function(pc){
       pc.edgeKeys.forEach(function(ek){
-        var parts = ek.split('>');
-        var line = bpBarrageTerrain(g, parts[0], +parts[1], pc.t);
+        var parts = E.parseSideKey(ek);
+        var line = bpBarrageTerrain(g, parts[0], parts[1], pc.t);
         line.addEventListener('mouseenter', function(){ line.setAttribute('opacity','.9'); });
         line.addEventListener('mouseleave', function(){ line.setAttribute('opacity','.55'); });
         line.addEventListener('click', function(){ act({pieceId: pc.id}); });

@@ -219,7 +219,7 @@ function terrainFeatures(map) {
     if (!p || !p.edges || !p.edges.length || !byType[p.t]) return;
     // A well-formed piece's sides all lie in one hex (pieceProblem enforces it);
     // count every hex any side touches so a malformed piece is never under-counted.
-    p.edges.forEach(function (e) { byType[p.t][e[0] + ',' + e[1]] = true; });
+    p.edges.forEach(function (e) { byType[p.t][E.key(e[0], e[1])] = true; });
   });
   var hexes = {};
   mapTerrains().forEach(function (t) { hexes[t.name] = Object.keys(byType[t.letter]).length; });

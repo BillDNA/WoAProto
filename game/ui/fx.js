@@ -117,5 +117,5 @@ function playFX(pre){
 }
 function fxPieceHex(pieceId){
   var pc = (E.view(APP.st).terrainPieces||[]).filter(function(x){ return x.id===pieceId; })[0];
-  return pc ? pc.edgeKeys[0].split('>')[0] : null;
+  return pc ? E.sideHex(pc.edgeKeys[0]) : null;
 }

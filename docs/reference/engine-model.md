@@ -5,14 +5,16 @@
 
 ## Board & hexes
 
-- Pointy-top axial coords, key `'q,r'`. Board shapes are data from `maps.js`: `rows: [[r,qFrom,qTo],...]` OR an explicit `hexes: [[q,r],...]` set for irregular outlines. The engine builds the hex set, grid labels, and (for point-symmetric outlines) the rot180 centre. Five built-in shapes: classic 24 (the physical board), compact 19, hourglass 21, ridge 20, spear 23. `setBoard()` switches a module-level current shape — always set from `st.boardShape`.
+The hex itself — the `'q,r'` key, the six directions, distance, and the names of an edge and of one hex's side of it — is the hex house: `game/engine/hex/hex.md`. What follows is the board's outline over that vocabulary.
+
+- Board shapes are data from `maps.js`: `rows: [[r,qFrom,qTo],...]` OR an explicit `hexes: [[q,r],...]` set for irregular outlines. The engine builds the hex set, grid labels, and (for point-symmetric outlines) the rot180 centre. Five built-in shapes: classic 24 (the physical board), compact 19, hourglass 21, ridge 20, spear 23. `setBoard()` switches a module-level current shape — always set from `st.boardShape`.
 - **Custom outlines**: a map may carry `shapeDef: {label, hexes:[[q,r],...]}` inline — `ensureMapShape(map)` registers it as `'@<map id>'` (rebuilt every call so edits stick) and normalizes `map.shape`; the def travels with the map, so LAN joins and resumes work. `validateMaps` enforces the **24-hex ceiling** for shapeDef maps (a design guardrail: the physical board is laser-cut to 24).
 - `hexLabel(k)` — human grid reference (`'C4'`): row letter from top + position from left on the current board. Every engine log message uses it; off-board keys fall back to raw coords. Labels on holed rows keep their columns (a gap in a row is a gap in the numbering).
 - **Map library & match pool**: every map is a file in `content/maps/`. The match pool is the **active mapset** (`E.activeMaps()` / `content/mapsets/`, up to 5 named sets, one `active:true`) — the browser, the LAN peer, and every CLI tool all draw from the same set. A **floor of 5 maps** (`MAP_FLOOR`) warns before deleting below a playable library.
 
 ## Terrain — hex-owned and directional
 
-A side is keyed `sideKey(hex,dir)` = `'q,r>d'`. Map defs list pieces as `{t, edges:[[q,r,d],...]}`.
+Map defs list pieces as `{t, edges:[[q,r,d],...]}` — one side each.
 
 Each type is one file in `game/engine/board/terrain/`, over a shared base; its drawing is one file in `game/ui/board/terrain/`. The rules ask through `terrainAt` / `sideEffect` / `supportBlocker` / `deployBlocked` and name no type. Start at `game/engine/board/terrain/terrain.md`.
 

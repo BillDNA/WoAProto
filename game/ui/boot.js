@@ -647,10 +647,10 @@ $('edMirror').onclick = function(){
   }
   var add = {};
   for (var ek in ED.edges){
-    var parts = ek.split('>');
+    var parts = E.parseSideKey(ek);
     var a = E.parseKey(parts[0]);
     var ra = E.rot180(live, a[0], a[1]);
-    add[E.key(ra[0], ra[1]) + '>' + ((+parts[1] + 3) % 6)] = ED.edges[ek];
+    add[E.sideKey(E.key(ra[0], ra[1]), E.oppositeDir(parts[1]))] = ED.edges[ek];
   }
   for (var k2 in add) ED.edges[k2] = add[k2];
   if (ED.red && !ED.blue) ED.blue = E.rot180(live, ED.red[0], ED.red[1]);
