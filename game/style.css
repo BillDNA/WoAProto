@@ -432,7 +432,7 @@
   /* The Campaign Journal as a bound field book: brass header plate, dark spine,
      ruled red margin, stacked page-edge — shared by the inline rail (#log) and
      the small-screen overlay (#journalBody). */
-  .rosters-feed{display:flex; flex-direction:column; gap:8px;}
+  .mats-feed{display:flex; flex-direction:column; gap:8px;}
   .journal-feed{
     font-size:12.5px; line-height:1.45; text-align:left;
     background:linear-gradient(165deg, var(--journal), var(--journal-lo));

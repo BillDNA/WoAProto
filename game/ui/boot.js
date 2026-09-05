@@ -7,7 +7,7 @@
    from index.html's inline app script. */
 'use strict';
 
-// Every modal's markup, written from the registry (ui/kit/modal.js) before any
+// Every modal's markup, written from the registry (ui/modals/modal.js) before any
 // wiring below reaches into a modal body.
 uiModalsBuild();
 
@@ -194,7 +194,7 @@ $('journalOvrBody').onclick = function(ev){
   if (t && t.classList && t.classList.contains('jturn') && t.classList.contains('toggler')) t.classList.toggle('open');
 };
 
-$('fabRosters').onclick = function(){ modalOpen('rosters'); };
+$('fabRosters').onclick = function(){ modalOpen('mats'); };
 $('btnQuit').onclick = function(){
   if (APP.net.poller) clearInterval(APP.net.poller);
   APP.net.poller = null; APP.mode = null;

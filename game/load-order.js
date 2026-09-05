@@ -51,7 +51,7 @@
     'ui/screens.js',
     'ui/ui-primitives.js',
     'ui/kit/kind.js',
-    'ui/kit/modal.js',
+    'ui/modals/modal.js',
     'ui/board-primitives.js',
     'ui/board.js',
     'ui/fx.js',
@@ -65,7 +65,7 @@
     'ui/build-battalion.js',
     'ui/chart-primitives.js',
     'ui/screens/dashboard/dashboard.js',
-    'ui/screens/dashboard/pane.js',
+    'ui/screens/dashboard/panes/pane.js',
     'ui/screens/dashboard/panes/overview.js',
     'ui/screens/dashboard/panes/maps.js',
     'ui/screens/dashboard/panes/cards.js',
@@ -79,8 +79,8 @@
     'ui/modals/handoff.js',
     'ui/modals/journal.js',
     'ui/modals/manual.js',
+    'ui/modals/mats.js',
     'ui/modals/play.js',
-    'ui/modals/rosters.js',
     'ui/modals/skirmish.js',
     'ui/boot.js'
   ];

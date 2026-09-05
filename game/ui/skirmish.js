@@ -24,10 +24,10 @@ function syncJournalOverlay(){
 }
 
 function syncRostersOverlay(){
-  $('rostersOvrBody').innerHTML = $('leftcol').innerHTML;
+  $('matsOvrBody').innerHTML = $('leftcol').innerHTML;
   // the mirrored spent-track is CSS-hidden on small screens; that's fine — the
   // Cards glossary carries the full read
-  var sp = $('rostersOvrBody').querySelector('.spent'); if (sp) sp.onclick = showCards;
+  var sp = $('matsOvrBody').querySelector('.spent'); if (sp) sp.onclick = showCards;
 }
 
 function startLocal(mode, mapsOverride, battalionsOverride, commandersOverride){
@@ -371,7 +371,7 @@ function renderLog(){
   el.scrollTop = el.scrollHeight;
   // keep the small-screen journal overlay in sync while it's open
   if (modalIsOpen('journal')) syncJournalOverlay();
-  if (modalIsOpen('rosters')) syncRostersOverlay();
+  if (modalIsOpen('mats')) syncRostersOverlay();
 }
 
 function confirmAttack(a){

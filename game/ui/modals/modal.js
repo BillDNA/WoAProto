@@ -1,4 +1,5 @@
-/* War of Attrition — the MODAL kind: the second household built over kit/kind.js.
+/* War of Attrition — the MODAL kind: one of two households over ui/kit/kind.js.
+   The shell lives with its instances — every file beside this one is one modal.
 
    Every modal in the game is the same three-part shape — a title, a body, a row
    of buttons that close it. Eight of them hand-built that shape, four in

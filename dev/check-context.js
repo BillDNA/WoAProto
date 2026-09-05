@@ -103,7 +103,7 @@ var ALIASES = [
   // the only allowed "roster" is the player piece-mats overlay UI (a distinct
   // concept) and the `map-roster-and-shapes` spec codename.
   { term: 'roster (→ Mapset / map library)', pattern: /\broster/gi,
-    ignore: /rostersOvr|rostersBody|fabRosters|syncRostersOverlay|RostersOverlay|BOTH rosters|Both rosters|>Rosters<|modals\/rosters|rosters-feed|id:'rosters'|map-roster-and-shapes/, status: 'locked',
+    ignore: /rostersOvr|rostersBody|fabRosters|syncRostersOverlay|RostersOverlay|BOTH rosters|>Rosters<|title:'Rosters'|map-roster-and-shapes/, status: 'locked',
     note: 'active-set → Mapset; full collection → map library; piece mats stay the mats overlay' },
   // The engine best-of object is now st.battle / newBattle. What stays "match":
   // the claude-plays `--match` CLI flag + its jsonl log schema, the `matchup`
