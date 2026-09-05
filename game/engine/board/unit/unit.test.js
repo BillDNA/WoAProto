@@ -4,7 +4,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { E, testSkirmish } = require('../../../test/test.helpers.js');
+const { E, SIM, TESTMAP, testSkirmish, freshEngine } = require('../../../test/test.helpers.js');
 
 test('the stat record is a live view of the dials, not a snapshot', () => {
   const was = E.CONFIG.unit.infantry.atk;
@@ -124,8 +124,11 @@ test('a deploy step is priced by the unit it places', () => {
 // The house's contract: a fourth type is written once, in one room file plus its
 // dial row, and is then live in combat, in the AI's valuation, in the reserve
 // model, on the board and on the mat — none of which names a unit type.
-// Registered LAST so the shipped three are asserted against a three-type registry.
+// Runs on its OWN engine (freshEngine), so the fixture type is real everywhere
+// inside this test and exists nowhere outside it.
 test('the unit house: a fourth type needs only its own answers', () => {
+  const { E, SIM } = freshEngine();
+  const testSkirmish = seed => E.newSkirmish(E.newBattle({ seed, firstPlayer: 'red', maps: [TESTMAP] }));
   const dial = { name: 'Sapper', atk: 2, def: 2, sup: 0, worth: 4, count: 0, deployCost: 3 };
   E.CONFIG.unit.sapper = dial;
   E.defineUnit({
@@ -172,4 +175,13 @@ test('the unit house: a fourth type needs only its own answers', () => {
 
   // and the stock guardrail still counts it (count 0 keeps the shipped total legal)
   assert.strictEqual(E.unitStockProblem(), null, 'the composition is still legal');
+
+  // it plays: a whole AI skirmish on an engine that has four types
+  assert.strictEqual(SIM.simSkirmish(TESTMAP, 42, 'red', 'normal', 'normal').flow.phase,
+    'skirmish-over', 'and a skirmish runs to a result with it registered');
+});
+
+test('a contract fixture never reaches the shipped registry', () => {
+  assert.strictEqual(E.unitTypes().indexOf('sapper'), -1,
+    'the live engine still ships exactly the types in content/units/');
 });

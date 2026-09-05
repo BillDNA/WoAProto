@@ -8,7 +8,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { E, SIM } = require('../../test/test.helpers.js');
+const { E, SIM, freshEngine } = require('../../test/test.helpers.js');
 
 test('shapes (data-driven from maps.js)', () => {
 (function () {
@@ -136,8 +136,11 @@ test('a malformed outline is a problem, not a board left switched under a live g
 })();
 });
 
+// Runs on its OWN engine (freshEngine), so the fixture form is real everywhere
+// inside this test and exists nowhere outside it.
 test('a new authored outline form is one file, live with no edit anywhere else', () => {
 (function () {
+  var f = freshEngine(), E = f.E, SIM = f.SIM;
   // The third form the ticket names — the shape editor's future output, a ring
   // written as a centre and a radius. One defineOutlineForm call, nothing else
   // touched, and every question the board answers works over it.
@@ -164,6 +167,10 @@ test('a new authored outline form is one file, live with no edit anywhere else',
   assert.strictEqual(E.neighbors('0,0').length, 6, 'and the neighbour filter is built from it');
   var sim = SIM.simSkirmish(RING, 42, 'red', 'normal', 'normal');
   assert.strictEqual(sim.flow.phase, 'skirmish-over', 'an AI skirmish plays out on it');
-  E.setBoard('classic');
 })();
+});
+
+test('a contract fixture never reaches the shipped registry', () => {
+  assert.throws(function () { E.buildShape('ring', { ring: 1 }); }, /no outline form recognises/,
+    'the live engine knows only the forms that ship');
 });
