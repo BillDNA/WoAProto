@@ -615,8 +615,6 @@
   I.buildDeck = buildDeck;
   I.newSkirmish = newSkirmish;
   I.copyReserves = copyReserves;
-  // One slot per physical piece on the player mat: a reserve nobody has spent.
-  I.PIECE_TOTALS = copyReserves();
   I.log = log;
   I.cardsRemaining = cardsRemaining;
   I.drawHand = drawHand;

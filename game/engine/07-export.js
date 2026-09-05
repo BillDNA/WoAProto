@@ -21,12 +21,12 @@
     CARD_POOL: I.CARD_POOL, hydrateBattalionCards: I.hydrateBattalionCards,
     cardPoints: I.cardPoints, battalionPoints: I.battalionPoints,
     CONFIG: I.CONFIG, configDigest: I.configDigest, defineConfigHome: I.defineConfigHome,
-    PIECE_TOTALS: I.PIECE_TOTALS,
     // The unit house (engine/unit/) — the registry, the stat record and what a
     // type is worth to each layer. Its screen dialect is game/ui/unit/.
     defineUnit: I.defineUnit, unitTypes: I.unitTypes, unitOf: I.unitOf,
     unitStock: I.unitStock, unitValue: I.unitValue, deployPoints: I.deployPoints,
-    unitStockProblem: I.unitStockProblem,
+    unitStockProblem: I.unitStockProblem, orphanRowProblem: I.orphanRowProblem,
+    checkUnitStock: I.checkUnitStock,
     SHAPES: I.SHAPES, DEFAULT_SHAPE: I.DEFAULT_SHAPE, boardHexes: I.boardHexes, setBoard: I.setBoard, hexes: I.hexes,
     buildShape: I.buildShape, ensureMapShape: I.ensureMapShape,
     currentShape: I.currentShape, rot180: I.rot180, buildTerrain: I.buildTerrain, hexLabel: I.hexLabel,
@@ -63,5 +63,10 @@
     // engine surface — it lives in game/sim.js (WOA_SIM), built on playToEnd.
     playToEnd: I.playToEnd
   };
+  // One slot per physical piece on the player mat: a reserve nobody has spent.
+  // Read live, not snapshotted, so the mat and a full reserve can never disagree
+  // about what the box holds.
+  Object.defineProperty(Engine, 'PIECE_TOTALS', { enumerable: true, get: I.copyReserves });
+
   global.Engine = Engine;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -23,7 +23,9 @@
   I.AI_WEIGHTS = I.defineConfigHome({
     attrWin: 500,      // attrition-projection swing at full urgency
     fsDiff: 8, fsDiffUrgent: 40, // field-score diff, flat + urgency-scaled
-    unitOnBoard: 22, unitReserve: 16, // multipliers over the unit house's own aiValue
+    unitOnBoard: 22, unitReserve: 16, // multipliers over each type's own price
+    // unitValue — the per-type price table — is installed here by the unit house
+    // (engine/unit/unit-config.js), so a new type is priced in one file.
     advance: 2.2,      // pressure toward the enemy HQ (per hex of distance)
     hqGuard: 4,        // bonus for sitting next to my own HQ
     enemyDist: 1.6,    // keep enemy units far from my HQ

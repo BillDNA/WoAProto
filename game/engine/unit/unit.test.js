@@ -31,8 +31,22 @@ test('a room must answer every question, and only those questions', () => {
     /unknown field/, 'a room may not invent a field');
   assert.throws(() => E.defineUnit(Object.assign({}, full, { type: 'infantry' })),
     /duplicate type/, 'two rooms may not claim the same type');
-  assert.throws(() => E.defineUnit(Object.assign({}, full, { type: 'zorphan' })),
-    /no row in CONFIG.unit/, 'a room with no dial row is rejected at load, not silently zeroed');
+  assert.strictEqual(E.defineUnit(Object.assign({}, full, { type: 'zstanddown' })), null,
+    'a room whose type the active stat block dropped stands down rather than registering');
+  assert.ok(E.unitTypes().indexOf('zstanddown') < 0, 'and is nowhere in the registry');
+});
+
+// The two halves of "the stat block and the rooms agree": a room with no row
+// stands down (above), and a row with no room is a piece nothing could draw.
+test('a stat row nobody claimed is named, not silently dropped', () => {
+  E.CONFIG.unit.tank = { name: 'Tank', atk: 4, def: 4, sup: 0, worth: 5, count: 2 };
+  try {
+    assert.match(String(E.orphanRowProblem()), /"tank".*no room in engine\/unit\//,
+      'the orphan row is named, with where its stats came from');
+    assert.throws(() => E.checkUnitStock(), /tank/,
+      'and the load-time check fails on it rather than on the piece count it skews');
+  } finally { delete E.CONFIG.unit.tank; }
+  assert.strictEqual(E.orphanRowProblem(), null, 'clean again');
 });
 
 test('the stock guardrail counts what the rooms declare', () => {
@@ -47,14 +61,31 @@ test('the stock guardrail counts what the rooms declare', () => {
   E.unitTypes().forEach(t => assert.strictEqual(stock[t], E.UNITS[t].count, t + "'s stock is its count"));
 });
 
-test('the AI prices a unit from its own dial, and falls back to the bounty', () => {
-  assert.strictEqual(E.unitValue('cavalry'), E.CONFIG.unit.cavalry.aiValue, 'the dial is what the search reads');
-  const was = E.CONFIG.unit.cavalry.aiValue;
+test('the AI prices a unit from its own weight, overridably, and falls back to the bounty', () => {
+  assert.strictEqual(E.unitValue('cavalry'), E.AI_WEIGHTS.unitValue.cavalry, 'the weight is what the search reads');
+  assert.strictEqual(E.unitValue('cavalry', { unitValue: { cavalry: 99 } }), 99,
+    "a personality's or Commander's merged weights reprice the piece");
+  assert.strictEqual(E.unitValue('infantry', { unitValue: { cavalry: 99 } }),
+    E.AI_WEIGHTS.unitValue.infantry, 'a partial override leaves the other types at base');
+  const was = E.AI_WEIGHTS.unitValue.cavalry;
   try {
-    delete E.CONFIG.unit.cavalry.aiValue;
+    delete E.AI_WEIGHTS.unitValue.cavalry;
     assert.strictEqual(E.unitValue('cavalry'), E.UNITS.cavalry.worth + 2,
-      'a type with no aiValue is priced off its bounty rather than vanishing from the search');
-  } finally { E.CONFIG.unit.cavalry.aiValue = was; }
+      'a type with no price is valued off its bounty rather than vanishing from the search');
+  } finally { E.AI_WEIGHTS.unitValue.cavalry = was; }
+});
+
+// AI tuning must never move the digest stamped on DB rows: sweeping what the
+// search pays for a cavalry cannot make new runs incomparable with old ones.
+test('the AI price is an AI weight, so it is outside the rules digest', () => {
+  const was = E.CONFIG.digest;
+  E.AI_WEIGHTS.unitValue.cavalry += 1;
+  try { assert.strictEqual(E.CONFIG.digest, was, 'repricing a unit leaves CONFIG.digest alone'); }
+  finally { E.AI_WEIGHTS.unitValue.cavalry -= 1; }
+  E.CONFIG.unit.cavalry.deployCost += 1;
+  try {
+    assert.notStrictEqual(E.CONFIG.digest, was, 'while a rules dial on the same row does move it');
+  } finally { E.CONFIG.unit.cavalry.deployCost -= 1; }
 });
 
 test('a deploy step is priced by the unit it places', () => {
@@ -71,8 +102,9 @@ test('a deploy step is priced by the unit it places', () => {
 // model, on the board and on the mat — none of which names a unit type.
 // Registered LAST so the shipped three are asserted against a three-type registry.
 test('the unit house: a fourth type needs only its own answers', () => {
-  const dial = { name: 'Sapper', atk: 2, def: 2, sup: 0, worth: 4, count: 0, aiValue: 7, deployCost: 3 };
+  const dial = { name: 'Sapper', atk: 2, def: 2, sup: 0, worth: 4, count: 0, deployCost: 3 };
   E.CONFIG.unit.sapper = dial;
+  E.AI_WEIGHTS.unitValue.sapper = 7;
   E.defineUnit({
     type: 'sapper',
     name:       function () { return E.CONFIG.unit.sapper.name; },
@@ -81,7 +113,7 @@ test('the unit house: a fourth type needs only its own answers', () => {
     sup:        function () { return E.CONFIG.unit.sapper.sup; },
     worth:      function () { return E.CONFIG.unit.sapper.worth; },
     count:      function () { return E.CONFIG.unit.sapper.count; },
-    aiValue:    function () { return E.CONFIG.unit.sapper.aiValue; },
+    aiValue:    function (price) { return price.sapper; },
     deployCost: function () { return E.CONFIG.unit.sapper.deployCost; }
   });
 
@@ -101,14 +133,14 @@ test('the unit house: a fourth type needs only its own answers', () => {
   assert.strictEqual(E.fieldScore(st, 'red'), dial.worth, 'it counts for its own field score');
 
   // the AI's valuation
-  assert.strictEqual(E.unitValue('sapper'), dial.aiValue, "the search knows what it's worth");
+  assert.strictEqual(E.unitValue('sapper'), E.AI_WEIGHTS.unitValue.sapper, "the search knows what it's worth");
 
   // the reserve model + the mat's slot count
   const fresh = E.newSkirmish(E.newBattle({ seed: 5, firstPlayer: 'red' }));
   assert.strictEqual(fresh.pieces.reserves.red.sapper, dial.count,
     'a fresh reserve holds its stock');
-  E.unitTypes().filter(t => t !== 'sapper').forEach(t => assert.strictEqual(E.PIECE_TOTALS[t], E.UNITS[t].count,
-    "the mat's slot count for " + t + ' is the house\'s stock (a room loaded with the engine is in it)'));
+  E.unitTypes().forEach(t => assert.strictEqual(E.PIECE_TOTALS[t], E.UNITS[t].count,
+    "the mat's slot count for " + t + " is the house's stock, the new type included"));
   assert.ok(Object.prototype.hasOwnProperty.call(fresh.journal.unitMetrics, 'sapper'),
     'the per-type metrics fold has a row for it');
 

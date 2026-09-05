@@ -12,7 +12,7 @@
     sup:        function () { return I.CONFIG.unit.cavalry.sup; },
     worth:      function () { return I.CONFIG.unit.cavalry.worth; },
     count:      function () { return I.CONFIG.unit.cavalry.count; },
-    aiValue:    function () { return I.CONFIG.unit.cavalry.aiValue; },
+    aiValue:    function (price) { return price.cavalry; },
     deployCost: function () { return I.CONFIG.unit.cavalry.deployCost; }
   });
 })(typeof window !== 'undefined' ? window : globalThis);

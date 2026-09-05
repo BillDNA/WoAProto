@@ -28,7 +28,7 @@
     sup:        'function',  // () -> power lent to an adjacent fight
     worth:      'function',  // () -> field score the enemy banks for destroying it
     count:      'function',  // () -> pieces of it the box holds, per side
-    aiValue:    'function',  // () -> what the AI prices one of them at
+    aiValue:    'function',  // (priceTable) -> what the AI prices one of them at
     deployCost: 'function'   // () -> points a deploy step of it adds to a card
   };
   // The answers a caller reads off I.UNITS[type] — the stat record.
@@ -49,7 +49,11 @@
     Object.keys(spec).forEach(function (f) {
       if (!FIELDS[f]) bad(id, 'unknown field ' + JSON.stringify(f));
     });
-    if (!I.CONFIG.unit[id]) bad(id, 'no row in CONFIG.unit — add one to maps.js\'s "units" block');
+    // A room whose type the active stat block does not carry stands DOWN rather
+    // than registering: a units variant replaces that block wholly, and dropping
+    // a type is one of the things it is allowed to do. The stock guardrail below
+    // catches the case where the drop was a typo.
+    if (!I.CONFIG.unit[id]) return null;
     all.push(spec); byType[id] = spec;
     UNITS[id] = record(spec);
     return spec;
@@ -80,12 +84,22 @@
   /* ---------- what a type is worth to each layer ---------- */
   // The AI's own price for one piece, kept apart from the rules' `worth` (the
   // enemy's field score) because the search values a piece for what it can still
-  // do, not for the points it hands over. No dial falls back to the bounty.
-  function unitValue(t) {
+  // do, not for the points it hands over. It is an AI weight, not a rules dial —
+  // AI tuning must never move CONFIG.digest, which is stamped on DB rows — so it
+  // lives in AI_WEIGHTS.unitValue and a personality or Commander can reprice a
+  // piece by overriding it. A type with no price falls back to its bounty.
+  function unitValue(t, w) {
     var u = byType[t];
     if (!u) return 1;
-    var v = u.aiValue();
+    var v = u.aiValue(priceTable(w));
     return typeof v === 'number' ? v : u.worth() + 2;
+  }
+  // The base prices, with a merged weight vector's override laid over them —
+  // the same object back when there is no override, so the search allocates
+  // nothing in the common case.
+  function priceTable(w) {
+    var base = I.AI_WEIGHTS.unitValue, over = w && w.unitValue;
+    return (!over || over === base) ? base : Object.assign({}, base, over);
   }
   // The surcharge a deploy step of this type adds to a card's price. A step with
   // no unit costs nothing extra.
@@ -97,17 +111,29 @@
   /* ---------- the physical model, written once ---------- */
   // Physical-board guardrail: a side always fields exactly CONFIG.pieceTotal
   // pieces. The values are free data; the TOTAL is the invariant. Returns a
-  // problem string, or null. Checked at load (07-export) so a bad units variant
-  // fails loud instead of quietly skewing every skirmish.
+  // problem string, or null.
   function unitStockProblem() {
     var stock = unitStock(), total = 0;
     Object.keys(stock).forEach(function (t) { total += stock[t]; });
     if (total === I.CONFIG.pieceTotal) return null;
     return 'unit composition must total ' + I.CONFIG.pieceTotal + ' pieces (got ' + total +
-      (I.unitVariant ? ' from units variant "' + I.unitVariant + '"' : ' in maps.js') + ')';
+      ') ' + source();
   }
+  // A stat row nobody claimed. Its pieces would be counted by no rule and drawn
+  // by nothing, so the author's composition silently loses them — say so instead.
+  function orphanRowProblem() {
+    var orphans = Object.keys(I.CONFIG.unit).filter(function (t) { return !byType[t]; });
+    if (!orphans.length) return null;
+    return 'unit type ' + orphans.map(function (t) { return '"' + t + '"'; }).join(', ') +
+      ' has stats ' + source() + ' but no room in engine/unit/ — a piece nothing can draw';
+  }
+  function source() {
+    return I.unitVariant ? 'from units variant "' + I.unitVariant + '"' : 'in maps.js';
+  }
+  // Both checks at load (07-export), so a bad stat block fails loud instead of
+  // quietly skewing every skirmish.
   function checkUnitStock() {
-    var prob = unitStockProblem();
+    var prob = orphanRowProblem() || unitStockProblem();
     if (prob) throw new Error('War of Attrition: ' + prob);
   }
 
@@ -120,5 +146,6 @@
   I.unitValue = unitValue;
   I.deployPoints = deployPoints;
   I.unitStockProblem = unitStockProblem;
+  I.orphanRowProblem = orphanRowProblem;
   I.checkUnitStock = checkUnitStock;
 })(typeof window !== 'undefined' ? window : globalThis);

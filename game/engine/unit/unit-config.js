@@ -8,14 +8,19 @@
      atk/def/sup power attacking, defending, and lent to an adjacent fight
      worth       field score the enemy banks for destroying it
      count       pieces of it the box holds, per side
-     aiValue     what the AI prices one of them at in its own search
      deployCost  points a deploy step of it adds to a card's price
 
    The first six are hand-editable in maps.js's "units" block, and an active
    content/units/*.js variant replaces that block wholly — composition, values
-   and stats are all content levers. The last two are this house's own dials,
-   held here and merged in; a variant may override them by naming them in its
-   row, and a type with no dial falls back (aiValue -> worth + 2, deployCost -> 0).
+   and stats are all content levers. deployCost is this house's own dial, held
+   here and merged in; a variant may override it by naming it in its row, and a
+   type with none costs nothing extra.
+
+   What the AI prices a piece at is NOT here. It is an AI weight, installed
+   below as AI_WEIGHTS.unitValue, because only Engine.CONFIG.digest is stamped
+   onto DB rows — sweeping the AI's price for cavalry must not make every run
+   after it incomparable with every run before. Being a weight also means a
+   personality or a Commander can reprice a piece.
 
    Loads after 01-core, which resolves WOA_CONTENT. */
 (function (global) {
@@ -26,13 +31,14 @@
     (typeof require === 'function' ? require('../../maps.js') : null) || {};
   var CONTENT = global.WOA_CONTENT || {};
 
-  // The AI's price per piece was an AI weight until this house was built; it is
-  // a fact about the unit, not about a personality, so it lives beside the stats.
   var DIALS = {
-    infantry:  { aiValue: 3, deployCost: 0 },
-    cavalry:   { aiValue: 4, deployCost: 1 },
-    artillery: { aiValue: 5, deployCost: 2 }
+    infantry:  { deployCost: 0 },
+    cavalry:   { deployCost: 1 },
+    artillery: { deployCost: 2 }
   };
+  // What the AI pays for one piece of each type — the AI tier's half of a unit's
+  // row, read by that type's own room through the merged weight vector.
+  I.AI_WEIGHTS.unitValue = { infantry: 3, cavalry: 4, artillery: 5 };
 
   var variant = (CONTENT.units || []).filter(function (u) { return u && u.active; })[0] || null;
   var stats = (variant && variant.units) || CORE.units || {};

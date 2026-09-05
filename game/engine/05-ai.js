@@ -105,8 +105,8 @@
       if (res.defenderIsHQ) {
         if (res.outcome !== 'defender') score -= w.threatHQ; // enemy can take our HQ
       } else if (tgt && tgt.owner === me) {
-        if (res.outcome === 'attacker') score -= I.unitValue(tgt.type) * w.threatKill;
-        else if (res.outcome === 'tie') score -= I.unitValue(tgt.type) * w.threatTie;
+        if (res.outcome === 'attacker') score -= I.unitValue(tgt.type, w) * w.threatKill;
+        else if (res.outcome === 'tie') score -= I.unitValue(tgt.type, w) * w.threatTie;
       }
     });
     return score;
@@ -148,12 +148,12 @@
       var u = st.pieces.units[h];
       (u.owner === me ? myUnits : enUnits).push({ h: h, u: u });
     }
-    myUnits.forEach(function (x) { s += I.unitValue(x.u.type) * w.unitOnBoard; });
-    enUnits.forEach(function (x) { s -= I.unitValue(x.u.type) * w.unitOnBoard; });
+    myUnits.forEach(function (x) { s += I.unitValue(x.u.type, w) * w.unitOnBoard; });
+    enUnits.forEach(function (x) { s -= I.unitValue(x.u.type, w) * w.unitOnBoard; });
     // reserves slightly less valuable than deployed
     I.unitTypes().forEach(function (t) {
-      s += st.pieces.reserves[me][t] * I.unitValue(t) * w.unitReserve;
-      s -= st.pieces.reserves[en][t] * I.unitValue(t) * w.unitReserve;
+      s += st.pieces.reserves[me][t] * I.unitValue(t, w) * w.unitReserve;
+      s -= st.pieces.reserves[en][t] * I.unitValue(t, w) * w.unitReserve;
     });
     // advance toward enemy HQ; keep some defense near own HQ
     var ehq = st.board.hq[en], mhq = st.board.hq[me];
@@ -166,7 +166,7 @@
     I.listAttacks(st, me).forEach(function (a) {
       var res = I.computeAttack(st, a);
       if (res.defenderIsHQ) { if (res.outcome !== 'defender') s += w.myThreatHQ; }
-      else if (res.outcome === 'attacker') s += I.unitValue(st.pieces.units[a.to].type) * w.myThreatKill;
+      else if (res.outcome === 'attacker') s += I.unitValue(st.pieces.units[a.to].type, w) * w.myThreatKill;
     });
     // enemy threats on mine
     s += threatScan(st, me, w);
@@ -219,8 +219,8 @@
       var res = I.computeAttack(st, { from: c.from, to: c.to, via: c.via || null,
         mod: o.mod || 0, tieSpare: !!o.tieSpare, noAdvance: !!o.noAdvance });
       if (res.defenderIsHQ && res.outcome !== 'defender') return 1e4; // skirmish won
-      var tgt = res.defenderUnit ? I.unitValue(res.defenderUnit) : 0;
-      var mine = I.unitValue(st.pieces.units[c.from].type);
+      var tgt = res.defenderUnit ? I.unitValue(res.defenderUnit, w) : 0;
+      var mine = I.unitValue(st.pieces.units[c.from].type, w);
       if (res.outcome === 'attacker') return 100 + tgt * 10;
       if (res.outcome === 'tie') return 50 + (tgt - mine) * 10;
       return -mine * 10; // walking into a repulse

@@ -9,8 +9,6 @@ require('./test.board.js');           // the board's outline, shapes and grid la
 require('./test.combat.js');
 require('../engine/board/terrain/terrain.test.js');   // the terrain house keeps its own tests
 require('../ui/board/terrain/terrain-marks.test.js'); // and its drawing half likewise
-require('../engine/unit/unit.test.js');        // the unit house — the pieces a side owns
-require('../ui/unit/unit-marks.test.js');      // and its drawing half likewise
 require('./test.cards.js');
 require('./test.maps.js');
 require('./test.ai.js');
@@ -19,3 +17,7 @@ require('./test.reports.js');
 require('./test.seams.js');
 require('./test.ui.js');
 require('./test.integration.js');
+// The unit house last: its contract test registers a fourth type, and the
+// registry is append-only, so every file above sees the shipped three.
+require('../engine/unit/unit.test.js');        // the unit house — the pieces a side owns
+require('../ui/unit/unit-marks.test.js');      // and its drawing half likewise
