@@ -19,12 +19,12 @@
 'use strict';
 
 /* ============ mini-board geometry (the live board's vocabulary at MP_S) ============
-   The manual draws its own tiny board, but through board-primitives' shared
-   helpers at MP_S scale — hexXY(k,MP_S) for position, bpUnitToken / bpHQMarker
-   for the pieces, and the BOARD palette for every colour — so the two boards
-   are literally the same marks, one implementation, just smaller. Only the
-   scale-tuned line widths + the manual's own overlays (glow halos, ghost ✕,
-   support rings, A-vs-D pill) stay local. */
+   The manual draws its own tiny board, but through the shared helpers at MP_S
+   scale — the hex house's hexXY(k,MP_S) for position, board-primitives'
+   bpUnitToken / bpHQMarker for the pieces, and the BOARD palette for every
+   colour — so the two boards are literally the same marks, one implementation,
+   just smaller. Only the scale-tuned line widths + the manual's own overlays
+   (glow halos, ghost ✕, support rings, A-vs-D pill) stay local. */
 var MP_S = 34; // mini hex radius (live board: S = 44)
 // the mini-board's own scale-tuned line weights (board-primitives keeps mini-boards
 // local by design). Named here so the glow/ghost widths are read by name, not re-typed.

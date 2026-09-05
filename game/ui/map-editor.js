@@ -63,7 +63,10 @@ function edHexSet(){
   return set;
 }
 function edHexPairs(){
-  return Object.keys(edHexSet()).map(E.parseKey).sort(function(a,b){ return a[1]-b[1] || a[0]-b[0]; });
+  // copies, not the house's shared parse results — these become map data the
+  // editor and the save file own (E.parseKey hands back a read-only pair).
+  return Object.keys(edHexSet()).map(function(k){ return E.parseKey(k).slice(); })
+    .sort(function(a,b){ return a[1]-b[1] || a[0]-b[0]; });
 }
 // register the outline being edited so hexLabel / rot180 speak its grid
 function edLiveShape(){
@@ -118,7 +121,7 @@ function renderEditor(){
     if (ED.tool==='redhq' || ED.tool==='bluehq'){
       p.style.cursor = 'pointer';
       p.addEventListener('click', function(){
-        var qr = E.parseKey(k);
+        var qr = E.parseKey(k).slice(); // editor state owns its pair (see edHexPairs)
         if (ED.tool==='redhq'){ ED.red = qr; if (ED.blue && E.key(ED.blue[0],ED.blue[1])===k) ED.blue=null; }
         else { ED.blue = qr; if (ED.red && E.key(ED.red[0],ED.red[1])===k) ED.red=null; }
         renderEditor();

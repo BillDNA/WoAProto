@@ -65,9 +65,9 @@ function bpTerrainStroke(g, hexKey, dir, letter, o){
 // One terrain side, drawn inside its owning hex: the line plus the type's glyph.
 // Board defaults at S; a mini-board passes o = {s, sw, edgeData, …} plus any
 // options the glyph reads, so the SAME mark renders at that scale.
-function bpTerrainEdge(g, edgeKey, letter, o){
+function bpTerrainEdge(g, side, letter, o){
   o = o || {};
-  var s = o.s || S, parts = E.parseSideKey(edgeKey), d = parts[1];
+  var s = o.s || S, parts = E.parseSideKey(side), d = parts[1];
   var ep = bpTerrainStroke(g, parts[0], d, letter, { s:s, rad:o.rad, sw:o.sw, edgeData:o.edgeData });
   var mark = terrainMark(letter);
   if (!mark || !mark.glyph) return;

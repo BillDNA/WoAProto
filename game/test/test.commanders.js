@@ -34,7 +34,7 @@ function fightSkirmish(seed, place) {
   E.Pieces.place(st, '0,1', 'infantry', 'blue');
   const atkDir = E.dirBetween('0,1', '0,0'); // the defender's edge toward the attacker
   if (place === 'attacked') st.board.terrainEdges[E.sideKey('0,1', atkDir)] = 'M';
-  else if (place === 'other') st.board.terrainEdges[E.sideKey('0,1', (atkDir + 3) % 6)] = 'M'; // a non-attacked edge of the DEFENDER hex
+  else if (place === 'other') st.board.terrainEdges[E.sideKey('0,1', E.oppositeDir(atkDir))] = 'M'; // a non-attacked edge of the DEFENDER hex
   else if (place === 'attacker') st.board.terrainEdges[E.sideKey('0,0', E.dirBetween('0,0', '0,1'))] = 'M'; // the ATTACKER's edge
   return st;
 }

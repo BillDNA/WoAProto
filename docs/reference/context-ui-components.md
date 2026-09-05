@@ -11,7 +11,7 @@ draws raw SVG, and the home pointers here are machine-checked by
 that must appear in it (no line numbers), so only a renamed or relocated primitive
 fails, fixed in the same commit.
 
-Three modules, one implementation of each primitive, many callers:
+Four modules, one implementation of each primitive, many callers:
 
 - **hex/hex-screen.js** — where a hex and its faces sit on screen, at any scale.
   The screen dialect of the hex house (`game/engine/hex/hex.md`).
